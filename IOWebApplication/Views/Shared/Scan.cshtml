@@ -1,0 +1,12 @@
+﻿@model IOWebApplication.Core.Models.ScanInfoViewModel
+@{
+    ViewData["Title"] = "Сканиране на документ";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+}
+@section menuHeader{
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+@await Component.InvokeAsync(nameof(IOWebApplication.Components.ScanComponent), new { info = Model })
+

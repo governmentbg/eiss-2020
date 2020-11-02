@@ -1,0 +1,106 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@inject IViewLocalizer Localizer
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="CasePerson" asp-action="CasePersonNotification" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-success">
+            <i class="fa fa-check-square-o"></i>
+            Добави/Премахни
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="casePersonNotificationMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#casePersonNotificationMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataNotification", "CasePerson")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                        d.caseSessionId = @(Model.CaseSessionId??0);
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'notificationNumber',
+                        data: 'notificationNumber',
+                        title: 'Пореден номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    //{
+                    //    name: 'uic',
+                    //    data: 'uic',
+                    //    title: 'ЕГН/ЕИК',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'roleName',
+                        data: 'roleName',
+                        title: 'Вид лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#casePersonNotificationTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+            $(document).on('click', '.orderButton', savePosition);
+
+            function savePosition(e) {
+                var element = e.currentTarget;
+                var data = element.dataset;
+
+                element.setAttribute("disabled", "");
+                $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("ChangeOrderCasePersonNotification", "CasePerson")',
+                    dataType: "json",
+                    data: data
+                }).fail(function (jqXHR, status, message) {
+                    if (jqXHR.responseText) {
+                        //messageHelper.ShowErrorMessage(jqXHR.responseText);
+                    }
+                }).always(function () {
+                    table.draw(false);
+                });
+            };
+
+        });
+</script>
+
+<script id="casePersonNotificationTemplateEdit" type="text/x-handlebars-template">
+    <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-info btn-sm" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
+    <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-primary btn-sm" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
+</script>
+
+

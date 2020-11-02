@@ -1,0 +1,16 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model ListNumberVM
+
+<div class="row">
+    <div class="form-group">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="Label" type="hidden" />
+        <div class="col-lg-4 text-right">
+            <label style="margin-top:8.4px">@Model.Label</label>
+        </div>
+        <div class="col-lg-2">
+            <input asp-for="Value" class="form-control" type="number" min="0" step="1">
+        </div>
+    </div>
+</div>
+

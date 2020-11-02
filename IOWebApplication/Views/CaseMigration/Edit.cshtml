@@ -1,0 +1,146 @@
+﻿@model CaseMigration
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на движение на дело" : "Преглед на движение на дело";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на движение на дело";
+    }
+
+
+}
+@section breadcrumb{
+    <partial name="Breadcrumbs" model="@ViewBag.breadcrumbs" />
+}
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.PriorCaseId)
+            @Html.HiddenFor(x => x.InitialCaseId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseSessionActId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.CaseMigrationTypeId, "GenericDropDown")
+                <div id="actToApeal" class="act-container">
+                    <div class="form-group">
+                        <label class="control-label">Обжалван акт</label>
+                        @Html.DropDownList("ddlActToApeal", ViewBag.ApealCaseSessionActId_ddl, null, new { onchange = "migActSelect(this);return false;", @class = "form-control" })
+                        <span asp-validation-for="@Model.CaseSessionActId" class="text-danger"></span>
+                    </div>
+
+                </div>
+                <div id="actAll" class="act-container">
+                    <div class="form-group">
+                        <label class="control-label">Съдебен акт</label>
+                        @Html.DropDownList("ddlActAll", ViewBag.AllEnforecedCaseSessionActId_ddl, null, new { onchange = "migActSelect(this);return false;", @class = "form-control" })
+                        <span asp-validation-for="@Model.CaseSessionActId" class="text-danger"></span>
+                    </div>
+                </div>
+                <div id="returnCase">
+                    @Html.EditorFor(x => x.ReturnCaseId, "GenericDropDown")
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Изберете получател на делото</label>
+                    <div>
+                        <label>@Html.RadioButtonFor(x => x.SendToTypeId, NomenclatureConstants.CaseMigrationSendTo.Court, new { @class = "toCourt" }) Към съд</label>
+                        &nbsp;&nbsp;&nbsp;
+                        <label>@Html.RadioButtonFor(x => x.SendToTypeId, NomenclatureConstants.CaseMigrationSendTo.Institution, new { @class = "toInstitution" }) Към институция</label>
+                    </div>
+                </div>
+                <div id="sendToCourt">
+                    @Html.EditorFor(x => x.SendToCourtId, "SelectCourt")
+                </div>
+                <div id="sendToInstitution">
+                    @Html.EditorFor(x => x.SendToInstitutionTypeId, "GenericDropDown")
+                    @Html.EditorFor(x => x.SendToInstitutionId, "SelectInstitution", null, new { institutionTypeContainer = "#SendToInstitutionTypeId" })
+                </div>
+                @Html.EditorFor(x => x.Description, "Textarea")
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="Index" asp-route-caseId="@Model.CaseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.CaseMigration" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(function () {
+            initCourts();
+            initInstitution();
+            $('input[name="SendToTypeId"]').click(function () {
+                if ($(this).is(':checked')) {
+                    if ($(this).val() == @NomenclatureConstants.CaseMigrationSendTo.Court) {
+                        $('#sendToCourt').show();
+                        $('#sendToInstitution').hide();
+                    } else {
+                        $('#sendToCourt').hide();
+                        $('#sendToInstitution').show();
+                    }
+                }
+            });
+            $('#CaseMigrationTypeId').change(function () {
+                $('#actToApeal').hide();
+                $('#actAll').hide();
+                $('#returnCase').hide();
+                switch ($(this).val()) {
+                    case '@(NomenclatureConstants.CaseMigrationTypes.SendNextLevel)':
+                        $('#actToApeal').show().find('select').trigger('change');
+                        break;
+                    case '@(NomenclatureConstants.CaseMigrationTypes.SentToProsecutors)':
+                        $('#actAll').show().find('select').trigger('change');
+                        break;
+                    case '@(NomenclatureConstants.CaseMigrationTypes.ReturnCase_AfterComplain)':
+                    case '@(NomenclatureConstants.CaseMigrationTypes.ReturnCase_ForAdmin)':
+                    case '@(NomenclatureConstants.CaseMigrationTypes.ReturnCase_ForUse)':
+                        $('#returnCase').show();
+                        break;
+                }
+            }).trigger('change');
+            $('input[name="SendToTypeId"]:checked').trigger('click');
+
+            $('#SendToInstitutionTypeId').change(function () {
+                let _inst = '@Model.SendToInstitutionId';
+                if ($(this).val().toString() != '@Model.SendToInstitutionTypeId') {
+                    _inst = '0';
+                }
+                let instControl = $('#SendToInstitutionId_institution:first')[0];
+                console.log(instControl);
+                loadInstitution(instControl, _inst);
+            }).trigger('change');
+        });
+
+        function migActSelect(sender) {
+            if ($(sender).parents('.act-container:first').is(':visible')) {
+                $('#CaseSessionActId').val($(sender).val());
+            }
+        }
+    </script>
+}
+

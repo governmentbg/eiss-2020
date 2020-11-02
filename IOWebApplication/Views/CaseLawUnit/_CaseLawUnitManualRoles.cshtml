@@ -1,0 +1,129 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    var isNotVisibleColumnAkt = (@Model.CaseSessionId == null);
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    @if (Model.CaseStateId != NomenclatureConstants.CaseState.Draft)
+    {
+        @if (Model.CaseSessionId == null)
+        {
+            <div class="row">
+                <div class="col-md-12 text-right pb-15">
+                    <a asp-controller="CaseLawUnit" asp-action="AddManualRoles" asp-route-caseId="@Model.Id" class="btn btn-success btn-sm">
+                        <i class="fa fa-plus"></i>
+                        Добави
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-md-12 text-right pb-15">
+                    <a asp-controller="CaseLawUnit" asp-action="CaseLawUnitRefresh" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-def btn-sm">
+                        <i class="fa fa-refresh"></i>
+                        Обнови списъка
+                    </a>
+                </div>
+            </div>
+        }
+    }
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="caseLawUnitManualRolesMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var table = $('#caseLawUnitManualRolesMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListDataManualRoles", "CaseLawUnit")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.caseId = @Model.Id;
+                    d.caseSessionId = @(Model.CaseSessionId??0);
+                }
+            },
+            deferLoading: deferLoadingOnTab('#caseLawUnitManualRolesMainTable'),
+            columns: [
+                {
+                    name: 'lawUnitName',
+                    data: 'lawUnitName',
+                    title: 'Наименование',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'judgeRoleLabel',
+                    data: 'judgeRoleLabel',
+                    title: 'Вид лице',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: "text-center",
+                    name: 'dateFrom',
+                    data: 'dateFrom',
+                    title: 'От',
+                    sortable: true,
+                    searchable: true,
+                    render: function (data) {
+                        return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                    }
+                },
+                {
+                    className: "text-center",
+                    name: 'dateTo',
+                    data: 'dateTo',
+                    title: 'До',
+                    sortable: true,
+                    searchable: true,
+                    render: function (data) {
+                        return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                    }
+                },
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#caseLawUnitManualRolesTemplateEdit', value);
+                    }
+                }
+            ]
+        });
+    });
+</script>
+
+<script id="caseLawUnitManualRolesTemplateEdit" type="text/x-handlebars-template">
+    @if (Model.CaseSessionId == null)
+    {
+        @if (access.CanChange)
+        {
+            <a href="@Url.Action("EditManualRoles", "CaseLawUnit")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+        else
+        {
+            <a href="@Url.Action("EditManualRoles", "CaseLawUnit")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+
+    });
+</script>

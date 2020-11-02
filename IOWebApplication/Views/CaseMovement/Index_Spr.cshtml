@@ -1,0 +1,144 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CaseMovementFilterVM
+
+@{
+    ViewData["Title"] = "Справка местоположение на дело";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-4">@Html.EditorFor(m => m.CaseRegNum)</div>
+    <div class="col-lg-4">
+        <div id="UserSelect">
+            @Html.EditorFor(x => x.UserId, "SelectUser")
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTableMovement()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseMovementMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTableMovement() {
+        if ($.fn.dataTable.isDataTable('#caseMovementMainTable')) {
+            refreshTable('#caseMovementMainTable');
+        }
+        else {
+            $('#caseMovementMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseMovement_Spr", "CaseMovement")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseRegNumber = $("#CaseRegNum").val();
+                        d.UserId = $("#UserId").val();
+                    }
+                },
+                columns: [
+                    {
+                        name: 'caseName',
+                        data: 'caseName',
+                        title: 'Дело номер',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseName + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-left",
+                        name: 'userLawUnitName',
+                        data: 'userLawUnitName',
+                        title: 'Изпратено от',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'dateSend',
+                        data: 'dateSend',
+                        title: 'Изпратено на',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                        }
+                    },
+                    {
+                        className: "text-left",
+                        name: 'acceptLawUnitName',
+                        data: 'acceptLawUnitName',
+                        title: 'Приел местоположението',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'dateAccept',
+                        data: 'dateAccept',
+                        title: 'Дата на приемане',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                        }
+                    },
+                    {
+                        className: "text-left",
+                        name: 'isActiveText',
+                        data: 'isActiveText',
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#cMovementTemplate', value);
+                        }
+                    }
+                ]
+            }).order([[2, "desc"]]);
+        }
+    }
+</script>
+
+<script id="cMovementTemplate" type="text/x-handlebars-template">
+</script>
+
+<script>
+    $(document).ready(function () {
+        if ('@Model.CaseRegNum' != '')
+            LoadTableMovement();
+    });
+
+
+    $(function () {
+        initUserAutoComplete();
+    });
+</script>

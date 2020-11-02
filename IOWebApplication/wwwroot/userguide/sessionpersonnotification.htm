@@ -1,0 +1,746 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		h5 {
+			mso-style-link: "Heading 5 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h6 {
+			mso-style-link: "Heading 6 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListBullet, li.MsoListBullet, div.MsoListBullet {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpFirst, li.MsoListBulletCxSpFirst, div.MsoListBulletCxSpFirst {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpMiddle, li.MsoListBulletCxSpMiddle, div.MsoListBulletCxSpMiddle {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpLast, li.MsoListBulletCxSpLast, div.MsoListBulletCxSpLast {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.ListParagraph2, li.ListParagraph2, div.ListParagraph2 {
+			mso-style-name: "List Paragraph2 ЕИСС";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpFirst, li.ListParagraph2CxSpFirst, div.ListParagraph2CxSpFirst {
+			mso-style-name: "List Paragraph2 ЕИССCxSpFirst";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpMiddle, li.ListParagraph2CxSpMiddle, div.ListParagraph2CxSpMiddle {
+			mso-style-name: "List Paragraph2 ЕИССCxSpMiddle";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpLast, li.ListParagraph2CxSpLast, div.ListParagraph2CxSpLast {
+			mso-style-name: "List Paragraph2 ЕИССCxSpLast";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraph2Char {
+			mso-style-name: "List Paragraph2 ЕИСС Char";
+			mso-style-link: "List Paragraph2 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			mso-style-link: "Style4 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 74.55pt;
+			text-align: justify;
+			text-indent: 0cm;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Heading4IO, li.Heading4IO, div.Heading4IO {
+			mso-style-name: "Heading 4 IO";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.4pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-style: italic;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.REQTableText, li.REQTableText, div.REQTableText {
+			mso-style-name: "REQ Table Text";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		span.Heading5Char {
+			mso-style-name: "Heading 5 Char";
+			mso-style-link: "Heading 5";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.EISSBullet, li.EISSBullet, div.EISSBullet {
+			mso-style-name: "EISS Bullet";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpFirst, li.EISSBulletCxSpFirst, div.EISSBulletCxSpFirst {
+			mso-style-name: "EISS BulletCxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpMiddle, li.EISSBulletCxSpMiddle, div.EISSBulletCxSpMiddle {
+			mso-style-name: "EISS BulletCxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpLast, li.EISSBulletCxSpLast, div.EISSBulletCxSpLast {
+			mso-style-name: "EISS BulletCxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Style4Char {
+			mso-style-name: "Style4 Char";
+			mso-style-link: Style4;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.NormalIO, li.NormalIO, div.NormalIO {
+			mso-style-name: "Normal IO";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading6Char {
+			mso-style-name: "Heading 6 Char";
+			mso-style-link: "Heading 6";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 612.0pt 792.0pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h4 style='margin-left:125.45pt;text-indent:-36.0pt'>
+			<a name="_Toc42527953">
+				1.1.1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>Таб Списък за призоваване
+			</a>
+		</h4>
+
+		<p class=MsoNormal>
+			В таб Списък за призоваване се визуализира информация за
+			страните, които ще се призоват за конкретно заседание или за които ще бъдат
+			изготвени съобщения или уведомления във връзка с конкретното заседание. На база
+			на данните в този таб се изготвя списък на призованите/уведомените лица по
+			заседанията. Има възможност за допълване на списъка за призоваване/уведомяване
+			чрез избор на бутон  <img width=161 height=27 id="Picture 141188"
+									  src="sessionpersonnotification_files/image001.jpg"> – за добавяне на участници
+			по делото и бутон<img width=184 height=27 id="Picture 141191"
+						 src="sessionpersonnotification_files/image002.jpg"> – за добавяне на съдебни
+			заседатели.
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=605 height=174 id="Picture 143011"
+				 src="sessionpersonnotification_files/image003.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон <img width=161 height=27
+											id="Picture 141199" src="sessionpersonnotification_files/image001.jpg"> има
+			възможност за добавяне или премахвания на участници по делото за изготвяне на
+			призовки/съобщения/уведомления по конкретното заседание.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=440
+				 height=186 id="Picture 141201"
+				 src="sessionpersonnotification_files/image004.jpg">
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>&nbsp;</p>
+
+		<p class=MsoNormal>
+			Добавянето на участниците става посредством маркиране или
+			размаркиране на чекбокса пред имената на съответното лице.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			<span style='line-height:115%'>
+				След
+				маркиране на необходимите участници и избор на бутон Потвърди успешно се
+				добавят лицата в списъка за призоваване по заседанието.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			Посредством бутон<img width=184 height=27 id="Picture 141200"
+							   src="sessionpersonnotification_files/image002.jpg"> има възможност за добавяне
+			на съдебни заседатели за изготвяне на призовки/съобщения/уведомления по
+			конкретното заседание.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=438
+				 height=125 id="Picture 141203"
+				 src="sessionpersonnotification_files/image005.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Добавянето на участниците става посредством маркиране или
+			размаркиране на чекбокса пред имената на съответното лице.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка: </b>За да бъдат добавени в списъка за
+			призоваване лица – участници или съдебни заседатели те трябва да са налични в
+			табове Страни и Съдебен състав по конкретното заседание.
+		</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				След маркиране на
+				необходимите съдебни заседатели и избор на бутон Потвърди успешно се добавят
+				лицата в списъка за призоваване по заседанието.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=167
+				 id="Picture 141213" src="sessionpersonnotification_files/image006.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В списъка за призоваване/уведомяване лицата са подредени по
+			подразбиране в следния ред – иницииращи, ответни страни, представляващи и
+			други. Посредством бутони Нагоре <img width=24 height=25 id="Picture 141210"
+												  src="sessionpersonnotification_files/image007.jpg">и Надолу <img width=24
+																												   height=25 id="Picture 141211" src="sessionpersonnotification_files/image008.jpg"> има
+			възможност за преподреждане на списъка за призоваване с цел определяне на
+			поредния номер в списъка за призоваване на всяко лице.
+		</p>
+
+		<p class=MsoNormal>
+			Посредством бутон Адреси <img width=36 height=33
+								 id="Picture 141224" src="sessionpersonnotification_files/image009.png">на реда
+			на съответното лице има възможност за преглед на основния адрес на лицето
+			(маркиран като Адрес за призоваване).
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=167
+				 id="Picture 141214" src="sessionpersonnotification_files/image010.jpg"> 
+		</p>
+
+		<p class=MsoNormal>
+			Този адрес може да бъде променен при необходимост
+			посредством избор на падащия списък на друг адрес при наличие на въведен такъв
+			в данните за лицето в делото.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=101
+				 id="Picture 141212" src="sessionpersonnotification_files/image011.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			<span style='line-height:115%'>
+				След
+				избор на друг адрес и избор на бутон Запис
+			</span><img width=47 height=25
+						id="Picture 143250" src="sessionpersonnotification_files/image012.jpg"><span style='line-height:115%'>
+				успешно се променя адреса за уведомяване на лицето по
+				заседанието.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Посредством избор на <span style='line-height:115%'>бутон</span> Уведомление <img width=30 height=32
+																						id="Picture 141218" src="sessionpersonnotification_files/image013.jpg"> има
+			възможност за бързо изготвяне на призовка/съобщение/уведомление на лице.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=167
+				 id="Picture 141215" src="sessionpersonnotification_files/image014.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Наличните данни (имена, адрес,
+			въведени връзки с възможност за избор) за лицето автоматично се попълват във
+			формата за създаване на призовка/съобщение/уведомление.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>&nbsp;</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=290
+				 id="Picture 141216" src="sessionpersonnotification_files/image015.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			За изготвяне на
+			призовка/съобщение/уведомление се следват стъпките описани в т.ч. 8.1.4.5 Таб
+			Уведомления.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След изготвяне на всички
+			призовки/съобщения/уведомления за лицата от списъка за призоваване (през
+			бързата връзка от бутон Уведомление <img width=30 height=32 id="Picture 141217"
+												  src="sessionpersonnotification_files/image013.jpg"> в таб Списък за призоваване
+			или от таб Уведомления) може да се зададе множествен печат на
+			призовки/съобщения/уведомления.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=191
+				 id="Picture 141205" src="sessionpersonnotification_files/image016.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Посредством бутон  <img width=151 height=32 id="Picture 141204"
+							  src="sessionpersonnotification_files/image017.jpg"> в таб Списък за призоваване
+			се задава множествен печат на всички изготвени призовки/съобщения/уведомления
+			по заседанието.  
+		</p>
+
+		<p class=MsoNormal>
+			Генериране на списъка за призоваване става посредством избор
+			на бутон <img width=89 height=31 id="Picture 143013"
+					src="sessionpersonnotification_files/image018.jpg">. След генериране на файла
+			той е достъп за изтегляне от потребителя посредством избор на бутон <img width=79 height=31 id="Picture 143014"
+																			src="sessionpersonnotification_files/image019.jpg">. Веднъж генериран файла той
+			може да бъде изтеглен многократно. При наличие на редакции в списъка за
+			призоваване/уведомяване е необходимо файлът да бъде генериран отново, след
+			което той става активен за изтегляне през бутон Изтегли.
+		</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

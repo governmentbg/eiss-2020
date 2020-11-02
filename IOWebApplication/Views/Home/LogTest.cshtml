@@ -1,0 +1,39 @@
+﻿@model IOWebApplication.Models.LogTestModel
+<div class="row">
+    <div class="col-lg-6 col-md-8 col-sm-12">
+        <div class="box">
+            <div class="box-body">
+                @using (Html.BeginForm())
+                {
+                    <input asp-for="ID" type="hidden" />
+                    @Html.AntiForgeryToken()
+                    <div id="saveContainer">
+                        @await Html.PartialAsync("_SaveFormContent", "#saveContainer")
+
+                        <fieldset>
+                            <legend>
+                                TEST
+                            </legend>
+                            @Html.ValidationSummary()
+                            @Html.EditorFor(x => x.TenantName)
+                            @Html.EditorFor(x => x.Email)
+                            @Html.EditorFor(x => x.FullName)
+
+
+                            <div class="form-group">
+                                <input type="submit" class="btn btn-success" value="Запис" />
+
+                                @if (Model.ID > 0)
+                                {
+                                    <div class="pull-right">
+                                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.ID.ToString() })
+                                    </div>
+                                }
+                            </div>
+                        </fieldset>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

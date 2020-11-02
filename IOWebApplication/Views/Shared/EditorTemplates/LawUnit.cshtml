@@ -1,0 +1,46 @@
+﻿@model int?
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_lawunit";
+    var label = (string)ViewData["label"];
+    var lawUnitType = 0;
+    if (ViewData["lawUnitType"] != null)
+    {
+        lawUnitType = (int)ViewData["lawUnitType"];
+    }
+    var lawUnitTypes = (string)ViewData["lawUnitTypes"] ?? "";
+    var courtId = 0;
+    if (ViewData["courtId"] != null)
+    {
+        courtId = (int)ViewData["courtId"];
+    }
+
+    var addClass = "";
+    if (string.IsNullOrEmpty(label))
+    {
+        addClass = "form-group";
+    }
+
+    var selectMode = "current";
+    if(ViewData["selectMode"] != null)
+    {
+        selectMode = (string)ViewData["selectMode"];
+    }
+}
+
+<div class="lawunit-container @addClass" data-lawunittype="@lawUnitType" data-selectmode="@selectMode" data-lawunittypes="@lawUnitTypes" data-courtid="@courtId">
+    @if (label != "none")
+    {
+        if (string.IsNullOrEmpty(label))
+        {
+            <label asp-for="@Model" class="control-label"></label>
+        }
+        else
+        {
+            <label class="control-label">@label</label>
+        }
+    }
+    <input id="@fieldName" class="form-control lawunit-control" autocomplete="false" placeholder="Въведете ЕГН или част от името на лицето" />
+    <input asp-for="@Model" type="hidden" class="lawunit-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

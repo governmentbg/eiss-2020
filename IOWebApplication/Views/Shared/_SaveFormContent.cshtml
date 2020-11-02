@@ -1,0 +1,18 @@
+﻿@model string
+@{
+    string containerName = ViewData["hfContainer"] != null ? (string)ViewData["hfContainer"] : "hfContainer";
+}
+<input type="hidden" id="@containerName" name="@containerName" />
+
+<script type="text/javascript">
+    $(function () {
+        $("#@containerName").parents('form:first').submit(function (e) {
+            SaveContent();
+        });
+    });
+
+    function SaveContent() {
+        $("#@containerName").val(GetEncodedContent('@Model', '@(ViewBag.Title ?? "Съдържание")'));
+    }
+</script>
+

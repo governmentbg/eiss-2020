@@ -1,0 +1,149 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@model CourtLawUnitFilter
+
+@{
+    ViewData["Title"] = "Справка за длъжностно лице";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1,5,6" })</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.PeriodTypeId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function ReloadDatatable()
+        {
+            refreshTable('#mainTable');
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSpr")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.LawUnitId = $("#LawUnitId").val();
+                        d.DateFrom = $("#DateFrom").val();
+                        d.DateTo = $("#DateTo").val();
+                        d.PeriodTypeId = $("#PeriodTypeId").val();
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Длъжностно лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'periodTypeLabel',
+                        data: 'periodTypeLabel',
+                        title: 'Вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'courtLabel',
+                        data: 'courtLabel',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'courtOrganizationName',
+                        data: 'courtOrganizationName',
+                        title: 'Структура',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'lawUnitPositionName',
+                        data: 'lawUnitPositionName',
+                        title: 'Позиция',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+
+    </script>
+
+    <script>
+        initLawUnit();
+    </script>
+}

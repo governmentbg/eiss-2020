@@ -1,0 +1,22 @@
+﻿@model DocumentPersonVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@{
+    var containerId = Guid.NewGuid().ToString();
+}
+<div class="dynamic-form document-address-list" data-container="@containerId">
+    @for (int i = 0; i < Model.Addresses.Count(); i++)
+    {
+        Model.Addresses[i].PersonIndex = Model.Index;
+        Model.Addresses[i].Index = i;
+        ViewData.TemplateInfo.HtmlFieldPrefix = Model.Addresses[i].GetPath;
+
+        <partial name="_DocumentPersonAddressItem" model="@Model.Addresses[i]" />
+        ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+    }
+    <div id="@containerId"></div>
+    @if (Model.CanChange)
+    {
+        <a href="#" onclick="autoCloseOthers(this); return false;" class="add-item add-doc-address btn btn-xs btn-success" data-container="@containerId" data-url="@Url.Action("NewItem_DocumentPersonAddress", new { personIndex = Model.Index })" data-index="@Model.Addresses.Count()"><i class="fa fa-plus"></i> Добави адрес</a>
+        <a href="#" onclick="selectAddress(this); return false;" class="btn btn-xs btn-def" data-container="@containerId"><i class="fa fa-search"></i> Избери адрес</a>
+    }
+</div>

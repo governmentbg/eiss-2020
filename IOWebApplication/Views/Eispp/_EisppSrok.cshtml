@@ -1,0 +1,23 @@
+﻿@model EisppSrok
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@using IOWebApplication.Infrastructure.Extensions
+@inject IEisppRulesService rulesService
+@{
+    var eisppRule = ViewData.ModelMetadata.GetEisppRuleElement(ViewData.TemplateInfo.HtmlFieldPrefix);
+    (var ruleIds, var flags) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppRule);
+}
+@if (flags > 0)
+{
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Срок за обжалване</legend>
+        @Html.HiddenFor(x => x.SrokId)
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.SrokType, "EisppDropDown", null, new { Ddl = ViewBag.SrokTypeDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.Days, "Int32")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.Weeks, "Int32")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.Months, "Int32")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.Years, "Int32")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.SrokDateVM, "EisppDateTime")</div>
+        </div>
+    </fieldset>
+}

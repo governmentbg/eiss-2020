@@ -1,0 +1,27 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    var caseId = ViewBag.caseId;
+    var caseSessionId = ViewBag.caseSessionId;
+    if (caseSessionId == null)
+    {
+        ViewData["Title"] = "Съдебен състав по дело - заседатели " + ViewBag.casenumber;
+    }
+    else
+    {
+        ViewData["Title"] = "Съдебен състав по заседание - заседатели " + ViewBag.casenumber;
+    }
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <partial name="../CaseLawUnit/_CaseLawUnit.cshtml" model="@new CaseMainDataVM { Id = caseId, CaseSessionId = caseSessionId} " />
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group row col-md-12">
+        <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@caseId" class="btn btn-danger">Назад</a>
+    </div>
+</div>

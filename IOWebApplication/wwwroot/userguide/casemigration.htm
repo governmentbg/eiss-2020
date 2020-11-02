@@ -1,0 +1,1222 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: SimSun;
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
+
+		@font-face {
+			font-family: "\@SimSun";
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		h5 {
+			mso-style-link: "Heading 5 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListBullet, li.MsoListBullet, div.MsoListBullet {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpFirst, li.MsoListBulletCxSpFirst, div.MsoListBulletCxSpFirst {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpMiddle, li.MsoListBulletCxSpMiddle, div.MsoListBulletCxSpMiddle {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpLast, li.MsoListBulletCxSpLast, div.MsoListBulletCxSpLast {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-style: italic;
+		}
+
+		span.Heading5Char {
+			mso-style-name: "Heading 5 Char";
+			mso-style-link: "Heading 5";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.ListParagraph2, li.ListParagraph2, div.ListParagraph2 {
+			mso-style-name: "List Paragraph2 ЕИСС";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpFirst, li.ListParagraph2CxSpFirst, div.ListParagraph2CxSpFirst {
+			mso-style-name: "List Paragraph2 ЕИССCxSpFirst";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpMiddle, li.ListParagraph2CxSpMiddle, div.ListParagraph2CxSpMiddle {
+			mso-style-name: "List Paragraph2 ЕИССCxSpMiddle";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpLast, li.ListParagraph2CxSpLast, div.ListParagraph2CxSpLast {
+			mso-style-name: "List Paragraph2 ЕИССCxSpLast";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraph2Char {
+			mso-style-name: "List Paragraph2 ЕИСС Char";
+			mso-style-link: "List Paragraph2 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 74.55pt;
+			text-align: justify;
+			text-indent: 0cm;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Heading4IO, li.Heading4IO, div.Heading4IO {
+			mso-style-name: "Heading 4 IO";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.4pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.EISSBullet, li.EISSBullet, div.EISSBullet {
+			mso-style-name: "EISS Bullet";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpFirst, li.EISSBulletCxSpFirst, div.EISSBulletCxSpFirst {
+			mso-style-name: "EISS BulletCxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpMiddle, li.EISSBulletCxSpMiddle, div.EISSBulletCxSpMiddle {
+			mso-style-name: "EISS BulletCxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpLast, li.EISSBulletCxSpLast, div.EISSBulletCxSpLast {
+			mso-style-name: "EISS BulletCxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h4 style='margin-left:125.45pt;text-indent:-36.0pt'>
+			<a name="_Toc42527908">
+				1.1.1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>Бутон Движение
+			</a>
+		</h4>
+
+		<p class=MsoNormal>
+			Посредством бутон Движение <img width=67 height=26
+								   id="Picture 143530" src="casemigration_files/image001.jpg">има възможност за
+			извършване на действия и преглед на справки за движения на делото.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=267
+				 id="Picture 143531" src="casemigration_files/image002.jpg" alt=движение>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+21.6pt'>
+			Функционалността за управление на движението на делото дава възможност
+			за проследяване на делото при движение между различните съдилища и между
+			съдебните инстанциите.
+		</p>
+
+		<p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;text-indent:0cm'>
+			<img width=605 height=166 id="Picture 143267"
+				 src="casemigration_files/image003.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Управлението на връзките между делата при движението им
+			между съдилищата или между инстанциите става чрез последователно свързване
+			между изпращащия и приемащия съд /съдебна инстанция.
+		</p>
+
+		<p class=MsoNormal>
+			За движенията, които предизвикват образуване на дело в друг
+			съд/инстанция, за свързване на дела при движение между съдилищата е необходимо
+			при изпращане на делото от един съд на друг в изпращащия съд да се създаде
+			изпращащо движение. При регистриране на входящия иницииращ документ в
+			получаващия съд в секция Свързано дело се посочва делото на изпращащия съд.
+			След образуване на дело в получаващия съд системата визуализира предупредително
+			съобщение, че двете дела ще бъдат свързани.
+		</p>
+
+		<p class=MsoNormal>
+			Връзките между образуваните дела в ЕИСС става чрез
+			последователно свързване и създаване на единични връзки между делата. Всяка
+			следващо движение наследява свързаните дела, обвързани при предходно създаване
+			на движение.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Пример:</b> Първоинстанционно дело се посочва като
+			свързано дело на въззивна инстанция при регистриране на иницииращ документ във
+			въззивната инстанция, в секция Свързано дело. Само въззивното дело се посочва
+			като свързано дело на касационната инстанция при регистриране на иницииращ
+			документ във касационната инстанция, в секция Свързано дело, без да е
+			необходимо на касационната инстанция да се посочва първоинстанционното дело.
+			Връзката се наследява от предходното (въззивно) дело.
+		</p>
+
+		<p class=MsoNormal>
+			След връщане след инстанционна проверка, при регистриране на
+			съпровождащия документ по съответното върнато дело, в секция Свързано дело се
+			посочва делото на текущия съд.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'><span style='font-family:"Calibri",sans-serif'>&nbsp;</span></p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527909">
+				1.1.1.1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Изпращане на дело
+			</a>
+		</h5>
+
+		<p class=MsoNormal>
+			За създаване на ново движение за изпращане на делото се
+			избира бутон <img width=71 height=32 id="Picture 143532"
+						src="casemigration_files/image004.jpg"> и се зарежда екран за въвеждане на
+			данни, в зависимост от избрания вид движение:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=144 id="Picture 143534"
+				 src="casemigration_files/image005.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Вид движение – избира се от номенклатура вида на движението - <b>
+				Изпращане
+				в равен по степен съд по подсъдност
+			</b>, <b>
+				Изпращане в по-висша инстанция за
+				обжалване
+			</b>, <b>
+				Изпращане в по-висша инстанция за определяне на компетентен
+				съд
+			</b>, <b>Изпращане в по-висша инстанция при масов отвод</b>, <b>
+				Изпращане в
+				подчинен съд по компетентност, Изпращане за послужване
+			</b> и <b>
+				Връщане на
+				делото за доразследване на прокуратурата
+			</b>;
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=329
+				 height=156 id="Picture 143536" src="casemigration_files/image006.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Получател на делото – избира се посредством маркиране на радиобутон за
+			насочване – към съд или към институция (в зависимост от конкретното движение):
+		</p>
+
+		<p class=ListParagraph2CxSpFirst style='margin-left:92.15pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>При маркиране на радиобутон Към съд, посредством въвеждане на
+			част от наименование на съд в поле <b>Насрещен съд</b> се избира съд получател;
+		</p>
+
+		<p class=ListParagraph2CxSpMiddle style='margin-left:92.15pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>При маркиране на радиобутон Към институция, в поле <b>
+				Насрещна
+				институция
+			</b> посредством избор от падащ списък се избира типа на
+			институцията, а посредством въвеждане на част от наименование на институция от
+			избрания тип в поле Институция се избира институция получател.
+		</p>
+
+		<p class=ListParagraph2CxSpLast style='margin-left:92.15pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Обжалван акт (приложимо за движение Изпращане в по-висша
+			инстанция за обжалване) – избира се от падащ списък с актове по делото, които
+			са маркирани с атрибут „Подлежи на обжалване“.
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Описание – въвеждане на допълнителна информация. Поле с незадължителен
+			характер.
+		</p>
+
+		<p class=MsoCaption style='text-indent:0cm'>
+			<b>Забележка: </b>Движение Връщане
+			на делото за доразследване на прокуратурата има роля на изпращащо движение и се
+			създава чрез попълване на приложимите по-горе полета.
+		</p>
+
+		<p class=MsoCaption style='margin-top:3.0pt;margin-right:0cm;margin-bottom:
+0cm;margin-left:54.0pt;margin-bottom:.0001pt;text-indent:-18.0pt;line-height:
+150%'>
+			<span style='font-style:normal'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>&nbsp;
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на данните се избира бутон Запис <img width=48 height=23 id="Picture 143537" src="casemigration_files/image007.jpg">,
+			след което движението е успешно създадено.
+		</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Създаване на писмо
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+21.6pt'>
+			<span style='line-height:115%'>
+				При избор на бутон Създаване на писмо се
+				отваря екран за попълване на данни:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+21.6pt'><span style='line-height:115%'>&nbsp;</span></p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			<img width=604 height=130 id="Picture 143538" src="casemigration_files/image008.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			<span style='line-height:115%'>&nbsp;</span>
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Вид документ – избира се документа, който се изпраща – по дела;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Основен вид документ - от падащото меню се избира основен вид документ,
+			който се изпраща;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Точен вид на документа – потребителят избира точен вид документ, който е
+			в пряка зависимост от избран основен вид документ;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Автор – автоматично е зададен потребителят изготвящ документа;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Статус – при изготвяне на документа, той е в статус проект;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Описание – при необходимост се вписва допълнителна информация.
+		</p>
+
+		<p class=EISSStyle5>&nbsp;</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=605 height=154 id="Picture 143539" src="casemigration_files/image009.jpg">
+		</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Изготвяне на документ
+		</p>
+
+		<p class=MsoNormal>
+			Системата дава възможност за изготвяне на писмо по
+			предварително създадена в системата бланка или чрез текстов редактор чрез
+			въвеждане на текст.
+		</p>
+
+		<p class=MsoNormal>
+			Изготвяне на писмо към движение по дело става посредством
+			избор на бутон Изготвяне на документ. Отваря се текстов редактор за въвеждане
+			на писмо в свободен формат.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=461
+				 height=186 id="Picture 143540" src="casemigration_files/image010.jpg">
+		</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Регистриране на писмо (6.2 Регистриране на изходящ документ)
+		</p>
+
+		<p class=MsoNormal style='text-indent:17.85pt;line-height:150%'>
+			След избор на
+			бланка за писмо или въвеждане на текст в текстовия редактор, се избира бутон
+			Регистриране на документ, след което системата генерира писмото.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=605 height=190 id="Picture 143541" src="casemigration_files/image011.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В екрана се въвеждат последователно необходимо данни (в
+			случай, че не са автоматично попълнение при изготвяне  на изходящото писмо) в
+			таб Основни данни и свързани лица в таб Свързани лица чрез въвеждане на нови лица
+			или избор на свързани лица и институции по делото, по което се генерира писмо,
+			данни в таб Свързани документи и/или Свързани дела на външни институции.
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Запис<img width=47 height=25
+										  id="Picture 143542" src="casemigration_files/image012.jpg"> се генерира
+			регистрационен номер и дата на писмото, и се генерира файл с писмо, който е
+			достъпен за последващ преглед.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm;line-height:150%'>
+			<img width=604
+				 height=221 id="Picture 143543" src="casemigration_files/image013.jpg">
+		</p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527910">
+				1.1.1.1.2<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Редакция на движение
+			</a>
+		</h5>
+
+		<p class=MsoNormal>
+			<span style='color:black'>
+				Редакция на движение е възможно до
+				създаване приемащо движение на насрещния съд. Редакция на движение става
+				посредством избор на бутон Редакция
+			</span><img width=35 height=30
+						id="Picture 143544" src="casemigration_files/image014.jpg"><span style='color:black'> към съответното движение в екран Движение на дело.</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span style='line-height:115%;
+color:black'>&nbsp;</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span style='line-height:115%;
+color:black'>
+				<img width=605 height=128 id="Picture 143545"
+					 src="casemigration_files/image015.png">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			При редакция са достъпни за редакция всички полета в екран
+			за създаване на ново движение.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=158
+				 id="Picture 143546" src="casemigration_files/image016.jpg">
+		</p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527911">
+				1.1.1.1.3<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Приемане на движение на дела
+			</a>
+		</h5>
+
+		<p class=EISSBullet>
+			<span style='font-family:Symbol;color:black'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Приемане на дела при образуване на дело в приемащия съд – при<span style='color:black'> движения за </span><b>
+				Изпращане в равен по степен съд по
+				подсъдност
+			</b>, <b>
+				Изпращане в по-висша инстанция за определяне на компетентен
+				съд
+			</b>, <b>Изпращане в по-висша инстанция при масов отвод</b>, <b>
+				Изпращане в
+				подчинен съд по компетентност
+			</b>, <b>
+				Изпращане в по-висша инстанция за
+				обжалване
+			</b>
+		</p>
+
+		<p class=MsoNormal>
+			<span style='color:black'>
+				При получаване на дело в насрещен
+				съд, при регистриране на входящия иницииращ документ за образуване на дело в
+				приемащия съд в секция Свързано дело задължително се посочва делото на
+				изпращащия съд. При образуване на делото в приемащия съд в екран с данни за
+				образуване на делото се визуализира предупредително съобщение, че делата ще
+				бъдат свързани.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=319
+				 id="Picture 143547" src="casemigration_files/image017.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			<span style='color:black'>
+				След образуване на делото в
+				приемащия съд, приемащото движение се създава автоматично и се създава връзка
+				между двете дела, видима в електронните им папки.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=118
+				 id="Picture 143548" src="casemigration_files/image018.jpg">
+		</p>
+
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Приемане на дела при образуване на дело в приемащия съд – след
+			движение за Връщане на делото за доразследване в прокуратурата
+		</p>
+
+		<p class=MsoNormal>
+			<span style='color:black'>
+				При получаване на дело в текущия
+				съд след движение Връщане на делото за доразследване в прокуратурата, при
+				регистриране на входящия иницииращ документ за образуване на дело след доразследване
+				в текущия съд в секция Свързано дело задължително се посочва делото, което е
+				върнато за доразследване на прокуратурата, а в поле ЕИСПП номер на НП –
+				задължително ЕИСПП номера на върнатото за доразследване дело. При образуване на
+				делото в текущия съд в екран с данни за образуване на делото се визуализира
+				предупредително съобщение, че делата ще бъдат свързани.
+			</span>
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=524 height=718 id="Picture 143552" src="casemigration_files/image019.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			<span style='color:black'>
+				След образуване на делото в текущия
+				съд, приемащото движение се създава автоматично и се създава връзка между двете
+				дела, видима в електронните им папки.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=115
+				 id="Picture 143558" src="casemigration_files/image020.jpg">
+		</p>
+
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Приемане на дела изпратени за послужване в приемащия съд – след
+			движение за Изпращане за послужване
+		</p>
+
+		<p class=MsoNormal>
+			След изпращане на делото от изпращащия съд посредством
+			движение Изпращане за послужване, в приемащия съд трябва да се извършват
+			действия за изтегляне на делото за послужване. За да бъда изтеглено едно дело
+			за послужване в получаващия съд, той трябва е отбелязан като насрещен съд при
+			създаване на изпращащото движение.
+		</p>
+
+		<p class=MsoNormal>
+			Приемане на дело за послужване в получаващия съд става
+			посредством избор на оранжевия бутон Приемане <img width=64 height=18
+														 id="Picture 143526" src="casemigration_files/image021.jpg"> в екран за движение
+			на делото, във връзка с което се изпраща делото за послужване (делото, за което
+			се изпраща за послужване).
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=104
+				 id="Picture 143560" src="casemigration_files/image022.jpg"> 
+		</p>
+
+		<p class=MsoNormal>Въвеждат се необходимите данни:</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=150
+				 id="Picture 143570" src="casemigration_files/image023.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Изпратено от съд – избира се съд, който е изпратил делото за послужване;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Изпратено дело – избира се дело, което е изпратено за послужване. При
+			въвеждане на минимум три последователни символа, системата автоматично търси и
+			предлага за избор от дела, които да се приемат за послужване;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Забележка по послужване – въвеждане на допълнителна информация. Полето
+			не е със задължителен характер.
+		</p>
+
+		<p class=MsoCaption style='text-indent:0cm'>
+			<b>Забележка: </b>Едно дело може да
+			бъде изтеглено след изпращане за послужване само  в едно дело и да бъде
+			изтеглено само при наличие на изпращащо движение.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на данните се избира бутон Запис <img width=48 height=23 id="Picture 143571" src="casemigration_files/image024.jpg">,
+			след което движението е успешно създадено.
+		</p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527912">
+				1.1.1.1.4<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Връщане на дело
+			</a>
+		</h5>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+21.6pt'><span style='color:black;background:yellow'>&nbsp;</span></p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			<span style='color:black'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span><span style='color:black'>
+				Връщане на дела към изпращащия съд –
+				при движения за
+			</span><b>Връщане с резултат от инстанционна проверка</b>, <b>
+				Връщане
+				в подчинен съд за администриране
+			</b> и <b>Връщане след послужване</b>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+21.6pt'>
+			След образуване на делото в приемащия съд или след послужване и
+			извършване на всички необходими действия в текущия съд/инстанция, се създава
+			движение за връщане към изпращащия съд (първоизточника на делото).
+		</p>
+
+		<p class=MsoNormal>
+			За създаване на ново движение за връщане на делото се избира
+			бутон <img width=71 height=32 id="Picture 143400"
+					src="casemigration_files/image025.jpg"> и се зарежда екран за въвеждане на
+			данни, в зависимост от избрания вид движение:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=182
+				 id="Picture 143521" src="casemigration_files/image026.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Вид движение – избира се от номенклатура вида на движението – <b>
+				Връщане
+				с резултат от инстанционна проверка, Връщане в подчинен съд за администриране и
+				Връщане след послужване
+			</b>
+		</p>
+
+		<p class=EISSStyle5>&nbsp;</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=379
+				 height=150 id="Picture 143572" src="casemigration_files/image027.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Дело, подлежащо на връщане, в което се избира делото което подлежи на
+			връщане (например от Окръжен съд към Районен съд след инстанционна проверка се
+			връща делото на Районния съд)
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Получател на делото – избира се посредством маркиране на радиобутон за
+			насочване – към съд или към институция (в зависимост от конкретното движение):
+		</p>
+
+		<p class=ListParagraph2CxSpFirst style='margin-left:92.15pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>При маркиране на радиобутон Към съд, посредством въвеждане на
+			част от наименование на съд в поле <b>Насрещен съд</b> се избира съд получател;
+		</p>
+
+		<p class=ListParagraph2CxSpLast style='margin-left:92.15pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>При маркиране на радиобутон Към институция, в поле <b>
+				Насрещна
+				институция
+			</b> посредством избор от падащ списък се избира типа на
+			институцията, а посредством въвеждане на част от наименование на институция от
+			избрания тип в поле Институция се избира институция получател.
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			<span lang=EN-US>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Описание – въвеждане на допълнителна информация. <span lang=EN-US>Поле с незадължителен характер.</span>
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на данните се избира бутон Запис <img width=48 height=23 id="Picture 143520" src="casemigration_files/image028.jpg">,
+			след което движението е успешно създадено.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=122 id="Picture 143523"
+				 src="casemigration_files/image029.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			<span style='color:black'>
+				При получаване на дело в насрещния
+				съд (изпращащия съд, на който се връща делото), при регистриране на входящия
+				съпровождащ документ в секция Свързано дело задължително се посочва делото на
+				текущия съд. При връщане на делото е необходимо да се приеме връщащото
+				движение.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span style='color:black'>
+				<img width=604 height=109 id="Picture 143573" src="casemigration_files/image030.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			При приемане на движението системата извежда предупредително
+			съобщение.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=250
+				 height=168 id="Picture 143574" src="casemigration_files/image031.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			С натискането на бутон Потвърди от потребител, той изцяло
+			приема движението. При натискане на бутон Отказ, състоянието на движението
+			остава непроменено.
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Приеми се създава автоматично приемащото
+			движение.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=120
+				 id="Picture 143575" src="casemigration_files/image032.jpg">
+		</p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527913">
+				1.1.1.1.5<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Обединяване на дела
+			</a>
+		</h5>
+
+		<p class=MsoNormal>
+			<span style='color:black'>Обединяването</span><span style='line-height:115%;color:black'>
+				на дела се извършва чрез бутон движения
+				от основния екран на Делото:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span style='line-height:115%;
+color:black'>
+				<img width=604 height=105 id="Picture 143576"
+					 src="casemigration_files/image033.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:17.85pt;line-height:150%'>
+			<span style='line-height:150%;color:#323E4F'>Посредством избор на бутон Обединяване</span>
+			<img width=101 height=33 id="Picture 143577"
+				 src="casemigration_files/image034.jpg">се въвеждат необходимите данни:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm;line-height:150%'>
+			<img width=605
+				 height=152 id="Picture 143578" src="casemigration_files/image035.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Текущо дело – извежда се текущото дело, към което ще се присъедини
+			другото дело;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Дело, което ще се обедини с текущото – избира се дело, което да се
+			присъедини към текущото дело;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Забележка по обединяването – въвежда се допълнителна информация при
+			необходимост. Полето не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на данните се избира бутон Запис, с което
+			делата са успешно обединени.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=107
+				 id="Picture 143579" src="casemigration_files/image036.jpg">
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

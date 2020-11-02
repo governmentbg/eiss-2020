@@ -1,0 +1,136 @@
+﻿@model string
+@{
+    string leftId = Model + "_Left";
+    string rightId = Model + "_Right";
+    string btnId = Model + "_MoveSelectedRight";
+    string percentDiv = Model + "_PercentDiv";
+    string percent = Model + "_Percent";
+    string percentVal = Model + "_Percent_val";
+}
+
+<div class="col-sm-5">
+    <select id="@leftId" class="form-control" multiple="multiple"></select>
+</div>
+<div class="col-sm-2">
+    <div id="@percentDiv" class="form-group ms-transfer-all-percent">
+        <label class="control-label" for="@percent">Процент натовареност</label>
+        <input class="form-control valid" type="text" id="@percent" name="@percent">
+        <span class="text-danger field-validation-valid" id="@percentVal"></span>
+    </div>
+    <button type="button" id="@btnId" class="btn btn-success ms-transfer-button">
+        <i class="fa fa-arrow-right"></i>
+    </button>
+</div>
+<div class="col-sm-5">
+    <div id="@rightId" class="ms-transfer-right">
+    </div>
+</div>
+
+<script id="templatePercentRight" type="text/x-handlebars-template">
+    {{#each this.data}}
+    <div class="ms-transfer-right-item">
+        <div class="ms-transfer-right-item-text ms-transfer-width-percent">
+            {{this.text}}
+        </div>
+        <div class="ms-transfer-right-item-buttons">
+            <div class="ms-transfer-right-item-percent">
+                <input id="percent{{this.id}}" type="text" class="ms-transfer-right-item-percent-input form-control" value="{{this.percent}}">
+                <span class="text-danger field-validation-valid ms-transfer-right-item-percent-valid" id="percent{{this.id}}_val"></span>
+            </div>
+            <div class="ms-transfer-right-item-button">
+                <a id="delete{{this.id}}" class="btn btn-danger ms-transfer-right-delete"><i class="fa fa-trash"></i></a>
+            </div>
+        </div>
+    </div>
+    {{/each}}
+</script>
+<script id="templateRight" type="text/x-handlebars-template">
+    {{#each this.data}}
+    <div class="ms-transfer-right-item">
+        <div class="ms-transfer-right-item-text ms-transfer-width-nopercent">
+            {{this.text}}
+        </div>
+        <div class="ms-transfer-right-item-button">
+            <a id="delete{{this.id}}" class="btn btn-danger ms-transfer-right-delete"><i class="fa fa-trash"></i></a>
+        </div>
+    </div>
+    {{/each}}
+</script>
+<script id="templatePercentRightEdit" type="text/x-handlebars-template">
+    {{#each this.data}}
+    <div class="ms-transfer-right-item">
+        <div class="ms-transfer-right-item-text ms-transfer-width-percent">
+            <div style="display:block">
+                {{this.text}}
+            </div>
+            <div style="display:block">
+                {{this.comment}}
+            </div>
+        </div>
+        <div class="ms-transfer-right-item-buttons">
+            <div class="ms-transfer-right-item-percent">
+                <input id="percent{{this.id}}" type="text" class="ms-transfer-right-item-percent-input form-control" readonly value="{{this.percent}}">
+             </div>
+            <div class="ms-transfer-right-item-button">
+                <a id="edit{{this.id}}" class="btn btn-warning ms-transfer-right-edit"><i class="fa fa-edit"></i></a>
+            </div>
+        </div>
+    </div>
+    {{/each}}
+</script>
+<script id="templatePercentRightModal" type="text/x-handlebars-template">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Затвори"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">{{this.text}}</h4>
+            </div>
+            <div class="modal-body">
+                <form id="formEditModal" name="formEditModal">
+                    <input id="id_modal" type="hidden" value="{{this.id}}">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="percent_modal" class="control-label">Процент</label>
+                                <input id="percent_modal" name="percent_modal" class="form-control" type="number" value="{{this.percent}}">
+                                <span class="text-danger field-validation-valid" id="percent_modal_span"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 col-lg-8">
+                            <div class="form-group">
+                                <label for="reason_modal" class="control-label">Причина</label>
+                                <input id="reason_modal" name="reason_modal" class="form-control" type="text" value="{{this.reason}}" data-val="true" data-val-required="Въведете причина">
+                                <span class="text-danger field-validation-valid" id="reason_modal_span"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-6">
+                            <button type="button" id="button_save_modal" class="btn btn-success">
+                                <i class="fa fa-edit"><span class="hidden-sm hidden-xs"> Запис</span></i>
+                            </button>
+                            <button type="button" id="button_delete_modal" class="btn btn-danger">
+                                <i class="fa fa-trash"><span class="hidden-sm hidden-xs"> Изтриване</span></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</script>
+
+
+<script id="templateErrMultiTransfer" type="text/x-handlebars-template">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger no-margin-bottom">
+                <button data-dismiss="alert" class="close">×</button>
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                {{this}}
+            </div>
+        </div>
+    </div>
+</script>

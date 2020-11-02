@@ -1,0 +1,79 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Identity
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseSessionCalendarFilterVM
+@{ 
+    string calendar_addr = Url.Action("ListDataCaseSessionHallUseCalendarSpr", "CaseSession");
+}
+<link href="~/lib/fullcalendar/fullcalendar.min.css" rel="stylesheet" />
+<link href="~/lib/fullcalendar/fullcalendar.print.css" rel="stylesheet" media="print" />
+<script src="~/lib/fullcalendar/lib/moment.min.js"></script>
+<script src="~/lib/fullcalendar/fullcalendar.min.js"></script>
+<script src="~/lib/fullcalendar/bg.js"></script>
+<div>
+    @*<div class="box-header with-border ">
+        <h3 class="box-title">Календар на заседания</h3>
+    </div>*@
+    <div class="box-body">
+        <div id="calendar" class="calendar-person"></div>
+    </div>
+</div>
+
+<script>
+
+    $(function () {
+       $('#calendar').fullCalendar({
+            header: {
+                left: 'prev,next',
+                center: 'title',
+               right: 'month,listWeek,agendaDay'
+            },
+            editable: true,
+            eventLimit: true, // allow "more" link when too many events
+            timezone: "local",
+           defaultView: userSettings.CalendarStyle,
+            weekNumbers: false,
+            eventRender: function (eventObj, $el) {
+                $el.popover({
+                    title: eventObj.pop_title,
+                    content: eventObj.pop_content,
+                    trigger: 'hover',
+                    placement: 'top',
+                    container: 'body'
+                });
+            },
+            events: {
+                url: '@calendar_addr',
+                type: 'POST',
+                data: {
+                    courtHallId: '@Model.CourtHallId',
+                    dateFrom: '@Model.DateFrom?.ToString("dd.MM.yyyy")',
+                    dateTo: '@Model.DateTo?.ToString("dd.MM.yyyy")'
+                },
+                error: function () {
+                    $('#script-warning').show();
+                }
+           },
+           timeFormat: 'HH:mm',
+           viewRender: (function () {
+               var lastViewName;
+               return function (view) {
+                   var view = $('#calendar').fullCalendar('getView');
+                   //console.log(view);
+                   //alert('The new title of the view is ' + view.type);
+                   if (view.type != userSettings.CalendarStyle)
+                   updateUserSetting('@UserSettingsModel.Set.CalendarStyle', view.type);
+
+               }
+           })(),
+
+        });
+    });
+</script>
+<style>
+    /*#calendar {
+                background-color: #fff;
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 5px;
+            }*/
+</style>

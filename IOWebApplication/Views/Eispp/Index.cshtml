@@ -1,0 +1,317 @@
+﻿@model EisppEventFilterVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+@{
+    ViewData["Title"] = "Събития ЕИСПП";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<form id="formFilter" asp-action="Filter" method="post" class="quick-submit">
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.CourtId)
+    <div class="row">
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.EventTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.EventDateFrom)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.EventDateTo)
+        </div>
+        @if (Model.CaseId <= 0)
+        {
+            <div class="col-md-2">
+                @Html.EditorFor(x => x.CaseRegNumber)
+            </div>
+        }
+    </div>
+
+    @if (Model.CaseId > 0)
+    {
+        <div class="row">
+            <div class="col-md-2">
+                @Html.EditorFor(x => x.LinkType, "GenericDropDown")
+            </div>
+            <div class="col-md-2 act-protocol">
+                @Html.EditorFor(x => x.ActDateFrom)
+            </div>
+            <div class="col-md-2 act-protocol">
+                @Html.EditorFor(x => x.ActDateTo)
+            </div>
+            <div class="col-md-2 act-protocol">
+                @Html.EditorFor(x => x.SessionActId, "GenericDropDown")
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-2 pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadEventItems()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <hr>
+    </div>
+</form>
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a href="#" onclick="AddEisppEvent()" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        if ($('#filterJson').val() == "") {
+                            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+                        }
+                        d.filterData = JSON.parse($('#filterJson').val());
+                    }
+                },
+                columns: [
+                    {
+                        name: 'id',
+                        data: 'id',
+                        title: 'ИД',
+                        sortable: true,
+                    },
+                    {
+                        name: 'eventDate',
+                        data: 'eventDate',
+                        title: 'Дата събитие',
+                        sortable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'eventTypeName',
+                        data: 'eventTypeName',
+                        title: 'Събитие',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'eventLink',
+                        data: 'eventLink',
+                        title: 'Връзка',
+                        sortable: true,
+                        searchable: true
+                    },
+                   @if (Model.CaseId <= 0)
+                    {
+                        <text>
+                        {
+                            name: 'caseRegNum',
+                            data: 'caseRegNum',
+                            title: 'Към дело',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'caseRegDate',
+                            data: 'caseRegDate',
+                            title: 'Дата дело',
+                            sortable: true,
+                            "render": function (value) {
+                                if (value)
+                                    return moment(value).format("DD.MM.YYYY");
+                                else
+                                    return "";
+                            }
+                        },
+                       </text>
+                    }
+                    {
+                         name: 'sessionAct',
+                        data: 'sessionAct',
+                        title: 'Акт/Протокол',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                         name: 'personName',
+                        data: 'personName',
+                        title: 'Лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                         name: 'errorDescription',
+                        data: 'errorDescription',
+                        title: 'Описание на грешка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                         name: 'statusTransfer',
+                        data: 'statusTransfer',
+                        title: 'Статус трансфер',
+                        sortable: true,
+                        searchable: true
+                    },
+                   {
+                         name: 'dateExpired',
+                        data: 'dateExpired',
+                        title: 'Спрян на',
+                        sortable: true,
+                        "render": function (value) {
+                                 if (value)
+                                     return moment(value).format("DD.MM.YYYY");
+                                 else
+                                     return "";
+                             }
+                         },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        width: 240,
+                        className: "text-left noExport",
+                        "render": function (data, type, row) {
+                                 row.isNotExpired = (row.dateExpired === null && row.mqEpepId === null);
+                                 row.isForEditWithReq = (row.dateExpired === null && row.eventFromId == null);
+                                 row.isForEdit = (row.dateExpired === null &&
+                                                  (row.mqEpepId === null || row.integrationStateId == @IOWebApplication.Infrastructure.Constants.EpepConstants.IntegrationStates.ReplyContainsError)
+                                                 );
+                                 row.isOK = (row.integrationStateId == @IOWebApplication.Infrastructure.Constants.EpepConstants.IntegrationStates.TransferOK);
+                                 row.isSend = (row.mqEpepId !== null);
+                                 return TemplateToHtml('#templateEdit', row);
+                             }
+                         }
+                ]
+            });
+
+        });
+        function LoadEventItems() {
+            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+            $('#mainTable').DataTable().ajax.reload();
+        }
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        {{#if isForEdit}}
+        <a href="@Url.Action("SendPackage")?packageId={{this.id}}" class="btn btn-warning btn-sm" title="Редакция">
+            <i class="fa fa-edit"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+        {{else}}
+        <a href="@Url.Action("SendPackage")?packageId={{this.id}}" class="btn btn-def btn-sm" title="Преглед">
+            <i class="fa fa-eye"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+        {{/if}}
+        {{#if isNotExpired}}
+        <a href="#"
+           data-modal-title="Изтриване на събитие"
+           data-modal-url="@Url.Action("ExpiredInfo","Manage")?SubmitUrl=@Url.Action("ExpiredInfo","EISPP")&ReturnUrl={{this.id}}"
+           class="btn btn-danger btn-sm modal-loader" title="Премахване">
+            <i class="fa fa-remove"></i>
+        </a>
+        {{/if}}
+        {{#if isOK}}
+        {{#if isForEditWithReq}}
+        <a href="@Url.Action("EisppChangeFrom")?eventFromId={{this.id}}" class="btn btn-def btn-sm" title="Корекция">
+            <i class="fa fa-edit"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+        <a href="#"
+           data-modal-title="Изтриване на събитие със ЗАЯВКА"
+           data-modal-url="@Url.Action("ExpiredInfo","Manage")?SubmitUrl=@Url.Action("ExpiredInfo","EISPP")&ReturnUrl={{this.id}}"
+           class="btn btn-def btn-sm modal-loader" title="Премахване">
+            <i class="fa fa-remove"></i>
+        </a>
+        {{/if}}
+        <a href="@Url.Action("GetNPCard")/{{this.id}}" class="btn btn-def btn-sm" title="Карта">
+            <i class="fa fa-id-card"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+        <a href="@Url.Action("GetEisppResponse")/{{this.id}}" class="btn btn-def btn-sm" title="Отговор">
+            <i class="fa fa-mail-reply"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+        {{/if}}
+        <a href="@Url.Action("GetEisppRequest")/{{this.id}}" class="btn btn-def btn-sm" title="Заявка">
+            <i class="fa fa-send"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+
+    </script>
+}
+<script>
+     function GetCaseSessionActDDL() {
+        let caseId = $('#CaseId').val();
+        let caseSessionActId = $('#SessionActId').val();
+         let actDateFrom = $('#ActDateFrom').val();
+         let actDateTo = $('#ActDateTo').val();
+         console.log(actDateFrom)
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetCaseSessionActDDL", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: { caseId: caseId, actDateFrom: actDateFrom, actDateTo: actDateTo },
+            success: function (response) {
+                console.log(response.caseSessionActDDL);
+                fillCombo(response.caseSessionActDDL, $('#SessionActId'));
+                setComboSelectedOrFirst($('#SessionActId'), caseSessionActId);
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+    function AddEisppEvent() {
+        let caseSessionActId = $('#SessionActId').val();
+        window.location.href = '@Url.Action("EisppEvent", "Eispp")?sourceType=@SourceTypeSelectVM.Case&sourceId=@Model.CaseId&caseId=@Model.CaseId&caseSessionActId=' + caseSessionActId;
+    }
+    $(document).ready(function () {
+        $('#LinkType').change(function () {
+            var linkType = $('#LinkType').val();
+
+            if (linkType == 2) {
+                $('.act-protocol').show();
+            } else {
+                $('.act-protocol').hide();
+            }
+        });
+
+        $('#ActDateFrom').change(function () {
+            GetCaseSessionActDDL()
+        });
+        $('#ActDateTo').change(function () {
+            GetCaseSessionActDDL()
+        });
+
+
+        $('#LinkType').change();
+    });
+</script>

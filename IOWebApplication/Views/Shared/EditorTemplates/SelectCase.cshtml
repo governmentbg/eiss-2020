@@ -1,0 +1,27 @@
+﻿@model int?
+@{
+
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_case";
+    var label = (string)ViewData["case_label"];
+    var addClass = "";
+    if (string.IsNullOrEmpty(label))
+    {
+        addClass = "form-group";
+    }
+}
+
+<div class="case-container @addClass" @if (ViewData["courtId"] != null) { <text> data-court="@(ViewData["courtId"])" </text> } @if (ViewData["onChange"] != null) { <text> onchange="@(ViewData["onChange"])" </text> }>
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label has-auto-search io-req"></label>
+        <a href="#" onclick="showCasePreview(this); return false;" class="pull-right auto-cmpt-search" title="Преглед" >Преглед</a>
+        <input id="@fieldName" name="@fieldName" class="form-control case-control" autocomplete="false" placeholder="Въведете номера на делото или част от него" />
+    }
+    else
+    {
+        <input id="@fieldName" name="@fieldName" class="form-control case-control" autocomplete="false" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="case-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

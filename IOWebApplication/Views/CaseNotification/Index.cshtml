@@ -1,0 +1,30 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    var caseId = (int)ViewBag.caseId;
+    var caseSessionId = (int?)ViewBag.caseSessionId;
+    var caseSessionActId = (int?)ViewBag.caseSessionActId;
+    ViewData["Title"] = "Уведомление " + ViewBag.Caption;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни дела</a></li>
+        <li><a href="@Url.Action("CasePreview","Case", new { id = caseId})">Дело @ViewBag.CaseName</a></li>
+        <li><a href="@Url.Action("Preview","CaseSession", new { id = caseSessionId})">@ViewBag.CaseSessionName</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../CaseNotification/_CaseNotification.cshtml" model="@new CaseMainDataVM { Id = caseId, CaseSessionId = caseSessionId, CaseSessionActId = caseSessionActId } " />
+    </div>
+</div>
+
+@*<div class="row">
+    <div class="form-group row col-md-12">
+        <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@caseSessionId" class="btn btn-danger">Назад</a>
+    </div>
+</div>*@

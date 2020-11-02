@@ -1,0 +1,43 @@
+﻿@model EisppPackage
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
+    bool isPostBack = (bool?)ViewBag.isPostBack == true;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        <form id="formEdit" asp-action="SendPackage" method="post">
+            @Html.ValidationSummary()
+            @await Html.PartialAsync("_Package", Model)
+            <div class="form-group">
+                @Html.HiddenFor(x => x.IsForEdit)
+                @Html.EditorFor(x => x.IsForSend)
+                @Html.HiddenFor(x => x.EventTypeId)
+                @if (!Model.IsForSend || isPostBack || Model.IsForEdit)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("_EisppScript")
+<script>
+    function deletePackageJson() {
+        $('form').attr('action', '@Url.Action("DeletePackageJson")');
+        $("form").submit();
+    }
+
+    $(document).ready(function () {
+        EisppOnReady();
+    });
+</script>

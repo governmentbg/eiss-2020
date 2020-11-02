@@ -1,0 +1,54 @@
+﻿@model DocumentDecisionCase
+@using IOWebApplication.Infrastructure.Data.Models.Documents
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
+
+<div class="row">
+    <div class="col-md-10">
+        <form asp-action="EditDocumentDecisionCase" method="post" id="cmModalForm">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DocumentDecisionId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.CaseId, "SelectCase", new { courtId = userContext.CourtId })
+                @Html.EditorFor(x => x.DecisionTypeId, "GenericDropDown")
+                @Html.EditorFor(x => x.Description)
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                @*@if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }*@
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="messageContainerDecisionCase">
+</div>
+
+<script>
+    $(function () {
+        attachAjaxForm('#cmModalForm', function (data) {
+            if (data.responseJSON.result == true) {
+                refreshTable('#documentDecisionCaseMainTable');
+                HideModal();
+                messageHelper.ShowSuccessMessage('Записът премина успешно.');
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#messageContainerDecisionCase');
+            }
+        });
+    })
+</script>
+
+<script>
+    $(function () {
+        initCase();
+    });
+</script>

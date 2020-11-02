@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Разпореждания към документ";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="DocumentResolution" asp-action="Add" asp-route-documentId="@ViewBag.documentId" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="documentResolutionMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+        $(function () {
+            var table = $('#documentResolutionMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ResolutionsByDocument_ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.documentId = @ViewBag.documentId;
+                    }
+                },
+                columns: [
+                    {
+                        name: 'resolutionTypeName',
+                        data: 'resolutionTypeName',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return JsonBGdate(data);
+                        }
+                    },
+                    {
+                        name: 'judgeName',
+                        data: 'judgeName',
+                        title: 'Съдия',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'stateName',
+                        data: 'stateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+

@@ -1,0 +1,155 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.AuditLog
+@using IOWebApplication.Infrastructure.Constants
+@model AuditLogFilterVM
+
+@{
+    ViewData["Title"] = "Журнал";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTimeWithTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTimeWithTime")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.Operation, "GenericDropDownString")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.RegNumber)</div>
+    <div class="col-lg-3" id="UserSelect">@Html.EditorFor(x => x.UserId, "SelectUser")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.DateFrom = $('#DateFrom').val();
+                        d.DateTo = $('#DateTo').val();
+                        d.Operation = $('#Operation').val();
+                        d.RegNumber = $('#RegNumber').val();
+                        d.UserId = $('#UserId').val();
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'date',
+                        data: 'date',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY HH:mm:ss");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'operation',
+                        data: 'operation',
+                        title: 'Операция',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'baseObject',
+                        data: 'baseObject',
+                        title: 'Документ/дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    //{
+                    //    name: 'caseGroupLabel',
+                    //    data: 'caseGroupLabel',
+                    //    title: 'Вид дело/документ',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
+                    //{
+                    //    name: 'caseNumberLabel',
+                    //    data: 'caseNumberLabel',
+                    //    title: 'Номер/Година',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
+                    {
+                        name: 'objectType',
+                        data: 'objectType',
+                        title: 'Вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'objectInfo',
+                        data: 'objectInfo',
+                        title: 'Обект',
+                        sortable: true,
+                        searchable: true
+                    },
+
+                    {
+                        name: 'userName',
+                        data: 'userName',
+                        title: 'Потребител',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+
+</script>
+
+<script>
+    $(function () {
+        initUserAutoComplete();
+    })
+</script>

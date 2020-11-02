@@ -1,0 +1,146 @@
+﻿[
+  {
+    "outputFileName": "wwwroot/css/prod/site.min.css",
+    "inputFiles": [
+      "wwwroot/lib/bootstrap/dist/css/bootstrap.css",
+      "wwwroot/lib/adminlte/css/skins/skin-blue-light.css",
+      "wwwroot/lib/adminlte/plugins/pace/pace.css",
+      "wwwroot/lib/adminlte/plugins/iCheck/square/blue.css",
+      "wwwroot/lib/adminlte/plugins/dataTables/css/dataTables.bootstrap.css",
+      "wwwroot/lib/adminlte/plugins/dataTables/css/buttons.bootstrap.css",
+      "wwwroot/lib/adminlte/plugins/datePicker/css/bootstrap-datepicker.css",
+      "wwwroot/lib/adminlte/plugins/dateRangePicker/daterangepicker.css",
+      "wwwroot/lib/adminlte/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.css",
+      "wwwroot/lib/adminlte/plugins/fullcalendar/fullcalendar.css",
+      "wwwroot/lib/adminlte/css/AdminLTE.css",
+      "wwwroot/css/ionicons.css",
+      "wwwroot/lib/font-awesome/css/font-awesome.css",
+      "wwwroot/lib/adminlte/plugins/multiSelect/multi-select.css",
+      "wwwroot/lib/adminlte/plugins/jQueryUI/jquery-ui.css",
+      "wwwroot/lib/bootstrap-toggle/css/bootstrap-toggle.css",
+      "wwwroot/lib/adminlte/plugins/datetimePicker/bootstrap-datetimepicker.css",
+      "wwwroot/css/log-operation.css",
+      "wwwroot/lib/select2/css/select2.min.css",
+      "wwwroot/css/site.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/prod/site.min.js",
+    "inputFiles": [
+      "wwwroot/lib/bootstrap/dist/js/bootstrap.js",
+      "wwwroot/lib/adminlte/js/adminlte.js",
+      "wwwroot/lib/adminlte/plugins/pace/pace.js",
+      "wwwroot/lib/adminlte/plugins/iCheck/icheck.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/jquery.dataTables.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/jszip.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/pdfmake.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/vfs_fonts.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/dataTables.bootstrap.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/dataTables.rowReorder.min.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/dataTables.buttons.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/buttons.bootstrap.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/buttons.colVis.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/buttons.flash.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/buttons.html5.js",
+      "wwwroot/lib/adminlte/plugins/dataTables/js/buttons.print.js",
+      "wwwroot/lib/adminlte/plugins/datePicker/js/bootstrap-datepicker.js",
+      "wwwroot/lib/adminlte/plugins/datePicker/locales/bootstrap-datepicker.bg.min.js",
+      "wwwroot/lib/adminlte/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.js",
+      "wwwroot/lib/adminlte/plugins/multiSelect/jquery.multi-select.js",
+      "wwwroot/js/jquery.form.js",
+      "wwwroot/lib/handlebars.js",
+      "wwwroot/lib/sweetalert.min.js",
+      "wwwroot/js/moment.js",
+      "wwwroot/lib/adminlte/plugins/datetimePicker/bootstrap-datetimepicker.js",
+      "wwwroot/lib/adminlte/plugins/dateRangePicker/daterangepicker.js",
+      "wwwroot/lib/adminlte/plugins/fullcalendar/fullcalendar.js",
+      "wwwroot/lib/adminlte/plugins/fullcalendar/locale/bg.js",
+      "wwwroot/js/jquery.override-validator.js",
+      "wwwroot/lib/bootstrap-toggle/js/bootstrap-toggle.js",
+      "wwwroot/js/init.js",
+      "wwwroot/js/log-operation.js",
+      "wwwroot/js/site.js",
+      "wwwroot/js/ekatte-loader.js",
+      "wwwroot/js/autocomplete-loader.js",
+      "wwwroot/js/ms-transfer.js",
+      "wwwroot/js/ms-transferNew.js",
+      "wwwroot/lib/select2/js/select2.full.min.js",
+      "wwwroot/lib/select2/js/i18n/bg.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": false
+    },
+    "sourceMap": false
+  },
+
+  {
+    "outputFileName": "wwwroot/js/prod/head_site.min.js",
+    "inputFiles": [
+      "wwwroot/lib/jquery/dist/jquery.js",
+      "wwwroot/lib/adminlte/plugins/jQueryUI/jquery-ui.js",
+      "wwwroot/lib/jquery-validation/dist/jquery.validate.js",
+      "wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"
+    ],
+    // Optionally specify minification options
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    // Optinally generate .map file
+    "sourceMap": false
+  },
+
+  {
+    "outputFileName": "wwwroot/js/prod/sign.min.js",
+    "inputFiles": [
+      "wwwroot/js/scs/polyfill.js",
+      "wwwroot/js/scs/scs.js",
+      "wwwroot/js/scs/scs.helpers.js",
+      "wwwroot/js/scs/pdfSigner.js"
+    ],
+    // Optionally specify minification options
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    // Optinally generate .map file
+    "sourceMap": false
+  },
+
+  {
+    "outputFileName": "wwwroot/js/prod/scan.min.js",
+    "inputFiles": [
+      "wwwroot/js/scs/polyfill.js",
+      "wwwroot/js/scs/scs.js",
+      "wwwroot/js/scs/scs.helpers.js",
+      "wwwroot/js/scs/scs.scan.helpers.js",
+      "wwwroot/js/scs/scan.js"
+    ],
+    // Optionally specify minification options
+    "minify": {
+      "enabled": false,
+      "renameLocals": false
+    },
+    // Optinally generate .map file
+    "sourceMap": false
+  },
+
+  {
+    "outputFileName": "wwwroot/js/prod/pos.min.js",
+    "inputFiles": [
+      "wwwroot/js/scs/polyfill.js",
+      "wwwroot/js/scs/scs.js",
+      "wwwroot/js/scs/scs.helpers.js",
+      "wwwroot/js/scs/scs.pos.helpers.js",
+      "wwwroot/js/scs/pos.js"
+    ],
+    // Optionally specify minification options
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    // Optinally generate .map file
+    "sourceMap": false
+  }
+]

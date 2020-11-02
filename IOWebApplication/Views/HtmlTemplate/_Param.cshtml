@@ -1,0 +1,70 @@
+﻿@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="htmParamMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#htmParamMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataParamAll", "HtmlTemplate")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+
+                },
+                dom: 'ftp',
+                columns: [
+                    {
+                        name: 'code',
+                        data: 'code',
+                        title: 'Параметър',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#htmParamTemplateEdit', row);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="htmParamTemplateEdit" type="text/x-handlebars-template">
+    <a href="#" title="Добави" class="btn btn-def btn-sm" onclick="AddCodeInText('{{code}}'); return false;"><i class="fa fa-plus"></i></a>
+</script>
+
+<script>
+    function AddCodeInText(code_text) {
+        //var ed = tinyMCE.get('Text');     // get editor instance
+        //var range = ed.selection.getRng().startOffset;     // get range
+
+        //alert(range);
+        tinymce.activeEditor.execCommand('mceInsertContent', false, "{" + code_text + "}");
+    }
+</script>
+
+
+

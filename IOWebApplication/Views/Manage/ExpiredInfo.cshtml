@@ -1,0 +1,26 @@
+﻿@model ExpiredInfoVM
+<form id="frmExpireObject" action="@Html.Raw(Model.ExpireSubmitUrl)" method="post">
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.LongId)
+    @Html.HiddenFor(x => x.ExpireSubmitUrl)
+    @Html.HiddenFor(x => x.ReturnUrl)
+    @Html.EditorFor(x => x.DescriptionExpired, "Textarea")
+    <div class="form-group">
+        <input type="submit" value="Премахване" class="btn btn-danger submit" />
+    </div>
+</form>
+<div id="modalMessageContainer">
+</div>
+<script>
+    $(function () {
+        attachAjaxForm('#frmExpireObject', function (data) {
+            if (data.responseJSON.result == true) {
+                document.location.href = data.responseJSON.redirectUrl;
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+            }
+        }, undefined, function () {
+            $('#modalMessageContainer').html('');
+        });
+    })
+</script>

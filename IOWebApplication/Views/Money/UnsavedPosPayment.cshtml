@@ -1,0 +1,120 @@
+﻿@{
+    ViewData["Title"] = "Незаписани ПОС плащания";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function ReloadDatatable()
+        {
+            refreshTable('#mainTable');
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataUnsavedPosPayment")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'courtBankAccountName',
+                        data: 'courtBankAccountName',
+                        title: 'Банкова сметка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'moneyGroupName',
+                        data: 'moneyGroupName',
+                        title: 'Вид сметка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'paidDate',
+                        data: 'paidDate',
+                        title: 'Платено на',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'senderName',
+                        data: 'senderName',
+                        title: 'Вносител',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="#" class="btn btn-primary btn-sm" onclick="MakePosPayment('{{this}}');" title="Създай плащане"><i class="fa fa-money"> Създай плащане</i></a>
+    </script>
+
+    <script>
+        function MakePosPayment(id) {
+            swalConfirm('Потвърди създаването на плащане!', function () {
+                postContent('@Url.Action("MakePosPaymentFromPosResult","Money")'
+                    , { id: id }
+                    , function (data) {
+                        if (data.result == true) {
+                            refreshTable('#mainTable');
+                            messageHelper.ShowSuccessMessage(data.message);
+                        } else {
+                            messageHelper.ShowErrorMessage(data.message);
+                        }
+                    });
+            });
+        }
+    </script>
+}

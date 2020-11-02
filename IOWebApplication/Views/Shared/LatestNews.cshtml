@@ -1,0 +1,91 @@
+﻿<div id="readnewsContainer">
+</div>
+
+<script>
+    $(function () {
+        rnLoadData();
+    })
+
+    function rnLoadData() {
+        requestGET_Json('@Url.Action("GetData","News")', null
+            , function (data) {
+                //console.log(data);
+                $('#readnewsContainer').html(TemplateToHtml('#readnewsLastNewsTemplate', data));
+                $('.box').boxWidget({
+                    animationSpeed: 500,
+                    collapseTrigger: '[data-widget="collapse"]',
+                    removeTrigger: '[data-widget="remove"]',
+                    collapseIcon: 'fa-minus',
+                    expandIcon: 'fa-plus',
+                    removeIcon: 'fa-times'
+                });
+            });
+    }
+
+    function rnReadNews(id) {
+        requestContent('@Url.Action("ReadNews", "News")'
+            , { id: id }
+            , function (data) {
+                ShowModalDialog('Преглед на новина', data, true);
+            });
+    }
+</script>
+
+<script id="readnewsLastNewsTemplate" type="text/x-handlebars-template">
+
+    <div class="box box-warning box-solid">
+        <div class="box-header with-border">
+            <a href="@Url.Action("IndexUser", "News")" title="Всички новини">
+                <h3 class="box-title">Новини</h3>
+            </a>
+            <div class="box-tools pull-right">
+                <span data-toggle="tooltip" title="{{unreadNews}} непрочетени новини" class="badge" data-original-title="{{unreadNews}} непрочетени новини">{{unreadNews}}</span>
+                <button type="button" title="Минимизиране" class="btn btn-box-tool" data-widget="collapse">
+                    <i class="fa fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-box-tool" title="Затваряне" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+            <!-- /.box-tools -->
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body">
+            <a style="font-size:18px;color:rgb(51, 51, 51);" href="#" onclick="rnReadNews('{{news.id}}'); return false;" title="Прочети">
+                <b>
+                    {{#if isUnread}}
+                    <i class="fa fa-envelope-o"></i>
+                    {{else}}
+                    <i class="fa fa-envelope-open-o"></i>
+                    {{/if}}                    
+                    {{news.title}}
+                </b>
+            </a>
+        </div>
+        <!-- /.box-body -->
+    </div>
+
+
+    @*{{#if isUnreadNews}}
+        <div class="box">
+            <div class="box-header with-border" style="background-color:gold">
+                <h3 class="box-title"><a style="cursor: pointer; font-size:24px; color:black" data-toggle="tooltip" title="Всички новини" href="@Url.Action("IndexUser", "News")"><b><i class="fa fa-bell-o" aria-hidden="true"></i> Новини</b></a></h3>
+                <div class="box-tools pull-right">
+                    <span data-toggle="tooltip" title="{{unreadNews}} непрочетени новини" class="badge badge-light" data-original-title="{{unreadNews}} непрочетени новини">{{unreadNews}}</span>
+                    <button type="button" class="btn btn-box-tool" style="color:dimgray" title="Минимизиране" data-widget="collapse">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-box-tool" style="color:dimgray" title="Затваряне" data-widget="remove"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div>
+                    <div>
+                        <a style="font-size:18px; color:darkblue" href="#" onclick="rnReadNews('{{news.id}}'); return false;" title="Прочети"><b><i class="fa fa-th-list" aria-hidden="true"></i> {{news.title}}</b></a>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {{/if}}*@
+</script>

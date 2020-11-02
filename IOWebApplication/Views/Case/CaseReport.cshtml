@@ -1,0 +1,284 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@model CaseFilterReport
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
+
+@{
+    bool hasRegNumberOtherSystem = (bool)(ViewBag.HasRegNumberOtherSystem ?? false);
+    ViewData["Title"] = "Разширено търсене";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form id="formFilter" method="post">
+    @Html.HiddenFor(x => x.ActIsFinalDocHidden)
+
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Дела</legend>
+        <div class="legendbody">
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+                <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+                <div class="col-lg-3">@Html.EditorFor(m => m.CaseYear, "DateTimeYear")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Заседание</legend>
+        <div class="legendbody">
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(m => m.Session_DateFrom, "DateTime")</div>
+                <div class="col-lg-3">@Html.EditorFor(m => m.SessionDateTo, "DateTime")</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.SessionTypeId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Актове</legend>
+        <div class="legendbody">
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(m => m.ActDate, "DateTime")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.ActNumber)</div>
+                <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(m => m.ActIsFinalDoc, "Boolean")</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Свързани дела</legend>
+        <div class="legendbody">
+            <div class="row" id="linkCaseInfo">
+                <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
+                @if (hasRegNumberOtherSystem)
+                {
+                    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+                }
+            </div>
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionTypeId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_CaseYear, "DateTimeYear")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_RegNumber)</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Входящи/изходящи документи</legend>
+        <div class="legendbody">
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(m => m.DateDoc, "DateTime")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.NumberDoc)</div>
+            </div>
+        </div>
+    </fieldset>
+
+
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Страни по дело</legend>
+        <div class="legendbody">
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(m => m.IdentifikatorPerson)</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.NamePerson)</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Съдебен състав</legend>
+        <div class="legendbody">
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(m => m.IdentifikatorCaseLawUnit)</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.NameCaseLawUnit)</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+            </div>
+        </div>
+    </fieldset>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTableCase()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<input type="hidden" id="filterJson" name="filterJson" value="">
+
+<script>
+    function LoadTableCase() {
+        $("#ActIsFinalDocHidden").val($("#ActIsFinalDoc").is(":checked"));
+        $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("CaseReport_ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filterJson = $('#filterJson').val();
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'shortNumber',
+                        data: 'shortNumber',
+                        title: 'Кратък ном.',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.shortNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Пълен номер',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.regNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Шифри',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'processPriorityLabel',
+                        data: 'processPriorityLabel',
+                        title: 'Ред',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseStateLabel',
+                        data: 'caseStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width:130,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    $(document).on('click', 'legend.casereport-legend', function () {
+        $(this).parent().find('.legendbody').toggle();
+    });
+
+    $(document).ready(function () {
+        $(".legendbody").hide();
+        $('#CaseGroupId').trigger('change');
+        $('#Institution_InstitutionTypeId').trigger('change');
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+    });
+
+    $('#Institution_InstitutionTypeId').change(function () {
+        requestCombo('@Url.Action("GetDDL_InstitutionFilter","Ajax")', { institutionTypeId: $(this).val() }, '#Institution_InstitutionId', @Model.Institution_InstitutionId);
+    });
+
+    function courtSelect() {
+        let courtId = $('#LinkDelo_CourtId').val();
+        var courtData = $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court');
+        $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court', courtId);
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        @*<a href="@Url.Action("CaseFolder")/{{this}}" class="btn btn-success btn-sm" title="Обобщена информация"><i class="fa fa-info-circle"></i><span class="hidden-sm hidden-xs"></span></a>*@
+        <a href="@Url.Action("CaseTimeLinePreview")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("CaseProceedings")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Ход на дело"><i class="fa fa-calendar"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("ActFinalView", "CaseSessionAct")?caseId={{this}}" target="_blank" class="btn btn-def btn-sm m-b-5" title="Финализиращи актове влезли в сила"><i class="fa fa-book"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+@section scripts {
+    <script>
+        initCase();
+        initCourts();
+        initLawUnit();
+        initActLawBaseAutoComplete();
+   </script>
+}

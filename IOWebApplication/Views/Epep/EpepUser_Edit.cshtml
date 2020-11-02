@@ -1,0 +1,151 @@
+﻿@model EpepUser
+@using  IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на потребител в ЕПЕП";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на потребител в ЕПЕП";
+    }
+
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EpepUser_Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Основни данни</legend>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.EpepUserTypeId, "GenericDropDown")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.BirthDate)</div>
+                    </div>
+                    <div id="lawyerControls">
+                        <div class="row">
+                            <div class="col-lg-12">@Html.EditorFor(x => x.LawyerLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Lawyer })</div>
+                        </div>
+                    </div>
+                    <div id="personControls">
+                        <div class="row">
+                            <div class="col-lg-6">@Html.EditorFor(x => x.Uic)</div>
+                            <div class="col-lg-6">@Html.EditorFor(x => x.FullName)</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.Address)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.Email)</div>
+                    </div>
+                    @Html.EditorFor(x => x.Description)
+                </div>
+            </fieldset>
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-action="EpepUser" class="btn btn-danger">Назад</a>
+                <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.EpepUser, SourceId = Model.Id })" />
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+    @if (Model.Id > 0)
+    {
+        <div class="col-md-6">
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Участие в дела</legend>
+                <div class="pull-right">
+                    <a asp-controller="Epep" asp-action="EpepUserAssignment_Add" asp-route-epepUserId="@Model.Id" class="btn btn-success btn-sm">
+                        <i class="fa fa-plus"></i>
+                        Добави
+                    </a>
+                </div>
+                <table id="dtAssignments" class="table table-hover table-striped"></table>
+            </fieldset>
+        </div>
+    }
+</div>
+@section scripts{
+    <script>
+        $(function () {
+            $('#EpepUserTypeId').change(function () {
+                switch ($(this).val()) {
+                    case '@EpepConstants.UserTypes.Person':
+                        $('#lawyerControls').hide();
+                        $('#personControls').show();
+                        break;
+                    case '@EpepConstants.UserTypes.Lawyer':
+                        $('#lawyerControls').show();
+                        $('#personControls').hide();
+                        break;
+                    default:
+                }
+            }).trigger('change');
+            @if(Model.Id > 0)
+            {
+                <text>loadAssignments();</text>
+            }
+            initLawUnit();
+        });
+        function loadAssignments() {
+            $('#dtAssignments').DataTable({
+                ajax: {
+                    "url": "@Url.Action("EpepUserAssignment_ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.epepUserId = @(Model.Id);
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'caseInfo',
+                        data: 'caseInfo',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sideInfo',
+                        data: 'sideInfo',
+                        title: 'Страна',
+                        sortable: true,
+                        searchable: true
+                    }
+                    ,
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    </script>
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EpepUserAssignment_Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

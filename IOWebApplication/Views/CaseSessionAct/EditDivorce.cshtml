@@ -1,0 +1,127 @@
+﻿@model CaseSessionActDivorce
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция" : "Преглед";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditDivorce" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseSessionActId)
+            @if (Model.Id > 0)
+            {
+                @Html.HiddenFor(x => x.RegDate)
+                @Html.HiddenFor(x => x.RegNumber)
+            }
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                @if (@Model.Id > 0)
+                {
+                    <h2>@Model.RegNumber/@Model.RegDate.ToString("dd.MM.yyyy")</h2>
+                }
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Основни данни</legend>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CountryCode, "GenericDropDownString")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CountryCodeDate)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.MarriageNumber)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.MarriageDate)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.MarriagePlace)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.MarriageFault)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.MarriageFaultDescription)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.ChildrenUnder18)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.ChildrenOver18)</div>
+                    </div>
+                </fieldset>
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Данни за мъжа</legend>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CasePersonManId, "GenericDropDown")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.BirthDayMan)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.NameAfterMarriageMan)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-3">@Html.EditorFor(x => x.MarriedStatusBeforeMan)</div>
+                        <div class="col-lg-3">@Html.EditorFor(x => x.MarriageCountMan)</div>
+                        <div class="col-lg-3">@Html.EditorFor(x => x.DivorceCountMan)</div>
+                        <div class="col-lg-3">@Html.EditorFor(x => x.NationalityMan)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.EducationMan)</div>
+                    </div>
+                </fieldset>
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Данни за жената</legend>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CasePersonWomanId, "GenericDropDown")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.BirthDayWoman)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.NameAfterMarriageWoman)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-3">@Html.EditorFor(x => x.MarriedStatusBeforeWoman)</div>
+                        <div class="col-lg-3">@Html.EditorFor(x => x.MarriageCountWoman)</div>
+                        <div class="col-lg-3">@Html.EditorFor(x => x.DivorceCountWoman)</div>
+                        <div class="col-lg-3">@Html.EditorFor(x => x.NationalityWoman)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.EducationWoman)</div>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                <a asp-action="Edit" asp-route-id=@Model.CaseSessionActId class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    @if (access.CanChange)
+                    {
+                        <a href="@Url.Action("PreviewRawDivorce", "CaseSessionAct", new { id = Model.Id })" class="btn btn-dropbox" title="Печат"><i class="fa fa-print"></i> Печат<span class="hidden-sm hidden-xs"></span></a>
+                        <a href="@Url.Action("Index", "DocumentTemplate",new { sourceType=SourceTypeSelectVM.CaseSessionActDivorce, sourceId=Model.Id})" class="btn btn-def" title="Създаване на писмо"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Създаване на писмо</span></a>
+                    }
+
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>

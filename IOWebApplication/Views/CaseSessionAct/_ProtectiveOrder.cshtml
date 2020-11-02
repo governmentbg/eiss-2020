@@ -1,0 +1,92 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseSessionActPrintVM
+@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+</head>
+<body>
+    <div class=WordSection1>
+        @if (!string.IsNullOrEmpty(Model.ActRegNumber))
+        {
+            <p align="center" style="text-align:center">
+                <b>
+                    <span style="font-size:16.0pt;letter-spacing:8.0pt">ОБЕЗПЕЧИТЕЛНА ЗАПОВЕД № @Model.ActRegNumber</span>
+                </b>
+            </p>
+
+            <p align="center" style="margin-top:18.0pt;margin-right:0cm;margin-bottom:18.0pt;margin-left:0cm;text-align:center">
+                <span lang=EN-US>
+                    Град @Model.CourtCity
+                </span>@Model.ActRegDate г.
+            </p>
+        }
+        else
+        {
+            <p align="center" style="text-align:center">
+                <b>
+                    <span style="font-size:16.0pt;letter-spacing:8.0pt">ОБЕЗПЕЧИТЕЛНА ЗАПОВЕД</span>
+                </b>
+            </p>
+
+            <p align="center" style="margin-top:18.0pt;margin-right:0cm;margin-bottom:18.0pt;margin-left:0cm;text-align:center">
+                Град @Model.CourtCity Датата и номера ще бъдат генерирани след предаване за подпис
+            </p>
+        }
+
+        <p align="center" style="margin-top:18.0pt;margin-right:0cm;margin-bottom:18.0pt;margin-left:0cm;text-align:center">
+            <b>
+                <span style="font-size:14.0pt">В ИМЕТО НА НАРОДА</span>
+            </b>
+        </p>
+
+        <p style="margin-top:12.0pt;text-align:justify;text-indent:36.0pt;line-height:150%">
+            Съдия при @Model.CourtName @Model.DepartmentName на основание @Model.ActKindDescription, като констатира, че @Model.RelatedActTypeName
+            № @Model.RelatedActNumber/@Model.RelatedActDate г. по @Model.CaseTypeName №
+            @Model.CaseRegShortNumber/@Model.CaseRegYear г. по описа на @Model.CourtName,
+            @Model.DepartmentName подлежи на изпълнение, разпореди да се издаде
+            следната
+        </p>
+
+        <p align="center" style="margin-top:12.0pt;margin-right:0cm;margin-bottom:12.0pt;margin-left:0cm;text-align:center">
+            <b>
+                <span style="font-size:14.0pt">ОБЕЗПЕЧИТЕЛНА ЗАПОВЕД</span>
+            </b>
+        </p>
+        @if (!Model.HeaderOnly)
+        {
+            @Html.Raw(Model.MainBody)
+
+            <p style="margin-top:12.0pt;text-align:justify;text-indent:35.45pt;line-height:150%">
+                Тази обезпечителна заповед се издава на @Model.LeftSideName,
+                @Model.LeftSideCurrentAddress.
+            </p>
+
+            <p style="margin-top:12.0pt;text-align:justify;text-indent:35.45pt;line-height:150%">
+                <b>
+                    Задължават се органите на държавното управление да
+                    оказват съдействие на съдебния изпълнител за привеждане в изпълнение на
+                    обезпечителната заповед.
+                </b>
+            </p>
+
+            <p align=right style="margin-top:24.0pt;text-align:right;line-height:150%;text-autospace:none">
+                Съдия при @Model.CourtName: ...............................
+            </p>
+            <p align=right style="text-align:right;line-height:150%;text-autospace:none">
+                <span lang=EN-US style="font-size:10.0pt;line-height:150%">
+                    /@Model.JudgeReporter/
+                </span>
+            </p>
+        }
+    </div>
+
+</body>
+</html>
+

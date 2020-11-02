@@ -1,0 +1,319 @@
+﻿@model CaseVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Core.Helper.GlobalConstants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Съдебно дело " + Model.RegNumber;
+    }
+    else
+    {
+        ViewData["Title"] = "Преглед на съдебно дело";
+    }
+
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни делa</a></li>
+    </ol>
+}
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <form method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs" id="caseTab">
+                        <li class="active"><a href="#tabMainData" data-toggle="tab" data-filename="@HelpFileValues.CaseMainData"><i class="fa fa-database"></i> Основни данни</a></li>
+                        <li class=""><a href="#tabLawUnit" data-toggle="tab" data-filename="@HelpFileValues.CaseLawunit"><i class="fa fa-users"></i> Съдебен състав</a></li>
+                        <li class=""><a href="#tabPerson" data-toggle="tab" data-filename="@HelpFileValues.CasePerson"><i class="fa fa-user"></i> Лица</a></li>
+                        @*<li class=""><a href="#tabPersonLink" data-toggle="tab"><i class="fa fa-user-plus"></i> Връзки свързани лица</a></li>*@
+                        <li class=""><a href="#tabSession" data-toggle="tab" data-filename="@HelpFileValues.CaseSession"><i class="fa fa-handshake-o"></i> Заседания</a></li>
+                        @*<li class=""><a href="#tabLifecycle" data-toggle="tab"><i class="fa fa-clock-o"></i> Интервали</a></li>*@
+                        @*<li class=""><a href="#tabNotification" data-toggle="tab"><i class="fa fa-bell"></i> Уведомления</a></li>*@
+                        @*<li class=""><a href="#tabMoney" data-toggle="tab"><i class="fa fa-money"></i> Суми по дело</a></li>*@
+                        <li class=""><a href="#tabEvidence" data-toggle="tab" data-filename="@HelpFileValues.CaseEvidence"><i class="fa fa-archive"></i> Доказателства</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tabMainData">
+
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <fieldset class="is-fieldset">
+                                        <legend class="legend_1">Данни</legend>
+
+                                        <div class="form-group">
+                                            <label class="control-label">Иницииращ документ</label>
+                                            <div>
+                                                <a asp-controller="Document" asp-action="View" asp-route-id="@Model.DocumentId" target="_blank"><b>Вх.№ @Model.DocumentName - @Model.DocumentTypeName</b></a>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.CaseGroupLabel)</div>
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.CaseTypeLabel)</div>
+
+                                        </div>
+                                        <div class="row">
+                                            @if (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
+                                            {
+                                                <div class="col-lg-6">@Html.EditorFor(x => x.CaseCodeLabel)</div>
+                                                <div class="col-lg-6">@Html.EditorFor(x => x.EISSPNumber)</div>
+                                            }
+                                            else
+                                            {
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseCodeLabel)</div>
+                                            }
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-4">@Html.EditorFor(x => x.ShortNumber)</div>
+                                            <div class="col-lg-4">@Html.EditorFor(x => x.RegNumber)</div>
+                                            <div class="col-lg-4">@Html.EditorFor(x => x.RegDate)</div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-12">@Html.EditorFor(x => x.LoadGroupLinkLabel)</div>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(Model.CaseReasonLabel))
+                                        {
+                                            <div class="row">
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseReasonLabel)</div>
+                                            </div>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(Model.CaseStateDescription))
+                                        {
+                                            <div class="row">
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseStateDescription, "Textarea")</div>
+                                            </div>
+                                        }
+
+                                        <div class="row">
+                                            <div class="col-lg-12">@Html.EditorFor(x => x.LastMovment)</div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.CaseStateLabel)</div>
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.ProcessPriorityLabel)</div>
+                                        </div>
+
+                                        @if (access.CanChange)
+                                        {
+                                            <a href="@Url.Action("Edit", "Case")?id=@Model.Id" class="btn btn-warning btn-sm" title="Корекция на основни данни по делото"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Корекция на основни данни по делото</span></a>
+                                        }
+                                        @if ((bool)ViewBag.isFastProcess)
+                                        {
+                                            <text>&nbsp;</text>
+                                            <a href="@Url.Action("Index", "CaseFastProcess")?caseId=@Model.Id" class="btn btn-def btn-sm" title="410"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Заповедни производства</span></a>
+                                        }
+                                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.Case, SourceId = Model.Id })" />
+                                    </fieldset>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <fieldset class="is-fieldset">
+                                        <legend class="legend_1">Действия</legend>
+                                        <a href="@Url.Action("Index", "CaseMovement")?CaseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Местоположение на дело"><i class="fa fa-map-marker"></i><span class="hidden-sm hidden-xs"> Местоположение</span></a>
+                                        <a href="@Url.Action("Index", "CaseMigration",new { caseId = Model.Id})" class="btn btn-def btn-sm m-b-5" title="Движение на делото"><i class="fa fa-exchange"></i><span class="hidden-sm hidden-xs"> Движение</span></a>
+                                        <a href="@Url.Action("Index", "DocumentTemplate",new { sourceType=SourceTypeSelectVM.Case,sourceId=Model.Id})" class="btn btn-def btn-sm m-b-5" title="Изходящи документи по делото"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Изх.док.</span></a>
+                                        <a href="@Url.Action("CaseTimeLinePreview", "Case")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Ел.папка</span></a>
+                                        <a href="@Url.Action("IndexDocumentInstitutionCaseInfoList", "Document")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Дела др. институции"><i class="fa fa-folder"></i><span class="hidden-sm hidden-xs"> Дела др. институции</span></a>
+                                        @if (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
+                                        {
+                                            <a href="@Url.Action("IndexCaseCrime", "CasePersonSentence")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Престъпления"><i class="fa fa-bug"></i><span class="hidden-sm hidden-xs"> Престъпления</span></a>
+                                            <a href="@Url.Action("Index", "Eispp",new {caseId=Model.Id})" class="btn btn-def btn-sm m-b-5" title="ЕИСПП събития"><i class="fa fa-paper-plane-o"></i><span class="hidden-sm hidden-xs"> ЕИСПП</span></a>
+                                        }
+                                    </fieldset>
+                                    <fieldset class="is-fieldset">
+                                        <legend class="legend_1">Натовареност и срокове</legend>
+                                        <a href="@Url.Action("Index", "CaseLoadIndex")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Натовареност"><i class="fa fa-cubes"></i><span class="hidden-sm hidden-xs"> Натовареност</span></a>
+                                        <a href="@Url.Action("Index", "CaseLoadCorrection")?CaseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Коригиращи коефициенти"><i class="fa fa-plus-square-o"></i><span class="hidden-sm hidden-xs"> Коригиращи коефициенти</span></a>
+                                        <a href="@Url.Action("Index", "CaseLifecycle")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Интервали"><i class="fa fa-clock-o"></i><span class="hidden-sm hidden-xs"> Интервали</span></a>
+                                        <a href="@Url.Action("IndexCase", "CaseDeadLine")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Срокове"><i class="fa fa-bell-o"></i><span class="hidden-sm hidden-xs"> Срокове</span></a>
+                                    </fieldset>
+                                    <div id="caseClassification" class="case-info">
+                                        <fieldset class="is-fieldset">
+                                            <legend>Индикатори</legend>
+                                            @foreach (var cl in (List<SelectListItem>)ViewBag.CaseClassification_ddl)
+                                            {
+                                                <div class="row">
+                                                    <div class="col-lg-6"><i class="fa fa-check"></i> @cl.Text</div>
+                                                </div>
+                                            }
+                                            <br />
+                                            @if (access.CanChange)
+                                            {
+                                                <div class="row">
+                                                    <div class="col-lg-6">
+                                                        <a href="@Url.Action("CaseClassification", "CaseClassification")?caseId=@Model.Id" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </fieldset>
+                                    </div>
+                                    @if (Model.CaseStateId == NomenclatureConstants.CaseState.Archive)
+                                    {
+                                        <fieldset class="is-fieldset">
+                                            <legend class="legend_1">Архив</legend>
+                                            <div class="row">
+                                                <div class="col-lg-6">@Html.EditorFor(x => x.ArchRegNumber)</div>
+                                                <div class="col-lg-6">@Html.EditorFor(x => x.ArchRegDate)</div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-6">@Html.EditorFor(x => x.ArchiveIndexLabel)</div>
+                                                <div class="col-lg-6">@Html.EditorFor(x => x.ArchiveLink)</div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-4">@Html.EditorFor(x => x.BookNumber, "Int32Nullable")</div>
+                                                <div class="col-lg-4">@Html.EditorFor(x => x.BookYear, "Int32Nullable")</div>
+                                                <div class="col-lg-4">@Html.EditorFor(x => x.StorageYears, "Int32Nullable")</div>
+                                            </div>
+                                        </fieldset>
+                                    }
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabLawUnit">
+                            <fieldset class="is-fieldset">
+                                <legend>Съдебен състав</legend>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <partial name="../CaseLawUnit/_CaseLawUnit.cshtml" model="@new CaseMainDataVM { Id = Model.Id, CaseSessionId = null, CaseStateId = Model.CaseStateId, IsND = (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)} " />
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <fieldset class="is-fieldset">
+                                <legend>Други</legend>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <partial name="../CaseLawUnit/_CaseLawUnitManualRoles.cshtml" model="@new CaseMainDataVM { Id = Model.Id } " />
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabPerson">
+                            <partial name="../CasePerson/_CasePerson.cshtml" model="@new CaseMainDataVM { Id = Model.Id, IsND = (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo), CaseTypeId = Model.CaseTypeId} " />
+                        </div>
+
+                        @*<div class="tab-pane" id="tabPersonLink">
+                                <partial name="../CasePersonLink/_CasePersonLink.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            </div>*@
+
+                        <div class="tab-pane dt-lazy-loading" id="tabSession">
+                            <partial name="../CaseSession/_CaseSession.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>
+
+                        @*<div class="tab-pane" id="tabLifecycle">
+                                <partial name="../CaseLifecycle/_CaseLifecycle.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            </div>*@
+
+                        @*<div class="tab-pane" id="tabNotification">
+                                <partial name="../CaseNotification/_CaseNotification.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            </div>*@
+
+                        @*<div class="tab-pane" id="tabMoney">
+                                <partial name="../CaseMoney/_CaseMoney.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            </div>*@
+
+                        <div class="tab-pane dt-lazy-loading" id="tabEvidence">
+                            <partial name="../CaseEvidence/_CaseEvidence.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="form-group">
+                @*<input type="submit" value="Запис" class="btn btn-success" />*@
+                @*<a asp-action="Index" class="btn btn-danger">Назад</a>*@
+                @if (Model.Id > 0)
+                {
+                    @*<div class="pull-right">
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>*@
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        $('#CaseGroupLabel').attr("disabled", true);
+        $('#CaseTypeLabel').attr("disabled", true);
+        $('#CaseCodeLabel').attr("disabled", true);
+        $('#EISSPNumber').attr("disabled", true);
+        $('#ShortNumber').attr("disabled", true);
+        $('#RegNumber').attr("disabled", true);
+        $('#RegDate').attr("disabled", true);
+        $('#CaseStateLabel').attr("disabled", true);
+        $('#LoadGroupLinkLabel').attr("disabled", true);
+        $('#LastMovment').attr("disabled", true);
+        $('#ProcessPriorityLabel').attr("disabled", true);
+        $('#CaseReasonLabel').attr("disabled", true);
+        $('#CaseStateDescription').attr("disabled", true);
+
+        $('#ArchRegNumber').attr("disabled", true);
+        $('#ArchRegDate').attr("disabled", true);
+        $('#ArchiveIndexLabel').attr("disabled", true);
+        $('#ArchiveLink').attr("disabled", true);
+        $('#StorageYears').attr("disabled", true);
+        $('#BookNumber').attr("disabled", true);
+        $('#BookYear').attr("disabled", true);
+
+        localStorage.removeItem('activeTabSession');
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTabCase', $(e.target).attr('href'));
+        });
+        var activeTab = localStorage.getItem('activeTabCase');
+        if (activeTab) {
+            $('#caseTab a[href="' + activeTab + '"]').tab('show');
+            ChangeUserGuide($('#caseTab a[href="' + activeTab + '"]'));
+        }
+
+        var url = document.location.toString();
+        if (url.match('#')) {
+            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+            ChangeUserGuide($('.nav-tabs a[href="#' + url.split('#')[1] + '"]'));
+        }
+
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
+            window.location.hash = e.target.hash;
+        })
+
+    });
+
+    $(function () {
+        $('.nav-tabs li a').click(function (e) {
+            ChangeUserGuide($(this));
+        });
+    });
+
+    function ChangeUserGuide(tab) {
+        var fileName = tab.data('filename');
+        if (fileName != undefined) {
+            var newurl = '@Url.Content($"~/userguide/")' + fileName + ".htm";
+            $("#horizontalUserguideId").attr('href', newurl);
+        }
+    }
+</script>

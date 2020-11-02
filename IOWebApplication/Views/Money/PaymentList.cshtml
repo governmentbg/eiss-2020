@@ -1,0 +1,261 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@model PaymentFilterVM
+
+@{
+    ViewData["Title"] = "Извършени плащания";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.MoneyGroupId, "GenericDropDown")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.SenderName)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PaymentTypeId, "GenericDropDown")</div>
+</div>
+<div class="row">
+    <div class="col-lg-4">@Html.EditorFor(m => m.UserId, "SelectUser")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PosDeviceTid, "GenericDropDownString")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.CaseRegNumber)</div>
+</div>
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActivePayment, "Boolean")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="AddAvansPayment" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави авансово плащане
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<div id="obligationsForPayment" title="Свързани задължения">
+
+</div>
+
+@section scripts {
+    <script>
+        function ReloadDatatable()
+        {
+            refreshTable('#mainTable');
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataPayment")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            MoneyGroupId: $("#MoneyGroupId").val(),
+                            SenderName: $("#SenderName").val(),
+                            PaymentTypeId: $("#PaymentTypeId").val(),
+                            UserId: $("#UserId").val(),
+                            PosDeviceTid: $("#PosDeviceTid").val(),
+                            CaseRegNumber: $("#CaseRegNumber").val(),
+                            ActivePayment: $("#ActivePayment").is(":checked")
+                        };
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'paymentNumber',
+                        data: 'paymentNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'moneyGroupName',
+                        data: 'moneyGroupName',
+                        title: 'Вид сметка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amountPayObligation',
+                        data: 'amountPayObligation',
+                        title: 'Прихваната сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amountFree',
+                        data: 'amountFree',
+                        title: 'Остатък за прихващане',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'paidDate',
+                        data: 'paidDate',
+                        title: 'Платено на',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'paymentTypeName',
+                        data: 'paymentTypeName',
+                        title: 'Начин на плащане',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'senderName',
+                        data: 'senderName',
+                        title: 'Вносител',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseNumbers',
+                        data: 'caseNumbers',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isAvans',
+                        data: "isAvans",
+                        title: 'Авансово плащане',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        name: 'isActive',
+                        data: "isActive",
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        name: 'userName',
+                        data: 'userName',
+                        title: 'Потребител на плащането',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        width: 250,
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditPayment")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="#" class="btn btn-primary btn-sm" onclick="ObligationsForPayment('{{this}}');" title="Свързани задължения"><i class="fa fa-money"></i></a>
+        @*<a href="@Url.Action("PreviewRaw")/{{this}}" class="btn btn-primary btn-sm" title="Печат"><i class="fa fa-print"></i><span class="hidden-sm hidden-xs"></span></a>*@
+        @if (ViewBag.HasStorno)
+        {
+            <a href="#" class="btn btn-sm btn-danger" onclick="StornoPayment('{{this}}');"><i class="fa fa-remove"></i></a>
+        }
+    </script>
+
+    <script>
+        function StornoPayment(id) {
+            swalConfirm('Потвърди деактивирането на плащането!', function () {
+                postContent('@Url.Action("StornoPayment","Money")'
+                    , { id: id }
+                    , function (data) {
+                        if (data.result == true) {
+                            refreshTable('#mainTable');
+                            messageHelper.ShowSuccessMessage(data.message);
+                        } else {
+                            messageHelper.ShowErrorMessage(data.message);
+                        }
+                    });
+            });
+        }
+
+        function ObligationsForPayment(id)
+        {
+            requestContent('@Url.Action("ObligationsForPayment","Money")'
+                , { id: id }
+                , function (data) {
+                    MakeBigModalDialog("div#obligationsForPayment");
+                    $("#obligationsForPayment").html(data);
+                });
+        }
+
+        initUserAutoComplete();
+    </script>
+}

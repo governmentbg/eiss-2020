@@ -1,0 +1,26 @@
+﻿@model LegalEntity
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+<fieldset class="is-fieldset">
+    <legend class="legend_1">Юридическо лице</legend>
+    @Html.HiddenFor(x => x.EntityId)
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.FullName, "hd")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.RegistrationNumber, "hd")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.EntityGroup, "EisppDropDown", null, new { Ddl = ViewBag.EntityGroupDDL })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.EntityType, "EisppDropDown", null, new { Ddl = ViewBag.EntityTypeDDL })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.EntityStatus, "EisppDropDown", null, new { Ddl = ViewBag.EntityStatusDDL })</div>
+    </div>
+    @if (Model.Addresses != null)
+    {
+        for (int i = 0; i < Model.Addresses.Length; i++)
+        {
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.Addresses[{i}]";
+            @await Html.PartialAsync("_EisppAddress", Model.Addresses[i])
+        }
+    }
+</fieldset>

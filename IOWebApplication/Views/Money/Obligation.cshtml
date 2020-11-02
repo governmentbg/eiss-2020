@@ -1,0 +1,32 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+
+@{
+    var caseSessionActId = ViewBag.caseSessionActId ?? 0;
+    var documentId = ViewBag.documentId ?? 0;
+    var caseSessionId = ViewBag.caseSessionId ?? 0;
+    if (caseSessionActId > 0)
+    {
+        ViewData["Title"] = "Суми към съдебен акт";
+    }
+    else if (documentId > 0)
+    {
+        ViewData["Title"] = "Суми към документ";
+    }
+    else if (caseSessionId > 0)
+    {
+        ViewData["Title"] = "Суми по заседание";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../Money/_Obligation.cshtml" model="@new ObligationMainDataVM { CaseSessionActId = caseSessionActId, DocumentId = documentId, CaseSessionId = caseSessionId} " />
+    </div>
+</div>

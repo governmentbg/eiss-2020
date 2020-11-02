@@ -1,0 +1,23 @@
+﻿@using IOWebApplication.Infrastructure.Extensions
+@model int?
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_institution";
+    var label = (string)ViewData["label"];
+    var containerId = Guid.NewGuid().ToString();
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+<div class="institution-container" data-container="@containerId" @if (ViewData["institutionType"] != null) { <text> data-institutiontype="@ViewData["institutiontype"]" </text> } @if (ViewData["institutionTypeContainer"] != null) { <text> data-institutiontypecontainer="@ViewData["institutionTypeContainer"]" </text> } @if (ViewData["onChange"] != null) { <text> onchange="@(ViewData["onChange"])" </text> }>
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label @reqClass"></label>
+        <input id="@fieldName" class="form-control institution-control" autocomplete="false" />
+    }
+    else
+    {
+        <input id="@fieldName" class="form-control institution-control" autocomplete="false" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="institution-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

@@ -1,0 +1,100 @@
+﻿@{
+    ViewData["Title"] = "Управление на тарифи";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="PriceDesc_Edit" asp-route-courtId="@ViewBag.courtId" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави тарифа
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("PriceDesc_LoadData")",
+                    "data": function (d) {
+                        d.courtId = '@ViewBag.courtId';
+                    },
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'keyword',
+                        data: 'keyword',
+                        title: 'Идентификатор',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'name',
+                        data: null,
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true,
+                        render: function (a,b,item,d) {
+                            return TemplateToHtml("#templateName",item);
+                        }
+                    },
+                    {
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return JsonBGdate(data);
+                        }
+                    },
+                    {
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return JsonBGdate(data);
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+    </script>
+    <script id="templateName" type="text/x-handlebars-template">
+        <a href="@Url.Action("PriceVal")?priceDesc={{id}}" title="Стойности">{{name}}</a>
+    </script>
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("PriceDesc_Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        &nbsp;
+        <a href="@Url.Action("PriceCol")?priceDesc={{this}}" class="btn btn-def btn-sm" title="Колони"><i class="fa fa-pause"></i><span class="hidden-sm hidden-xs"> Колони</span></a>
+    </script>
+}

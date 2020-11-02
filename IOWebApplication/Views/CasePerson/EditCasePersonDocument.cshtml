@@ -1,0 +1,155 @@
+﻿@model CasePersonDocument
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на документ" : "Преглед на документ";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на документ";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditCasePersonDocument" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CasePersonId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="row">
+                                <div class="col-lg-8">@Html.EditorFor(x => x.DocumentNumber)</div>
+                                <a href="#" onclick="GetPersonalIdentityV2(); return false;" class="btn btn-sm btn-def" style="margin-top:23px;"><i class="fa fa-check"></i></a>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.IssuerCountryCode, "GenericDropDownString")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.PersonalDocumentTypeId, "GenericDropDownString")</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentDate, "DateTime")</div>
+                                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentDateTo, "DateTime")</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.IssuerName)</div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="col-lg-6" id="DocumentRegix">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Проверка документ</legend>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.Editor("R_DocumentValid")</div>
+                            </div>
+                            <div id="DocumentRegixData">
+                                <div class="row">
+                                    <div class="col-lg-6">@Html.Editor("R_PersonName")</div>
+                                    <div class="col-lg-6">@Html.Editor("R_PersonUic")</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">@Html.Editor("R_DocumentType")</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6">@Html.Editor("R_DocumentNumber")</div>
+                                    <div class="col-lg-6">@Html.Editor("R_IssuerName")</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6">@Html.Editor("R_DocumentDateFrom")</div>
+                                    <div class="col-lg-6">@Html.Editor("R_DocumentDateTo")</div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="IndexCasePersonDocument" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+
+    $(function () {
+        $("#DocumentRegix").hide();
+        $("#DocumentRegixData").hide();
+        $('#R_DocumentValid').attr("disabled", true);
+        $('#R_PersonName').attr("disabled", true);
+        $('#R_PersonUic').attr("disabled", true);
+        $('#R_DocumentType').attr("disabled", true);
+        $('#R_DocumentNumber').attr("disabled", true);
+        $('#R_IssuerName').attr("disabled", true);
+        $('#R_DocumentDateFrom').attr("disabled", true);
+        $('#R_DocumentDateTo').attr("disabled", true);
+    });
+
+        function GetPersonalIdentityV2() {
+            var documentNumber = $("#DocumentNumber").val();
+            var casePersonId = @Model.CasePersonId;
+            postContent('@Url.Action("GetPersonalIdentityV2", "CasePerson")'
+                , { CasePersonId: casePersonId, DocumentNumber: documentNumber }
+                , function (data) {
+                    $("#R_DocumentValid").val(data.documentRegixVM.documentValid);
+                    $("#R_PersonName").val(data.documentRegixVM.personName);
+                    $("#R_PersonUic").val(data.documentRegixVM.personUic);
+                    $("#R_DocumentType").val(data.documentRegixVM.documentType);
+                    $("#R_DocumentNumber").val(data.documentRegixVM.documentNumber);
+                    $("#R_IssuerName").val(data.documentRegixVM.issuerName);
+                    $("#R_DocumentDateFrom").val(data.documentRegixVM.documentDateFrom);
+                    $("#R_DocumentDateTo").val(data.documentRegixVM.documentDateTo);
+                    debugger;
+                    if (data.documentRegixVM.issuerName != null) {
+                        $("#DocumentRegix").show();
+                        $("#DocumentRegixData").show();
+
+                        if (@Model.Id < 1) {
+                            $("#DocumentDate").val(data.documentRegixVM.documentDateFromDate);
+                            $("#DocumentDateTo").val(data.documentRegixVM.documentDateToDate);
+                            $("#IssuerName").val(data.documentRegixVM.issuerName);
+                        }
+                    }
+                    else {
+                        $("#DocumentRegix").show();
+                    }
+                });
+        }
+
+    </script>
+}
+

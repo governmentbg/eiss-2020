@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "Списък ПОС устройства";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="AddPosDevice" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataPosDevice")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Име на устройство',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'courtBankAccountName',
+                        data: 'courtBankAccountName',
+                        title: 'По сметка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'tid',
+                        data: 'tid',
+                        title: 'Номер на ПОС устройство',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isActive',
+                        data: "isActive",
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditPosDevice")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

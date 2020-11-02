@@ -1,0 +1,11 @@
+﻿@model string
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    //var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+    var flags = ((int?)ViewData["flags"] ?? 0);
+}
+<div class="eisppnumber-container">
+    <label asp-for="@Model" class="control-label"></label>
+    <input asp-for="@Model" class="form-control io-req" autocomplete="false" readonly="@flags == 3" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

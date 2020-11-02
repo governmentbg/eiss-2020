@@ -1,0 +1,533 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-style: italic;
+		}
+
+		p.ListParagraph2, li.ListParagraph2, div.ListParagraph2 {
+			mso-style-name: "List Paragraph2 ЕИСС";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpFirst, li.ListParagraph2CxSpFirst, div.ListParagraph2CxSpFirst {
+			mso-style-name: "List Paragraph2 ЕИССCxSpFirst";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpMiddle, li.ListParagraph2CxSpMiddle, div.ListParagraph2CxSpMiddle {
+			mso-style-name: "List Paragraph2 ЕИССCxSpMiddle";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpLast, li.ListParagraph2CxSpLast, div.ListParagraph2CxSpLast {
+			mso-style-name: "List Paragraph2 ЕИССCxSpLast";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraph2Char {
+			mso-style-name: "List Paragraph2 ЕИСС Char";
+			mso-style-link: "List Paragraph2 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 74.55pt;
+			text-align: justify;
+			text-indent: 0cm;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Heading4IO, li.Heading4IO, div.Heading4IO {
+			mso-style-name: "Heading 4 IO";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.4pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h4 style='margin-left:125.45pt;text-indent:-36.0pt'>
+			<a name="_Toc42527916">
+				1.1.1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>Бутон Престъпления
+			</a>
+		</h4>
+
+		<p class=MsoNormal>
+			Посредством бутон Престъпления <img width=109 height=34
+									   id="Picture 143489" src="casepersonsentence_files/image001.jpg"> има възможност
+			за извършване на действия и преглед на справки за престъпления по наказателните
+			дела.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=267
+				 id="Picture 142271" src="casepersonsentence_files/image002.jpg"
+				 alt=престъпления>
+		</p>
+
+		<p class=MsoListParagraph>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span> Преглед на престъпления по НД
+		</p>
+
+		<p class=MsoCaption>
+			<img width=485 height=217 id="Picture 142239"
+				 src="casepersonsentence_files/image003.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Преглед и въвеждане на престъпления по НД става посредством
+			избор на бутон Престъпления от секция Действия в таб Основни данни.
+		</p>
+
+		<p class=MsoNormal>
+			В списъка се извеждат всички престъпления извлечени от
+			технологичната справка на ЕИСПП. Има възможност за ръчно добавяне на престъпления.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=126
+				 id="Picture 142240" src="casepersonsentence_files/image004.jpg">
+		</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Въвеждане на престъпление става посредством избор на бутон <img width=75 height=29 id="Picture 142241"
+																				   src="casepersonsentence_files/image005.jpg">.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=424
+				 height=211 id="Picture 142242" src="casepersonsentence_files/image006.jpg">
+		</p>
+
+		<p class=MsoNormal>Въвеждат се следните данни:</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Код по ЕИСПП – въвежда се код на престъпление по ЕИСПП;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Вид престъпление – при въвеждане на минимум три последователни символа,
+			системата автоматично търси и предлага за избор списък от престъпления;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>id от ЕИСПП – получава се от обмена на данни с ЕИСПП.
+		</p>
+
+		<p class=MsoNormal>След попълване на изискуемите данни се избира бутон Запис.</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Редакция на престъпление
+		</p>
+
+		<p class=MsoNormal>
+			<img width=604 height=135 id="Picture 142243"
+				 src="casepersonsentence_files/image007.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Редакция на престъпление става посредством избор на бутон
+			редакция <img width=35 height=30 id="Picture 143474"
+					   src="casepersonsentence_files/image008.jpg">на реда на съответното
+			престъпление. Екранът за редакция съдържа аналогични полета като тези при
+			въвеждане.
+		</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Лица към престъпления
+		</p>
+
+		<p class=MsoNormal>
+			Към всяко престъпление може да има въведени свързани лица. В
+			списъка се извеждат всички лица извлечени от технологичната справка на ЕИСПП.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=135
+				 id="Picture 142244" src="casepersonsentence_files/image009.jpg"> 
+		</p>
+
+		<p class=MsoNormal>
+			Преглед на лица към престъпление става посредством избор на
+			бутон Лица <img width=25 height=26 id="Picture 142245"
+					  src="casepersonsentence_files/image010.jpg"> в екрана с престъпления.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=113
+				 id="Picture 142246" src="casepersonsentence_files/image011.jpg">
+		</p>
+
+		<p class=MsoNormal>Има възможност за ръчно добавяне на лица към престъпление.</p>
+
+		<p class=MsoNormal>
+			Добавяне на лице към престъпление става посредством избор на
+			бутон <img width=55 height=21 id="Picture 142247"
+					src="casepersonsentence_files/image012.jpg">.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=394
+				 height=185 id="Picture 142248" src="casepersonsentence_files/image013.jpg">
+		</p>
+
+		<p class=MsoNormal>Въвеждат се следните данни:</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Лице – избор от лицата въведени по делото;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Роля на лицето в престъплението – избор на падащ списък с номенклатура
+			на роля в престъпление;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Рецидив –  избор от падащ списък с номенклатура за квалификация на
+			участието в престъплението на лицето.
+		</p>
+
+		<p class=MsoNormal>След попълване на изискуемите данни се избира бутон Запис.</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Редакция на лице към престъпление
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=143
+				 id="Picture 142249" src="casepersonsentence_files/image014.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Редакция на лице става посредством избор на бутон Редакция<img width=35 height=30 id="Picture 143475"
+																		   src="casepersonsentence_files/image008.jpg"> на реда на съответното лице в
+			престъпление. Екранът за редакция съдържа аналогични полета като тези при
+			въвеждане.
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

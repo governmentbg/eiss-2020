@@ -1,0 +1,50 @@
+[
+  {
+    "aread_id": "1",
+    "region": "BG31",
+    "name": "Северозападен",
+    "document": "1483",
+    "abc": "1",
+    "name_en": "Severozapaden"
+  },
+  {
+    "aread_id": "2",
+    "region": "BG32",
+    "name": "Северен централен",
+    "document": "1483",
+    "abc": "2",
+    "name_en": "Severen tsentralen"
+  },
+  {
+    "aread_id": "3",
+    "region": "BG33",
+    "name": "Североизточен",
+    "document": "1483",
+    "abc": "3",
+    "name_en": "Severoiztochen"
+  },
+  {
+    "aread_id": "4",
+    "region": "BG34",
+    "name": "Югоизточен",
+    "document": "1483",
+    "abc": "4",
+    "name_en": "Yugoiztochen"
+  },
+  {
+    "aread_id": "5",
+    "region": "BG41",
+    "name": "Югозападен",
+    "document": "1483",
+    "abc": "5",
+    "name_en": "Yugozapaden"
+  },
+  {
+    "aread_id": "6",
+    "region": "BG42",
+    "name": "Южен централен",
+    "document": "1483",
+    "abc": "6",
+    "name_en": "Yuzhen tsentralen"
+  }
+]

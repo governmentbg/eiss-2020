@@ -1,0 +1,84 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Core.Extensions
+
+@model RegixCompensationByPaymentPeriodVM
+
+@{
+    var identifierType = "";
+    if (Model.Report.Id > 0)
+    {
+        identifierType = ((IdentifierTypeCompensationByPaymentPeriodVM)Model.CompensationByPaymentPeriodFilter.IdentifierTypeFilter).GetDisplayName();
+    }
+}
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.CompensationByPaymentPeriodFilter.IdentifierFilter, "objInline", new { label = "Справка за: " + identifierType + " " })
+        <b>
+            От дата до дата:
+        </b>
+        @Model.CompensationByPaymentPeriodFilter.DateFromFilter.ToString("dd.MM.yyyy") - @Model.CompensationByPaymentPeriodFilter.DateToFilter.ToString("dd.MM.yyyy")
+        <br />
+        <br />
+
+        @Html.DisplayFor(x => x.CompensationByPaymentPerioResponse.Identifier, "objInline")
+        @Html.DisplayFor(x => x.CompensationByPaymentPerioResponse.IdentifierType, "objInline")
+        @Html.DisplayFor(x => x.CompensationByPaymentPerioResponse.Names, "objInline")
+
+        @if (Model.CompensationByPaymentPerioResponse.Payments.Count() == 0)
+        {
+            <b>Липсват данни за изплатени обезщетения</b>
+        }
+        else
+        {
+            <table>
+                <tr>
+                    <td colspan="3">
+                        <table class="bordered">
+                            <tr>
+                                <td><b>Вид</b></td>
+                                <td><b>Месец</b></td>
+                                <td><b>Година</b></td>
+                                <td><b>Изплатена сума</b></td>
+                                @if (Model.CompensationTypeId == NomenclatureConstants.RegixType.DisabilityCompensationByPaymentPeriod)
+                                {
+                                    <td><b>Дата</b></td>
+                                }
+                            </tr>
+
+                            @foreach (var item in Model.CompensationByPaymentPerioResponse.Payments)
+                            {
+                                <tr>
+                                    <td align="left">
+                                        @item.BenefitType
+                                    </td>
+                                    <td align="right">
+                                        @item.BenefitMonth
+                                    </td>
+                                    <td align="right">
+                                        @item.BenefitYear
+                                    </td>
+                                    <td align="right">
+                                        @item.BenefitAmount
+                                    </td>
+                                    @if (Model.CompensationTypeId == NomenclatureConstants.RegixType.DisabilityCompensationByPaymentPeriod)
+                                    {
+                                        <td align="center">
+                                            @item.BenefitDatePayment
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        }
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

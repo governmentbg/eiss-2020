@@ -1,0 +1,21 @@
+﻿@model int?
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var groupClass = "";
+    if (ViewData["groupClass"] != null)
+    {
+        groupClass = (string)ViewData["groupClass"];
+    }
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+<div class="form-group @groupClass">
+    <label asp-for="@Model" class="control-label @reqClass"></label>
+    <div class="input-group date">
+        <div class="input-group-addon">
+            <i class="fa fa-calendar"></i>
+        </div>
+        <input asp-for="@Model" class="form-control dateyear-picker" type="text" autocomplete="off" />
+    </div>
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

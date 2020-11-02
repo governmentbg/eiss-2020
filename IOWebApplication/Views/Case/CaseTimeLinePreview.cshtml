@@ -1,0 +1,92 @@
+﻿@model CaseElectronicFolderVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Съдебно дело " + Model.RegNumber;
+    }
+    else
+    {
+        ViewData["Title"] = "Преглед на съдебно дело";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs" id="caseTab">
+                        <li class="active"><a href="#tabMainData" data-toggle="tab"><i class="fa fa-database"></i> Електронна папка</a></li>
+                        <li class=""><a href="#tabLawUnit" data-toggle="tab"><i class="fa fa-line-chart"></i> Хронология</a></li>
+                        @*<li class=""><a href="#tabSession" data-toggle="tab"><i class="fa fa-users"></i> Заседания</a></li>*@
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tabMainData">
+                            <div class="row">
+                                <div class="col-lg-6"><partial name="../Case/_CaseTimeLine.cshtml" model="@Model" /></div>
+                                <div class="col-lg-6">
+                                    @foreach (var caseSessionVM in Model.CaseSessions.OrderBy(x => x.DateFrom))
+                                    {
+                                        caseSessionVM.IsOnlyFiles = Model.IsOnlyFiles;
+                                        <partial name="../CaseSession/_CaseSessionTimeLine.cshtml" model="@caseSessionVM" />
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane" id="tabLawUnit">
+                            <partial name="../Case/_CaseHronologia.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+        $(function () {
+            $('div.cdn-listview').each(function (i, e) {
+                $(this).find('a').click(function () {
+                    let url = '@Url.Action("FileListView","Files")';
+                    if ($(this).data('url')) {
+                        url = $(this).data('url');
+                    }
+                    requestContent(url,
+                        { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                        function (html) {
+                            $(e).html(html);
+                        });
+                    return false;
+                });
+            });
+        });
+
+        $(document).ready(function () {
+            $('#tabMainData input[type="text"]').attr("disabled", true);
+        });
+    </script>
+}

@@ -1,0 +1,218 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model ObligationJuryFilterReportVM
+
+@{
+    ViewData["Title"] = "Справка за възнаграждения";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("ObligationJuryReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.MoneyGroupId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(m => m.OnlyJury)</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="obligationJuryMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#obligationJuryMainTable')) {
+            refreshTable('#obligationJuryMainTable');
+        }
+        else {
+            $('#obligationJuryMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataObligationJuryReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            SessionTypeId: $("#SessionTypeId").val(),
+                            MoneyGroupId: $("#MoneyGroupId").val(),
+                            OnlyJury: $("#OnlyJury").is(":checked"),
+                        };
+                    }
+                },
+                columns: [
+                    {
+                        name: 'caseTypeName',
+                        data: 'caseTypeName',
+                        title: 'Вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseNumber',
+                        data: 'caseNumber',
+                        title: 'Номер/Година',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionTypeName',
+                        data: 'sessionTypeName',
+                        title: 'Вид заседание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'sessionDate',
+                        data: 'sessionDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'personName',
+                        data: 'personName',
+                        title: 'Лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'moneyGroupName',
+                        data: 'moneyGroupName',
+                        title: 'Сметка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'obligationDate',
+                        data: 'obligationDate',
+                        title: 'Дата на възнаграждението',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amountTransport',
+                        data: 'amountTransport',
+                        title: 'В т.ч. пътни',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'status',
+                        data: 'status',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Текст',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'expenseOrderDates',
+                        data: 'expenseOrderDates',
+                        title: 'Изготвени РКО',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        {{#if existCase}}
+        <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        {{/if}}
+    </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+</script>

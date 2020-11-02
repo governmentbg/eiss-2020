@@ -1,0 +1,12 @@
+﻿@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@{
+    ViewData["Title"] = "Отказан достъп";
+}
+<div class="row">
+    <div class="col-lg-offset-3 col-lg-6">
+        <div class="alert alert-danger">
+            <h4><i class="icon fa fa-ban"></i> @ViewData["Title"]!</h4>
+            @ViewBag.message
+        </div>
+    </div>
+</div>

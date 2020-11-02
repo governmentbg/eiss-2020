@@ -1,0 +1,21 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    var caseId = ViewBag.caseId;
+    ViewData["Title"] = "Коригиращи коефициенти по дело " + ViewBag.CaseName;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни дела</a></li>
+        <li><a href="@Url.Action("CasePreview","Case", new { id = caseId})">Дело @ViewBag.CaseName</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../CaseLoadCorrection/_CaseLoadCorrection.cshtml" model="@new CaseMainDataVM { Id = caseId} " />
+    </div>
+</div>

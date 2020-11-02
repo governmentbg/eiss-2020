@@ -1,0 +1,199 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@model WorkingDaysFilter
+
+@{
+    ViewData["Title"] = "Pаботни и почивни дни";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6 col-lg-4">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-md-6 col-lg-4">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+</div>
+@*<div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>*@
+<div class="row">
+    <div class="form-group">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#workingDaysTable');" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Филтриране"></i>
+            </button>
+        </div>
+
+        <div class="col-md-6 text-right pb-15">
+            <a asp-action="Add" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="workingDaysTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+
+
+    <script>
+        $(function () {
+            var table = $('#workingDaysTable').DataTable({
+                ajax: {
+                    "url": '@Url.Action("ListData", "WorkingDays")',
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.DateFrom = $('#DateFrom').val();
+                        d.DateTo = $('#DateTo').val();
+                    }
+                },
+                filter: true,
+                "bLengthChange": false,
+                "serverSide": true,
+                "processing": true,
+                "paging": true,
+                "pageLength": 20,
+                "stateSave": true,
+                "stateDuration": -1,
+                columns: [
+                    {
+                        name: 'Day',
+                        data: 'day',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+                    {
+                        name: 'DayTypeName',
+                        data: 'dayTypeName',
+                        title: 'Тип ден',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'CourtName',
+                        data: 'courtName',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'Description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'id',
+                        data: 'id',
+                        title: '',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (data, type, row, meta) {
+                            var parameters = {
+                                id: row.id
+                            }
+                            return TemplateToHtml('#templateActions', parameters)
+                        }
+                    },
+                ],
+            });
+        });
+    </script>
+
+
+    <script id="templateActions" type="text/x-handlebars-template">
+        <div class="text-left" style="font-size:1.5em">
+            <a href="@Url.Action("Edit")/{{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+            @*<a href="@Url.Action("Delete")/{{id}}" class="btn btn-warning btn-sm" title="Изтриване"><i class="fa fa-trash"></i><span class="hidden-sm hidden-xs"> Изтриване</span></a>*@
+            <button type="button" onclick="DeleteAlert(this);"
+                    class="btn btn-danger btn-sm" title="Изтриване"
+                    data-ID="{{id}}"
+                    data-Title="Изтриване на запис от календара"
+                    data-Message="Сигурни ли сте, че искате да изтриете записа?">
+                <i class="fa fa-trash"></i><span class="hidden-sm hidden-xs"> Изтриване</span>
+            </button>
+        </div>
+    </script>
+
+
+
+
+    <script>
+
+       function DeleteAlert(element) {
+            var data = $(element).data();
+            var id = data.id;
+            swal({
+                title: data.title,
+                text: data.message,
+                icon: "error",
+                buttons: ["Отказ", "Изтриване"],
+                dangerMode: true,
+            })
+                .then((result) => {
+                    if (result) {
+                        // Изтрива работен ден от списъка с работни дни
+                        DeleteWorkingDay(id)
+                    } else {
+                        return false;
+                    }
+                });
+        }
+
+        // Изтрива работен ден от списъка с работни дни
+        function DeleteWorkingDay(ID) {
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("Delete", "WorkingDays")',
+                data: {
+                    "id": ID
+                },
+                dataType: "json",
+                beforeSend: function () {
+                },
+                success: function (data) {
+                   refreshTable('#workingDaysTable');
+
+                    if (data.status === 'ok') {
+                        messageHelper.ShowSuccessMessage(data.message);
+                    } else {
+                        messageHelper.ShowErrorMessage(data.message);
+                     }
+
+                },
+                error: function (result) {
+                    writeJavascriptExceptionToErrorLog("Error in DeleteWorkingDay", result.status + ' Type :' + result.statusText);
+                }
+            });
+        }
+
+    </script>
+}
+
+
+
+

@@ -1,0 +1,140 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@model CaseFilterReport
+
+@{
+    ViewData["Title"] = "Oбразувани и свършени дела за корупционни престъпления";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseCorruptCrimes")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'caseRegNum',
+                        data: 'caseRegNum',
+                        title: '№ дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegDate',
+                        data: 'caseRegDate',
+                        title: 'Дата на образуване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'courtLabel',
+                        data: 'courtLabel',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'casePersons',
+                        data: 'casePersons',
+                        title: 'Лице, срещу което се води наказателното производство',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'casePersonRoles',
+                        data: 'casePersonRoles',
+                        title: 'Длъжностно качество на лицето',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Правна квалификация на деянието по обвинението',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'casePersonSentenceInfo',
+                        data: 'casePersonSentenceInfo',
+                        title: 'Съдебен акт (кратък диспозитив, оправдан, признат за виновен) текст от НК',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview")/{{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    
+</script>

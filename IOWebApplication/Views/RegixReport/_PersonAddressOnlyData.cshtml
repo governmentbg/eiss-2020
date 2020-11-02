@@ -1,0 +1,20 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixPersonAddressResponseVM
+
+<div>
+    @if (string.IsNullOrEmpty(Model.CountryName) == false)
+    {
+        @Html.DisplayFor(x => x.CountryName, "objInline")
+    }
+    @Html.DisplayFor(x => x.DistrictName, "objInline")
+    @Html.DisplayFor(x => x.MunicipalityName, "objInline")
+    @Html.DisplayFor(x => x.SettlementName, "objInline")
+    @Html.DisplayFor(x => x.CityArea, "objInline")
+    @Html.DisplayFor(x => x.LocationName, "objInline")
+    @Html.DisplayFor(x => x.BuildingNumber, "objInline")
+    @Html.DisplayFor(x => x.Entrance, "objInline")
+    @Html.DisplayFor(x => x.Floor, "objInline")
+    @Html.DisplayFor(x => x.Apartment, "objInline")
+    @Html.DisplayFor(x => x.FromDate, "objInline")
+</div>
+

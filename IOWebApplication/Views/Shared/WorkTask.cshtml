@@ -1,0 +1,166 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@model SourceTypeSelectVM
+<div>
+    <div id="wtContainer">
+    </div>
+    <a href="#" data-modal-title="Нова задача"
+       data-modal-url="@Url.Action("CreateTask","WorkTask",new {sourceType=Model.SourceType,sourceId=Model.SourceId })"
+       class="modal-loader btn btn-sm btn-success">
+        <i class="fa fa-plus"></i> Нова задача
+    </a>
+</div>
+<script>
+    $(function () {
+        wtLoadData();
+    });
+    function wtLoadData() {
+        requestGET_Json('@Url.Action("Select","WorkTask")'
+            , { sourceType:@Model.SourceType, sourceId:@Model.SourceId}
+            , function (data) {
+                $('#wtContainer').html(TemplateToHtml('#workTaskTemplate', data));
+                if ('@(Model.TaskRequired.ToString().ToLower())' == 'true') {
+                    if (data.length > 0) {
+                        if ($('#wtContainer').hasClass('io-element-warning')) {
+                            $('#wtContainer').removeClass('io-element-warning');
+                        }
+                    } else {
+                        $('#wtContainer').addClass('io-element-warning');
+                    }
+                    validateTabs();
+                }
+            });
+    }
+
+    function wtAcceptTask(id) {
+        //swalConfirm('Потвърди приемането на задачата!', function () {
+            postContent('@Url.Action("AcceptTask","WorkTask")'
+            , {id:id}
+            , function (data) {
+                if (data.result == true) {
+                    wtLoadData();
+                    messageHelper.ShowSuccessMessage('Задачата е приета успешно.');
+                } else {
+                    messageHelper.ShowErrorMessage('Грешка при приемане на задача.');
+                }
+            });
+        //});
+    }
+    function wtCompleteTask(id) {
+        requestContent('@Url.Action("CompleteTask","WorkTask")'
+            , { id:id}
+            , function (data) {
+                ShowModalDialog('Изпълни задача', data);
+            });
+    }
+    function wtDoTask(sender) {
+        window.location.href = $(sender).data('url');
+
+
+        //var wtConfirmText = 'Премини към изпълнение на задачата!';
+        //if ($(sender).data('warning')) {
+        //    wtConfirmText = $(sender).data('warning');
+        //}
+        //swalConfirm(wtConfirmText, function () {
+        //    window.location.href = $(sender).data('url');
+        //});
+    }
+</script>
+<script id="workTaskTemplate" type="text/x-handlebars-template">
+    {{#if this}}
+    <div class="worktask-header">
+        <div class="row">
+            <div class="col-lg-3">
+                <b>Вид задача</b>
+            </div>
+            <div class="col-lg-3">
+                <b>Автор / Дата на създаване / Срок за изпълнение</b>
+            </div>
+            <div class="col-lg-3">
+                <b>Изпълнител / Дата на приемане</b>
+            </div>
+            <div class="col-lg-3">
+                <b>Статус / Дата на изпълнение</b>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+    {{#each this}}
+    <div class="worktask-item">
+        <div class="row">
+            <div class="col-lg-3">
+                <b>{{taskTypeName}}</b>
+                {{#if taskActionName}}
+                <br />
+                {{taskActionName}}
+                {{/if}}
+                {{#if descriptionCreated}}
+                <br />
+                <span class="remark">
+                    {{descriptionCreated}}
+                </span>
+                {{/if}}
+                {{#if canUpdate}}
+                <br />
+                <a href="#" class="modal-loader btn btn-xs btn-warning"
+                   data-modal-title="Редакция на задача"
+                   data-modal-url="@Url.Action("UpdateTask","WorkTask")?id={{id}}"><i class="fa fa-edit"></i> Редакция</a>
+                {{/if}}
+            </div>
+            <div class="col-lg-3">
+                {{userCreatedFullName}}
+
+                <br />
+                <span class="remark">{{dateTimeMin dateCreated}}</span>
+                {{#if dateEnd}}
+                <br />
+                <span class="date-end {{#if overDue}}overdue{{/if}}">
+                    <b>Срок: {{date dateEnd}}</b>
+                </span>
+                {{/if}}
+            </div>
+
+            <div class="col-lg-3">
+                {{userFullName}}
+                {{#if dateAccepted}}
+                <br />
+                <span class="remark">{{dateTimeMin dateAccepted}}</span>
+                {{/if}}
+                {{#if canAccept}}
+                <br />
+                <a href="#" class="btn btn-xs btn-def" onclick="wtAcceptTask('{{id}}');"><i class="glyphicon glyphicon-ok"></i> Приемане</a>
+                &nbsp;
+                &nbsp;
+                {{/if}}
+                {{#if canRedirect}}
+                <a href="#" class="modal-loader btn btn-xs btn-danger" data-modal-title="Пренасочване на задача"
+                   data-modal-url="@Url.Action("RedirectTask","WorkTask")?id={{id}}"><i class="glyphicon glyphicon-random"></i> Пренасочване</a>
+                {{/if}}
+            </div>
+            <div class="col-lg-3">
+                <span class="state{{taskStateId}}">{{taskStateName}}</span>
+                {{#if dateCompleted}}
+                <br />
+                <span class="remark">{{dateTimeMin dateCompleted}}</span>
+                {{#if description}}
+                <br />
+                <span class="remark">
+                    {{description}}
+                </span>
+                {{/if}}
+                {{else}}
+                {{#if canDoAction}}
+                <br />
+                {{#if doActionUrl}}
+                <a href="#" data-url="{{{doActionUrl}}}" data-warning="{{doActionWarning}}" class="btn btn-sm btn-primary" onclick="wtDoTask(this);"><i class="glyphicon glyphicon-exclamation-sign"></i> Изпълни</a>
+                &nbsp;
+                {{/if}}
+                {{#if canComplete}}
+                <a href="#" class="btn btn-sm btn-default" onclick="wtCompleteTask('{{id}}');"><i class="glyphicon glyphicon-thumbs-up"></i> Приключи</a>
+                {{/if}}
+                {{/if}}
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    {{/each}}
+</script>

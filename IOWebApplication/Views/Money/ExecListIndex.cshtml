@@ -1,0 +1,269 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@model ExecListFilterVM
+
+@{
+    ViewData["Title"] = "Изготвени изпълнителни листове";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.RegNumber)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.ExecListTypeId, "GenericDropDown")</div>
+</div>
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.FullName)</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.FullNameReceive)</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.InstitutionId, "GenericDropDown")</div>
+</div>
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActiveExecList, "Boolean")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable();" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+        <button type="button" class="btn btn-primary" id="btnExchangeDoc" onclick="MakeExchangeDoc()" value="Протокол" title="Протокол">
+            Протокол
+            <i class="fa fa-paypal" title="Протокол"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTableExecList" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        LoadTable();
+    });
+
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTableExecList')) {
+            refreshTable('#mainTableExecList');
+        }
+        else {
+            table = $('#mainTableExecList').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataExecList", "Money")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            RegNumber: $("#RegNumber").val(),
+                            FullName: $("#FullName").val(),
+                            FullNameReceive: $("#FullNameReceive").val(),
+                            ExecListTypeId: $("#ExecListTypeId").val(),
+                            InstitutionId: $("#InstitutionId").val(),
+                            ActiveExecList: $("#ActiveExecList").is(":checked")
+                        };
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: "checkRow",
+                        data: "checkRow",
+                        title: '<input type="checkbox" id="select-all" onclick="selectAll();">',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            return '<input type="checkbox" value="' + row.id + '">';
+                        }
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'execListTypeName',
+                        data: 'execListTypeName',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fullNameReceive',
+                        data: 'fullNameReceive',
+                        title: 'В полза на трето лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'institutionNames',
+                        data: 'institutionNames',
+                        title: 'Възлагателно писмо до',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'exchangeDocNumber',
+                        data: 'exchangeDocNumber',
+                        title: 'Протокол',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseNumber',
+                        data: 'caseNumber',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateCaseNumber', item);
+                        }
+                    },
+                    {
+                        name: 'isActive',
+                        data: "isActive",
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport col-md-1",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    function ReloadDatatable() {
+        refreshTable('#mainTableExecList');
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditExecList")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    <a href="#" class="btn btn-sm btn-danger" onclick="StornoOrder('{{this}}');"><i class="fa fa-remove"></i></a>
+</script>
+
+<script id="templateCaseNumber" type="text/x-handlebars-template">
+    {{#if caseId}}
+    <a href="@Url.Action("CasePreview","Case")/{{caseId}}" target="_blank" title="Преглед дело">{{caseNumber}}</a>
+    {{/if}}
+</script>
+
+<script>
+        function selectAll() {
+            var check = $("#select-all").is(':checked');
+            var rows = table.rows({ 'search': 'applied' }).nodes();
+            $('input[type="checkbox"]', rows).prop('checked', check);
+        }
+
+        function GetAllCheckIds() {
+            var ids = "";
+            table.$('input[type="checkbox"]').each(function () {
+                if (this.checked) {
+                    if (ids != "") {
+                        ids = ids + ",";
+                    }
+                    ids = ids + this.value;
+                }
+            });
+            return ids;
+        }
+
+        function StornoOrder(id) {
+            swalConfirm('Потвърди деактивирането на изпълнителния лист!', function () {
+                postContent('@Url.Action("StornoExecList", "Money")'
+                    , { id: id }
+                    , function (data) {
+                        if (data.result == true) {
+                            refreshTable('#mainTableExecList');
+                            messageHelper.ShowSuccessMessage(data.message);
+                        } else {
+                            messageHelper.ShowErrorMessage(data.message);
+                        }
+                    });
+            });
+        }
+
+    function MakeExchangeDoc() {
+        if (table === undefined) return;
+        var ids = GetAllCheckIds();
+
+        if (ids == "") {
+            messageHelper.ShowErrorMessage('Изберете поне един ИЛ.');
+            return;
+        }
+        swalConfirm('Потвърди създаване на протокол за избраните ИЛ!', function () {
+            postContent('@Url.Action("ExchangeDoc", "Money")'
+                , { idStr: ids }
+                , function (data) {
+                    if (data.result == true) {
+                        refreshTable('#mainTableExecList');
+                        messageHelper.ShowSuccessMessage(data.message);
+                    } else {
+                        messageHelper.ShowErrorMessage(data.message);
+                    }
+                });
+        });
+    }
+</script>
+

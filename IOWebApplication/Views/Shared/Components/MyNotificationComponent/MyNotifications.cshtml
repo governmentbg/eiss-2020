@@ -1,0 +1,50 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Common;
+@using IOWebApplication.Core.Contracts;
+@inject IWorkNotificationService service;
+@model WorkNotificationFilterVM;
+@{
+    IEnumerable<WorkNotification> notifications = service.SelectWorkNotifications(Model);
+}
+
+<div class="box wn-box" style="border:none">
+    <div class="box-body" style="border:none">
+        @foreach (var notification in notifications)
+        {
+            <div id="@notification.Id.ToString()" class="wn-box col-lg-6" style="border:1px grey solid;border-radius:5px; margin: 4px;">
+                <div class="box-header">
+                    <h2 class="box-title">@notification.Title</h2>
+
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="" data-original-title="Collapse">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="" data-original-title="Remove">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    @notification.Description
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<script>
+    function wtDoNotification(realRemove) {
+        var wtConfirmText = 'Маркирай известието като прочетено!';
+        swalConfirm(wtConfirmText, function () {
+            realRemove();
+        });
+    }
+    $(document).ready(function () {
+        if (!document.old_boxWidgetConstructorRemove)
+            document.old_boxWidgetConstructorRemove = $.fn.boxWidget.Constructor.prototype.remove;
+        var oldRemove = document.old_boxWidgetConstructorRemove;
+        $.fn.boxWidget.Constructor.prototype.remove = function () {
+            var old = oldRemove.bind(this);
+            wtDoNotification(old);
+        };
+        $('.wn-box').boxWidget();
+    });
+</script>

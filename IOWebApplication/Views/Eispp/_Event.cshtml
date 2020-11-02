@@ -1,0 +1,32 @@
+﻿@model Event
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+
+<div class="nav-tabs-custom" id="mainTabs">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#tabMainData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+        <li class=""><a href="#tabPerson" data-toggle="tab"><i class="fa fa-user"></i> Свързани лица</a></li>
+        <li class=""><a href="#tabCrimes" data-toggle="tab"><i class="fa fa-gavel"></i> Престъпления и участия</a></li>
+    </ul>
+    <div class="tab-content">
+        @{
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}";
+            @await Html.PartialAsync("_EventMainData", Model)
+        }
+        @{
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.CriminalProceeding.Case";
+            @await Html.PartialAsync("_EisppPersons", Model.CriminalProceeding.Case)
+        }
+        @{
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.CriminalProceeding.Case";
+            @await Html.PartialAsync("_EisppCrimes", Model.CriminalProceeding.Case)
+        }
+    </div>
+</div>
+
+
+
+
+

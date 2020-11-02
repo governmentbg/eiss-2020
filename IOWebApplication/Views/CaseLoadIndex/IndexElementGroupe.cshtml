@@ -1,0 +1,83 @@
+﻿@{
+    ViewData["Title"] = "Основни дейности - натовареност";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="AddElementGroupe" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataElementGroupe")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'isNDLabel',
+                        data: 'isNDLabel',
+                        title: 'Наказателно дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseInstanceLabel',
+                        data: 'caseInstanceLabel',
+                        title: 'Инстанция',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            }).order([[ 0, "asc" ]]);
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditElementGroupe")/{{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("IndexElementType")?CaseLoadElementGroupId={{this}}" class="btn btn-primary btn-sm" title="Елементи към група"><i class="fa fa-sitemap"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

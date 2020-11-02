@@ -1,0 +1,164 @@
+﻿@model HtmlTemplateFilterVM;
+@{
+    ViewData["Title"] = "Бланки на документи";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<form id="formFilter" asp-action="Edit" method="post">
+    <div class="row">
+        <div class="col-md-5">
+            @Html.EditorFor(x => x.HtmlTemplateTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-2 text-right pb-15">
+            <br>
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadHtmlTemplate()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+
+    </div>
+    <div class="row">
+        <hr>
+    </div>
+</form>
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+        <a asp-action="AddHtmlTemplateCreate" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Създаване на бланка
+        </a>
+    </div>
+</div>
+
+@*<div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-action="ImportHtmlParam" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Импорт на параметрите
+            </a>
+        </div>
+    </div>*@
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<form name="formPostEditCreate" id="formPostEditCreate" action="@Url.Action("EditHtmlTemplateCreate")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        if ($('#filterJson').val() == "") {
+                           $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+                        }
+                        d.filterData = JSON.parse($('#filterJson').val());
+                    }
+                },
+                columns: [
+                    {
+                        name: 'HtmlTemplateTypeLabel',
+                        data: 'htmlTemplateTypeLabel',
+                        title: 'Вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'Label',
+                        data: 'label',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'Alias',
+                        data: 'alias',
+                        title: 'Указател на бланка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'FileName',
+                        data: 'fileName',
+                        title: 'Име на файл',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("DownloadFile", "HtmlTemplate",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Сваляне на файл' href=" + url + "><i class='fa fa fa-file-code-o'></i> " + row.fileName + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+        function printTemplateRaw(id) {
+            window.open('@Url.Action("PreviewRaw")/' + id, '_blank');
+        }
+        function LoadHtmlTemplate() {
+            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+            $('#mainTable').DataTable().ajax.reload();
+        }
+        function EditHtmlTemplate(id) {
+             $('#formPostEdit').attr('action', '@Url.Action("Edit")/'+ id);
+             $("#formPostEdit").submit();
+        }
+        function IndexLinkHtmlTemplate(id) {
+            $('#formPostEdit').attr('action', '@Url.Action("IndexLink")/' + id);
+            $("#formPostEdit").submit();
+        }
+        function IndexParamHtmlTemplate(id) {
+            $('#formPostEdit').attr('action', '@Url.Action("IndexParam")/' + id);
+            $("#formPostEdit").submit();
+        }
+        function EditHtmlTemplateCreate(id) {
+            $('#formPostEditCreate').attr('action', '@Url.Action("EditHtmlTemplateCreate")/'+ id);
+            $("#formPostEditCreate").submit();
+        }
+
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{id}}" onclick="EditHtmlTemplate({{id}})" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        {{#if isCreate}}
+        <a onclick="EditHtmlTemplateCreate({{id}})" class="btn btn-warning btn-sm" title="Редакция на бланка"><i class="fa fa-pencil"></i><span class="hidden-sm hidden-xs"></span></a>
+        {{/if}}
+        <a href="@Url.Action("IndexLink")/{{id}}" onclick="IndexLinkHtmlTemplate({{id}})" class="btn btn-dropbox btn-sm" title="Връзки по вид съд/дело"><i class="fa fa-external-link"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="IndexParamHtmlTemplate({{id}})" class="btn btn-google btn-sm" title="Параметри в бланка"><i class="fa fa-paragraph"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("Preview")/{{id}}" class="btn btn-file btn-sm" title="Преглед на бланка"><i class="fa fa-file-o"></i><span class="hidden-sm hidden-xs"> Преглед TinyMCE</span></a>
+        <a onclick="printTemplateRaw({{id}})" class="btn btn-file btn-sm" title="Преглед на бланка"><i class="fa fa-file-o"></i><span class="hidden-sm hidden-xs"> Преглед Html</span></a>
+        <a href="@Url.Action("HtmlTemplate_GetNotSetParam")/{{id}}" class="btn btn-file btn-sm" title="Непопълнени параметри"><i class="fa fa-paragraph"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

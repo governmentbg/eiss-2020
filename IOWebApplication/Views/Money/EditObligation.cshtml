@@ -1,0 +1,209 @@
+﻿@model ObligationEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на сума";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на сума";
+    }
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    string moneyTypeJson = @ViewBag.MoneyTypeJson;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditObligation" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseSessionActId)
+            @Html.HiddenFor(x => x.DocumentId)
+            @Html.HiddenFor(x => x.CaseSessionId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.Person_SourceType)
+            @Html.Hidden("moneyTypeJson", moneyTypeJson)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.Person_SourceId, "GenericDropDownLong")
+                @Html.EditorFor(x => x.MoneyTypeId, "GenericDropDown")
+
+                @if ((Model.CaseSessionActId ?? 0) > 0)
+                {
+                    <div id="divMoneyFine">
+                        @Html.EditorFor(x => x.MoneyFineTypeId, "GenericDropDown")
+                    </div>
+                }
+
+                @if ((Model.CaseSessionActId ?? 0) > 0 && Model.Person_SourceType == SourceTypeSelectVM.CasePerson)
+                {
+                    @Html.EditorFor(x => x.ExecListTypeId, "GenericDropDown")
+                    <div id="countryreceive">
+                        @Html.EditorFor(x => x.CountryReceiveId, "GenericDropDownString")
+                        @Html.EditorFor(x => x.Iban)
+                        @Html.EditorFor(x => x.BIC)
+                        @Html.EditorFor(x => x.BankName)
+                    </div>
+                    <div id="countryperson">
+                        @Html.EditorFor(x => x.PersonReceiveId, "GenericDropDown")
+                    </div>
+                }
+
+                <div id="divSign">
+                    @Html.EditorFor(x => x.MoneySign, "GenericDropDown")
+                </div>
+
+                @if ((Model.DocumentId ?? 0) > 0)
+                {
+                    @Html.EditorFor(x => x.MoneyFeeTypeId, "GenericDropDown")
+                }
+
+                <div id="divAmount">
+                    @Html.EditorFor(x => x.Amount)
+                </div>
+                @Html.EditorFor(x => x.Description, "Textarea")
+                @Html.EditorFor(x => x.IsActive)
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                @if ((Model.CaseSessionId ?? 0) > 0)
+                {
+                    <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@Model.CaseSessionId" class="btn btn-danger">Назад</a>
+                }
+                else
+                {
+                    <a asp-action="Obligation" asp-route-caseSessionActId="@Model.CaseSessionActId" asp-route-documentId="@Model.DocumentId" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-danger">Назад</a>
+                }
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        ManageMoneyTypeAmount();
+        if (@(Model.CaseSessionActId ?? 0) > 0) {
+            ManageMoneyFineType();
+        }
+
+        if (@(Model.MoneyFeeTypeId?? 0) > 0) {
+            $("#Amount").attr("readonly", true);
+        }
+
+        if (@(Model.CaseSessionActId ?? 0) > 0 && @Model.Person_SourceType == @SourceTypeSelectVM.CasePerson) {
+            ChangeExecListType();
+        }
+    });
+
+    function ChangeExecListType() {
+        $("#divSign").show();        
+        var execListTypeId = $("#ExecListTypeId").val();
+        if (execListTypeId == @NomenclatureConstants.ExecListTypes.Country) {
+            $("#countryreceive").show();
+            $("#countryperson").hide();
+        }
+        else if (execListTypeId == @NomenclatureConstants.ExecListTypes.ThirdPerson) {
+            $("#countryreceive").hide();
+            $("#countryperson").show();
+            $("#divSign").hide(); 
+        }
+        else {
+            $("#countryreceive").hide();
+            $("#countryperson").hide();
+        }
+    }
+
+    $('#MoneyFeeTypeId').change(function () {
+        var feeId = $(this).val();
+        if (feeId > 0) {
+            requestGET_Json('@Url.Action("Get_PriceFee","Money")', { moneyFeeId: feeId }, function (data) {
+                $("#Amount").val(data.price);
+                $("#Amount").attr("readonly", true);
+            });
+        }
+        else {
+            $("#Amount").attr("readonly", false);
+        }
+    });
+
+    $('#ExecListTypeId').change(function () {
+        ChangeExecListType();
+    });
+
+    $('#CountryReceiveId').change(function () {
+        var id = $(this).val();
+        if (id != "") {
+            requestGET_Json('@Url.Action("LastDataForReceive", "Money")', { receiveId: id }, function (data) {
+                    $("#Iban").val(data.iban);
+                    $("#BIC").val(data.bic);
+                    $("#BankName").val(data.bankName);
+                });
+        }
+    });
+
+    $('#Iban').blur(function () {
+        var iban = $(this).val();
+        if (iban.length >= 8) {
+            var searchBic = iban.substr(4, 4);
+            if (searchBic.length > 0) {
+                requestGET_Json('@Url.Action("GetBankDataFromIban","Money")', { search: searchBic }, function (data) {
+                    $("#BIC").val(data.bic);
+                    $("#BankName").val(data.bankName);
+                });
+            }
+        }
+    });
+
+    $('#MoneyTypeId').change(function () {
+        ManageMoneyTypeAmount();
+        if (@(Model.CaseSessionActId ?? 0) > 0) {
+            ManageMoneyFineType();
+        }
+    });
+
+    function ManageMoneyFineType() {
+        var moneyTypeId = $("#MoneyTypeId").val();
+        if (moneyTypeId == '@NomenclatureConstants.MoneyType.Fine') {
+            $("#divMoneyFine").show();
+        }
+        else {
+            $("#divMoneyFine").hide();
+        }
+    }
+
+    function ManageMoneyTypeAmount() {
+        var moneyTypeId = $("#MoneyTypeId").val();
+        var moneyTypes = jQuery.parseJSON($("#moneyTypeJson").val());
+
+        var moneyType = moneyTypes.find(x => x.Id == moneyTypeId);
+        if (moneyType != undefined) {
+            if (moneyType.NoMoney == false) {
+                $("#divAmount").show();
+            }
+            else {
+                $("#divAmount").hide();
+            }
+        }
+    }
+</script>

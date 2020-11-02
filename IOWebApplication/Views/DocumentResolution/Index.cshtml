@@ -1,0 +1,154 @@
+﻿@model DocumentResolutionFilterVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
+@{
+    ViewData["Title"] = "Разпореждания по регистрирани документи";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.ResolutionNumber, "String")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.JudgeId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentNumber, "String")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentYear, "DateTimeYear")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable();" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        initLawUnit();
+    });
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filter = {
+                            dateFrom : $('#DateFrom').val(),
+                            dateTo : $('#DateTo').val(),
+                            resolutionNumber : $('#ResolutionNumber').val(),
+                            judgeId: $('#JudgeId').val(),
+                            documentNumber : $('#DocumentNumber').val(),
+                            documentYear : $('#DocumentYear').val()
+                        }
+                    }
+                },
+                columns: [
+                    {
+                        name: 'resolutionTypeName',
+                        data: 'resolutionTypeName',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return JsonBGdate(data);
+                        }
+                    },
+                    {
+                        name: 'judgeName',
+                        data: 'judgeName',
+                        title: 'Съдия',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'stateName',
+                        data: 'stateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    }
+                    ,
+                    {
+                        name: 'docLink',
+                        data: null,
+                        title: "Документ",
+                        sortable: false,
+                        searchable: false,
+                        //className: "text-center noExport",
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateDoc', item);
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        }
+    }
+</script>
+<script id="templateDoc" type="text/x-handlebars-template">
+    <a href="@Url.Action("View","Document")?id={{documentId}}" title="Преглед на документа" target="_blank">{{documentTypeName}} {{documentNumber}}</a>
+</script>
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+

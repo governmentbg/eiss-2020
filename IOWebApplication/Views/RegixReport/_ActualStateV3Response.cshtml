@@ -1,0 +1,51 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixActualStateV3VM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.ActualStateV3Filter.UIC, "objInline", new { label = "Справка за: ЕИК " })
+        <br />
+        <br />
+
+        @if (Model.ActualStateV3Response.DataFound == false)
+        {
+            <b>
+                Липсват данни по зададените критерии
+            </b>
+        }
+        else
+        {
+            @Html.DisplayFor(x => x.ActualStateV3Response.DeedStatus, "objInline")
+            @Html.DisplayFor(x => x.ActualStateV3Response.CompanyName, "objInline")
+            @Html.DisplayFor(x => x.ActualStateV3Response.UIC, "objInline")
+            @Html.DisplayFor(x => x.ActualStateV3Response.LegalForm, "objInline")
+            @Html.DisplayFor(x => x.ActualStateV3Response.CaseNo, "objInline")
+            @Html.DisplayFor(x => x.ActualStateV3Response.CaseYear, "objInline")
+            @Html.DisplayFor(x => x.ActualStateV3Response.CourtNo, "objInline")
+            @Html.DisplayFor(x => x.ActualStateV3Response.LiquidationOrInsolvency, "objInline")
+
+            <br />
+            <br />
+            @foreach (var subdeed in Model.ActualStateV3Response.Subdeeds)
+            {
+                <hr />
+                @Html.DisplayFor(x => subdeed.SubUIC, "objInline")
+                @Html.DisplayFor(x => subdeed.SubUICName, "objInline")
+                @Html.DisplayFor(x => subdeed.SubUICType, "objInline")
+                @Html.DisplayFor(x => subdeed.SubdeedStatus, "objInline")
+                <b>Вписани обстоятелства</b>
+                @foreach (var record in subdeed.Records)
+                {
+                    @Html.DisplayFor(x => record.Value, "objInline", new { label = record.Name })
+                }
+                <br />
+                <br />
+            }
+        }
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

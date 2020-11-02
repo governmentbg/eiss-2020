@@ -1,0 +1,166 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseSessionHallUseFilterVM
+
+@{
+    ViewData["Title"] = "Заетост на зали";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-4">@Html.EditorFor(m => m.DateFrom, "DateTimeWithTime")</div>
+    <div class="col-lg-4">@Html.EditorFor(m => m.DateTo, "DateTimeWithTime")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">@Html.EditorFor(x => x.IsCalendar, "Boolean")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTableCaseSessionHallUse()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div id="divTable" class="row">
+    <div class="col-md-12">
+        <table id="caseSessionHallUseMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<div id="divCalendar" class="col-md-12">
+</div>
+
+<script>
+    function LoadTableCaseSessionHallUse() {
+        var isCalendar = $("#IsCalendar").is(":checked");
+        if (isCalendar) {
+            var _CourtHallId = $("#CourtHallId").val();
+            var _DateFrom = $("#DateFrom").val(); 
+            var _DateTo = $("#DateTo").val(); 
+            let data = { CourtHallId: _CourtHallId, dateFrom:_DateFrom, dateTo:_DateTo };
+            requestContent('@Url.Action("CaseSessionCalendar")', data, function (html) {
+                $('#divCalendar').html(html);
+            });
+        }
+        else {
+            if ($.fn.dataTable.isDataTable('#caseSessionHallUseMainTable')) {
+                refreshTable('#caseSessionHallUseMainTable');
+            }
+            else {
+                $('#caseSessionHallUseMainTable').DataTable({
+                    ajax: {
+                        "url": "@Url.Action("ListDataCaseSessionHallUseSpr", "CaseSession")",
+                        "type": "POST",
+                        "datatype": "json",
+                        data: function (d) {
+                            d.dateFrom = $("#DateFrom").val();
+                            d.dateTo = $("#DateTo").val();
+                            d.CourtHallId = $("#CourtHallId").val();
+                        }
+                    },
+                    columns: [
+                        {
+                            name: 'courtHallName',
+                            data: 'courtHallName',
+                            title: 'Зала',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'caseName',
+                            data: 'caseName',
+                            title: 'Дело',
+                            "render": function (item, type, row, meta) {
+                                var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                                url = url.replace('666', row.caseId);
+                                return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseName + "</a>";
+                            },
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'sessionLabel',
+                            data: 'sessionLabel',
+                            title: 'Заседание',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            className: "text-center",
+                            name: 'dateFrom',
+                            data: 'dateFrom',
+                            title: 'От',
+                            sortable: true,
+                            searchable: true,
+                            render: function (data) {
+                                return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                            }
+                        },
+                        {
+                            className: "text-center",
+                            name: 'dateTo',
+                            data: 'dateTo',
+                            title: 'До',
+                            sortable: true,
+                            searchable: true,
+                            render: function (data) {
+                                return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                            }
+                        },
+                        {
+                            name: 'actions',
+                            data: "id",
+                            title: "",
+                            sortable: false,
+                            searchable: false,
+                            className: "text-center noExport",
+                            "render": function (value) {
+                                return TemplateToHtml('#luDismisalTemplate', value);
+                            }
+                        }
+                    ]
+                });
+            }
+        }
+    }
+</script>
+
+<script id="luDismisalTemplate" type="text/x-handlebars-template">
+</script>
+
+<script>
+    $(document).ready(function () {
+        SH_DivElements();
+        if (@(Model.CourtHallId ?? 0) > 0)
+            LoadTableCaseSessionHallUse();
+    });
+
+    $('#IsCalendar').change(function () {
+        SH_DivElements();
+    });
+
+    function SH_DivElements() {
+        var isCalendar = $("#IsCalendar").is(":checked");
+        if (isCalendar) {
+            $("#divCalendar").show();
+            $("#divTable").hide();
+        }
+        else {
+            $("#divCalendar").hide();
+            $("#divTable").show();
+        }
+    }
+</script>

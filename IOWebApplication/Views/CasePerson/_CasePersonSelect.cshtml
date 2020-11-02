@@ -1,0 +1,53 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <a href="#" title="Добави/Премахни" class="btn btn-def btn-sm" onclick="LoadCasePerson();return false;"><i class="fa fa-files-o"></i> Добави/Премахни</a>
+}
+
+<div id="casePersonSelectContainer" style="display:none;z-index:1000;" title="Избор на страни">
+    <div class="row">
+        <div class="col-lg-6">
+            @Html.Editor("CaseSession", "GenericDropDown")
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 text-left pb-15" id="partialCasePerson">
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function LoadCasePerson() {
+        MakeBigModalDialog('div#casePersonSelectContainer');
+        LoadCasePersonTable();
+    }
+
+    function LoadCasePersonTable() {
+        requestCombo('@Url.Action("GetDDL_Case_CaseSession_ForPersonCopy", "CasePerson")', { caseId: @Model.Id, caseSessionId: @(Model.CaseSessionId) }, '#CaseSession', -1, function () { $('#CaseSession').trigger('change') });
+    }
+
+    $("#CaseSession").change(function () {
+        var caseSessionId = $("#CaseSession").val();
+        $.ajax({
+            dataType: "html",
+            cache: false,
+            url: '@Url.Action("CasePerson_SelectForCheck", "CasePerson")',
+            data: { caseId: '@Model.Id', caseSessionId: caseSessionId, realCaseSessionId: '@Model.CaseSessionId' },
+            success: function (data) {
+                if (data.length > 0) {
+                    $("#partialCasePerson").html(data);
+                } else {
+                }
+            }
+        });
+
+    });
+
+</script>

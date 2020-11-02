@@ -1,0 +1,11 @@
+﻿@using IOWebApplication.Infrastructure.Extensions
+@model decimal
+@{
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+<div class="form-group">
+    <label asp-for="@Model" class="control-label @reqClass"></label>
+    <input asp-for="@Model" class="form-control form-control-decimal" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

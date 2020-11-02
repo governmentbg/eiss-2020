@@ -1,0 +1,32 @@
+﻿@model CaseSessionActPrintVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@{
+    Layout = null;
+}
+
+    <div style="font-family: 'Times New Roman'">
+        <center>
+            <b>ЗАПОВЕД ЗА ЗАЩИТА № @Model.ActRegNumber</b><br /><br />
+            @Model.CourtCity, @DateTime.Now.ToString("dd.MM.yyyy")г.<br /><br />
+            <b>В ИМЕТО НА НАРОДА</b><br /><br />
+        </center>
+        <br />
+        Съдия @Model.JudgeReporter при @Model.CourtName @Model.DepartmentName като констатира, че Решение № @Model.AnswerActRegNumber г. по @Model.CaseTypeName № @Model.CaseRegNumber по описа на @Model.CourtName, подлежи на изпълнение, разпореди да се издаде следната<br />
+        <br />
+        <center>
+            <b>ЗАПОВЕД ЗА ЗАЩИТА</b><br /><br />
+        </center>
+
+        <b>ПОСТАНОВЯВА МЕРКИ ЗА ЗАКРИЛА</b> на основание чл.5, ал.1, т.1 от Закона за защита срещу домашното насилие, както следва:<br />
+        <b>ЗАДЪЛЖАВА</b> на основание чл.5, ал.1, т.1 от ЗЗДН извършителя/ите @Model.RightSideName да се въздържа/т от извършване на домашно насилие спрямо @Model.LeftSideName.<br />
+        <b>ЗАБРАНЯВА</b> на основание чл.5, ал.1, т.3 от ЗЗДН на @Model.RightSideName ДА ПРИБЛИЖАВА жилището, находящо се @Model.LeftSideCurrentAddress, обитавано от @Model.LeftSideName, нейната месторабота @Model.LeftSideWorkAddress и местата за социални контакти и отдих, за срок от @Model.ActTerm<br />
+        <b>ПРЕДУПРЕЖДАВА</b> @Model.RightSideName, че съгласно чл.21, ал.2 от ЗЗДН при неизпълнение на заповедта констатирано от полицейските органи, същия ще бъде задържан и незабавно ще бъде уведомена прокуратурата.<br />
+        Тази заповед се издава на @Model.LeftSideName.<br />
+        <b>ЗАПОВЕДТА</b> на основание чл.21, ал.1 от ЗЗДН да се изпълни от полицейските органи по местоживеене на ответника.<br />
+        <br />
+        <br />
+        <div align="right">
+            Съдия при @Model.CourtName: ...............................................<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.JudgeReporter )
+        </div>
+    </div>

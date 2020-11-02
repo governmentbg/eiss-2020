@@ -1,0 +1,6 @@
+﻿
+@using IOWebApplication.Extensions
+@{
+   List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+}
+<a href="@breadcrumbs.ReturnUrlFromLast()" onclick="@breadcrumbs.ReturnOnClickFromLast()" class="btn btn-danger">Назад</a>

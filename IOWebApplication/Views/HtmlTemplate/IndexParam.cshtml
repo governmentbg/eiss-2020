@@ -1,0 +1,98 @@
+﻿@{
+    ViewData["Title"] = "Описание на параметри по бланки " + ViewBag.htmlName;
+    var htmlId = ViewBag.htmlId;
+    var filterJson = ViewBag.filterJson;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+@*<div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-action="AddLink" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>*@
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+
+    <div class="col-lg-12">
+        @await Html.PartialAsync("_ButtonClose")
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataParam", new { htmlId = htmlId})",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'htmlTemplateFile',
+                        data: 'htmlTemplateFile',
+                        title: 'Бланка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'htmlTemplateParamLabel',
+                        data: 'htmlTemplateParamLabel',
+                        title: 'Параметър',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'htmlTemplateParamDescr',
+                        data: 'htmlTemplateParamDescr',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: false
+                    }
+                    //{
+                    //    name: 'HtmlTemplateName',
+                    //    data: 'htmlTemplateName',
+                    //    title: 'Бланка',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
+                    //{
+                    //    name: 'actions',
+                    //    data: "id",
+                    //    title: "",
+                    //    sortable: false,
+                    //    searchable: false,
+                    //    className: "text-center noExport",
+                    //    //"render": function (value) {
+                    //    //    return TemplateToHtml('#templateEdit', value);
+                    //    //}
+                    //}
+                ]
+            });
+
+
+        });
+        function postToFilterHtmlTemplate() {
+            $("#formPostFilter").submit();
+        }
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        @*<a href="@Url.Action("EditLink")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>*@
+        @*<a href="@Url.Action("DownloadFile")/{{this}}" class="btn btn-file btn-sm" title="Сваляне"><i class="fa fa-save"></i><span class="hidden-sm hidden-xs"> Сваляне</span></a>*@
+    </script>
+}
+

@@ -1,0 +1,80 @@
+﻿@model CasePersonSentenceBulletinEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditBulletin" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CasePersonId)
+            @Html.HiddenFor(x => x.CaseTypeId)
+            @Html.ValidationSummary()
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+
+                @Html.EditorFor(x => x.FamilyMarriage)
+                @Html.EditorFor(x => x.BirthDayPlace)
+                @Html.EditorFor(x => x.BirthDay)
+                @Html.EditorFor(x => x.Nationality)
+                @Html.EditorFor(x => x.FatherName)
+                @Html.EditorFor(x => x.MotherName)
+
+                @if (Model.CaseTypeId == NomenclatureConstants.CaseTypes.NOHD || Model.CaseTypeId == NomenclatureConstants.CaseTypes.AND)
+                {
+                    @Html.EditorFor(x => x.IsAdministrativePunishment)
+                }
+
+                @Html.EditorFor(x => x.IsConvicted)
+
+                @Html.EditorFor(x => x.SentenceDescription, "Textarea", new { @class = "tinymce" })
+
+                @if (@Model.Id > 0)
+                {
+                    <div class="cdn-files" data-label="Файлове" data-sourcetype="@SourceTypeSelectVM.CasePersonBulletin" data-sourceid="@Model.Id" data-editmode="none"></div>
+                }
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="Index" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <a href="@Url.Action("Index", "DocumentTemplate",new { sourceType=SourceTypeSelectVM.CasePersonBulletin, sourceId=Model.Id})" class="btn btn-def" title="Създаване на писмо"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Създаване на писмо</span></a>
+
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<partial name="_CdnScript" />
+
+<script>
+    $(function () {
+        initLawUnit();
+    });
+</script>

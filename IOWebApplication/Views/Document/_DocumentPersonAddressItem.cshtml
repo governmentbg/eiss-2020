@@ -1,0 +1,19 @@
+﻿@model DocumentPersonAddressVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@{
+    var adrType = ((IEnumerable<SelectListItem>)ViewBag.AddressTypesDDL).FirstOrDefault(x => x.Value == Model?.Address?.AddressTypeId.ToString())?.Text;
+    if (string.IsNullOrEmpty(adrType))
+    {
+        adrType = "Адрес";
+    }
+}
+<div data-index="@Model.Index" class="item-template">
+    <fieldset>
+        <legend class="address-legend"><a href="#" class="remove-item" title="Премахни адреса" data-alert="Потвърди премахването на адреса!"><i class="fa fa-remove"></i></a> <span class="address-title">@adrType</span></legend>
+        <div class="address-body" @if (Model.Collapsed) { <text> style="display:none;" </text> }>
+            <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
+            @Html.HiddenFor(x => x.Id)
+            @Html.EditorFor(x => x.Address)
+        </div>
+    </fieldset>
+</div>

@@ -1,0 +1,20 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    var caseSessionId = ViewBag.CaseSessionId;
+    var caseId = ViewBag.caseId;
+    ViewData["Title"] = "Съпровождащи документи ";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../CaseSessionDoc/_CaseSessionDoc.cshtml" model="@new CaseMainDataVM { Id = caseId, CaseSessionId = caseSessionId} " />
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group row col-md-12">
+        <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@caseId" class="btn btn-danger">Назад</a>
+    </div>
+</div>

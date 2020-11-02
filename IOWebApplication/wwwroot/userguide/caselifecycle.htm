@@ -1,0 +1,430 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-style: italic;
+		}
+
+		p.ListParagraph2, li.ListParagraph2, div.ListParagraph2 {
+			mso-style-name: "List Paragraph2 ЕИСС";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpFirst, li.ListParagraph2CxSpFirst, div.ListParagraph2CxSpFirst {
+			mso-style-name: "List Paragraph2 ЕИССCxSpFirst";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpMiddle, li.ListParagraph2CxSpMiddle, div.ListParagraph2CxSpMiddle {
+			mso-style-name: "List Paragraph2 ЕИССCxSpMiddle";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpLast, li.ListParagraph2CxSpLast, div.ListParagraph2CxSpLast {
+			mso-style-name: "List Paragraph2 ЕИССCxSpLast";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraph2Char {
+			mso-style-name: "List Paragraph2 ЕИСС Char";
+			mso-style-link: "List Paragraph2 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 74.55pt;
+			text-align: justify;
+			text-indent: 0cm;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Heading4IO, li.Heading4IO, div.Heading4IO {
+			mso-style-name: "Heading 4 IO";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.4pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h4 style='margin-left:125.45pt;text-indent:-36.0pt'>
+			<a name="_Toc42527919">
+				1.1.1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>Бутон Интервали
+			</a>
+		</h4>
+
+		<p class=MsoNormal>
+			Посредством бутон Интервали <img width=100 height=32
+									id="Picture 143493" src="caselifecycle_files/image001.png">има възможност за
+			извършване на действия и преглед на интервалите за разглеждане на делото.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=267
+				 id="Picture 142269" src="caselifecycle_files/image002.jpg" alt=интервали>
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<span style='line-height:115%'>
+				Бутон
+				Интервали показва периоди (интервали) за разглеждане на делата. В списъка се
+				извеждат всички интервали по делото, в които то е било в процес на разглеждане.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<b><span style='line-height:115%'>Забележка</span></b><span style='line-height:115%'>
+				: I   интервал на разглеждане на делото се стартира от
+				дата на образуване на делото, а за първоинстанционни ГД и ТР от датата на
+				регистриране на съдебен акт по заседание с резултат Насрочено за I заседание.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=118
+				 id="Picture 142264" src="caselifecycle_files/image003.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<span style='line-height:115%'>
+				Въвеждане
+				на интервал по делото. Добавяне на нов интервал става посредством избор на
+				бутон Добави:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<img width=605 height=162
+				 id="Picture 142265" src="caselifecycle_files/image004.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<span style='line-height:115%'>
+				Въвеждат
+				се следните данни:
+			</span>
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Вид интервал – избира се от падащ списък вид на интервала – в процес или
+			спряно.
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>От дата – въвежда се начална дата на интервала;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>До дата – въвежда се крайна дата на интервала. Полето не е със
+			задължителен характер при въвеждане на интервала;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Повторение – зарежда се автоматично от системата според броя въведени
+			интервали от един и същи тип и е не е достъпно за редакция;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Продължителност от месеци – изчислява се автоматично от системата и е не
+			е достъпно за редакция;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Забележка – въвежда се допълнителна информация при необходимост. Полето
+			не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на данните се избира бутон Запис, с което
+			интервала се регистрира успешно.
+		</p>
+
+		<p class=ListParagraph2CxSpFirst style='margin-left:36.0pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Редакция на интервали
+		</p>
+
+		<p class=ListParagraph2CxSpLast style='margin-left:0cm;text-indent:0cm'>
+			<img width=603 height=149 id="Picture 142266" src="caselifecycle_files/image005.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Редакция на интервали става посредством избор на бутон
+			Редакция <img width=35 height=30 id="Picture 143479"
+					   src="caselifecycle_files/image006.jpg"> на реда на съответния интервал. Екранът
+			за редакция съдържа аналогични полета като тези при въвеждане.
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<b><span style='line-height:115%'>Забележка:</span></b><span style='line-height:115%'>
+				Докато има неприключен основен интервал от тип В
+				процес, не може да бъде въведен нов интервал на разглеждане. Редакция на
+				интервал за разглеждане на дело може да бъде направена само на крайна дата на
+				интервала (До дата).При наличие на неприключен интервал за разглеждане на
+				делото има възможност за въвеждане на интервал, в който делото е било спряно.
+			</span>
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

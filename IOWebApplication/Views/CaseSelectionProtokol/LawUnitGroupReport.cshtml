@@ -1,0 +1,131 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CaseSelectionProtokoLUGrouplFilterVM
+
+@{
+    ViewData["Title"] = "Разпределени дела в група";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.GroupId, "GenericDropDown")</div>
+    <div class="col-lg-6"> @Html.EditorFor(x => x.LawUnitID, "LawUnit", null, new { lawUnitTypes = "1" })   </div>
+
+</div>
+
+
+
+
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h3  id="total"></h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSelectionProtokolMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+
+        if ($.fn.dataTable.isDataTable('#caseSelectionProtokolMainTable')) {
+            refreshTable('#caseSelectionProtokolMainTable');
+        }
+        else {
+            $('#caseSelectionProtokolMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListLawUnitGroup", "CaseSelectionProtokol")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                                   GroupId: $('#GroupId ').val(),
+                            LawUnitID: $('#LawUnitID').val()
+
+                        };
+                    },
+                    "dataSrc": function (json) {
+                        if (json.additionalParameters.total) {
+
+                            var str1 = "Общо разпределени дела в групaта: ";
+                            var res = str1.concat(json.additionalParameters.total);
+
+                            $('#total').text(res);
+
+                        } else {
+                            $('#total').text('');
+                        }
+                        return json.data;
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'lawUnitFullName',
+                        data: 'lawUnitFullName',
+                        title: 'Съдия',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'fromDateInGROUP',
+                        data: 'fromDateInGROUP',
+                        title: 'Дата на добавяне',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+
+
+                    {
+                        name: 'caseCount',
+                        data: 'caseCount',
+                        title: 'Брой дела в група',
+                        sortable: true,
+                        searchable: true
+                    },
+
+                     {
+                        name: 'loadIndex',
+                        data: 'loadIndex',
+                        title: 'Текущо натоварване (%)',
+                        sortable: true,
+                        searchable: true
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="caseSelectionProtokolTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("PreviewDoc", "CaseSelectionProtokol")?id={{this}}" target="_blank" class="btn btn-dropbox btn-sm" title="Протокол от разпределение"><i class="fa fa-random"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+<script>
+
+
+    $(function () {
+        initLawUnit();
+    })
+</script>

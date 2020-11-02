@@ -1,0 +1,11 @@
+﻿@model string
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+<div class="eisppnumber-container">
+    <label asp-for="@Model" class="control-label has-auto-search @reqClass"></label>
+    <a href="#" onclick="searchEisppNumber(this); return false;" class="pull-right auto-cmpt-search" title="Преглед">Преглед</a>
+    <input asp-for="@Model" class="form-control eisppnumber-control" style="text-transform: uppercase;" autocomplete="false" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

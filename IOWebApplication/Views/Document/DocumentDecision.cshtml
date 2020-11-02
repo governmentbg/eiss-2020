@@ -1,0 +1,148 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@model DocumentDecisionFilterVM
+@{
+    ViewData["Title"] = "Решения по регистрирани документи";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentNumber, "String")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentYear, "DateTimeYear")
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("DocumentDecisionListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $('#DateFrom').val(),
+                            DateTo: $('#DateTo').val(),
+                            documentNumber: $('#DocumentNumber').val(),
+                            documentYear: $('#DocumentYear').val()
+                        };
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'decisionNumber',
+                        data: 'decisionNumber',
+                        title: 'Номер на решение',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'decisionDate',
+                        data: 'decisionDate',
+                        title: 'Дата и час на решение',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    {
+                        name: 'documentNumber',
+                        data: 'documentNumber',
+                        title: 'Номер на документ',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateDocumentNumber', item);
+                        }
+                    },
+                    {
+                        name: 'documentDate',
+                        data: 'documentDate',
+                        title: 'Дата и час на документ',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    {
+                        name: 'documentTypeName',
+                        data: 'documentTypeName',
+                        title: 'Вид документ',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'decisionName',
+                        data: 'decisionName',
+                        title: 'Решение',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'decisionUserName',
+                        data: 'decisionUserName',
+                        title: 'Регистрирал',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+            table.order([1, 'desc']);
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditDocumentDecision")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i></a>
+</script>
+<script id="templateDocumentNumber" type="text/x-handlebars-template">
+    <a href="@Url.Action("View")/{{documentId}}" title="Преглед">{{documentNumber}}</a>
+</script>
+
+

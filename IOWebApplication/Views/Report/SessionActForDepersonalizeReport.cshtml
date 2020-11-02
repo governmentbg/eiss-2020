@@ -1,0 +1,122 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@model SessionActForDepersonalizeFilterReportVM
+
+@{
+    ViewData["Title"] = "Актове подлежащи на обезличаване";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.IsFinalAct, "GenericDropDownString")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSessionActForDepersonalizeReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            IsFinalAct: $("#IsFinalAct").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'caseTypeName',
+                        data: 'caseTypeName',
+                        title: 'Точен вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' target='_blank' title='Преглед' href=" + url + ">" + row.caseRegNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionActTypeName',
+                        data: 'sessionActTypeName',
+                        title: 'Вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionActNumber',
+                        data: 'sessionActNumber',
+                        title: 'Номер',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("Edit", "CaseSessionAct",new { id = 666}))';
+                            url = url.replace('666', row.sessionActId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' target='_blank' title='Преглед' href=" + url + ">" + row.sessionActNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'sessionActDate',
+                        data: 'sessionActDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'sessionTypeName',
+                        data: 'sessionTypeName',
+                        title: 'Заседание',
+                        sortable: true,
+                        searchable: true
+                    },
+                ]
+            });
+        }
+    }
+</script>

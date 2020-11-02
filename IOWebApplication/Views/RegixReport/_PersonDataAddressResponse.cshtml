@@ -1,0 +1,41 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Infrastructure.Constants
+@model RegixPersonDataAddressVM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.PersonAddressFilter.EgnFilter, "objInline", new { label = "Справка за: ЕГН " })
+        @Html.DisplayFor(x => x.PersonDataResponse.PersonFullName, "objInline")
+        <br />
+        <br />
+
+        <center>
+            <b>
+                Постоянен адрес
+            </b>
+            <br />
+            <br />
+        </center>
+
+        <partial name="_PersonAddressOnlyData" model="@Model.PermanentAddressResponse" />
+
+        <br />
+        <br />
+
+        <center>
+            <b>
+                Настоящ адрес
+            </b>
+            <br />
+            <br />
+        </center>
+
+        <partial name="_PersonAddressOnlyData" model="@Model.TemporaryAddressResponse" />
+
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

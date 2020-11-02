@@ -1,0 +1,156 @@
+﻿@model DeliveryItemOperVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@using IOWebApplication.Infrastructure.Constants
+@inject IDeliveryItemService deliveryItemService;
+@{
+    ViewData["Title"] = "Въвеждане доставка на призовка/съобщение от призовкар";
+    var filterJson = ViewBag.filterJson;
+    var notificationId = ViewBag.notificationId;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="col-md-12 col-lg-6">
+    <form id="formEdit" asp-action="EditPost" method="post">
+        @Html.ValidationSummary()
+        @Html.HiddenFor(x => x.Id)
+        @Html.HiddenFor(x => x.DeliveryItemId)
+        @Html.HiddenFor(x => filterJson)
+        <div id="saveContainer">
+            <partial name="_SaveFormContent" model="@("#saveContainer")" />
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="caseInfo" class="control-label">Към дело:</label>
+                    <input name="caseInfo" id="personName" class="form-control" value="@Model.CaseInfo" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="regNumber" class="control-label">Баркод:</label>
+                    <input name="regNumber" id="regNumber" class="form-control" value="@Model.RegNumber" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="courtName" class="control-label">От съд:</label>
+                    <input name="courtName" id="regNumber" class="form-control" value="@Model.FromCourtName" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="personName" class="control-label">Име на лицето:</label>
+                    <input name="personName" id="personName" class="form-control" value="@Model.PersonName" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="address" class="control-label">Адрес:</label>
+                    <input name="address" id="address" class="form-control" value="@Model.Address" readonly>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="deliveryArea" class="control-label">Район:</label>
+                    <input name="deliveryArea" id="deliveryArea" class="form-control" value="@Model.AreaName" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="lawUnitName" class="control-label">Призовкар:</label>
+                    <input name="lawUnitName" id="lawUnitName" class="form-control" value="@Model.LawUnitName" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.DateOper, "DateTimeWithTime")
+                </div>
+
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.DeliveryOperId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")
+                </div>
+                <div class="col-md-6" id="divReason">
+                    @Html.EditorFor(x => x.DeliveryReasonId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.DeliveryInfo)
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                @await Html.PartialAsync("_ButtonClose")
+                @if (Model.Id > 0 && deliveryItemService.NotificationStateEnd().Contains(Model.NotificationStateId))
+                {
+                    <a onclick="DeliveryItemEditReturn()" class="btn btn-def">Върнат отрязък</a>
+                }
+            </div>
+    </form>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItemOper")" method="post">
+    @Html.HiddenFor(x => filterJson)
+    @Html.HiddenFor(x => x.DeliveryItemId)
+</form>
+@section scripts {
+    <script>
+        function postToFilterDeliveryItems()
+        {
+            $("#formPostFilter").submit();
+        }
+        function DeliveryItemEditReturn() {
+            $('#formPostFilter').attr('action', '@Url.Action("EditReturn", "DeliveryItem")?deliveryItemId='+ @Model.DeliveryItemId);
+            $("#formPostFilter").submit();
+        }
+        $(document).ready(function () {
+            $('#NotificationStateId').change();
+            $("label[for='" + $("#DateOper").attr("id") + "']").addClass("io-req");
+        })
+        $('#NotificationStateId').change(function () {
+            var stateId = $("#NotificationStateId").val();
+            var reasonId = $("#DeliveryReasonId").val();
+            if (typeof reasonId == 'undefined' || reasonId == null)
+                reasonId = '';
+            requestCombo('@Url.Action("GetDeliveryReasonDDL", "DeliveryItemOper")', { notificationStateId: stateId }, '#DeliveryReasonId', reasonId,
+                function () {
+                    if ($('#DeliveryReasonId option').length) {
+                        $("#divReason").show();
+                        $('#DeliveryReasonId').attr('disabled', false);
+                        $('#DeliveryReasonId').attr('readonly', false);
+                    } else {
+                        $("#divReason").hide();
+                        $('#DeliveryReasonId').attr('disabled', true);
+                        $('#DeliveryReasonId').attr('readonly', true);
+                    }
+                    setRulesDeliveryInfo();
+                }
+            );
+        });
+        $('#DeliveryReasonId').change(function () {
+            setRulesDeliveryInfo();
+        })
+        function setRulesDeliveryInfo() {
+            var el = "#DeliveryInfo";
+            var idReason = $('#DeliveryReasonId').val();
+            if (idReason == @NomenclatureConstants.DeliveryReason.Other) {
+                $(el).rules('add', {
+                    required: true,
+                    messages: {
+                        required: 'Въведете причина!',
+                    }
+                })
+                $("label[for='" + $(el).attr("id") + "']").addClass("io-req");
+            } else {
+                $(el).rules('remove', 'required');
+                $("label[for='" + $(el).attr("id") + "']").removeClass("io-req");
+            }
+        }
+
+    </script>
+}
+
+

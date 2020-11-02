@@ -1,0 +1,123 @@
+﻿@using Microsoft.AspNetCore.Mvc.Localization
+
+@inject IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = TempData.Peek("Title");
+    string tableId = (string)TempData.Peek("NomenclatureName") ?? "nomenclatureListTable";
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            @Localizer["btnAdd"]
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="@tableId" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#@tableId').DataTable({
+                ajax: {
+                    "url": "@Url.Action("NomenclatureListData", "Nomenclature")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'orderNumber',
+                        data: 'orderNumber',
+                        title: '@Localizer["OrderNumber"]',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'code',
+                        data: 'code',
+                        title: '@Localizer["Code"]',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: '@Localizer["Label"]',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'description',
+                        data: "description",
+                        title: '@Localizer["Description"]',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'isActive',
+                        data: "isActive",
+                        title: '@Localizer["IsActive"]',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? '@Localizer["Yes"]' : '@Localizer["No"]';
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+            $(document).on('click', '.orderButton', savePosition);
+
+            function savePosition(e) {
+                var element = e.currentTarget;
+                var data = element.dataset;
+
+                element.setAttribute("disabled", "");
+
+                 $.ajax({
+                        method: "POST",
+                        url: '@Url.Action("ChangeOrder")',
+                        dataType: "json",
+                        data: data
+                    }).fail(function (jqXHR, status, message) {
+                            if (jqXHR.responseText) {
+                                //messageHelper.ShowErrorMessage(jqXHR.responseText);
+                            }
+                    }).always(function () {
+                        table.draw( false );
+                    });
+             }
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-info btn-sm" title="@Localizer["btnUp"]"><i class="fa fa-angle-up"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-primary btn-sm" title="@Localizer["btnDown"]"><i class="fa fa-angle-down"></i></a>
+        <a href="@Url.Action("Edit", "Nomenclature")/{{this}}" class="btn btn-warning btn-sm" title="@Localizer["btnEdit"]"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

@@ -1,0 +1,53 @@
+﻿@model int
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    ViewData["Title"] = "Копиране на съпровождащи документи от заседание";
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbsEdit != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbsEdit" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        @Html.Editor("CaseSession", "GenericDropDown")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-left pb-15" id="caseSessionFastDocument">
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        LoadCaseSession();
+    });
+
+    function LoadCaseSession() {
+        requestCombo('@Url.Action("GetDDL_CaseCaseSessionForCopy", "CaseSessionFastDocument")', { caseSessionId: @Model }, '#CaseSession', -1, function () { $('#CaseSession').trigger('change') });
+    }
+
+    $("#CaseSession").change(function () {
+        var caseSessionId = $("#CaseSession").val();
+        $.ajax({
+            dataType: "html",
+            cache: false,
+            url: '@Url.Action("CaseSessionFastDocument_SelectForSessionCheck", "CaseSessionFastDocument")',
+            data: { caseSessionFromId: caseSessionId, caseSessionToId: '@Model' },
+            success: function (data) {
+                if (data.length > 0) {
+                    $("#caseSessionFastDocument").html(data);
+                } else {
+                }
+            }
+        });
+
+    });
+
+</script>

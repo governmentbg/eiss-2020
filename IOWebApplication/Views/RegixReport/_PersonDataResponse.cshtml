@@ -1,0 +1,65 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixPersonDataVM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.PersonDataFilter.EgnFilter, "objInline", new { label = "Справка за: ЕГН " })
+        <br />
+        <br />
+
+        @if (Model.PersonDataFilter.PersonNamesCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.PersonNamesFirstName, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.PersonNamesSurName, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.PersonNamesFamilyName, "objInline")
+        }
+        @if (Model.PersonDataFilter.AliasCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.Alias, "objInline")
+        }
+        @if (Model.PersonDataFilter.LatinNamesCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.LatinNamesFirstName, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.LatinNamesSurName, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.LatinNamesFamilyName, "objInline")
+        }
+        @if (Model.PersonDataFilter.ForeignNamesCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.ForeignNamesFirstName, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.ForeignNamesSurName, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.ForeignNamesFamilyName, "objInline")
+        }
+        @if (Model.PersonDataFilter.GenderCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.GenderName, "objInline")
+        }
+        @if (Model.PersonDataFilter.EgnCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.Egn, "objInline")
+        }
+        @if (Model.PersonDataFilter.BirthDateCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.BirthDate, "objInline")
+        }
+        @if (Model.PersonDataFilter.PlaceBirthCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.PlaceBirth, "objInline")
+        }
+        @if (Model.PersonDataFilter.NationalityCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.NationalityCode, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.NationalityName, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.NationalityCode2, "objInline")
+            @Html.DisplayFor(x => x.PersonDataResponse.NationalityName2, "objInline")
+        }
+        @if (Model.PersonDataFilter.DeathDateCheck)
+        {
+            @Html.DisplayFor(x => x.PersonDataResponse.DeathDate, "objInline")
+        }
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

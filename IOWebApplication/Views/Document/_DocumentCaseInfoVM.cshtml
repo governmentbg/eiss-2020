@@ -1,0 +1,66 @@
+﻿@model DocumentCaseInfoVM
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
+@using IOWebApplication.Infrastructure.Models.ViewModels
+<div class="documentCaseInfo">
+    @Html.HiddenFor(x => x.Id)
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="pull-right legacy-case-check" style="margin-top:-20px;">
+                @Html.CheckBoxFor(x => x.IsLegacyCase)
+                @Html.LabelFor(x => x.IsLegacyCase, new { @class = "text-muted" })
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6 col-md-6 legacy-case-select">
+            @Html.EditorFor(x => x.CaseRegNumber)
+        </div>
+        <div class="col-lg-3 col-md-6 eiss-case-select">
+            @Html.EditorFor(x => x.CourtId, "SelectCourt", new { onChange = "courtSelect();" })
+        </div>
+        <div class="col-lg-3 col-md-6 eiss-case-select">
+            @Html.EditorFor(x => x.CaseId, "SelectCase", new { onChange = "caseSelect();", courtId = Model.CourtId })
+        </div>
+        <div class="col-lg-3 col-md-6 eiss-case-select">
+            <div class="form-group" style="margin-top: -3px !important;">
+                <label class="control-label">@Html.CheckBoxFor(x => x.HasLawAct)&nbsp;Избор на съдебен акт</label>
+                @Html.DropDownListFor(x => x.SessionActId, new List<SelectListItem>(), null, new { @class = "form-control lawact-select" })
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            @Html.EditorFor(x => x.Description)
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $('#DocumentCaseInfo_IsLegacyCase').change(function () {
+           if ($(this).is(':checked')) {
+               $('.legacy-case-select').show();
+               $('.eiss-case-select').hide();
+           } else {
+               $('.legacy-case-select').hide();
+               $('.eiss-case-select').show();
+           }
+        }).trigger('change');
+        $('.legacy-case-check').hide();
+    });
+    function caseSelect() {
+        requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#DocumentCaseInfo_CaseId').val() }, '#DocumentCaseInfo_SessionActId', '@Model.SessionActId');
+    }
+    function legacyCaseNumberInit(instance) {
+        switch (instance) {
+            case 2:
+            case 3:
+                $('.legacy-case-check').show();
+                $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
+                break;
+            default:
+                $('#DocumentCaseInfo_IsLegacyCase').removeAttr('checked');
+                $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
+                $('.legacy-case-check').hide();
+                break;
+        }
+    }
+</script>

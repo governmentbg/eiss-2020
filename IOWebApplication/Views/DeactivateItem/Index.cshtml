@@ -1,0 +1,129 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@model DeactivateItemFilterVM
+
+@{
+    ViewData["Title"] = DeactivateItemVM.RegisterName;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.SourceType, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.SourceInfo)</div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.SourceDateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.SourceDateTo, "DateTime")
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DeactivateDateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DeactivateDateTo, "DateTime")
+    </div>
+    <div class="col-lg-6">
+        @Html.EditorFor(m => m.DeactivateUserName)
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+
+    <script>
+    function LoadTable() {
+
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            SourceType: $("#SourceType").val(),
+                            SourceInfo: $("#SourceInfo").val(),
+                            SourceDateFrom: $("#SourceDateFrom").val(),
+                            SourceDateTo: $("#SourceDateTo").val(),
+                            DeactivateDateFrom: $("#DeactivateDateFrom").val(),
+                            DeactivateDateTo: $("#DeactivateDateTo").val(),
+                            DeactivateUserName: $("#DeactivateUserName").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'sourceInfo',
+                        data: 'sourceInfo',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sourceDate',
+                        data: 'sourceDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return JsonBGdate(data);
+                        }
+                    },
+                    {
+                        name: 'deactivateUserName',
+                        data: 'deactivateUserName',
+                        title: 'Деактивирал обекта',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'deactivateDate',
+                        data: 'deactivateDate',
+                        title: 'Деактивирано на',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return JsonBGdate(data);
+                        }
+                    },
+                    {
+                        name: 'deactivateDescription',
+                        data: 'deactivateDescription',
+                        title: 'Основание',
+                        sortable: true,
+                        searchable: false
+                    }
+                ]
+            });
+        }
+    }
+    </script>
+
+}

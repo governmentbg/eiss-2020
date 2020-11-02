@@ -1,0 +1,93 @@
+﻿@{
+    var loadGroupId = ViewBag.loadGroupId;
+    ViewData["Title"] = "Натовареност към група " + ViewBag.LoadGroupLabel;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="AddLoadGroupLink" asp-route-loadGroupId="@loadGroupId" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group col-md-12">
+        <a asp-action="Index" class="btn btn-danger">Назад</a>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataLoadGroupLink")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.loadGroupId = @loadGroupId;
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'courtTypeName',
+                        data: 'courtTypeName',
+                        title: 'Вид съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseInstanceName',
+                        data: 'caseInstanceName',
+                        title: 'Инстанция',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'loadIndex',
+                        data: 'loadIndex',
+                        title: 'Натовареност %',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditLoadGroupLink")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

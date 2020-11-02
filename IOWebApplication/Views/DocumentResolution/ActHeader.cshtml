@@ -1,0 +1,34 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@model DocumentResolutionVM
+@{
+    Layout = null;
+}
+<div class="act-header" style="width:100%;">
+    <table class="no-border" width="100%">
+        <tr>
+            <td colspan="3" align="center">
+                <h2>@Model.ResolutionTypeName.ToUpper()</h2>
+            </td>
+        </tr>
+        <tr>
+            @if (!string.IsNullOrEmpty(Model.RegNumber))
+            {
+                <td>Номер @Model.RegNumber</td>
+                <td>@Model.RegDate.Value.ToString("dd.MM.yyyy") г.</td>
+            }
+            else
+            {
+                <td colspan="2">
+                    Документа не е регистриран
+                </td>
+            }
+            <td>
+                Град @Model.CourtCity
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">@Model.CourtName</td>
+            <td></td>
+        </tr>
+    </table>
+</div>

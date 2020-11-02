@@ -1,0 +1,23 @@
+﻿@model DocumentTemplateHeaderVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@{
+    Layout = null;
+}
+<h4>@Model.CourtName</h4>
+<center>
+    <h2>@Model.DocumentTypeLabel</h2>
+    @if (string.IsNullOrEmpty(Model.DocumentNumber))
+    {
+        <h4>Регистрационния номер ще бъде генериран след регистриране на документа</h4>
+    }
+    else
+    {
+        <h4>@($"{Model.DocumentNumber}/{Model.DocumentDate:dd.MM.yyyy} ")</h4>
+    }
+</center>
+<p>
+    <strong>
+        Информация за обжалване:
+    </strong>
+    <hr />
+</p>

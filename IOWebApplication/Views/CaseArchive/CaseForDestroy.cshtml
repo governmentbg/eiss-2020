@@ -1,0 +1,143 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseForDestroyFilterVM
+
+@{
+    ViewData["Title"] = "Съдебни дела за унищожаване";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="row">
+    <div class="col-md-6 col-lg-2">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-md-6 col-lg-2">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-md-6 col-lg-4">@Html.EditorFor(x => x.CaseRegNumber)</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseForDestroy")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CaseRegNumber: $("#CaseRegNumber").val(),
+                        }
+                    }
+                },
+                columns: [
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата архив',
+                        sortable: true,
+                        searchable: false,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер архив',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseRegDate',
+                        data: 'caseRegDate',
+                        title: 'Дата дело',
+                        sortable: true,
+                        searchable: false,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Пълен номер дело',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateCase', item);
+                        }
+                    },
+                    {
+                        name: 'caseStateLabel',
+                        data: 'caseStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: "text-right",
+                        name: 'storageYears',
+                        data: 'storageYears',
+                        title: 'Срок на съхранение години',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width:100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <div class="row">
+            <a href="@Url.Action("Edit")?id={{this}}&comeFrom=CaseForDestroy" class="btn btn-warning btn-sm" title="Унищожаване"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        </div>
+    </script>
+    <script id="templateCase" type="text/x-handlebars-template">
+        {{#if caseId}}
+        <a href="@Url.Action("CasePreview","Case")/{{caseId}}" target="_blank" title="Преглед дело">{{caseRegNumber}}</a>
+        {{/if}}
+    </script>
+
+}

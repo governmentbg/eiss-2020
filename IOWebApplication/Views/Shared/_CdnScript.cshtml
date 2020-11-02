@@ -1,0 +1,146 @@
+﻿<script type="text/javascript">
+    $(function () {
+        $('.cdn-files').each(function (i, e) {
+            if (!$(e).attr('id')) {
+                $(e).attr('id', Date.now());
+            }
+            LoadFiles('#'+$(e).attr('id'));
+        });
+    });
+    function LoadFiles(container) {
+        let sourceType = $(container).data('sourcetype');
+        let sourceId = $(container).data('sourceid');
+        let editMode = $(container).data('editmode');
+        let defaultTitle = $(container).data('defaulttitle');
+        let label = 'Прикачени файлове';
+        if ($(container).data('label')) {
+            label = $(container).data('label');
+            if (label == 'hidden') {
+                label = undefined;
+            }
+        }
+        let url = '@Url.Action("GetFileList", "Files")';
+        if ($(container).data('url')) {
+            url = $(container).data('url');
+        }
+        let genUrl = null;
+        if ($(container).data('genurl')) {
+            genUrl = $(container).data('genurl');
+            if (!$(container).hasClass('inline')) {
+                $(container).addClass('inline');
+            }
+        }
+        let data = {
+            sourceType : sourceType,
+            sourceID: sourceId
+            };
+        requestGET_Json(url, data, function (result) {
+            let canAppend = true;
+            let canDelete = true;
+            switch (editMode) {
+                case 'replace':
+                    canAppend = result.length == 0;
+                    canDelete = !canAppend;
+                    break;
+                case 'none':
+                    canAppend = false;
+                    canDelete = canAppend;
+                    break;
+                case 'append':
+                    canAppend = true;
+                    canDelete = false;
+                    break;
+                case 'list':
+                    canAppend = true;
+                    canDelete = canAppend;
+                    break;
+                default:
+            }
+            let filesModel = { label: label, canDelete: canDelete, canAppend: canAppend, data: result, container: container, genUrl: genUrl, defaultTitle: defaultTitle };
+            if (genUrl) {
+                $(container).html(TemplateToHtml('#templateSingleFile', filesModel));
+            } else {
+                $(container).html(TemplateToHtml('#templateFilesList', filesModel));
+            }
+        });
+    }
+    function AppendFile(container, defaultTitle) {
+        let sourceType = $(container).data('sourcetype');
+        let sourceId = $(container).data('sourceid');
+        let url = '@Url.Action("UploadFile", "Files")';
+        let data = {
+            sourceType : sourceType,
+            sourceID: sourceId,
+            container: container,
+            defaultTitle: defaultTitle
+        };
+        requestContent(url, data, function (html) {
+            //debugger;
+            ShowModalDialog("Избор на файл",html);
+        });
+    }
+    function GenerateFile(sender) {
+        let url = $(sender).data('genurl');
+        requestGET_Json(url, null, function (data) {
+            if (data.result == true) {
+                messageHelper.ShowSuccessMessage('Гененирането на файла премина успешно.');
+                LoadFiles($(sender).parents('.cdn-files:first'));
+            }
+        });
+    }
+    function DeleteFile(fileID, fileName, container) {
+        swalConfirm('Потвърди изтриването на файл ' + fileName + '!', function () {
+            let url = '@Url.Action("DeleteFile", "Files")';
+            let data = { cdnFileId: fileID };
+            requestContentOk(url, data, function () {
+                LoadFiles(container);
+            });
+        });
+    }
+</script>
+
+<script id="templateFilesList" type="text/x-handlebars-template">
+    <fieldset class="is-fieldset">
+        {{#if label}}
+        <legend class="legend_1">
+            {{label}}
+        </legend>
+        {{/if}}
+        {{#each this.data}}
+        <div class="row">
+            <div class="col-lg-8">
+                {{#if canPreview}}
+                <a class="btn btn-xs btn-default" href="@(Url.Action("Preview","Files"))/{{this.fileId}}" title="Преглед на файла" target="_blank"><i class="fa fa-eye"></i></a>
+                <a class="btn btn-xs btn-default" href="#" onclick="printPdfFile('@(Url.Action("Preview","Files"))/{{this.fileId}}'); return false;" title="Печат на файла" target="_blank"><i class="fa fa-print"></i></a>
+                &nbsp;
+                {{/if}}
+
+                <a class="text-primary" href="@(Url.Action("Download","Files"))/{{this.fileId}}" title="Изтегли файла"><i class="{{fileIcon}}"></i>&nbsp;{{this.title}}</a>
+
+            </div>
+            <div class="col-lg-1">
+                {{#if ../canDelete}}
+                <a class="btn btn-xs btn-danger m-b-5" href="#" title="Премахни файла" onclick="DeleteFile('{{this.fileId}}', '{{this.fileName}}', '{{../../container}}');">
+                    <i class="glyphicon glyphicon-remove"></i>
+                </a>
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+        {{#if canAppend}}
+        <div>
+            <br />
+            <a class="btn btn-xs btn-success m-b-5" href="#" title="Избери файл." onclick="AppendFile('{{this.container}}', '{{this.defaultTitle}}');return false;">Добави файл</a>
+        </div>
+        {{/if}}
+    </fieldset>
+</script>
+<script id="templateSingleFile" type="text/x-handlebars-template">
+    {{#if canAppend}}
+    <a href="#" data-genurl="{{{genUrl}}}" onclick="GenerateFile(this); return false;" class="btn btn-sm btn-warning m-b-5" title="{{label}}"><i class="fa fa-check"></i> Генериране</a>
+    {{/if}}
+
+    {{#each this.data}}
+    <a href="@(Url.Action("Download","Files"))/{{this.fileId}}" class="btn btn-sm btn-def m-b-5" title="{{../label}}"><i class="fa fa-download"></i> Изтегли</a>
+    {{/each}}
+</script>

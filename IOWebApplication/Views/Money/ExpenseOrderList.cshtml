@@ -1,0 +1,155 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@model ExpenseOrderFilterVM
+
+@{
+    ViewData["Title"] = "Списък разходни ордери";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.RegNumber)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.FullName)</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function ReloadDatatable()
+        {
+            refreshTable('#mainTable');
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataExpenseOrder")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.fromDate = $("#DateFrom").val();
+                        d.toDate = $("#DateTo").val();
+                        d.name = $("#FullName").val();
+                        d.expenseOrderRegNumber = $("#RegNumber").val();
+                    }
+                },
+                columns: [
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'expenseOrderStateName',
+                        data: 'expenseOrderStateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },                    
+                    {
+                        name: 'isActive',
+                        data: "isActive",
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditExpenseOrder")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("PreviewRawExpenseOrder")/{{this}}" class="btn btn-primary btn-sm" title="Печат"><i class="fa fa-print"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="#" class="btn btn-sm btn-danger" onclick="StornoOrder('{{this}}');"><i class="fa fa-remove"></i></a>
+    </script>
+
+    <script>
+        function StornoOrder(id) {
+            swalConfirm('Потвърди деактивирането на ордера!', function () {
+                postContent('@Url.Action("StornoExpenseOrder","Money")'
+                    , { id: id }
+                    , function (data) {
+                        if (data.result == true) {
+                            refreshTable('#mainTable');
+                            messageHelper.ShowSuccessMessage(data.message);
+                        } else {
+                            messageHelper.ShowErrorMessage(data.message);
+                        }
+                    });
+            });
+        }
+    </script>
+}

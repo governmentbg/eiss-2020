@@ -1,0 +1,82 @@
+﻿@model CaseSessionActCoordination
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на съгласуване" : "Преглед на съгласуване";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на съгласуване";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseSessionActId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.ActCoordinationTypeId, "GenericDropDown")
+                <div id="motives">
+                    @Html.EditorFor(x => x.Content, "Textarea", new { @class = "tinymce" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                &nbsp;
+                <a href="@Url.Action("PreviewAct","CaseSessionAct",new { caseSessionActId=Model.CaseSessionActId})" class="btn btn-primary">Преглед на акт</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+        @if (Model.Id > 0)
+        {
+            <div class="col-lg-6">
+                <div class="cdn-files" data-label="Съдебен акт / протокол" data-sourcetype="@SourceTypeSelectVM.CaseSessionActCoordinationPdf" data-sourceid="@Model.Id" data-editmode="none"></div>
+            </div>
+        }
+    </div>
+</div>
+@section scripts{
+    <script>
+        $(function(){
+            $('#ActCoordinationTypeId').change(function () {
+                switch ($(this).val()) {
+                    case '@(NomenclatureConstants.ActCoordinationTypes.AcceptWithOpinion)':
+                    case '@(NomenclatureConstants.ActCoordinationTypes.DontAccept)':
+                        $('#motives').show();
+                        break;
+                    default:
+                        $('#motives').hide();
+                        break;
+                }
+            }).trigger('change');
+        });
+    </script>
+}
+<partial name="_CdnScript" />

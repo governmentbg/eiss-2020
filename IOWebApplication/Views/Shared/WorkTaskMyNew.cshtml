@@ -1,0 +1,29 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@model SourceTypeSelectVM
+<span id="wtMyNewContainer">
+</span>
+<script>
+    $(function () {
+        wtMyNewLoadData();
+    });
+    function wtMyNewLoadData() {
+        requestGET_Json('@Url.Action("SelectMyNewTasks", "WorkTask")'
+            , { sourceType:@Model.SourceType, sourceId:@Model.SourceId}
+            , function (data) {
+                $('#wtMyNewContainer').html(TemplateToHtml('#workTaskMyNewTemplate', data));
+            });
+    }
+
+</script>
+<script id="workTaskMyNewTemplate" type="text/x-handlebars-template">
+    {{#each this}}
+    &nbsp;&nbsp;
+    {{#if canDoAction}}
+
+    {{#if doActionUrl}}
+    <a href="#" data-url="{{{doActionUrl}}}" data-warning="{{doActionWarning}}" class="btn btn-sm btn-primary" onclick="wtDoTask(this);"><i class="glyphicon glyphicon-exclamation-sign"></i> {{taskTypeName}}</a>
+    {{/if}}
+    {{/if}}
+
+    {{/each}}
+</script>

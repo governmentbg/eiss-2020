@@ -1,0 +1,269 @@
+﻿@model CasePersonVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    bool hasArrested = NomenclatureConstants.CaseTypes.CaseTypeArrested.Contains(Model.CaseTypeId);
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    bool canChange = (bool)(ViewBag.canChange ?? false);
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на лице" : "Преглед на лице";
+        if (!canChange)
+        {
+            ViewData["Title"] = "Преглед на лице";
+        }
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на лице";
+    }
+
+
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseSessionId)
+            @Html.HiddenFor(x => x.FromPersonId)
+            @Html.HiddenFor(x => x.Person_SourceType)
+            @Html.HiddenFor(x => x.Person_SourceId)
+            @Html.HiddenFor(x => x.CaseTypeId)
+            @Html.HiddenFor(x => x.CaseGroupId)
+
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Основни данни за лице</legend>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "" })
+
+                    @*@if (Model.CaseSessionId == null)
+                        {
+                            @Html.EditorFor(x => x.IsInitialPerson)
+                        }*@
+                    <div class="row">
+                        <div class="col-md-6"> @Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
+                        <div class="col-md-6">@Html.EditorFor(x => x.DateTo, "DateTimeDivided")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">@Html.EditorFor(x => x.PersonRoleId, "GenericDropDown")</div>
+                        <div class="col-md-6">@Html.EditorFor(x => x.PersonMaturityId, "GenericDropDown")</div>
+                    </div>
+                    <div class="row">
+                        <div id="divIsArrested" class="col-md-3">
+                            @Html.EditorFor(x => x.IsArrested)
+                        </div>
+                        <div id="divIsDeceased" class="col-md-3">
+                            @Html.EditorFor(x => x.IsDeceased)
+                        </div>
+                    </div>
+
+                    @if (ViewBag.isRegisterCompany)
+                    {
+                        <div id="divCompanyType">
+                            <div class="row">
+                                <div class="col-md-6">@Html.EditorFor(x => x.CompanyTypeId, "GenericDropDown")</div>
+                                <div class="col-md-6">@Html.EditorFor(x => x.TaxNumber)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">@Html.EditorFor(x => x.ReRegisterDate)</div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (ViewBag.MilitaryRangId_ddl != null)
+                    {
+                        @Html.EditorFor(x => x.MilitaryRangId, "GenericDropDown")
+                    }
+                </div>
+
+                <div class="form-group">
+                    @if (canChange)
+                    {
+                        <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    }
+                    @if (Model.CaseSessionId == null)
+                    {
+                        <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@Model.CaseSessionId" class="btn btn-danger">Назад</a>
+                    }
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+                            @if (!Model.IsExpired && access.CanChangeFull && Model.CaseSessionId == null)
+                            {
+                                @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на лице към дело", ExpireSubmitUrl = Url.Action("CasePerson_ExpiredInfo") })
+                                <span>&nbsp;</span>
+                            }
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                            <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CasePerson, SourceId = Model.Id })" />
+                        </div>
+                    }
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    @if (Model.Id > 0)
+    {
+        <div class="col-md-6">
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Адреси</legend>
+                @if (canChange)
+                {
+                    <div class="text-right">
+                        <a asp-action="AddCasePersonAdr" asp-route-casePersonId="@Model.Id" class="btn btn-success btn-sm">
+                            <i class="fa fa-address-card"></i>
+                            Добави адрес
+                        </a>
+                        <a onclick="selectAddress(); return false;" class="btn btn-primary btn-sm">
+                            <i class="fa fa-address-card"></i>
+                            Избери адрес
+                        </a>
+                    </div>
+                }
+                <table id="mainTable" class="table table-hover table-striped"></table>
+            </fieldset>
+        </div>
+    }
+</div>
+
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCasePersonAddress")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.casePersonId = @Model.Id;
+                    }
+
+                },
+                dom:'rt',
+                columns: [
+                    {
+                        name: 'addressTypeName',
+                        data: 'addressTypeName',
+                        title: 'Вид адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fullAddress',
+                        data: 'fullAddress',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'forNotification',
+                        data: 'forNotification',
+                        title: 'За известие',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return "ДА";
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        @if (canChange)
+        {
+            <a href="@Url.Action("EditCasePersonAdr", "CasePerson")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+    </script>
+}
+
+<script>
+    var arrayRoleKind;
+    $(document).ready(function () {
+        arrayRoleKind = @Html.Raw(Json.Serialize(@ViewBag.PersonRolesForArrested));
+        ChangePerson();
+    });
+
+    function selectAddress(sender) {
+        var uic = $("#Uic").val();
+        var uicTypeId = $("#UicTypeId").val();
+        var personSourceType = $("#Person_SourceType").val();
+        var personSourceId = $("#Person_SourceId").val();
+        var casePersonId = @Model.Id;
+        if (uic != "" || (personSourceType ?? 0) > 0) {
+            requestContent('@Url.Action("CasePersonAddress_Search")', {
+                uic: uic, uicTypeId: uicTypeId, casePersonId: casePersonId,
+                personSourceType: personSourceType, personSourceId: personSourceId
+            }, function (html) {
+                ShowModalDialog('Адреси към лице', html, true);
+            });
+        }
+    }
+
+    function ChangePerson() {
+        var personRoleId = $('#PersonRoleId').val();
+        var isRightSide = arrayRoleKind.find(x => x == personRoleId);
+        if ('@hasArrested' == 'True' && isRightSide != undefined) {
+            $('#divIsArrested').show();
+        }
+        else {
+            $('#divIsArrested').hide();
+        }
+
+        if ('@ViewBag.isRegisterCompany' && personRoleId == '@NomenclatureConstants.PersonRole.Company') {
+            $('#divCompanyType').show();
+        }
+        else {
+            $('#divCompanyType').hide();
+        }
+    }
+
+    $('#PersonRoleId').change(function () {
+        ChangePerson();
+    });
+
+    $('#Uic').blur(function () {
+        var uic = $('#Uic').val();
+        var uicTypeId = $('#UicTypeId').val();
+        if (uicTypeId == '@NomenclatureConstants.UicTypes.EGN') {
+            var personMaturity = GetPersonMaturity(uic);
+            if (personMaturity != "-1") {
+                $("#PersonMaturityId").val(personMaturity);
+            }
+        }
+    });
+
+</script>

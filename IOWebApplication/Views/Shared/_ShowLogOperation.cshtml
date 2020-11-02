@@ -1,0 +1,130 @@
+﻿@model IOWebApplication.Core.Models.ShowLogModel
+@{
+    string action = ViewContext.RouteData.Values["action"].ToString();
+    string controller = ViewContext.RouteData.Values["controller"].ToString();
+    if (!string.IsNullOrEmpty(Model.Action))
+    {
+        action = Model.Action;
+    }
+    if (!string.IsNullOrEmpty(Model.Controller))
+    {
+        controller = Model.Controller;
+    }
+    var title = "История на промените";
+    var btnLabel = "Покажи история на промените";
+    if (!string.IsNullOrEmpty(Model.Title))
+    {
+        title = Model.Title;
+
+    }
+    if (!string.IsNullOrEmpty(Model.ButtonLabel))
+    {
+        btnLabel = Model.ButtonLabel;
+
+    }
+}
+@if (Model.ObjectKey != "0")
+{
+    if (Model.IconOnly)
+    {
+        <a href="#" title="Покажи история на промените" class="btn btn-success" onclick="LoadLogOperation();return false;"><i class="fa fa-history"></i></a>
+    }
+    else
+    {
+        <a href="#" title="@title" class="btn btn-success" onclick="LoadLogOperation();return false;"><i class="icon-search"></i>@btnLabel</a>
+    }
+    <div id="historyContainer" style="display:none;z-index:1000;" title="@title">
+        <table border="0" width="100%">
+            <tr>
+                <td class="tdList" valign="top" width="40%">
+                    <div class="grid">
+                    </div>
+                    <div class="pager">
+                    </div>
+                </td>
+                <td class="tdHTML log-operation-container" valign="top" width="60%" style="padding-left: 20px;"></td>
+            </tr>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        function LoadLogOperation() {
+            MakeBigModalDialog('div#historyContainer');
+            ShowLogs(1);
+        }
+
+        function ShowLogs(page_no) {
+            $.ajax({
+                dataType: "json",
+                cache: false,
+                url: '@Url.Action("Get_LogOperation", "Ajax")',
+                data: { controller_name: '@controller', action_name: '@action', object_key: '@Model.ObjectKey' },
+                success: function (data) {
+                    if (data.length > 0) {
+                        var _template = '<table class="tblGrid table table-bordered table-striped"><tr><th>Дата</th><th>Операция</th><th>Потребител</th><th></th></tr>';
+                        _template += '{{#each this}}<tr><td>{{oper_date}}</td><td>{{oper}}</td><td>{{user}}</td><td><a href="#" title="Преглед" onclick="ShowLogOperationCompared({{id}},this);return false;"><i class="glyphicon glyphicon-search"></i></a></td></tr>{{/each}}'
+                        _template += '</table>';
+                        var _d = MakeJsonPager(data, 'div#historyContainer div.pager', page_no, 'ShowLogs');;
+                        $("div#historyContainer div.grid").html(HandlebarsToHtml(_template, _d));
+                        $("div#historyContainer table.tblGrid").addClass("grid");
+
+                    } else {
+                        $("div#historyContainer div.grid").html("Няма намерени данни.");
+                        $("div#historyContainer div.pager").html('');
+                    }
+                }
+            });
+        }
+
+        function ShowLogOperation(id, sender) {
+
+            $("div#historyContainer TD.tdList td").removeClass("selected");
+            $.ajax({
+                type: 'GET',
+                async: true,
+                cache: false,
+                url: '@Url.Action("Get_LogOperationHTML", "Ajax")',
+                data: { id: id },
+                success: function (data) {
+                    let _html = htmlUnescape(data);
+                    $("div#historyContainer TD.tdHTML").html(_html);
+                    $(sender).closest('tr').find('td').addClass("selected");
+                    if (_html.indexOf('nav-tabs-custom') > 0) {
+                        $('.log-operation-container').find('.nav-tabs-custom:first').tabs();
+                    }
+                    return false;
+                }
+            });
+            return false;
+        }
+        function ShowLogOperationCompared(id, sender) {
+
+            $("div#historyContainer TD.tdList td").removeClass("selected");
+            $.ajax({
+                type: 'GET',
+                async: true,
+                cache: false,
+                url: '@Url.Action("Get_LogOperationHTMLwithPrior", "Ajax")',
+                data: { controller_name: '@controller', action_name: '@action', object_key: '@Model.ObjectKey',currentId: id },
+                success: function (data) {
+                    $("div#historyContainer TD.tdHTML").html(LogOperationCompareVersions(htmlUnescape(data.current), htmlUnescape(data.prior)));
+                    $(sender).closest('tr').find('td').addClass("selected");
+                    return false;
+                }
+            });
+            return false;
+        }
+        function SaveChangeInformation(changeDescription) {
+
+            $.ajax({
+                type: 'POST',
+                async: false,
+                cache: false,
+                url: '@Url.Action("SaveChange_LogOperation", "Ajax")',
+                data: { controller_name: '@controller', action_name: '@action', object_key: '@Model.ObjectKey', changeDescription: changeDescription }
+            });
+
+        }
+    </script>
+
+}

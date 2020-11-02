@@ -1,0 +1,30 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels;
+@model CaseMovementVM
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "cmStornoModalForm" }))
+{
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.CourtId)
+    @Html.EditorFor(x => x.DisableDescription, "textarea")
+
+    <div class="form-group">
+        <input type="submit" value="Запис" class="btn btn-success" />
+    </div>
+}
+<div id="modalMessageContainer">
+</div>
+<script>
+    $(function () {
+        attachAjaxForm('#cmStornoModalForm', function (data) {
+            if (data.responseJSON.result == true) {
+                cmLoadData();
+                HideModal();
+                messageHelper.ShowSuccessMessage('Сторнирането успешно.');
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+            }
+        });
+        initLawUnit();
+        initDatePicker();
+    })
+</script>

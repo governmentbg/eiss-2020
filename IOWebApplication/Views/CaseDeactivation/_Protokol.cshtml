@@ -1,0 +1,35 @@
+﻿@model CaseDeactivationVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@{
+    Layout = null;
+}
+<div>
+    <center>
+        <b>@Model.CourtName</b>
+    </center>
+    <br />
+    <center>
+        <b>
+            Протокол за анулиране на дело поради техническа грешка
+        </b>
+    </center>
+    <br />
+    <br />
+    <br />
+    <div>
+        @Html.DisplayFor(x => x.CaseDate, "dateInline")
+        @Html.DisplayFor(x => x.CaseNumber, "objInline")
+        @Html.DisplayFor(x => x.CaseTypeName, "objInline")
+        @Html.DisplayFor(x => x.CaseYear, "objInline")
+        @Html.DisplayFor(x => x.DocumentNumber, "objInline")
+        @if (!string.IsNullOrEmpty(Model.CourtGroupName))
+        {
+            @Html.DisplayFor(x => x.CourtGroupName, "objInline")
+        }
+        @Html.DisplayFor(x => x.CaseCodeName, "objInline")
+
+        @Html.DisplayFor(x => x.DateWrt, "dateInline", new { format = "dd.MM.yyyy г. HH:mm:ss" })
+
+        @Html.DisplayFor(x => x.Description, "objInline")
+    </div>
+</div>

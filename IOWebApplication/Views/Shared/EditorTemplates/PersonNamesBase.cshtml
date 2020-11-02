@@ -1,0 +1,100 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Base
+@using IOWebApplication.Extensions
+@model PersonNamesBase
+@{
+    bool egnOnly = (bool)(ViewData["egnOnly"] ?? false);
+    bool readonlyEgn = (bool)(ViewData["readonlyEgn"] ?? false);
+
+    var uicTypes = new List<SelectListItem>() {
+     new SelectListItem("ЕГН","1")
+    };
+    if (!egnOnly)
+    {
+        uicTypes.Add(new SelectListItem("ЛНЧ", "2"));
+        uicTypes.Add(new SelectListItem("ЕИК", "3"));
+        uicTypes.Add(new SelectListItem("Дата на раждане", "4"));
+        uicTypes.Add(new SelectListItem("БУЛСТАТ", "5"));
+    }
+    var label = (string)ViewData["label"] ?? "Идентификация";
+}
+<input type="hidden" asp-for="@Model.PersonId" />
+@if (Model.Person != null)
+{
+    <input type="hidden" asp-for="@Model.Person.Id" />
+    <input type="hidden" asp-for="@Model.Person.PersonTypeId" />
+}
+<div class="form-group person--control" data-controlid="@Guid.NewGuid()">
+    @*<label class="control-label">@label</label>*@
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="UicTypeId" class="io-req"></label>
+                @Html.DropDownListFor(model => model.UicTypeId, uicTypes.SetSelected(Model.UicTypeId), new { @class = "form-control uic--type" })
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group uic--container">
+                <label asp-for="Uic"></label>
+                @if (readonlyEgn)
+                {
+                    <input asp-for="@Model.Uic" class="form-control person-uic" title="Идентификатор" readonly />
+                }
+                else
+                {
+                    <input asp-for="@Model.Uic" class="form-control person-uic" title="Идентификатор" />
+                }
+                <span asp-validation-for="@Model.Uic" class="text-danger"></span>
+                <a href="#" class="btn btn-primary uic--search" title="Провери"><i class="fa fa-check"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="row person--names">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="FirstName" class="io-req"></label>
+                <input asp-for="@Model.FirstName" class="form-control" title="Собствено име" />
+                <span asp-validation-for="@Model.FirstName" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="MiddleName"></label>
+                <input asp-for="@Model.MiddleName" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="FamilyName" class="io-req"></label>
+                <input asp-for="@Model.FamilyName" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Family2Name"></label>
+                <input asp-for="@Model.Family2Name" class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="row entity--names">
+        <div class="col-md-12">
+            <div class="form-group">
+                <label asp-for="FullName" class="io-req"></label>
+                <input asp-for="@Model.FullName" class="form-control" />
+                <span asp-validation-for="@Model.FullName" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    @*<div class="row latin--name">
+            <div class="col-md-12">
+                <input asp-for="@Model.LatinName" class="form-control" placeholder="Изписване на латиница" />
+            </div>
+        </div>
+        <div class="row department--name">
+            <div class="col-md-12">
+                <input asp-for="@Model.DepartmentName" class="form-control" placeholder="Отдел / дирекция" />
+            </div>
+        </div>*@
+</div>
+
+

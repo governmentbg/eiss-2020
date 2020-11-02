@@ -1,0 +1,29 @@
+﻿@model CrimeSubjectStatisticData
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@using IOWebApplication.Infrastructure.Extensions
+@inject IEisppRulesService rulesService
+@{
+    var eisppRule = ViewData.ModelMetadata.GetEisppRuleElement(ViewData.TemplateInfo.HtmlFieldPrefix);
+    (var ruleIds, var flags) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppRule);
+}
+@if (flags > 0)
+{
+    <fieldset class="is-fieldset">
+        <legend class="legend_1"><span>Статистически данни за субект на престъпление</span></legend>
+        @Html.HiddenFor(x => x.SubjectStatisticDataId)
+        <div class="row">
+            @*<div class="col-lg-2">@Html.EditorFor(x => x.Citizenship, "EisppDropDown", null, new { Ddl = ViewBag.CountriesDDL })</div>*@
+            @*<div class="col-lg-2">@Html.EditorFor(x => x.ЕthnicGroup, "EisppDropDown", null, new { Ddl = ViewBag.ЕthnicGroupDDL })</div>*@
+            <div class="col-lg-2">@Html.EditorFor(x => x.Education, "EisppDropDown", null, new { Ddl = ViewBag.EducationDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.LawfulAge, "EisppDropDown", null, new { Ddl = ViewBag.LawfulAgeDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.Relaps, "EisppDropDown", null, new { Ddl = ViewBag.RelapsDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.MeritalStatus, "EisppDropDown", null, new { Ddl = ViewBag.MeritalStatusDDL })</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.LaborActivity, "EisppDropDown", null, new { Ddl = ViewBag.LaborActivityDDL })</div>
+            @* <div class="col-lg-2">@Html.EditorFor(x => x.Occupation, "EisppDropDown", null, new { Ddl = ViewBag.OccupationDDL })</div>*@
+            <div class="col-lg-2">@Html.EditorFor(x => x.FormerRegistrations, "EisppDropDown", null, new { Ddl = ViewBag.FormerRegistrationsDDL })</div>
+        </div>
+    </fieldset>
+}
+

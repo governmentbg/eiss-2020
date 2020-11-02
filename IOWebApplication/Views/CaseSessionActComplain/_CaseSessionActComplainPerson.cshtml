@@ -1,0 +1,65 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseSessionActComplain" asp-action="AddCaseSessionActComplainPerson" asp-route-CaseSessionActComplainId="@Model.Id" class="btn btn-warning btn-sm">
+                <i class="fa fa-edit"></i>
+                Добави/Премахни
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSessionActComplainPersonMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseSessionActComplainPersonMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseSessionActComplainPerson", "CaseSessionActComplain")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.CaseSessionActComplainId = @Model.Id;
+                    }
+                },
+                columns: [
+                    {
+                        name: 'casePersonName',
+                        data: 'casePersonName',
+                        title: 'Лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionActComplainPersonTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="caseSessionActComplainPersonTemplateEdit" type="text/x-handlebars-template">
+</script>
+
+

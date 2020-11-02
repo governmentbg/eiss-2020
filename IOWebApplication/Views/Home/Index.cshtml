@@ -1,0 +1,46 @@
+﻿@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@{
+    ViewData["Title"] = "ЕИСС";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+    var settings = userContext.Settings().Result;
+
+}
+@section menuHeader{
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        @if (settings.NewsVisible)
+        {
+            <div>
+                <partial name="LatestNews" />
+            </div>
+        }
+
+        @if (settings.CalendarVisible)
+        {
+            <partial name="CalendarPerson" />
+        }
+    </div>
+    <div class="col-lg-6">
+        @if (settings.WorkTaskVisible)
+        {
+            @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyTasksComponent))
+        }
+        @if (settings.CaseMoveVisible)
+        {
+            @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyMovementComponent))
+        }
+    </div>
+</div>
+
+
+@section scripts {
+    @*Тези скриптове са с демонстрационна цел*@
+    <script type="text/javascript" src="~/lib/adminlte/plugins/chartJs/Chart.js"></script>
+    @*<script type="text/javascript" src="~/lib/adminlte/js/pages/dashboard2.js"></script>*@
+    @*<script type="text/javascript" src="~/lib/adminlte/js/pages/dashboard2.js"></script>*@
+}

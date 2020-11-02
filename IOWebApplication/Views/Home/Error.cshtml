@@ -1,0 +1,12 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Грешка";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+}
+@section menuHeader{
+    @*<header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>*@
+}
+<h3>@Model.Message</h3>
+<p>@Model.InnerException</p>

@@ -1,0 +1,129 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using Microsoft.Extensions.Configuration
+@using IOWebApplication.Infrastructure.Constants
+@inject IConfiguration configuration;
+@{
+    Layout = null;
+    var isTestEnvironment = configuration.GetValue<string>("Environment:Name") == NomenclatureConstants.Environments.Test;
+}
+@model BlankEditVM
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @if (!string.IsNullOrEmpty(Model.TemplateStyle))
+    {
+        <style type="text/css">
+            @Html.Raw(Model.TemplateStyle)
+        </style>
+    }
+    <style type="text/css">
+        .act-body {
+            font-family: "Times New Roman",serif !important;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+
+        .act-header {
+            font-size: 14pt;
+        }
+
+            .act-header table.no-border td {
+                font-size: 14pt;
+            }
+
+        .act-body table.table {
+            border-collapse: collapse;
+        }
+
+            .act-body table.table td {
+                border: 1px solid #888;
+            }
+
+        /*Print classes*/
+        table.bordered {
+            border-collapse: collapse;
+        }
+
+            table.bordered td, table.bordered th {
+                padding: 3px 5px;
+                border: 1px solid #777;
+            }
+
+        table.no-border {
+            border: none !important;
+        }
+
+            table.no-border td, table.no-border th {
+                border: none !important;
+            }
+
+        /*Print classes*/
+        label.control-label {
+            font-weight: bold
+        }
+
+        tr.highlight-bold td {
+            background-color: #eee;
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        table.protokol-table th {
+            background-color: #a8a8a8;
+            font-weight: bold;
+            color: white;
+            padding: 2px 5px;
+        }
+
+        table.protokol-table td {
+            padding: 1px 5px;
+            font-size:10pt;
+        }
+
+        table.row-space-single td {
+            padding-bottom: 15px;
+        }
+
+        #test--env-container {
+            position: absolute;
+            display: block;
+            min-width: 100%;
+            opacity: 0.6;
+            text-align: center;
+            background-color: transparent;
+            padding-top: 40%;
+        }
+
+        #test--env--text {
+            color: lightgrey;
+            font-size: 50px;
+            transform: rotate(300deg);
+            -webkit-transform: rotate(300deg);
+            opacity: 0.9;
+            filter: alpha(opacity=70);
+            background-color: transparent;
+        }
+    </style>
+
+</head>
+<body>
+    @if (isTestEnvironment && Model.AppendWatermarkforTest)
+    {
+        <div id="test--env-container"><p id="test--env--text">Документът е изготвен от тестова среда на ЕИСС</p> </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.HtmlHeader))
+    {
+        <div>
+            @Html.Raw(Model.HtmlHeader)
+        </div>
+    }
+    @Html.Raw(Model.HtmlContent)
+    @if (!string.IsNullOrEmpty(Model.HtmlFooter))
+    {
+        <div>
+            @Html.Raw(Model.HtmlFooter)
+        </div>
+    }
+
+</body>
+</html>

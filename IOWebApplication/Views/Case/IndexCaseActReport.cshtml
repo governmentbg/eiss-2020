@@ -1,0 +1,244 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@model CaseFilterReport
+
+@{
+    ViewData["Title"] = "Справка за срочност за изготвяне на съдебен акт";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.Session_DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.SessionDateTo, "DateTime")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.ActDateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.ActDateTo, "DateTime")
+    </div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActDateToId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseActReport")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            Session_DateFrom: $("#Session_DateFrom").val(),
+                            SessionDateTo: $("#SessionDateTo").val(),
+                            ActDateFrom: $("#DateFrom").val(),
+                            ActDateTo: $("#DateTo").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            CaseCodeId: $("#CaseCodeId").val(),
+                            SessionTypeId: $("#SessionTypeId").val(),
+                            ActDateToId: $("#ActDateToId").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegNum',
+                        data: 'caseRegNum',
+                        title: 'Номер/Година',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Предмет',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionDateFrom',
+                        data: 'sessionDateFrom',
+                        title: 'Заседание от',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'sessionResult',
+                        data: 'sessionResult',
+                        title: 'Резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actTypeLabel',
+                        data: 'actTypeLabel',
+                        title: 'Вид съдебен акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionActDate',
+                        data: 'sessionActDate',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actReturnDate',
+                        data: 'actReturnDate',
+                        title: 'Връщане',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview")/{{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+    });
+
+    $('#ActDateTo1Month').change(function () {
+        var check = $("#ActDateTo1Month").is(":checked");
+        if (check) {
+            $("#ActDateTo2Month").prop("checked", false);
+            $("#ActDateTo3Month").prop("checked", false);
+            $("#ActDateToUp3Month").prop("checked", false);
+        }
+    });
+
+    $('#ActDateTo2Month').change(function () {
+        var check = $("#ActDateTo2Month").is(":checked");
+        if (check) {
+            $("#ActDateTo1Month").prop("checked", false);
+            $("#ActDateTo3Month").prop("checked", false);
+            $("#ActDateToUp3Month").prop("checked", false);
+        }
+    });
+
+    $('#ActDateTo3Month').change(function () {
+        var check = $("#ActDateTo3Month").is(":checked");
+        if (check) {
+            $("#ActDateTo1Month").prop("checked", false);
+            $("#ActDateTo2Month").prop("checked", false);
+            $("#ActDateToUp3Month").prop("checked", false);
+        }
+    });
+
+    $('#ActDateToUp3Month').change(function () {
+        var check = $("#ActDateToUp3Month").is(":checked");
+        if (check) {
+            $("#ActDateTo1Month").prop("checked", false);
+            $("#ActDateTo2Month").prop("checked", false);
+            $("#ActDateTo3Month").prop("checked", false);
+        }
+    });
+
+    $(function () {
+        initCaseCode();
+    });
+</script>

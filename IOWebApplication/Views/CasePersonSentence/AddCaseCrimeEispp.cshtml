@@ -1,0 +1,54 @@
+﻿@model EisppCrimeVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    ViewData["Title"] = "Добавяне на престъпления от ЕИСПП Технологична справка";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="AddCaseCrimeEispp" method="post">
+            @Html.HiddenFor(x => x.CaseId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        <div id="divEISPP">
+                            @Html.EditorFor(x => x.EISPPNumber, "EisppNumber")
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        @Html.EditorFor(x => x.PneNumber, "GenericDropDown")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Добави" class="btn btn-success" />
+                }
+                <a asp-action="IndexCaseCrime" asp-route-caseId="@Model.CaseId" class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        $('#EISPPNumber').prop('readOnly', true);
+    });
+
+</script>

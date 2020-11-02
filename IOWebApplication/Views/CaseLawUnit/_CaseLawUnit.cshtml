@@ -1,0 +1,149 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    var isNotVisibleColumnAkt = (@Model.CaseSessionId == null);
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    @if (Model.CaseStateId != NomenclatureConstants.CaseState.Draft)
+    {
+        @if (Model.CaseSessionId == null)
+        {
+            <div class="row">
+                <div class="col-md-12 text-right pb-15">
+                    <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.Id" class="btn btn-def btn-sm m-b-5">
+                        <i class="fa fa-random"></i>
+                        Протоколи от разпределение
+                    </a>
+                    <a asp-controller="CaseLawUnit" asp-action="IndexDismisal" asp-route-id="@Model.Id" class="btn btn-def btn-sm m-b-5">
+                        <i class="fa fa-user-times"></i>
+                        Документи преразпределение
+                    </a>
+                    <a asp-controller="CaseLawUnit" asp-action="CaseLawUnitChangeDepRol" asp-route-caseId="@Model.Id" class="btn btn-def btn-sm m-b-5">
+                        <i class="fa fa-graduation-cap"></i>
+                        Промяна на председател/състав
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-md-12 text-right pb-15">
+                    <a asp-controller="CaseLawUnit" asp-action="SessionLawUnitFromCase" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-def btn-sm m-b-5">
+                        <i class="fa fa-users"></i>
+                        Добави от състав по делото
+                    </a>
+                    <a asp-controller="CaseLawUnit" asp-action="CaseLawUnitChangeDepRol" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-def btn-sm m-b-5">
+                        <i class="fa fa-graduation-cap"></i>
+                        Промяна на председател/състав
+                    </a>
+                </div>
+            </div>
+        }
+    }
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="caseLawUnitMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var table = $('#caseLawUnitMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListData", "CaseLawUnit")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.caseId = @Model.Id;
+                    d.caseSessionId = @(Model.CaseSessionId??0);
+                }
+
+            },
+            deferLoading: deferLoadingOnTab('#caseLawUnitMainTable'),
+            columns: [
+                {
+                    name: 'lawUnitName',
+                    data: 'lawUnitName',
+                    title: 'Наименование',
+                    sortable: false,
+                    searchable: true
+                },
+                {
+                    name: 'judgeRoleLabel',
+                    data: 'judgeRoleLabel',
+                    title: 'Вид лице',
+                    sortable: false,
+                    searchable: true
+                },
+                {
+                    name: 'judgeDepartmentRoleLabel',
+                    data: 'judgeDepartmentRoleLabel',
+                    title: 'Роля в делото',
+                    sortable: false,
+                    searchable: true
+                },
+                {
+                    name: 'departmentLabel',
+                    data: 'departmentLabel',
+                    title: 'Състав',
+                    sortable: false,
+                    searchable: true
+                },
+                {
+                    name: 'dismisalLabel',
+                    data: 'dismisalLabel',
+                    title: 'Отвод',
+                    sortable: false,
+                    searchable: true
+                },
+                {
+                    name: 'dateFrom',
+                    data: 'dateFrom',
+                    title: 'От дата',
+                    sortable: true,
+                    searchable: true,
+                    render: function (data) {
+                        return moment(data).format("DD.MM.YYYY HH:mm:ss");
+                    }
+                },
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#caseLawUnitTemplateEdit', value);
+                    }
+                }
+            ]
+        });
+    });
+</script>
+
+<script id="caseLawUnitTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        @if (@Model.CaseSessionId == null)
+        {
+            <a href="@Url.Action("AddEditDismisal", "CaseLawUnit")?lawUnitId={{this}}" class="btn btn-def btn-sm" title="Извеждане от състав по дело"><i class="fa fa-user-times"></i><span class="hidden-sm hidden-xs">Извеждане от състав по дело</span></a>
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+        @*var visible = '@isNotVisibleColumnAkt' === 'True';
+        var table = $('#caseLawUnitMainTable').DataTable();
+        table.column(3).visible(visible);*@
+    });
+</script>

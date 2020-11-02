@@ -1,0 +1,991 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		h5 {
+			mso-style-link: "Heading 5 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h6 {
+			mso-style-link: "Heading 6 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListBullet, li.MsoListBullet, div.MsoListBullet {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpFirst, li.MsoListBulletCxSpFirst, div.MsoListBulletCxSpFirst {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpMiddle, li.MsoListBulletCxSpMiddle, div.MsoListBulletCxSpMiddle {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpLast, li.MsoListBulletCxSpLast, div.MsoListBulletCxSpLast {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.ListParagraph2, li.ListParagraph2, div.ListParagraph2 {
+			mso-style-name: "List Paragraph2 ЕИСС";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpFirst, li.ListParagraph2CxSpFirst, div.ListParagraph2CxSpFirst {
+			mso-style-name: "List Paragraph2 ЕИССCxSpFirst";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpMiddle, li.ListParagraph2CxSpMiddle, div.ListParagraph2CxSpMiddle {
+			mso-style-name: "List Paragraph2 ЕИССCxSpMiddle";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpLast, li.ListParagraph2CxSpLast, div.ListParagraph2CxSpLast {
+			mso-style-name: "List Paragraph2 ЕИССCxSpLast";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraph2Char {
+			mso-style-name: "List Paragraph2 ЕИСС Char";
+			mso-style-link: "List Paragraph2 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			mso-style-link: "Style4 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 74.55pt;
+			text-align: justify;
+			text-indent: 0cm;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Heading4IO, li.Heading4IO, div.Heading4IO {
+			mso-style-name: "Heading 4 IO";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.4pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-style: italic;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.REQTableText, li.REQTableText, div.REQTableText {
+			mso-style-name: "REQ Table Text";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		span.Heading5Char {
+			mso-style-name: "Heading 5 Char";
+			mso-style-link: "Heading 5";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.EISSBullet, li.EISSBullet, div.EISSBullet {
+			mso-style-name: "EISS Bullet";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpFirst, li.EISSBulletCxSpFirst, div.EISSBulletCxSpFirst {
+			mso-style-name: "EISS BulletCxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpMiddle, li.EISSBulletCxSpMiddle, div.EISSBulletCxSpMiddle {
+			mso-style-name: "EISS BulletCxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpLast, li.EISSBulletCxSpLast, div.EISSBulletCxSpLast {
+			mso-style-name: "EISS BulletCxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Style4Char {
+			mso-style-name: "Style4 Char";
+			mso-style-link: Style4;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.NormalIO, li.NormalIO, div.NormalIO {
+			mso-style-name: "Normal IO";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading6Char {
+			mso-style-name: "Heading 6 Char";
+			mso-style-link: "Heading 6";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 612.0pt 792.0pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h3 style='margin-left:107.45pt;text-indent:-36.0pt'>
+			<a name="_Toc42527925"></a><a name="_Toc39426265">
+				1.1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Таб Съдебен състав
+			</a>
+		</h3>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<span style='line-height:115%'>
+				В
+				таб Съдебен състав се визуализира две секции с данни – Съдебен състав и Други.
+				В секция Съдебен състав се извежда активния състав по делото – съдия-докладчик,
+				членове на съдебен състав и съдебни заседатели. В секция Други се извеждат данни
+				за съдебен помощник и секретар по делото.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=246
+				 id="Picture 142428" src="caselawunit_files/image001.jpg">
+		</p>
+
+		<h4 style='margin-left:125.45pt;text-indent:-36.0pt'>
+			<a name="_Toc42527926">
+				1.1.1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>Секция Съдебен състав
+			</a>
+		</h4>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527927">
+				1.1.1.1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Бутон Протоколи за разпределение
+			</a>
+		</h5>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			Посредством избор на бутон
+			Протоколи за разпределение <img width=184 height=41 id="Picture 142429"
+								   src="caselawunit_files/image002.jpg">се визуализират протоколите за
+			разпределение на състава по делото (съдия-докладчик, членове на състава и
+			съдебни заседатели):
+		</p>
+
+		<p class=MsoCaption style='text-indent:0cm'>
+			<img width=605 height=120
+				 id="Picture 142430" src="caselawunit_files/image003.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<b>
+				<span style='line-height:115%'>
+					Забележка:
+				</span>
+			</b><span style='line-height:115%'>
+				В случай, че състав по делото не е
+				запълнен, има възможност за извършване на ново случайно разпределение
+				посредством избор на бутон Добави. Бутонът препраща в екран за случайно
+				разпределение, което се извършва съгласно описаното.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			Ако съдебният състав по делото е запълнен след избор на
+			бутон Добави се визуализира стопиращо съобщение и ново разпределение по делото
+			не може да бъде извършено.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:1.0cm'>
+			<img width=605 height=183 id="Picture 142431" src="caselawunit_files/image004.jpg">
+		</p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527928">
+				1.1.1.1.2<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Бутон Извеждане от съдебен състав
+			</a> 
+		</h5>
+
+		<p class=MsoNormal>
+			Бутон Извеждане от състав по дело<img width=165 height=20
+											   id="Picture 142432" src="caselawunit_files/image005.jpg"> се използва при
+			необходимост от смяна на съдия-докладчик или член на съдебен състав по делото е
+			необходимо съответния участник в съдебния състав да бъде изведен, за да се
+			освободи позицията в делото, след което да се пристъпи към следващото
+			разпределение според неговия тип и режим на разпределение, както е описано в
+			точки по-горе.
+		</p>
+
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Извеждане на съдия от дело
+		</p>
+
+		<p class=MsoNormal>
+			Извеждане на съдия от дело става от таб Съдебен състав в
+			делото посредством избор на бутон Извеждане от състав по дело за съответния
+			съдия, който трябва да бъде изведен.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=172
+				 id="Picture 141446" src="caselawunit_files/image006.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Извеждане от състав по дело се отваря
+			екран за въвеждане на основание за извеждане:
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=419 height=226 id="Picture 142434" src="caselawunit_files/image007.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Тип – налични са следните причини за извеждане на съдия-докладчик и
+			член на съдебен състав – отвод, самоотвод и преразпределение.
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Акт – избира се съдебен акт от заседание с резултат
+			отвод/самоотвод, с който е постановен отвод/самоотвод по делото. Полето е със
+			задължителен характер за избрани причини отвод или самоотвод;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле От дата – избира се дата, от която съдията да бъде изведен от
+			съдебния състав. За отвод/самоотвод датата не може да е преди датата на
+			регистрация на акта, избран в поле Акт;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Мотив – въвежда се причина за извеждане на съдия от състав. Полето е със
+			задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Запис<img width=47 height=25
+										  id="Picture 143393" src="caselawunit_files/image008.jpg"> и успешен записване
+			на извеждане от състав, позицията по делото е свободна и може да се пристъпи
+			към следващо разпределение.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка</b>: След извеждане на съдия-докладчик или член
+			на съдебен състав на основание отвод/самоотвод съдията <b>не</b> <b>участва</b>
+			в следващи разпределения по съответното дело. След извеждане на съдия-докладчик
+			или член на съдебен състав на основание разпределение съдията <b>участва</b> в
+			следващи разпределения по съответното дело.
+		</p>
+
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Извеждане на съдебен заседател от дело
+		</p>
+
+		<p class=MsoNormal>
+			При необходимост от смяна на съдебен заседател по делото е
+			необходимо съответния участник в съдебния състав да бъде изведен, за да се
+			освободи позицията в делото, след което да се пристъпи към следващото
+			разпределение според неговия тип и режим на разпределение, както е описано в
+			точки по-горе.
+		</p>
+
+		<p class=MsoNormal>
+			Извеждане на съдебен заседател от дело става от таб Съдебен
+			състав в делото посредством избор на бутон Извеждане от състав по дело за
+			съответния съдебен заседател, който трябва да бъде изведен.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=603 height=170
+				 id="Picture 141600" src="caselawunit_files/image009.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Извеждане от състав по дело се отваря
+			екран за въвеждане на основание за извеждане:
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=411 height=174 id="Picture 142436" src="caselawunit_files/image010.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Тип – налични са следните причини за извеждане на съдебен
+			заседател  – смяна на съдебен заседател.
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле От дата – избира се дата, от която съдебния заседател да бъде
+			изведен от съдебния състав;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Мотив – въвежда се причина за извеждане на съдебния заседател от състав.
+			Полето е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Запис<img width=47 height=25
+										  id="Picture 143394" src="caselawunit_files/image008.jpg"> и успешен записване
+			на извеждане от състав, позицията по делото е свободна и може да се пристъпи
+			към следващо разпределение.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка</b>: След извеждане на съдебен заседател на
+			основание смяна на заседател, същият <b>не участва</b> в следващи разпределения
+			по съответното дело за деня, в който е изведен от състав. За разпределения след
+			тези в деня, в който е изведен, съдебният заседател участва отново в
+			разпределения по същото дело при съблюдаване на изискванията за максимален брой
+			заседателни дни.
+		</p>
+
+		<p class=MsoNormal>
+			При изчерпване на възможните съдебни заседатели се извежда
+			съобщение за невъзможност да бъде извършен избор.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=162
+				 id="Picture 142437" src="caselawunit_files/image011.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След изпълнение образуване на дело в изпълнение на задача за
+			разпределение задачата се приключва автоматично от системата.
+		</p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527929">
+				1.1.1.1.3<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Бутон Документи от преразпределение
+			</a>
+		</h5>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Документи преразпределение <img width=181 height=21 id="Picture 142438" src="caselawunit_files/image012.jpg">има
+			възможност за преглед на всички промени в съдебния състав свързани с извеждане
+			от съдебен състав.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<span style='line-height:115%'>
+				<img width=603 height=104 id="Picture 142439"
+					 src="caselawunit_files/image013.jpg">
+			</span>
+		</p>
+
+		<h5 style='margin-left:161.45pt;text-indent:-54.0pt'>
+			<a name="_Toc42527930">
+				1.1.1.1.4<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Бутон Промяна на председател/състав
+			</a>
+		</h5>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Промяна на председател/състав <img width=183 height=23 id="Picture 141240" src="caselawunit_files/image014.jpg">има
+			възможност за отбелязване на роля Председател в съдебния състав по делото и за
+			избор на състав от предварително въведената съдебна структура на конкретния
+			съд.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=120
+				 id="Picture 141386" src="caselawunit_files/image015.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В случаите на избор на постоянен състав по делото ролята
+			председател автоматично се задава на съдията посочен като председател на
+			съдебния състав, въведен при конфигуриране на данните за съдебна структура на
+			съда. Автоматично се извежда и номера и името на състава от съдебната
+			структура.
+		</p>
+
+		<p class=MsoNormal>
+			В случаите на избор на съдии от различни състави в съда има
+			възможност за ръчно определяне кой съдия по делото да бъде с роля председател
+			на състава по конкретното дело, както и ръчен избор на името и номера на
+			конкретния съдебен състав, който разглежда делото.
+		</p>
+
+		<p class=MsoNormal>
+			Задаване/Промяна на роля Председател в съдебния състав става
+			посредством избор от падащия списък с текущите съдии в състава в поле
+			Председател.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=101
+				 id="Picture 141380" src="caselawunit_files/image016.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След избор на съответния съдия и избор на бутон Запис<img width=47 height=25 id="Picture 143395" src="caselawunit_files/image017.jpg">
+			успешно се задава новия Председател на състава.
+		</p>
+
+		<p class=MsoNormal>
+			Задаване/Промяна на номер и име на постоянен съдебен
+			състав по делото става посредством избор от падащия списък в поле Състав на
+			съответния състав. В падащия списък се извеждат всички съдебни състави в съда,
+			от които са избирани съдии по делото.
+		</p>
+
+		<h4 style='margin-left:125.45pt;text-indent:-36.0pt'>
+			<a name="_Toc42527931">
+				1.1.1.2<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>Секция Други
+			</a>
+		</h4>
+
+		<p class=MsoNormal>
+			Секция Други съдържа информация за съдебен помощник и/или
+			секретар по конкретното дело.
+		</p>
+
+		<p class=ListParagraph2 style='margin-left:36.0pt'>
+			<span style='font-family:
+Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Бутон Добави
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Добави има възможност за добавяне
+			на съдебен помощник или секретар по делото. Визуализира се екран за въвеждане
+			на данни:
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=459
+				 height=252 id="Picture 142440" src="caselawunit_files/image018.jpg">
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Служител - при въвеждане на минимум три последователни символа,
+			системата автоматично търси и предлага за избор списък от потребители, които да
+			бъдат добавени по делото;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Роля – избира се роля на потребителя в делото – възможност за избор а
+			съдебен помощник или секретар;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>От дата – До дата – въвежда се период на активност на избрания
+			потребител като служител по делото (До дата е с незадължителен характер);
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Забележка – въвежда се допълнителна информация при необходимост. Полето
+			не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>След попълване на изискуемите данни се избира бутон Запис.</p>
+
+		<p class=Style4 style='text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=239
+				 id="Picture 142441" src="caselawunit_files/image019.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След успешен запис в екран Съдебен състав са добавени
+			служителите.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=603 height=97
+				 id="Picture 142442" src="caselawunit_files/image020.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Редакция <img width=35 height=30
+												  id="Picture 143480" src="caselawunit_files/image021.jpg">има възможност за
+			редакция на служител в делото – съдебен помощник или секретар. Екранът за
+			редакция съдържа аналогични полета като тези при въвеждане.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<span style='line-height:115%'>&nbsp;</span>
+		</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

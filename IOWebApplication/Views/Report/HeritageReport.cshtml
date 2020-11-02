@@ -1,0 +1,32 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model HeritageFilterReportVM
+
+@{
+    ViewData["Title"] = "Книга за приемане и отказ от наследство";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.NumberAct)</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.FromActInforcedDate, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.ToActInforcedDate, "DateTime")</div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="submit" class="btn btn-primary">
+                Експорт в Excel
+                <i class="fa fa-file-excel-o" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+</form>

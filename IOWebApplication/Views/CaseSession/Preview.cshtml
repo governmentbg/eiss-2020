@@ -1,0 +1,246 @@
+﻿@model CaseSessionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@using IOWebApplication.Core.Helper.GlobalConstants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = (string)ViewBag.CaseSessionName;
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на заседание";
+    }
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    var hasSubst = (bool)ViewBag.hasSubstitutions;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <form method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs" id="caseSessionTab">
+                        <li class="active"><a href="#tabSessionMainData" data-toggle="tab" data-filename="@HelpFileValues.SessionMainData"><i class="fa fa-database"></i> Основни данни</a></li>
+                        <li class=""><a href="#tabLawUnit" data-toggle="tab" data-filename="@HelpFileValues.SessionLawunit"><i class="fa fa-users"></i> Съдебен състав</a></li>
+                        <li class=""><a href="#tabPerson" data-toggle="tab" data-filename="@HelpFileValues.SessionPerson"><i class="fa fa-user"></i> Лица</a></li>
+                        @*<li class=""><a href="#tabPersonLink" data-toggle="tab"><i class="fa fa-user-plus"></i> Връзки страни</a></li>*@
+                        <li class=""><a href="#tabPersonNotification" data-toggle="tab" data-filename="@HelpFileValues.SessionPersonNotification"><i class="fa fa-share"></i> Списък за призоваване</a></li>
+                        <li class=""><a href="#tabNotification" data-toggle="tab" data-filename="@HelpFileValues.SessionNotification"><i class="fa fa-bell"></i> Уведомления</a></li>
+                        <li class=""><a href="#tabSessionDoc" data-toggle="tab" data-filename="@HelpFileValues.SessionDoc"><i class="fa fa-file-text"></i> Съпровождащи документи</a></li>
+                        <li class=""><a href="#tabSessionAct" data-toggle="tab" data-filename="@HelpFileValues.SessionAct"><i class="fa fa-book"></i> Актове и протоколи</a></li>
+                        <li class=""><a href="#tabMoney" data-toggle="tab"><i class="fa fa-money"></i> Суми по заседание</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane dt-lazy-loading active" id="tabSessionMainData">
+                            <div class="row">
+                                <div class="col-lg-5">
+                                    <fieldset class="is-fieldset">
+                                        <legend class="legend_1">Данни</legend>
+                                        <div class="row">
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.SessionTypeId, "GenericDropDown")</div>
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeWithTime")</div>
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.DateTo_Minutes, "GenericDropDown")</div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                @if (access.CanChange)
+                                                {
+                                                    <a href="@Url.Action("Edit", "CaseSession")?id=@Model.Id" class="btn btn-warning btn-sm m-b-5" title="Редакция на основни данни"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+                                                    <a href="@Url.Action("CopySession", "CaseSession")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Създай ново заседание с текущите данни"><i class="fa fa-clone"></i><span class="hidden-sm hidden-xs"> Създай ново заседание с текущите данни</span></a>
+                                                }
+                                                else
+                                                {
+                                                    <a href="@Url.Action("Edit", "CaseSession")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Преглед на основни данни"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Преглед на основни данни</span></a>
+                                                }
+                                                <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CaseSession, SourceId = Model.Id })" />
+                                            </div>
+                                        </div>
+                                    </fieldset>
+
+                                    <fieldset class="is-fieldset">
+                                        <legend class="legend_1">Сесия/тайно съвещание</legend>
+                                        <div class="tab-pane1" id="tabSessionMeeting">
+                                            <partial name="../CaseSessionMeeting/_CaseSessionMeeting.cshtml" model="@new CaseMainDataVM { CaseSessionId = Model.Id, CaseStateId = Model.SessionStateId } " />
+                                        </div>
+                                    </fieldset>
+                                </div>
+
+                                <div class="col-lg-7">
+                                    <fieldset class="is-fieldset">
+                                        <legend class="legend_1">Резултат от заседание</legend>
+                                        <div class="tab-pane1" id="tabSessionResult">
+                                            <partial name="../CaseSession/_CaseSessionResult.cshtml" model="@new CaseMainDataVM { CaseSessionId = Model.Id, CaseStateId = Model.SessionStateId } " />
+                                        </div>
+                                    </fieldset>
+
+                                    <fieldset class="is-fieldset">
+                                        <legend class="legend_1">Натовареност</legend>
+                                        <div class="tab-pane1" id="tabCaseLoadIndex">
+                                            <partial name="../CaseLoadIndex/_CaseLoadIndex.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id, IsND = false} " />
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabPerson">
+                            <div class="row">
+                                <div class="col-md-12 text-right pb-15">
+                                    <partial name="../CasePerson/_CasePersonSelect.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id} " />
+                                </div>
+                            </div>
+
+                            <partial name="../CasePerson/_CasePerson.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id, CaseTypeId = Model.CaseTypeId } " />
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabPersonNotification">
+                            <partial name="../CaseNotification/_NotificationList.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id, NotificationListTypeId = Model.NotificationListTypeId } " />
+                        </div>
+
+                        @*<div class="tab-pane" id="tabPersonLink">
+                                <partial name="../CasePersonLink/_CasePersonLink.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id} " />
+                            </div>*@
+
+                        <div class="tab-pane dt-lazy-loading" id="tabLawUnit">
+                            <fieldset class="is-fieldset">
+                                <legend>Съдебен състав</legend>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <partial name="../CaseLawUnit/_CaseLawUnit.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id } " />
+                                    </div>
+                                </div>
+                            </fieldset>
+
+
+                            @if (hasSubst)
+                            {
+                                <fieldset class="is-fieldset">
+                                    <legend>Заместване на съдии</legend>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <partial name="../CaseLawUnit/_CaseLawUnitSubstitution.cshtml" model="@new CaseMainDataVM { CaseSessionId = Model.Id } " />
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            }
+
+
+                            <fieldset class="is-fieldset">
+                                <legend>Други</legend>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <partial name="../CaseLawUnit/_CaseLawUnitManualRoles.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id } " />
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabSessionAct">
+                            <partial name="../CaseSessionAct/_CaseSessionAct.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id} " />
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabNotification">
+                            <partial name="../CaseNotification/_CaseNotification.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id} " />
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabMoney">
+                            <partial name="../Money/_Obligation.cshtml" model="@new ObligationMainDataVM { CaseSessionId = Model.Id} " />
+                        </div>
+
+                        <div class="tab-pane dt-lazy-loading" id="tabSessionDoc">
+                            <fieldset class="is-fieldset">
+                                <legend>Съпровождащи документи през регистратура</legend>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <partial name="../CaseSessionDoc/_CaseSessionDoc.cshtml" model="@new CaseMainDataVM { Id = Model.CaseId, CaseSessionId = Model.Id} " />
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <fieldset class="is-fieldset">
+                                <legend>Съпровождащи документи, представени в заседание</legend>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <partial name="../CaseSessionFastDocument/_CaseSessionFastDocument.cshtml" model="@new CaseMainDataVM { CaseSessionId = Model.Id} " />
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        $('#tabSessionMainData').find('select,input,textarea').attr("disabled", true);
+        localStorage.removeItem('activeTabEditSession');
+
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTabSession', $(e.target).attr('href'));
+        });
+        var activeTabSession = localStorage.getItem('activeTabSession');
+        if (activeTabSession) {
+            $('#caseSessionTab a[href="' + activeTabSession + '"]').tab('show');
+            ChangeUserGuide($('#caseSessionTab a[href="' + activeTabSession + '"]'));
+        }
+
+        var url = document.location.toString();
+        if (url.match('#')) {
+            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+            ChangeUserGuide($('.nav-tabs a[href="#' + url.split('#')[1] + '"]'));
+        }
+
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
+            window.location.hash = e.target.hash;
+        })
+    });
+
+    $(function () {
+        $('.nav-tabs li a').click(function (e) {
+            ChangeUserGuide($(this));
+        });
+    });
+
+    function ChangeUserGuide(tab) {
+        var fileName = tab.data('filename');
+        if (fileName != undefined) {
+            var newurl = '@Url.Content($"~/userguide/")' + fileName + ".htm";
+            $("#horizontalUserguideId").attr('href', newurl);
+        }
+    }
+
+</script>

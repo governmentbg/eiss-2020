@@ -1,0 +1,116 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseEvidence" asp-action="Add" asp-route-caseId="@Model.Id" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseEvidenceMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseEvidenceMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseEvidence")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                    }
+
+                },
+                deferLoading: deferLoadingOnTab('#caseEvidenceMainTable'),
+                columns: [
+                    {
+                        name: 'evidenceTypeLabel',
+                        data: 'evidenceTypeLabel',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fileNumber',
+                        data: 'fileNumber',
+                        title: 'Служебно дело',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        name: 'dateAccept',
+                        data: 'dateAccept',
+                        title: 'Дата на регистрация',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'evidenceStateLabel',
+                        data: 'evidenceStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseEvidenceTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+</script>
+
+<script id="caseEvidenceTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "CaseEvidence")?id={{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("Edit", "CaseEvidence")?id={{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    <a href="@Url.Action("IndexMovement", "CaseEvidence")?CaseEvidenceId={{this}}" class="btn btn-def btn-sm m-b-5" title="Разпоредителни движения"><i class="fa fa-arrow-circle-right"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

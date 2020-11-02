@@ -1,0 +1,85 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+@model EisppTSActualDataVM
+@if (Model != null)
+{
+    @if (Model.PhazeName != null)
+    {
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Производството</legend>
+            <div class="row">
+                <div class="col-lg-5"><label>Фаза НП</label></div>
+                <div class="col-lg-5"><label>Стадий НП</label></div>
+                <div class="col-lg-2"><label>Дата</label></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-5">@Model.PhazeName</div>
+                <div class="col-lg-5">@Model.ProcessName</div>
+                <div class="col-lg-2">@Model.ProcessDate</div>
+            </div>
+        </fieldset>
+    }
+    @if (Model.Persons.Count() > 0)
+    {
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Страни</legend>
+            <div class="row">
+                <div class="col-lg-3"><label>Идентификатор</label></div>
+                <div class="col-lg-5"><label>Имена</label></div>
+                <div class="col-lg-4"><label>Участие</label></div>
+            </div>
+            @foreach (var person in Model.Persons)
+            {
+                <div class="row">
+                    <div class="col-lg-3">@person.Uic @(person.UicTypeLabel)</div>
+                    <div class="col-lg-5">@person.FullName</div>
+                    <div class="col-lg-4">
+                        @foreach (var pCrime in person.PersonCrimes)
+                        {
+                            <p>@pCrime.Role по @pCrime.CrimeNumber</p>
+                        }
+                    </div>
+                </div>
+            }
+        </fieldset>
+    }
+    @if (Model.Crimes.Count() > 0)
+    {
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Престъпления</legend>
+            <div class="row">
+                <div class="col-lg-3"><label>Номер</label></div>
+                <div class="col-lg-6"><label>Описание</label></div>
+            </div>
+            @foreach (var crime in Model.Crimes)
+            {
+                <div class="row">
+                    <div class="col-lg-3">@crime.CrimeNumber</div>
+                    <div class="col-lg-6">@crime.CrimeDescription</div>
+                </div>
+            }
+        </fieldset>
+    }
+    @if (Model.Cases.Count() > 0)
+    {
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Дела</legend>
+            <div class="row">
+                <div class="col-lg-6"><label>Вид</label></div>
+                <div class="col-lg-3"><label>Номер</label></div>
+                <div class="col-lg-3"><label>Година</label></div>
+            </div>
+            @foreach (var _case in Model.Cases)
+            {
+                <div class="row">
+                    <div class="col-lg-6">@_case.CaseTypeName</div>
+                    <div class="col-lg-3">@_case.CaseNumber</div>
+                    <div class="col-lg-3">@_case.CaseYear</div>
+                </div>
+            }
+        </fieldset>
+    }
+}
+else
+{
+    <div class="text-muted">Няма намерени данни по търсения номер.</div>
+}

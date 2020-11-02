@@ -1,0 +1,56 @@
+﻿@model CasePersonAddress
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на адрес";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на адрес";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditCasePersonAdr" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CasePersonId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.ValidationSummary()
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.Address)
+                @Html.EditorFor(x => x.ForNotification)
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-action="Edit" asp-route-id="@Model.CasePersonId" class="btn btn-danger">Назад</a>
+                @*<a asp-action="CasePersonAddressList" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>*@
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        initEkatte();
+    });
+</script>

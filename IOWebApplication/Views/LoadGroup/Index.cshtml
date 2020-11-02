@@ -1,0 +1,112 @@
+﻿@{
+    ViewData["Title"] = "Групи по натовареност";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'code',
+                        data: 'code',
+                        title: 'Код',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Етикет',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isActive',
+                        data: "isActive",
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateStart',
+                        data: 'dateStart',
+                        title: 'Начална дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateEnd',
+                        data: 'dateEnd',
+                        title: 'Крайна дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        width:200,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("LoadGroupLinkList")?loadGroupId={{this}}" class="btn btn-primary btn-sm" title="Натовареност"><i class="fa fa-list"></i><span class="hidden-sm hidden-xs"> Натовареност</span></a>
+    </script>
+}

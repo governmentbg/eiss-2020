@@ -1,0 +1,214 @@
+﻿@model CaseSessionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на заседание" : "Преглед на заседание";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на заседание";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form id="frmCaseSessionEdit" asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="tab-pane active" id="tabSessionEditMainData">
+                    <div class="row">
+                        <div id="divSessionType" class="col-lg-6">@Html.EditorFor(x => x.SessionTypeId, "GenericDropDown")</div>
+                        <div class="col-lg-6 col-md-12">
+                            <div class="row">
+                                <div class="col-lg-9 col-md-8 col-xs-8">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
+                                <div class="col-lg-3 col-md-4 col-xs-4 bottom-right"><a id="link" href="#" target="_blank" class="btn btn-def btn-sm btn-block"><i class="fa fa-calendar"></i> Заетост</a></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DateTo_Minutes, "GenericDropDown")</div>
+                        @*<div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTimeDivided")</div>*@
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+                    @if (access.CanChange)
+                    {
+                        @*<div class="btn btn-success" title="Запис" onclick={SubmitCaseEdit()}>Запис</div>*@
+                        <input id="subButton" type="button" value="Запис" onclick={SubmitCaseSessionEdit()} class="btn btn-success single-click-submit" />
+                    }
+                    @if (Model.Id > 0)
+                    {
+                        <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@Model.Id" class="btn btn-danger">Назад</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                    }
+
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+                            @if (!Model.IsExpired && access.CanChangeFull)
+                            {
+                                @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на заседание", ExpireSubmitUrl = Url.Action("CaseSession_ExpiredInfo") })
+                                <span>&nbsp;</span>
+                            }
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTabEditSession', $(e.target).attr('href'));
+        });
+        var activeTabEditSession = localStorage.getItem('activeTabEditSession');
+        if (activeTabEditSession) {
+            $('#caseSessionTab a[href="' + activeTabEditSession + '"]').tab('show');
+        }
+
+        $('#CourtHallId').trigger('change');
+        $('#subButton').removeAttr("disabled");
+    });
+
+    $('#CourtHallId').change(function () {
+        var selected = $("#CourtHallId").val()
+        $('#link').prop('href', '@Url.Action("CaseSessionHallUseSpr", "CaseSession")?HallId=' + selected);
+        if (selected > 0) {
+            var _minutes = $("#DateTo_Minutes").val()
+            if (_minutes < 1) {
+                $("#DateTo_Minutes").val(15)
+            }
+        }
+    });
+
+    function SubmitCaseSessionEdit() {
+        $("#subButton").attr("disabled", true);
+        var caseId = @Model.CaseId;
+        postContent('@Url.Action("IsFullComposition", "CaseSession")'
+            , { CaseId: caseId }
+            , function (data) {
+                if (data.result == false) {
+                    swalConfirm('Съставът по делото не е пълен!', function () {
+                        CheckExistSecretaryOfAllMeeting();
+                    }, function () {
+                            $('#subButton').removeAttr("disabled");
+                    });
+                } else {
+                    CheckExistSecretaryOfAllMeeting();
+                }
+            });
+    }
+
+    function CheckExistSecretaryOfAllMeeting() {
+        var caseSessionId = @Model.Id;
+        var sessionStateId = $("#SessionStateId").val();
+
+        if (sessionStateId == @NomenclatureConstants.SessionState.Provedeno && caseSessionId > 0) {
+            postContent('@Url.Action("CheckExistSecretaryOfAllMeeting", "CaseSessionMeeting")'
+                , { caseSessionId: caseSessionId }
+                , function (data) {
+                    if (data.result == false) {
+                        swalConfirm('Има сесия без секретар!', function () {
+                            SubmitCaseSessionEditLawUnitIsBusy();
+                        }, function () {
+                            $('#subButton').removeAttr("disabled");
+                        });
+                    } else {
+                        SubmitCaseSessionEditLawUnitIsBusy();
+                    }
+                });
+        }
+        else {
+            SubmitCaseSessionEditLawUnitIsBusy();
+        };
+    }
+
+    function SubmitCaseSessionEditLawUnitIsBusy() {
+        var dateFrom = getDevidedDateTimeValue("#DateFrom");
+        var dateToMinutes = $("#DateTo_Minutes").val();
+        var modelId = @Model.Id;
+        var caseId = @Model.CaseId;
+
+        if ((dateFrom != null) && (dateToMinutes > 0)) {
+            postContent('@Url.Action("IsCaseLawUnitFromCaseBusy", "CaseSessionMeeting")'
+                , { caseId: caseId, caseSessionId: modelId, dateTimeFrom: dateFrom, DateTo_Minutes: dateToMinutes }
+                , function (data) {
+                    if (data.result != '') {
+                        swalConfirm(data.result, function () {
+                            SubmitCaseSessionEditFinal();
+                        }, function () {
+                            $('#subButton').removeAttr("disabled");
+                        });
+                    } else {
+                        SubmitCaseSessionEditFinal();
+                    }
+                });
+        }
+        else {
+            SubmitCaseSessionEditFinal();
+        };
+    }
+
+    function SubmitCaseSessionEditFinal() {
+        var courtHall = $("#CourtHallId").val();
+        var dateFrom = getDevidedDateTimeValue("#DateFrom");
+        var dateToMinutes = $("#DateTo_Minutes").val();
+        var modelId = @Model.Id;
+
+        if ((courtHall > 0) && (dateFrom != null) && (dateToMinutes > 0)) {
+            postContent('@Url.Action("CourtHallBusyFromSession", "CaseSessionMeeting")'
+                , { CourtHallId: courtHall, DateFrom: dateFrom, DateTo_Minutes: dateToMinutes, CaseSessionId: modelId }
+                , function (data) {
+                    if (data.result == true) {
+                        swalConfirm('Залата е заета в този интервал!', function () {
+                            $('#frmCaseSessionEdit').trigger('submit');
+                        });
+                    } else {
+                        $('#frmCaseSessionEdit').trigger('submit');
+                    }
+                });
+        }
+        else {
+            $('#frmCaseSessionEdit').trigger('submit');
+        };
+        $('#subButton').removeAttr("disabled");
+    }
+
+</script>
+

@@ -1,0 +1,63 @@
+﻿@model CaseSessionActCompany
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция" : "Преглед";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditCompany" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseSessionActId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="save-container-data">
+                    <h1>@ViewBag.ActData</h1>
+                </div>
+
+                <div>@Html.EditorFor(x => x.RegisterDate, "DateTime")</div>
+                <div>@Html.EditorFor(x => x.RegisterNumber)</div>
+                <div>@Html.EditorFor(x => x.Chapter)</div>
+                <div>@Html.EditorFor(x => x.PageNumber)</div>
+                <div>@Html.EditorFor(x => x.Batch)</div>
+                <div>@Html.EditorFor(x => x.Level)</div>
+                <div>@Html.EditorFor(x => x.Authorization)</div>
+            </div>
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                <a asp-action="Edit" asp-route-id=@Model.CaseSessionActId class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>

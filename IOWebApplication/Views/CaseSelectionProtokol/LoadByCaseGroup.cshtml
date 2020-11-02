@@ -1,0 +1,37 @@
+﻿@model CaseSelectionProtokolVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    ViewData["Title"] = "Избор на съдии";
+}
+
+<div class="row">
+    <div class="col-md-10">
+        @using (Html.BeginForm(FormMethod.Post, null, new { id = "cmModalForm" }))
+        {
+            @Html.HiddenFor(x => x.IdStr)
+            @Html.HiddenFor(x => x.CaseId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
+
+            <div class="form-group">
+                <input type="submit" value="Избор" class="submit btn btn-success" />
+            </div>
+        }
+    </div>
+</div>
+
+<div id="modalMessageContainer">
+</div>
+<script>
+    $(function () {
+        attachAjaxForm('#cmModalForm', function (data) {
+            appendLoadedUnits(data.responseText);
+                HideModal();
+            //if (data.responseJSON.result == true) {
+            //} else {
+            //}
+        });
+    })
+</script>

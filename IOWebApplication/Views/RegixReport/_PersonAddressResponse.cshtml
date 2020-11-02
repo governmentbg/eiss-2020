@@ -1,0 +1,19 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Infrastructure.Constants
+@model RegixPersonAddressVM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.PersonAddressFilter.EgnFilter, "objInline", new { label = "Справка за: ЕГН " })
+        <br />
+        <br />
+
+        <partial name="_PersonAddressOnlyData" model="@Model.PersonAddressResponse" />
+
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

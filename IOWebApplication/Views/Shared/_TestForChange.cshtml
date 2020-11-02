@@ -1,0 +1,19 @@
+﻿@model string
+<a onclick="checkForChange('@Model')"  class="btn btn-danger" title="Тест"><i class="fa fa-check-circle-o"></i></a>
+<script>
+    function checkForChange(form){
+        var data_old = getFormData($(form));
+        changeOnReady();
+
+        setTimeout(function () {
+            var data_new = getFormData($(form));
+            console.log('check start');
+            $.each(data_new, function (key, value) {
+                if (value !== data_old[key])
+                    console.log(key + ": " + value+ " != " +data_old[key]);
+            });
+            console.log('check end');
+            console.log(data_new);
+        }, 2000)
+    }
+</script>

@@ -1,0 +1,30 @@
+﻿@model string
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var label = "";
+    if (ViewData["label"] != null)
+    {
+        label = (string)ViewData["label"];
+    }
+    var groupClass = "";
+    if (ViewData["groupClass"] != null)
+    {
+        groupClass = (string)ViewData["groupClass"];
+    }
+
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+<div class="form-group @groupClass">
+    @if (!string.IsNullOrEmpty(label))
+    {
+        <label class="control-label @reqClass">@label</label>
+    }
+    else
+    {
+        <label asp-for="@Model" class="control-label @reqClass"></label>
+    }
+
+    <input asp-for="@Model" class="form-control" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

@@ -1,0 +1,282 @@
+[
+  {
+    "id": "1",
+    "raion": "10135-01",
+    "name": "Одесос",
+    "category": "",
+    "document": "21",
+    "settlement_id": "649"
+  },
+  {
+    "id": "2",
+    "raion": "10135-02",
+    "name": "Приморски",
+    "category": "",
+    "document": "21",
+    "settlement_id": "649"
+  },
+  {
+    "id": "3",
+    "raion": "10135-03",
+    "name": "Младост",
+    "category": "",
+    "document": "21",
+    "settlement_id": "649"
+  },
+  {
+    "id": "4",
+    "raion": "10135-04",
+    "name": "Владислав Варненчик",
+    "category": "",
+    "document": "21",
+    "settlement_id": "649"
+  },
+  {
+    "id": "5",
+    "raion": "10135-05",
+    "name": "Аспарухово",
+    "category": "",
+    "document": "21",
+    "settlement_id": "649"
+  },
+  {
+    "id": "6",
+    "raion": "56784-01",
+    "name": "Централен",
+    "category": "",
+    "document": "21",
+    "settlement_id": "3599"
+  },
+  {
+    "id": "7",
+    "raion": "56784-02",
+    "name": "Източен",
+    "category": "",
+    "document": "21",
+    "settlement_id": "3599"
+  },
+  {
+    "id": "8",
+    "raion": "56784-03",
+    "name": "Западен",
+    "category": "",
+    "document": "21",
+    "settlement_id": "3599"
+  },
+  {
+    "id": "9",
+    "raion": "56784-04",
+    "name": "Северен",
+    "category": "",
+    "document": "21",
+    "settlement_id": "3599"
+  },
+  {
+    "id": "10",
+    "raion": "56784-05",
+    "name": "Южен",
+    "category": "",
+    "document": "21",
+    "settlement_id": "3599"
+  },
+  {
+    "id": "11",
+    "raion": "56784-06",
+    "name": "Тракия",
+    "category": "",
+    "document": "21",
+    "settlement_id": "3599"
+  },
+  {
+    "id": "12",
+    "raion": "68134-01",
+    "name": "Средец",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "13",
+    "raion": "68134-02",
+    "name": "Красно село",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "14",
+    "raion": "68134-03",
+    "name": "Възраждане",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "15",
+    "raion": "68134-04",
+    "name": "Оборище",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "16",
+    "raion": "68134-05",
+    "name": "Сердика",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "17",
+    "raion": "68134-06",
+    "name": "Подуяне",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "18",
+    "raion": "68134-07",
+    "name": "Слатина",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "19",
+    "raion": "68134-08",
+    "name": "Изгрев",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "20",
+    "raion": "68134-09",
+    "name": "Лозенец",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "21",
+    "raion": "68134-10",
+    "name": "Триадица",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "22",
+    "raion": "68134-11",
+    "name": "Красна поляна",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "23",
+    "raion": "68134-12",
+    "name": "Илинден",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "24",
+    "raion": "68134-13",
+    "name": "Надежда",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "25",
+    "raion": "68134-14",
+    "name": "Искър",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "26",
+    "raion": "68134-15",
+    "name": "Младост",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "27",
+    "raion": "68134-16",
+    "name": "Студентски",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "28",
+    "raion": "68134-17",
+    "name": "Витоша",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "29",
+    "raion": "68134-18",
+    "name": "Овча купел",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "30",
+    "raion": "68134-19",
+    "name": "Люлин",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "31",
+    "raion": "68134-20",
+    "name": "Връбница",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "32",
+    "raion": "68134-21",
+    "name": "Нови Искър",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "33",
+    "raion": "68134-22",
+    "name": "Кремиковци",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "34",
+    "raion": "68134-23",
+    "name": "Панчарево",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  },
+  {
+    "id": "35",
+    "raion": "68134-24",
+    "name": "Банкя",
+    "category": "",
+    "document": "21",
+    "settlement_id": "4389"
+  }
+]

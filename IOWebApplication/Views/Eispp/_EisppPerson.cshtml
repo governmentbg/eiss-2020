@@ -1,0 +1,93 @@
+﻿@model EisppPerson
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@using IOWebApplication.Infrastructure.Extensions
+@inject IEisppRulesService rulesService
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+    var eisppRulePersonCPStatus = ViewData.ModelMetadata.GetEisppRuleElement(currentHtmlPrefix + ".PersonCPStatus");
+    (var ruleIds, var flagsPersonCPStatus) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppRulePersonCPStatus);
+}
+<div class="eispp-checkbox-container eispp-person">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">@Html.EditorFor(x => x.IsSelected, "EisppBoolean", null, new { IsSelectedReadOnly = Model.IsSelectedReadOnly, @class = "person-select" })</legend>
+        @Html.HiddenFor(x => x.PersonId)
+        @Html.HiddenFor(x => x.PersonSourceId)
+        @Html.HiddenFor(x => x.CasePersonId)
+        @Html.HiddenFor(x => x.PersonCPStatus.PersonId)
+        @Html.HiddenFor(x => x.FullNameCyr)
+        @Html.HiddenFor(x => x.IsSelectedReadOnly)
+        <div class="row">
+            @if (Model.IsBgCitizen)
+            {
+                <div class="col-lg-2">@Html.EditorFor(x => x.CitizenshipVM, "EisppDropDown", null, new { Ddl = ViewBag.CountriesBgDDL })</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.Egn, "EisppString", null, new { flags = 3 })</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.BirthDateVM, "EisppDateTime", null, new { flags = 30 })</div>
+            }
+            else
+            {
+                <div class="col-lg-2">@Html.EditorFor(x => x.CitizenshipVM, "EisppDropDown", null, new { Ddl = ViewBag.CountriesOtherDDL})</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.Lnch, "hd")</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.BirthDateVM, "EisppDateTime", null, new { flags = 7 })</div>
+            }
+            <div class="col-lg-2">@Html.EditorFor(x => x.FirstName, "hd")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.SecondName, "hd")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.LastName, "hd")</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.Gender, "EisppDropDown", null, new { Ddl = ViewBag.GenderDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.BirthPlace.Country, "EisppDropDown", null, new { Ddl = ViewBag.CountriesDDL })</div>
+            <div class="col-lg-3">@Html.EditorFor(x => x.BirthPlace.SettelmentAbroad)</div>
+            <div class="col-lg-5">@Html.EditorFor(x => x.FullNameLat)</div>
+        </div>
+        @if (flagsPersonCPStatus > 0)
+        {
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.PersonRole, "EisppDropDown", null, new { Ddl = ViewBag.PStatusPersonRoleDDL })</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.Status, "EisppDropDown", null, new { Ddl = ViewBag.PStatusDDL })</div>
+                @* <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.StatusDateVM, "EisppDateTime")</div>*@
+                <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.StatusReason, "EisppDropDown", null, new { Ddl = ViewBag.PStatusStatusReasonDDL })</div>
+            </div>
+        }
+        @if ((Model.Addresses?.Length ?? 0) > 0)
+        {
+            <div class="box collapsed-box">
+                <div class="box-header">
+                    <h3 class="box-title">Адреси</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body no-padding">
+                    <table class="table table-striped">
+                        <tr>
+                            <td>
+                                @for (int i = 0; i < Model.Addresses.Length; i++)
+                                {
+                                    ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.Addresses[{i}]";
+                                    @await Html.PartialAsync("_EisppAddress", Model.Addresses[i])
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        }
+        <div id="caseProceduralCoercionMeasure">
+            @for (int i = 0; i < Model.Measures?.Length; i++)
+            {
+                ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.Measures[{i}]";
+                @await Html.PartialAsync("_CPProceduralCoercionMeasure", Model.Measures[i])
+            }
+        </div>
+        <div id="caseProceduralCoercionMeasure">
+            @for (int i = 0; i < Model.Punishments?.Length; i++)
+            {
+                ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.Punishments[{i}]";
+                @await Html.PartialAsync("_Punishment", Model.Punishments[i])
+            }
+        </div>
+    </fieldset>
+</div>

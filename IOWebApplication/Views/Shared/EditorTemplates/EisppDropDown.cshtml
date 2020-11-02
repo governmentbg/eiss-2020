@@ -1,0 +1,60 @@
+﻿@model int?
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Models
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    int flag = 0;
+    EisppDropDownVM ddl;
+    try
+    {
+        ddl = (EisppDropDownVM)(ViewData["Ddl"] ?? new EisppDropDownVM());
+    }
+    catch
+    {
+        ddl = new EisppDropDownVM()
+        {
+            DDList = new List<SelectListItem>(),
+            Label = "",
+            Flags = 0
+        };
+    }
+    var add_class = ((string)ViewData["class"] ?? "");
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+    bool forEdit = ((ddl.Flags & 4) > 0) || (@Model == -1) || (@Model == 0);
+    bool isReq = ((ddl.Flags & 2) > 0);
+    if (!forEdit)
+    {
+        forEdit = !ddl.DDList.Any(x => x.Value == @Model.ToString());
+    }
+    if (isReq && !add_class.Contains("eispp_range"))
+    {
+        add_class += " eispp_range";
+    };
+    var eisppRuleName = ViewData.ModelMetadata.GetEisppRuleFullName(ViewData.TemplateInfo.HtmlFieldPrefix, false);
+    eisppRuleName += ddl.Flags.ToString();
+    flag = ddl.Flags;
+    if (flag == 30)
+    {
+        forEdit = false;
+    }
+}
+@if (flag > 0)
+{
+    <div class="form-group">
+        <label asp-for="@Model" class="control-label @reqClass"></label>
+        @if (forEdit)
+        {
+            @Html.DropDownListFor(model => model, ddl.DDList.SetSelected(Model), new { @class = "form-control " + add_class })
+            <span asp-validation-for="@Model" class="text-danger"></span>
+        }
+        else
+        {
+            <input value="@ddl.GetSelectedText(Model)" class="form-control" readonly />
+            @Html.HiddenFor(model => model, new { @class = add_class })
+        }
+    </div>
+}
+else
+{
+    @*<label class="control-label">@eisppRuleName</label>*@
+}

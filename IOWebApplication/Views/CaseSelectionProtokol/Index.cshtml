@@ -1,0 +1,109 @@
+﻿@{
+    var caseId = ViewBag.caseId;
+    ViewData["Title"] = "Протоколи от разпределение";
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseSelectionProtokol" asp-action="Add" asp-route-caseId="@caseId" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSelectionProtokolMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#caseSelectionProtokolMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseSelectionProtokol")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @caseId;
+                    }
+
+                },
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'selectionDate',
+                        data: 'selectionDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'judgeRoleName',
+                        data: 'judgeRoleName',
+                        title: 'Тип разпределение',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'selectionModeName',
+                        data: 'selectionModeName',
+                        title: 'Начин на разпределение',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'selectedLawUnitName',
+                        data: 'selectedLawUnitName',
+                        title: 'Съдебен състав',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'selectionProtokolStateName',
+                        data: 'selectionProtokolStateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSelectionProtokolTemplateEdit', value);
+                        }
+                    }
+
+                ]
+            });
+        });
+    </script>
+
+    <script id="caseSelectionProtokolTemplateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("PreviewDoc", "CaseSelectionProtokol")?id={{this}}" class="btn btn-warning btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+    </script>
+
+}

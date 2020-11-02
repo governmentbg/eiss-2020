@@ -1,0 +1,131 @@
+﻿@model DeliveryItemReturnVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+@{
+    ViewData["Title"] = "Въвеждане доставка на призовка/съобщение от призовкар";
+    var filterJson = ViewBag.filterJson;
+    var cndEditMode = "replace";
+    var defaultTitle = "Сканиран върнат отрязък";
+    if (Model.NotificationStateId == IOWebApplication.Infrastructure.Constants.NomenclatureConstants.NotificationState.UnDelivered)
+    {
+        defaultTitle = "Сканирана призовка в цялост";
+    }
+    string notificationId = Model.CaseNotificationId?.ToString();
+    if (notificationId == null)
+    {
+        notificationId = $"DI{Model.Id}";
+    }
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="col-md-12 col-lg-6">
+    <form action="@Url.Action("EditReturnPost","DeliveryItem")" id="formDeliveryItemReturn" method="post" enctype="multipart/form-data">
+        @Html.ValidationSummary()
+        @Html.HiddenFor(x => x.Id)
+        @Html.HiddenFor(x => x.CaseNotificationId)
+        @Html.HiddenFor(x => x.NotificationStateId)
+        @Html.HiddenFor(x => x.IsForReturn)
+        @Html.HiddenFor(x => filterJson)
+        <div id="saveContainer">
+            <partial name="_SaveFormContent" model="@("#saveContainer")" />
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="regNumber" class="control-label">Баркод:</label>
+                    <input name="regNumber" id="regNumber" class="form-control" value="@Model.RegNumber" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="FromCourtName" class="control-label">От съд:</label>
+                    <input name="FromCourtName" id="FromCourtName" class="form-control" value="@Model.FromCourtName" readonly>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="personName" class="control-label">Име на лицето:</label>
+                    <input name="personName" id="personName" class="form-control" value="@Model.PersonName" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="address" class="control-label">Адрес:</label>
+                    <input name="address" id="address" class="form-control" value="@Model.Address" readonly>
+                </div>
+            </div>
+            @if (Model.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WithSummons)
+            {
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="AreaName" class="control-label">Район:</label>
+                        <input name="AreaName" id="AreaName" class="form-control" value="@Model.AreaName" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="lawUnitName" class="control-label">Призовкар:</label>
+                        <input name="lawUnitName" id="lawUnitName" class="form-control" value="@Model.LawUnitName" readonly>
+                    </div>
+                </div>
+            }
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="NotificationState" class="control-label">Статус:</label>
+                    <input name="NotificationState" id="NotificationState" class="form-control" value="@Model.NotificationState" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">@Html.EditorFor(x => x.ReturnDate, "DateTimeWithTime")</div>
+                <div class="col-md-6">
+                    <div name="returnFiles" id="returnFiles" class="cdn-files" data-sourcetype="@SourceTypeSelectVM.CaseNotificationReturn" data-sourceid="@notificationId" data-editmode="@cndEditMode" data-defaulttitle="@defaultTitle"></div>
+                    @*<input type="file" name="returnFiles" id="returnFiles" accept="application/pdf, image/jpeg, image/png" />*@
+                    @Html.ValidationMessage("returnFiles", null, new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">@Html.EditorFor(x => x.ReturnInfo, "Textarea")</div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        @if (@Model.IsForReturn)
+                        {
+                            <input type="submit" value="Запис" class="btn btn-success" />
+                        }
+                        @await Html.PartialAsync("_ButtonClose")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItem")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+@section scripts {
+    <script>
+        function postToFilterDeliveryItems() {
+            $("#formPostFilter").submit();
+        }
+    </script>
+}
+<partial name="_CdnScript" />
+<script>
+    @*$(document).ready(function () {
+        var files = "@Model.CountFiles";
+        var requiredFiles = !!(files == "0" || files == "")
+        $.validator.addMethod('filesize', function (value, element, arg) {
+            return this.optional(element) || (element.files[0].size <= arg*1024*1024);
+           },
+           'Файлът трябва да е по-малък от {0}MB'
+        );
+
+         $('#returnFiles').rules('add', {
+             required: requiredFiles,
+             filesize: 5,
+             messages : { required : 'Изберете файл!' }
+         });
+    });*@
+</script>

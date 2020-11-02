@@ -1,0 +1,50 @@
+﻿@model DocumentInstitutionCaseInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@{
+    var InstitutionTypeIdControl = $"#InstitutionCaseInfo_{Model.Index}__InstitutionTypeId";
+}
+<div data-index="@Model.Index" class="item-template">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1"><a href="#" class="remove-item" title="Премахни връзката" data-alert="Потвърди премахването на връзката!"><i class="fa fa-remove"></i></a> Свързано дело на външна институция</legend>
+        <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
+       
+        @Html.HiddenFor(x => x.Id)
+        <div class="row">
+            <div class="col-lg-2 col-md-4">
+                @Html.EditorFor(x => x.InstitutionTypeId, "DropDown", null, new { Ddl = ViewBag.InstitutionTypes })
+            </div>
+            <div class="col-lg-4 col-md-4">
+                @Html.EditorFor(x => x.InstitutionId, "SelectInstitution", null, new { institutionTypeContainer = InstitutionTypeIdControl })
+            </div>
+            <div class="col-lg-2 col-md-3">
+                @Html.EditorFor(x => x.InstitutionCaseTypeId, "DropDown", null, new { Ddl = ViewBag.InstitutionCaseTypes })
+            </div>
+            <div class="col-lg-1 col-md-2">
+                @Html.EditorFor(x => x.CaseYear, "DateTimeYear")
+            </div>
+            <div class="col-lg-3 col-md-3">
+                @Html.EditorFor(x => x.CaseNumber)
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                @Html.EditorFor(x => x.Description)
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script>
+    $(function () {
+        initInstitution();
+        initDatePicker();
+        $('@InstitutionTypeIdControl').change(function () {
+            var _inst = '@Model.InstitutionId';
+            if ($(this).val().toString() != '@Model.InstitutionTypeId') {
+                _inst = '0';
+            }
+            let instControl = $(this).parents('.item-template:first').find('.institution-control:first')[0];
+            loadInstitution(instControl, _inst);            
+        });
+    });
+</script>

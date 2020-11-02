@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Адвокати";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("Lawyers_ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+
+                    }
+                },
+                columns: [
+                    {
+                        name: 'name',
+                        data: 'name',
+                        title: 'Имена',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'number',
+                        data: 'number',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'college',
+                        data: 'college',
+                        title: 'Колегия',
+                        sortable: true,
+                        searchable: true
+                    }
+                    //,
+                    //{
+                    //    name: 'actions',
+                    //    data: "id",
+                    //    title: "",
+                    //    sortable: false,
+                    //    searchable: false,
+                    //    className: "text-center noExport",
+                    //    "render": function (value) {
+                    //        return TemplateToHtml('#templateEdit', value);
+                    //    }
+                    //}
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a onclick="EditHtmlTemplate({{this}})" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="IndexLinkHtmlTemplate({{this}})" class="btn btn-dropbox btn-sm" title="Връзки по вид съд/дело"><i class="fa fa-external-link"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="IndexParamHtmlTemplate({{this}})" class="btn btn-google btn-sm" title="Параметри в бланка"><i class="fa fa-paragraph"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("Preview")/{{this}}" class="btn btn-file btn-sm" title="Преглед на бланка"><i class="fa fa-file-o"></i><span class="hidden-sm hidden-xs"> Преглед TinyMCE</span></a>
+        <a onclick="printTemplateRaw({{this}})" class="btn btn-file btn-sm" title="Преглед на бланка"><i class="fa fa-file-o"></i><span class="hidden-sm hidden-xs"> Преглед Html</span></a>
+        <a href="@Url.Action("HtmlTemplate_GetNotSetParam")/{{this}}" class="btn btn-file btn-sm" title="Непопълнени параметри"><i class="fa fa-paragraph"></i><span class="hidden-sm hidden-xs"></span></a>
+        @*<a href="@Url.Action("DownloadFile")/{{this}}" class="btn btn-file btn-sm" title="Сваляне"><i class="fa fa-save"></i><span class="hidden-sm hidden-xs"> Сваляне</span></a>*@
+    </script>
+}

@@ -1,0 +1,73 @@
+﻿@model CaseLoadElementType
+@using IOWebApplication.Infrastructure.Data.Models.Nomenclatures
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на елемент";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на елемент";
+    }
+
+    var caseLoadElementGroupId = ViewBag.caseLoadElementGroupId;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("IndexElementGroupe","CaseLoadIndex")">Основни дейности - натовареност</a></li>
+        <li><a href="@Url.Action("IndexElementType","CaseLoadIndex", new { CaseLoadElementGroupId = caseLoadElementGroupId })">Елементи към @ViewBag.caseLoadElementGroupName</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditElementType" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseLoadElementGroupId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.Label)</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.LoadProcent, "Decimal")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.ReplaceCaseLoadElementTypeId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.DateStart, "DateTime")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.DateEnd, "DateTime")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                        </fieldset>
+                    </div>
+                    @if (Model.Id > 0)
+                    {
+                        <div class="col-md-6">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Правила</legend>
+                                <partial name="../CaseLoadIndex/_CaseLoadElementTypeRule.cshtml" model="@new CaseMainDataVM { Id = Model.Id } " />
+                            </fieldset>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="CaseLoadIndex" asp-action="IndexElementType" asp-route-CaseLoadElementGroupId="@caseLoadElementGroupId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>

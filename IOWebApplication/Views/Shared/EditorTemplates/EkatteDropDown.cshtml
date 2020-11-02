@@ -1,0 +1,23 @@
+﻿@model string
+@using IOWebApplication.Extensions
+@{
+    //var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_ekatte";
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_ddl";
+    IEnumerable<SelectListItem> ddl = null;
+}
+@if (ViewData[fieldName] != null)
+{
+    ddl = (List<SelectListItem>)ViewData[fieldName];
+}
+else
+{
+
+    ddl = new List<SelectListItem>();
+}
+
+<div class="ekatte-container">
+    <label asp-for="@Model" class="control-label"></label>
+    @Html.DropDownListFor(model => model, ddl.SetSelected(Model), new { @class = "form-control  ekatte-control" })
+    <input asp-for="@Model" type="hidden" class="ekatte-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

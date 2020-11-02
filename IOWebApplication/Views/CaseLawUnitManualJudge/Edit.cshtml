@@ -1,0 +1,55 @@
+﻿@model CaseLawUnitManualJudge
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
+@{
+    ViewData["Title"] = "Добавяне на съдия при масов отвод";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index")">Регистър на замествания при обективна невъзможност</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1"> Основни данни</legend>
+                    @Html.EditorFor(x => x.CaseId, "SelectCase", new { courtId = userContext.CourtId })
+                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
+                    @Html.EditorFor(x => x.JudgeRoleId, "GenericDropDown")
+                    @Html.EditorFor(x => x.DateFrom, "DateTimeDivided")
+                    @Html.EditorFor(x => x.Description, "Textarea")
+                </fieldset>
+            </div>
+
+            <div class="form-group">
+
+                <input type="submit" value="Запис" class="btn btn-success" />
+
+                <a asp-action="Index" class="btn btn-danger">Назад</a>
+
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {       
+        initCase();
+        initLawUnit();
+    });
+</script>

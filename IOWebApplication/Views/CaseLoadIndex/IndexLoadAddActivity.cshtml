@@ -1,0 +1,71 @@
+﻿@{
+    ViewData["Title"] = "Допълнителни дейности - натовареност";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="AddLoadAddActivity" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataLoadAddActivity")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'isNDLabel',
+                        data: 'isNDLabel',
+                        title: 'Наказателно дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditLoadAddActivity")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("IndexLoadAddActivityIndex")?CaseLoadAddActivityId={{this}}" class="btn btn-primary btn-sm" title="Елементи към група"><i class="fa fa-sitemap"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

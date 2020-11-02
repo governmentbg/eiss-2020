@@ -1,0 +1,155 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@model SentenceListFilterReportVM
+
+@{
+    ViewData["Title"] = "Справка влезли в сила присъди";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("SentenceListReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.SentenceResultTypeId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-9">
+            @Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })
+        </div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSentenceListReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val(),
+                            SessionResultId: $("#SessionResultId").val(),
+                            SentenceResultTypeId: $("#SentenceResultTypeId").val(),
+                            CaseCodeId: $("#CaseCodeId").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'caseTypeName',
+                        data: 'caseTypeName',
+                        title: 'Точен вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'inforcedDate',
+                        data: 'inforcedDate',
+                        title: 'Дата на влизане в сила',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'judgeReporterName',
+                        data: 'judgeReporterName',
+                        title: 'Съдия докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCodeName',
+                        data: 'caseCodeName',
+                        title: 'Предмет и шифър',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'sessionResultName',
+                        data: 'sessionResultName',
+                        title: 'Резултат от заседанието',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'sentenceResultTypeName',
+                        data: 'sentenceResultTypeName',
+                        title: 'Резултат от съдебното производство',
+                        sortable: true,
+                        searchable: false,
+                    },
+                ]
+            });
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+</script>
+
+<script>
+    $(function () {
+        initLawUnit();
+        initCaseCode();
+    });
+</script>

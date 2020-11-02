@@ -1,0 +1,143 @@
+﻿@model DeliveryAreaAddress
+@using IOWebApplication.Infrastructure.Data.Models.Delivery
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Constants
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция група адреси";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне група адреси";
+    }
+    List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+    int editDeliveryAreaId = (int)ViewBag.editDeliveryAreaId;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="form-group address--control">
+    <div class="col-md-12 col-lg-6">
+        <form id="formEdit" asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DeliveryAreaId)
+            @Html.HiddenFor(x => editDeliveryAreaId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <br />
+                </div>
+
+                <div class="row  bg-address">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.CityCode, "EkatteDropDown")
+                    </div>
+                </div>
+                <div class="row">
+                    <br />
+                </div>
+                <div class="row  bg-address">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.ResidentionAreaCode, "EkStreet", null, new { streetType = NomenclatureConstants.EkStreetTypes.Area })
+                    </div>
+                </div>
+                <div class="row  bg-address">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.StreetCode, "EkStreet", null, new { streetType = NomenclatureConstants.EkStreetTypes.Street })
+                    </div>
+                </div>
+                <div class="row">
+                    <br />
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        @Html.EditorFor(x => x.NumberType, "GenericDropDown")
+                    </div>
+                    <div class="col-md-4 number-from">
+                        @Html.EditorFor(x => x.NumberFrom, "Int32Nullable")
+                    </div>
+                    <div class="col-md-4 number-to">
+                        @Html.EditorFor(x => x.NumberTo, "Int32Nullable")
+                    </div>
+                    <div class="col-md-4 block-name">
+                        @Html.EditorFor(x => x.BlockName)
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.DateFrom)
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.DateTo)
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <input type="submit" value="Запис" class="btn btn-success  single-click-submit" />
+                        @await Html.PartialAsync("_ButtonClose")
+                        @if (Model.Id > 0)
+                        {
+                            <div class="pull-right">
+                                @if (Model.DateExpired == null)
+                                {
+                                    @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, ReturnUrl = breadcrumbs.ReturnUrlFromLast(), DialogTitle = "Премахване на  група адреси", ExpireSubmitUrl = Url.Action("DeliveryAreaAddress_ExpiredInfo") })
+                                    <span>&nbsp;</span>
+                                }
+                                @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        initEkatteDDL();
+    });
+
+    $("#NumberType").change(function () {
+        let numberType = $("#NumberType").val();
+        $("#NumberFrom").data('previousValue', {});
+        $("#NumberFrom").valid();
+        $("#NumberTo").data('previousValue', {});
+        $("#NumberTo").valid();
+        $("#BlockName").data('previousValue', {});
+        $("#BlockName").valid();
+
+        if (numberType == @NomenclatureConstants.DeliveryAddressNumberType.BlockName || numberType == @NomenclatureConstants.DeliveryAddressNumberType.NumberName) {
+            $("label[for='NumberFrom']").text("Номер");
+            $(".number-to").hide();
+            $(".block-name").show();
+        } else {
+            $("label[for='NumberFrom']").text("От номер");
+            $(".number-to").show();
+            $(".block-name").hide();
+        }
+    });
+    $("#NumberFrom").change(function () {
+        $("#NumberTo").data('previousValue', {});
+        $("#NumberTo").valid();
+    });
+    $("#NumberTo").change(function () {
+        $("#NumberFrom").data('previousValue', {});
+        $("#NumberFrom").valid();
+    });
+    $(document).ready(function () {
+        $('#CityCode').select2({
+            language: "bg"
+        });
+        $("#NumberType").change();
+        $("label[for='BlockName']").addClass("io-req");
+
+    });
+</script>

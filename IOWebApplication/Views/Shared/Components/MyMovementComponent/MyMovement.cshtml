@@ -1,0 +1,47 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels;
+@model IEnumerable<CaseMovementVM>
+@if (Model.Count() > 0)
+{
+    <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">Дела към мен</h3>
+        </div>
+        <div class="box-body">
+            <div id="cmContainer">
+                @foreach (var movementVM in Model)
+                {
+                    <div class="worktask-item">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <b>Дело: @movementVM.CaseName</b>
+                                @if (!string.IsNullOrEmpty(movementVM.Description))
+                                {
+                                    <br />
+                                    <span class="remark">
+                                        @movementVM.Description
+                                    </span>
+                                }
+                                <br />
+                            </div>
+                            <div class="col-lg-5">
+                                Изпратено от: @movementVM.UserLawUnitName
+                                <br />
+                                <span class="remark">Изпратена на: @movementVM.DateSend.ToString("dd.MM.yyyy")</span>
+                                @if (movementVM.DateAccept.HasValue)
+                                {
+                                    <br />
+                                    <span class="date-end">
+                                        <b>Прието на: @movementVM.DateAccept.Value.ToString("dd.MM.yyyy")</b>
+                                    </span>
+                                }
+                            </div>
+                            <div class="col-lg-3">
+                                <a href="@movementVM.ViewUrl" class="btn btn-sm btn-primary" ><i class="fa fa-map-marker"></i> Преглед</a>                                
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}

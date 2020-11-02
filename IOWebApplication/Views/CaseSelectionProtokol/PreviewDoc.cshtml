@@ -1,0 +1,166 @@
+﻿@model CaseSelectionProtokolPreviewVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@{
+    ViewData["Title"] = "Преглед на протокол";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+}
+@section menuHeader{
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+@section contentHeader{
+    <section class="content-header">
+        <h1>
+            @ViewData["Title"]
+        </h1>
+        @if (ViewBag.breadcrumbs != null)
+        {
+            <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        }
+    </section>
+}
+<div class="row">
+
+    <div class="col-lg-12">
+
+        @if ((((List<SelectListItem>)ViewBag.comparement_ddl).Count > 1 && Model.SelectionProtokolStateId == NomenclatureConstants.SelectionProtokolState.Generated) && (Model.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter))
+        {
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Избор на съдебен състав</h3>
+
+
+                    <!-- /.box-tools -->
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" style="">
+                    <form asp-action="PreviewDoc" method="post">
+
+
+                        <h3>Съдебен състав към съдия:@Model.SelectedLawUnitName</h3>
+                        <div class="dynamic-form">
+                            <div class="col-lg-6 col-md-9">
+                                @Html.DropDownListFor(x => x.ComparementID, (IEnumerable<SelectListItem>)ViewBag.comparement_ddl, null, new { @class = "form-control", title = "Съдебен състав" })
+                            </div>
+
+                        </div>
+                        @Html.HiddenFor(x => x.CourtId)
+                        @Html.HiddenFor(x => x.CaseId)
+                        @Html.HiddenFor(x => x.SelectedLawUnitId)
+                        @Html.HiddenFor(x => x.Id)
+                        <div class="form-group">
+                            <input type="submit" value="Потвърди състав" class="btn btn-success single-click-submit" />
+                            <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.box-body -->
+            </div>
+
+
+
+        }
+        @if (Model.SelectionProtokolStateId == NomenclatureConstants.SelectionProtokolState.CreatedDoc || (((((List<SelectListItem>)ViewBag.comparement_ddl).Count == 1) || Model.JudgeRoleId != NomenclatureConstants.JudgeRole.JudgeReporter) && Model.SelectionProtokolStateId == NomenclatureConstants.SelectionProtokolState.Generated))
+        {
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Подписване на протокол</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" style="">
+                    <form asp-action="SignDoc" method="get">
+                        @Html.HiddenFor(x => x.Id)
+                        <div class="form-group">
+
+                            @if (Model.SelectionProtokolStateId != NomenclatureConstants.SelectionProtokolState.Signed)
+                            {
+                                <input type="submit" value="Подписване" class="btn btn-success single-click-submit" /><text>&nbsp;</text>
+                            }
+                            <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.box-body -->
+            </div>
+
+        }
+        @if (Model.SelectionProtokolStateId == NomenclatureConstants.SelectionProtokolState.Signed)
+        {
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Прикачени документи</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" style="">
+                    <div class="cdn-files" data-label="hidden" data-sourcetype="@SourceTypeSelectVM.CaseSelectionProtokol" data-sourceid="@Model.Id" data-editmode="none"></div>
+                    <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <partial name="_CdnScript" />
+
+        }
+        <div class="box box-default">
+            <div class="box-header with-border">
+                <h3 class="box-title">Протокол</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body" style="">
+                <partial name="Preview" model="@Model" />
+                @*@if (Model.SelectionProtokolStateId == NomenclatureConstants.SelectionProtokolState.Generated && NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(Model.JudgeRoleId ?? 0))*@
+                    @if ((NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(Model.JudgeRoleId ?? 0)&& Model.LawUnits.Where(x=>x.CaseCourtTotalCount==null).Count()==0))
+
+                    {
+                        <br />
+                        <br />
+                        <center>
+                            <b>Към момента на разпределяне</b>
+                        </center>
+                        <table width="100%" class="bordered">
+
+                            <tr class="inversed-bold">
+                                <td width="30%"><b>Съдия</b></td>
+                                <td align="center"><b>Натоварване</b></td>
+                                <td align="center"> <b>Брой дела в групата</b></td>
+                                <td align="center"> <b>Брой дела в съда</b></td>
+                            </tr>
+
+                            @foreach (var item in Model.LawUnits)
+                            {
+                                <tr>
+                                    <td> @item.LawUnitFullName</td>
+
+                                    @if (item.SelectedFromCaseGroup == false)
+                                    {
+                                        <td align="center">
+
+                                            @item.LoadIndex%
+
+                                        </td>
+                                        <td align="center"> @item.CaseCount</td>
+                                    }
+                                    else
+
+                                    {
+                                        <td></td>
+                                        <td></td>
+                                    }
+                                    <td>@item.CaseCourtTotalCount</td>
+                                </tr>
+                            }
+
+                        </table>}
+                </div>
+            <!-- /.box-body -->
+        </div>
+
+    </div>
+</div>

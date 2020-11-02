@@ -1,0 +1,32 @@
+﻿@model string
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_ddl";
+    IEnumerable<SelectListItem> ddl = null;
+
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+@if (ViewData[fieldName] != null)
+{
+    ddl = (List<SelectListItem>)ViewData[fieldName];
+}
+else
+{
+
+    ddl = new List<SelectListItem>();
+}
+
+<div class="form-group">
+    @if (ViewData["label"] != null)
+    {
+        <label class="control-label @reqClass">@ViewData["label"]</label>
+    }
+    else
+    {
+        <label asp-for="@Model" class="control-label @reqClass"></label>
+    }
+    @Html.DropDownListFor(model => model, ddl.SetSelected(Model), new { @class = "form-control", @multiple = "multiple" })
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

@@ -1,0 +1,82 @@
+﻿@model CourtLawUnitGroupVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@{
+    ViewData["Title"] = "Групи към съдия - " + Model.LawUnitName;
+    var multiselectGroup = "multiselectGroup";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form id="formEdit" asp-action="EditCourtLawUnitGroup" method="post">
+            @Html.HiddenFor(x => x.CourtLawUnitId)
+            @Html.HiddenFor(x => x.LawUnitId)
+            @Html.HiddenFor(x => x.LawUnitName)
+            @Html.HiddenFor(x => x.PeriodTypeId)
+            @Html.Hidden("groupCodesJson")
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer" class="row col-md-12">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-md-2">
+                        @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
+                    </div>
+                </div>
+                <div class="row">
+                    <h4 id="h4Code" class="text-center">Групи</h4>
+                </div>
+                <div id="multiselectGroup" class="row ms-transfer-container">
+                    <partial name="_MultiSelectTransfer" model=@multiselectGroup />
+                </div>
+                <div class="row">
+                    <br>
+                </div>
+            </div>
+
+
+            <div class="form-group row col-md-12">
+                <a id="submit_button" class="btn btn-success" />Запис</a>
+                <a asp-action="Index" asp-route-periodType="@Model.PeriodTypeId" asp-route-lawUnitType="@NomenclatureConstants.LawUnitTypes.Judge" class="btn btn-danger">Назад</a>
+                <div class="pull-right">
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = $"{userContext.CourtId}|{Model.LawUnitId}" })
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="divRightEdit" class="modal master-modal fade" tabindex="-1" role="dialog"></div>
+@section scripts {
+    <script>
+        var $multiselectGroup = $("#multiselectGroup").multiselectiontransfer(
+            {
+                havePercent : true,
+                ajaxLeftUrl: "@Url.Action("CourtLawUnitGroupLeftList")",
+                ajaxRightUrl: "@Url.Action("CourtLawUnitGroupRightList")",
+                templateRight: "#templatePercentRightEdit",
+                templateRightModal: "#templatePercentRightModal"
+            }
+        );
+        var initCaseGroupId =  0;
+        $multiselectGroup.loadLeft({ caseGroupId: initCaseGroupId });
+        $multiselectGroup.loadRight({ lawUnitId: @Model.LawUnitId });
+
+        $("#CaseGroupId").change(function () {
+            var caseGroupId = $("#CaseGroupId").val();
+            $multiselectGroup.loadLeft({caseGroupId: caseGroupId});
+        });
+        $("#formEdit").submit(function (event) {
+            $("#groupCodesJson").val($multiselectGroup.getSelected());
+            return true;
+        });
+        $('#submit_button').click(function(){
+            $("#formEdit").submit();
+        });
+    </script>
+}

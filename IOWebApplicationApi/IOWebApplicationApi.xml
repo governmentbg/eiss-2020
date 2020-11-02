@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>IOWebApplicationApi</name>
+    </assembly>
+    <members>
+        <member name="T:IOWebApplicationApi.Controllers.ValuesController">
+            <summary>
+            Демо API
+            </summary>
+        </member>
+        <member name="M:IOWebApplicationApi.Controllers.ValuesController.Get">
+            <summary>
+            Списък от стойности
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplicationApi.Controllers.ValuesController.Get(System.Int32)">
+            <summary>
+            Конкретна стойност
+            </summary>
+            <param name="id">Идентификатор на стойност</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplicationApi.Controllers.ValuesController.Post(System.String)">
+            <summary>
+            Празен метод, имитира създаване на стойност
+            </summary>
+            <param name="value">Стойност за добавяне</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplicationApi.Controllers.ValuesController.Put(System.Int32,System.String)">
+            <summary>
+            Този метод е игнориран в документацията
+            Празен метод имитиращ редакция
+            </summary>
+            <param name="id"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:IOWebApplicationApi.Controllers.ValuesController.Delete(System.Int32)">
+            <summary>
+            Изтрива елемент
+            </summary>
+            <param name="id">Идентификатор на елемента за изтриване</param>
+        </member>
+        <member name="T:Microsoft.Extensions.DependencyInjection.IOWebApiServiceCollectionExtension">
+            <summary>
+            Описва услугите и контекстите на приложението
+            </summary>
+        </member>
+        <member name="M:Microsoft.Extensions.DependencyInjection.IOWebApiServiceCollectionExtension.AddApplicationServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Регистрира услугите на приложението в  IoC контейнера
+            </summary>
+            <param name="services">Регистрирани услуги</param>
+        </member>
+        <member name="M:Microsoft.Extensions.DependencyInjection.IOWebApiServiceCollectionExtension.AddAppDbContext(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Регистрира контекстите на приложението в IoC контейнера
+            </summary>
+            <param name="services">Регистрирани услуги</param>
+            <param name="Configuration">Настройки на приложението</param>
+        </member>
+    </members>
+</doc>

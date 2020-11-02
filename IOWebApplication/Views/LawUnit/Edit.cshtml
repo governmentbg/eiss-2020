@@ -1,0 +1,126 @@
+﻿@model LawUnit
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+
+    bool readonlyEgn = (Model.Id > 0);
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.LawUnitTypeId)
+
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Основни данни</legend>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { egnOnly = true, readonlyEgn = readonlyEgn, label = "Наименование на лице" })
+
+                    @if (NomenclatureConstants.LawUnitTypes.DepartmentPersons.Contains(Model.LawUnitTypeId))
+                    {
+                        @Html.EditorFor(x => x.Code)
+                        @Html.EditorFor(x => x.Department)
+                    }
+
+                    @Html.EditorFor(x => x.DateFrom)
+                    @Html.EditorFor(x => x.DateTo)
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                    <a asp-action="Index" asp-route-lawUnitType="@Model.LawUnitTypeId" class="btn btn-danger">Назад</a>
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+                    }
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    @if (Model.Id > 0)
+    {
+        <div class="col-md-6">
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Адреси</legend>
+                <div class="text-right">
+                    <a asp-action="AddLawUnitAdr" asp-route-lawUnitId="@Model.Id" class="btn btn-success">
+                        <i class="fa fa-address-card"></i>
+                        Добави адрес
+                    </a>
+                </div>
+                <table id="mainTable" class="table table-hover table-striped"></table>
+            </fieldset>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataLawUnitAddress")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.lawUnitId = @Model.Id;
+                    }
+
+                },
+                dom:'rt',
+                columns: [
+                    {
+                        name: 'addressTypeName',
+                        data: 'addressTypeName',
+                        title: 'Вид адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fullAddress',
+                        data: 'fullAddress',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "addressId",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditLawUnitAdr", "LawUnit")?lawUnitId=@Model.Id&&addressId={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

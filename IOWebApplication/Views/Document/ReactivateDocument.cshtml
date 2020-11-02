@@ -1,0 +1,57 @@
+﻿@model DocumentReactivateVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@{
+    ViewData["Title"] = "Възстановяване на премахнат документ";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="ReactivateDocument" method="post">
+            <div class="row">
+                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentDirectionId, "GenericDropDown")</div>
+                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentNumber)</div>
+                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentDate, "DateTime")</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 text-left pb-15">
+                    <button type="submit" class="btn btn-primary" value="Филтриране" title="Филтриране">
+                        Филтриране
+                        <i class="fa fa-search" title="Търсене"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+        @if (Model.IsFound)
+        {
+            if (!Model.IsActivated)
+            {
+                <form asp-action="ReactivateDocument" method="post">
+                    @Html.HiddenFor(x => x.Id)
+                    @Html.HiddenFor(x => x.IsFound)
+                    @Html.HiddenFor(x => x.IsActivated)
+                    @Html.HiddenFor(x => x.DocumentNumber)
+                    @Html.HiddenFor(x => x.DocumentDate)
+
+                    @Html.EditorFor(x => x.DocumentInfo, "hd")
+                    <div class="form-group">
+                        <input type="button" value="Възстанови" class="btn btn-warning single-click-submit" onclick="swalSubmit(this, 'Потвърдете възстановяването на документа!');" />
+                    </div>
+                </form>
+            }
+            else
+            {
+                <p class="text-success text-bold">Документът е възстановен успешно.</p>
+            }
+        }
+        else
+        {
+            <p class="text-danger text-bold">Няма намерен премахнат документ.</p>
+        }
+    </div>
+</div>

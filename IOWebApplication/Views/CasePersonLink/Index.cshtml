@@ -1,0 +1,20 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    var caseId = ViewBag.caseId;
+    ViewData["Title"] = "Връзки по дело " + ViewBag.CaseName;
+ }
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../CasePersonLink/_CasePersonLink.cshtml" model="@new CaseMainDataVM { Id = caseId } " />
+    </div>
+</div>

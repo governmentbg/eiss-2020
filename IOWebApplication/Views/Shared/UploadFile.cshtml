@@ -1,0 +1,54 @@
+﻿@using IOWebApplication.Infrastructure.Models.Cdn
+@model CdnUploadRequest
+@if (Model.FileUploadEnabled)
+{
+    <form action="@Url.Action("UploadFile", "Files")" id="cdnUploadFile" method="post" enctype="multipart/form-data">
+        @Html.HiddenFor(x => x.SourceId)
+        @Html.HiddenFor(x => x.SourceType)
+        @Html.HiddenFor(x => x.FileContainer)
+        <input type="file" name="files" id="files" />
+        @Html.EditorFor(x => x.Title)
+        <input type="submit" value="Прикачи" id="cdnUploadButton" />
+        <button type="button" id="scanButton" class="pull-right" data-url="@Url.Action("Scan", "Scan", new { sourceId = Model.SourceId, sourceType = Model.SourceType })">Сканирай</button>
+    </form>
+}
+else
+{
+    <div>
+        <button type="button" id="scanButton" class="pull-right" data-url="@Url.Action("Scan", "Scan", new { sourceId = Model.SourceId, sourceType = Model.SourceType })">Сканирай</button>
+        <br />
+        <br />
+    </div>
+}
+<script>
+    $(function () {
+        $('form#cdnUploadFile').ajaxForm({
+            beforeSend: function () {
+                $('#cdnUploadButton').hide();
+                $('#scanButton').hide();
+            },
+
+            complete: function (xhr) {
+                $('#cdnUploadButton').show();
+                $('#scanButton').show();
+                if (xhr.responseText == "ok") {
+                    //alert('stana!');
+                    LoadFiles('@Model.FileContainer');
+                    $('#cdnUploadButton').parents('div.modal:first').modal("hide");
+                } else {
+                    if (xhr.responseText.length > 100) {
+                        // percent.html("Проблем при зареждане на файл.");
+                    } else {
+                        // percent.html(xhr.responseText);
+                    }
+                }
+            }
+        });
+
+        $('#scanButton').on('click', function (e) {
+            var returnUrl = window.location.href;
+            var url = $(e.target).data('url') + '&returnUrl=' + returnUrl;
+            window.location.href = url;
+        });
+    });
+</script>

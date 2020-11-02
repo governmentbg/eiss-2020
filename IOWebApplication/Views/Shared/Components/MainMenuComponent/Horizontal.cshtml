@@ -1,0 +1,542 @@
+﻿@model string
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@inject IOWebApplication.Core.Contracts.IWorkTaskService workTaskContext;
+@{
+    string helpFile = TempData["HelpFile"]?.ToString();
+    //Служебния съд ВСС няма нищо, освен Администриране
+    bool isRestictedMode = userContext.CourtId == NomenclatureConstants.VSScourtId;
+}
+<nav class="navbar navbar-static-top">
+    <div class="container menu-container">
+        <div class="navbar-header">
+            <a asp-action="Index" asp-controller="Home" class="navbar-brand"><i class="fa fa-balance-scale"></i>&nbsp;<b>ЕИСС</b></a>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+            <ul class="nav navbar-nav">
+                @if (userContext.IsUserInFeature(AccountConstants.Features.Modules.Documents) && !isRestictedMode)
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-book"></i> Документи<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@Url.Action("Add", "Document", new { direction = DocumentConstants.DocumentDirection.Incoming })"><i class="fa fa-sign-in"></i> Регистриране на входящ документ</a></li>
+                            <li><a href="@Url.Action("Add", "Document", new { direction = DocumentConstants.DocumentDirection.OutGoing })"><i class="fa fa-sign-out"></i> Регистриране на изходящ документ</a></li>
+                            <li><a href="@Url.Action("Add", "Document", new { direction = DocumentConstants.DocumentDirection.Internal })"><i class="fa fa-home"></i> Вътрешно-административен документооборот</a></li>
+                            <li class="divider"></li>
+                            <li><a href="@Url.Action("Index", "Document")"><i class="fa fa-folder-o"></i> Съдебна регистратура</a></li>
+                            <li><a href="@Url.Action("DocumentDecision", "Document")"><i class="fa fa-folder-o"></i> Решения по регистрирани документи</a></li>
+                            <li><a href="@Url.Action("Index", "DocumentResolution")"><i class="fa fa-folder"></i> Разпореждания по регистрирани документи</a></li>
+                        </ul>
+                    </li>
+                }
+                @if (userContext.IsUserInFeature(AccountConstants.Features.Modules.CaseData) && !isRestictedMode)
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-balance-scale"></i> Съдебни дела<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@Url.Action("Index", "Case")"><i class="fa fa-balance-scale"></i> Обща информация за дела</a></li>
+                            <li><a href="@Url.Action("CaseSelectionProtokolList", "CaseSelectionProtokol")"><i class="fa fa-random"></i> Информация за разпределение</a></li>
+                            <li><a href="@Url.Action("CaseForSelection", "Case")"><i class="fa fa-users"></i> Дела с непълен състав</a></li>
+                            <li><a href="@Url.Action("Index", "CasePerson")"><i class="fa fa-user"></i> Информация за страни</a></li>
+                            <li><a href="@Url.Action("Index_Spr", "CaseSession")"><i class="fa fa-handshake-o"></i> Съдебни заседания</a></li>
+                            <li><a href="@Url.Action("Index", "CaseSessionAct")"><i class="fa fa-book"></i> Съдебни актове и протоколи</a></li>
+                            <li><a href="@Url.Action("Index", "CaseEvidence")"><i class="fa fa-archive"></i> Доказателства</a></li>
+                            <li><a href="@Url.Action("Index_Spr", "CaseMovement")"><i class="fa fa-map-marker"></i> Местоположение на дело</a></li>
+                            <li><a href="@Url.Action("CaseSessionHallUseSpr", "CaseSession", new { HallId = 0 })"><i class="fa fa-calendar"></i> Заетост на зали</a></li>
+                            <li><a href="@Url.Action("SessionActForDepersonalizeReport", "Report")"><i class="fa fa-calendar"></i> Актове подлежащи на обезличаване</a></li>
+                            @if (userContext.IsUserInRole(AccountConstants.Roles.CaseInit) && userContext.IsUserInRole(AccountConstants.Roles.Supervisor))
+                            {
+                                <li class="divider"></li>
+                                <li class="dropdown-submenu">
+                                    <a><i class="fa fa-university"></i> Управление на дела</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href='@Url.Action("Index", "CaseLawUnitTaskChange")'><i class="fa fa-refresh"></i> Регистър обективна невъзможност</a></li>
+                                        <li><a href='@Url.Action("Index", "CaseLawUnitManualJudge")'><i class="fa fa-user-plus"></i> Регистър на добавени съдии при масов отвод</a></li>
+                                        <li><a href='@Url.Action("Index", "CaseDeactivation")'><i class="fa fa-remove"></i> @IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseDeactivationVM.RegisterName</a></li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+
+                @if ((userContext.IsUserInFeature(AccountConstants.Features.Modules.CaseNotification) ||
+userContext.IsUserInRole(AccountConstants.Roles.MoneyAccount) ||
+userContext.IsUserInRole(AccountConstants.Roles.CaseInit) ||
+userContext.IsUserInRole(AccountConstants.Roles.CaseArhive) ||
+userContext.IsUserInFeature(AccountConstants.Features.DocumentReactivate)) && !isRestictedMode)
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-retweet"></i> Управление<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+
+                            @if (userContext.IsUserInFeature(AccountConstants.Features.Modules.CaseNotification))
+                            {
+                                <li class="dropdown-submenu">
+                                    <a><i class="fa fa fa-envelope-open"></i> Уведомяване</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href='@Url.Action("Index", "DeliveryItem", new { filterType = NomenclatureConstants.DeliveryItemFilterType.Inner })'><i class="fa fa-exchange"></i> Призовки/съобщения в текущия съд</a></li>
+                                        <li><a href='@Url.Action("Index", "DeliveryItem", new { filterType = NomenclatureConstants.DeliveryItemFilterType.FromOther })'><i class="fa fa-arrow-right"></i> Призовки/съобщения изготвени в друг съд</a></li>
+                                        <li><a href='@Url.Action("Index", "DeliveryItem", new { filterType = NomenclatureConstants.DeliveryItemFilterType.ToOther })'><i class="fa fa-arrow-left"></i> Призовки/съобщения изпратени за разнасяне в друг съд</a></li>
+                                        <li class="divider"></li>
+                                        <li><a href='@Url.Action("IndexTrans", "DeliveryItem", new { toNotificationStateId = NomenclatureConstants.NotificationState.Send })'><i class="fa fa-share"></i>@Html.Raw(DeliveryItemTransFilterVM.GetTitle(NomenclatureConstants.NotificationState.Send))</a></li>
+                                        <li><a href='@Url.Action("IndexTrans", "DeliveryItem", new { toNotificationStateId = NomenclatureConstants.NotificationState.Received })'><i class="fa fa-reply"></i>@Html.Raw(DeliveryItemTransFilterVM.GetTitle(NomenclatureConstants.NotificationState.Received))</a></li>
+                                        <li><a href='@Url.Action("IndexTrans", "DeliveryItem", new { toNotificationStateId = NomenclatureConstants.NotificationState.ForDelivery })'><i class="fa fa-male"></i>@Html.Raw(DeliveryItemTransFilterVM.GetTitle(NomenclatureConstants.NotificationState.ForDelivery))</a></li>
+                                        <li class="divider"></li>
+                                        <li><a href='@Url.Action("ChangeLawUnit", "DeliveryItem")'><i class="fa fa-refresh"></i>Смяна на призовкар</a></li>
+                                        <li class="divider"></li>
+                                        <li><a href='@Url.Action("DownloadST", "Files",new { st=SourceTypeSelectVM.MobileApp,si=1})'><i class="fa fa-mobile-phone"></i>Мобилно приложение</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            @if (userContext.IsUserInRole(AccountConstants.Roles.MoneyAccount))
+                            {
+                                <li class="dropdown-submenu">
+                                    <a><i class="fa fa-money"></i> Финанси</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="@Url.Action("ObligationForPay", "Money", new { sign = NomenclatureConstants.MoneySign.SignMinus})"><i class="fa fa-american-sign-language-interpreting"></i> Задължения</a></li>
+                                        <li><a href="@Url.Action("ObligationForPay", "Money", new { sign = NomenclatureConstants.MoneySign.SignPlus})"><i class="fa fa-american-sign-language-interpreting"></i> Вземания</a></li>
+                                        <li><a href="@Url.Action("ObligationThirdPerson", "Money")"><i class="fa fa-american-sign-language-interpreting"></i> Задължения в полза на страни</a></li>
+                                        <li><a href="@Url.Action("AddAvansPayment", "Money")"><i class="fa fa-cc-visa"></i> Ново авансово плащане</a></li>
+                                        <li><a href="@Url.Action("PaymentList", "Money")"><i class="fa fa-money"></i> Извършени плащания</a></li>
+                                        <li><a href="@Url.Action("UnsavedPosPayment", "Money")"><i class="fa fa-save"></i> Незаписани ПОС плащания</a></li>
+                                        <li><a href="@Url.Action("ExpenseOrderList", "Money")"><i class="fa fa-th-list"></i> Списък разходни ордери</a></li>
+                                        <li><a href="@Url.Action("ExecListIndex", "Money")"><i class="fa fa-check-square-o"></i> Изготвени изпълнителни листове</a></li>
+                                        <li><a href="@Url.Action("ExchangeDocList", "Money")"><i class="fa fa-check-square-o"></i> Списък протоколи</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            @if (userContext.IsUserInRole(AccountConstants.Roles.CaseArhive))
+                            {
+                                <li class="dropdown-submenu">
+                                    <a><i class="fa fa-file-archive-o"></i> Архивиране</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="@Url.Action("CaseForArchive", "CaseArchive")"><i class="fa fa-cloud-download"></i> Съдебни дела за архивиране</a></li>
+                                        <li><a href="@Url.Action("CaseArchive", "CaseArchive")"><i class="fa fa-archive"></i> Съдебни дела в архив</a></li>
+                                        <li><a href="@Url.Action("CaseForDestroy", "CaseArchive")"><i class="fa fa-archive"></i> Съдебни дела за унищожаване</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            @if (userContext.IsUserInRole(AccountConstants.Roles.CaseInit) || userContext.IsUserInFeature(AccountConstants.Features.DocumentReactivate))
+                            {
+                                <li class="divider"></li>
+                                <li class="dropdown-submenu">
+                                    <a><i class="fa fa-university"></i> Общи</a>
+                                    <ul class="dropdown-menu">
+                                        @if (userContext.IsUserInRole(AccountConstants.Roles.CaseInit))
+                                        {
+                                            <li><a href='@Url.Action("IndexCourtLawUnitActivity", "CaseLoadIndex")'><i class="fa fa-street-view"></i> Натовареност на съдии</a></li>
+                                            @if (userContext.IsUserInRole(AccountConstants.Roles.Supervisor))
+                                            {
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("IndexAll", "WorkTask")'><i class="fa fa-flag-o"></i> Преглед на задачи</a></li>
+                                            }
+                                        }
+                                        @if (userContext.IsUserInFeature(AccountConstants.Features.DocumentReactivate))
+                                        {
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("ReactivateDocument", "Document")'><i class="fa fa-undo"></i> Възстановяване на документ</a></li>
+                                        }
+                                        <li class="divider"></li>
+                                        <li><a href='@Url.Action("Index", "DeactivateItem")'><i class="fa fa-trash"></i> @IOWebApplication.Infrastructure.Models.ViewModels.Report.DeactivateItemVM.RegisterName</a></li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+
+
+                @if (userContext.IsUserInRole(AccountConstants.Roles.Statistic) && !isRestictedMode)
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-bar-chart"></i> Справки<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-submenu">
+                                <a><i class="fa fa-book"></i> Книги и регистри</a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="@Url.Action("DocumentInComingReport", "Report")"><i class="fa fa-sign-in"></i> Входящ дневник</a></li>
+                                    <li><a href="@Url.Action("DocumentOutGoingReport", "Report")"><i class="fa fa-sign-out"></i> Изходящ дневник</a></li>
+                                    <li><a href="@Url.Action("CaseAlphabeticalReport", "Report")"><i class="fa fa-sort-alpha-asc"></i> Азбучник</a></li>
+                                    <li><a href="@Url.Action("DismisalReport", "Report")"><i class="fa fa fa-user-times"></i> Регистър на отводите и самоотводите</a></li>
+                                    <li><a href="@Url.Action("CaseEvidenceSpr", "CaseEvidence")"><i class="fa fa-archive"></i> Книга за веществени доказателства</a></li>
+                                    <li><a href="@Url.Action("CaseObligationReport", "Report")"><i class="fa fa-ban"></i> Книга глоби и присъдени на държавата суми</a></li>
+                                    <li><a href="@Url.Action("DeliveryBookReport", "Report")"><i class="fa fa-book"></i> Разносна книга</a></li>
+                                    <li><a href="@Url.Action("CaseSessionPrivateReport", "Report")"><i class="fa fa-stop-circle-o"></i> Книга за закрити и разпоредителни заседания</a></li>
+
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.Millitary ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.Criminal ||
+NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId)
+)
+                                    {
+                                        <li><a href="@Url.Action("CaseSessionPublicReport", "Report")"><i class="fa fa-calendar"></i> Срочна книга</a></li>
+                                    }
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.Millitary ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.Criminal)
+                                    {
+                                        <li><a href="@Url.Action("SentenceReport", "Report")"><i class="fa fa-trash-o"></i> Книга за изпълнение на присъдите</a></li>
+                                        <li><a href="@Url.Action("CaseFirstInstanceReport", "Report")"><i class="fa fa-bars"></i> Описна книга първоинстанционни</a></li>
+                                    }
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
+NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId) ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                                    {
+                                        <li><a href="@Url.Action("CaseSecondInstanceReport", "Report")"><i class="fa fa-list"></i> Описна книга въззивни/касационни</a></li>
+                                        <li><a href="@Url.Action("CaseMigrationReturnReport", "Report")"><i class="fa fa-list-ol"></i> Регистър по чл. 39, т. 13 от ПАС</a></li>
+                                    }
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt)
+                                    {
+                                        <li><a href="@Url.Action("InsolvencyReport", "Report")"><i class="fa fa-list-alt"></i> Книга по чл. 634в от ТЗ</a></li>
+                                    }
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.Apeal ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                                    {
+                                        <li><a href="@Url.Action("CaseDecisionReport", "Report")"><i class="fa fa-th-list"></i> Регистър на съдебните решения по чл. 235, ал. 5 ГПК</a></li>
+                                    }
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
+                                    {
+                                        <li><a href="@Url.Action("HeritageReport", "Report")"><i class="fa fa-user-times"></i> Книга за приемане и отказ от наследство</a></li>
+                                        <li><a href="@Url.Action("ZzdnReport", "Report")"><i class="fa fa-list"></i> Регистър по чл. 10, ал. 2 от ЗЗДН</a></li>
+                                        <li><a href="@Url.Action("DivorceReport", "Report")"><i class="fa fa-trash-o"></i> Регистър на изготвените съобщения за прекратен граждански брак</a></li>
+                                        <li><a href="@Url.Action("EuropeanHeritageReport", "Report")"><i class="fa fa-users"></i> Регистър на издадените европейски удостоверения за наследство</a></li>
+                                    }
+
+                                    <li><a href="@Url.Action("CaseArchiveReport", "Report")"><i class="fa fa-book"></i> Архивна книга</a></li>
+                                    <li><a href="@Url.Action("PublicInformationReport", "Report")"><i class="fa fa-info-circle"></i> Регистър на заявленията за достъп до обществена информация</a></li>
+                                    <li><a href="@Url.Action("ExecListReport", "Report")"><i class="fa fa-check-square-o"></i> Регистър на изпълнителните листове</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="@Url.Action("OutList", "DeliveryItem")"><i class="fa fa-male"></i> Описна книга на призовкар</a></li>
+                                    <li><a href="@Url.Action("ResultList", "DeliveryItem")"><i class="fa fa-arrows"></i> Книга за получени и върнати призовки и други съдебни книжа</a></li>
+                                </ul>
+                            </li>
+                            <li class="dropdown-submenu">
+                                <a><i class="fa fa-pie-chart"></i> Оперативни предефинирани справки</a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="@Url.Action("IndexCaseWithoutFinal", "Case")"><i class="fa fa-calendar-o"></i> Несвършени дела към дата</a></li>
+                                    <li><a href="@Url.Action("IndexSpr", "CaseSessionActComplain")"><i class="fa fa-gavel"></i> Обжалвани дела</a></li>
+                                    <li><a href="@Url.Action("IndexReportMaturity", "Case")"><i class="fa fa-child"></i> Образувани дела с участието на малолетни/непълнолетни лица</a></li>
+                                    <li><a href="@Url.Action("IndexWithCaseFinalActMaturity", "Case")"><i class="fa fa-child"></i> Свършили дела с участието на малолетни/непълнолетни лица</a></li>
+                                    <li><a href="@Url.Action("IndexWithoutCaseFinalActMaturity", "Case")"><i class="fa fa-child"></i> Несвършени дела с участието на малолетни/непълнолетни лица</a></li>
+                                    <li><a href="@Url.Action("IndexCaseWithoutFinalAct", "Case")"><i class="fa fa-user-times"></i> Дела с ненаписани съдебни актове от всички съдии</a></li>
+                                    <li><a href="@Url.Action("IndexCaseCorruptCrimes", "Case")"><i class="fa fa-exchange"></i> Образувани и свършени дела за престъпления, включени в Единния каталог на корупционните престъпления</a></li>
+                                    <li><a href="@Url.Action("CaseLinkReport", "Report")"><i class="fa fa-odnoklassniki"></i> Дела на други институции/инстанции</a></li>
+                                    <li><a href="@Url.Action("IndexCaseBeginReport", "Case")"><i class="fa fa-line-chart"></i> Срочност за насрочване на дела</a></li>
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
+userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
+                                    {
+                                        <li><a href="@Url.Action("IndexCaseFirstLifecyclie", "Case")"><i class="fa fa-clock-o"></i> Времетраене на размяната на книжата (първи интервал)</a></li>
+                                        <li><a href="@Url.Action("IndexCaseFirstLifecyclieDoubleExchange", "Case")"><i class="fa fa-clock-o"></i> Времетраене на размяната на книжата (двойна размяна)</a></li>
+                                    }
+                                    <li><a href="@Url.Action("CaseArchiveListReport", "Report")"><i class="fa fa-archive"></i> Архивирани дела</a></li>
+                                    <li><a href="@Url.Action("SentenceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка влезли в сила присъди</a></li>
+                                    <li><a href="@Url.Action("CasePersonDefendantListReport", "Report")"><i class="fa fa-line-chart"></i> Справка съдени и осъдени лица</a></li>
+                                    <li><a href="@Url.Action("CaseFirstInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка постъпили дела за период – първоинстанционни дела</a></li>
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
+                        NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId))
+                                    {
+                                        <li><a href="@Url.Action("CaseSecondInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка постъпили дела за период – въззивни дела</a></li>
+                                    }
+                                    <li><a href="@Url.Action("CaseFinishFirstInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка свършени дела за период – първоинстанционни дела</a></li>
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
+                      NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId))
+                                    {
+                                        <li><a href="@Url.Action("CaseFinishSecondInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка свършени дела за период – въззивни дела</a></li>
+                                    }
+
+                                    <li class="divider"></li>
+                                    <li><a href="@Url.Action("IndexCaseSessionWithActProject", "CaseSession")"><i class="fa fa-pencil"></i> Заседания с не написани съдебни актове от всички съдии</a></li>
+                                    <li><a href="@Url.Action("IndexReportMaturity", "CaseSession")"><i class="fa fa-child"></i> Заседания за период с участието на малолетни/непълнолетни лица</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="@Url.Action("IndexActReport", "CaseSessionAct")"><i class="fa fa-book"></i> Съдебни актове</a></li>
+                                    <li><a href="@Url.Action("IndexCaseActReport", "Case")"><i class="fa fa-line-chart"></i> Срочност за изготвяне на съдебен акт</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="@Url.Action("Index", "CaseDeadline")"><i class="fa fa-bell-o"></i> Срокове</a></li>
+                                    <li><a href="@Url.Action("LawUnitGroupReport", "CaseSelectionProtokol")"><i class="fa fa-sort-numeric-asc"></i> Брой разпределени дела в група</a></li>
+                                    <li><a href="@Url.Action("IndexSpr", "CaseLoadIndex")"><i class="fa fa-id-card-o"></i> Натовареност по дела</a></li>
+                                    <li><a href="@Url.Action("IndexCourtLawUnitActivitySpr", "CaseLoadIndex")"><i class="fa fa-id-card"></i> Натовареност извън дела</a></li>
+                                    <li><a href="@Url.Action("IndexLawUnitActivitySprSpr", "CaseLoadIndex")"><i class="fa fa-id-badge"></i> Натовареност общо</a></li>
+                                    <li><a href="@Url.Action("IndexSpr", "CaseSelectionProtokol")"><i class="fa fa-calendar"></i> Отработени дни съдебни заседатели</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="@Url.Action("DocumentOutListReport", "Report")"><i class="fa fa-sign-out"></i> Документи от изходящ регистър</a></li>
+                                    <li><a href="@Url.Action("IndexDocumentCaseInfoSpr", "Document")"><i class="fa fa-sign-in"></i> Съпровождащи документи</a></li>
+                                    <li><a href="@Url.Action("IndexDocumentProvidedReturned", "Case")"><i class="fa fa-paper-plane"></i> Предоставени/върнати документи</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="@Url.Action("PosDeviceReport", "Report")"><i class="fa fa-television"></i> ПОС терминал</a></li>
+                                    <li><a href="@Url.Action("PaymentPosReport", "Report")"><i class="fa fa-money"></i> Преведени суми през ПОС Терминал</a></li>
+                                    <li><a href="@Url.Action("FineReport", "Report")"><i class="fa fa-taxi"></i> Глоби</a></li>
+                                    <li><a href="@Url.Action("StateFeeReport", "Report")"><i class="fa fa-credit-card-alt"></i> Държавни такси</a></li>
+                                    <li><a href="@Url.Action("ObligationJuryReport", "Report")"><i class="fa fa-hand-lizard-o"></i> Възнаграждения</a></li>
+                                    <li><a href="@Url.Action("ExecListIndexReport", "Money")"><i class="fa fa-check-square-o"></i> Изпълнителни листове</a></li>
+                                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
+                                    {
+                                        <li><a href="@Url.Action("IndexExecListReport", "CaseSessionAct")"><i class="fa fa-check-square-o"></i> Изпълнителни листове по ЗП</a></li>
+                                    }
+                                    <li class="divider"></li>
+                                    <li><a href="@Url.Action("IndexSpr", "CourtLawUnit")"><i class="fa fa-odnoklassniki"></i> Длъжностно лице</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="@Url.Action("Index", "ReportViewer")"><i class="fa fa-bar-chart"></i> Оперативни нерегламентирани справки</a></li>
+                            @*<li class="dropdown-submenu">
+                                    <a><i class="fa fa-table"></i> Оперативни нерегламентирани справки</a>
+                                        <li><a href="@Url.Action("IndexSpr", "CourtLawUnit")"><i class="fa fa-odnoklassniki"></i> Длъжностно лице</a></li>
+                                    </ul>
+                                </li>*@
+                            <li class="dropdown-submenu">
+                                <a><i class="fa fa-file-excel-o"></i> Статистически справки</a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="@Url.Action("Excel", "Report")"><i class="fa fa-file-excel-o"></i> Статистическа отчетна форма към ВСС</a></li>
+                                </ul>
+                            </li>
+                            @*<li class="dropdown-submenu">
+                                    <a><i class="fa fa-area-chart"></i> Натовареност</a>
+                                    <ul class="dropdown-menu">
+
+                                    </ul>
+                                </li>*@
+                            <li class="dropdown-submenu">
+                                <a><i class="fa fa-table"></i> Справка външни системи</a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="@Url.Action("PersonData", "RegixReport", new { id = 0 })"><i class="fa fa-users"></i> Справка за физическо лице</a></li>
+                                    <li><a href="@Url.Action("PersonAddress", "RegixReport", new { addressTypeId = NomenclatureConstants.RegixType.PersonPermanentAddress, id = 0 })"><i class="fa fa-map-marker"></i> Справка за постоянен адрес</a></li>
+                                    <li><a href="@Url.Action("PersonAddress", "RegixReport", new { addressTypeId = NomenclatureConstants.RegixType.PersonCurrentAddress, id = 0 })"><i class="fa fa-location-arrow"></i> Справка за настоящ адрес</a></li>
+                                    <li><a href="@Url.Action("PersonDataAddress", "RegixReport", new { id = 0 })"><i class="fa fa-users"></i> Справка НБД</a></li>
+                                    <li><a href="@Url.Action("EmploymentContracts", "RegixReport", new { id = 0 })"><i class="fa fa-file-text"></i> Справка трудови договори</a></li>
+                                    <li><a href="@Url.Action("CompensationByPaymentPeriod", "RegixReport", new { compensationTypeId = NomenclatureConstants.RegixType.DisabilityCompensationByPaymentPeriod, id = 0 })"><i class="fa fa-wheelchair"></i> Справка обезщетения за болест и майчинство</a></li>
+                                    <li><a href="@Url.Action("CompensationByPaymentPeriod", "RegixReport", new { compensationTypeId = NomenclatureConstants.RegixType.UnemploymentCompensationByPaymentPeriod, id = 0 })"><i class="fa fa-male"></i> Справка обезщетения за безработица</a></li>
+                                    <li><a href="@Url.Action("PensionIncomeAmountReport", "RegixReport", new { id = 0 })"><i class="fa fa-blind"></i> Справка за доход от пенсия и добавки</a></li>
+                                    <li><a href="@Url.Action("PersonalIdentityV2", "RegixReport", new { id = 0 })"><i class="fa fa-address-card-o"></i> Справка за лице по документ за самоличност</a></li>
+                                    <li><a href="@Url.Action("ActualStateV3", "RegixReport", new { id = 0 })"><i class="fa fa-industry"></i> Справка търговски регистър</a></li>
+                                    <li><a href="@Url.Action("StateOfPlay", "RegixReport", new { id = 0 })"><i class="fa fa-th-list"></i> Справка регистър БУЛСТАТ</a></li>
+                                    <li><a href="@Url.Action("RegixReportList", "RegixReport")"><i class="fa fa-th-list"></i> Справка търсене във външни регистри</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                }
+                @if (userContext.IsUserInFeature(AccountConstants.Features.Modules.HrAdministration))
+                {
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-cogs"></i> Администриране<span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            @*<li><a href='@Url.Action("Admin", "Nomenclature")'><i class="fa fa-cogs"></i> Администрация</a></li>*@
+                            <li class="dropdown-submenu">
+                                <a><i class="fa fa-cog fa-spin"></i> Номенклатури</a>
+                                <ul class="dropdown-menu">
+                                    <li class="dropdown-submenu">
+                                        <a><i class="fa fa-users"></i> Съдии</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href='@Url.Action("Index", "LawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })'><i class="fa fa-users"></i> Съдии</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.Appoint })'><i class="fa fa-briefcase"></i> Назначаване</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.Ill })'><i class="fa fa fa-medkit"></i> Болнични дни</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.Move })'><i class="fa fa-car"></i> Командироване</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.Holiday })'><i class="fa fa-ship"></i> Отпуски</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="dropdown-submenu">
+                                        <a><i class="fa fa-users"></i> Служители</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href='@Url.Action("Index", "LawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.OtherEmployee })'><i class="fa fa-user-circle"></i> Служители</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.OtherEmployee, periodType = NomenclatureConstants.PeriodTypes.Appoint })'><i class="fa fa-briefcase"></i> Назначаване</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.OtherEmployee, periodType = NomenclatureConstants.PeriodTypes.Ill })'><i class="fa fa fa-medkit"></i> Болнични дни</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.OtherEmployee, periodType = NomenclatureConstants.PeriodTypes.Move })'><i class="fa fa-car"></i> Командироване</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.OtherEmployee, periodType = NomenclatureConstants.PeriodTypes.Holiday })'><i class="fa fa-ship"></i> Отпуски</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="dropdown-submenu">
+                                        <a><i class="fa fa-envelope-open"></i> Призовкари</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href='@Url.Action("Index", "LawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.MessageDeliverer })'><i class="fa fa-users"></i> Призовкари</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.MessageDeliverer, periodType = NomenclatureConstants.PeriodTypes.Appoint })'><i class="fa fa-briefcase"></i> Назначаване</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.MessageDeliverer, periodType = NomenclatureConstants.PeriodTypes.Ill })'><i class="fa fa fa-medkit"></i> Болнични дни</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.MessageDeliverer, periodType = NomenclatureConstants.PeriodTypes.Holiday })'><i class="fa fa-ship"></i> Отпуски</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("Index", "DeliveryArea")'><i class="fa fa-object-group"></i> Райони за призоваване</a></li>
+                                            <li><a href='@Url.Action("IndexDuplication", "DeliveryAreaAddress")'><i class="fa fa-object-group"></i> Адреси с различни райони за призоваване</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a href="@Url.Action("Index", "Account")"><i class="fa fa-user-o"></i> Потребители</a></li>
+                                    <li class="divider"></li>
+                                    <li class="dropdown-submenu">
+                                        <a><i class="fa fa-users"></i> Заседатели</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href='@Url.Action("Index", "LawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Jury })'><i class="fa fa-user-circle"></i> Заседатели</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Jury, periodType = NomenclatureConstants.PeriodTypes.Appoint })'><i class="fa fa-briefcase"></i> Назначаване</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Jury, periodType = NomenclatureConstants.PeriodTypes.Ill })'><i class="fa fa fa-medkit"></i> Болнични дни</a></li>
+                                            <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Jury, periodType = NomenclatureConstants.PeriodTypes.Holiday })'><i class="fa fa-ship"></i> Отпуски</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("Index", "CourtJuryFee")'><i class="fa fa-money"></i> Ставка възнаграждение за заседатели</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a href='@Url.Action("Index", "LawUnit", new { lawUnitType = 4 })'><i class="fa fa-user-md"></i> Вещи лица</a></li>
+                                    <li class="divider"></li>
+                                    <li class="dropdown-submenu">
+                                        <a><i class="fa fa-code-fork"></i> Интеграции</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href='@Url.Action("EpepUser", "Epep")'><i class="fa fa-cubes"></i> ЕПЕП - Потребители</a></li>
+                                        </ul>
+                                    </li>
+                                    @if (userContext.IsUserInRole(AccountConstants.Roles.Administrator))
+                                    {
+                                        <li class="divider"></li>
+                                        <li><a href='@Url.Action("Edit", "Court", new { returnUrl = @Url.Action("Index", "Home") })'><i class="fa fa-cubes"></i> Данни за текущия съд</a></li>
+                                        <li><a href='@Url.Action("Index", "CourtOrganization")'><i class="fa fa-sitemap"></i> Организационна структура на съд</a></li>
+                                        <li><a href='@Url.Action("Index", "CourtDepartment")'><i class="fa fa-home"></i> Съдебна структура</a></li>
+                                        <li><a href='@Url.Action("Index", "CourtDuty")'><i class="fa fa-calendar"></i> Дежурства към съд</a></li>
+                                        <li><a href='@Url.Action("ArchiveCommittee", "CourtArchive")'><i class="fa fa-graduation-cap"></i> Експертни комисии</a></li>
+                                        <li><a href='@Url.Action("ArchiveIndex", "CourtArchive")'><i class="fa fa-list-ol"></i> Номенклатурни индекси</a></li>
+                                        <li><a href='@Url.Action("Index", "CourtHall")'><i class="fa fa-building-o"></i> Зали към съд</a></li>
+                                        <li><a href='@Url.Action("Index", "CourtBankAccount")'><i class="fa fa-university"></i> Банкови сметки</a></li>
+                                        <li><a href='@Url.Action("PosDevice", "CourtBankAccount")'><i class="fa fa-credit-card"></i> ПОС устройства</a></li>
+                                        <li><a href='@Url.Action("Index", "CourtGroup")'><i class="fa fa-list-ol"></i> Групи шифри</a></li>
+                                        <li><a href='@Url.Action("Index", "LoadPeriod")'><i class="fa fa-calendar"></i>Периоди за натовареност</a></li>
+                                        <li><a href='@Url.Action("Index", "AuditLog")'><i class="fa fa-users"></i> Журнал</a></li>
+                                    }
+                                </ul>
+                            </li>
+                            @if (userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+                            {
+                                <li class="divider"></li>
+                                <li class="dropdown-submenu">
+                                    <a><i class="fa fa-cog text-danger"></i> Конфигуриране</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href='@Url.Action("Index", "News")'><i class="fa fa-book"></i> Новини</a></li>
+                                        <li class="divider"></li>
+                                        <li class="dropdown-submenu">
+                                            <a><i class="fa fa-users"></i> Институции</a>
+                                            <ul class="dropdown-menu">
+                                                <li><a href='@Url.Action("Index", "LawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Prosecutor })'><i class="fa fa-graduation-cap"></i> Прокурори</a></li>
+                                                <li><a href='@Url.Action("Index", "LawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Lawyer })'><i class="fa fa-graduation-cap"></i> Адвокати</a></li>
+
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = NomenclatureConstants.InstitutionTypes.Attourney })'><i class="fa fa-university"></i> Прокуратури</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = NomenclatureConstants.InstitutionTypes.MVR })'><i class="fa fa-taxi"></i> ОД на МВР</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 9 })'><i class="fa fa-taxi"></i> РУ на Полиция</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 11 })'><i class="fa fa-taxi"></i> БОП</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 12 })'><i class="fa fa-taxi"></i> Гранична полиция</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 13 })'><i class="fa fa-taxi"></i> Други структури на МВР</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 16 })'><i class="fa fa-truck"></i> Военни формирования</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 17 })'><i class="fa fa-university"></i> Министерства</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 18 })'><i class="fa fa-university"></i> Агенции</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 19 })'><i class="fa fa-university"></i> Комисии</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 20 })'><i class="fa fa-university"></i> Главни дирекции</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 21 })'><i class="fa fa-university"></i> Други</a></li>
+
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = NomenclatureConstants.InstitutionTypes.Prison })'><i class="fa fa-truck"></i> Затвори</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 4 })'><i class="fa fa-user-secret"></i> Следствени служби</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 8 })'><i class="fa fa-odnoklassniki"></i> Пробационни служби</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 5 })'><i class="fa fa-bullhorn"></i> ТД на НАП</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 6 })'><i class="fa fa-user-secret"></i> ЧСИ</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = 7 })'><i class="fa fa-user-secret"></i> ДСИ</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = NomenclatureConstants.InstitutionTypes.Notary })'><i class="fa fa-user-secret"></i> Нотариуси</a></li>
+                                                <li><a href='@Url.Action("Index", "Institution", new { institutionType = NomenclatureConstants.InstitutionTypes.Syndic })'><i class="fa fa-user-secret"></i> Синдици</a></li>
+                                            </ul>
+                                        </li>
+                                        <li><a href='@Url.Action("CaseCodeList", "CaseGroup")'><i class="fa fa-sliders"></i> Списък шифри</a></li>
+                                        @*<li><a href='@Url.Action("Index", "CaseGroup")'><i class="fa fa-cubes"></i> Видове дела</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("Index", "Counter")'><i class="fa fa-sort-numeric-asc"></i> Броячи</a></li>
+                                        *@
+                                        <li><a href='@Url.Action("Index", "WorkingDays")'><i class="fa fa-calendar-check-o"></i> Работни дни</a></li>
+                                        <li><a href='@Url.Action("Index", "CourtRegion")'><i class="fa fa-cubes"></i> Съдебни райони</a></li>
+                                        <li class="divider"></li>
+                                        <li><a href='@Url.Action("Index", "Nomenclature", new { nomenclatureName = "DepartmentType" })'><i class="fa fa-sitemap"></i> Видове организационни нива</a></li>
+                                        @*<li><a href='@Url.Action("PriceDesc", "Price")'><i class="fa fa-money"></i> Тарифи</a></li>*@
+                                        @*<li><a href='@Url.Action("Index", "Nomenclature", new { nomenclatureName = "NotificationType" })'><i class="fa fa-sliders"></i> Вид известие</a></li>*@
+                                        <li class="dropdown-submenu">
+                                            <a><i class="fa fa-file-o"></i> Бланки</a>
+                                            <ul class="dropdown-menu">
+                                                <li><a href='@Url.Action("Index", "Nomenclature", new { nomenclatureName = "HtmlTemplateType" })'><i class="fa fa-file"></i> Видове документи</a></li>
+                                                <li><a href='@Url.Action("Index", "HtmlTemplate")'><i class="fa fa-file-o"></i> Бланки на документи</a></li>
+                                                <li><a href='@Url.Action("Index", "Nomenclature", new { nomenclatureName = "HtmlTemplateParam" })'><i class="fa fa-paragraph"></i> Параметри в бланка</a></li>
+                                            </ul>
+                                        </li>
+                                        <li class="divider"></li>
+                                        <li class="dropdown-submenu">
+                                            <a><i class="fa fa-object-group"></i> Натовареност</a>
+                                            <ul class="dropdown-menu">
+                                                <li><a href='@Url.Action("Index", "LoadGroup")'><i class="fa fa-list-ol"></i> Групи по натовареност</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("IndexElementGroupe", "CaseLoadIndex")'><i class="fa fa-object-group"></i> Основни дейности - натовареност</a></li>
+                                                <li><a href='@Url.Action("IndexLoadAddActivity", "CaseLoadIndex")'><i class="fa fa-object-group"></i> Допълнителни дейности - натовареност</a></li>
+                                                <li><a href='@Url.Action("IndexJudgeLoadActivity", "CaseLoadIndex")'><i class="fa fa-object-group"></i> Натовареност на съдии - допълнителни дейности</a></li>
+                                                <li><a href='@Url.Action("IndexCaseLoadCorrectionActivity", "CaseLoadCorrection")'><i class="fa fa-object-group"></i> Коригиращи коефициенти по дела</a></li>
+                                            </ul>
+                                        </li>
+                                        <li class="divider"></li>
+                                        <li><a href='@Url.Action("Index", "Court")'><i class="fa fa-cubes"></i> Съдилища</a></li>
+                                        @*<li><a href='@Url.Action("IndexAddress", "Common")'><i class="fa fa-address-card-o"></i> Адреси</a></li>*@
+                                        <li><a href='@Url.Action("IndexEkStreet", "Nomenclature")'><i class="fa fa-address-card-o"></i> Квартали/булеварди/улици</a></li>
+                                    </ul>
+                                </li>
+
+                            }
+                        </ul>
+                    </li>
+                }
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+        <!-- Navbar Right Menu -->
+        <div class="navbar-custom-menu">
+            <ul class="nav navbar-nav nav-main">
+                <li><a href="@Url.Action("CaseReport","Case")" title="Разширено търсене"><i class="fa fa-search"></i></a></li>
+                @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyNotificationComponent), new { view = "NotificationCount" })
+                <partial name="_MyTaskCount" model="@workTaskContext.Select_ToDoCount()" />
+
+                @*@await Component.InvokeAsync(nameof(IOWebApplication.Components.MyTasksComponent), new { view = "TaskCount" })*@
+                @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyMovementComponent), new { view = "MovementCount" })
+
+                @*@await Component.InvokeAsync(nameof(IOWebApplication.Components.UserInfoComponent), "CourtInfo")*@
+
+                <partial name="_LoginPartial" />
+                @if (helpFile != null)
+                {
+                    <li class="dropdown">
+                        <a id="horizontalUserguideId" href="@Url.Content($"~/userguide/{helpFile}.htm")" target="_blank" title="Ръководство на потребителя">
+                            <i class="fa fa-question-circle-o"></i>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+        <!-- /.navbar-custom-menu -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>
+
+<script>
+    $(function () {
+        var currentMenuItem = '@ViewBag.MenuItemValue';
+        if (currentMenuItem.length > 0) {
+            $('ul.sidebar-menu li[data-li="' + currentMenuItem + '"]:first').addClass('active')
+                .parents('li.treeview:first').addClass('menu-open')
+                .find('ul.treeview-menu').show();
+        }
+    });
+
+    function selectCourt() {
+        requestContent('@Url.Action("SelectCourt","Account")',null, function (htmlModal) {
+             ShowModalDialog('Изберете съд', htmlModal);
+        });
+    }
+</script>

@@ -1,0 +1,138 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Constants 
+@model Address
+<div class="form-group address--control">
+    @Html.HiddenFor(x => x.Id)
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="AddressTypeId" class="control-label io-req"></label>
+                <div>
+                    @Html.DropDownListFor(x => x.AddressTypeId, (IEnumerable<SelectListItem>)ViewBag.AddressTypesDDL, new { @class = "form-control address-type" })
+
+                    @*@foreach (var addressType in (IEnumerable<SelectListItem>)ViewBag.AddressTypesDDL)
+                        {
+                            if (addressType.Value == "-1")
+                            {
+                                continue;
+                            }
+                            <label>
+                                @Html.RadioButtonFor(x => x.AddressTypeId, addressType.Value)
+                                @addressType.Text.Replace(" адрес", "")
+                                &nbsp;
+                            </label>
+                        }*@
+                </div>
+                @*@Html.DropDownListFor(x => x.AddressTypeId, ((IEnumerable<SelectListItem>)ViewBag.AddressTypesDDL).ToSelectList(x => x.Value, x => x.Text, Model.AddressTypeId), null, new { @class = "form-control" })*@
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="CountryCode" class="control-label io-req"></label>
+                @Html.DropDownListFor(x => x.CountryCode, ((IEnumerable<SelectListItem>)ViewBag.CountriesDDL).ToSelectList(x => x.Value, x => x.Text, Model.CountryCode ?? ""), null, new { @class = "form-control country-code" })
+            </div>
+        </div>
+    </div>
+    <div class="row bg-address">
+        <div class="col-md-12">
+            <div class="form-group">
+                @Html.EditorFor(x => x.CityCode, "Ekatte")
+            </div>
+        </div>
+    </div>
+    <div class="row bg-address">
+        <div class="col-md-6">
+            <div class="form-group">
+                @Html.EditorFor(x => x.ResidentionAreaCode, "EkStreet", null, new { streetType = NomenclatureConstants.EkStreetTypes.Area })
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                @Html.EditorFor(x => x.StreetCode, "EkStreet", null, new { streetType = NomenclatureConstants.EkStreetTypes.Street })
+            </div>
+        </div>
+    </div>
+    <div class="row bg-address">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="StreetNumber"></label>
+                <input asp-for="@Model.StreetNumber" class="form-control" min="1" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="SubNumber"></label>
+                <input asp-for="@Model.SubNumber" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Block"></label>
+                <input asp-for="@Model.Block" class="form-control" min="1" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="SubBlock"></label>
+                <input asp-for="@Model.SubBlock" class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="row bg-address">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Entrance"></label>
+                <input asp-for="@Model.Entrance" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Floor"></label>
+                <input asp-for="@Model.Floor" class="form-control" />
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Appartment"></label>
+                <input asp-for="@Model.Appartment" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="@Model.Email" class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="row foreign-address">
+        <div class="col-md-12">
+            <div class="form-group">
+                <label asp-for="ForeignAddress" class="io-req"></label>
+                <input asp-for="@Model.ForeignAddress" class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Phone"></label>
+                <input asp-for="@Model.Phone" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                <label asp-for="Fax"></label>
+                <input asp-for="@Model.Fax" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Description"></label>
+                <input asp-for="@Model.Description" class="form-control" />
+            </div>
+        </div>
+    </div>
+</div>
+

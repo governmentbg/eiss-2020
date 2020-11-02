@@ -1,0 +1,25 @@
+﻿@model ProbationMeasure
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+<div class="pbc-measure-container">
+    <h5><b>Пробационно наказание</b></h5>
+    @Html.HiddenFor(x => x.MeasureId)
+
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(x => x.MeasureType, "EisppDropDown", null, new { Ddl = ViewBag.ProbationMeasureTypeDDL, @class = "pbc-measure-type" })</div>
+        <div class="col-lg-2 pbc-measure-unit-container">@Html.EditorFor(x => x.Unit, "EisppDropDown", null, new { Ddl = ViewBag.MeasureUnitDDL, @class = "pbc-measure-unit" })</div>
+        <div class="col-lg-2 pbc-measure-unit-container">@Html.EditorFor(x => x.MeasureAmount)</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.ValidFromVM, "EisppDateTime", null, new { flags = 5 })</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.ValidTillVM, "EisppDateTime", null, new { flags = 5 })</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(x => x.Years)</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.Months)</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.Days)</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.Note)</div>
+    </div>
+</div>

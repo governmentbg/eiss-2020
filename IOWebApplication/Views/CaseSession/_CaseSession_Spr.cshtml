@@ -1,0 +1,204 @@
+﻿@model CaseSessionFilterVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.Year, "DateTimeYear")
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.CaseSessionTypeId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.HallId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.SessionResultId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.SessionStateId, "GenericDropDown")
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.SecretaryUserId, "SelectUser")
+    </div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+</div>
+
+
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="caseSessionMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($("#DateFrom").val() == '' && $("#DateTo").val() == '' && $("#Year").val() == '') {
+            return messageHelper.ShowErrorMessage('Попълнете от дата до дата или година', messageContainer);
+        }
+
+        if ($.fn.dataTable.isDataTable('#caseSessionMainTable')) {
+            refreshTable('#caseSessionMainTable');
+        }
+        else {
+            $('#caseSessionMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSpr", "CaseSession")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $('#DateFrom').val(),
+                            DateTo: $('#DateTo').val(),
+                            Year: $('#Year').val(),
+                            CaseSessionTypeId: $('#CaseSessionTypeId').val(),
+                            HallId: $('#HallId').val(),
+                            SecretaryUserId: $('#SecretaryUserId').val(),
+                            CaseGroupId: $('#CaseGroupId').val(),
+                            CaseTypeId: $('#CaseTypeId').val(),
+                            RegNumber: $('#RegNumber').val(),
+                            SessionResultId: $('#SessionResultId').val(),
+                            SessionStateId: $('#SessionStateId').val(),
+                            JudgeReporterId: $('#JudgeReporterId').val(),
+                            CourtDepartmentId: $('#CourtDepartmentId').val()
+                        };
+                    }
+
+                },
+                filter: false,
+                columns: [
+                    {
+                        className: 'col-md-2',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'Дата и час',
+                        sortable: true,
+                        searchable: true,
+                        render: function(data){
+                            return JsonBGdateTime(data);
+                        }
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'sessionTypeLabel',
+                        data: 'sessionTypeLabel',
+                        title: 'Вид заседание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'courtHallName',
+                        data: 'courtHallName',
+                        title: 'Зала',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'sessionStateLabel',
+                        data: 'sessionStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'sessionResultLabel',
+                        data: 'sessionResultLabel',
+                        title: 'Резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'judgeReporterLabel',
+                        data: 'judgeReporterLabel',
+                        title: 'Съдия докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'caseName',
+                        data: 'caseName',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseName + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="caseSessionTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Preview", "CaseSession")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+<script>
+        $(document).ready(function () {
+            $('#CaseGroupId').trigger('change');
+        });
+
+        $('#CaseGroupId').change(function () {
+            requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+        });
+
+    $(function () {
+        initUserAutoComplete();
+        initLawUnit();
+    })
+</script>

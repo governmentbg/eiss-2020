@@ -1,0 +1,62 @@
+﻿@model DocumentTemplateHeaderVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@using IOWebApplication.Infrastructure.Constants
+@{
+    Layout = null;
+}
+
+<div align=center>
+
+<table class=MsoNormalTable border=0 cellspacing=0 cellpadding=0 width=0
+ style='width:16.0cm;border-collapse:collapse'>
+ <tr>
+  <td width=139 style='width:70.9pt;padding:0cm 0cm 0cm 0cm'>
+  <p align=right style='text-align:right'><div style="margin-bottom: 10px; width: 200px;height: 200px; background: url('@Model.CourtLogo') 100% 100% no-repeat;"></div></p>
+  </td>
+  <td width=384 valign=bottom style='width:11.0cm;padding:0cm 0cm 0cm 0cm'>
+  <p align=center style='text-align:center;margin-top:0pt;margin-bottom:0pt'><b><span
+  style='font-size:14.0pt'>РЕПУБЛИКА БЪЛГАРИЯ</span></b></p>
+  <p align=center style='text-align:center;margin-top:0pt;margin-bottom:0pt'><b><span
+  lang=EN-US style='font-size:14.0pt'>@Model.CourtName</span></b></p>
+  </td>
+  <td width=82 valign=top style='width:70.9pt;padding:0cm 0cm 0cm 0cm'></td>
+ </tr>
+</table>
+</div>
+
+<hr />
+<hr />
+
+    @if (string.IsNullOrEmpty(Model.DocumentNumber))
+    {
+        <text> Изх.№ .....</text>
+    }
+    else
+    {
+        <p style='text-align:justify;margin-bottom:.0001pt'><span lang=EN-US>Изх. №
+        @Model.DocumentNumber</span></p>
+       <p style='text-align:justify;margin-top:0pt'>Дата: <span lang=EN-US>@($"{Model.DocumentDate:dd.MM.yyyy}")</span></p>
+    }
+
+
+@if (Model.HtmlTemplateTypeId != NomenclatureConstants.HtmlTemplateTypes.Certificate)
+{
+    <table border="0" width="100%">
+        <tr>
+            <td width="50%"></td>
+            <td>
+                <b><span>ДО</span></b>
+                @if (!string.IsNullOrEmpty(Model.DocumentReccipientName))
+                {
+                    <br />
+                    <b><span style="text-transform: uppercase">@Model.DocumentReccipientName</span></b>
+                }
+                @if (!string.IsNullOrEmpty(Model.DocumentReccipientAddress))
+                {
+                    <br />
+                    <b><span style="text-transform: uppercase">@Model.DocumentReccipientAddress</span></b>
+                }
+            </td>
+        </tr>
+    </table>
+}

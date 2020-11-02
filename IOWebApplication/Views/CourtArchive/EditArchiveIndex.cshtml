@@ -1,0 +1,114 @@
+﻿@model CourtArchiveIndexEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+    var multiselectCode = "multiselectCode";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form id="formEdit" asp-action="EditArchiveIndex" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer" class="row col-md-12">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.Code)
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.Label)
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.CourtArchiveCommitteeId, "GenericDropDown")
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.StorageYears)
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.DateStart)
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.DateEnd)
+                    </div>
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Description)
+                    </div>
+                </div>
+
+                <div class="row">
+                    @Html.ValidationMessage("caseCodesJson")
+                    @Html.Hidden("caseCodesJson")
+                    <div class="col-md-2">
+                        <h2 id="h4Code" class="text-left">Шифри</h2>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="control-label" for="CaseGroupId">Филтър по вид дело</label>
+                        @Html.DropDownList("CaseGroupId", ViewBag.filterCaseGroupId_ddl, null, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div id="multiselectCode" class="row ms-transfer-container">
+                    <partial name="_MultiSelectTransfer" model=@multiselectCode />
+                </div>
+                <div class="row">
+                    <br>
+                </div>
+            </div>
+
+
+            <div class="form-group row col-md-12">
+                <a id="submit_button" class="btn btn-success" />Запис</a>
+                <a asp-action="ArchiveIndex" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+@section scripts {
+    <script>
+        var $multiselectCode = $("#multiselectCode").multiselectiontransfer(
+            {
+                ajaxLeftUrl: "@Url.Action("CodeLeftList")",
+                ajaxRightUrl: "@Url.Action("CodeRightList")"
+            }
+        );
+        var initCaseGroupId =  0;
+        $multiselectCode.loadLeft({ caseGroupId: initCaseGroupId });
+        $multiselectCode.loadRight({ indexId: @Model.Id });
+
+        $("#CaseGroupId").change(function () {
+            var caseGroupId = $("#CaseGroupId").val();
+            $multiselectCode.loadLeft({ caseGroupId : caseGroupId});
+        });
+
+        $("#formEdit").submit(function (event) {
+            $("#caseCodesJson").val($multiselectCode.getSelectedId());
+            return true;
+        });
+        $('#submit_button').click(function(){
+            $("#formEdit").submit();
+        });
+    </script>
+}
+

@@ -1,0 +1,109 @@
+﻿@model int
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Списък групи адреси с различни райони";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataDuplication")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+                 },
+                columns: [
+                    {
+                        name: 'city',
+                        data: 'city',
+                        title: 'Населено място',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'residentionArea',
+                        data: 'residentionArea',
+                        title: 'Квартал/ж.к.',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'street',
+                        data: 'street',
+                        title: 'Улица',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'numberType',
+                        data: 'numberType',
+                        title: 'Вид номера',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'numberFrom',
+                        data: 'numberFrom',
+                        title: 'От номер',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'numberTo',
+                        data: 'numberTo',
+                        title: 'До номер',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'blockName',
+                        data: 'blockName',
+                        title: 'Блок име/подномер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'areaName',
+                        data: 'areaName',
+                        title: 'Район',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'text-right noExport',
+                        width: 80,
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href='@Url.Action("Edit")/{{this}}' class="btn btn-warning btn-sm" title="Редакция">
+            <i class="fa fa-edit"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+    </script>
+}

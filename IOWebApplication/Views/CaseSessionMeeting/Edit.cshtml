@@ -1,0 +1,189 @@
+﻿@model CaseSessionMeetingEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на сесия/съвещание" : "Преглед на сесия/съвещание";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на сесия/съвещание";
+    }
+
+    var caseId = ViewBag.caseId;
+    var caseSessionId = ViewBag.caseSessionId;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <form id="frmCaseSessinMeetingEdit" asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CaseSessionId)
+            @Html.HiddenFor(x => x.IsAutoCreate)
+            @Html.HiddenFor(x => x.IsSessionProvedeno)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div id="MeetingData" class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="row">
+                                @*@if ((Model.IsAutoCreate ?? false) && (!Model.IsSessionProvedeno ?? false))
+                                {
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided", new { disabledParam = "disabled" })</div>
+                                }
+                                else*@
+                                <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.DateTo, "DateTimeOnlyTime")</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.SessionMeetingTypeId, "GenericDropDown")</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="col-lg-6">
+                        @if (Model.CaseSessionMeetingUser.Count() > 0)
+                        {
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Избор на секретари</legend>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionMeetingUser)</div>
+                            </fieldset>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input id="subButton" type="button" value="Запис" onclick={SubmitCaseEditLawUnitIsBusy()} class="btn btn-success" />
+                }
+                <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@caseSessionId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @if (access.CanChangeFull && Model.IsAutoCreate == false)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на сесия", ExpireSubmitUrl = Url.Action("CaseSessionMeeting_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
+
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        //SH_Elements();
+    });
+
+    $('#CourtHallId').change(function () {
+        var selected = $("#CourtHallId").val()
+        $('#link').prop('href', '@Url.Action("CaseSessionHallUseSpr", "CaseSession")?HallId=' + selected);
+    });
+
+    function SubmitCaseEditLawUnitIsBusy() {
+        $("#subButton").attr("disabled", true);
+        var isProvedeno = '@Model.IsSessionProvedeno';
+        if (isProvedeno == 'True') {
+            $('#frmCaseSessinMeetingEdit').trigger('submit');
+            $('#subButton').removeAttr("disabled");
+        }
+        else {
+            var dateFrom = getDevidedDateTimeValue("#DateFrom");
+            var dateTo = getDevidedDateTimeValue("#DateTo");
+            var modelId = @Model.CaseSessionId;
+            var caseId = @Model.CaseId;
+
+            if ((dateFrom != null) && (dateTo != null)) {
+                postContent('@Url.Action("IsCaseLawUnitFromCaseBusyMeeting", "CaseSessionMeeting")'
+                    , { caseId: caseId, caseSessionId: modelId, dateTimeFrom: dateFrom, dateTimeТо: dateTo }
+                    , function (data) {
+                        if (data.result != '') {
+                            swalConfirm(data.result, function () {
+                                SubmitCaseSessionMeetingEdit();
+                            }, function () {
+                                $('#subButton').removeAttr("disabled");
+                            });
+                        } else {
+                            SubmitCaseSessionMeetingEdit();
+                        }
+                    });
+            }
+            else {
+                SubmitCaseSessionMeetingEdit();
+            };
+        }
+    }
+
+    function SubmitCaseSessionMeetingEdit() {
+        var courtHall = $("#CourtHallId").val();
+        var dateFrom = getDevidedDateTimeValue("#DateFrom");
+        var dateTo = getDevidedDateTimeValue("#DateTo");
+        var modelId = @Model.CaseSessionId;
+        if ((courtHall > 0) && (dateFrom != null) && (dateTo != null)) {
+
+            postContent('@Url.Action("CourtHallBusy", "CaseSessionMeeting")', { CourtHallId: courtHall, DateFrom: dateFrom, DateTo: dateTo, CaseSessionId: modelId }
+                , function (data)
+                {
+                    if (data.result == true)
+                    {
+                        swalConfirm('Залата е заета в този интервал!', function ()
+                        {
+                            $('#frmCaseSessinMeetingEdit').trigger('submit');
+                        });
+                    }
+                    else
+                    {
+                        $('#frmCaseSessinMeetingEdit').trigger('submit');
+                    }
+                });
+        }
+        else {
+            $('#frmCaseSessinMeetingEdit').trigger('submit');
+        };
+        $('#subButton').removeAttr("disabled");
+    }
+
+    @*function SH_Elements() {
+        debugger;
+        var isProvedeno = '@Model.IsSessionProvedeno';
+        if (isProvedeno == 'True') {
+            $("#MeetingData").hide();
+        }
+        else {
+            $("#MeetingData").show();
+        }
+    }*@
+
+</script>

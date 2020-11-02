@@ -1,0 +1,92 @@
+﻿@model CaseSessionResult
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на резултат" : "Преглед на резултат";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на резултат";
+    }
+
+    var caseId = ViewBag.caseId;
+    var caseSessionId = ViewBag.caseSessionId;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни дела</a></li>
+        <li><a href="@Url.Action("CasePreview","Case", new { id = caseId})">Дело @ViewBag.CaseName</a></li>
+        <li><a href="@Url.Action("Preview", "CaseSession", new { id = caseSessionId })">@ViewBag.CaseSessionName</a></li>
+        @*<li><a href="@Url.Action("Edit", "CaseSession", new { id = caseSessionId })">Редакция на @ViewBag.CaseSessionName</a></li>*@
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="EditResult" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CaseSessionId)
+            @Html.HiddenFor(x => x.IsActive)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.SessionResultBaseId, "GenericDropDown")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.IsMain, "Boolean")</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+                    @if (access.CanChange)
+                    {
+                        <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    }
+                    <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@caseSessionId" class="btn btn-danger">Назад</a>
+                    @if (Model.Id > 0)
+                    {
+                        @if (access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на резултат от заседание", ExpireSubmitUrl = Url.Action("CaseSessionResult_ExpiredInfo") })
+                        }
+                        <span>&nbsp;</span>
+
+                        <div class="pull-right">
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#SessionResultId').trigger('change');
+        });
+
+        $('#SessionResultId').change(function () {
+            requestCombo('@Url.Action("GetDDL_SessionResultBase","Ajax")', { sessionResultId: $(this).val() }, '#SessionResultBaseId', @(Model.SessionResultBaseId??0), function () { $('#SessionResultBaseId').trigger('change') });
+        });
+    </script>
+}

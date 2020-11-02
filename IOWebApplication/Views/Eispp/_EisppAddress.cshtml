@@ -1,0 +1,26 @@
+﻿@model EisppAddress
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@using IOWebApplication.Infrastructure.Constants
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.AddressType, "EisppDropDown", null, new { Ddl = ViewBag.AddressTypeDDL })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.Country, "EisppDropDown", null, new { Ddl = ViewBag.CountriesDDL })</div>
+    @if (Model.Country == EISPPConstants.CountryBG)
+    {
+        <div class="col-lg-3">@Html.EditorFor(x => x.SettlementBg, "hdEisppEkatte")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.StreetName, "hd")</div>
+    }
+    else
+    {
+        <div class="col-lg-6">@Html.EditorFor(x => x.SettlementAbroad, "hd")</div>
+    }
+</div>
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(x => x.Building, "hd")</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Number, "hd")</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Entrance, "hd")</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Floor, "hd")</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Appartment, "hd")</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Description, "hd")</div>
+</div>
+
+

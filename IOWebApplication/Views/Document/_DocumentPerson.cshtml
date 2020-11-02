@@ -1,0 +1,63 @@
+﻿@model DocumentVM
+@{
+    var containerId = Guid.NewGuid().ToString();
+}
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+<div class="dynamic-form document-persons" data-container="@containerId">
+    @for (int i = 0; i < Model.DocumentPersons.Count(); i++)
+    {
+        Model.DocumentPersons[i].Index = i;
+        Model.DocumentPersons[i].CanChange = Model.CanChange;
+        ViewData.TemplateInfo.HtmlFieldPrefix = Model.DocumentPersons[i].GetPath;
+        var personPartialName = "_DocumentPersonItem";
+        if (Model.DocumentPersons[i].Person_SourceType > 0)
+        {
+            personPartialName = "_DocumentPersonInstitutionItem";
+        }
+        <partial name="@personPartialName" model="@Model.DocumentPersons[i]" />
+        ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+    }
+    <div id="@containerId"></div>
+    @if (Model.CanChange)
+    {
+        <br />
+        <a href="#" class="add-item add-doc-person btn btn-xs btn-success" data-container="@containerId" data-url="@Url.Action("NewItem_DocumentPerson")" data-index="@Model.DocumentPersons.Count()"><i class="fa fa-plus"></i> Добави лице</a>
+        <a href="#" class="search-institution btn btn-xs btn-warning" data-container="@containerId"><i class="fa fa-search"></i> Лица/институции</a>
+        <a href="#" class="btn btn-xs btn-def" data-container="@containerId" id="btnSelectData" onclick="selectPersonData(); return false;"><i class="fa fa-search"></i> Свързани данни</a>
+    }
+</div>
+
+<script>
+    function appendAddressToDocumentPersonFromNBD(uic, controlId) {
+        let personControl = $('.person--control[data-controlid="' + controlId + '"]');
+        let docPersonControl = $(personControl).parents('.document-person-item:first');
+        let personIndex = $(docPersonControl).data('index');
+        let addAddressButton = $(docPersonControl).find('.add-doc-address:first');
+        let adrIndex = parseInt($(addAddressButton).data('index'));
+        if (adrIndex == 0) {
+            requestContent('@Url.Action("NewItem_DocumentPersonAddressByEGN")', { uic: uic, adrTypeId:@(NomenclatureConstants.AddressType.Permanent), personIndex: personIndex, index: adrIndex }, function (html) {
+                if (html && html != 'null') {
+
+                    let container = $(addAddressButton).data('container');
+                    $('#' + container).append(html);
+                    initEkatte();
+                    adrIndex++;
+                    $(addAddressButton).data('index', adrIndex);
+
+                    requestContent('@Url.Action("NewItem_DocumentPersonAddressByEGN")', { uic: uic, adrTypeId:@(NomenclatureConstants.AddressType.Current), personIndex: personIndex, index: adrIndex }, function (html) {
+                        if (html && html != 'null') {
+
+                            container = $(addAddressButton).data('container');
+                            autoCloseOthers(addAddressButton);
+                            $('#' + container).append(html);
+                            initEkatte();
+                            adrIndex++;
+                            $(addAddressButton).data('index', adrIndex);
+                        }
+                    });
+                }
+            });
+        }
+    }
+</script>

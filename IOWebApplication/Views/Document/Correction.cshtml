@@ -1,0 +1,51 @@
+﻿@model DocumentVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@{
+    ViewData["Title"] = "Корекция на документ";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Document")">Съдебна регистратура</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        @using (Html.BeginForm("Correction", "Document", System.Net.Http.HttpMethod.Post))
+        {
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DocumentDirectionId)
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-lg-6">
+                        @Html.DisplayFor(x => x.RegNumber, "obj")
+                    </div>
+                </div>
+                @Html.EditorFor(model => model.DeliveryGroupId, "GenericDropDown")
+                @Html.EditorFor(model => model.Description, "Textarea")
+                <div class="row">
+                    <div class="col-lg-12">
+                        @Html.CheckBoxFor(x => x.IsSecret)
+                        @Html.LabelFor(x => x.IsSecret)
+                        &nbsp;&nbsp;
+                        @Html.CheckBoxFor(x => x.IsRestictedAccess)
+                        @Html.LabelFor(x => x.IsRestictedAccess)
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                    &nbsp;
+                    <a asp-action="View" asp-route-id="@Model.Id" class="btn btn-danger">Назад</a>
+                </div>
+
+            </div>
+        }
+    </div>
+</div>

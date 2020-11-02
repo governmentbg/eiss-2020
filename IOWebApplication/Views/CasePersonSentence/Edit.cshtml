@@ -1,0 +1,163 @@
+﻿@model CasePersonSentenceEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на присъда" : "Преглед на присъда";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на присъда";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CasePersonId)
+            @Html.HiddenFor(x => x.IsActive)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="row">
+                                <div class="col-lg-4">@Html.EditorFor(x => x.DecreedCourtId, "GenericDropDown")</div>
+                                <div class="col-lg-8">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.SentenceResultTypeId, "GenericDropDown")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.PunishmentActivityId, "GenericDropDown")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.PunishmentActivityDate, "DateTime")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.ChangedCasePersonSentenceId, "GenericDropDown")</div>
+                                @*<div class="col-lg-6">@Html.EditorFor(x => x.ChangeCaseSessionActId, "GenericDropDown")</div>*@
+                            </div>
+                        </fieldset>
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Приложение на:</legend>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.LawBases)</div>
+                        </fieldset>
+                    </div>
+                    <div class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Изпълнение на присъда</legend>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.InforcedDate, "DateTime")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.SentDate, "DateTime")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-4">@Html.EditorFor(x => x.SentenceExecPeriodId, "GenericDropDown")</div>
+                                <div class="col-lg-8">@Html.EditorFor(x => x.InforcerInstitutionId, "GenericDropDown")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.EnforceIncomingDocument)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.ExecDescription, "Textarea")</div>
+                            </div>
+                            @if (Model.Id > 0)
+                            {
+                                <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.CasePersonSentence" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
+                            }
+                        </fieldset>
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Данни за изпълнение</legend>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.NotificationDate, "DateTime")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.ExecDate, "DateTime")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.InforcerDocumentNumber)</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.AmnestyDocumentNumber)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.EffectiveDateFrom, "DateTime")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.ExecInstitutionId, "GenericDropDown")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.ExecIncomingDocument)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.ExecRemark, "Textarea")</div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="Index" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        DecreedCourtIdChange();
+    });
+
+    $('#DecreedCourtId').change(function () {
+        DecreedCourtIdChange();
+        GetActDiscription();
+    });
+
+    $('#CaseSessionActId').change(function () {
+        GetActDiscription();
+    });
+
+    function DecreedCourtIdChange() {
+        requestCombo('@Url.Action("GetDDL_CaseSessionActFromMigration", "CasePersonSentence")', { courtId: $('#DecreedCourtId').val(), caseId: @Model.CaseId }, '#CaseSessionActId', @Model.CaseSessionActId, function () { $('#CaseSessionActId').trigger('change') });
+    }
+
+    function GetActDiscription() {
+        var actId = $("#CaseSessionActId").val();
+        var modelId = @Model.Id;
+        debugger;
+        if ((actId > 0) && (modelId < 1)) {
+            postContent('@Url.Action("Get_ActDescription","CasePersonSentence")'
+                , { ActId: actId }
+                , function (data) {
+                    if (data.result != "") {
+                        $("#Description").val(data.result);
+                    };
+                });
+        };
+    }
+
+</script>
+

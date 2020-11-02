@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "Съдебни райони Област-Община";
+    var courtRegionId = ViewBag.CourtRegionId;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="AddArea" asp-route-CourtRegionId="@courtRegionId" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataArea", new { CourtRegionId = courtRegionId})",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'districtName',
+                        data: 'districtName',
+                        title: 'Област',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'districtCode',
+                        data: 'districtCode',
+                        title: 'Код',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'municipalityName',
+                        data: 'municipalityName',
+                        title: 'Община',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'municipalityCode',
+                        data: 'municipalityCode',
+                        title: 'Код',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditArea")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+        @*<a href="@Url.Action("DownloadFile")/{{this}}" class="btn btn-file btn-sm" title="Сваляне"><i class="fa fa-save"></i><span class="hidden-sm hidden-xs"> Сваляне</span></a>*@
+    </script>
+}
+

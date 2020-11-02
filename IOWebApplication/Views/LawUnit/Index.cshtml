@@ -1,0 +1,172 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@model LawUnitFilterVM
+@{
+
+    var lawUnitType = (IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LawUnitType)ViewBag.lawUnitType;
+    ViewData["Title"] = lawUnitType.Description;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.FullName)</div>
+    @if (NomenclatureConstants.LawUnitTypes.HasSpecialities.Contains(lawUnitType.Id))
+    {
+        <div class="col-lg-2">@Html.EditorFor(m => m.SpecialityId, "GenericDropDown")</div>
+    }
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable')" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" asp-route-lawUnitType="@(lawUnitType.Id)" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+        @if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(lawUnitType.Id))
+        {
+            <a href="@Url.Action("Index", "CourtLawUnit", new { periodType = NomenclatureConstants.PeriodTypes.Appoint, lawUnitType = lawUnitType.Id })" class="btn btn-primary" title="Назначаване"><i class="fa fa-briefcase"></i><span class="hidden-sm hidden-xs"> Назначаване</span></a>
+            @if (lawUnitType.Id == NomenclatureConstants.LawUnitTypes.Judge || lawUnitType.Id == NomenclatureConstants.LawUnitTypes.OtherEmployee)
+            {
+                <a href="@Url.Action("Index", "CourtLawUnit", new { periodType = NomenclatureConstants.PeriodTypes.Move, lawUnitType = lawUnitType.Id })" class="btn btn-warning" title="Командироване"><i class="fa fa-car"></i><span class="hidden-sm hidden-xs"> Командироване</span></a>
+            }
+        }
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.lawUnitType = @(lawUnitType.Id);
+                        d.fromDate = $("#DateFrom").val();
+                        d.toDate = $("#DateTo").val();
+                        d.fullName = $("#FullName").val();
+                        d.specialityId = $("#SpecialityId").val();
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Имена',
+                        sortable: true,
+                        searchable: false
+                    }
+                    @if (NomenclatureConstants.LawUnitTypes.DepartmentPersons.Contains(lawUnitType.Id))
+                       {
+                        <text>
+                    ,
+                    {
+                        name: 'department',
+                        data: 'department',
+                        title: 'Организация/отдел',
+                        sortable: true,
+                        searchable: false
+                    }
+                    </text>
+                        }
+
+                    ,
+                    {
+                        className: 'col-md-1',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                                if (value)
+                                    return moment(value).format("DD.MM.YYYY");
+                                else
+                                    return "";
+                            }
+                        },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                                if (value)
+                                    return moment(value).format("DD.MM.YYYY");
+                                else
+                                    return "";
+                            }
+                        }
+
+                        @if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(lawUnitType.Id))
+                         {
+                         <text>
+                    ,
+                    {
+                            name: 'actions',
+                        title: "Назначен/командирован",
+                        sortable: false,
+                        searchable: false,
+                        "render": function(a, b, item, d) {
+                                    return TemplateToHtml('#templateCourts', item);
+                                }
+                            }
+                        </text>
+                         }
+
+                             ,
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                                return TemplateToHtml('#templateEdit', value);
+                            }
+                        }
+                ]
+            });
+
+        });
+    </script>
+    <script id="templateCourts" type="text/x-handlebars-template">
+        {{#each courtList}}
+        {{this}}
+        <br />
+        {{/each}}
+    </script>
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        @if (NomenclatureConstants.LawUnitTypes.HasSpecialities.Contains(lawUnitType.Id))
+        {
+            <a href="@Url.Action("LawUnitSpeciality")?lawUnitId={{this}}" class="btn btn-primary btn-sm" title="Специалности"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Специалности</span></a>
+        }
+    </script>
+}

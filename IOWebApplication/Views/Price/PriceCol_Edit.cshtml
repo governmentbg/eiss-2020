@@ -1,0 +1,40 @@
+﻿@model PriceCol
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на колона";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на колона";
+    }
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="PriceCol_Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.OrderBy)
+            @Html.HiddenFor(x => x.PriceDescId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            @Html.EditorFor(x => x.ColType, "GenericDropDown")
+            @Html.EditorFor(x => x.ColNo, "Int32Nullable")
+            @Html.EditorFor(x => x.Name)
+            @Html.EditorFor(x => x.Active, "boolean")
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="PriceCol" asp-route-priceDesc="@Model.PriceDescId" class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>

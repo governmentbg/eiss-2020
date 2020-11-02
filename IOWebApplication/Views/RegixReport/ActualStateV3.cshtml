@@ -1,0 +1,48 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixActualStateV3VM
+
+@{
+    ViewData["Title"] = "Справка търговски регистър";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <form asp-action="ActualStateV3" method="post">
+            @Html.HiddenFor(m => m.Report.CourtId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-lg-2">@Html.EditorFor(m => m.ActualStateV3Filter.UIC)</div>
+                </div>
+
+                <partial name="_ReportReason" model="@Model.Report" />
+
+                <div class="form-group">
+                    <input type="submit" value="Търсене" class="btn btn-success" />
+                </div>
+
+                <hr />
+            </div>
+        </form>
+        <div>
+            @if (Model.Report.Id > 0)
+            {
+                <partial name="_ActualStateV3Response" model="@Model" />
+                <a href="@Url.Action("PrintPdf","RegixReport",new { id = Model.Report.Id})" class="btn btn-primary">Свали PDF</a>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+</script>
+

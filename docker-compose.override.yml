@@ -1,0 +1,21 @@
+version: '3.5'
+
+services:
+  application:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+  integrations:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+  cdn:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro

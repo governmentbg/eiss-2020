@@ -1,0 +1,88 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseSessionActPrintVM
+@{
+    Layout = null;
+    string sign = "_______________________";
+}
+<div style="text-align:right;width:100%;margin-top:30px;">
+    <table class="no-border row-space-single" align="right">
+        @if (Model.JudgeList.Count == 0 && Model.JuryList.Count == 0)
+        {
+
+            <tr>
+                <td align="right">
+                    <b>Съдия при @Model.CourtName:</b>
+                </td>
+                <td>@sign</td>
+            </tr>
+        }
+        else
+        {
+            <tr>
+                <td align="right">
+                    <b>Председател:</b>
+                </td>
+                <td>@sign</td>
+            </tr>
+            @if ((Model.JudgeList.Count > 0) && (!Model.ChairmanSignOnly))
+            {
+                <tr>
+                    <td align="right">
+                        <b>
+                            @if (Model.JudgeList.Count == 1)
+                            {
+                                <text>Член-съдия:</text>
+                            }
+                            else
+                            {
+                                <text>Членове:</text>
+                            }
+                        </b>
+                    </td>
+                    <td></td>
+                </tr>
+                int i = 0;
+                foreach (var item in Model.JudgeList)
+                {
+                    i++;
+                    <tr>
+                        <td align="right">
+                            @(i).
+                        </td>
+                        <td>@sign</td>
+                    </tr>
+                }
+            }
+            @if ((Model.JuryList.Count > 0) && (!Model.ChairmanSignOnly))
+            {
+                <tr>
+                    <td align="right">
+                        <b>Заседатели:</b>
+                    </td>
+                    <td></td>
+                </tr>
+                int i = 0;
+                foreach (var item in Model.JuryList)
+                {
+                    i++;
+                    <tr>
+                        <td align="right">
+                            @(i).
+                        </td>
+                        <td>@sign</td>
+                    </tr>
+                }
+            }
+        }
+        @if (!string.IsNullOrEmpty(Model.SecretaryName) && Model.ActFormatType == NomenclatureConstants.ActFormatType.Protokol)
+        {
+            <tr>
+                <td align="right">
+                    <b>Секретар:</b>
+                </td>
+                <td>@sign</td>
+            </tr>
+        }
+    </table>
+</div>

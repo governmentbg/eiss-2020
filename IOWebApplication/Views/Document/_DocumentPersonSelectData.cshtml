@@ -1,0 +1,103 @@
+﻿@using System.Web
+<fieldset class="is-fieldset">
+    <legend class="legend_1">Източник</legend>
+    <div class="row">
+        <div class="col-lg-12" id="selectSource">
+        </div>
+    </div>
+</fieldset>
+<div id="sourceContent">
+
+</div>
+
+<script id="templateSelect" type="text/x-handlebars-template">
+    <div class="form-group">
+        <label class="control-label">Изберете източник на данни</label>
+        <select class="form-control" id="ddlSelectData">
+            {{#each this}}
+            <option value="{{SourceType}}">{{SourceTypeName}}</option>
+            {{/each}}
+        </select>
+    </div>
+</script>
+<script id="templateData" type="text/x-handlebars-template">
+    <input type="hidden" id="stValue" value="{{SourceType}}" />
+    <input type="hidden" id="sidValue" value="{{SourceId}}" />
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Лица и адреси</legend>
+        <div class="row">
+            <div class="col-lg-12">
+                {{#each Persons}}
+                <div class="row select-person">
+                    <div class="col-lg-4">
+                        <label><input type="checkbox" class="select-person-check" value="{{Id}}" /> {{FullName}}</label>
+                        <br />
+                        {{RoleName}}
+                    </div>
+                    <div class="col-lg-8 select-adr-container">
+                        {{#each Addresses}}
+                        <label><input type="checkbox" class="select-address-check" value="{{Id}}" /> {{AddressTypeName}}</label>
+                        <br />
+                        {{FullAddress}}
+                        {{/each}}
+                    </div>
+                </div>
+                <hr />
+                {{/each}}
+            </div>
+        </div>
+    </fieldset>
+    <a href="#" class="btn btn-success" onclick="saveCheckedData(); return false;">Добави избраните</a>
+</script>
+<script>
+    var personData = {};   
+    $(function () {
+        requestGET_Json('@Html.Raw(ViewBag.dataUrl)', function (data) {
+            personData = data;
+            $('#selectSource').html(TemplateToHtml('#templateSelect', personData));
+
+            $('#ddlSelectData').change(function () {
+                let sourceType = $('#ddlSelectData').val();
+                let data = personData.filter(function (e) {
+                    return e.SourceType == sourceType;
+                });
+                $('#sourceContent').html(TemplateToHtml('#templateData', data[0]));
+            }).trigger('change');
+        });
+       
+        
+
+        $(document).on('click', '.select-person-check', function () {
+            let personContainer = $(this).parents('.select-person:first');
+            if ($(this).is(':checked')) {
+                $(personContainer).find('.select-adr-container').show();
+            } else {
+                $(personContainer).find('.select-adr-container').hide();
+            }
+        });
+    });
+
+    function saveCheckedData() {
+        let model = {
+            sourceType: $('#stValue').val(),
+            sourceId: $('#sidValue').val()
+        };
+        let persons = [];
+        $('.select-person-check:checked').each(function (i, e) {
+            let person = {
+                id: $(e).val()
+            };
+            let addresses = [];
+            $(e).parents('.select-person:first').find('.select-address-check:checked').each(function (ia, ea) {
+                addresses.push({ id: $(ea).val() });
+            });
+            person.addresses = addresses;
+            persons.push(person);
+        });
+        model.persons = persons;
+        if (model.persons.length > 0) {
+            loadSelectedPersonData(model);
+        }
+        //console.log(model);
+    }
+</script>

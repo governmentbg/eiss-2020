@@ -1,0 +1,94 @@
+﻿@model CaseLifecycle
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = (access.CanChange) ? "Редакция на интервал" : "Преглед на интервал";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на интервал";
+    }
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни дела</a></li>
+        <li><a href="@Url.Action("CasePreview","Case", new { id = Model.CaseId})">Дело @ViewBag.CaseName</a></li>
+        <li><a href="@Url.Action("Index", "CaseLifecycle", new { id = Model.CaseId })">Интервали по дело @ViewBag.CaseName</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row" id="LifecycleTypeDiv">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.LifecycleTypeId, "GenericDropDown")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6" id="DateFromDiv">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.Iteration, "Int32")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DurationMonths, "Int32")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                <a asp-controller="CaseLifecycle" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        $('#Iteration').attr("readonly", true);
+        $('#DurationMonths').attr("readonly", true);
+        ED_Elements();
+    });
+
+    function ED_Elements() {
+        if ((@Model.Id > 0) && (@Model.LifecycleTypeId == @NomenclatureConstants.LifecycleType.InProgress))
+        {
+            $('#DateFromDiv').hide();
+        }
+
+        if (@Model.Id > 0)
+        {
+            $('#LifecycleTypeDiv').hide();
+        }
+    }
+
+</script>

@@ -1,0 +1,83 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@using IOWebApplication.Core.Helper.GlobalConstants;
+@model WorkNotificationFilterVM;
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Моите известия";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<form id="formFilter" asp-action="Edit" method="post">
+    <div class="row">
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.WorkNotificationTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.ReadTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            <div id="divDateFrom">
+                @Html.EditorFor(x => x.DateFrom)
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div id="divDateTo">
+                @Html.EditorFor(x => x.DateTo)
+            </div>
+        </div>
+        <div class="col-md-2 text-right pb-15">
+            <br>
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadWorkNotifications()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+
+    </div>
+</form>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<div id="divDashboard" name="divDashboard" >
+<partial name="_Dashboard" model="@Model" />
+</div>
+<script>
+    $('#ReadTypeId').change(function () {
+        var showDates = ($('#ReadTypeId').val() != "1");
+        if (showDates) {
+            $('#divDateFrom').show();
+            $('#divDateTo').show();
+        } else {
+            $('#divDateFrom').hide();
+            $('#divDateTo').hide();
+        }
+    });
+    function LoadWorkNotifications() {
+        var filter = getFormData($('#formFilter'));
+        $('#filterJson').val(JSON.stringify(filter));
+        $('#mainTable').DataTable().ajax.reload();
+        WorkNotificationReLoad();
+    }
+    function WorkNotificationReLoad() {
+        var filterData = JSON.parse($('#filterJson').val());
+        $.ajax({
+            method: "POST",
+            url: '@Url.Action("DashboardReload")',
+         //   dataType: "json",
+            data: filterData,
+            success: function (response) {
+                $('#divDashboard').html('');
+                $('#divDashboard').html(response);
+            }
+        }).fail(function (jqXHR, status, message) {
+            console.log(status);
+            if (jqXHR.responseText) {
+                console.log(jqXHR.responseText);
+            }
+        });
+    };
+</script>

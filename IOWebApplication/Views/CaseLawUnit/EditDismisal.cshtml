@@ -1,0 +1,97 @@
+﻿@model CaseLawUnitDismisal
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на ооснование за извеждане от състав по дело";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на основание за извеждане от състав по дело";
+    }
+
+    var caseId = @ViewBag.caseId;
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни дела</a></li>
+        <li><a href="@Url.Action("CasePreview","Case", new { id = caseId})">Дело @ViewBag.CaseName</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+
+        <form asp-action="EditDismisal" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CaseLawUnitId)
+            @Html.HiddenFor(x => x.DismisalKindId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <fieldset class="is-fieldset">
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                    <div class="row">
+
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DismisalTypeId, "GenericDropDown")</div>
+                    </div>
+                    @if (ViewBag.DismisalKind == NomenclatureConstants.LawUnitTypes.Judge)
+                    {
+                        <div class="row">
+                            <div id="act">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+                            </div>
+                        </div>
+                    }
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DismisalDate, "DateTimeDivided")</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+
+                    </div>
+                </div>
+            </fieldset>
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@caseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(function () {
+            $('#DismisalTypeId').change(function () {
+                var typeId = $(this).val();
+                if ((typeId == '@NomenclatureConstants.DismisalType.Otvod') || (typeId == '@NomenclatureConstants.DismisalType.SamoOtvod')) {
+                    $("#act").show();
+                }
+                else {
+                    $("#act").hide();
+                }
+            }).trigger('change');
+        });
+    </script>
+}

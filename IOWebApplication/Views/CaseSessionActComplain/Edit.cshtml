@@ -1,0 +1,94 @@
+﻿@model CaseSessionActComplain
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на oбжалванe" : "Преглед на oбжалванe";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на oбжалванe";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CaseSessionActId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.ComplainDocumentId, "GenericDropDownLong")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.ComplainStateId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.RejectDescription, "Textarea")</div>
+                        </fieldset>
+                    </div>
+
+                    @if (Model.Id > 0)
+                    {
+                        <div class="col-md-6">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Резултати от обжалване</legend>
+                                <partial name="../CaseSessionActComplain/_CaseSessionActComplainResult.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            </fieldset>
+                        </div>
+                    }
+                </div>
+
+                <div class="row">
+                    @if (Model.Id > 0)
+                    {
+                        <div class="col-md-6">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Жалбоподатели</legend>
+                                <partial name="../CaseSessionActComplain/_CaseSessionActComplainPerson.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                            </fieldset>
+                        </div>
+                    }
+                </div>
+
+                <div class="form-group">
+                    @if (access.CanChange)
+                    {
+                        <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    }
+                    <a asp-action="Index" asp-route-caseSessionActId="@Model.CaseSessionActId" class="btn btn-danger">Назад</a>
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+                            @if (access.CanChangeFull)
+                            {
+                                @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на обжалване", ExpireSubmitUrl = Url.Action("CaseSessionActComplain_ExpiredInfo") })
+                                <span>&nbsp;</span>
+                            }
+
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+
+
+                    }
+                </div>
+        </form>
+    </div>
+</div>
+

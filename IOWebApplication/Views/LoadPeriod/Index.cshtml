@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Периоди за нулиране на резпределени дела в група";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: false
+                    },
+                      {
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                         {
+                        className: 'col-md-1',
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+    </script>
+}

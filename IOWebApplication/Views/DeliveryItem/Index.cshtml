@@ -1,0 +1,345 @@
+﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+@using IOWebApplication.Infrastructure.Constants;
+@model DeliveryItemFilterVM;
+@inject IViewLocalizer Localizer
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+@{
+    ViewData["Title"] = Model.getDeliveryTypeName();
+ }
+<form id="formFilter" asp-action="Edit" method="post" class="quick-submit">
+    @Html.HiddenFor(x => x.FilterType)
+    @Html.HiddenFor(x => x.NoAutoLoad)
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")
+        </div>
+        @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.Inner)
+        {
+            <div class="col-md-2">
+                @Html.EditorFor(x => x.NotificationDeliveryGroupId, "GenericDropDown")
+            </div>
+        }
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateSendFrom)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateSendTo)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateAcceptedFrom)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateAcceptedTo)
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.RegNumber)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.CaseRegNumber)
+        </div>
+
+        @if (Model.FilterType != NomenclatureConstants.DeliveryItemFilterType.Inner)
+        {
+            @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.FromOther)
+            {
+                <div class="col-md-4">
+                    @Html.EditorFor(x => x.FromCourtId, "GenericDropDown")
+                </div>
+            }
+            @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.ToOther)
+            {
+                <div class="col-md-4">
+                    @Html.EditorFor(x => x.CourtId, "GenericDropDown")
+                </div>
+            }
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-md-2 pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadDeliveryItems()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <hr>
+    </div>
+</form>
+@if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.FromOther)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a onclick="postAddReceived()" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<script>
+    function createMainTable() {
+        var table = $('#mainTable').DataTable({
+            'order': [[0, 'asc']],
+            ajax: {
+                "url": "@Url.Action("ListData")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    if ($('#filterJson').val() == "") {
+                        $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+                    }
+                    d.filterData = JSON.parse($('#filterJson').val());
+                }
+            },
+            "fnDrawCallback": function (oSettings) {
+                hideCourtName();
+            },
+            columns: [
+                {
+                    name: 'regNumber',
+                    data: 'regNumber',
+                    title: 'Рег. номер',
+                    width: 100,
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'caseInfo',
+                    data: 'caseInfo',
+                    title: 'Към дело',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'personName',
+                    data: 'personName',
+                    title: 'Име на лицето',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'address',
+                    data: 'address',
+                    title: 'Адрес',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'lawUnitName',
+                    data: 'lawUnitName',
+                    title: 'Връчител',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'areaName',
+                    data: 'areaName',
+                    title: 'Район',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'fromCourtName',
+                    data: 'fromCourtName',
+                    title: 'Изготвена в',
+                    className: "from-court-name",
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'courtName',
+                    data: 'courtName',
+                    title: 'Изпратена към',
+                    className: "to-court-name",
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'dateSend',
+                    data: 'dateSend',
+                    title: 'Изпратено на',
+                    sortable: true,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
+                    }
+                },
+                {
+                    name: 'dateAccepted',
+                    data: 'dateAccepted',
+                    title: 'Прието на',
+                    sortable: true,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
+                    }
+                },
+                {
+                    name: 'stateName',
+                    data: 'stateName',
+                    title: 'Статус',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    width: 190,
+                    className: "text-center noExport",
+                    "render": function (item, type, row) {
+                        if (row.notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithSummons || row.notificationDeliveryGroupId == '0') {
+                            return TemplateToHtml('#templateEdit', item);
+                        } else {
+                            return TemplateToHtml('#templateEditNoVisit', item);
+                        }
+                    }
+                }
+            ]
+        });
+    };
+    function hideCourtName() {
+        if (@Model.FilterType != @NomenclatureConstants.DeliveryItemFilterType.FromOther)
+        {
+             $('.from-court-name').hide();
+        }
+        if (@Model.FilterType != @NomenclatureConstants.DeliveryItemFilterType.ToOther)
+        {
+            $('.to-court-name').hide();
+        }
+        if (@Model.FilterType == @NomenclatureConstants.DeliveryItemFilterType.FromOther) {
+            $('.btnAdd').show();
+        }
+    }
+    function LoadDeliveryItems() {
+        let createTbl = false;
+        if ($('#filterJson').val() == "") {
+            createTbl = true;
+        } else {
+            let filterData = JSON.parse($('#filterJson').val());
+            if (filterData.NoAutoLoad == 'Y')
+                createTbl = true;
+        }
+        $('#NoAutoLoad').val('N');
+        if (createTbl) {
+            createMainTable();
+            hideCourtName();
+        } else {
+            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+            $('#mainTable').DataTable().ajax.reload();
+        }
+    }
+    function EditDeliveryItem(id) {
+        $('#formPostEdit').attr('action', '@Url.Action("Edit")/'+ id);
+        $("#formPostEdit").submit();
+    }
+    function EditDeliveryItemState(id) {
+        $('#formPostEdit').attr('action', '@Url.Action("EditState")/'+ id);
+        $("#formPostEdit").submit();
+    }
+    function AddDeliveryItemOper(id) {
+        $('#formPostEdit').attr('action', '@Url.Action("Index", "DeliveryItemOper")?deliveryItemId='+ id);
+        $("#formPostEdit").submit();
+    }
+    function postCheckReceived() {
+        $('#formPostEdit').attr('action', '@Url.Action("CheckReceived")');
+        $("#formPostEdit").submit();
+    }
+    function postAddReceived() {
+        if ($('#filterJson').val() == "") {
+            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+        }
+        $('#formPostEdit').attr('action', '@Url.Action("AddReceived")');
+        $("#formPostEdit").submit();
+    }
+    function DeliveryItemReturn(id) {
+        $('#formPostEdit').attr('action', '@Url.Action("EditReturn")?deliveryItemId=' + id);
+        $("#formPostEdit").submit();
+    }
+    function DeliveryItemOperList(id) {
+        $('#formPostEdit').attr('action', '@Url.Action("IndexHistory", "DeliveryItemOper")?deliveryItemId=' + id);
+        $("#formPostEdit").submit();
+    }
+    $("#RegNumber").keypress(function (event) {
+        console.log(event);
+        if (event.which == 13) {
+            console.log("event13");
+            event.preventDefault();
+            $("#NotificationStateId").val("-1");
+            $("#FromCourtId").val("-1");
+            $("#CourtId").val("-1");
+            $("#DateSendFrom").val(null);
+            $("#DateSendTo").val(null);
+            $("#DateAcceptedFrom").val(null);
+            $("#DateAcceptedTo").val(null);
+            LoadDeliveryItems();
+        }
+    });
+    $(document).ready(function () {
+        $('#CourtId').select2({
+            language: "bg"
+        });
+        $('#FromCourtId').select2({
+            language: "bg"
+        });
+        if ($('#NoAutoLoad').val() != 'Y')
+            LoadDeliveryItems();
+    });
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a onclick="EditDeliveryItem({{this}})" class="btn btn-warning btn-sm" title="Смяна на район и призовкар">
+        <i class="fa fa-edit"></i>
+        <span class="hidden-sm hidden-xs"></span>
+    </a>
+    <a onclick="AddDeliveryItemOper({{this}})" class="btn btn-def btn-sm" title="Посещения">
+        <i class="fa fa-bell"></i>
+        <span class="hidden-sm hidden-xs"></span>
+    </a>
+    <a onclick="DeliveryItemReturn({{this}})" class="btn btn-def btn-sm" title="Връщане на отрязък">
+        <i class="fa fa-backward"></i>
+        <span class="hidden-sm hidden-xs"></span>
+    </a>
+    <a onclick="DeliveryItemOperList({{this}})" class="btn btn-def btn-sm" title="Проследяване">
+        <i class="fa fa-address-card"></i>
+        <span class="hidden-sm hidden-xs"></span>
+    </a>
+    @*<a href='@Url.Action("ToCaseNotification", "DeliveryItem")/{{this}}' class="btn btn-def btn-sm" title="Съобщение">
+        <i class="fa fa-envelope-open"></i>
+        <span class="hidden-sm hidden-xs"></span>
+    </a>*@
+</script>
+<script id="templateEditNoVisit" type="text/x-handlebars-template">
+    <a onclick="EditDeliveryItemState({{this}})" class="btn btn-warning btn-sm" title="Смяна на статус">
+        <i class="fa fa-edit"></i>
+        <span class="hidden-sm hidden-xs"></span>
+    </a>
+    <a onclick="DeliveryItemReturn({{this}})" class="btn btn-def btn-sm" title="Връщане на отрязък">
+        <i class="fa fa-backward"></i>
+        <span class="hidden-sm hidden-xs"></span>
+    </a>
+</script>

@@ -1,0 +1,300 @@
+﻿@model CaseSessionElectronicFolderVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+
+<ul class="timeline">
+    <!-- timeline time label -->
+    <li class="time-label" data-target="S_@Model.Id">
+        <span class="bg-purple">
+            <i class="fa fa-handshake-o"></i> @Model.SessionTypeLabel @Model.DateFrom.ToString("dd.MM.yyyy HH:mm")
+        </span>
+    </li>
+    <!-- /.timeline-label -->
+    <!-- timeline item -->
+    <li data-for="S_@Model.Id" class="hidden">
+        <!-- timeline icon -->
+        <i class="fa fa-info bg-red"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-clock-o"></i> @Model.DateFrom.ToString("dd.MM.yyyy HH:mm") </span>
+
+            <h3 class="timeline-header"><a href="#">Основни данни</a></h3>
+
+            <div class="timeline-body hidden">
+                <b>Вид заседание:</b> @Model.SessionTypeLabel
+                <br />
+                <b>Продължителност:</b> @Model.DateFrom.ToString("dd.MM.yyyy HH:mm") - @Model.DateTo?.ToString("dd.MM.yyyy HH:mm")
+                <br />
+                @if (Model.CourtHallName != string.Empty)
+                {
+                    <b>Зала:</b> @Model.CourtHallName
+                    <br />
+                }
+                @if (Model.SessionStateLabel != string.Empty)
+                {
+                    <b>Статус:</b> @Model.SessionStateLabel
+                    <br />
+                }
+                @if (Model.SessionStateString != string.Empty)
+                {
+                    <b>Резултат:</b> @Model.SessionStateString
+                    <br />
+                }
+                @if ((Model.JudgeRapporteur ?? string.Empty) != string.Empty)
+                {
+                    <b>Съдия докладчик:</b> @Model.JudgeRapporteur
+                    <br />
+                }
+                @if ((Model.Prokuror ?? string.Empty) != string.Empty)
+                {
+                    <b>Прокурор:</b> @Model.Prokuror
+                    <br />
+                }
+                @if ((Model.Description ?? string.Empty) != string.Empty)
+                {
+                    <b>Забележка:</b> @Model.Description
+                    <br />
+                }
+                @if (Model.SessionMeetings != null)
+                {
+                    @if (Model.SessionMeetings.Count > 0)
+                    {
+                        <b>Сесии:</b>
+                        <br />
+                        @foreach (var meetingVM in Model.SessionMeetings.OrderBy(x => x.DateFrom))
+                        {
+                            var row = meetingVM.SessionMeetingTypeLabel + " от " + meetingVM.DateFrom.ToString("dd.MM.yyyy HH:mm") + " до " + meetingVM.DateTo.ToString("dd.MM.yyyy HH:mm") + ((meetingVM.UsersNames != string.Empty) ? " Секретар: " + meetingVM.UsersNames : string.Empty);
+                            @Html.Raw("<i class='fa fa-clock-o'></i> " + row + "<br/>")
+                        }
+                    }
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabMainData" class="btn btn-dropbox btn-xs" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Заседание</span></a>
+                }
+            </div>
+        </div>
+    </li>
+    <!-- END timeline item -->
+
+    <li data-for="S_@Model.Id" class="hidden">
+        <!-- timeline icon -->
+        <i class="fa fa-user bg-orange"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-user"></i> @Model.CaseSessionNotificationLists.Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Списък на призованите/уведомените/съобщените лица</a></h3>
+            <div class="timeline-body hidden">
+                @if (Model.CaseSessionNotificationLists.Any(x => x.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList || x.NotificationListTypeId == null))
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        <div>
+                            <b>Списък на призованите лица</b>
+                        </div>
+
+                        <div class="cdn-listview" style="margin-left:5px;">
+                            <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionNotificationList" data-sourceId="@Model.Id">Файлове</a>
+                        </div>
+                    </div>
+
+                    @foreach (var caseSessionNotification in Model.CaseSessionNotificationLists.Where(x => x.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList || x.NotificationListTypeId == null).OrderBy(x => x.RowNumber))
+                    {
+                        var row = caseSessionNotification.RowNumber + ". " + caseSessionNotification.PersonName + " (" + caseSessionNotification.PersonRole + ")";
+                        @Html.Raw("<i class='fa fa-user'></i> " + row + "<br/>")
+                    }
+
+                    <br />
+                }
+                @if (Model.CaseSessionNotificationLists.Any(x => x.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListNotification))
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        <div>
+                            <b>Списък на уведомените лица</b>
+                        </div>
+
+                        <div class="cdn-listview" style="margin-left:5px;">
+                            <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionNotificationListNotification" data-sourceId="@Model.Id">Файлове</a>
+                        </div>
+                    </div>
+
+                    @foreach (var caseSessionNotification in Model.CaseSessionNotificationLists.Where(x => x.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListNotification).OrderBy(x => x.RowNumber))
+                    {
+                        var row = caseSessionNotification.RowNumber + ". " + caseSessionNotification.PersonName + " (" + caseSessionNotification.PersonRole + ")";
+                        @Html.Raw("<i class='fa fa-user'></i> " + row + "<br/>")
+                    }
+                    <br />
+                }
+                @if (Model.CaseSessionNotificationLists.Any(x => x.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListMessage))
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        <div>
+                            <b>Списък на съобщените лица</b>
+                        </div>
+
+                        <div class="cdn-listview" style="margin-left:5px;">
+                            <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionNotificationListMessage" data-sourceId="@Model.Id">Файлове</a>
+                        </div>
+                    </div>
+
+                    @foreach (var caseSessionNotification in Model.CaseSessionNotificationLists.Where(x => x.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListMessage).OrderBy(x => x.RowNumber))
+                    {
+                        var row = caseSessionNotification.RowNumber + ". " + caseSessionNotification.PersonName + " (" + caseSessionNotification.PersonRole + ")";
+                        @Html.Raw("<i class='fa fa-user'></i> " + row + "<br/>")
+                    }
+                }
+            </div>
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabPersonNotification" class="btn btn-dropbox btn-xs" title="Списък"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Списък</span></a>
+                }
+            </div>
+        </div>
+    </li>
+
+    <li data-for="S_@Model.Id" class="hidden">
+        <!-- timeline icon -->
+        <i class="fa fa-bell bg-green"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-bell"></i> @Model.CaseNotifications.Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Уведомления</a></h3>
+
+            <div class="timeline-body hidden">
+                @foreach (var caseNotification in Model.CaseNotifications)
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        @{
+                            var row = "- " + caseNotification.NotificationTypeLabel + ": " + caseNotification.RegNumber + "/" + caseNotification.RegDate.ToString("dd.MM.yyyy") + " " + caseNotification.CasePersonName;
+                        }
+                        <div>
+                            @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                        </div>
+
+                        <div class="cdn-listview" style="margin-left:5px;">
+                            <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseNotification" data-sourceId="@caseNotification.Id">Файлове</a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabNotification" class="btn btn-dropbox btn-xs" title="Уведомления"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Уведомления</span></a>
+                }
+            </div>
+        </div>
+    </li>
+
+    <li data-for="S_@Model.Id" class="hidden">
+        <!-- timeline icon -->
+        <i class="fa fa-book bg-blue-active"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-book"></i> @(Model.SessionFastDocuments.Count() + Model.CaseSessionDocs.Count())бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Съпровождащи документи</a></h3>
+
+            <div class="timeline-body hidden">
+                @if (Model.CaseSessionDocs.Count > 0)
+                {
+                    <b> - Съпровождащи документи:</b>
+                    <br />
+                    @foreach (var caseSessionDoc in Model.CaseSessionDocs)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var row = caseSessionDoc.DocumentLabel + " - " + caseSessionDoc.SessionDocStateLabel;
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                            </div>
+
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionDoc" data-sourceId="@caseSessionDoc.Id"> Файлове</a>
+                            </div>
+                        </div>
+                    }
+                    <br />
+                }
+
+                @if (Model.SessionFastDocuments.Count > 0)
+                {
+                    <b> - Съпровождащи документи представени в заседание:</b>
+                    <br />
+                    @foreach (var caseSessionFast in Model.SessionFastDocuments)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var row = ((caseSessionFast.CaseSessionFastDocumentInitDateSession ?? caseSessionFast.DateSession).ToString("dd.MM.yyyy")) + " " +
+                                          " " + caseSessionFast.SessionDocTypeLabel +
+                                          " " + caseSessionFast.CasePersonName +
+                                          " - " + caseSessionFast.SessionDocStateLabel;
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                            </div>
+
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionFastDocument" data-sourceId="@caseSessionFast.Id"> Файлове</a>
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    if (Model.CaseSessionDocs.Count > 0)
+                    {
+                        <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabSessionDoc" class="btn btn-dropbox btn-xs" title="Съпровождащи документи"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Съпровождащи документи</span></a>
+                    }
+
+                    if (Model.SessionFastDocuments.Count > 0)
+                    {
+                        <a href="@Url.Action("Index", "CaseSessionFastDocument", new { CaseSessionId = Model.Id })" class="btn btn-dropbox btn-xs" title="Съпровождащ документ представен в заседание"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Съпровождащ документ представен в заседание</span></a>
+                    }
+                }
+            </div>
+        </div>
+    </li>
+
+    <li data-for="S_@Model.Id" class="hidden">
+        <!-- timeline icon -->
+        <i class="fa fa-book bg-yellow"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-book"></i> @Model.CaseSessionActs.Where(x => x.RegNumber != string.Empty).Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Актове и протоколи</a></h3>
+
+            <div class="timeline-body hidden">
+                @foreach (var caseSessionAct in Model.CaseSessionActs.Where(x => x.RegNumber != string.Empty))
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        @{
+                            var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty);
+                        }
+                        <div>
+                            @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                        </div>
+
+                        <div class="cdn-listview" style="margin-left:5px;">
+                            <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabSessionAct" class="btn btn-dropbox btn-xs" title="Актове"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Актове</span></a>
+                }
+            </div>
+        </div>
+    </li>
+</ul>

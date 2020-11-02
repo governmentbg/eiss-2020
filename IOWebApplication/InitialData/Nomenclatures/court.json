@@ -1,0 +1,1813 @@
+[
+  {
+    "id": "1",
+    "order_number": "1",
+    "label": "Административен съд – Благоевград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "703",
+    "ecli_code": "AD703",
+    "court_type_id": "9"
+  },
+  {
+    "id": "2",
+    "order_number": "2",
+    "label": "Административен съд – Бургас",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "704",
+    "ecli_code": "AD704",
+    "court_type_id": "9"
+  },
+  {
+    "id": "3",
+    "order_number": "3",
+    "label": "Административен съд – Варна",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "705",
+    "ecli_code": "AD705",
+    "court_type_id": "9"
+  },
+  {
+    "id": "4",
+    "order_number": "4",
+    "label": "Административен съд – Велико Търново",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "706",
+    "ecli_code": "AD706",
+    "court_type_id": "9"
+  },
+  {
+    "id": "5",
+    "order_number": "5",
+    "label": "Административен съд – Видин",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "707",
+    "ecli_code": "AD707",
+    "court_type_id": "9"
+  },
+  {
+    "id": "6",
+    "order_number": "6",
+    "label": "Административен съд – Враца",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "708",
+    "ecli_code": "AD708",
+    "court_type_id": "9"
+  },
+  {
+    "id": "7",
+    "order_number": "7",
+    "label": "Административен съд – Габрово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "709",
+    "ecli_code": "AD709",
+    "court_type_id": "9"
+  },
+  {
+    "id": "8",
+    "order_number": "8",
+    "label": "Административен съд – Добрич",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "710",
+    "ecli_code": "AD710",
+    "court_type_id": "9"
+  },
+  {
+    "id": "9",
+    "order_number": "9",
+    "label": "Административен съд – Кърджали",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "712",
+    "ecli_code": "AD712",
+    "court_type_id": "9"
+  },
+  {
+    "id": "10",
+    "order_number": "10",
+    "label": "Административен съд – Кюстендил",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "711",
+    "ecli_code": "AD711",
+    "court_type_id": "9"
+  },
+  {
+    "id": "11",
+    "order_number": "11",
+    "label": "Административен съд – Ловеч",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "713",
+    "ecli_code": "AD713",
+    "court_type_id": "9"
+  },
+  {
+    "id": "12",
+    "order_number": "12",
+    "label": "Административен съд – Монтана",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "714",
+    "ecli_code": "AD714",
+    "court_type_id": "9"
+  },
+  {
+    "id": "13",
+    "order_number": "13",
+    "label": "Административен съд – Пазарджик",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "715",
+    "ecli_code": "AD715",
+    "court_type_id": "9"
+  },
+  {
+    "id": "14",
+    "order_number": "14",
+    "label": "Административен съд – Перник",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "716",
+    "ecli_code": "AD716",
+    "court_type_id": "9"
+  },
+  {
+    "id": "15",
+    "order_number": "15",
+    "label": "Административен съд – Плевен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "717",
+    "ecli_code": "AD717",
+    "court_type_id": "9"
+  },
+  {
+    "id": "16",
+    "order_number": "16",
+    "label": "Административен съд – Пловдив",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "718",
+    "ecli_code": "AD718",
+    "court_type_id": "9"
+  },
+  {
+    "id": "17",
+    "order_number": "17",
+    "label": "Административен съд – Разград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "719",
+    "ecli_code": "AD719",
+    "court_type_id": "9"
+  },
+  {
+    "id": "18",
+    "order_number": "18",
+    "label": "Административен съд – Русе",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "720",
+    "ecli_code": "AD720",
+    "court_type_id": "9"
+  },
+  {
+    "id": "19",
+    "order_number": "19",
+    "label": "Административен съд – Силистра",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "721",
+    "ecli_code": "AD721",
+    "court_type_id": "9"
+  },
+  {
+    "id": "20",
+    "order_number": "20",
+    "label": "Административен съд – Сливен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "722",
+    "ecli_code": "AD722",
+    "court_type_id": "9"
+  },
+  {
+    "id": "21",
+    "order_number": "21",
+    "label": "Административен съд – Смолян",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "723",
+    "ecli_code": "AD723",
+    "court_type_id": "9"
+  },
+  {
+    "id": "22",
+    "order_number": "22",
+    "label": "Административен съд – София-окръг",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "702",
+    "ecli_code": "AD702",
+    "court_type_id": "9"
+  },
+  {
+    "id": "23",
+    "order_number": "23",
+    "label": "Административен съд – София-град",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "701",
+    "ecli_code": "AD701",
+    "court_type_id": "9"
+  },
+  {
+    "id": "24",
+    "order_number": "24",
+    "label": "Административен съд – Стара Загора",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "724",
+    "ecli_code": "AD724",
+    "court_type_id": "9"
+  },
+  {
+    "id": "25",
+    "order_number": "25",
+    "label": "Административен съд – Търговище",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "725",
+    "ecli_code": "AD725",
+    "court_type_id": "9"
+  },
+  {
+    "id": "26",
+    "order_number": "26",
+    "label": "Административен съд – Хасково",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "726",
+    "ecli_code": "AD726",
+    "court_type_id": "9"
+  },
+  {
+    "id": "27",
+    "order_number": "27",
+    "label": "Административен съд – Шумен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "727",
+    "ecli_code": "AD727",
+    "court_type_id": "9"
+  },
+  {
+    "id": "28",
+    "order_number": "28",
+    "label": "Административен съд – Ямбол",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "728",
+    "ecli_code": "AD728",
+    "court_type_id": "9"
+  },
+  {
+    "id": "29",
+    "order_number": "29",
+    "label": "Апелативен специализиран наказателен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "101",
+    "ecli_code": "PA101",
+    "court_type_id": "4"
+  },
+  {
+    "id": "30",
+    "order_number": "30",
+    "label": "Апелативен съд – Бургас",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "200",
+    "ecli_code": "AP200",
+    "court_type_id": "8"
+  },
+  {
+    "id": "31",
+    "order_number": "31",
+    "label": "Апелативен съд – Варна",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "300",
+    "ecli_code": "AP300",
+    "court_type_id": "8"
+  },
+  {
+    "id": "32",
+    "order_number": "32",
+    "label": "Апелативен съд – Велико Търново",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "400",
+    "ecli_code": "AP400",
+    "court_type_id": "8"
+  },
+  {
+    "id": "33",
+    "order_number": "33",
+    "label": "Апелативен съд – Пловдив",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "500",
+    "ecli_code": "AP500",
+    "court_type_id": "8"
+  },
+  {
+    "id": "34",
+    "order_number": "34",
+    "label": "Софийски апелативен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "100",
+    "ecli_code": "AP100",
+    "court_type_id": "8"
+  },
+  {
+    "id": "35",
+    "order_number": "35",
+    "label": "Военен съд – Пловдив",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "620",
+    "ecli_code": "MC620",
+    "court_type_id": "7"
+  },
+  {
+    "id": "36",
+    "order_number": "36",
+    "label": "Военен съд – Сливен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "650",
+    "ecli_code": "MC650",
+    "court_type_id": "7"
+  },
+  {
+    "id": "37",
+    "order_number": "37",
+    "label": "Военен съд – София",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "610",
+    "ecli_code": "MC610",
+    "court_type_id": "7"
+  },
+  {
+    "id": "38",
+    "order_number": "38",
+    "label": "Военно-апелативен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "600",
+    "ecli_code": "MA600",
+    "court_type_id": "6"
+  },
+  {
+    "id": "39",
+    "order_number": "39",
+    "label": "Върховен касационен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "800",
+    "ecli_code": "SC001",
+    "court_type_id": "2"
+  },
+  {
+    "id": "40",
+    "order_number": "40",
+    "label": "Окръжен съд – Благоевград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "120",
+    "ecli_code": "DC120",
+    "court_type_id": "10"
+  },
+  {
+    "id": "41",
+    "order_number": "41",
+    "label": "Окръжен съд – Бургас",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "210",
+    "ecli_code": "DC210",
+    "court_type_id": "10"
+  },
+  {
+    "id": "42",
+    "order_number": "42",
+    "label": "Окръжен съд – Варна",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "310",
+    "ecli_code": "DC310",
+    "court_type_id": "10"
+  },
+  {
+    "id": "43",
+    "order_number": "43",
+    "label": "Окръжен съд – Велико Търново",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "410",
+    "ecli_code": "DC410",
+    "court_type_id": "10"
+  },
+  {
+    "id": "44",
+    "order_number": "44",
+    "label": "Окръжен съд – Видин",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "130",
+    "ecli_code": "DC130",
+    "court_type_id": "10"
+  },
+  {
+    "id": "45",
+    "order_number": "45",
+    "label": "Окръжен съд – Враца",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "140",
+    "ecli_code": "DC140",
+    "court_type_id": "10"
+  },
+  {
+    "id": "46",
+    "order_number": "46",
+    "label": "Окръжен съд – Габрово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "420",
+    "ecli_code": "DC420",
+    "court_type_id": "10"
+  },
+  {
+    "id": "47",
+    "order_number": "47",
+    "label": "Окръжен съд – Добрич",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "320",
+    "ecli_code": "DC320",
+    "court_type_id": "10"
+  },
+  {
+    "id": "48",
+    "order_number": "48",
+    "label": "Окръжен съд – Кърджали",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "510",
+    "ecli_code": "DC510",
+    "court_type_id": "10"
+  },
+  {
+    "id": "49",
+    "order_number": "49",
+    "label": "Окръжен съд – Кюстендил",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "150",
+    "ecli_code": "DC150",
+    "court_type_id": "10"
+  },
+  {
+    "id": "50",
+    "order_number": "50",
+    "label": "Окръжен съд – Ловеч",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "430",
+    "ecli_code": "DC430",
+    "court_type_id": "10"
+  },
+  {
+    "id": "51",
+    "order_number": "51",
+    "label": "Окръжен съд – Монтана",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "160",
+    "ecli_code": "DC160",
+    "court_type_id": "10"
+  },
+  {
+    "id": "52",
+    "order_number": "52",
+    "label": "Окръжен съд – Пазарджик",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "520",
+    "ecli_code": "DC520",
+    "court_type_id": "10"
+  },
+  {
+    "id": "53",
+    "order_number": "53",
+    "label": "Окръжен съд – Перник",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "170",
+    "ecli_code": "DC170",
+    "court_type_id": "10"
+  },
+  {
+    "id": "54",
+    "order_number": "54",
+    "label": "Окръжен съд – Плевен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "440",
+    "ecli_code": "DC440",
+    "court_type_id": "10"
+  },
+  {
+    "id": "55",
+    "order_number": "55",
+    "label": "Окръжен съд – Пловдив",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "530",
+    "ecli_code": "DC530",
+    "court_type_id": "10"
+  },
+  {
+    "id": "56",
+    "order_number": "56",
+    "label": "Окръжен съд – Разград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "330",
+    "ecli_code": "DC330",
+    "court_type_id": "10"
+  },
+  {
+    "id": "57",
+    "order_number": "57",
+    "label": "Окръжен съд – Русе",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "450",
+    "ecli_code": "DC450",
+    "court_type_id": "10"
+  },
+  {
+    "id": "58",
+    "order_number": "58",
+    "label": "Окръжен съд – Силистра",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "340",
+    "ecli_code": "DC340",
+    "court_type_id": "10"
+  },
+  {
+    "id": "59",
+    "order_number": "59",
+    "label": "Окръжен съд – Сливен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "220",
+    "ecli_code": "DC220",
+    "court_type_id": "10"
+  },
+  {
+    "id": "60",
+    "order_number": "60",
+    "label": "Окръжен съд – Смолян",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "540",
+    "ecli_code": "DC540",
+    "court_type_id": "10"
+  },
+  {
+    "id": "61",
+    "order_number": "61",
+    "label": "Окръжен съд – Стара Загора",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "550",
+    "ecli_code": "DC550",
+    "court_type_id": "10"
+  },
+  {
+    "id": "62",
+    "order_number": "62",
+    "label": "Окръжен съд – Търговище",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "350",
+    "ecli_code": "DC350",
+    "court_type_id": "10"
+  },
+  {
+    "id": "63",
+    "order_number": "63",
+    "label": "Окръжен съд – Хасково",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "560",
+    "ecli_code": "DC560",
+    "court_type_id": "10"
+  },
+  {
+    "id": "64",
+    "order_number": "64",
+    "label": "Окръжен съд – Шумен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "360",
+    "ecli_code": "DC360",
+    "court_type_id": "10"
+  },
+  {
+    "id": "65",
+    "order_number": "65",
+    "label": "Окръжен съд – Ямбол",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "230",
+    "ecli_code": "DC230",
+    "court_type_id": "10"
+  },
+  {
+    "id": "66",
+    "order_number": "66",
+    "label": "Районен съд – Айтос",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "211",
+    "ecli_code": "RC211",
+    "court_type_id": "11"
+  },
+  {
+    "id": "67",
+    "order_number": "67",
+    "label": "Районен съд – Ардино",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "511",
+    "ecli_code": "RC511",
+    "court_type_id": "11"
+  },
+  {
+    "id": "68",
+    "order_number": "68",
+    "label": "Районен съд – Асеновград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "531",
+    "ecli_code": "RC531",
+    "court_type_id": "11"
+  },
+  {
+    "id": "69",
+    "order_number": "69",
+    "label": "Районен съд – Балчик",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "321",
+    "ecli_code": "RC321",
+    "court_type_id": "11"
+  },
+  {
+    "id": "70",
+    "order_number": "70",
+    "label": "Районен съд – Белоградчик",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "131",
+    "ecli_code": "RC131",
+    "court_type_id": "11"
+  },
+  {
+    "id": "71",
+    "order_number": "71",
+    "label": "Районен съд – Берковица",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "161",
+    "ecli_code": "RC161",
+    "court_type_id": "11"
+  },
+  {
+    "id": "72",
+    "order_number": "72",
+    "label": "Районен съд – Благоевград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "121",
+    "ecli_code": "RC121",
+    "court_type_id": "11"
+  },
+  {
+    "id": "73",
+    "order_number": "73",
+    "label": "Районен съд – Ботевград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "181",
+    "ecli_code": "RC181",
+    "court_type_id": "11"
+  },
+  {
+    "id": "74",
+    "order_number": "74",
+    "label": "Районен съд – Брезник",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "171",
+    "ecli_code": "RC171",
+    "court_type_id": "11"
+  },
+  {
+    "id": "75",
+    "order_number": "75",
+    "label": "Районен съд – Бургас",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "212",
+    "ecli_code": "RC212",
+    "court_type_id": "11"
+  },
+  {
+    "id": "76",
+    "order_number": "76",
+    "label": "Районен съд – Бяла",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "451",
+    "ecli_code": "RC451",
+    "court_type_id": "11"
+  },
+  {
+    "id": "77",
+    "order_number": "77",
+    "label": "Районен съд – Бяла Слатина",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "141",
+    "ecli_code": "RC141",
+    "court_type_id": "11"
+  },
+  {
+    "id": "78",
+    "order_number": "78",
+    "label": "Районен съд – Варна",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "311",
+    "ecli_code": "RC311",
+    "court_type_id": "11"
+  },
+  {
+    "id": "79",
+    "order_number": "79",
+    "label": "Районен съд – Велики Преслав",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "361",
+    "ecli_code": "RC361",
+    "court_type_id": "11"
+  },
+  {
+    "id": "80",
+    "order_number": "80",
+    "label": "Районен съд – Велико Търново",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "411",
+    "ecli_code": "RC411",
+    "court_type_id": "11"
+  },
+  {
+    "id": "81",
+    "order_number": "81",
+    "label": "Районен съд – Велинград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "521",
+    "ecli_code": "RC521",
+    "court_type_id": "11"
+  },
+  {
+    "id": "82",
+    "order_number": "82",
+    "label": "Районен съд – Видин",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "132",
+    "ecli_code": "RC132",
+    "court_type_id": "11"
+  },
+  {
+    "id": "83",
+    "order_number": "83",
+    "label": "Районен съд – Враца",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "142",
+    "ecli_code": "RC142",
+    "court_type_id": "11"
+  },
+  {
+    "id": "84",
+    "order_number": "84",
+    "label": "Районен съд – Габрово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "421",
+    "ecli_code": "RC421",
+    "court_type_id": "11"
+  },
+  {
+    "id": "85",
+    "order_number": "85",
+    "label": "Районен съд – Генерал Тошево",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "322",
+    "ecli_code": "RC322",
+    "court_type_id": "11"
+  },
+  {
+    "id": "86",
+    "order_number": "86",
+    "label": "Районен съд – Горна Оряховица",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "412",
+    "ecli_code": "RC412",
+    "court_type_id": "11"
+  },
+  {
+    "id": "87",
+    "order_number": "87",
+    "label": "Районен съд – Гоце Делчев",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "122",
+    "ecli_code": "RC122",
+    "court_type_id": "11"
+  },
+  {
+    "id": "88",
+    "order_number": "88",
+    "label": "Районен съд – Гълъбово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "555",
+    "ecli_code": "RC555",
+    "court_type_id": "11"
+  },
+  {
+    "id": "89",
+    "order_number": "89",
+    "label": "Районен съд – Девин",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "541",
+    "ecli_code": "RC541",
+    "court_type_id": "11"
+  },
+  {
+    "id": "90",
+    "order_number": "90",
+    "label": "Районен съд – Девня",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "312",
+    "ecli_code": "RC312",
+    "court_type_id": "11"
+  },
+  {
+    "id": "91",
+    "order_number": "91",
+    "label": "Районен съд – Димитровград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "561",
+    "ecli_code": "RC561",
+    "court_type_id": "11"
+  },
+  {
+    "id": "92",
+    "order_number": "92",
+    "label": "Районен съд – Добрич",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "323",
+    "ecli_code": "RC323",
+    "court_type_id": "11"
+  },
+  {
+    "id": "93",
+    "order_number": "93",
+    "label": "Районен съд – Дряново",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "422",
+    "ecli_code": "RC422",
+    "court_type_id": "11"
+  },
+  {
+    "id": "94",
+    "order_number": "94",
+    "label": "Районен съд – Дулово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "341",
+    "ecli_code": "RC341",
+    "court_type_id": "11"
+  },
+  {
+    "id": "95",
+    "order_number": "95",
+    "label": "Районен съд – Дупница",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "151",
+    "ecli_code": "RC151",
+    "court_type_id": "11"
+  },
+  {
+    "id": "96",
+    "order_number": "96",
+    "label": "Районен съд – Елена",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "413",
+    "ecli_code": "RC413",
+    "court_type_id": "11"
+  },
+  {
+    "id": "97",
+    "order_number": "97",
+    "label": "Районен съд – Елин Пелин",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "182",
+    "ecli_code": "RC182",
+    "court_type_id": "11"
+  },
+  {
+    "id": "98",
+    "order_number": "98",
+    "label": "Районен съд – Елхово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "231",
+    "ecli_code": "RC231",
+    "court_type_id": "11"
+  },
+  {
+    "id": "99",
+    "order_number": "99",
+    "label": "Районен съд – Етрополе",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "183",
+    "ecli_code": "RC183",
+    "court_type_id": "11"
+  },
+  {
+    "id": "100",
+    "order_number": "100",
+    "label": "Районен съд – Златоград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "542",
+    "ecli_code": "RC542",
+    "court_type_id": "11"
+  },
+  {
+    "id": "101",
+    "order_number": "101",
+    "label": "Районен съд – Ивайловград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "565",
+    "ecli_code": "RC565",
+    "court_type_id": "11"
+  },
+  {
+    "id": "102",
+    "order_number": "102",
+    "label": "Районен съд – Исперих",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "331",
+    "ecli_code": "RC331",
+    "court_type_id": "11"
+  },
+  {
+    "id": "103",
+    "order_number": "103",
+    "label": "Районен съд – Ихтиман",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "184",
+    "ecli_code": "RC184",
+    "court_type_id": "11"
+  },
+  {
+    "id": "104",
+    "order_number": "104",
+    "label": "Районен съд – Каварна",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "324",
+    "ecli_code": "RC324",
+    "court_type_id": "11"
+  },
+  {
+    "id": "105",
+    "order_number": "105",
+    "label": "Районен съд – Казанлък",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "551",
+    "ecli_code": "RC551",
+    "court_type_id": "11"
+  },
+  {
+    "id": "106",
+    "order_number": "106",
+    "label": "Районен съд – Карлово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "532",
+    "ecli_code": "RC532",
+    "court_type_id": "11"
+  },
+  {
+    "id": "107",
+    "order_number": "107",
+    "label": "Районен съд – Карнобат",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "213",
+    "ecli_code": "RC213",
+    "court_type_id": "11"
+  },
+  {
+    "id": "108",
+    "order_number": "108",
+    "label": "Районен съд – Кнежа",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "143",
+    "ecli_code": "RC143",
+    "court_type_id": "11"
+  },
+  {
+    "id": "109",
+    "order_number": "109",
+    "label": "Районен съд – Козлодуй",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "144",
+    "ecli_code": "RC144",
+    "court_type_id": "11"
+  },
+  {
+    "id": "110",
+    "order_number": "110",
+    "label": "Районен съд – Костинброд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "185",
+    "ecli_code": "RC185",
+    "court_type_id": "11"
+  },
+  {
+    "id": "111",
+    "order_number": "111",
+    "label": "Районен съд – Котел",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "221",
+    "ecli_code": "RC221",
+    "court_type_id": "11"
+  },
+  {
+    "id": "112",
+    "order_number": "112",
+    "label": "Районен съд – Крумовград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "513",
+    "ecli_code": "RC513",
+    "court_type_id": "11"
+  },
+  {
+    "id": "113",
+    "order_number": "113",
+    "label": "Районен съд – Кубрат",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "332",
+    "ecli_code": "RC332",
+    "court_type_id": "11"
+  },
+  {
+    "id": "114",
+    "order_number": "114",
+    "label": "Районен съд – Кула",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "133",
+    "ecli_code": "RC133",
+    "court_type_id": "11"
+  },
+  {
+    "id": "115",
+    "order_number": "115",
+    "label": "Районен съд – Кърджали",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "514",
+    "ecli_code": "RC514",
+    "court_type_id": "11"
+  },
+  {
+    "id": "116",
+    "order_number": "116",
+    "label": "Районен съд – Кюстендил",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "152",
+    "ecli_code": "RC152",
+    "court_type_id": "11"
+  },
+  {
+    "id": "117",
+    "order_number": "117",
+    "label": "Районен съд – Левски",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "441",
+    "ecli_code": "RC441",
+    "court_type_id": "11"
+  },
+  {
+    "id": "118",
+    "order_number": "118",
+    "label": "Районен съд – Ловеч",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "431",
+    "ecli_code": "RC431",
+    "court_type_id": "11"
+  },
+  {
+    "id": "119",
+    "order_number": "119",
+    "label": "Районен съд – Лом",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "162",
+    "ecli_code": "RC162",
+    "court_type_id": "11"
+  },
+  {
+    "id": "120",
+    "order_number": "120",
+    "label": "Районен съд – Луковит",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "432",
+    "ecli_code": "RC432",
+    "court_type_id": "11"
+  },
+  {
+    "id": "121",
+    "order_number": "121",
+    "label": "Районен съд – Мадан",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "543",
+    "ecli_code": "RC543",
+    "court_type_id": "11"
+  },
+  {
+    "id": "122",
+    "order_number": "122",
+    "label": "Районен съд – Малко Търново",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "214",
+    "ecli_code": "RC214",
+    "court_type_id": "11"
+  },
+  {
+    "id": "123",
+    "order_number": "123",
+    "label": "Районен съд – Мездра",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "145",
+    "ecli_code": "RC145",
+    "court_type_id": "11"
+  },
+  {
+    "id": "124",
+    "order_number": "124",
+    "label": "Районен съд – Момчилград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "515",
+    "ecli_code": "RC515",
+    "court_type_id": "11"
+  },
+  {
+    "id": "125",
+    "order_number": "125",
+    "label": "Районен съд – Монтана",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "163",
+    "ecli_code": "RC163",
+    "court_type_id": "11"
+  },
+  {
+    "id": "126",
+    "order_number": "126",
+    "label": "Районен съд – Несебър",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "215",
+    "ecli_code": "RC215",
+    "court_type_id": "11"
+  },
+  {
+    "id": "127",
+    "order_number": "127",
+    "label": "Районен съд – Никопол",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "442",
+    "ecli_code": "RC442",
+    "court_type_id": "11"
+  },
+  {
+    "id": "128",
+    "order_number": "128",
+    "label": "Районен съд – Нова Загора",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "222",
+    "ecli_code": "RC222",
+    "court_type_id": "11"
+  },
+  {
+    "id": "129",
+    "order_number": "129",
+    "label": "Районен съд – Нови Пазар",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "362",
+    "ecli_code": "RC362",
+    "court_type_id": "11"
+  },
+  {
+    "id": "130",
+    "order_number": "130",
+    "label": "Районен съд – Омуртаг",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "351",
+    "ecli_code": "RC351",
+    "court_type_id": "11"
+  },
+  {
+    "id": "131",
+    "order_number": "131",
+    "label": "Районен съд – Оряхово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "146",
+    "ecli_code": "RC146",
+    "court_type_id": "11"
+  },
+  {
+    "id": "132",
+    "order_number": "132",
+    "label": "Районен съд – Павликени",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "414",
+    "ecli_code": "RC414",
+    "court_type_id": "11"
+  },
+  {
+    "id": "133",
+    "order_number": "133",
+    "label": "Районен съд – Пазарджик",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "522",
+    "ecli_code": "RC522",
+    "court_type_id": "11"
+  },
+  {
+    "id": "134",
+    "order_number": "134",
+    "label": "Районен съд – Панагюрище",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "523",
+    "ecli_code": "RC523",
+    "court_type_id": "11"
+  },
+  {
+    "id": "135",
+    "order_number": "135",
+    "label": "Районен съд – Перник",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "172",
+    "ecli_code": "RC172",
+    "court_type_id": "11"
+  },
+  {
+    "id": "136",
+    "order_number": "136",
+    "label": "Районен съд – Петрич",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "123",
+    "ecli_code": "RC123",
+    "court_type_id": "11"
+  },
+  {
+    "id": "137",
+    "order_number": "137",
+    "label": "Районен съд – Пещера",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "524",
+    "ecli_code": "RC524",
+    "court_type_id": "11"
+  },
+  {
+    "id": "138",
+    "order_number": "138",
+    "label": "Районен съд – Пирдоп",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "186",
+    "ecli_code": "RC186",
+    "court_type_id": "11"
+  },
+  {
+    "id": "139",
+    "order_number": "139",
+    "label": "Районен съд – Плевен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "443",
+    "ecli_code": "RC443",
+    "court_type_id": "11"
+  },
+  {
+    "id": "140",
+    "order_number": "140",
+    "label": "Районен съд – Пловдив",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "533",
+    "ecli_code": "RC533",
+    "court_type_id": "11"
+  },
+  {
+    "id": "141",
+    "order_number": "141",
+    "label": "Районен съд – Поморие",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "216",
+    "ecli_code": "RC216",
+    "court_type_id": "11"
+  },
+  {
+    "id": "142",
+    "order_number": "142",
+    "label": "Районен съд – Попово",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "352",
+    "ecli_code": "RC352",
+    "court_type_id": "11"
+  },
+  {
+    "id": "143",
+    "order_number": "143",
+    "label": "Районен съд – Провадия",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "313",
+    "ecli_code": "RC313",
+    "court_type_id": "11"
+  },
+  {
+    "id": "144",
+    "order_number": "144",
+    "label": "Районен съд – Първомай",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "534",
+    "ecli_code": "RC534",
+    "court_type_id": "11"
+  },
+  {
+    "id": "145",
+    "order_number": "145",
+    "label": "Районен съд – Раднево",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "552",
+    "ecli_code": "RC552",
+    "court_type_id": "11"
+  },
+  {
+    "id": "146",
+    "order_number": "146",
+    "label": "Районен съд – Радомир",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "173",
+    "ecli_code": "RC173",
+    "court_type_id": "11"
+  },
+  {
+    "id": "147",
+    "order_number": "147",
+    "label": "Районен съд – Разград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "333",
+    "ecli_code": "RC333",
+    "court_type_id": "11"
+  },
+  {
+    "id": "148",
+    "order_number": "148",
+    "label": "Районен съд – Разлог",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "124",
+    "ecli_code": "RC124",
+    "court_type_id": "11"
+  },
+  {
+    "id": "149",
+    "order_number": "149",
+    "label": "Районен съд – Русе",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "452",
+    "ecli_code": "RC452",
+    "court_type_id": "11"
+  },
+  {
+    "id": "150",
+    "order_number": "150",
+    "label": "Районен съд – Самоков",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "187",
+    "ecli_code": "RC187",
+    "court_type_id": "11"
+  },
+  {
+    "id": "151",
+    "order_number": "151",
+    "label": "Районен съд – Сандански",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "125",
+    "ecli_code": "RC125",
+    "court_type_id": "11"
+  },
+  {
+    "id": "152",
+    "order_number": "152",
+    "label": "Районен съд – Свиленград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "562",
+    "ecli_code": "RC562",
+    "court_type_id": "11"
+  },
+  {
+    "id": "153",
+    "order_number": "153",
+    "label": "Районен съд – Свищов",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "415",
+    "ecli_code": "RC415",
+    "court_type_id": "11"
+  },
+  {
+    "id": "154",
+    "order_number": "154",
+    "label": "Районен съд – Своге",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "188",
+    "ecli_code": "RC188",
+    "court_type_id": "11"
+  },
+  {
+    "id": "155",
+    "order_number": "155",
+    "label": "Районен съд – Севлиево",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "423",
+    "ecli_code": "RC423",
+    "court_type_id": "11"
+  },
+  {
+    "id": "156",
+    "order_number": "156",
+    "label": "Районен съд – Силистра",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "342",
+    "ecli_code": "RC342",
+    "court_type_id": "11"
+  },
+  {
+    "id": "157",
+    "order_number": "157",
+    "label": "Районен съд – Сливен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "223",
+    "ecli_code": "RC223",
+    "court_type_id": "11"
+  },
+  {
+    "id": "158",
+    "order_number": "158",
+    "label": "Районен съд – Сливница",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "189",
+    "ecli_code": "RC189",
+    "court_type_id": "11"
+  },
+  {
+    "id": "159",
+    "order_number": "159",
+    "label": "Районен съд – Смолян",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "544",
+    "ecli_code": "RC544",
+    "court_type_id": "11"
+  },
+  {
+    "id": "160",
+    "order_number": "160",
+    "label": "Районен съд – Средец",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "217",
+    "ecli_code": "RC217",
+    "court_type_id": "11"
+  },
+  {
+    "id": "161",
+    "order_number": "161",
+    "label": "Районен съд – Стара Загора",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "553",
+    "ecli_code": "RC553",
+    "court_type_id": "11"
+  },
+  {
+    "id": "162",
+    "order_number": "162",
+    "label": "Районен съд – Тервел",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "325",
+    "ecli_code": "RC325",
+    "court_type_id": "11"
+  },
+  {
+    "id": "163",
+    "order_number": "163",
+    "label": "Районен съд – Тетевен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "433",
+    "ecli_code": "RC433",
+    "court_type_id": "11"
+  },
+  {
+    "id": "164",
+    "order_number": "164",
+    "label": "Районен съд – Тополовград",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "232",
+    "ecli_code": "RC232",
+    "court_type_id": "11"
+  },
+  {
+    "id": "165",
+    "order_number": "165",
+    "label": "Районен съд – Троян",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "434",
+    "ecli_code": "RC434",
+    "court_type_id": "11"
+  },
+  {
+    "id": "166",
+    "order_number": "166",
+    "label": "Районен съд – Трън",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "174",
+    "ecli_code": "RC174",
+    "court_type_id": "11"
+  },
+  {
+    "id": "167",
+    "order_number": "167",
+    "label": "Районен съд – Трявна",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "424",
+    "ecli_code": "RC424",
+    "court_type_id": "11"
+  },
+  {
+    "id": "168",
+    "order_number": "168",
+    "label": "Районен съд – Тутракан",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "343",
+    "ecli_code": "RC343",
+    "court_type_id": "11"
+  },
+  {
+    "id": "169",
+    "order_number": "169",
+    "label": "Районен съд – Търговище",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "353",
+    "ecli_code": "RC353",
+    "court_type_id": "11"
+  },
+  {
+    "id": "170",
+    "order_number": "170",
+    "label": "Районен съд – Харманли",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "563",
+    "ecli_code": "RC563",
+    "court_type_id": "11"
+  },
+  {
+    "id": "171",
+    "order_number": "171",
+    "label": "Районен съд – Хасково",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "564",
+    "ecli_code": "RC564",
+    "court_type_id": "11"
+  },
+  {
+    "id": "172",
+    "order_number": "172",
+    "label": "Районен съд – Царево",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "218",
+    "ecli_code": "RC218",
+    "court_type_id": "11"
+  },
+  {
+    "id": "173",
+    "order_number": "173",
+    "label": "Районен съд – Чепеларе",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "545",
+    "ecli_code": "RC545",
+    "court_type_id": "11"
+  },
+  {
+    "id": "174",
+    "order_number": "174",
+    "label": "Районен съд – Червен Бряг",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "444",
+    "ecli_code": "RC444",
+    "court_type_id": "11"
+  },
+  {
+    "id": "175",
+    "order_number": "175",
+    "label": "Районен съд – Чирпан",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "554",
+    "ecli_code": "RC554",
+    "court_type_id": "11"
+  },
+  {
+    "id": "176",
+    "order_number": "176",
+    "label": "Районен съд – Шумен",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "363",
+    "ecli_code": "RC363",
+    "court_type_id": "11"
+  },
+  {
+    "id": "177",
+    "order_number": "177",
+    "label": "Районен съд – Ямбол",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "233",
+    "ecli_code": "RC233",
+    "court_type_id": "11"
+  },
+  {
+    "id": "178",
+    "order_number": "178",
+    "label": "Софийски градски съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "110",
+    "ecli_code": "DC110",
+    "court_type_id": "10"
+  },
+  {
+    "id": "179",
+    "order_number": "179",
+    "label": "Софийски окръжен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "180",
+    "ecli_code": "DC180",
+    "court_type_id": "10"
+  },
+  {
+    "id": "180",
+    "order_number": "180",
+    "label": "Софийски районен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "111",
+    "ecli_code": "RC111",
+    "court_type_id": "11"
+  },
+  {
+    "id": "181",
+    "order_number": "181",
+    "label": "Специализиран наказателен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00",
+    "code": "105",
+    "ecli_code": "PC105",
+    "court_type_id": "5"
+  }
+
+]

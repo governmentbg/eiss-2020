@@ -1,0 +1,57 @@
+﻿@model EisppBaseCase
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Infrastructure.Constants
+@inject IEisppRulesService rulesService
+@inject IEisppService service
+@{
+    var eisppRule = ViewData.ModelMetadata.GetEisppRuleElement(ViewData.TemplateInfo.HtmlFieldPrefix);
+    (var ruleIds, var flags) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppRule);
+    string css = "case-cause-item cci" + Model.ConnectedCaseId;
+    // ТоченТип дело в основание
+    var exactCaseTypeCauseDDL = service.GetDDL_EISPPTblElementWithRules_DloOsnExactType(
+        EISPPConstants.EisppTableCode.ExactCaseType, (int)ViewBag.EventTypeId, "NPR.DLO.DLOOSN.dlosig", Model.CaseType.ToString(), Model.CaseCharacterId
+    ); // dlosig
+}
+@if (flags > 0)
+{
+    <div class='@css'>
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Основание</legend>
+            @Html.HiddenFor(x => x.EisppCaseId)
+            @Html.HiddenFor(x => x.ConnectedCaseId)
+            @Html.HiddenFor(x => x.StructureId)
+            @Html.HiddenFor(x => x.CaseCharacterId)
+            <div class="row">
+                <div class="col-lg-1">
+                    @Html.EditorFor(x => x.Year, "hd")
+                </div>
+                <div class="col-lg-1">
+                    @Html.EditorFor(x => x.ShortNumber, "hd")
+                </div>
+                <div class="col-lg-2">
+                    @Html.EditorFor(x => x.InstitutionTypeName, "hd")
+                </div>
+                <div class="col-lg-4">
+                    @Html.EditorFor(x => x.InstitutionName, "hd")
+                </div>
+                <div class="col-lg-2">
+                    @Html.EditorFor(x => x.InstitutionCaseTypeName, "hd")
+                </div>
+
+                @*<div class="col-lg-8">
+                @Html.EditorFor(x => x.CaseCodeId, "EisppDropDown", null, new { Ddl = ViewBag.CaseCodeId_ddl })
+            </div>*@
+            </div>
+            <div class="row">
+                <div class="col-lg-2">
+                    @Html.EditorFor(x => x.ExactCaseType, "EisppDropDown", null, new { Ddl = exactCaseTypeCauseDDL })
+                </div>
+                <div class="col-lg-4">
+                    @Html.EditorFor(x => x.CaseType, "EisppDropDown", null, new { Ddl = ViewBag.CaseTypeCauseDDL })
+                </div>
+            </div>
+        </fieldset>
+    </div>
+}
+

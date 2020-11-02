@@ -1,0 +1,19 @@
+﻿@model EisppPackage
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@Html.HiddenFor(x => x.Id)
+@Html.HiddenFor(x => x.SourceType)
+@Html.HiddenFor(x => x.SourceId)
+@Html.HiddenFor(x => x.CaseId)
+@Html.HiddenFor(x => x.SenderNode)
+@Html.HiddenFor(x => x.SenderStructure)
+@Html.HiddenFor(x => x.ReceiverNode)
+@Html.HiddenFor(x => x.ReceiverStructure)
+@Html.HiddenFor(x => x.MessageType)
+@Html.HiddenFor(x => x.CorrelationId)
+@{
+    if (Model.Data.Events.Length > 0)
+    {
+        ViewData.TemplateInfo.HtmlFieldPrefix = "Data.Events[0]";
+        @await Html.PartialAsync("_Event", Model.Data.Events[0])
+    }
+}

@@ -1,0 +1,106 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CourtLawUnitFilter
+
+@{
+    ViewData["Title"] = "Брой присъствени дни на заседателите за текущата година";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-6">
+        @Html.EditorFor(x => x.LawUnitJuryId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Jury })
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function LoadTable() {
+            if ($.fn.dataTable.isDataTable('#mainTable')) {
+                refreshTable('#mainTable');
+            }
+            else {
+                $('#mainTable').DataTable({
+                    ajax: {
+                        "url": "@Url.Action("ListDataJuryDays")",
+                        "type": "POST",
+                        "datatype": "json",
+                        data: function (d) {
+                            d.fromData = $("#DateFrom").val();
+                            d.toData = $("#DateTo").val();
+                            d.LawUnitId = $("#LawUnitJuryId").val();
+                        }
+                    },
+                    filter: false,
+                    columns: [
+
+                        {
+                            name: 'fullName',
+                            data: 'fullName',
+                            title: 'Име',
+                            sortable: true,
+                            searchable: false
+                        },
+                        {
+                            name: 'daysCount',
+                            data: 'daysCount',
+                            title: 'Брой участия(дни)',
+                            sortable: true,
+                            searchable: false
+                        },
+                        {
+                            name: 'daysCountAppointed',
+                            data: 'daysCountAppointed',
+                            title: 'Брой насрочени (дни)',
+                            sortable: true,
+                            searchable: false
+                        },
+                        {
+                            name: 'daysCountTotal',
+                            data: 'daysCountTotal',
+                            title: 'Общо (дни)',
+                            sortable: true,
+                            searchable: false
+                        }]
+                });
+            }
+        }
+    </script>
+
+    <script id="caseSelectionProtokolTemplateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("PreviewDoc", "CaseSelectionProtokol")?id={{this}}" class="btn btn-warning btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+    </script>
+}
+
+<script>
+    $(function () {
+        initLawUnit();
+    });
+</script>

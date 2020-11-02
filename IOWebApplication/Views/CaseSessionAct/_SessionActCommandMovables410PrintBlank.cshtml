@@ -1,0 +1,97 @@
+﻿@model CaseSessionActCommandVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@{
+    Layout = null;
+}
+
+    <div style="font-family: 'Times New Roman'">
+        <center>
+            <b>ЗАПОВЕД № @Model.CaseSessionActPrint.ActRegNumber</b><br />
+            <b>ЗА ИЗПЪЛНЕНИЕ НА ЗАДЪЛЖЕНИЕ ЗА ПРЕДАВАНЕ НА ДВИЖИМИ ВЕЩИ</b><br />
+            <b>по чл. 410 от ГПК</b><br />
+            @Model.CaseSessionActPrint.CourtCity на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy")г.<br />
+        </center>
+        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName в проведеното на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy")г. в закрито разпоредително заседание по @Model.CaseSessionActPrint.CaseTypeName № @Model.CaseSessionActPrint.CaseRegNumber/@Model.CaseSessionActPrint.CaseRegYear г., по описа на съда за @Model.CaseSessionActPrint.CaseRegYear г. @Model.CaseSessionActPrint.DepartmentName, докладвано от @Model.CaseSessionActPrint.JudgeReporter – районен съдия, като разгледа подаденото заявление за издаване на заповед за изпълнение по реда на чл. 410 и сл. ГПК, и след като прецени, че са налице предпоставките за уважаване на искането и на основание чл. 411, ал. 3 ГПК<br />
+        <center>
+            <b>РАЗПОРЕЖДА:</b><br />
+        </center>
+        <br />
+
+        @foreach (var rightSide in Model.CaseSessionActPrint.RightSide)
+        {
+            @Html.Raw(rightSide + "<br />");
+        }
+
+        @if (Model.CaseSessionActPrint.RightSide.Count() > 1)
+        {
+            @Html.Raw("да предадат на " + "<br />");
+        }
+        else
+        {
+            @Html.Raw("да предаде на " + "<br />");
+        }
+
+        @foreach (var leftSide in Model.CaseSessionActPrint.LeftSide)
+        {
+            @Html.Raw(leftSide + "<br />");
+        }
+        <br />
+        @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+        {
+            foreach (var caseMoneyCollection in caseMoneyClaim.CaseMoneyCollections.Where(x => x.IsMovables))
+            {
+                @Html.Raw("следната вещ " + caseMoneyCollection.Description + "<br />");
+                @Html.Raw("която " + caseMoneyCollection.CaseMoneyCollectionTypeLabel + "<br />");
+                foreach (var caseMoneyCollectionExtra in caseMoneyCollection.CaseMoneyCollectionExtras)
+                {
+                    @Html.Raw("с " + caseMoneyCollectionExtra.PretendedAmount + " " + caseMoneyCollection.CurrencyCode + " /" + caseMoneyCollectionExtra.PretendedAmountString + "/ " + caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + " от " + caseMoneyCollectionExtra.DateFrom?.ToString("dd.MM.yyyy") + "г. до " + caseMoneyCollectionExtra.DateTo?.ToString("dd.MM.yyyy") + "г.<br />");
+                }
+            }
+        }
+        както и сумите:<br />
+        @foreach (var caseMoneyExpense in Model.CaseFastProcessView.CaseMoneyExpenses)
+        {
+            @Html.Raw("&nbsp;&nbsp; - " + caseMoneyExpense.Amount + " " + caseMoneyExpense.CurrencyCode + " /" + caseMoneyExpense.AmountString + "/ " + caseMoneyExpense.CaseMoneyExpenseTypeLabel + "<br />");
+        }
+        разноски по делото.<br />
+        Вземането произтича от следните обстоятелства:<br />
+        @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+        {
+            if (caseMoneyClaim.CaseMoneyCollections.Any(x => x.IsMovables))
+            {
+                @Html.Raw("&nbsp;&nbsp; - " + caseMoneyClaim.CaseMoneyClaimGroupLabel + ((caseMoneyClaim.CaseMoneyClaimTypeLabel != string.Empty) ? " - " + caseMoneyClaim.CaseMoneyClaimTypeLabel : string.Empty) + "<br />");
+            }
+        }
+        Присъдената сума може да бъде:<br />
+        @foreach (var caseBankAccount in Model.CaseFastProcessView.CaseBankAccounts.OrderBy(x => x.CaseBankAccountTypeId))
+        {
+            if (caseBankAccount.CaseBankAccountTypeId == 1)
+            {
+                @Html.Raw("&nbsp;&nbsp; - внесена по следната банкова сметка на заявителя/кредитора IBAN: " + caseBankAccount.LabelIBAN + " BIC: " + caseBankAccount.LabelBIC + " " + caseBankAccount.BankName + "<br />");
+            }
+            else
+            {
+                @Html.Raw("&nbsp;&nbsp; - платена по следния начин: " + caseBankAccount.Description + "<br />");
+            }
+        }
+        <br />
+        <br />
+        <center>
+            <b>ВАЖНА ИНФОРМАЦИЯ ЗА ДЛЪЖНИКА</b>
+        </center>
+        <br />
+        Предоставя Ви се възможност в едномесечен срок:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;1. Да подадете в съда писмено възражение по образец, приложен към заповедта, че не дължите изпълнение на вземането по издадената заповед за изпълнение. В случай че възражението е неоснователно, може да понесете разноски в по-висок размер от посочения в заповедта.<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;2. Да предадете вещта, посочена в настоящата заповед, и да подадете в съда писмено възражение по образец, приложен към заповедта, че сте изпълнили изцяло или частично задължението си. Към това възражение се прилагат доказателства за изпълнението на задължението с препис за заявителя.<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;3. Ако възражението бъде подадено в едномесечния срок, заповедта няма да влезе в сила.<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;4. Настоящата заповед е издадена единствено на информация, предоставена от кредитора. Информацията, съдържаща се в заявлението, не е проверявана от съда.<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;5. Ако до изтичане на едномесечния срок не изпълните задължението или не подадете писмено възражение до съда, заповедта влиза в сила и подлежи на принудително изпълнение.<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;6. Заповедта подлежи на обжалване пред @Model.CaseSessionActPrint.CourtParent само в частта за разноските в едномесечен срок от връчването.<br />
+        <br />
+        <br />
+        <div align="right">
+            Районен съдия: ...............................................<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.CaseSessionActPrint.JudgeReporter )
+        </div>
+    </div>
+

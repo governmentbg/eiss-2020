@@ -1,0 +1,133 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            @if (!IOWebApplication.Infrastructure.Constants.NomenclatureConstants.FilterPersonOnNotification)
+            {
+            <a asp-controller="CaseNotification" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-caseSessionActId="@Model.CaseSessionActId" asp-route-notificationPersonType="1" class="btn btn-success btn-sm m-b-5">
+                <i class="fa fa-plus"></i>
+                Добави (за лице)
+            </a>
+            <a asp-controller="CaseNotification" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-caseSessionActId="@Model.CaseSessionActId" asp-route-notificationPersonType="2" class="btn btn-success btn-sm m-b-5">
+                <i class="fa fa-plus"></i>
+                Добави (за съдебен състав)
+            </a>
+            }
+            <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-caseSessionActId="@Model.CaseSessionActId" class="btn btn-success btn-sm m-b-5">
+                <i class="fa fa-user"></i>
+                Печат на уведомления
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseNotificationMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseNotificationMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseNotification")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                        d.caseSessionId = @(Model.CaseSessionId??0);
+                        d.caseSessionActId = @(Model.CaseSessionActId??0);
+                    }
+                },
+                deferLoading: deferLoadingOnTab('#caseNotificationMainTable'),
+                columns: [
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Регистрационен номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function(data){
+                                    return moment(data).format("DD.MM.YYYY");
+                                }
+                    },
+                    {
+                        name: 'notificationTypeLabel',
+                        data: 'notificationTypeLabel',
+                        title: 'Вид известие',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'casePersonName',
+                        data: 'casePersonName',
+                        title: 'Призован',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'notificationStateLabel',
+                        data: 'notificationStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'htmlTemplateLabel',
+                        data: 'htmlTemplateLabel',
+                        title: 'Бланка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseNotificationTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+         function printNotificationRaw(id) {
+             window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
+          //    window.open('@Url.Action("PreviewRaw", "CaseNotification")/' + id, '_blank');
+        }
+</script>
+
+<script id="caseNotificationTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "CaseNotification")/{{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("AddWithParent", "CaseNotification")?caseParentId={{this}}&caseId=@Model.Id&caseSessionId=@Model.CaseSessionId&caseSessionActId=@Model.CaseSessionActId" class="btn btn-def btn-sm m-b-5" title="Уведомление към текущото"><i class="fa fa-link"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="printNotificationRaw({{this}})" class="btn btn-def btn-sm m-b-5" title="Печат"><i class="fa fa-print"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("Edit", "CaseNotification")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+

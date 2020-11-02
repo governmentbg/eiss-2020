@@ -1,0 +1,1252 @@
+[
+  {
+    "country_id": "1",
+    "code": "A",
+    "name": "НИДЕРЛАНДСКИ АНТИЛИ"
+  },
+  {
+    "country_id": "2",
+    "code": "AA",
+    "name": "БЕЗ ГРАЖДАНСТВО"
+  },
+  {
+    "country_id": "3",
+    "code": "AD",
+    "name": "АНДОРА"
+  },
+  {
+    "country_id": "4",
+    "code": "AE",
+    "name": "ОБЕДИНЕНИ АРАБСКИ ЕМИРСТВА"
+  },
+  {
+    "country_id": "5",
+    "code": "AF",
+    "name": "АФГАНИСТАН"
+  },
+  {
+    "country_id": "6",
+    "code": "AG",
+    "name": "АНТИГУА И БАРБУДА"
+  },
+  {
+    "country_id": "7",
+    "code": "AI",
+    "name": "АНГУИЛА"
+  },
+  {
+    "country_id": "8",
+    "code": "AL",
+    "name": "АЛБАНИЯ"
+  },
+  {
+    "country_id": "9",
+    "code": "AM",
+    "name": "АРМЕНИЯ"
+  },
+  {
+    "country_id": "10",
+    "code": "AO",
+    "name": "АНГОЛА"
+  },
+  {
+    "country_id": "11",
+    "code": "AQ",
+    "name": "АНТАРКТИКА"
+  },
+  {
+    "country_id": "12",
+    "code": "AR",
+    "name": "АРЖЕНТИНА"
+  },
+  {
+    "country_id": "13",
+    "code": "AS",
+    "name": "ИЗТОЧНИ САМОА"
+  },
+  {
+    "country_id": "14",
+    "code": "AT",
+    "name": "АВСТРИЯ"
+  },
+  {
+    "country_id": "15",
+    "code": "AU",
+    "name": "АВСТРАЛИЯ"
+  },
+  {
+    "country_id": "16",
+    "code": "AW",
+    "name": "АРУБА"
+  },
+  {
+    "country_id": "17",
+    "code": "AZ",
+    "name": "АЗЕРБАЙДЖАН"
+  },
+  {
+    "country_id": "18",
+    "code": "B",
+    "name": "БРУНЕЙ ДАРУССАЛАМ"
+  },
+  {
+    "country_id": "19",
+    "code": "BA",
+    "name": "БОСНА И ХЕРЦЕГОВИНА"
+  },
+  {
+    "country_id": "20",
+    "code": "BB",
+    "name": "БАРБЕЙДОС"
+  },
+  {
+    "country_id": "21",
+    "code": "BD",
+    "name": "БАНГЛАДЕШ"
+  },
+  {
+    "country_id": "22",
+    "code": "BE",
+    "name": "БЕЛГИЯ"
+  },
+  {
+    "country_id": "23",
+    "code": "BF",
+    "name": "БУРКИНА ФАСО"
+  },
+  {
+    "country_id": "24",
+    "code": "BG",
+    "name": "БЪЛГАРИЯ"
+  },
+  {
+    "country_id": "25",
+    "code": "BH",
+    "name": "БАХРЕЙН"
+  },
+  {
+    "country_id": "26",
+    "code": "BI",
+    "name": "БУРУНДИ"
+  },
+  {
+    "country_id": "27",
+    "code": "BJ",
+    "name": "БЕНИН"
+  },
+  {
+    "country_id": "28",
+    "code": "BM",
+    "name": "БЕРМУДСКИ ОСТРОВИ"
+  },
+  {
+    "country_id": "29",
+    "code": "BO",
+    "name": "БОЛИВИЯ"
+  },
+  {
+    "country_id": "30",
+    "code": "BR",
+    "name": "БРАЗИЛИЯ"
+  },
+  {
+    "country_id": "31",
+    "code": "BS",
+    "name": "БАХАМСКИ ОСТРОВИ"
+  },
+  {
+    "country_id": "32",
+    "code": "BT",
+    "name": "БУТАН"
+  },
+  {
+    "country_id": "33",
+    "code": "BU",
+    "name": "БИРМА"
+  },
+  {
+    "country_id": "34",
+    "code": "BW",
+    "name": "БОТСУАНА"
+  },
+  {
+    "country_id": "35",
+    "code": "BY",
+    "name": "БЕЛАРУС"
+  },
+  {
+    "country_id": "36",
+    "code": "BZ",
+    "name": "БЕЛИЗ"
+  },
+  {
+    "country_id": "37",
+    "code": "C",
+    "name": "КИТАЙ"
+  },
+  {
+    "country_id": "38",
+    "code": "CA",
+    "name": "КАНАДА"
+  },
+  {
+    "country_id": "39",
+    "code": "CC",
+    "name": "КОКОСОВИ ОСТРОВИ"
+  },
+  {
+    "country_id": "40",
+    "code": "CE",
+    "name": "ЧСФР"
+  },
+  {
+    "country_id": "41",
+    "code": "CF",
+    "name": "ЦЕНТРАЛНОАФРИКАНСКА РЕПУБЛИКА"
+  },
+  {
+    "country_id": "42",
+    "code": "CG",
+    "name": "КОНГО"
+  },
+  {
+    "country_id": "43",
+    "code": "CH",
+    "name": "ШВЕЙЦАРИЯ"
+  },
+  {
+    "country_id": "44",
+    "code": "CI",
+    "name": "КОТ Д'ИВОАР"
+  },
+  {
+    "country_id": "45",
+    "code": "CK",
+    "name": "КУК(О-ВИ)"
+  },
+  {
+    "country_id": "46",
+    "code": "CL",
+    "name": "ЧИЛИ"
+  },
+  {
+    "country_id": "47",
+    "code": "CM",
+    "name": "КАМЕРУН"
+  },
+  {
+    "country_id": "48",
+    "code": "CO",
+    "name": "КОЛУМБИЯ"
+  },
+  {
+    "country_id": "49",
+    "code": "CR",
+    "name": "КОСТА РИКА"
+  },
+  {
+    "country_id": "50",
+    "code": "CS",
+    "name": "СЪРБИЯ И ЧЕРНА ГОРА"
+  },
+  {
+    "country_id": "51",
+    "code": "CU",
+    "name": "КУБА"
+  },
+  {
+    "country_id": "52",
+    "code": "CV",
+    "name": "КАБО ВЕРДЕ"
+  },
+  {
+    "country_id": "53",
+    "code": "CX",
+    "name": "РОЖДЕСТВО"
+  },
+  {
+    "country_id": "54",
+    "code": "CY",
+    "name": "КИПЪР"
+  },
+  {
+    "country_id": "55",
+    "code": "CZ",
+    "name": "ЧЕШКА РЕПУБЛИКА"
+  },
+  {
+    "country_id": "56",
+    "code": "DE",
+    "name": "ГЕРМАНИЯ"
+  },
+  {
+    "country_id": "57",
+    "code": "DJ",
+    "name": "ДЖИБУТИ"
+  },
+  {
+    "country_id": "58",
+    "code": "DK",
+    "name": "ДАНИЯ"
+  },
+  {
+    "country_id": "59",
+    "code": "DM",
+    "name": "ДОМИНИКА"
+  },
+  {
+    "country_id": "60",
+    "code": "DO",
+    "name": "ДОМИНИКАНСКА РЕПУБЛИКА"
+  },
+  {
+    "country_id": "61",
+    "code": "DZ",
+    "name": "АЛЖИР"
+  },
+  {
+    "country_id": "62",
+    "code": "EC",
+    "name": "ЕКВАДОР"
+  },
+  {
+    "country_id": "63",
+    "code": "EE",
+    "name": "ЕСТОНИЯ"
+  },
+  {
+    "country_id": "64",
+    "code": "EG",
+    "name": "ЕГИПЕТ"
+  },
+  {
+    "country_id": "65",
+    "code": "EH",
+    "name": "ЗАПАДНА САХАРА"
+  },
+  {
+    "country_id": "66",
+    "code": "ER",
+    "name": "ЕРИТРЕЯ"
+  },
+  {
+    "country_id": "67",
+    "code": "ES",
+    "name": "ИСПАНИЯ"
+  },
+  {
+    "country_id": "68",
+    "code": "ET",
+    "name": "ЕТИОПИЯ"
+  },
+  {
+    "country_id": "69",
+    "code": "FI",
+    "name": "ФИНЛАНДИЯ"
+  },
+  {
+    "country_id": "70",
+    "code": "FJ",
+    "name": "ФИДЖИ"
+  },
+  {
+    "country_id": "71",
+    "code": "FK",
+    "name": "ФОЛКЛЕНДСКИ ОСТРОВИ"
+  },
+  {
+    "country_id": "72",
+    "code": "FM",
+    "name": "МИКРОНЕЗИЯ"
+  },
+  {
+    "country_id": "73",
+    "code": "FO",
+    "name": "ФЕРЬОРСКИ ОСТРОВИ"
+  },
+  {
+    "country_id": "74",
+    "code": "FR",
+    "name": "ФРАНЦИЯ"
+  },
+  {
+    "country_id": "75",
+    "code": "FX",
+    "name": "ФРАНЦИЯ,МЕТРОПОЛИЯ"
+  },
+  {
+    "country_id": "76",
+    "code": "G",
+    "name": "ГВИНЕЯ"
+  },
+  {
+    "country_id": "77",
+    "code": "GA",
+    "name": "ГАБОН"
+  },
+  {
+    "country_id": "78",
+    "code": "GB",
+    "name": "ВЕЛИКОБРИТАНИЯ"
+  },
+  {
+    "country_id": "79",
+    "code": "GD",
+    "name": "ГРЕНАДА"
+  },
+  {
+    "country_id": "80",
+    "code": "GE",
+    "name": "ГРУЗИЯ"
+  },
+  {
+    "country_id": "81",
+    "code": "GF",
+    "name": "ФРЕНСКА ГВИАНА"
+  },
+  {
+    "country_id": "82",
+    "code": "GH",
+    "name": "ГАНА"
+  },
+  {
+    "country_id": "83",
+    "code": "GI",
+    "name": "ГИБРАЛТАР"
+  },
+  {
+    "country_id": "84",
+    "code": "GL",
+    "name": "ГРЕНЛАНДИЯ"
+  },
+  {
+    "country_id": "85",
+    "code": "GM",
+    "name": "ГАМБИЯ"
+  },
+  {
+    "country_id": "86",
+    "code": "GP",
+    "name": "ГВАДЕЛУПА"
+  },
+  {
+    "country_id": "87",
+    "code": "GQ",
+    "name": "ЕКАТОРИАЛНА ГВИНЕЯ"
+  },
+  {
+    "country_id": "88",
+    "code": "GR",
+    "name": "ГЪРЦИЯ"
+  },
+  {
+    "country_id": "89",
+    "code": "GS",
+    "name": "ЮЖНА ДЖОРДЖИЯ И ОСТРОВИ"
+  },
+  {
+    "country_id": "90",
+    "code": "GT",
+    "name": "ГВАТЕМАЛА"
+  },
+  {
+    "country_id": "91",
+    "code": "GU",
+    "name": "ГУАМ"
+  },
+  {
+    "country_id": "92",
+    "code": "GW",
+    "name": "ГВИНЕЯ-БИСАУ"
+  },
+  {
+    "country_id": "93",
+    "code": "GY",
+    "name": "ГАЯНА"
+  },
+  {
+    "country_id": "94",
+    "code": "H",
+    "name": "ХОНДУРАС"
+  },
+  {
+    "country_id": "95",
+    "code": "HK",
+    "name": "ХОНКОНГ"
+  },
+  {
+    "country_id": "96",
+    "code": "HM",
+    "name": "ХЪРД И МАКДОНАЛД О-ВИ"
+  },
+  {
+    "country_id": "97",
+    "code": "HR",
+    "name": "ХЪРВАТСКО"
+  },
+  {
+    "country_id": "98",
+    "code": "HT",
+    "name": "ХАИТИ"
+  },
+  {
+    "country_id": "99",
+    "code": "HU",
+    "name": "УНГАРИЯ"
+  },
+  {
+    "country_id": "100",
+    "code": "I",
+    "name": "ИНДИЯ"
+  },
+  {
+    "country_id": "101",
+    "code": "ID",
+    "name": "ИНДОНЕЗИЯ"
+  },
+  {
+    "country_id": "102",
+    "code": "IE",
+    "name": "ИРЛАНДИЯ (ЕЙРЕ)"
+  },
+  {
+    "country_id": "103",
+    "code": "IL",
+    "name": "ИЗРАЕЛ"
+  },
+  {
+    "country_id": "104",
+    "code": "IO",
+    "name": "БРИТАН.ТЕР.В ИНДИЙСКИЯ О-Н"
+  },
+  {
+    "country_id": "105",
+    "code": "IQ",
+    "name": "ИРАК"
+  },
+  {
+    "country_id": "106",
+    "code": "IR",
+    "name": "ИРАН"
+  },
+  {
+    "country_id": "107",
+    "code": "IS",
+    "name": "ИСЛАНДИЯ"
+  },
+  {
+    "country_id": "108",
+    "code": "IT",
+    "name": "ИТАЛИЯ"
+  },
+  {
+    "country_id": "109",
+    "code": "JM",
+    "name": "ЯМАЙКА"
+  },
+  {
+    "country_id": "110",
+    "code": "JO",
+    "name": "ЙОРДАНИЯ"
+  },
+  {
+    "country_id": "111",
+    "code": "JP",
+    "name": "ЯПОНИЯ"
+  },
+  {
+    "country_id": "112",
+    "code": "K",
+    "name": "СЕЙНТ КИТС И НЕЙВИС"
+  },
+  {
+    "country_id": "113",
+    "code": "KE",
+    "name": "КЕНИЯ"
+  },
+  {
+    "country_id": "114",
+    "code": "KG",
+    "name": "КИРГИЗСТАН"
+  },
+  {
+    "country_id": "115",
+    "code": "KH",
+    "name": "КАМБОДЖА"
+  },
+  {
+    "country_id": "116",
+    "code": "KI",
+    "name": "КИРИБАТИ"
+  },
+  {
+    "country_id": "117",
+    "code": "KM",
+    "name": "КОМОРСКИ ОСТРОВИ"
+  },
+  {
+    "country_id": "118",
+    "code": "KP",
+    "name": "КОРЕЯ (ДЕМОКРАТИЧНА НР)"
+  },
+  {
+    "country_id": "119",
+    "code": "KR",
+    "name": "КОРЕЯ (РЕПУБЛИКА)"
+  },
+  {
+    "country_id": "120",
+    "code": "KW",
+    "name": "КУВЕЙТ"
+  },
+  {
+    "country_id": "121",
+    "code": "KY",
+    "name": "КАЙМАНОВИ ОСТРОВИ"
+  },
+  {
+    "country_id": "122",
+    "code": "KZ",
+    "name": "КАЗАХСТАН"
+  },
+  {
+    "country_id": "123",
+    "code": "LA",
+    "name": "ЛАОС"
+  },
+  {
+    "country_id": "124",
+    "code": "LB",
+    "name": "ЛИВАН"
+  },
+  {
+    "country_id": "125",
+    "code": "LC",
+    "name": "СЕЙНТ ЛУСИЯ"
+  },
+  {
+    "country_id": "126",
+    "code": "LI",
+    "name": "ЛИХТЕНЩАЙ"
+  },
+  {
+    "country_id": "127",
+    "code": "LK",
+    "name": "ШРИ ЛАНКА"
+  },
+  {
+    "country_id": "128",
+    "code": "LR",
+    "name": "ЛИБЕРИЯ"
+  },
+  {
+    "country_id": "129",
+    "code": "LS",
+    "name": "ЛЕСОТО"
+  },
+  {
+    "country_id": "130",
+    "code": "LT",
+    "name": "ЛИТВА"
+  },
+  {
+    "country_id": "131",
+    "code": "LU",
+    "name": "ЛЮКСЕМБУРГ"
+  },
+  {
+    "country_id": "132",
+    "code": "LV",
+    "name": "ЛАТВИЯ"
+  },
+  {
+    "country_id": "133",
+    "code": "LY",
+    "name": "ЛИБИЙСКА АРАБСКА ДЖАМАХИРИЯ"
+  },
+  {
+    "country_id": "134",
+    "code": "M",
+    "name": "МОНГОЛИЯ"
+  },
+  {
+    "country_id": "135",
+    "code": "MA",
+    "name": "МАРОКО"
+  },
+  {
+    "country_id": "136",
+    "code": "MC",
+    "name": "МОНАКО"
+  },
+  {
+    "country_id": "137",
+    "code": "MD",
+    "name": "МОЛДОВА"
+  },
+  {
+    "country_id": "138",
+    "code": "ME",
+    "name": "ЧЕРНА ГОРА"
+  },
+  {
+    "country_id": "139",
+    "code": "MG",
+    "name": "МАДАГАСКАР"
+  },
+  {
+    "country_id": "140",
+    "code": "MH",
+    "name": "МАРШАЛСКИ ОСТРОВИ"
+  },
+  {
+    "country_id": "141",
+    "code": "MI",
+    "name": "МИДУЕЙ"
+  },
+  {
+    "country_id": "142",
+    "code": "MK",
+    "name": "МАКЕДОНИЯ"
+  },
+  {
+    "country_id": "143",
+    "code": "ML",
+    "name": "МАЛИ"
+  },
+  {
+    "country_id": "144",
+    "code": "MM",
+    "name": "МИАНМА"
+  },
+  {
+    "country_id": "145",
+    "code": "MO",
+    "name": "МАКАО"
+  },
+  {
+    "country_id": "146",
+    "code": "MP",
+    "name": "СЕВ.МАРИАНСКИ О-ВИ"
+  },
+  {
+    "country_id": "147",
+    "code": "MQ",
+    "name": "МАРТИНИКА"
+  },
+  {
+    "country_id": "148",
+    "code": "MR",
+    "name": "МАВРИТАНИЯ"
+  },
+  {
+    "country_id": "149",
+    "code": "MS",
+    "name": "МОНТСЕРАТ"
+  },
+  {
+    "country_id": "150",
+    "code": "MT",
+    "name": "МАЛТА"
+  },
+  {
+    "country_id": "151",
+    "code": "MU",
+    "name": "МАВРИЦИЙ"
+  },
+  {
+    "country_id": "152",
+    "code": "MV",
+    "name": "МАЛДИВИ"
+  },
+  {
+    "country_id": "153",
+    "code": "MW",
+    "name": "МАЛАВИ"
+  },
+  {
+    "country_id": "154",
+    "code": "MX",
+    "name": "МЕКСИКО"
+  },
+  {
+    "country_id": "155",
+    "code": "MY",
+    "name": "МАЛАЙЗИЯ"
+  },
+  {
+    "country_id": "156",
+    "code": "MZ",
+    "name": "МОЗАМБИК"
+  },
+  {
+    "country_id": "157",
+    "code": "NA",
+    "name": "НАМИБИЯ"
+  },
+  {
+    "country_id": "158",
+    "code": "NC",
+    "name": "НОВА КАЛЕДОНИЯ"
+  },
+  {
+    "country_id": "159",
+    "code": "NE",
+    "name": "НИГЕР"
+  },
+  {
+    "country_id": "160",
+    "code": "NF",
+    "name": "НОРФОЛК"
+  },
+  {
+    "country_id": "161",
+    "code": "NG",
+    "name": "НИГЕРИЯ"
+  },
+  {
+    "country_id": "162",
+    "code": "NI",
+    "name": "НИКАРАГУА"
+  },
+  {
+    "country_id": "163",
+    "code": "NL",
+    "name": "НИДЕРЛАНДИЯ"
+  },
+  {
+    "country_id": "164",
+    "code": "NO",
+    "name": "НОРВЕГИЯ"
+  },
+  {
+    "country_id": "165",
+    "code": "NP",
+    "name": "НЕПАЛ"
+  },
+  {
+    "country_id": "166",
+    "code": "NR",
+    "name": "НАУРУ"
+  },
+  {
+    "country_id": "167",
+    "code": "NU",
+    "name": "НИУЕ"
+  },
+  {
+    "country_id": "168",
+    "code": "NZ",
+    "name": "НОВА ЗЕЛАНДИЯ"
+  },
+  {
+    "country_id": "169",
+    "code": "OM",
+    "name": "ОМАН"
+  },
+  {
+    "country_id": "170",
+    "code": "P",
+    "name": "ПИТКЕЪРН"
+  },
+  {
+    "country_id": "171",
+    "code": "PA",
+    "name": "ПАНАМА"
+  },
+  {
+    "country_id": "172",
+    "code": "PE",
+    "name": "ПЕРУ"
+  },
+  {
+    "country_id": "173",
+    "code": "PF",
+    "name": "ФРЕНСКА ПОЛИНЕЗИЯ"
+  },
+  {
+    "country_id": "174",
+    "code": "PG",
+    "name": "ПАПУА-НОВА ГВИНЕЯ"
+  },
+  {
+    "country_id": "175",
+    "code": "PH",
+    "name": "ФИЛИПИНИ"
+  },
+  {
+    "country_id": "176",
+    "code": "PK",
+    "name": "ПАКИСТАН"
+  },
+  {
+    "country_id": "177",
+    "code": "PL",
+    "name": "ПОЛША"
+  },
+  {
+    "country_id": "178",
+    "code": "PM",
+    "name": "СЕН ПИЕР И МИКЕЛОН"
+  },
+  {
+    "country_id": "179",
+    "code": "PR",
+    "name": "ПУЕРТО РИКО"
+  },
+  {
+    "country_id": "180",
+    "code": "PS",
+    "name": "ПАЛЕСТИНА"
+  },
+  {
+    "country_id": "181",
+    "code": "PT",
+    "name": "ПОРТУГАЛИЯ"
+  },
+  {
+    "country_id": "182",
+    "code": "PU",
+    "name": "БЕЙКЕР"
+  },
+  {
+    "country_id": "183",
+    "code": "PW",
+    "name": "ПАЛАУ"
+  },
+  {
+    "country_id": "184",
+    "code": "PY",
+    "name": "ПАРАГВАЙ"
+  },
+  {
+    "country_id": "185",
+    "code": "QA",
+    "name": "КАТАР"
+  },
+  {
+    "country_id": "186",
+    "code": "RE",
+    "name": "РЕЮНИОН"
+  },
+  {
+    "country_id": "187",
+    "code": "RO",
+    "name": "РУМЪНИЯ"
+  },
+  {
+    "country_id": "188",
+    "code": "RS",
+    "name": "СЪРБИЯ"
+  },
+  {
+    "country_id": "189",
+    "code": "RU",
+    "name": "РУСКА ФЕДЕРАЦИЯ"
+  },
+  {
+    "country_id": "190",
+    "code": "RW",
+    "name": "РУАНДА"
+  },
+  {
+    "country_id": "191",
+    "code": "S",
+    "name": "СЕНЕГАЛ"
+  },
+  {
+    "country_id": "192",
+    "code": "SA",
+    "name": "САУДИТСКА АРАБИЯ"
+  },
+  {
+    "country_id": "193",
+    "code": "SB",
+    "name": "СОЛОМОНОВИ О-ВИ"
+  },
+  {
+    "country_id": "194",
+    "code": "SC",
+    "name": "СЕЙШЕЛИ"
+  },
+  {
+    "country_id": "195",
+    "code": "SD",
+    "name": "СУДАН"
+  },
+  {
+    "country_id": "196",
+    "code": "SE",
+    "name": "ШВЕЦИЯ"
+  },
+  {
+    "country_id": "197",
+    "code": "SG",
+    "name": "СИНГАПУР"
+  },
+  {
+    "country_id": "198",
+    "code": "SH",
+    "name": "СВЕТА ЕЛЕНА"
+  },
+  {
+    "country_id": "199",
+    "code": "SI",
+    "name": "СЛОВЕНИЯ"
+  },
+  {
+    "country_id": "200",
+    "code": "SJ",
+    "name": "СВАЛБАР И ЯН МАЙЕН"
+  },
+  {
+    "country_id": "201",
+    "code": "SK",
+    "name": "СЛОВАКИЯ"
+  },
+  {
+    "country_id": "202",
+    "code": "SL",
+    "name": "СИЕРА ЛЕОНЕ"
+  },
+  {
+    "country_id": "203",
+    "code": "SM",
+    "name": "САН МАРИНО"
+  },
+  {
+    "country_id": "204",
+    "code": "SO",
+    "name": "СОМАЛИЯ"
+  },
+  {
+    "country_id": "205",
+    "code": "SR",
+    "name": "СУРИНАМ"
+  },
+  {
+    "country_id": "206",
+    "code": "ST",
+    "name": "САО ТОМЕ И ПРИНСИПИ"
+  },
+  {
+    "country_id": "207",
+    "code": "SU",
+    "name": "СССР"
+  },
+  {
+    "country_id": "208",
+    "code": "SV",
+    "name": "САЛВАДОР"
+  },
+  {
+    "country_id": "209",
+    "code": "SY",
+    "name": "СИРИЙСКА АРАБСКА РЕПУБЛИКА"
+  },
+  {
+    "country_id": "210",
+    "code": "SZ",
+    "name": "СУАЗИЛЕНД"
+  },
+  {
+    "country_id": "211",
+    "code": "T",
+    "name": "ТУНИС"
+  },
+  {
+    "country_id": "212",
+    "code": "TC",
+    "name": "ТЪРКС И КАЙКОС"
+  },
+  {
+    "country_id": "213",
+    "code": "TD",
+    "name": "ЧАД"
+  },
+  {
+    "country_id": "214",
+    "code": "TF",
+    "name": "ФРЕНСКИ ЮЖНИ ТЕРИТОРИИ"
+  },
+  {
+    "country_id": "215",
+    "code": "TG",
+    "name": "ТОГО"
+  },
+  {
+    "country_id": "216",
+    "code": "TH",
+    "name": "ТАЙЛАНД"
+  },
+  {
+    "country_id": "217",
+    "code": "TJ",
+    "name": "ТАДЖИКИСТАН"
+  },
+  {
+    "country_id": "218",
+    "code": "TK",
+    "name": "ТОКЕЛАУ"
+  },
+  {
+    "country_id": "219",
+    "code": "TM",
+    "name": "ТУРКМЕНИСТАН"
+  },
+  {
+    "country_id": "220",
+    "code": "TO",
+    "name": "ТОНГА"
+  },
+  {
+    "country_id": "221",
+    "code": "TP",
+    "name": "ИЗТОЧЕН ТИМОР"
+  },
+  {
+    "country_id": "222",
+    "code": "TR",
+    "name": "ТУРЦИЯ"
+  },
+  {
+    "country_id": "223",
+    "code": "TT",
+    "name": "ТРИНИДАД И ТОБАГО"
+  },
+  {
+    "country_id": "224",
+    "code": "TV",
+    "name": "ТУВАЛУ"
+  },
+  {
+    "country_id": "225",
+    "code": "TW",
+    "name": "ТАЙВАН"
+  },
+  {
+    "country_id": "226",
+    "code": "TZ",
+    "name": "ТАНЗАНИЯ"
+  },
+  {
+    "country_id": "227",
+    "code": "UA",
+    "name": "УКРАЙНА"
+  },
+  {
+    "country_id": "228",
+    "code": "UG",
+    "name": "УГАНДА"
+  },
+  {
+    "country_id": "229",
+    "code": "UM",
+    "name": "МАЛКИ О-ВИ ПРИНАД.НА САЩ"
+  },
+  {
+    "country_id": "230",
+    "code": "US",
+    "name": "САЩ"
+  },
+  {
+    "country_id": "231",
+    "code": "UY",
+    "name": "УРУГВАЙ"
+  },
+  {
+    "country_id": "232",
+    "code": "UZ",
+    "name": "УЗБЕКИСТАН"
+  },
+  {
+    "country_id": "233",
+    "code": "V",
+    "name": "ВИЕТНАМ"
+  },
+  {
+    "country_id": "234",
+    "code": "VA",
+    "name": "ВАТИКАНА"
+  },
+  {
+    "country_id": "235",
+    "code": "VC",
+    "name": "СЕЙНТ ВИНСЕНТ И ГРЕНАДИНИ"
+  },
+  {
+    "country_id": "236",
+    "code": "VE",
+    "name": "ВЕНЕЦУЕЛА"
+  },
+  {
+    "country_id": "237",
+    "code": "VG",
+    "name": "ВИРДЖИНСКИ О-ВИ"
+  },
+  {
+    "country_id": "238",
+    "code": "VI",
+    "name": "ВИРДЖИНСКИ О-ВИ (САЩ)"
+  },
+  {
+    "country_id": "239",
+    "code": "VU",
+    "name": "ВАНУАТУ"
+  },
+  {
+    "country_id": "240",
+    "code": "WF",
+    "name": "УОЛИС И ФУТУНА"
+  },
+  {
+    "country_id": "241",
+    "code": "WS",
+    "name": "САМОА"
+  },
+  {
+    "country_id": "242",
+    "code": "XK",
+    "name": "КОСОВО"
+  },
+  {
+    "country_id": "243",
+    "code": "YE",
+    "name": "ЙЕМЕН"
+  },
+  {
+    "country_id": "244",
+    "code": "YT",
+    "name": "МАЙОТ"
+  },
+  {
+    "country_id": "245",
+    "code": "YU",
+    "name": "ЮГОСЛАВИЯ"
+  },
+  {
+    "country_id": "246",
+    "code": "ZA",
+    "name": "ЮЖНА АФРИКА"
+  },
+  {
+    "country_id": "247",
+    "code": "ZM",
+    "name": "ЗАМБИЯ"
+  },
+  {
+    "country_id": "248",
+    "code": "ZR",
+    "name": "ЗАИР"
+  },
+  {
+    "country_id": "249",
+    "code": "ZW",
+    "name": "ЗИМБАБВЕ"
+  },
+  {
+    "country_id": "250",
+    "code": "ZX",
+    "name": "НЕПОКАЗАНО"
+  }
+]

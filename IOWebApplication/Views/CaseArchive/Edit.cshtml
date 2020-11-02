@@ -1,0 +1,165 @@
+﻿@model CaseArchive
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    if (Model.Id > 0)
+    {
+        if (Model.DateDestroy != null)
+        {
+            ViewData["Title"] = "Редакция на унищожаване по дело " + ViewBag.CaseNumber;
+        }
+        else if (ViewBag.ComeFrom == "CaseForDestroy")
+        {
+            ViewData["Title"] = "Унищожаване на дело " + ViewBag.CaseNumber;
+        }
+        else
+        {
+            ViewData["Title"] = "Редакция на архив по дело " + ViewBag.CaseNumber;
+        }
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на дело " + ViewBag.CaseNumber + " в архив";
+    }
+    var isDestroy = Model.DateDestroy != null || ViewBag.ComeFrom == "CaseForDestroy";
+    var titleBack = "";
+    var actionBack = "";
+    if (ViewBag.ComeFrom == "CaseForArchive")
+    {
+        titleBack = "Съдебни дела за архивиране";
+        actionBack = "CaseForArchive";
+    }
+    else if (ViewBag.ComeFrom == "CaseArchive")
+    {
+        titleBack = "Съдебни дела в архив";
+        actionBack = "CaseArchive";
+    }
+    else if (ViewBag.ComeFrom == "CaseForDestroy")
+    {
+        titleBack = "Съдебни дела за унищожаване";
+        actionBack = "CaseForDestroy";
+    }
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action(actionBack,"CaseArchive")">@titleBack</a></li>
+    </ol>
+}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit" method="post" asp-route-comeFrom="@ViewBag.ComeFrom">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.DateDestroy)
+            @if (Model.Id > 0)
+            {
+                @Html.HiddenFor(x => x.RegNumber)
+                @Html.HiddenFor(x => x.RegDate)
+            }
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @if (ViewBag.MessageArchivePeriod != "")
+                {
+                    <div class="alert alert-info alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <h4><i class="icon fa fa-info"></i> Внимание!</h4>
+                        @ViewBag.MessageArchivePeriod
+                    </div>
+                }
+
+                @if (@Model.Id > 0)
+                {
+                    <div class="save-container-data">
+                        <h1>@Model.RegNumber/@Model.RegDate.ToString("dd.MM.yyyy")</h1>
+                    </div>
+                }
+                <div class="row">
+                    <div class="col-md-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1">Основни данни за архивиране</legend>
+                            <div class="archiveData">
+                                @Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")
+                                @Html.EditorFor(x => x.ArchiveIndexId, "GenericDropDown")
+                                @Html.EditorFor(x => x.ArchiveLink)
+                                @Html.EditorFor(x => x.StorageYears)
+                            </div>
+                            @Html.EditorFor(x => x.BookNumber)
+                            @Html.EditorFor(x => x.BookYear, "DateTimeYear")
+                            <div class="archiveData">
+                                @Html.EditorFor(x => x.DescriptionInfo)
+                            </div>
+                            @if (Model.Id == 0)
+                            {
+                                <div class="divCheckOldNumber">
+                                    @Html.EditorFor(x => x.IsOldNumber)
+                                </div>
+                                <div class="row" id="divOldNumber" style="display: none;">
+                                    <div class="col-md-6">
+                                        @Html.EditorFor(x => x.RegNumber, "String", new { groupClass = "has-error" })
+                                    </div>
+                                    <div class="col-md-6">
+                                        @Html.EditorFor(x => x.RegDate, "DateTime", new { groupClass = "has-error" })
+                                    </div>
+                                </div>
+                            }
+                        </fieldset>
+                    </div>
+                    @if (isDestroy)
+                    {
+                        <div class="col-md-6">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">Основни данни за унищожаване</legend>
+                                @Html.EditorFor(x => x.ActDestroyLabel)
+                                @Html.EditorFor(x => x.Description, "Textarea", new { @rows = "6" })
+                                @Html.EditorFor(x => x.DescriptionInfoDestroy, "Textarea", new { @rows = "6" })
+                            </fieldset>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action=@ViewBag.ComeFrom class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        if ('@isDestroy' == 'True') {
+            $(".archiveData").find('input, select').attr("readonly", "readonly");
+            $('#CaseSessionActId').attr("style", "pointer-events: none;");
+            $('#ArchiveIndexId').attr("style", "pointer-events: none;");
+        }
+    });
+
+    $('#ArchiveIndexId').change(function () {
+        var indexId = $(this).val();
+        if (indexId > 0) {
+            requestGET_Json('@Url.Action("Get_StorageYears","CaseArchive")', { indexId: indexId }, function (data) {
+                $("#StorageYears").val(data.years);
+            });
+        }
+    });
+
+    $('input#IsOldNumber').change(function () {
+        if ($(this).is(':checked')) {
+            $('#divOldNumber').show();
+        } else {
+            $('#divOldNumber').hide();
+        }
+    }).trigger('change');
+</script>

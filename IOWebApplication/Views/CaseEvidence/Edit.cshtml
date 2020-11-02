@@ -1,0 +1,89 @@
+﻿@model CaseEvidence
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = (access.CanChange ? "Редакция на доказателство " : "Преглед на доказателство ") + ViewBag.EvidenceName;
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на доказателство";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                @*@if (Model.Id > 0)
+                    {
+                        <div class="pull-right text-danger">
+                            НОМЕР: @Model.RegNumber
+                        </div>
+                    }*@
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.EvidenceTypeId, "GenericDropDown")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.FileNumber, "Textarea")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateAccept, "DateTimeWithTime")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.Location, "Textarea")</div>
+                    <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.AddInfo, "Textarea")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.EvidenceStateId, "GenericDropDown")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @if (access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на доказателство", ExpireSubmitUrl = Url.Action("CaseEvidence_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,120 @@
+﻿@{
+    var casePersonId = ViewBag.casePersonId;
+    ViewData["Title"] = "Мерки към " + ViewBag.casePersonName;
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CasePerson" asp-action="AddCasePersonMeasure" asp-route-personId="@casePersonId" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCasePersonMeasure")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.casePersonId = @casePersonId;
+                    }
+                 },
+                columns: [
+                    {
+                        name: 'id',
+                        data: 'id',
+                        title: '',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'measureInstitutionLabel',
+                        data: 'measureInstitutionLabel',
+                        title: 'Институция, определила мярката',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'measureTypeLabel',
+                        data: 'measureTypeLabel',
+                        title: 'Вид мярка',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'measureStatusDate',
+                        data: 'measureStatusDate',
+                        title: 'Дата на мярката',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'bailAmount',
+                        data: 'bailAmount',
+                        title: 'Гаранция',
+                        sortable: true,
+                        searchable: false
+                    },
+
+                    {
+                        name: 'measureStatusLabel',
+                        data: 'measureStatusLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-left noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            }).order([[0, "desc"]]).column(0).visible(false);
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        @if (access.CanChange)
+        {
+            <a href="@Url.Action("EditCasePersonMeasure", "CasePerson")?id={{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+        else
+        {
+            <a href="@Url.Action("EditCasePersonMeasure", "CasePerson")?id={{id}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+    </script>
+}

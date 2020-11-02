@@ -1,0 +1,129 @@
+﻿@{
+    ViewData["Title"] = "Списък Основен вид дело";
+}
+@inject IViewLocalizer Localizer
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'orderNumber',
+                        data: 'orderNumber',
+                        title: 'Номер по ред',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Етикет',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isActive',
+                        data: "isActive",
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false,
+                        className: "text-center",
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateStart',
+                        data: 'dateStart',
+                        title: 'Начална дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateEnd',
+                        data: 'dateEnd',
+                        title: 'Крайна дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+            $(document).on('click', '.orderButton', savePosition);
+
+            function savePosition(e) {
+                var element = e.currentTarget;
+                var data = element.dataset;
+
+                element.setAttribute("disabled", "");
+                $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("ChangeOrder")',
+                    dataType: "json",
+                    data: data
+                }).fail(function (jqXHR, status, message) {
+                    if (jqXHR.responseText) {
+                        //messageHelper.ShowErrorMessage(jqXHR.responseText);
+                    }
+                }).always(function () {
+                    table.draw(false);
+                });
+            };
+        });        
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-info btn-sm" title="@Localizer["btnUp"]"><i class="fa fa-angle-up"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-primary btn-sm" title="@Localizer["btnDown"]"><i class="fa fa-angle-down"></i></a>
+        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+        <a href="@Url.Action("CaseTypeList")?caseGroupId={{this}}" class="btn btn-warning btn-sm" title="Точен вид дело"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Точен вид дело</span></a>
+    </script>
+}

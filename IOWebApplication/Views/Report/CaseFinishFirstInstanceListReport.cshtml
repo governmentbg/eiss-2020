@@ -1,0 +1,195 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@model CaseFinishListFilterReportVM
+
+@{
+    ViewData["Title"] = "Справка свършени дела за период – първоинстанционни дела";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("CaseFinishFirstInstanceListReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div id="divComplain" class="col-lg-3">@Html.EditorFor(x => x.ActComplainResultId, "GenericDropDown")</div>
+        <div id="divResult" class="col-lg-3">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseFinishFirstInstanceListReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val(),
+                            ActComplainResultId: $("#ActComplainResultId").val(),
+                            SessionResultId: $("#SessionResultId").val(),
+                            CaseCodeId: $("#CaseCodeId").val(),
+                        };
+                    }
+                },
+                filter: false,
+                "fnDrawCallback": function (oSettings) {
+                    hideColumn();
+                },
+                columns: [
+                    {
+                        name: 'caseTypeName',
+                        data: 'caseTypeName',
+                        title: 'Точен вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'judgeReporterName',
+                        data: 'judgeReporterName',
+                        title: 'Съдия докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCodeName',
+                        data: 'caseCodeName',
+                        title: 'Предмет и шифър',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "complain-result",
+                        name: 'actComplainResultName',
+                        data: 'actComplainResultName',
+                        title: 'Резултат/Степен на уважаване на иска',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "session-result",
+                        name: 'sessionResultName',
+                        data: 'sessionResultName',
+                        title: 'Резултат от заседанието',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'sessionResultStopBaseName',
+                        data: 'sessionResultStopBaseName',
+                        title: 'Причина за прекратяване',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-center",
+                        name: 'caseDateFinish',
+                        data: 'caseDateFinish',
+                        title: 'Дата на приключване на делото',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-right",
+                        name: 'caseLifecycleMonths',
+                        data: 'caseLifecycleMonths',
+                        title: 'Продължителност',
+                        sortable: true,
+                        searchable: false,
+                    },
+                ]
+            });
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+
+    $('#CaseGroupId').change(function () {
+        var caseGroupId = $(this).val();
+        $("#divComplain").hide();
+        $("#divResult").hide();
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () {
+            $('#CaseTypeId').trigger('change')
+        });
+        if (caseGroupId == '@NomenclatureConstants.CaseGroups.NakazatelnoDelo') {
+            $("#divResult").show();
+        }
+        else if (caseGroupId == '@NomenclatureConstants.CaseGroups.GrajdanskoDelo' || caseGroupId == '@NomenclatureConstants.CaseGroups.Trade') {
+            $("#divComplain").show();
+        }
+    });
+
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("GetDDL_ActComplainResult", "Ajax")', { caseTypeId: $(this).val() }, '#ActComplainResultId', @Model.ActComplainResultId);
+    });
+
+    function hideColumn()
+    {
+        var caseGroupId = $("#CaseGroupId").val();
+        $(".session-result").show();
+        $(".complain-result").show();
+        if (caseGroupId == '@NomenclatureConstants.CaseGroups.NakazatelnoDelo') {
+            $('.complain-result').hide();
+        }
+        else if (caseGroupId == '@NomenclatureConstants.CaseGroups.GrajdanskoDelo' || caseGroupId == '@NomenclatureConstants.CaseGroups.Trade') {
+            $('.session-result').hide();
+        }
+    }
+</script>
+
+<script>
+    $(function () {
+        initLawUnit();
+        initCaseCode();
+    });
+</script>

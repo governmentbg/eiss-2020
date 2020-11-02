@@ -1,0 +1,19 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    ViewData["Title"] = "Дела др. институции";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../Document/_DocumentInstitutionCaseInfoList.cshtml" model="@new CaseMainDataVM { Id = Model.Id, DocumentId = Model.DocumentId} " />
+    </div>
+</div>

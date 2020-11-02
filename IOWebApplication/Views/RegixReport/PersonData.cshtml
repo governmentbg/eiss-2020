@@ -1,0 +1,63 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixPersonDataVM
+
+@{
+    ViewData["Title"] = "Справка за физическо лице";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <form asp-action="PersonData" method="post">
+            @Html.HiddenFor(m => m.Report.CourtId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.EgnFilter)</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.PersonNamesCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.AliasCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.LatinNamesCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.ForeignNamesCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.GenderCheck)</div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.EgnCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.BirthDateCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.PlaceBirthCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.NationalityCheck)</div>
+                    <div class="col-lg-2">@Html.EditorFor(m => m.PersonDataFilter.DeathDateCheck)</div>
+                </div>
+
+                <partial name="_ReportReason" model="@Model.Report" />
+
+                <div class="form-group">
+                    <input type="submit" value="Търсене" class="btn btn-success" />
+                </div>
+
+                <hr />
+            </div>
+        </form>
+        <div>
+            @if (Model.Report.Id > 0)
+            {
+                <partial name="_PersonDataResponse" model="@Model" />
+                <a href="@Url.Action("PrintPdf","RegixReport",new { id = Model.Report.Id})" class="btn btn-primary">Свали PDF</a>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+</script>
+

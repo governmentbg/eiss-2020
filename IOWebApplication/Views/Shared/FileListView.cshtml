@@ -1,0 +1,17 @@
+﻿@using IOWebApplication.Infrastructure.Models.Cdn
+@model IEnumerable<CdnItemVM>
+@if (Model != null && Model.Count() > 0)
+{
+    <ul class="cdn-file-listview">
+        @foreach (var item in Model)
+        {
+            <li>
+                <a href="@Url.Action("Download", "Files", new { id = item.FileId })" title="Изтегли файла">@(item.Title ?? item.FileName)</a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <text>Няма прикачени документи.</text>
+}

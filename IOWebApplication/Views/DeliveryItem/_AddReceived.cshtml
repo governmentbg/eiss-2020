@@ -1,0 +1,90 @@
+﻿@model DeliveryItem
+@using IOWebApplication.Infrastructure.Data.Models.Delivery
+@{
+    var containerId = ViewBag.conteinerId;
+    var formId = "formEdit" + containerId;
+}
+<div id="@containerId" name="@containerId">
+    <div class="col-md-12">
+        <div class="delivery-item-input">
+            <form id="@formId" asp-action="Edit" method="post">
+                @Html.ValidationSummary()
+                @Html.HiddenFor(x => x.Id)
+                @Html.HiddenFor(x => x.CourtId)
+                <div id="saveContainer">
+                    <div class="col-md-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1">Данни за уведомяване</legend>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    @Html.EditorFor(x => x.RegNumber)
+                                </div>
+                                <div class="col-md-4">
+                                    @Html.EditorFor(x => x.RegDate)
+                                </div>
+                                <div class="col-md-4">
+                                    @Html.EditorFor(x => x.DateAccepted)
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    @Html.EditorFor(x => x.FromCourtId, "GenericDropDown")
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    @Html.EditorFor(x => x.PersonName)
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    @Html.EditorFor(x => x.CaseInfo)
+                                </div>
+                            </div>
+                            @if (ViewBag.showButtons)
+                            {
+
+                                <div class="row rajon-add">
+                                    <div class="col-lg-3 text-left pb-15">
+                                        <div class="form-group">
+                                            <br />
+                                            <a onclick="getToCourtAndType('@containerId')" class="btn btn-success">
+                                                <i class="fa fa-address-book"></i>
+                                                Райониране
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <div class="row">
+                                <div class="col-md-6">
+                                    @Html.EditorFor(x => x.DeliveryAreaId, "GenericDropDown")
+                                </div>
+                                <div class="col-md-6">
+                                    @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1">Адрес на лице</legend>
+                            @Html.EditorFor(x => x.Address)
+                        </fieldset>
+                    </div>
+
+                    @if (ViewBag.showButtons)
+                    {
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a id="button" class="btn btn-success">Запис</a>
+                                <a href="#" onclick="postToFilterDeliveryItems()" class="btn btn-danger">Назад</a>
+                            </div>
+                        </div>
+                    }
+            </form>
+        </div>
+    </div>
+</div>
+
+

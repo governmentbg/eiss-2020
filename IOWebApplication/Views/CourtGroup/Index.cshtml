@@ -1,0 +1,173 @@
+﻿@{
+    int? filterCaseGroupId = ViewBag.filterCaseGroupId;
+    ViewData["Title"] = "Списък групи шифри";
+}
+@model int?
+@inject IViewLocalizer Localizer
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        @Html.EditorFor(model => filterCaseGroupId, "GenericDropDown")
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a onclick=addFilterCourtGroup("@Url.Action("Add")") class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filterCaseGroupId = filterCaseGroupId.value;
+                    }
+                 },
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'orderNumber',
+                        data: 'orderNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-3 floatCaseGroup',
+                        name: 'caseGroupLabel',
+                        data: 'caseGroupLabel',
+                        title: 'Основен вид делo',
+                        sortable: false,
+                        searchable: false
+                     },
+                     {
+                        className: 'col-md-3 labelGroup',
+                        name: 'label',
+                        data: 'label',
+                         title: 'Наименование',
+                         sortable: false,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'text-right',
+                        name: 'countCode',
+                        data: 'countCode',
+                        title: 'Брой шифри',
+                        sortable: false,
+                        searchable: false
+                    },                    
+                    {
+                        className: 'text-right',
+                        name: 'countLawUnit',
+                        data: 'countLawUnit',
+                        title: 'Брой съдии',
+                        sortable: false,
+                        searchable: false
+                    },                    
+                    {
+                        width: 250,
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: 'text-right noExport',
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+            $(document).on('click', '.orderButton', savePosition);
+
+            function savePosition(e) {
+                var element = e.currentTarget;
+                var data = element.dataset;
+
+                element.setAttribute("disabled", "");
+
+                $.ajax({
+                     method: "POST",
+                     url: '@Url.Action("ChangeOrder")',
+                     dataType: "json",
+                     data: data
+                }).fail(function (jqXHR, status, message) {
+                     if (jqXHR.responseText) {
+                        //messageHelper.ShowErrorMessage(jqXHR.responseText);
+                     }
+                }).always(function () {
+                     table.draw( false );
+                });
+            };
+        });
+        $("#filterCaseGroupId").change(function () {
+            $('#mainTable').DataTable().ajax.reload(function (json) {
+                if ($("#caseGroupId").val() == -1) {
+                    $('.floatCaseGroup').show();
+                    $('.labelGroup').removeClass("col-md-6");
+                    $('.labelGroup').addClass("col-md-3");
+                } else {
+                    $('.floatCaseGroup').hide();
+                    $('.labelGroup').removeClass("col-md-3");
+                    $('.labelGroup').addClass("col-md-6");
+                }
+            }, false);
+        });
+        function addFilterCourtGroup(addr) {
+            window.location.href = addr + "?filterCaseGroupId=" + $("#filterCaseGroupId").val();// + "&filterMainTable=" + $('#mainTable').DataTable().search();
+        }
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-def btn-sm" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-def btn-sm" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
+        <a onclick=addFilterCourtGroup("@Url.Action("Edit")/{{this}}") class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick=addFilterCourtGroup("@Url.Action("EditCourtGroupLawUnit")/{{this}}") class="btn btn-def btn-sm" title="Съдии"><i class="fa fa-user"></i><span class="hidden-sm hidden-xs"> Съдии</span></a>
+    </script>
+}

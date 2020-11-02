@@ -1,0 +1,118 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@inject IViewLocalizer Localizer
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseMoney" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseMoneyMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseMoneyMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseMoney")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                        d.caseSessionId = @(Model.CaseSessionId??0);
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'caseLawUnitName',
+                        data: 'caseLawUnitName',
+                        title: 'Участник',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'moneyTypeName',
+                        data: 'moneyTypeName',
+                        title: 'Вид сума',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'moneySignName',
+                        data: 'moneySignName',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'paidDate',
+                        data: 'paidDate',
+                        title: 'Платено на',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseMoneyTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="caseMoneyTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "CaseMoney")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("Edit", "CaseMoney")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+

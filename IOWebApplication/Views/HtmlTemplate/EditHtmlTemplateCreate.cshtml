@@ -1,0 +1,94 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Common.HtmlTemplateCreateVM
+
+@{
+    ViewData["Title"] = "Създаване на бланка";
+    var filterJson = ViewBag.filterJson;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form id="formHtmlTemplateCreate" method="post" action="@Url.Action("EditHtmlTemplateCreatePost", "HtmlTemplate")">
+            <style>
+                table.mce-item-table, .mce-item-table td, .mce-item-table th, .mce-item-table caption {
+                    border: none;
+                }
+            </style>
+            @Html.HiddenFor(x => x.Style)
+            @Html.HiddenFor(x => x.Id)
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <fieldset class="is-fieldset">
+                        <legend class="legend_1"> Текст</legend>
+                        <div>@Html.TextAreaFor(model => model.Text)</div>
+                    </fieldset>
+                </div>
+                <div class="col-lg-4">
+                    <fieldset class="is-fieldset">
+                        <legend class="legend_1"> Параметри</legend>
+                        <div><partial name="../HtmlTemplate/_Param.cshtml" /></div>
+                    </fieldset>
+                    <fieldset class="is-fieldset">
+                        <legend class="legend_1"> Основни данни</legend>
+                        <div class="row">
+                            <div class="col-md-12">@Html.EditorFor(x => x.HtmlTemplateTypeId, "GenericDropDown")</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">@Html.EditorFor(x => x.Alias)</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">@Html.EditorFor(x => x.Label)</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">@Html.EditorFor(x => x.Description)</div>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div>
+                <button onclick="saveTinyMCE()" class="btn btn-success">Запис</button>
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        </form>
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+@section scripts {
+    <script>
+        tinymce.init({
+            selector: 'textarea#Text',
+            height: 800,
+            menubar: 'file edit view insert format tools table tc help',
+            plugins: [
+                'advlist autolink lists link image charmap print preview anchor',
+                'searchreplace visualblocks code fullscreen',
+                'insertdatetime media table paste code help wordcount'
+            ],
+            toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+            visual_table_class : "table",
+            table_default_attributes: { border : 0},
+            @*content_css: [
+                '@Url.Action("Preview", "HtmlTemplate", new { id = Model.Id})/style.css'
+            ]*@
+        });
+
+        function saveTinyMCE() {
+            $("#formHtmlTemplateCreate").submit();
+        }
+
+        function postToFilterHtmlTemplate() {
+            $("#formPostFilter").submit();
+        }
+
+    </script>
+}

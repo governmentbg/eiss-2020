@@ -1,0 +1,20 @@
+﻿@model int
+
+@{
+    var ddl = (List<SelectListItem>)(ViewData["Ddl"] ?? new List<SelectListItem>());
+}
+
+<div class="form-group">
+    <div id="divRepesentativeContainer" class="form-group form-group-selection">
+        <label asp-for="@Model" class="control-label"></label>
+        <br />
+        @foreach (var item in ddl)
+        {
+            string checkedValue = item.Value == Model.ToString() ? "checked" : "";
+            <input asp-for="@Model" type="radio" value="@item.Value" checked="@checkedValue" /> @item.Text
+            <span>&nbsp;&nbsp;</span>
+        }
+        <span asp-validation-for="@Model" class="text-danger"></span>
+    </div>
+</div>
+

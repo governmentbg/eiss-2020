@@ -1,0 +1,165 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@using IOWebApplication.Core.Helper.GlobalConstants;
+@model WorkNotificationFilterVM;
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Моите известия";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<form id="formFilter" asp-action="Edit" method="post">
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateCreate)
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.WorkNotificationTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.ReadTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            <div id="divDateFrom">
+                @Html.EditorFor(x => x.DateFrom)
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div id="divDateTo">
+                @Html.EditorFor(x => x.DateTo)
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadWorkNotifications()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+
+    </div>
+</form>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<script>
+    $('#ReadTypeId').change(function () {
+        var showDates = ($('#ReadTypeId').val() != "1");
+        if (showDates) {
+            $('#divDateFrom').show();
+            $('#divDateTo').show();
+        } else {
+            $('#divDateFrom').hide();
+            $('#divDateTo').hide();
+        }
+    });
+    $('#ReadTypeId').change();
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                'order': [[0, 'asc']],
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                     data: function (d) {
+                         if ($('#filterJson').val() == "") {
+                            console.log('initial set filterData');
+                            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+                        }
+                        d.filterData = JSON.parse($('#filterJson').val());
+                     }
+                 },
+                columns: [
+                    {
+                        name: 'title',
+                        data: 'title',
+                        title: 'Нотификация',
+                        width: 300,
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateRead',
+                        data: 'dateRead',
+                        title: 'Прочетено',
+                        sortable: true,
+                        searchable: false,
+                        width: 120,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("@FormattingConstant.DateFormatJS");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Съобщение',
+                        width: 400,
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-right noExport",
+                        width: 205,
+                        "render": function (data, type, row) {
+                            row.isUnRead = (row.dateRead === null);
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        });
+
+    function LoadWorkNotifications() {
+        var filter = getFormData($('#formFilter'));
+        $('#filterJson').val(JSON.stringify(filter));
+        $('#mainTable').DataTable().ajax.reload();
+    }
+
+    function WorkNotificationIsRead(id) {
+        $.ajax({
+            method: "POST",
+            url: '@Url.Action("SaveReaded")',
+            dataType: "json",
+            data: {id:id}
+        }).fail(function (jqXHR, status, message) {
+            if (jqXHR.responseText) {
+                console.log(jqXHR.responseText);
+            }
+        }).always(function () {
+          $('#mainTable').DataTable().ajax.reload();
+        });
+    };
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    {{#if isUnRead}}
+    <a onclick="WorkNotificationIsRead({{this.id}})" class="btn btn-warning btn-sm" title="Маркирай като прочетено">
+        <i class="fa fa-edit"></i>
+        <span class="hidden-sm hidden-xs">Маркирай като прочетено</span>
+    </a>
+    {{/if}}
+    <a href="{{this.sourceUrl}}" class="btn btn-def btn-sm" title="{{this.linkLabel}}">
+        <i class="fa fa-eye"></i>
+    </a>
+</script>
+@*<a href="{{this.sourceUrl}}" class="btn btn-def btn-sm" title="{{this.linkLabel}}">
+    <i class="fa fa-eye"></i>
+    <span class="hidden-sm hidden-xs">{{this.linkLabel}}</span>
+</a>*@

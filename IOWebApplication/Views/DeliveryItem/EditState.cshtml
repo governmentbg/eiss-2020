@@ -1,0 +1,112 @@
+﻿@model DeliveryItem
+@using IOWebApplication.Infrastructure.Data.Models.Delivery
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Constants;
+
+@{
+    ViewData["Title"] = "Промяна на статус при разнасяне с куриер/кметство";
+    var filterJson = ViewBag.filterJson;
+    List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="col-md-12 col-lg-6">
+    <form id="formEdit" asp-action="EditStatePost" method="post">
+        @Html.HiddenFor(x => x.Id)
+        @Html.HiddenFor(x => filterJson)
+        @Html.HiddenFor(x => x.CaseNotificationId)
+        @Html.HiddenFor(x => x.CourtId)
+        @Html.HiddenFor(x => x.FromCourtId)
+        <div id="saveContainer">
+            <partial name="_SaveFormContent" model="@("#saveContainer")" />
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="regNumber" class="control-label">Баркод:</label>
+                    <input name="regNumber" id="regNumber" class="form-control" value="@Model.RegNumber" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="courtName" class="control-label">От съд:</label>
+                    <input name="courtName" id="regNumber" class="form-control" value="@Model.FromCourt?.Label" readonly>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="personName" class="control-label">Име на лицето:</label>
+                    <input name="personName" id="personName" class="form-control" value="@Model.PersonName" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="address" class="control-label">Адрес:</label>
+                    <input name="address" id="address" class="form-control" value="@Model.Address.FullAddress" readonly>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")
+                </div>
+                <div class="col-lg-6" id="DeliveryDateDivCC">
+                    @Html.EditorFor(x => x.DeliveryDateCC, "DateTimeWithTime")
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+    </form>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+@section scripts {
+    <script>
+        function postToFilterDeliveryItems()
+        {
+            $("#formPostFilter").submit();
+        }
+        function setDateDeliveryCC(el) {
+            if ($(el).length === 0)
+                return;
+            let isAdd = false;
+            let notificationStateId = $("#NotificationStateId").val();
+            if (notificationStateId == @NomenclatureConstants.NotificationState.Delivered ||
+                notificationStateId == @NomenclatureConstants.NotificationState.Delivered47 ||
+                notificationStateId == @NomenclatureConstants.NotificationState.Delivered50 ||
+                notificationStateId == @NomenclatureConstants.NotificationState.Delivered51 ||
+                notificationStateId == @NomenclatureConstants.NotificationState.UnDelivered)
+            {
+                isAdd = true;
+            }
+            if (isAdd) {
+                $("#DeliveryDateDivCC").show();
+                $(el).rules('add', {
+                    required: true,
+                    messages: {
+                        required: 'Въведете Дата на връчване!',
+                    }
+                })
+            } else {
+                $(el).rules('remove', 'required');
+                $("#DeliveryDateDivCC").hide();
+            }
+        }
+        $('#NotificationStateId').change(function () {
+            setDateDeliveryCC("#DeliveryDateCC");
+        });
+
+
+        $(document).ready(function () {
+            $('#NotificationStateId').change();
+        });
+
+    </script>
+}
+
+

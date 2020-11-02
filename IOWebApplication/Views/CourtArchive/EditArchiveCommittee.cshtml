@@ -1,0 +1,99 @@
+﻿@model CourtArchiveCommittee
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+    var multiselectCode = "multiselectCode";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form id="formEdit" asp-action="EditArchiveCommittee" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer" class="row col-md-12">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-md-4">
+                        @Html.EditorFor(x => x.Label)
+                    </div>
+                    <div class="col-md-2">
+                        @Html.EditorFor(x => x.DateStart)
+                    </div>
+                    <div class="col-md-2">
+                        @Html.EditorFor(x => x.DateEnd)
+                    </div>
+
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Description)
+                    </div>
+                </div>
+                <div class="row">
+                    @Html.ValidationMessage("lawUnitJson")
+                    @Html.Hidden("lawUnitJson")
+                    <div class="col-md-2">
+                        <h2 id="h4Code" class="text-left">Служители</h2>
+                    </div>
+                </div>
+                <div id="multiselectCode" class="row ms-transfer-container">
+                    <partial name="_MultiSelectTransfer" model=@multiselectCode />
+                </div>
+                <div class="row">
+                    <br>
+                </div>
+            </div>
+
+
+            <div class="form-group row col-md-12">
+                <a id="submit_button" class="btn btn-success" />Запис</a>
+                <a asp-action="ArchiveCommittee" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+@section scripts {
+    <script>
+        var $multiselectCode = $("#multiselectCode").multiselectiontransfer(
+            {
+                ajaxLeftUrl: "@Url.Action("LawUnitLeftList")",
+                ajaxRightUrl: "@Url.Action("LawUnitRightList")"
+            }
+        );
+        $multiselectCode.loadLeft({});
+        $multiselectCode.loadRight({ committeeId: @Model.Id});
+
+        $("#CaseGroupId").change(function () {
+            var caseGroupId = $("#CaseGroupId").val();
+            $multiselectCode.loadLeft({ caseGroupId : caseGroupId});
+        });
+
+        $("#formEdit").submit(function (event) {
+            $("#lawUnitJson").val($multiselectCode.getSelectedId());
+            return true;
+        });
+        $('#submit_button').click(function(){
+            $("#formEdit").submit();
+        });
+    </script>
+}
+

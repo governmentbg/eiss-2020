@@ -1,0 +1,167 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case;
+@using IOWebApplication.Core.Helper.GlobalConstants;
+@model CaseDeadLineFilterVM;
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Срокове";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<form id="formFilter" asp-action="Edit" method="post">
+    @Html.HiddenFor(x => x.CaseId)
+    <div class="row caseIdHide">
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.DeadlineTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.RegNumber)
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.DateStartFrom)
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.DateStartTo)
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.DateEndFrom)
+        </div>
+        <div class="col-md-3">
+            @Html.EditorFor(x => x.DateEndTo)
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadDeadLines()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+
+    </div>
+</form>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                'order': [[0, 'asc']],
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                     data: function (d) {
+                         if ($('#filterJson').val() == "") {
+                            console.log('initial set filterData');
+                            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+                        }
+                         d.filterData = JSON.parse($('#filterJson').val());
+                    }
+                },
+                "fnDrawCallback": function (oSettings) {
+                    hideCase();
+                },
+                columns: [
+                    {
+                        name: 'deadlineType',
+                        data: 'deadlineType',
+                        title: 'Вид срок',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseInfo',
+                        data: 'caseInfo',
+                        className: 'caseIdHide',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'makerName',
+                        data: 'id',
+                        title: 'За изпълнение от',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (data, type, row) {
+                            return row.lawUnitName + "<br>" + row.secretaryName ;
+                        }
+                    },
+                    {
+                        name: 'startDate',
+                        data: 'startDate',
+                        title: 'Начало на срока',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("@FormattingConstant.NormalDateFormatJS");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'endDate',
+                        data: 'endDate',
+                        title: 'Край на срока',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("@FormattingConstant.NormalDateFormatJS");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        width:70,
+                        className: "text-center noExport caseIdHide",
+                       "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        });
+    function hideCase() {
+       if (@Model.CaseId > 0)
+          $('.caseIdHide').hide();
+    }
+    function LoadDeadLines() {
+        var filter = getFormData($('#formFilter'));
+        $('#filterJson').val(JSON.stringify(filter));
+        $('#mainTable').DataTable().ajax.reload();
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        @*<a href="{{this.sourceUrl}}" class="btn btn-def btn-sm" title="">
+            <i class="fa fa-eye"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>*@
+        <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>

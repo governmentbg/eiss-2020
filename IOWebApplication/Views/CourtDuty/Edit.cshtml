@@ -1,0 +1,80 @@
+﻿@model CourtDuty
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","CourtDuty")">Дежурства към съд</a></li>
+    </ol>
+}
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на дежурство";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на дежурство";
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.Label)</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.ActNomer)</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.ActDate)</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeWithTime")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTimeWithTime")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="Index" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#DateFrom').on('dp.change', function (e) {
+            if (e.oldDate === null) {
+                var dateNow = new Date();
+                $(this).data('DateTimePicker').date(moment(dateNow).hours(0).minutes(0).seconds(0).milliseconds(0));
+            }
+        });
+        $('#DateTo').on('dp.change', function (e) {
+            if (e.oldDate === null) {
+                var dateNow = new Date();
+                $(this).data('DateTimePicker').date(moment(dateNow).hours(23).minutes(59).seconds(59));
+            }
+        });
+    });
+</script>

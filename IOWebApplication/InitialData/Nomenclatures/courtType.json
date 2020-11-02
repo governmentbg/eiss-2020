@@ -1,0 +1,79 @@
+[
+  {
+    "id": "1",
+    "order_number": "1",
+    "label": "Конституционния съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "2",
+    "order_number": "2",
+    "label": "Върховния касационен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "3",
+    "order_number": "3",
+    "label": "Върховния административен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "4",
+    "order_number": "4",
+    "label": "Апелативен специализиран наказателен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "5",
+    "order_number": "5",
+    "label": "Специализиран наказателен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "6",
+    "order_number": "6",
+    "label": "Апелативен военен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "7",
+    "order_number": "7",
+    "label": "Военен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "8",
+    "order_number": "8",
+    "label": "Апелативен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "9",
+    "order_number": "9",
+    "label": "Административен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "10",
+    "order_number": "10",
+    "label": "Окръжен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "11",
+    "order_number": "11",
+    "label": "Районен съд",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  }
+]

@@ -1,0 +1,89 @@
+﻿@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@using Microsoft.Extensions.Configuration
+@using IOWebApplication.Infrastructure.Constants
+@inject IConfiguration configuration;
+@{
+    var settings = await userContext.Settings();
+
+    var signToolsPath = configuration.GetValue<string>("SignToolsPath");
+    var certCheckPath = configuration.GetValue<string>("StampIT:CertCheckPath")";
+    if (userContext.ClaimValue("PasswordLogin") == "true")
+    {
+        certCheckPath = "";
+    }
+    var environmentName = configuration.GetValue<string>("Environment:Name") ?? NomenclatureConstants.Environments.Production;
+    //environmentName = "test";
+    var envClass = string.Empty;
+    if (environmentName != NomenclatureConstants.Environments.Production)
+    {
+        envClass = "env--show";
+    }
+    string dbName = configuration.GetDbName();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewBag.Title</title>
+    <link href="~/css/prod/site.min.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="shortcut icon" href="@Url.Content("~/img/favicon.ico")" type="image/x-icon">
+    <link rel="icon" href="@Url.Content("~/img/favicon.ico")" type="image/x-icon">
+    <script type="text/javascript">
+        var rootDir = '@Url.Content("~/")';
+        var signToolsPath = '@Html.Raw(signToolsPath)';
+        var certCheckPath = '@Html.Raw(certCheckPath)';
+        var userSettings = JSON.parse('@Html.Raw(settings.AsText())');
+        var certNo = '@userContext.CertificateNumber';
+        var signOutUrl = '@Url.Action("LogOut", "Account")';
+    </script>
+    <script src="~/js/prod/head_site.min.js" asp-append-version="true"></script>
+    @RenderSection("head", false)
+</head>
+<body class="layout-top-nav 1sidebar-mini skin-blue-light wysihtml5-supported @ViewBag.body_style">
+    <div class="overlay-loader" id="ajaxLoader">
+        <div class="loader-content">
+            <img src="~/img/spinner.svg" alt="Ajax loader" />
+        </div>
+    </div>
+    <div class="wrapper @envClass">
+        @switch (environmentName)
+        {
+            case NomenclatureConstants.Environments.Test:
+                <div class="env env--test"><span>ТЕСТОВА СРЕДА</span><span class="pull-right hidden-sm hidden-xs">ТЕСТОВА СРЕДА</span></div>
+                break;
+            case NomenclatureConstants.Environments.Development:
+                <div class="env env--dev">
+                    <span>СРЕДА ЗА РАЗРАБОТКА</span>
+                    <span class="db--name">@dbName</span>
+                    <span class="pull-right hidden-sm hidden-xs">СРЕДА ЗА РАЗРАБОТКА</span>
+                </div>
+                break;
+            case NomenclatureConstants.Environments.QA:
+                <div class="env env--qa"><span>СРЕДА ЗА ПРИЕМАНЕ НА ПРОМЕНИ</span><span class="pull-right hidden-sm hidden-xs">СРЕДА ЗА ПРИЕМАНЕ НА ПРОМЕНИ</span></div>
+                break;
+        }
+        @RenderSection("menuHeader", false)
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            @RenderSection("contentHeader", false)
+            <!-- Main content -->
+            <section class="content">
+                @await Html.PartialAsync("_UserMessages")
+
+                @RenderBody()
+            </section>
+            <!-- /.content -->
+        </div>
+    </div>
+    <!-- /.content-wrapper -->
+    @await Html.PartialAsync("_ModalDialog")
+    @RenderSection("footer", required: false)
+    <script src="~/lib/tinymce/tinymce.min.js"></script>
+    <script src="~/js/prod/site.min.js" asp-append-version="true"></script>
+    @RenderSection("scripts", required: false)
+
+</body>
+</html>

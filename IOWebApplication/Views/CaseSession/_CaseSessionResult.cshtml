@@ -1,0 +1,97 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+<div id="myDiv">
+    @if (access.CanChange)
+    {
+        @if (Model.CaseStateId > 1)
+        {
+            <div class="row">
+                <div class="col-md-12 text-right pb-15">
+                    <a asp-controller="CaseSession" asp-action="AddResult" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-success btn-sm">
+                        <i class="fa fa-thumbs-o-up"></i>
+                        Добави рeзултат
+                    </a>
+                </div>
+            </div>
+        }
+    }
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <table id="caseSessionResultMainTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseSessionResultMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataResult", "CaseSession")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseSessionId = @Model.CaseSessionId;
+                    }
+
+                },
+                dom: 'rt',
+                deferLoading: deferLoadingOnTab('#caseSessionResultMainTable'),
+                columns: [
+                    {
+                        name: 'sessionResultLabel',
+                        data: 'sessionResultLabel',
+                        title: 'Резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionResultBaseLabel',
+                        data: 'sessionResultBaseLabel',
+                        title: 'Основание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isMainText',
+                        data: 'isMainText',
+                        title: 'Основен резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionResultTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+</script>
+
+<script id="caseSessionResultTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("EditResult", "CaseSession")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("EditResult", "CaseSession")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+

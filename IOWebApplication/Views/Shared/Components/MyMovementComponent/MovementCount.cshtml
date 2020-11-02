@@ -1,0 +1,19 @@
+﻿@model int
+@if (Model >= 0)
+{
+    <li class="dropdown tasks-menu">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Неприети дела">
+            <i class="fa fa-map-marker"></i>
+            @if (Model > 0)
+            {
+                <span class="label label-warning">@Model</span>
+            }
+            </a>
+        <ul class="dropdown-menu">
+            <li class="header">Неприети дела: <b>@Model</b></li>
+            <li class="footer">
+                <a asp-action="MyMovement" asp-controller="CaseMovement">Преглед на неприети дела</a>
+            </li>
+        </ul>
+    </li>
+}

@@ -1,0 +1,702 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		h5 {
+			mso-style-link: "Heading 5 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h6 {
+			mso-style-link: "Heading 6 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListBullet, li.MsoListBullet, div.MsoListBullet {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpFirst, li.MsoListBulletCxSpFirst, div.MsoListBulletCxSpFirst {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpMiddle, li.MsoListBulletCxSpMiddle, div.MsoListBulletCxSpMiddle {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpLast, li.MsoListBulletCxSpLast, div.MsoListBulletCxSpLast {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.ListParagraph2, li.ListParagraph2, div.ListParagraph2 {
+			mso-style-name: "List Paragraph2 ЕИСС";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpFirst, li.ListParagraph2CxSpFirst, div.ListParagraph2CxSpFirst {
+			mso-style-name: "List Paragraph2 ЕИССCxSpFirst";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpMiddle, li.ListParagraph2CxSpMiddle, div.ListParagraph2CxSpMiddle {
+			mso-style-name: "List Paragraph2 ЕИССCxSpMiddle";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpLast, li.ListParagraph2CxSpLast, div.ListParagraph2CxSpLast {
+			mso-style-name: "List Paragraph2 ЕИССCxSpLast";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraph2Char {
+			mso-style-name: "List Paragraph2 ЕИСС Char";
+			mso-style-link: "List Paragraph2 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			mso-style-link: "Style4 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 74.55pt;
+			text-align: justify;
+			text-indent: 0cm;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Heading4IO, li.Heading4IO, div.Heading4IO {
+			mso-style-name: "Heading 4 IO";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.4pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-style: italic;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.REQTableText, li.REQTableText, div.REQTableText {
+			mso-style-name: "REQ Table Text";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		span.Heading5Char {
+			mso-style-name: "Heading 5 Char";
+			mso-style-link: "Heading 5";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.EISSBullet, li.EISSBullet, div.EISSBullet {
+			mso-style-name: "EISS Bullet";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpFirst, li.EISSBulletCxSpFirst, div.EISSBulletCxSpFirst {
+			mso-style-name: "EISS BulletCxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpMiddle, li.EISSBulletCxSpMiddle, div.EISSBulletCxSpMiddle {
+			mso-style-name: "EISS BulletCxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpLast, li.EISSBulletCxSpLast, div.EISSBulletCxSpLast {
+			mso-style-name: "EISS BulletCxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Style4Char {
+			mso-style-name: "Style4 Char";
+			mso-style-link: Style4;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.NormalIO, li.NormalIO, div.NormalIO {
+			mso-style-name: "Normal IO";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading6Char {
+			mso-style-name: "Heading 6 Char";
+			mso-style-link: "Heading 6";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 612.0pt 792.0pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h2 style='margin-left:71.45pt;text-indent:-18.0pt'>
+			<a name="_Toc42527904"></a><a name="_Toc39426263">
+				1.1<span style='font:7.0pt "Times New Roman"'> </span>ОБЩА
+				ИНФОРМАЦИЯ ЗА ДЕЛА
+			</a>
+		</h2>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<span style='line-height:115%'>
+				Екран
+				обща информация дава възможност за търсене и преглед на образувани дела.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=135
+				 id="Picture 142192" src="caseindex_files/image001.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			При първоначално зареждане на екран Регистрирани документи
+			не се визуализират резултати. При директно натискане на бутон Филтриране <img width=94 height=25 id="Picture 141416" src="caseindex_files/image002.jpg">, се
+			извеждат всички образувани в системата дела. Наборът от данни може да бъде
+			филтриран, в зависимост от въведените критерии в полетата в горната част на
+			екрана. В меню обща информация за дела може да бъдат използвани следните
+			филтри:
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>От дата - До дата – избира се дата от и до за определяне на период, в
+			който е образувано делото ;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Година – избира се година за бързо извеждане на делата за цяла
+			календарна година, като полетата От дата и До дата не трябва да са попълнени;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Съдия-докладчик – избира се чрез автоматично попълване след търсене по
+			минимум три последователни символа от имената или идентификатор на активния
+			съдия-докладчик;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Основен вид дело – избира се от основните видове дела;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Точен вид дело – избира се от падащ списък филтриран в зависимост от
+			избраната стойност в поле основен вид дело;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Номер на дело – въвеждане на част от номер на дело или пълен 14 цифрен
+			номер на дело;
+		</p>
+
+		<p class=EISSStyle5 style='text-indent:0cm'>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Номер на иницииращ документ – въвежда се номер на входящ иницииращ 
+			документ за образуване на делото.
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal>
+			След натискане на бутон Филтриране <img width=94 height=25
+												 id="Picture 141415" src="caseindex_files/image002.jpg">резултатите се извеждат
+			в долната половина на екрана в табличен вид:
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'><span style='line-height:115%'>&nbsp;</span></p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=605
+				 height=263 id="Picture 142193" src="caseindex_files/image003.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			За всеки запис в таблицата е възможно извършване на
+			допълнителни действия, посредством избор на номер на дело, представляващи
+			хипервръзка, която препраща към екрани за преглед на дело. Бутон Преглед <img width=38 height=24 id="Picture 142304" src="caseindex_files/image004.jpg"> визуализира
+			данни за конкретното дело. Бутон Електронна папка по дело <img width=32
+																		height=26 id="Picture 142309" src="caseindex_files/image005.jpg"> предоставя
+			достъп до електронната папка на делото.
+		</p>
+
+		<p class=MsoNormal>
+			Управление на дела се извършва през функционалния екран за
+			конкретното съдебно дело със следните табове:
+		</p>
+
+		<p class=ListParagraph2CxSpFirst style='margin-left:36.0pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Таб Основни данни;
+		</p>
+
+		<p class=ListParagraph2CxSpMiddle style='margin-left:36.0pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Таб Съдебен състав;
+		</p>
+
+		<p class=ListParagraph2CxSpMiddle style='margin-left:36.0pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Таб Страни;
+		</p>
+
+		<p class=ListParagraph2CxSpMiddle style='margin-left:36.0pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Таб заседания;
+		</p>
+
+		<p class=ListParagraph2CxSpLast style='margin-left:36.0pt'>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Таб доказателства;
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			Детайлно описание на
+			изброените табове е направено в следващите подточки.
+		</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

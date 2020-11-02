@@ -1,0 +1,18 @@
+﻿@model EisppCase
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+<div class="tab-pane" id="tabPerson">
+    @for (int i = 0; i < Model.Persons.Length; i++)
+    {
+        ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.Persons[{i}]";
+        @await Html.PartialAsync("_EisppPerson", Model.Persons[i])
+    }
+    @for (int i = 0; i < Model.LegalEntities?.Length; i++)
+    {
+        ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.LegalEntities[{i}]";
+        @await Html.PartialAsync("_LegalEntity", Model.LegalEntities[i])
+    }
+</div>
+

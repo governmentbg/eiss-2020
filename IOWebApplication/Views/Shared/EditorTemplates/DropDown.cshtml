@@ -1,0 +1,14 @@
+﻿@model int?
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var ddl = (List<SelectListItem>)(ViewData["Ddl"] ?? new List<SelectListItem>());
+    var add_class = ((string)ViewData["class"] ?? "");
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+<div class="form-group">
+    <label asp-for="@Model" class="control-label @reqClass"></label>
+    @Html.DropDownListFor(model => model, ddl.SetSelected(Model), new { @class = "form-control " + add_class })
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

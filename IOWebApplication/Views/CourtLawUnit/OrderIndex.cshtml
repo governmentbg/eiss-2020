@@ -1,0 +1,74 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+
+@{
+    ViewData["Title"] = $"Ред на старшинство на съдии";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6 text-right pb-15">
+        <a asp-action="OrderIndex" asp-route-actualize="@true" class="btn btn-def">
+            <i class="fa fa-refresh"></i>
+            Обнови
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData_OrderIndex")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                sortable: false,
+                filter: false,
+                paging:false,
+                pageLength:0,
+                columns: [
+                    {
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Имена',
+                        sortable: false,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        width:70,
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+        function changeOrder(id, moveUp) {
+            requestGET_Json('@Url.Action("OrderChange")', { id: id, moveUp: moveUp }, function () {
+                $('#mainTable').DataTable().ajax.reload();
+            });
+        }
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="#" onclick="changeOrder({{this}}, true); return false;" class="orderButton btn btn-info btn-sm" title="Премести нагоре"><i class="fa fa-angle-up"></i></a>
+        <a href="#" onclick="changeOrder({{this}}, false); return false;" class="orderButton btn btn-primary btn-sm" title="Премести надолу"><i class="fa fa-angle-down"></i></a>
+    </script>
+
+}

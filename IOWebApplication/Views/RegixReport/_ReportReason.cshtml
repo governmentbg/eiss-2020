@@ -1,0 +1,30 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
+@model RegixReportVM
+
+<div>
+    @{ViewData.TemplateInfo.HtmlFieldPrefix = "Report"; }
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.DocumentId, "SelectDocument")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseId, "SelectCase", new { onChange = "caseSelect();", courtId = userContext.CourtId })</div>
+        <div class="col-lg-6">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.Description)</div>
+    </div>
+    @{ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty; }
+</div>
+
+
+<script>
+    $(function () {
+        initCase();
+        initDocument();
+    });
+
+    function caseSelect() {
+        requestCombo('@Url.Action("GetDDL_CaseSessionActsWithDefaultElement", "Ajax")', { caseId: $('#Report_CaseId').val() }, '#Report_CaseSessionActId', '@Model.CaseSessionActId');
+    }
+</script>

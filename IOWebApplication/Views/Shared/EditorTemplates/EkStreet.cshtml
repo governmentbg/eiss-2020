@@ -1,0 +1,21 @@
+﻿@model string
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_street";
+    var label = (string)ViewData["label"];
+    int? streetType = (int?)ViewData["streetType"];
+}
+
+<div class="street-container" data-streettype="@streetType">
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label"></label>
+        <input id="@fieldName" class="form-control street-control" />
+    }
+    else
+    {
+        <input id="@fieldName" class="form-control street-control" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="street-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

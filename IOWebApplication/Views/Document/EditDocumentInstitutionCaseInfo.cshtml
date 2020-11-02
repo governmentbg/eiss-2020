@@ -1,0 +1,93 @@
+﻿@model DocumentInstitutionCaseInfoEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = (access.CanChange) ? "Редакция на дело" : "Преглед на дело";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на дело";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditDocumentInstitutionCaseInfo" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.DocumentId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-2 col-md-4">
+                        @Html.EditorFor(x => x.InstitutionTypeId, "GenericDropDown")
+                    </div>
+                    <div class="col-lg-4 col-md-4">
+                        @Html.EditorFor(x => x.InstitutionId, "SelectInstitution", null, new { institutionTypeContainer = "#InstitutionTypeId" })
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                        @Html.EditorFor(x => x.InstitutionCaseTypeId, "GenericDropDown")
+                    </div>
+                    <div class="col-lg-2 col-md-2">
+                        @Html.EditorFor(x => x.CaseYear, "DateTimeYear")
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                        @Html.EditorFor(x => x.CaseNumber)
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        @Html.EditorFor(x => x.Description, "Textarea")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                <a asp-controller="Document" asp-action="IndexDocumentInstitutionCaseInfoList" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(function () {
+            initDatePicker();
+            initInstitution();
+
+            $('#InstitutionTypeId').change(function () {
+                let _inst = '@Model.InstitutionId';
+                if ($(this).val().toString() != '@Model.InstitutionTypeId') {
+                    _inst = '0';
+                }
+                let instControl = $('#InstitutionTypeId_institution:first')[0];
+                console.log(instControl);
+                loadInstitution(instControl, _inst);
+            }).trigger('change');
+        });
+    </script>
+}

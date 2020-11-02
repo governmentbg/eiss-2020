@@ -1,0 +1,118 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseSession" asp-action="Add" asp-route-caseId="@Model.Id" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+            <a asp-controller="CaseSession" asp-action="AddSessionAndAct" asp-route-caseId="@Model.Id" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави акт в ЗЗ
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="caseSessionMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseSessionMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseSession")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                    }
+
+                },
+                //title: table.container(),
+                deferLoading: deferLoadingOnTab('#caseSessionMainTable'),
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'Начало',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY HH:mm");
+                        }
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'sessionTypeLabel',
+                        data: 'sessionTypeLabel',
+                        title: 'Вид заседаниe',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'courtHallName',
+                        data: 'courtHallName',
+                        title: 'Зала',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'sessionStateLabel',
+                        data: 'sessionStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'sessionResultLabel',
+                        data: 'sessionResultLabel',
+                        title: 'Основен резултат от заседанието',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'actComplainResultLabel',
+                        data: 'actComplainResultLabel',
+                        title: 'Резултат/степен на уважаване на иска',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+</script>
+
+<script id="caseSessionTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Preview", "CaseSession")/{{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

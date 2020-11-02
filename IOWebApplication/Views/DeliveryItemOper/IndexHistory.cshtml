@@ -1,0 +1,103 @@
+﻿@model int
+@inject IViewLocalizer Localizer
+@using IOWebApplication.Core.Helper.GlobalConstants;
+@{
+    int deliveryItemId = @Model;
+    ViewData["Title"] = "Проследяване на данни";
+    var filterJson = ViewBag.filterJson;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+@Html.HiddenFor(x => deliveryItemId)
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItem")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+@section scripts {
+    <script>
+        function postToFilterDeliveryItems()
+        {
+            $("#formPostFilter").submit();
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.deliveryItemId = @deliveryItemId;
+                        d.onlyLast = false;
+                    }
+                 },
+                columns: [
+                    {
+                        name: 'dateOper',
+                        data: 'dateOper',
+                        title: 'Дата',
+                        sortable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("@FormattingConstant.DateFormatJSHHMM");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'toCourtName',
+                        data: 'toCourtName',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'areaName',
+                        data: 'areaName',
+                        title: 'Район',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Призовкар',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'operName',
+                        data: 'operName',
+                        title: 'Посещение',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'notificationStateName',
+                        data: 'notificationStateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'deliveryInfo',
+                        data: 'deliveryInfo',
+                        title: 'Данни за уведомяване',
+                        sortable: true,
+                        searchable: false
+                    }
+                ]
+            });
+        });
+
+
+    </script>
+
+}

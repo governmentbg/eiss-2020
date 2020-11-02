@@ -1,0 +1,129 @@
+@font-face {
+    font-family: Lato;
+    font-style: normal;
+    font-weight: 300;
+    src:local(".SFNSText-Light"),
+        local(".HelveticaNeueDeskInterface-Light"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI Light"),
+        local("Ubuntu Light"),
+        local("Roboto-Light"),
+        local("DroidSans"),
+        local("Tahoma");
+}
+@font-face {
+    font-family: Lato;
+    font-style: italic;
+    font-weight: 300;
+    src:local(".SFNSText-LightItalic"),
+        local(".HelveticaNeueDeskInterface-Italic"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI Light Italic"),
+        local("Ubuntu Light Italic"),
+        local("Roboto-LightItalic"),
+        local("DroidSans"),
+        local("Tahoma");
+}
+@font-face {
+    font-family: Lato;
+    font-style: normal;
+    font-weight: 400;
+    src:local(".SFNSText-Regular"),
+        local(".HelveticaNeueDeskInterface-Regular"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI"),
+        local("Ubuntu"),
+        local("Roboto-Regular"),
+        local("DroidSans"),
+        local("Tahoma");
+}
+@font-face {
+    font-family: Lato;
+    font-style: italic;
+    font-weight: 400;
+    src:local(".SFNSText-Italic"),
+        local(".HelveticaNeueDeskInterface-Italic"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI Italic"),
+        local("Ubuntu Italic"),
+        local("Roboto-Italic"),
+        local("DroidSans"),
+        local("Tahoma");
+}
+@font-face {
+    font-family: Lato;
+    font-style: normal;
+    font-weight: 500;
+    src:local(".SFNSText-Medium"),
+        local(".HelveticaNeueDeskInterface-MediumP4"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI Semibold"),
+        local("Ubuntu Medium"),
+        local("Roboto-Medium"),
+        local("DroidSans-Bold"),
+        local("Tahoma Bold");
+}
+@font-face {
+    font-family: Lato;
+    font-style: italic;
+    font-weight: 500;
+    src:local(".SFNSText-MediumItalic"),
+        local(".HelveticaNeueDeskInterface-MediumItalicP4"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI Semibold Italic"),
+        local("Ubuntu Medium Italic"),
+        local("Roboto-MediumItalic"),
+        local("DroidSans-Bold"),
+        local("Tahoma Bold");
+}
+@font-face {
+    font-family: Lato;
+    font-style: normal;
+    font-weight: 700;
+    src:local(".SFNSText-Bold"),
+        local(".HelveticaNeueDeskInterface-Bold"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI Bold"),
+        local("Ubuntu Bold"),
+        local("Roboto-Bold"),
+        local("DroidSans-Bold"),
+        local("Tahoma Bold");
+}
+@font-face {
+    font-family: Lato;
+    font-style: italic;
+    font-weight: 700;
+    src:local(".SFNSText-BoldItalic"),
+        local(".HelveticaNeueDeskInterface-BoldItalic"),
+        local(".LucidaGrandeUI"),
+        local("Segoe UI Bold Italic"),
+        local("Ubuntu Bold Italic"),
+        local("Roboto-BoldItalic"),
+        local("DroidSans-Bold"),
+        local("Tahoma Bold");
+}
+
+body { background: gray; }
+.pages { background: white !important; box-shadow: 0 0 10px rgba(0,0,0,0.75); padding:5rem; max-width:50em; margin:5em auto; }
+.menu-top { font-family:Lato !important; position:fixed; top:0; left:0; right:0; height:50px; background:white; box-shadow: 0 0 10px rgba(0,0,0,0.75); }
+.menu-side { overflow:auto; font-family:Lato !important; position:fixed; top:80px; left:0; bottom:0; width:400px; background:white; box-shadow: 0 0 10px rgba(0,0,0,0.75); display:none; }
+.menu-title { font-weight:bold; font-size:1.2rem; font-family:Lato !important; position:fixed; top:50px; left:0; height:30px; width:400px; background:white; color:black; text-align:center; display:none; }
+.menu .wrapper { margin-left:400px; }
+.menu .menu-side { display:block; }
+.menu .menu-title { display:block; }
+.button-toc { line-height:1; display:inline-block; padding:0.7em 1.4em; margin:0.3em; border-radius:0.15em; box-sizing: border-box; text-decoration:none; text-transform:uppercase; font-weight:400; color:#FFFFFF !important; text-decoration:none !important; background-color:#3369ff; box-shadow:inset 0 -0.6em 0 -0.35em rgba(0,0,0,0.17); text-align:center; }
+.menu-top input { float:right; font-size:1rem; border-radius:2px; padding:5px; border:1px solid silver; margin:5px 1rem 0 0; line-height:25px; width:300px; }
+.menu-search { font-family:Lato !important; text-align:center; padding:0 10px; display:none; position:fixed; top:50px; right:15px; width:280px; height:40px; line-height:40px; background:white; box-shadow: 0 0 10px rgba(0,0,0,0.75); border-radius:0 0 4px 4px; }
+.menu-search button { margin-top:10px; }
+.menu-search .prev { float:left; }
+.menu-search .next { float:right; }
+.search-result { background:yellow; }
+
+img { max-width:100% !important; }
+
+@media screen and (max-width: 40em) {
+    .menu { overflow:hidden; }
+    .menu .wrapper { margin-left:0; }
+    .menu .menu-side, .menu .menu-title { display:block; width:auto; right:0; }
+    .menu-top input { width:120px; }
+}

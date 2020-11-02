@@ -1,0 +1,54 @@
+﻿@model SelectCaseCodeVM
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <table id="selectCaseCodeTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<script>
+    $(function () {
+         $('#selectCaseCodeTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("LoadData_CaseCodeSearch","Ajax")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseTypeId = '@Model.CaseTypeId';
+                    }
+                },
+                 buttons: [],
+                "bInfo": false,
+                filter: true,
+                columns: [
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Основание',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "value",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return '<a href="#" onclick="@(Model.SelectCallback)(\'@Model.ContainerId\',\''+value+'\');return false;">избери</a>';
+                        }
+                    }
+                ]
+         });
+    });
+</script>

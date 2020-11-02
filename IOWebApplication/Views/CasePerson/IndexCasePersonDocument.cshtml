@@ -1,0 +1,119 @@
+﻿@{
+    var casePersonId = ViewBag.casePersonId;
+    ViewData["Title"] = "Лични документи на " + ViewBag.casePersonName;
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CasePerson" asp-action="AddCasePersonDocument" asp-route-casePersonId="@casePersonId" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCasePersonDocument")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.casePersonId = @casePersonId;
+                    }
+                 },
+                columns: [
+                    {
+                        name: 'id',
+                        data: 'id',
+                        title: '',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'issuerCountryName',
+                        data: 'issuerCountryName',
+                        title: 'Държава на издаване',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'personalDocumentTypeLabel',
+                        data: 'personalDocumentTypeLabel',
+                        title: 'Вид документ',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'documentNumber',
+                        data: 'documentNumber',
+                        title: 'Номер документ',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'documentDate',
+                        data: 'documentDate',
+                        title: 'Дата на издаване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'issuerName',
+                        data: 'issuerName',
+                        title: 'Издаден от',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-left noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            }).order([[0, "desc"]]).column(0).visible(false);
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        @if (access.CanChange)
+        {
+            <a href="@Url.Action("EditCasePersonDocument", "CasePerson")?id={{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+        else
+        {
+            <a href="@Url.Action("EditCasePersonDocument", "CasePerson")?id={{id}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+    </script>
+}

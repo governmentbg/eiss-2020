@@ -1,0 +1,162 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model CaseArchiveListFilterReportVM
+
+@{
+    ViewData["Title"] = "Справка за архивирани дела";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("CaseArchiveListReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.ArchiveNumber)</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseArchiveListReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            ArchiveNumber: $("#ArchiveNumber").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'caseTypeName',
+                        data: 'caseTypeName',
+                        title: 'Вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseNumber',
+                        data: 'caseNumber',
+                        title: '№/година',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'archiveLink',
+                        data: 'archiveLink',
+                        title: 'Връзка',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'archiveNumber',
+                        data: 'archiveNumber',
+                        title: 'Архивен №',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-center",
+                        name: 'archiveYear',
+                        data: 'archiveYear',
+                        title: 'Година на архивиране',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-center",
+                        name: 'archiveDate',
+                        data: 'archiveDate',
+                        title: 'Дата на архивиране',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'archiveIndexName',
+                        data: 'archiveIndexName',
+                        title: 'Номенклатурен индекс',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'storageYears',
+                        data: 'storageYears',
+                        title: 'Срок на съхранение',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+</script>

@@ -1,0 +1,163 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@{
+    var institutionType = (IOWebApplication.Infrastructure.Data.Models.Nomenclatures.InstitutionType)ViewBag.institutionType;
+    ViewData["Title"] = "Движение на дело " + (string)ViewBag.CaseName;
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    <partial name="Breadcrumbs" model="@ViewBag.breadcrumbs" />
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-action="Add" asp-route-caseId="@(ViewBag.caseId)" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+            &nbsp;&nbsp;
+            <a asp-action="UnionCase" asp-route-caseId="@(ViewBag.caseId)" class="btn btn-danger btn-sm">
+                <i class="fa fa-link"></i>
+                Обединяване
+            </a>
+            &nbsp;&nbsp;
+            <a asp-action="AcceptToUse" asp-route-caseId="@(ViewBag.caseId)" class="btn btn-warning btn-sm">
+                <i class="fa fa-check"></i>
+                Приемане
+            </a>
+        </div>
+    </div>
+}
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @((int)ViewBag.caseId);
+                    }
+                },
+                sortable: false,
+                searchable: false,
+                columns: [
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Дело номер',
+                        sortable: false,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'direction',
+                        data: 'migrationDirection',
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a, b, item, d) {
+                            switch (item.migrationDirection) {
+                                case @NomenclatureConstants.CaseMigrationDirections.Incoming:
+                                    return '<i class="fa fa-check text-success"></i>';
+                                case @NomenclatureConstants.CaseMigrationDirections.Outgoing:
+                                    return '<i class="fa fa-send text-primary"></i>';
+                                case @NomenclatureConstants.CaseMigrationDirections.UnionCase:
+                                    return '<i class="fa fa-link text-danger"></i>';
+                            }
+
+                        }
+                    },
+                    {
+                        name: 'migrationTypeName',
+                        data: 'migrationTypeName',
+                        title: 'Вид движение',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseSessionAct',
+                        data: 'caseSessionAct',
+                        title: 'Акт',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'sentFromName',
+                        data: 'sentFromName',
+                        title: 'Изпратено от',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'sentToName',
+                        data: 'sentToName',
+                        title: 'Изпратено към',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'dateWrt',
+                        data: 'dateWrt',
+                        title: 'Дата',
+                        sortable: false,
+                        searchable: false,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: null,
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a, b, item, d) {
+                            if (item.canAccept) {
+                                return TemplateToHtml('#templateAccept', item.id);
+                            }
+                            if (item.canEdit) {
+                                return TemplateToHtml('#templateEdit', item.id);
+                            }
+                            return "";
+                        }
+                    }
+                ]
+            });
+        });
+
+        function acceptMigration(id) {
+            swalConfirm('Потвърдете приемането на делото в рамките на текущото производство!', function () {
+                postContent('@Url.Action("AcceptMigration")'
+                    , { id: id, caseId: @((int)ViewBag.caseId) }, function () {
+                        document.location.href = document.location.href;
+                })
+            });
+        }
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        @if (access.CanChange)
+        {
+            <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+        else
+        {
+            <a href="@Url.Action("Edit")/{{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+    </script>
+    <script id="templateAccept" type="text/x-handlebars-template">
+        <a onclick="acceptMigration({{this}}); return false;" class="btn btn-def btn-sm"><i class="fa fa-check"></i>Приеми</a>
+    </script>
+}

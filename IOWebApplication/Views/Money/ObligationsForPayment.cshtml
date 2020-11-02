@@ -1,0 +1,144 @@
+﻿@model int
+@{
+    ViewData["Title"] = "Свързани задължения";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="obligationsForPaymentMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#obligationsForPaymentMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListDataObligationsForPayment", "Money")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.paymentId = @Model;
+                }
+            },
+            columns: [
+                {
+                    name: 'obligationNumber',
+                    data: 'obligationNumber',
+                    title: 'Номер',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: 'col-md-1',
+                    name: 'obligationDate',
+                    data: 'obligationDate',
+                    title: 'От дата',
+                    sortable: true,
+                    searchable: false,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
+                    }
+                },
+                {
+                    name: 'personUic',
+                    data: 'personUic',
+                    title: 'Идентификатор',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'personName',
+                    data: 'personName',
+                    title: 'Задължено лице',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'moneyTypeName',
+                    data: 'moneyTypeName',
+                    title: 'Вид сума',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: "text-right",
+                    name: 'amount',
+                    data: 'amount',
+                    title: 'Сума',
+                    sortable: true,
+                    searchable: false,
+                    "render": function (value) {
+                        if (value)
+                            return parseFloat(value).toFixed(2);
+                        else
+                            return "0.00";
+                    }
+                },
+                {
+                    name: 'obligationInfo',
+                    data: 'obligationInfo',
+                    title: 'Основание',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'caseData',
+                    data: 'caseData',
+                    title: 'Номер дело',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'isActive',
+                    data: "isActive",
+                    title: 'Активен',
+                    sortable: true,
+                    searchable: false,
+                    className: "text-center",
+                    "render": function (value) {
+                        return value ? 'Да' : 'Не';
+                    }
+                },
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#obligationsForPaymentTemplate', value);
+                    }
+                }
+            ]
+        });
+    })
+</script>
+
+<script id="obligationsForPaymentTemplate" type="text/x-handlebars-template">
+    @if (ViewBag.HasStorno)
+    {
+        <a href="#" class="btn btn-sm btn-danger" onclick="StornoObligationPayment('{{this}}');"><i class="fa fa-remove"></i></a>
+    }
+</script>
+
+<script>
+        function StornoObligationPayment(id) {
+            swalConfirm('Потвърди деактивирането!', function () {
+                postContent('@Url.Action("StornoObligationPayment","Money")'
+                    , { id: id }
+                    , function (data) {
+                        if (data.result == true) {
+                            refreshTable('#obligationsForPaymentMainTable');
+                            ReloadDatatable();
+                            messageHelper.ShowSuccessMessage(data.message);
+                        } else {
+                            messageHelper.ShowErrorMessage(data.message);
+                        }
+                    });
+            });
+        }
+</script>

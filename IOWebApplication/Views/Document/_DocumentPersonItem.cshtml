@@ -1,0 +1,51 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@model DocumentPersonVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+<div data-index="@Model.Index" id="@Guid.NewGuid()" class="item-template document-person-item">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1"><a href="#" class="remove-item" title="Премахни лицето" data-alert="Потвърди премахването на лицето!"><i class="fa fa-remove"></i></a> Свързано лице</legend>
+        <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-12">
+                <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
+                @Html.HiddenFor(x => x.Id)
+                @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "" })
+                <div class="row">
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.PersonRoleId, "DropDown", null, new { Ddl = ViewBag.PersonRoles })
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.PersonMaturityId, "DropDown", null, new { Ddl = ViewBag.PersonMaturities })
+                    </div>
+                    @if (ViewBag.MilitaryRangs != null)
+                    {
+                        <div class="col-md-6">
+                            @Html.EditorFor(x => x.MilitaryRangId, "DropDown", null, new { Ddl = ViewBag.MilitaryRangs })
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-12">
+                <partial name="_DocumentPersonAddress" model="@Model" />
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script>
+    $(function () {
+        initPersonControl();
+    });
+
+    $("input[name='" + '@Model.GetPath' + ".Uic" + "']").blur(function () {
+        var uic = $("input[name='" + '@Model.GetPath' + ".Uic" + "']").val();
+        var uicTypeId = $("select[name='" + '@Model.GetPath' + ".UicTypeId" + "']").val();
+        if (uicTypeId == '@NomenclatureConstants.UicTypes.EGN') {
+            var personMaturity = GetPersonMaturity(uic);
+            if (personMaturity != "-1") {
+                $("select[name='" + '@Model.GetPath' + ".PersonMaturityId" + "']").val(personMaturity);
+            }
+        }
+    });
+
+</script>

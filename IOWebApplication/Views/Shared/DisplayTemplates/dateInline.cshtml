@@ -1,0 +1,25 @@
+﻿@model DateTime
+@{
+    var label = "";
+    var format = "dd.MM.yyyy";
+    if (ViewData["label"] != null)
+    {
+        label = (string)ViewData["label"];
+    }
+    if (ViewData["format"] != null)
+    {
+        format = (string)ViewData["format"];
+    }
+}
+<div class="form-group">
+    @if (!string.IsNullOrEmpty(label))
+    {
+        <label class="control-label">@label</label>
+        @Model.ToString(format)
+    }
+    else
+    {
+        <label asp-for="@Model" class="control-label"></label>
+        @Model.ToString(format)
+    }
+</div>

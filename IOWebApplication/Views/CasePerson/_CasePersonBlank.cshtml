@@ -1,0 +1,43 @@
+﻿@model Print_CaseSessionNotificationListVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@{
+    Layout = null;
+}
+
+<div style="font-family: 'Times New Roman'">
+    <center>
+        <b>@Model.Title</b>
+    </center>
+    <br />
+    <br />
+    <center>
+        <b>@Model.NameReport</b>
+    </center>
+    <center>
+        <b>@Model.SessionTitle</b>
+    </center>
+    <br />
+    <br />
+
+    <table class="bordered">
+        <tr>
+            <th>№ по ред</th>
+            <th>Участие</th>
+            <th>Име на лицето</th>
+            <th>Адрес</th>
+            <th>Забележка</th>
+        </tr>
+
+        @foreach (var notList in Model.NotificationLists)
+        {
+            <tr>
+                <td align="center" width="10%">@notList.RowNumber</td>
+                <td width="10%">@notList.PersonRole</td>
+                <td width="10%">@notList.PersonName</td>
+                <td width="30%">@notList.AddressString</td>
+                <td width="25%">@notList.Remark</td>
+            </tr>
+        }
+    </table>
+
+</div>

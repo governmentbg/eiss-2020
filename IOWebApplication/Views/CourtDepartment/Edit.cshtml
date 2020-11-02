@@ -1,0 +1,89 @@
+﻿@model CourtDepartment
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на елемент";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на елемент";
+    }
+
+    bool hasInstance = (bool)(ViewBag.HasInstance ?? false);
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","CourtDepartment")">Съдебна структура</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseGroupId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="col-lg-12">@Html.EditorFor(x => x.DepartmentTypeId, "GenericDropDown")</div>
+                <div class="col-lg-12">@Html.EditorFor(x => x.ParentId, "GenericDropDown")</div>
+                <div id="divInstance" class="col-lg-12">@Html.EditorFor(x => x.CaseInstanceId, "GenericDropDown")</div>
+                <div class="col-lg-12">@Html.EditorFor(x => x.Label)</div>
+                <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
+            </div>
+
+            <div class="form-group">
+                @if (Model.Id == 0 || Model.DepartmentTypeId != IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DepartmentType.Napravlenie)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="Index" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+        @if (Model.Id > 0)
+        {
+            <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.CourtDepartment" data-sourceid="@Model.Id" data-editmode="all"></div>
+        }
+    </div>
+</div>
+
+<partial name="_CdnScript" />
+
+<script>
+
+    $(document).ready(function () {
+        $('#ParentId').trigger('change');
+        SH_Instance();
+    });
+
+    $('#DepartmentTypeId').change(function () {
+        SH_Instance();
+    });
+
+    function SH_Instance() {
+        var depType = $("#DepartmentTypeId").val();
+        if (('@hasInstance' == 'True') && (depType == @NomenclatureConstants.DepartmentType.Systav)) {
+            $('#divInstance').show();
+        }
+        else {
+            $('#divInstance').hide();
+        }
+    }
+
+</script>

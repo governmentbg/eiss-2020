@@ -1,0 +1,151 @@
+﻿@model CaseProceedingsVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@{
+    Layout = null;
+}
+
+<style>
+    div.just {
+        text-align: justify;
+        text-justify: inter-word;
+    }
+</style>
+
+<div style="font-family: 'Times New Roman'">
+    <center>
+        <b>Дело @Model.RegNumber / @Model.RegDate.ToString("dd.MM.yyyy")</b>
+    </center>
+    <br />
+    <br />
+    <b>Основен вид дело:</b> @Model.CaseGroupLabel
+    <br />
+    <b>Точен вид дело:</b> @Model.CaseTypeLabel
+    <br />
+    <b>Шифър:</b> @Model.CaseCodeLabel
+    <br />
+    <b>Статус:</b> @Model.CaseStateLabel
+    <br />
+
+    @if (!string.IsNullOrEmpty(Model.CaseReasonLabel))
+    {
+        <b>Основание за образуване:</b> @Model.CaseReasonLabel
+        <br />
+    }
+
+    @if (!string.IsNullOrEmpty(Model.CaseStateDescription))
+    {
+        <b>Основание:</b> @Model.CaseStateDescription
+        <br />
+    }
+
+    @if (Model.JudgeRapporteur != string.Empty)
+    {
+        <b>Съдия докладчик:</b> @Model.JudgeRapporteur
+        <br />
+    }
+
+    @if (Model.DocumentLabel != string.Empty)
+    {
+        <b>Иницииращ документ:</b> @Model.DocumentLabel
+        <br />
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ArchRegNumber))
+    {
+        <b>Архивиране:</b> @(Model.ArchRegNumber + "/" + (Model.ArchRegDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
+        <br />
+    }
+
+    @if (Model.CaseClassifications.Count() > 0)
+    {
+        <b>Индикатори:</b>
+        <br />
+        @foreach (var caseClassification in Model.CaseClassifications)
+        {
+            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                @{
+                    var _row = "   - " + caseClassification.Classification.Label;
+                }
+                <div>
+                    @Html.Raw(_row)
+                </div>
+            </div>
+        }
+    }
+
+    @if (Model.CasePersons.Count() > 0)
+    {
+        <br />
+        <b>Списък на страните</b>
+        <br />
+        @foreach (var casePerson in Model.CasePersons)
+        {
+            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                @{
+                    var _row = casePerson.FullName + " (" + casePerson.RoleName + ")";
+                }
+                <div class='just'>
+                    @Html.Raw("<i class='fa fa-user'></i> " + _row)
+                </div>
+            </div>
+        }
+    }
+
+    @if (Model.CaseLawUnits.Count() > 0)
+    {
+        <br />
+        <b>Състав по делото</b>
+        <br />
+        @foreach (var caseLawUnit in Model.CaseLawUnits.OrderBy(x => x.DateFrom).ThenBy(x => x.DateTo))
+        {
+            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                @{
+                    var _row = caseLawUnit.RowLabelFull;
+                }
+                <div class='just'>
+                    @Html.Raw("<i class='fa fa-user'></i> " + _row)
+                </div>
+            </div>
+        }
+    }
+
+    @if (Model.CaseProceedingsObjects.Count() > 0)
+    {
+        <br />
+        <b>Хронология</b>
+
+        @foreach (var caseProceedings in Model.CaseProceedingsObjects.Where(x => x.ParentId == null).OrderBy(x => x.Date))
+        {
+            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                @{
+                    var _row = caseProceedings.Label;
+                }
+                <div class='just'>
+                    <br />
+                    @Html.Raw(_row)
+                    <br />
+                </div>
+                @foreach (var caseProceedingsObjects in Model.CaseProceedingsObjects.Where(x => x.ParentId == caseProceedings.Id).OrderBy(x => x.Date))
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        @{
+                            var _rowOther = caseProceedingsObjects.Label;
+                            var _des = caseProceedingsObjects.Description;
+                        }
+                        <div class='just'>
+                            <br />
+                            @Html.Raw(_rowOther)
+                            @if (!string.IsNullOrEmpty(caseProceedingsObjects.Description))
+                            {
+                                <br />
+                                @Html.Raw(_des)
+                            }
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+
+</div>

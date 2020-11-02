@@ -1,0 +1,100 @@
+﻿@model CasePersonMeasureEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на мерки" : "Преглед на мерки";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на мерки";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditCasePersonMeasure" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CasePersonId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.MeasureCourtId, "SelectCourt")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.MeasureInstitutionTypeId, "GenericDropDown")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.MeasureInstitutionId, "SelectInstitution", null, new { institutionTypeContainer = "#MeasureInstitutionTypeId" })</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.MeasureType, "GenericDropDownString")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.MeasureStatusDate, "DateTime")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.BailAmount, "Double")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.MeasureStatus, "GenericDropDownString")</div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="IndexCasePersonMeasure" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+
+    $(function () {
+        initInstitution();
+        initCourts();
+
+        $('#MeasureInstitutionTypeId').change(function () {
+                let _inst = '@Model.MeasureInstitutionId';
+                if ($(this).val().toString() != '@Model.MeasureInstitutionTypeId') {
+                    _inst = '0';
+                }
+                let instControl = $('#MeasureInstitutionId_institution:first')[0];
+                console.log(instControl);
+                loadInstitution(instControl, _inst);
+            }).trigger('change');
+    });
+
+    </script>
+}
+

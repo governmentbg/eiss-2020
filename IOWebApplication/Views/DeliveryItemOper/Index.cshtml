@@ -1,0 +1,148 @@
+﻿@model int
+@inject IViewLocalizer Localizer
+@using IOWebApplication.Core.Helper.GlobalConstants;
+@{
+    int deliveryItemId = @Model;
+    ViewData["Title"] = "Посещения за известяване " + ViewBag.NotificationInfo;
+    var filterJson = ViewBag.filterJson;
+    bool canAdd = ViewBag.canAdd;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+@Html.HiddenFor(x => deliveryItemId)
+@if (canAdd)
+{
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a onclick="AddDeliveryItemOper()" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+}
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItem")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+@section scripts {
+    <script>
+        function postToFilterDeliveryItems()
+        {
+            $("#formPostFilter").submit();
+        }
+        function AddDeliveryItemOper() {
+            $('#formPostFilter').attr('action', '@Url.Action("Add", "DeliveryItemOper")?deliveryItemId=' + @deliveryItemId);
+            $("#formPostFilter").submit();
+        }
+        function EditDeliveryItemOper(id) {
+            $('#formPostFilter').attr('action', '@Url.Action("Edit", "DeliveryItemOper")/'+ id);
+            $("#formPostFilter").submit();
+        }
+        function DeliveryItemOperLocation(id) {
+            $('#formPostFilter').attr('action', '@Url.Action("Location", "DeliveryItemOper")/'+ id);
+            $("#formPostFilter").submit();
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.deliveryItemId = @deliveryItemId;
+                        d.onlyLast = true;
+                    }
+                 },
+                columns: [
+                    {
+                        name: 'dateOper',
+                        data: 'dateOper',
+                        title: 'Дата',
+                        sortable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("@FormattingConstant.DateFormatJSHHMM");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'toCourtName',
+                        data: 'toCourtName',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'areaName',
+                        data: 'areaName',
+                        title: 'Район',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Призовкар',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'operName',
+                        data: 'operName',
+                        title: 'Посещение',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'notificationStateName',
+                        data: 'notificationStateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    } ,
+                    {
+                        name: 'deliveryInfo',
+                        data: 'deliveryInfo',
+                        title: 'Данни за доставка',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        width: 90,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+
+    </script>
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a onclick="EditDeliveryItemOper({{this}})" class="btn btn-warning btn-sm" title="Редакция на посещение">
+            <i class="fa fa-edit"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+        <a onclick="DeliveryItemOperLocation({{this}})" class="btn btn-def btn-sm" title="Кординати">
+            <i class="fa fa-location-arrow"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
+    </script>
+
+}

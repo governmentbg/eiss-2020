@@ -1,0 +1,49 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseMoneyCollectionRespectSumVM
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="form-group">
+            <input asp-for="CaseId" type="hidden" />
+            <input asp-for="Id" type="hidden" />
+            <input asp-for="Label" type="hidden" />
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Вземане</legend>
+                <div class="row">
+                    <div class="col-sm-8 text-right">
+                        <label style="margin-top:8.4px">@Model.Label</label>
+                    </div>
+                    <div class="col-sm-4">
+                        <input asp-for="Value" class="form-control form-control-decimal">
+                    </div>
+                </div>
+
+                @if (Model.CasePersonListDecimals.Count > 0)
+                {
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">Разпределение на вземането</legend>
+                                @Html.EditorFor(x => x.CasePersonListDecimals)
+                            </fieldset>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.CaseMoneyCollectionRespectSumOthers.Count > 0)
+                {
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">Допънителни вземания</legend>
+                                @Html.EditorFor(x => x.CaseMoneyCollectionRespectSumOthers)
+                            </fieldset>
+                        </div>
+                    </div>
+                }
+            </fieldset>
+        </div>
+    </div>
+</div>
+
+

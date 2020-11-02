@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Връзки по вид съд/дело: " + ViewBag.htmlName;
+    var htmlId = ViewBag.htmlId;
+    var filterJson = ViewBag.filterJson;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="AddLink" asp-route-HtmlTemplateId="@htmlId" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+        <div class="form-group">
+            @await Html.PartialAsync("_ButtonClose")
+        </div>
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataLink", new { htmlId = htmlId})",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'sourceTypeLabel',
+                        data: 'sourceTypeLabel',
+                        title: 'Вид обект',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'courtTypeLabel',
+                        data: 'courtTypeLabel',
+                        title: 'Вид съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseGroupLabel',
+                        data: 'caseGroupLabel',
+                        title: 'Основен вид дело',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'isActiveLabel',
+                        data: 'isActiveLabel',
+                        title: 'Активен',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+        function postToFilterHtmlTemplate() {
+            $("#formPostFilter").submit();
+        }
+        function getEditLink(id) {
+            var htmlTemplateTypeId = 0;//JSON.parse('@Html.Raw(filterJson)').HtmlTemplateTypeId;
+            window.location.href = "@Url.Action("EditLink")/"+id+"?htmlTemplateTypeId=" + htmlTemplateTypeId;
+        }
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a onclick=getEditLink({{this}}) class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+        @*<a href="@Url.Action("DownloadFile")/{{this}}" class="btn btn-file btn-sm" title="Сваляне"><i class="fa fa-save"></i><span class="hidden-sm hidden-xs"> Сваляне</span></a>*@
+        <a href="@Url.Action(" DownloadFile") /{{this}}" class="btn btn-file btn-sm" title="Сваляне"><i class="fa fa-save"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action(" DownloadFile") /{{this}}" class="btn btn-file btn-sm" title="Сваляне"><i class="fa fa-save"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}
+

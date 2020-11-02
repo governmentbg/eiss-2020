@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1",
+    "order_number": "1",
+    "label": "Гражданско дело",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "2",
+    "order_number": "2",
+    "label": "Наказателно дело",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "3",
+    "order_number": "3",
+    "label": "Търговско дело",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "4",
+    "order_number": "4",
+    "label": "Фирмено дело",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  }
+]

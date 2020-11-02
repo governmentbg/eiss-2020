@@ -1,0 +1,74 @@
+﻿<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="News" asp-action="Add" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="newsMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+        $(function () {
+            var table = $('#newsMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "News")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'title',
+                        data: 'title',
+                        title: 'Заглавие',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'author',
+                        data: 'author',
+                        title: 'Автор',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'publishDate',
+                        data: 'publishDate',
+                        title: 'Публикувана на',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#newsTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+</script>
+
+<script id="newsTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit", "News")?id={{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

@@ -1,0 +1,86 @@
+﻿@model CaseLawUnit
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+
+    var caseId = @ViewBag.caseId;
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни дела</a></li>
+        <li><a href="@Url.Action("CasePreview","Case", new { id = caseId})">Дело @ViewBag.CaseName</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+
+        <form asp-action="EditManualRoles" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <fieldset class="is-fieldset">
+                <legend> Основни данни</legend>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                    <div class="row">
+                        <div class="col-lg-12">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "5" })</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            @Html.EditorFor(x => x.JudgeRoleId, "GenericDropDown")
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeWithTime")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTimeWithTime")</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                    </div>
+
+                </div>
+            </fieldset>
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@caseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+
+        </form>
+    </div>
+</div>
+@section scripts{
+    <script>
+        $(function () {
+            initLawUnit();
+        });
+    </script>
+}

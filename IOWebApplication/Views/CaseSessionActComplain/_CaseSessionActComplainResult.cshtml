@@ -1,0 +1,113 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <div class="row" id="ButtonAdd">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseSessionActComplain" asp-action="AddResult" asp-route-CaseSessionActComplainId="@Model.Id" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSessionActComplainResultMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+        $(function () {
+            var table = $('#caseSessionActComplainResultMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataResult", "CaseSessionActComplain")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "dataSrc": function (res) {
+                        var count = res.data.length;
+                        debugger;
+                        SH_AddButton(count);
+                        return res.data;
+                    },
+                    data: function (d) {
+                        d.CaseSessionActComplainId = @Model.Id;
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'caseName',
+                        data: 'caseName',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseSessionActName',
+                        data: 'caseSessionActName',
+                        title: 'Акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actResultLabel',
+                        data: 'actResultLabel',
+                        title: 'Резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateResult',
+                        data: 'dateResult',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionActComplainResultTemplateEdit', value);
+                        }
+                    }
+                ]
+            }).order([[ 2, "asc" ]]);
+        });
+</script>
+
+<script id="caseSessionActComplainResultTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("EditResult", "CaseSessionActComplain")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("EditResult", "CaseSessionActComplain")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+<script>
+    function SH_AddButton(tblCount) {
+        debugger;
+        if (tblCount >= 1) {
+            $("#ButtonAdd").hide();
+        }
+        else {
+            $("#ButtonAdd").show();
+        }
+    }
+</script>

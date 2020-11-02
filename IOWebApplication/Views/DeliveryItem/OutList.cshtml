@@ -1,0 +1,217 @@
+﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+@model DeliveryItemListVM;
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Описна книга на призовкар";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<form id="formFilter" asp-action="Edit" method="post">
+    <div class="row">
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateFrom)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateTo)
+        </div>
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.FromCourtId, "GenericDropDown")
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
+        </div>
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataOutWithLoad()" value="Експорт в Excel " title="Експорт в Excel">
+                Експорт в Excel
+                <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
+            </button>
+        </div>
+        @*<div class="col-md-4 text-right pb-15">
+                <br>
+                <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="LoadDeliveryItemsOutReport()" value="Филтриране" title="Филтриране">
+                    Филтриране
+                    <i class="fa fa-search" title="Търсене"></i>
+                </button>
+            </div>*@
+    </div>
+    <hr>
+</form>
+@*<div class="row">
+        <div class="col-md-12">
+            <table id="mainTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>*@
+
+
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+
+@section scripts {
+
+    <script>
+        function InitOutListTable() {
+             var table = $('#mainTable').DataTable({
+                'order': [[0, 'asc']],
+                 ajax: {
+                    "url": "@Url.Action("ListDataOut")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        $.fn.dataTable.ext.buttons.io_excel.messageTop = makeFilterData();
+                        d.filterData = JSON.parse($('#filterJson').val());
+                    }
+                 },
+                columns: [
+                    {
+                        className: 'col-md-1 text-right',
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер на призовка/съобщение',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'notificationTypeLabel',
+                        data: 'notificationTypeLabel',
+                        title: 'Вид документ',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'caseInfo',
+                        data: 'caseInfo',
+                        title: 'Вид, номер и година на дело',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-5',
+                        name: 'address',
+                        data: 'address',
+                        title: 'Адрес за връчване',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-4',
+                        name: 'deliveryInfo',
+                        data: 'deliveryInfo',
+                        title: 'Данни за връчване',
+                        sortable: false,
+                        searchable: false
+                    }
+                ]
+            });
+        };
+        function LoadDeliveryItemsOutReport() {
+
+            if ($('#filterJson').val() == "") {
+                $('#mainTable').show();
+                $('#divExcel').show();
+                $(function () {
+                    InitOutListTable();
+                });
+            }
+
+            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+            $('#mainTable').DataTable().ajax.reload();
+            $.fn.dataTable.ext.buttons.io_excel.messageTop = makeFilterData();
+           // $.fn.dataTable.ext.buttons.io_excel.hide();
+        }
+
+        $('#FromCourtId').select2({
+            language: "bg"
+        });
+
+        $('#LawUnitId').select2({
+            language: "bg"
+        });
+
+        $(document).ready(function () {
+            $('#mainTable').hide();
+            $('#divExcel').hide();
+             $('#CaseGroupId').change(function () {
+                requestCombo(
+                    '@Url.Action("GetDDL_CaseType","Ajax")',
+                    { CaseGroupId: $(this).val() },
+                    '#CaseTypeId',
+                    @Model.CaseTypeId,
+                    function () {
+                        $('#CaseTypeId').trigger('change')
+                    });
+             });
+            //$.fn.dataTable.ext.buttons.io_excel.title = "Описна книга на призовкаря";
+            //$.fn.dataTable.ext.buttons.io_excel.messageTop = function () {
+            //   return makeFilterData()
+            //};
+            $.fn.dataTable.ext.buttons.io_excel.action = function () {
+                ExcelDataOut();
+            };
+            //$('.buttons-excel').click(function () {
+            //    ExcelDataOut();
+            //});
+        });
+        function makeFilterData()
+        {
+            var filterMsg = "";
+            var dateFrom = "";
+            var dateTo = "";
+            var filterData = JSON.parse($('#filterJson').val());
+
+            if (filterData.LawUnitId != null && filterData.LawUnitId != -1)
+                filterMsg += '\n Призовкар' + $('#LawUnitId  option:selected').text();
+
+            if ((filterData.DateFrom !== null) && (filterData.DateFrom !== "")) {
+                dateFrom = filterData.DateFrom.toString();
+            }
+            if (filterData.DateTo !== null && filterData.DateTo !== "") {
+                dateTo = filterData.DateTo.toString();
+            }
+            if (dateTo === dateFrom && dateTo != "") {
+                filterMsg += "\n за дата: " + dateTo
+            } else
+            if (dateFrom != "" ||  dateTo != "") {
+                filterMsg += " \n за периода";
+                if (dateFrom !== "")
+                    filterMsg += " от " + dateFrom;
+                if (dateTo !== "")
+                    filterMsg += " до " + dateTo;
+            }
+            if ( filterData.FromCourtId != null && filterData.FromCourtId != -1)
+                filterMsg += '\n Изготвена в ' + $('#FromCourtId  option:selected').text();
+
+            if (filterData.CaseGroupId != null && filterData.CaseGroupId != -1)
+                filterMsg += '\n Основен вид дело ' + $('#CaseGroupId  option:selected').text();
+            if (filterData.CaseTypeId != null && filterData.CaseTypeId != -1)
+                filterMsg += '\n Точен вид дело ' + $('#CaseTypeId  option:selected').text();
+            return filterMsg;
+        }
+        function ExcelDataOut() {
+             $('#formPostEdit').attr('action', '@Url.Action("ExcelDataOut")');
+             $("#formPostEdit").submit();
+        }
+        function ExcelDataOutWithLoad() {
+             $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+             $('#formPostEdit').attr('action', '@Url.Action("ExcelDataOut")');
+             $("#formPostEdit").submit();
+        }
+
+    </script>
+}

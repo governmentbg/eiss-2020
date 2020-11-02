@@ -1,0 +1,101 @@
+﻿@{
+    ViewData["Title"] = "Съдилища";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'courtTypeName',
+                        data: 'courtTypeName',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'code',
+                        data: 'code',
+                        title: 'Код',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        name: 'ecliCode',
+                        data: 'ecliCode',
+                        title: 'ECLI идентификатор',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        name: 'cityName',
+                        data: 'cityName',
+                        title: 'Град',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        name: 'address',
+                        data: 'address',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        className: "text-right noExport",
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{this}}?returnUrl=@Url.Action("Index")" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> </span></a>
+        @if ((bool)ViewBag.MigrateData)
+        {
+            <a href="@Url.Action("MigrateData")?courtId={{this}}" class="btn btn-default btn-sm" title="Мигриране на данни" target="_blank"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> </span></a>
+        }
+    </script>
+}

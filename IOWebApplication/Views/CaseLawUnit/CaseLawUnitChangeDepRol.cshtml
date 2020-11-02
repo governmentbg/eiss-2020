@@ -1,0 +1,89 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseLawUnitChangeDepRolVM
+
+@{
+    ViewData["Title"] = "Промяна на председател/състав";
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool hasLawUnit = (bool)ViewBag.hasLawUnit;
+    bool hasDepartment = (bool)ViewBag.hasDepartment;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="CaseLawUnitChangeDepRol" method="post">
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CaseSessionId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <fieldset class="is-fieldset">
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                    <div id="divCaseLawUnit" class="row">
+                        <div class="col-lg-12">@Html.EditorFor(x => x.CaseLawUnitId, "GenericDropDown")</div>
+                    </div>
+                    @if (Model.CaseSessionId == null)
+                    {
+                        <div id="divDepartment" class="row">
+                            <div class="col-lg-12">@Html.EditorFor(x => x.DepartmentId, "GenericDropDown")</div>
+                        </div>
+                    }
+                </div>
+            </fieldset>
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                @if (Model.CaseSessionId == null)
+                {
+                    <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.CaseId.ToString() })
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@Model.CaseSessionId" class="btn btn-danger">Назад</a>
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.CaseSessionId.ToString() })
+                    </div>
+                }
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            SH_Div();
+        });
+
+        function SH_Div() {
+            if ('@hasLawUnit' == 'True')
+            {
+                $("#divCaseLawUnit").show();
+            }
+            else {
+                $("#divCaseLawUnit").hide();
+            }
+
+            if ('@hasDepartment' == 'True')
+            {
+                $("#divDepartment").show();
+            }
+            else {
+                $("#divDepartment").hide();
+            }
+        }
+    </script>
+}

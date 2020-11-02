@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Съдебна структура";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                columns: [
+                    {
+                        name: 'masterId',
+                        data: 'masterId',
+                        title: '',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'parentId',
+                        data: 'parentId',
+                        title: 'Горно ниво',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'parentLabel',
+                        data: 'parentLabel',
+                        title: 'Горно ниво',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseGroupLabel',
+                        data: 'caseGroupLabel',
+                        title: 'Група',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'departmentTypeLabel',
+                        data: 'departmentTypeLabel',
+                        title: 'Ниво',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            }).order([[0, "asc"], [1, "asc"]]).column(0).visible(false).column(1).visible(false);
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+        <a href="@Url.Action("AddLawUnits")/{{this}}" class="btn btn-primary btn-sm" title="Съдии"><i class="fa fa-user"></i><span class="hidden-sm hidden-xs"> Съдии</span></a>
+    </script>
+}

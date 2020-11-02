@@ -1,0 +1,27 @@
+﻿@model int?
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_court";
+    var label = (string)ViewData["court_label"];
+    var addClass = "";
+    if (string.IsNullOrEmpty(label))
+    {
+        addClass = "form-group";
+    }
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+<div class="court-container @addClass" @if (ViewData["onChange"] != null) { <text> onchange="@(ViewData["onChange"])" </text> }>
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label @reqClass"></label>
+        <input id="@fieldName" name="@fieldName" class="form-control court-control" autocomplete="false" placeholder="Въведете наименование на съда или част от него" />
+    }
+    else
+    {
+        <input id="@fieldName" name="@fieldName" class="form-control court-control" autocomplete="false" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="court-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

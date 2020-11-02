@@ -1,0 +1,584 @@
+﻿@model CaseElectronicFolderVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+<ul class="timeline">
+
+    <!-- timeline time label -->
+    <li class="time-label" data-target="@Model.RegNumber">
+        <span class="bg-blue-active">
+            <i class="fa fa-balance-scale"></i> Дело @Model.RegNumber / @Model.RegDate.ToString("dd.MM.yyyy")
+        </span>
+        @if (Model.CaseClassifications.Any(x => x.ClassificationId == NomenclatureConstants.CaseClassifications.Secret))
+        {
+            <span class="text-black">
+                <i class="fa fa-exclamation-triangle fa-lg" title="Секретно"></i>
+            </span>
+        }
+        @if (Model.CaseClassifications.Any(x => x.ClassificationId == NomenclatureConstants.CaseClassifications.Restriction))
+        {
+            <span class="text-red">
+                <i class="fa fa-exclamation-triangle fa-lg" title="Ограничен достъп"></i>
+            </span>
+        }
+        @if (Model.CaseClassifications.Any(x => x.ClassificationId == NomenclatureConstants.CaseClassifications.UnderAge))
+        {
+            <span class="text-yellow">
+                <i class="fa fa-exclamation-triangle fa-lg" title="Малолетни/непълнолетни"></i>
+            </span>
+        }
+    </li>
+    <!-- /.timeline-label -->
+    <!-- timeline item -->
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-info bg-red"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-clock-o"></i> @Model.RegDate</span>
+
+            <h3 class="timeline-header"><a href="#">Основни данни</a></h3>
+
+            <div class="timeline-body hidden">
+                <b>Основен вид дело:</b> @Model.CaseGroupLabel
+                <br />
+                <b>Точен вид дело:</b> @Model.CaseTypeLabel
+                <br />
+                <b>Шифър:</b> @Model.CaseCodeLabel
+                <br />
+                <b>Статус:</b> @Model.CaseStateLabel
+                <br />
+                @if (!string.IsNullOrEmpty(Model.CaseReasonLabel))
+                {
+                    <b>Основание за образуване:</b> @Model.CaseReasonLabel
+                    <br />
+                }
+                @if (!string.IsNullOrEmpty(Model.CaseStateDescription))
+                {
+                    <b>Основание:</b> @Model.CaseStateDescription
+                    <br />
+                }
+                @if (Model.JudgeRapporteur != string.Empty)
+                {
+                    <b>Съдия докладчик:</b> @Model.JudgeRapporteur
+                    <br />
+                }
+                @if (!string.IsNullOrEmpty(Model.ArchRegNumber))
+                {
+                    <b>Архивиране:</b> @(Model.ArchRegNumber + "/" + (Model.ArchRegDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
+                    <br />
+                }
+                @if (Model.CaseClassifications.Count() > 0)
+                {
+                    <b>Индикатори:</b>
+                    <br />
+                    @foreach (var caseClassification in Model.CaseClassifications)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = "   - " + caseClassification.Classification.Label;
+                            }
+                            <div>
+                                @Html.Raw(_row)
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (Model.CaseClassifications.Count() > 0)
+                {
+                    <b>Свързани дела на външни институции:</b>
+                    <br />
+                    @foreach (var documentInstitutionCaseInfo in Model.DocumentCaseInfos)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = documentInstitutionCaseInfo.Institution.FullName + " - " + ((documentInstitutionCaseInfo.InstitutionCaseType != null) ? documentInstitutionCaseInfo.InstitutionCaseType.Label + " - " : string.Empty) + documentInstitutionCaseInfo.CaseNumber + "/" + documentInstitutionCaseInfo.CaseYear;
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("CasePreview", "Case")?id=@Model.Id#tabMainData" class="btn btn-dropbox btn-xs" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Дело</span></a>
+                }
+                <a href="@Url.Action("CaseArchive", "Case")?CaseId=@Model.Id" class="btn btn-dropbox btn-xs" title="Архив"><i class="fa fa-file-archive-o"></i><span class="hidden-sm hidden-xs"> Експорт на електронна папка</span></a>
+            </div>
+        </div>
+    </li>
+    <!-- END timeline item -->
+
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-play bg-yellow"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-play"></i> 1бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Иницииращи документи</a></h3>
+
+            <div class="timeline-body hidden">
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    <div>
+                        <i class="fa fa-file-text" aria-hidden="true"></i> @Model.DocumentLabel
+                        @if (Model.DocumentSecret)
+                        {
+                            <i class="fa fa-exclamation-triangle text-black" title="Секретно"></i>
+                        }
+                        @if (Model.DocumentSecret)
+                        {
+                            <i class="fa fa-exclamation-triangle text-red" title="Ограничен достъп"></i>
+                        }
+                    </div>
+
+                    <div class="cdn-listview" style="margin-left:5px;">
+                        <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.Document" data-sourceId="@Model.DocumentId">Файлове</a>
+                    </div>
+                </div>
+
+                @if (Model.DocumentResolutions.Count() > 0)
+                {
+                    <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Разпореждания:</b>
+                    <br />
+                    @foreach (var doc in Model.DocumentResolutions)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = doc.Label;
+                            }
+                            <div>
+                                @Html.Raw("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class='fa fa-file-text'></i> " + _row)
+                            </div>
+
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceId="@doc.Id">Файлове</a>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("View", "Document")?id=@Model.DocumentId#tabMainData" class="btn btn-dropbox btn-xs" title="Иницииращи документи"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Документ</span></a>
+                }
+            </div>
+        </div>
+    </li>
+
+    <!-- timeline item -->
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-user bg-blue"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-user"></i> @Model.CasePersons.Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Лица по делото</a></h3>
+
+            <div class="timeline-body hidden">
+
+
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    <div>
+                        <b>Списък на страните</b>
+                    </div>
+
+                    <div class="cdn-listview" style="margin-left:5px;">
+                        <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CasePerson" data-sourceId="@Model.Id">Файлове</a>
+                    </div>
+                </div>
+
+                @foreach (var casePerson in Model.CasePersons)
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        @{
+                            var _row = casePerson.FullName + " (" + casePerson.RoleName + ")";
+                        }
+                        <div>
+                            @Html.Raw("<i class='fa fa-user'></i> " + _row)
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("CasePreview", "Case")?id=@Model.Id#tabPerson" class="btn btn-dropbox btn-xs" title="Лица"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Лица</span></a>
+                }
+            </div>
+        </div>
+    </li>
+    <!-- END timeline item -->
+
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-random bg-green"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-random"></i> @Model.CaseSelectionProtokols.Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Протоколи от разпределение</a></h3>
+
+            <div class="timeline-body hidden">
+                @foreach (var caseSelection in Model.CaseSelectionProtokols)
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        @{
+                            var _row = caseSelection.SelectionDate.ToString("dd.MM.yyyy") + " " + caseSelection.SelectedLawUnitName + " - " + caseSelection.JudgeRoleName;
+                        }
+                        <div>
+                            @Html.Raw("<i class='fa fa-random'></i> " + _row)
+                        </div>
+
+                        <div class="cdn-listview" style="margin-left:5px;">
+                            <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSelectionProtokol" data-sourceId="@caseSelection.Id">Файлове</a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("Index", "CaseSelectionProtokol")?id=@Model.Id" class="btn btn-dropbox btn-xs" title="Протоколи"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Протоколи</span></a>
+                }
+            </div>
+        </div>
+    </li>
+
+    <!-- timeline item -->
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-users bg-blue-active"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-users"></i> @Model.CaseLawUnits.Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Състав по делото</a></h3>
+
+            <div class="timeline-body hidden">
+
+                @foreach (var caseLawUnit in Model.CaseLawUnits.OrderBy(x => x.DateFrom).ThenBy(x => x.DateTo))
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        @{
+                            var _row = caseLawUnit.RowLabelFull;
+                        }
+                        <div>
+                            @Html.Raw("<i class='fa fa-user'></i> " + _row)
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+                @if (!Model.IsOnlyFiles)
+                {
+                    <a href="@Url.Action("CasePreview", "Case")?id=@Model.Id#tabLawUnit" class="btn btn-dropbox btn-xs" title="Състав"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Състав</span></a>
+                }
+            </div>
+        </div>
+    </li>
+    <!-- END timeline item -->
+
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-book bg-blue"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-book"></i> @Model.CaseInDocuments.Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Съпровождащи документи</a></h3>
+
+            <div class="timeline-body hidden">
+                @foreach (var caseDoc in Model.CaseInDocuments)
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        <div>
+                            <i class='fa fa-files-o'></i> @caseDoc.Title
+                            @if (caseDoc.IsSecret)
+                            {
+                                <i class="fa fa-exclamation-triangle text-black" title="Секретно"></i>
+                            }
+                            @if (caseDoc.IsRestriction)
+                            {
+                                <i class="fa fa-exclamation-triangle text-red" title="Ограничен достъп"></i>
+                            }
+                        </div>
+
+                        <div style="display:flex">
+                            @if (!Model.IsOnlyFiles)
+                            {
+                                <div>
+                                    <a href="@Url.Action("View", "Document")?id=@caseDoc.Id" class="btn btn-dropbox btn-xs" title="Документ"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Документ</span></a>
+                                </div>
+                            }
+
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.Document" data-sourceId="@caseDoc.Id">Файлове</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (caseDoc.DocumentResolutions.Count() > 0)
+                    {
+                        <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Разпореждания:</b>
+                        <br />
+                        @foreach (var doc in caseDoc.DocumentResolutions)
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var _row = doc.Label;
+                                }
+                                <div>
+                                    @Html.Raw("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class='fa fa-file-text'></i> " + _row)
+                                </div>
+
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceId="@doc.Id">Файлове</a>
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+            </div>
+        </div>
+    </li>
+
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-money bg-green-active"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-money"></i> @(Model.PaymentCases.Count() + Model.ExecLists.Count())бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Суми по дело</a></h3>
+
+            <div class="timeline-body hidden">
+
+                @if (Model.PaymentCases.Count() > 0)
+                {
+                    <b> - Плащания:</b>
+                    <br />
+                    @foreach (var paymentCase in Model.PaymentCases)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = "Име: " + paymentCase.PersonNames +
+                                           " / Тип: " + paymentCase.MoneyTypeNames +
+                                           " / Сума дело: " + paymentCase.AmountForCase +
+                                           " / Сума плащане: " + paymentCase.AmountForPayment +
+                                           " / Вид плащане: " + paymentCase.PaymentTypeName +
+                                           " / Дата: " + paymentCase.PaidDate.ToString("dd.MM.yyyy");
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-money'></i> " + _row)
+                            </div>
+
+                            <div style="margin-left:5px;">
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.Payment" data-sourceId="@paymentCase.Id">Файлове</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <br />
+                }
+
+                @if (Model.ExecLists.Count() > 0)
+                {
+                    <b> - Изпълнителни листове:</b>
+                    <br />
+                    @foreach (var execList in Model.ExecLists)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = "Тип: " + execList.ExecListTypeName +
+                                           " / Лице: " + execList.FullName +
+                                           " / Сума: " + execList.Amount.ToString("0.00") +
+                                           " / Номер: " + execList.RegNumber + "/" + execList.RegDate.ToString("dd.MM.yyyy");
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-money'></i> " + _row)
+                            </div>
+
+                            <div style="margin-left:5px;">
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.ExecList" data-sourceId="@execList.Id">Файлове</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+            </div>
+        </div>
+    </li>
+
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-sign-out bg-blue-active"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-sign-out"></i> @Model.CaseOutDocuments.Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Изходящи документи</a></h3>
+
+            <div class="timeline-body hidden">
+                @foreach (var caseDoc in Model.CaseOutDocuments.OrderBy(x => x.DocumentDate))
+                {
+                    <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                        <div>
+                            <i class='fa fa-files-o'></i> @caseDoc.Title
+                            @if (caseDoc.IsSecret)
+                            {
+                                <i class="fa fa-exclamation-triangle text-black" title="Секретно"></i>
+                            }
+                            @if (caseDoc.IsRestriction)
+                            {
+                                <i class="fa fa-exclamation-triangle text-red" title="Ограничен достъп"></i>
+                            }
+                        </div>
+
+                        <div style="display:flex">
+                            @if (!Model.IsOnlyFiles)
+                            {
+                                <div>
+                                    <a href="@Url.Action("View", "Document")?id=@caseDoc.Id" class="btn btn-dropbox btn-xs" title="Документ"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Документ</span></a>
+                                </div>
+                            }
+
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.Document" data-sourceId="@caseDoc.Id"> Файлове</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="timeline-footer hidden">
+            </div>
+        </div>
+    </li>
+
+    @if (Model.CaseMigrations.Count() > 0)
+    {
+        <li data-for="@Model.RegNumber">
+            <!-- timeline icon -->
+            <i class="fa fa-link bg-orange"></i>
+            <div class="timeline-item">
+                <span class="time"><i class="fa fa-link"></i> @Model.CaseMigrations.Count()бр.</span>
+
+                <h3 class="timeline-header"><a href="#">Свързани дела</a></h3>
+
+                <div class="timeline-body hidden">
+
+                    @foreach (var caseMigration in Model.CaseMigrations)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                            </div>
+
+                            <div style="margin-left:5px;">
+                                @if (caseMigration.CaseId != Model.Id)
+                                {
+                                    <a href="@Url.Action("CaseTimeLinePreview", "Case", new { id = caseMigration.CaseId })" class="btn btn-def btn-xs" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"></span></a>
+                                    <a href="@Url.Action("CaseArchive", "Case")?CaseId=@caseMigration.CaseId" class="btn btn-dropbox btn-xs" title="Архив"><i class="fa fa-file-archive-o"></i><span class="hidden-sm hidden-xs"></span></a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="timeline-footer hidden">
+                    @if (!Model.IsOnlyFiles)
+                    {
+                        <a href="@Url.Action("Index", "CaseMigration")?caseId=@Model.Id#tabMainData" class="btn btn-dropbox btn-xs" title="Свързани дела"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Свързани дела</span></a>
+                    }
+                </div>
+            </div>
+        </li>
+    }
+
+    <li data-for="@Model.RegNumber">
+        <!-- timeline icon -->
+        <i class="fa fa-file-archive-o bg-orange"></i>
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-file-archive-o"></i> @Model.CaseSessionFinalActs.Where(x => x.RegNumber != string.Empty).Count()бр.</span>
+
+            <h3 class="timeline-header"><a href="#">Финализиращи актове по дело</a></h3>
+
+            <div class="timeline-body hidden">
+                <div class="timeline-body hidden">
+                    @foreach (var caseSessionAct in Model.CaseSessionFinalActs.Where(x => x.RegNumber != string.Empty))
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + ((!string.IsNullOrEmpty(caseSessionAct.EcliCode)) ? " " + caseSessionAct.EcliCode : string.Empty);
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                            </div>
+
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="timeline-footer hidden">
+            </div>
+        </div>
+    </li>
+
+    @if (Model.RegixReports.Count() > 0)
+    {
+        <li data-for="@Model.RegNumber">
+            <!-- timeline icon -->
+            <i class="fa fa-file-text-o bg-red"></i>
+            <div class="timeline-item">
+                <span class="time"><i class="fa fa-link"></i> @Model.RegixReports.Count()бр.</span>
+
+                <h3 class="timeline-header"><a href="#">Справки външни системи</a></h3>
+
+                <div class="timeline-body hidden">
+
+                    @foreach (var regixList in Model.RegixReports.OrderBy(x => x.DateWrt))
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = regixList.RegixTypeName +
+                                           (!string.IsNullOrEmpty(regixList.ActRegNumber) ? " Акт: " + regixList.ActRegNumber : string.Empty) +
+                                           (!string.IsNullOrEmpty(regixList.DocumentNumber) ? " Документ: " + regixList.DocumentNumber : string.Empty);
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-file-text-o'></i> " + _row)
+                            </div>
+
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.RegixReport" data-sourceId="@regixList.Id"> Файлове</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="timeline-footer hidden">
+                </div>
+            </div>
+        </li>
+    }
+</ul>
+

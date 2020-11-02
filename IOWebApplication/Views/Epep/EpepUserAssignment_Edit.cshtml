@@ -1,0 +1,68 @@
+﻿@model EpepUserAssignment
+@using  IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на връзка към дело";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на връзка към дело";
+    }
+
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EpepUserAssignment_Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.EpepUserId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.DateFrom)
+
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Основни данни</legend>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    @Html.EditorFor(x => x.CaseId, "SelectCase", new { onChange = "courtSelect();" })
+                    @Html.EditorFor(x => x.CasePersonId, "GenericDropDown")
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    <a asp-action="EpepUser_Edit" asp-route-id="@Model.EpepUserId" class="btn btn-danger">Назад</a>
+                    <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.EpepUserAssignment, SourceId = Model.Id })" />
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+                    }
+                </div>
+            </fieldset>
+        </form>
+    </div>
+
+</div>
+@section scripts{
+    <script>
+        $(function () {
+            $('#CaseId').parents('.case-container:first').data('court', @(Model.CourtId));
+            initCase();
+            courtSelect();
+        });
+        function courtSelect() {
+            let caseId = $('#CaseId').val();
+            requestCombo('@Url.Action("Get_CasePerson")', { caseId: caseId }, '#CasePersonId','@Model.CasePersonId');
+        }
+    </script>
+}

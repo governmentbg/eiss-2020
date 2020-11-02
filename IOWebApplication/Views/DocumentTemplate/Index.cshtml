@@ -1,0 +1,18 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@{
+    int sourceType = (int)(ViewBag.sourceType);
+    long sourceId = (long)(ViewBag.sourceId);
+    ViewData["Title"] = "Създаване на документи към " + SourceTypeSelectVM.GetSourceTypeName(sourceType);
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        <partial name="_DocumentTemplate.cshtml" model="new SourceTypeSelectVM() { SourceType = sourceType, SourceId = sourceId }" />
+    </div>
+</div>
+

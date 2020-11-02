@@ -1,0 +1,245 @@
+﻿@model DeliveryItem
+@using IOWebApplication.Infrastructure.Data.Models.Delivery
+@{
+    ViewData["Title"] = "Въвеждане на призовки/писма";
+    string filterJson = ViewBag.filterJson;
+    bool showCheckedForDay = false;
+    var firstContainerId = ViewBag.conteinerId;
+    int ToCourtId = ViewBag.ToCourtId;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+@Html.HiddenFor(x => firstContainerId)
+@Html.HiddenFor(x => ToCourtId)
+<partial name="_SaveFormContent" model="@("#saveContainer")" />
+<div class="row">
+    <div class="col-md-6">
+
+        <div class="form-group">
+            <label asp-for="@showCheckedForDay" class="control-label">
+                @Html.CheckBoxFor(model => showCheckedForDay)
+                <label>&nbsp;Да се покажат приетите за деня</label>
+            </label>
+        </div>
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+<div id="content">
+    @await Html.PartialAsync("_AddReceived", @Model)
+</div>
+
+
+@section scripts {
+    <script>
+        function postToFilterDeliveryItems() {
+            $("#formPostFilter").submit();
+        }
+    </script>
+    <script>
+
+        function makeSubmitDeliveryItem(event, idContainer)
+        {
+            var data = getFormData($('#formEdit' + idContainer));
+            $.ajax({
+                method: "POST",
+                url: '@Url.Action("AddReceivedEdit")',
+                dataType: "json",
+                cache: false,
+                data: { 'model': data, 'guidForSave' : idContainer},
+                success: function (response) {
+                    $('#' + idContainer).before(response.viewAdd);
+                    if (response.isOk) {
+                        $('#' + idContainer).before(response.viewSaved);
+                    }
+                    $('#' + idContainer).remove();
+                    console.log(response.conteinerIdAdd);
+                    if (response.isOk) {
+                        setForm(response.conteinerIdAdd);
+                    }
+                    initEkatte();
+                    initDatePicker();
+
+                    if (!response.isOk) {
+                        var validator = $('#formEdit' + idContainer).validate();
+                        validator.form();
+                        //$('#formEdit' + idContainer).validate({});
+                        //var form = $('#formEdit' + idContainer)
+                        //    .removeData("validator") /* added by the raw jquery.validate plugin */
+                        //    .removeData("unobtrusiveValidation");  /* added by the jquery unobtrusive plugin*/
+                        // $.validator.unobtrusive.parse(form);
+                        let $summary = $('#formEdit' + idContainer).find("[data-valmsg-summary=true]")
+                            .addClass("validation-summary-errors")
+                            .removeClass("validation-summary-valid");
+                        let $ul = $summary.find("ul").empty();
+                        let error = {}
+                        response.errors.forEach(function (el) {
+                            let key = el.value.replace('model.', '');
+                            error[key] = el.text;
+                            $("<li />").html(el.text).appendTo($ul);
+                        });
+                        validator.showErrors(error);
+
+                    }
+                    if (response.saveOk && response.saveOk !== "") {
+                        messageHelper.ShowSuccessMessage(response.saveOk);
+                    }
+                    if (response.saveFailed && response.saveFailed !== "") {
+                        messageHelper.ShowSuccessMessage(response.saveFailed);
+                    }
+                    if (response.messageErr && response.messageErr !== "") {
+                        swal({
+                            title: 'Проблем',
+                            text: response.messageErr,
+                            icon: "warning",
+                            buttons: ["Затвори"],
+                            dangerMode: true
+                        })
+                    }
+
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+        function GetDeliveryAreaId(event, idContainer)
+        {
+            if ($('#formEdit' + idContainer).find('#DeliveryAreaId').val() != -1)
+                return;
+            var data = getFormData($('#formEdit' + idContainer));
+            $.ajax({
+                method: "POST",
+                url: '@Url.Action("GetDeliveryAreaId")',
+                dataType: "json",
+                cache: false,
+                data: { 'model': data},
+                success: function (response) {
+                    if (response.deliveryAreaId && response.deliveryAreaId > 0) {
+                        $('#formEdit' + idContainer).find('#DeliveryAreaId').val(response.deliveryAreaId);
+                    }
+                    console.log(response.lawUnitId);
+                    if (response.lawUnitId && response.lawUnitId > 0) {
+                        $('#formEdit' + idContainer).find('#LawUnitId').val(response.lawUnitId);
+                    }
+
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+
+        function GetReceivedForToday()
+        {
+             $.ajax({
+                method: "POST",
+                url: '@Url.Action("GetReceivedForToday")',
+                dataType: "json",
+                cache: false,
+                data: { },
+                success: function (response) {
+                    $('#content').children().each(function (i, e) {
+                        if (i > 0)
+                            e.remove();
+                    });
+
+                    response.viewsForDay.forEach(function (element) {
+                        $('#content').append(element);
+                    })
+                    initEkatte();
+                    if (response.messageErr && response.messageErr !== "") {
+                        swal({
+                            title: 'Проблем',
+                            text: response.messageErr,
+                            icon: "warning",
+                            buttons: ["Затвори"],
+                            dangerMode: true
+                        })
+                    }
+
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+         $('#showCheckedForDay').change(function () {
+            if ($('#showCheckedForDay').is(":checked")) {
+                 GetReceivedForToday();
+            }
+            else
+            {
+                $('#content').children().each(function (i, e) {
+                    //console.log(i);
+                    //console.log(e);
+                    if (i > 0)
+                        $('#content').find(e).remove();
+                 });
+            }
+         });
+        function setForm(containerId) {
+            let formId = "formEdit" + containerId;
+            $("#" + containerId).find('#button').click(function (event) {
+                makeSubmitDeliveryItem(event, containerId);
+            });
+            $("#"+containerId).find('#DeliveryAreaId').focus(function (event) {
+                GetDeliveryAreaId(event, containerId);
+            });
+
+            $('#' + formId + ' #FromCourtId').select2({
+                language: "bg"
+            });
+            $('#' + formId + ' #Address_Phone').closest('.row').hide();
+            $('#' + formId + ' #RegDate').addClass("io-req");
+            $('#' + formId + " label[for='RegDate']").addClass("io-req");
+            $('#' + formId + " label[for='DateAccepted']").addClass("io-req");
+            // Когато има много форми без  from.validate({}); гърми валидацията
+            $('#' + formId).validate({});
+            $('#' + formId + ' #RegDate').rules('add', {
+                required: true,
+                messages: {
+                    required: 'Изберете дата на изготвяне!',
+                }
+            });
+            $('#' + formId + ' #DateAccepted').rules('add', {
+                required: true,
+                messages: {
+                    required: 'Изберете дата на приемане!',
+                }
+            });
+        }
+        function getToCourtAndType(containerId) {
+            var data = getFormData($('#formEdit' + containerId));
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("GetDeliveryAreaAndCourtForAddReceived", "DeliveryItem")",
+                dataType: "json",
+                cache: false,
+                data: data,
+                success: function (response) {
+                    if ($("#ToCourtId").val() == response.toCourtId)
+                    {
+                        $("#" + containerId).find("#DeliveryAreaId").val(response.deliveryAreaId);
+                        $("#" + containerId).find("#LawUnitId").val(response.lawUnitId);
+                    }
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+        $(document).ready(function () {
+            console.log('document.ready')
+            let firstContainerId = $('#firstContainerId').val();
+            setForm(firstContainerId);
+        });
+    </script>
+    <script>
+        $(function () {
+            initEkatte();
+        });
+    </script>
+}
+

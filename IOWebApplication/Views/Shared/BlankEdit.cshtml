@@ -1,0 +1,141 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Common.BlankEditVM;
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+    bool hasFooter = !string.IsNullOrEmpty(Model.HtmlFooter) || Model.FooterIsEditable;
+}
+@section menuHeader{
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+
+@section contentHeader{
+    <section class="content-header">
+        <h1>
+            @ViewData["Title"]
+        </h1>
+        @if (ViewBag.breadcrumbs != null)
+        {
+            <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        }
+    </section>
+}
+
+<style>
+    table.mce-item-table, .mce-item-table td, .mce-item-table th, .mce-item-table caption {
+        border: none;
+    }
+</style>
+@if (!string.IsNullOrEmpty(Model.TemplateStyle))
+{
+    <style type="text/css">
+        @Html.Raw(Model.TemplateStyle)
+    </style>
+}
+<div class="row">
+    <div class="col-lg-12">
+        @using (Html.BeginForm())
+        {
+            @Html.HiddenFor(x => x.SourceType)
+            @Html.HiddenFor(x => x.SourceId)
+            @Html.HiddenFor(x => x.FooterIsEditable)
+            @Html.Hidden("reset_mode")
+            @if (!string.IsNullOrEmpty(Model.HtmlHeader))
+            {
+                <div class="box box-default">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Заглавна част</h3>
+
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </div>
+                        <!-- /.box-tools -->
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body" style="">
+                        @Html.Raw(Model.HtmlHeader)
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+
+
+            }
+            <div class="form-group">
+                @Html.TextAreaFor(model => model.HtmlContent, new { @class = "tinymce" })
+            </div>
+            @if (hasFooter)
+            {
+                <div class="box box-default @((!Model.FooterIsEditable) ? "collapsed-box":"")">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">@(Model.FooterTitle ?? "Долен колонтитул")</h3>
+
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                                <i class="fa @((!Model.FooterIsEditable) ? "fa-plus":"fa-minus")"></i>
+                            </button>
+                        </div>
+                        <!-- /.box-tools -->
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body" style="">
+                        @if (Model.FooterIsEditable)
+                        {
+                            @if (Model.FooterIsHtml)
+                            {
+                                @Html.TextAreaFor(model => model.HtmlFooter, new { @class = "tinymce" })
+                            }
+                            else
+                            {
+                                <textarea asp-for="HtmlFooter" class="form-control" rows="8"></textarea>
+                            }
+                        }
+                        else
+                        {
+                            @Html.Raw(Model.HtmlFooter)
+                        }
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+            }
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                &nbsp;
+                <a href="@Html.Raw(Model.ReturnUrl)" class="btn btn-danger">Назад</a>
+
+                <div class="pull-right">
+                    @if (Model.HasResetButton)
+                    {
+                        <input type="button" onclick="submitWithReset(this); return false;" value="Обнови от данните" class="btn btn-danger"  />
+                        <text>&nbsp;&nbsp;&nbsp;</text>
+                    }
+                    @if (Model.HasPreviewButton)
+                    {
+                        <input type="submit" name="btnPreview" value="Преглед" class="btn btn-primary" />
+
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<script>
+    $(function () {
+        @if (Model.FooterIsEditable)
+        {
+            <text>setTimeout(shrinkEditor, 200);</text>
+        }
+    });
+    function shrinkEditor() {
+        tinymce.activeEditor.getContainer().style.height = '400px';
+    }
+    function submitWithReset(sender) {
+        swalConfirm('Обновяването на данните ще премахне всички ваши промени по бланката на акта! Потвърдете зареждането на актуалните данните по бланката!', function () {
+            var mainForm = $(sender).parents('form:first');
+            $('#reset_mode').val('reset_blank');
+            $(mainForm).trigger('submit');
+        });
+    }
+</script>

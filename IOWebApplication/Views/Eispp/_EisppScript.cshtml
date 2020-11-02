@@ -1,0 +1,386 @@
+﻿<script>
+
+    function EisppRangeSetRules(el, isAdd) {
+        if (el.length === 0)
+            return;
+        if (isAdd) {
+            var controlName = $("label[for='" + el.attr("id") + "']").text();
+            el.rules('add', {
+                required: true,
+                range: [1, 9999999999999],
+                messages: {
+                    required: 'Изберете ' + controlName + '!',
+                    range: 'Изберете ' + controlName + '!'
+                }
+            })
+            $("label[for='" + el.attr("id") + "']").addClass("io-req");
+        } else {
+            el.rules('remove', 'required');
+            el.rules('remove', 'range');
+            $("label[for='" + $(el).attr("id") + "']").removeClass("io-req");
+        }
+    }
+
+    function EisppCrimeStatusDateSetRules(el, isAdd) {
+        if (el.length === 0)
+            return;
+        if (isAdd) {
+            var controlName = $("label[for='" + el.attr("id") + "']").text();
+            el.rules('add', {
+                required: true,
+                dateRange: ["01.01.2001", moment().format('DD.MM.YYYY')],
+                messages: {
+                    required: 'Изберете ' + controlName + '!',
+                }
+            })
+            $("label[for='" + el.attr("id") + "']").addClass("io-req");
+        } else {
+            el.rules('remove', 'required');
+            el.rules('remove', 'dateRange');
+            $("label[for='" + $(el).attr("id") + "']").removeClass("io-req");
+            el.data('previousValue', {});
+            el.valid();
+        }
+    }
+
+    function EisppDateSetRules(el, isAdd) {
+        if (el.length === 0)
+            return;
+        if (isAdd) {
+            var controlName = $("label[for='" + el.attr("id") + "']").text();
+            el.rules('add', {
+                required: true,
+                dateRangeEispp: ["01.01.1901", '01.01.2040'],
+                messages: {
+                    required: 'Изберете ' + controlName + '!',
+                }
+            })
+            $("label[for='" + el.attr("id") + "']").addClass("io-req");
+        } else {
+            el.rules('remove', 'required');
+            el.rules('remove', 'dateRangeEispp');
+            $("label[for='" + $(el).attr("id") + "']").removeClass("io-req");
+            el.data('previousValue', {});
+            el.valid();
+        }
+    }
+
+    function EisppSetCaseCauseRange(el) {
+        if (el.length === 0)
+            return;
+        $.validator.addMethod('caseCauseValidate', function (value, element, arg) {
+               return this.optional(element) || (value > "C");
+            },
+            'Изберете Свързано дело'
+        );
+
+        el.rules('add', {
+            required: true,
+            caseCauseValidate: 5,
+            messages: { required: 'Изберете Свързано дело' }
+        });
+
+        $("label[for='" + el.attr("id") + "']").addClass("io-req");
+    }
+
+    function EisppSetVisiblePunishmentVals($punismentContainer, mode, showRegim, showServingType)
+    {
+        let punishmentType = $punismentContainer.find('.punishment-type').val();
+        if (showRegim) {
+            $punismentContainer.find('.punishment-regime').show();
+        } else {
+            $punismentContainer.find('.punishment-regime').hide();
+        }
+        if (showServingType) {
+            $punismentContainer.find('.punisment-serving-type-container').show();
+        } else {
+            $punismentContainer.find('.punisment-serving-type-container').hide();
+        }
+        // Глоба
+        if (mode == 'fine') {
+            $punismentContainer.find('.fine-amount').show();
+        } else {
+            $punismentContainer.find('.fine-amount').hide();
+        }
+
+        // Наказание
+        if (mode == 'effective_period' || mode == 'probation' || mode == 'probation_period') {
+            $punismentContainer.find('.punishment-period').show();
+        } else {
+            $punismentContainer.find('.punishment-period').hide();
+        }
+
+        // Условно наказание
+        if (mode == 'probation_period') {
+            $punismentContainer.find('.punishment-probation-period').show();
+        } else {
+            $punismentContainer.find('.punishment-probation-period').hide();
+        }
+
+        // Пробация
+        if (mode == 'probation') {
+            $punismentContainer.find('.punishment-probation').show();
+        } else {
+            $punismentContainer.find('.punishment-probation').hide();
+
+        }
+
+    }
+
+    function EisppGetPunishmentKindMode($punismentContainer, setServingType) {
+        let eventType = $('#EventTypeId').val();
+        let punishmentKind = $punismentContainer.find('.punishment-kind').val();
+        let $servingType = $punismentContainer.find('.punishment-serving-type');
+        let servingTypeId = $servingType.val();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetPunishmentKindMode", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: {
+                eventType: eventType,
+                punishmentKind: punishmentKind,
+                servingType: servingTypeId
+            },
+            success: function (response) {
+                if (setServingType) {
+                    fillCombo(response.servingTypeDDL, $servingType);
+                    setComboSelectedOrFirst($servingType, response.servingTypeId);
+                }
+                EisppSetVisiblePunishmentVals($punismentContainer, response.punishmentKindMode, response.showRegim, response.showServingType);
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
+    function EisppSetVisibleCrimePunishmentVals($punismentContainer, mode) {
+        console.log(mode);
+        // Глоба
+        if (mode == 'fine') {
+            $punismentContainer.find('.crime-fine-amount').show();
+        } else {
+            $punismentContainer.find('.crime-fine-amount').hide();
+        }
+
+        // Наказание
+        if (mode == 'effective_period' || mode == 'probation' || mode == 'probation_period' || mode == 'period') {
+            $punismentContainer.find('.crime-punishment-period').show();
+        } else {
+            $punismentContainer.find('.crime-punishment-period').hide();
+        }
+    }
+
+    function EisppGetCrimePunishmentKindMode($punismentContainer) {
+        let eventType = $('#EventTypeId').val();
+        let punishmentKind = $punismentContainer.find('.crime-punishment-kind').val();
+        let servingTypeId = '0';
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetPunishmentKindMode", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: {
+                eventType: eventType,
+                punishmentKind: punishmentKind,
+                servingType: servingTypeId
+            },
+            success: function (response) {
+                EisppSetVisibleCrimePunishmentVals($punismentContainer, response.punishmentKindMode);
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
+    function EisppGetCheckValueContainer($checkBoxContainer) {
+        var result = null;
+        $checkBoxContainer.find('.eispp-checkbox').each(function () {
+            $checkBoxContainerThis = $(this).parents('.eispp-checkbox-container:first');
+            if ($checkBoxContainerThis.is($checkBoxContainer)) {
+                if ($(this).is(':checkbox')) {
+                    result = this.checked;
+                } else {
+                    result = $(this).val();
+                }
+            }
+        });
+        return result;
+    }
+
+    function EisppGetCheckHaveUpperFalse($checkBoxContainer) {
+        var $checkBoxContainerUp = $checkBoxContainer.parents('.eispp-checkbox-container:first');
+        if ($checkBoxContainerUp.length > 0) {
+            var upVal = EisppGetCheckValueContainer($checkBoxContainerUp);
+            if (upVal == null) {
+                return false;
+            }
+            if (upVal === false) {
+                return true;
+            }
+            return EisppGetCheckHaveUpperFalse($checkBoxContainerUp);
+        }
+    }
+
+    function EisppGetCheckValueForEl($el) {
+        var $checkBoxContainer = $el.parents('.eispp-checkbox-container:first');
+        if ($checkBoxContainer.length > 0) {
+            //if ($el.attr('name') == 'Data.Events[0].CriminalProceeding.Case.Persons[0].Punishments[0].PunishmentActivity')
+            //    debugger;
+            let isAdd = EisppGetCheckValueContainer($checkBoxContainer);
+            if (isAdd) {
+                if (EisppGetCheckHaveUpperFalse($checkBoxContainer))
+                    isAdd = false;
+            }
+            return isAdd;
+        }
+        return false;
+    };
+
+    function EisppCheckBoxEisppRules(checkBox) {
+        let $checkBoxContainer = $(checkBox).parents('.eispp-checkbox-container:first');
+        $checkBoxContainer.find('.eispp_range').each(function () {
+            let isAdd = EisppGetCheckValueForEl($(this))
+            EisppRangeSetRules($(this), isAdd);
+        });
+        $checkBoxContainer.find('.eispp-date-req').each(function () {
+            let isAdd = EisppGetCheckValueForEl($(this))
+            EisppDateSetRules($(this), isAdd);
+        });
+    }
+
+    function EisppPbcMeasureUnit($pbcMeasureType) {
+        let $pbcMeasureContainer = $pbcMeasureType.parents('.pbc-measure-container:first');
+        let $pbcMeasureUnit = $pbcMeasureContainer.find('.pbc-measure-unit');
+        let pbcMeasureTypeId = $pbcMeasureType.val();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetPbcMeasureUnit", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: { pbcMeasureTypeId: pbcMeasureTypeId },
+            success: function (response) {
+                if (response.pbcMeasureUnit == "") {
+                    $pbcMeasureContainer.find('.pbc-measure-unit-container').hide();
+                } else {
+                    $pbcMeasureUnit.val(response.pbcMeasureUnit);
+                    $pbcMeasureContainer.find('.pbc-measure-unit-container').show();
+                    $pbcMeasureUnit.attr('readonly', true);
+                }
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
+    function EisppCrimeStatusRules(ddStatus) {
+        let $ddContainer = $(ddStatus).parents('.eispp-checkbox-container:first');
+        let isAdd = $(ddStatus).val() !== "0" && $(ddStatus).val() !== null;
+        $ddContainer.find('.crime-status-date').each(function () {
+            EisppCrimeStatusDateSetRules($(this), isAdd);
+            if (!isAdd)
+                $(this).val('')
+        });
+    }
+
+    function EisppDateRules() {
+        let isAdd = true;
+        $('.eispp-date-req').each(function () {
+            EisppDateSetRules($(this), isAdd);
+            if (!isAdd)
+                $(this).val('')
+        });
+    }
+
+    function EisppOnReady() {
+        $(function () {
+            initEisppEkatte();
+            initEISPPTblElement();
+        });
+
+        $('.eispp_range').each(function () {
+            EisppRangeSetRules($(this), true);
+        });
+
+        $('.punishment-kind').change(function () {
+            let $punismentContainer = $(this).parents('.punishment-container:first');
+            EisppGetPunishmentKindMode($punismentContainer, true);
+        });
+        $('.punishment-serving-type').change(function () {
+            let $punismentContainer = $(this).parents('.punishment-container:first');
+            EisppGetPunishmentKindMode($punismentContainer, false);
+        });
+        $('.punishment-kind').change();
+
+        $('.crime-punishment-kind').change(function () {
+            let $punismentContainer = $(this).parents('.crime-punishment-container:first');
+            EisppGetCrimePunishmentKindMode($punismentContainer, true);
+        });
+        $('.crime-punishment-kind').change();
+
+        $('.case-cause-dd').each(function () {
+            EisppSetCaseCauseRange($(this));
+        });
+        $('.case-cause-dd').change(function () {
+            let $caseCauseContainer = $(this).parents('.case-cause:first');
+            $caseCauseContainer.find('.case-cause-item').hide();
+            $caseCauseContainer.find('.cci' + $(this).val()).show();
+        });
+        $('.case-cause-dd').change();
+
+
+        EisppDateRules();
+        $('.eispp-checkbox').change(function () {
+            EisppCheckBoxEisppRules(this);
+        });
+
+        $('.pbc-measure-type').change(function () {
+            EisppPbcMeasureUnit($(this))
+        });
+
+        $('.crime-status').change(function () {
+            EisppCrimeStatusRules(this);
+        });
+
+        $('.punishment-serving-type').change();
+        $('.person-select').change();
+        $('.person-crime-select').change();
+        $('.crime-status').change();
+        $.validator.addMethod('dateRange', function (value, element, arg) {
+            return moment(arg[0], 'DD.MM.YYYY') < moment(value, 'DD.MM.YYYY') && moment(value, 'DD.MM.YYYY') <= moment(arg[1], 'DD.MM.YYYY');
+            }, 'Въведете дата в периода от {0} до {1}'
+        );
+        $.validator.addMethod('dateRangeEispp', function (value, element, arg) {
+            var controlName = $("label[for='" + $(element).attr("id") + "']").text();
+            const result = moment(arg[0], 'DD.MM.YYYY') < moment(value, 'DD.MM.YYYY') && moment(value, 'DD.MM.YYYY') <= moment(arg[1], 'DD.MM.YYYY');
+            if (!result) {
+                $.validator.messages.dateRangeEispp = 'Въведете валидна дата за ' + controlName;
+            }
+            return result;
+        }, ''  /* $.validator.messages.dateRangeEispp */);
+        $('.date-picker').each(function () {
+            if ($(this).attr('readonly'))
+                $(this).attr("style", "pointer-events: none;");
+        });
+
+        localStorage.removeItem('activeTabSession');
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTabCase', $(e.target).attr('href'));
+        });
+        var activeTab = localStorage.getItem('activeTabCase');
+        if (activeTab) {
+            $('a[href="' + activeTab + '"]').tab('show');
+        }
+
+        var url = document.location.toString();
+        if (url.match('#')) {
+            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+        }
+
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
+            window.location.hash = e.target.hash;
+        })
+    }
+
+</script>

@@ -1,0 +1,46 @@
+﻿@model CaseLawUnitManualJudgeVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@{
+
+    ViewData["Title"] = "Преглед на избор на съдия при масов отвод";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index")">Регистър на замествания при обективна невъзможност</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1"> Основни данни</legend>
+            @Html.DisplayFor(x => x.CaseNumber, "obj")
+            @Html.DisplayFor(x => x.LawUnitName, "obj")
+            @Html.DisplayFor(x => x.JudgeRoleName, "obj")
+
+            <div class="row">
+                <div class="col-lg-6">
+                    @Html.DisplayFor(x => x.ChangeDate, "datetime")
+                </div>
+                <div class="col-lg-6">
+                    @Html.DisplayFor(x => x.ChangeUserName, "obj")
+                </div>
+            </div>
+
+
+            @Html.DisplayFor(x => x.Description, "obj")
+        </fieldset>
+        <div class="form-group">
+            <a asp-action="Index" class="btn btn-danger">Назад</a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.CaseLawUnitManualJudge" data-sourceid="@Model.Id" data-editmode="append"></div>
+    </div>
+</div>
+@section scripts {
+    <partial name="_CdnScript" />
+}

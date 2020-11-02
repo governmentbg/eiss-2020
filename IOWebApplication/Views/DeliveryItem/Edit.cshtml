@@ -1,0 +1,158 @@
+﻿@model DeliveryItem
+@using IOWebApplication.Infrastructure.Data.Models.Delivery
+@using IOWebApplication.Extensions
+
+@{
+    ViewData["Title"] = "Промяна на район и призовкар в призовка/съобщение";
+    var filterJson = ViewBag.filterJson;
+    List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="col-md-12 col-lg-6">
+    <form id="formEdit" asp-action="EditPost" method="post">
+        @Html.HiddenFor(x => x.Id)
+        @Html.HiddenFor(x => filterJson)
+        <div id="saveContainer">
+            <partial name="_SaveFormContent" model="@("#saveContainer")" />
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="regNumber" class="control-label">Баркод:</label>
+                    <input name="regNumber" id="regNumber" class="form-control" value="@Model.RegNumber" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="courtName" class="control-label">От съд:</label>
+                    <input name="courtName" id="regNumber" class="form-control" value="@Model.FromCourt?.Label" readonly>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="personName" class="control-label">Име на лицето:</label>
+                    <input name="personName" id="personName" class="form-control" value="@Model.PersonName" readonly>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="address" class="control-label">Адрес:</label>
+                    <input name="address" id="address" class="form-control" value="@Model.Address.FullAddress" readonly>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.CourtId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.DeliveryAreaId, "GenericDropDown")
+                </div>
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+                </div>
+
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+</form>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+@section scripts {
+    <script>
+        function postToFilterDeliveryItems()
+        {
+            $("#formPostFilter").submit();
+        }
+        function DeliveryAreaIdChange() {
+            var deliveryAreaId = $("#DeliveryAreaId").val();
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("getLawUnitId", "DeliveryArea")",
+                dataType: "json",
+                cache: false,
+                data: { deliveryAreaId : deliveryAreaId  },
+                success: function (response) {
+                    $("#LawUnitId").val(response.lawUnitId).trigger('change');
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        };
+        function getToCourtLawUnitAndArea(toCourtId, deliveryAreaId, lawUnitId) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("LoadDataLawUnitAndArea", "CaseNotification")',
+                dataType: "json",
+                cache: false,
+                data: {toCourtId : toCourtId},
+                success: function (response) {
+                    $('#DeliveryAreaId').empty().trigger("change");
+                    $('#DeliveryAreaId').select2({
+                        language: "bg",
+                        data: response.deliveryAreaDdl
+                    });
+                    var arrSelect = response.deliveryAreaDdl.filter(function (el) {
+                        if (el.id == deliveryAreaId)
+                            return true;
+                        else
+                            return false;
+                    });
+                    if (arrSelect.length <= 0)
+                        deliveryAreaId = -1;
+                    $('#DeliveryAreaId').val(deliveryAreaId).trigger('change');
+
+                    $('#LawUnitId').empty().trigger("change");
+                    $('#LawUnitId').select2({
+                        language: "bg",
+                        data: response.lawUnitDdl
+                    });
+                    var arrSelect = response.lawUnitDdl.filter(function (el) {
+                        if (el.id == lawUnitId)
+                            return true;
+                        else
+                            return false;
+                    });
+                    if (arrSelect.length <= 0)
+                        lawUnitId = -1;
+                    $('#LawUnitId').val(lawUnitId).trigger('change');
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+        $(document).ready(function () {
+            $('#CourtId').select2({
+                language: "bg"
+            });
+            $('#DeliveryAreaId').select2({
+                language: "bg"
+            });
+            $('#LawUnitId').select2({
+                language: "bg"
+            });
+            $("#DeliveryAreaId").change(function () {
+                DeliveryAreaIdChange();
+            });
+            $('#CourtId').on('select2:select', function (e) {
+                getToCourtLawUnitAndArea($('#CourtId').val(), -1, -1);
+            });
+            $('#DeliveryAreaId').on('select2:select', function (e) {
+                DeliveryAreaIdChange();
+            });
+
+        });
+    </script>
+
+}
+
+

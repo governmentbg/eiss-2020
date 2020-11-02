@@ -1,0 +1,251 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <UserSecretsId>aspnet-IOWebApplication-5AD4B9EC-3A1E-4BC8-9314-F465DE083FD6</UserSecretsId>
+    <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+    <AssemblyVersion>1.0.0.*</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>IOWebApplication.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="InitialData\EKATTE\ek_areas.json" />
+    <Content Remove="InitialData\EKATTE\ek_countries.json" />
+    <Content Remove="InitialData\EKATTE\ek_districts.json" />
+    <Content Remove="InitialData\EKATTE\ek_ekatte.json" />
+    <Content Remove="InitialData\EKATTE\ek_munincipalities.json" />
+    <Content Remove="InitialData\EKATTE\ek_regions.json" />
+    <Content Remove="InitialData\EKATTE\ek_sobr.json" />
+    <Content Remove="InitialData\Nomenclatures\caseGroup.json" />
+    <Content Remove="InitialData\Nomenclatures\court.json" />
+    <Content Remove="InitialData\Nomenclatures\courtType.json" />
+    <Content Remove="InitialData\Nomenclatures\documentGroup.json" />
+    <Content Remove="InitialData\Nomenclatures\documentRegister.json" />
+    <Content Remove="InitialData\Nomenclatures\documentType.json" />
+    <Content Remove="InitialData\Nomenclatures\institutionType.json" />
+    <Content Remove="InitialData\Nomenclatures\lawUnitType.json" />
+    <Content Remove="InitialData\Nomenclatures\uicType.json" />
+    <Content Remove="wwwroot\Fonts\times.ttf" />
+    <Content Remove="wwwroot\Fonts\timesbd.ttf" />
+    <Content Remove="wwwroot\Fonts\timesbi.ttf" />
+    <Content Remove="wwwroot\Fonts\timesi.ttf" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Audit.EntityFramework" Version="14.2.1" />
+    <PackageReference Include="Audit.Mvc.Core" Version="14.2.1" />
+    <PackageReference Include="Audit.NET.Elasticsearch" Version="14.7.0" />
+    <PackageReference Include="Audit.NET.PostgreSql" Version="14.2.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.1.1" />
+    <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
+    <PackageReference Include="DataTables.AspNet.AspNetCore" Version="2.0.2" />
+    <PackageReference Include="IO.LogOperation" Version="1.0.5" />
+    <PackageReference Include="IO.RegixClient" Version="1.0.3" />
+    <PackageReference Include="IO.SignTools" Version="1.0.16" />
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.All" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Analyzers" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="3.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.2.3" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.4" PrivateAssets="All" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Rotativa.AspNetCore" Version="1.1.1" />
+    <PackageReference Include="Serilog" Version="2.8.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
+    <PackageReference Include="Serilog.Sinks.ElasticSearch" Version="8.0.0" />
+    <PackageReference Include="StampIT.Authentication.Id" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.1" />
+    <DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IOWebApplication.Core\IOWebApplication.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\CaseClassification\" />
+    <Folder Include="Views\Pdf\" />
+    <Folder Include="Views\Shared\Components\SignPdfComponent\" />
+    <Folder Include="wwwroot\css\prod\" />
+    <Folder Include="wwwroot\js\prod\" />
+    <Folder Include="wwwroot\lib\adminlte\plugins\chartJs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+    <None Include="InitialData\EKATTE\ek_areas.json" />
+    <None Include="InitialData\EKATTE\ek_countries.json" />
+    <None Include="InitialData\EKATTE\ek_districts.json" />
+    <None Include="InitialData\EKATTE\ek_ekatte.json" />
+    <None Include="InitialData\EKATTE\ek_munincipalities.json" />
+    <None Include="InitialData\EKATTE\ek_regions.json" />
+    <None Include="InitialData\EKATTE\ek_sobr.json" />
+    <None Include="InitialData\Nomenclatures\court.json" />
+    <None Include="InitialData\Nomenclatures\documentRegister.json" />
+    <None Include="InitialData\Nomenclatures\documentType.json" />
+    <None Include="InitialData\Nomenclatures\documentGroup.json" />
+    <None Include="InitialData\Nomenclatures\lawUnitType.json" />
+    <None Include="InitialData\Nomenclatures\caseGroup.json" />
+    <None Include="InitialData\Nomenclatures\courtType.json" />
+    <None Include="InitialData\Nomenclatures\uicType.json" />
+    <None Include="InitialData\Nomenclatures\institutionType.json" />
+    <None Include="wwwroot\Fonts\times.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="wwwroot\Fonts\timesbd.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="wwwroot\Fonts\timesbi.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="wwwroot\Fonts\timesi.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="wwwroot\lib\fullcalendar\bg.js" />
+    <None Include="wwwroot\lib\fullcalendar\fullcalendar.min.js" />
+    <None Include="wwwroot\lib\fullcalendar\lib\jquery-ui.min.js" />
+    <None Include="wwwroot\lib\fullcalendar\lib\jquery.min.js" />
+    <None Include="wwwroot\lib\fullcalendar\lib\moment.min.js" />
+    <None Include="wwwroot\Rotativa\wkhtmltopdf.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Controllers\AccountController.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AccountController.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\Controllers\NomenclatureController.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>NomenclatureController.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\Views\Nomenclature\Edit.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Edit.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\Views\Nomenclature\Index.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Index.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\Rotativa\wkhtmltoimage">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltoimage.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltopdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltopdf.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\bin\wkhtmltoimage">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\bin\wkhtmltopdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\dllbegin.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\dllend.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\image.h">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\pdf.h">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0.12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0.12.4">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\share\man\man1\wkhtmltoimage.1.gz">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\share\man\man1\wkhtmltopdf.1.gz">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Controllers\AccountController.resx">
+      <LastGenOutput>AccountController.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Controllers\NomenclatureController.en.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Controllers\NomenclatureController.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>NomenclatureController.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Views\Nomenclature\Edit.en.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Views\Nomenclature\Edit.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Edit.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Views\Nomenclature\Index.en.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Views\Nomenclature\Index.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Index.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Certificates\Eispp\EISSTEST.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\eiss.local.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\Epep\rs-varna.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\vss-regix-test.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\vss-regix.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JSONSchema="http://json.schemastore.org/config" /></VisualStudio></ProjectExtensions>
+
+</Project>

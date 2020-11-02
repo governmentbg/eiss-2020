@@ -1,0 +1,36 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixHeaderFooterVM
+
+    <div>
+        <center>
+            <b>
+                @Model.CourtName
+            </b>
+            <br />
+            <b>
+                @Model.RegixTypeName
+            </b>
+            <br />
+            <br />
+        </center>
+        <b>
+            На основание
+        </b>
+        <br />
+        @if (string.IsNullOrEmpty(Model.DocumentNumber) == false)
+        {
+            @Html.DisplayFor(x => x.DocumentNumber, "objInline")
+        }
+        @if (string.IsNullOrEmpty(Model.CaseNumber) == false)
+        {
+            @Html.DisplayFor(x => x.CaseNumber, "objInline")
+        }
+        @if (string.IsNullOrEmpty(Model.CaseSessionActNumber) == false)
+        {
+            @Html.DisplayFor(x => x.CaseSessionActNumber, "objInline")
+        }
+        @if (string.IsNullOrEmpty(Model.DescriptionReason) == false)
+        {
+            @Html.DisplayFor(x => x.DescriptionReason, "objInline")
+        }
+    </div>

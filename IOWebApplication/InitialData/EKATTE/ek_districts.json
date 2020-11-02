@@ -1,0 +1,282 @@
+[
+  {
+    "district_id": "2",
+    "oblast": "BLG",
+    "ekatte": "04279",
+    "name": "Благоевград",
+    "region": "BG41",
+    "document": "1896",
+    "abc": "1",
+    "country_id": "24"
+  },
+  {
+    "district_id": "3",
+    "oblast": "BGS",
+    "ekatte": "07079",
+    "name": "Бургас",
+    "region": "BG34",
+    "document": "1678",
+    "abc": "2",
+    "country_id": "24"
+  },
+  {
+    "district_id": "4",
+    "oblast": "VAR",
+    "ekatte": "10135",
+    "name": "Варна",
+    "region": "BG33",
+    "document": "1896",
+    "abc": "3",
+    "country_id": "24"
+  },
+  {
+    "district_id": "5",
+    "oblast": "VTR",
+    "ekatte": "10447",
+    "name": "Велико Търново",
+    "region": "BG32",
+    "document": "1896",
+    "abc": "4",
+    "country_id": "24"
+  },
+  {
+    "district_id": "6",
+    "oblast": "VID",
+    "ekatte": "10971",
+    "name": "Видин",
+    "region": "BG31",
+    "document": "1896",
+    "abc": "5",
+    "country_id": "24"
+  },
+  {
+    "district_id": "7",
+    "oblast": "VRC",
+    "ekatte": "12259",
+    "name": "Враца",
+    "region": "BG31",
+    "document": "1483",
+    "abc": "6",
+    "country_id": "24"
+  },
+  {
+    "district_id": "8",
+    "oblast": "GAB",
+    "ekatte": "14218",
+    "name": "Габрово",
+    "region": "BG32",
+    "document": "1483",
+    "abc": "7",
+    "country_id": "24"
+  },
+  {
+    "district_id": "9",
+    "oblast": "DOB",
+    "ekatte": "72624",
+    "name": "Добрич",
+    "region": "BG33",
+    "document": "1483",
+    "abc": "8",
+    "country_id": "24"
+  },
+  {
+    "district_id": "10",
+    "oblast": "KRZ",
+    "ekatte": "40909",
+    "name": "Кърджали",
+    "region": "BG42",
+    "document": "1483",
+    "abc": "9",
+    "country_id": "24"
+  },
+  {
+    "district_id": "11",
+    "oblast": "KNL",
+    "ekatte": "41112",
+    "name": "Кюстендил",
+    "region": "BG41",
+    "document": "1483",
+    "abc": "10",
+    "country_id": "24"
+  },
+  {
+    "district_id": "12",
+    "oblast": "LOV",
+    "ekatte": "43952",
+    "name": "Ловеч",
+    "region": "BG31",
+    "document": "1896",
+    "abc": "11",
+    "country_id": "24"
+  },
+  {
+    "district_id": "13",
+    "oblast": "MON",
+    "ekatte": "48489",
+    "name": "Монтана",
+    "region": "BG31",
+    "document": "1483",
+    "abc": "12",
+    "country_id": "24"
+  },
+  {
+    "district_id": "14",
+    "oblast": "PAZ",
+    "ekatte": "55155",
+    "name": "Пазарджик",
+    "region": "BG42",
+    "document": "1862",
+    "abc": "13",
+    "country_id": "24"
+  },
+  {
+    "district_id": "15",
+    "oblast": "PER",
+    "ekatte": "55871",
+    "name": "Перник",
+    "region": "BG41",
+    "document": "1483",
+    "abc": "14",
+    "country_id": "24"
+  },
+  {
+    "district_id": "16",
+    "oblast": "PVN",
+    "ekatte": "56722",
+    "name": "Плевен",
+    "region": "BG31",
+    "document": "1483",
+    "abc": "15",
+    "country_id": "24"
+  },
+  {
+    "district_id": "17",
+    "oblast": "PDV",
+    "ekatte": "56784",
+    "name": "Пловдив",
+    "region": "BG42",
+    "document": "1483",
+    "abc": "16",
+    "country_id": "24"
+  },
+  {
+    "district_id": "18",
+    "oblast": "RAZ",
+    "ekatte": "61710",
+    "name": "Разград",
+    "region": "BG32",
+    "document": "1483",
+    "abc": "17",
+    "country_id": "24"
+  },
+  {
+    "district_id": "19",
+    "oblast": "RSE",
+    "ekatte": "63427",
+    "name": "Русе",
+    "region": "BG32",
+    "document": "1896",
+    "abc": "18",
+    "country_id": "24"
+  },
+  {
+    "district_id": "20",
+    "oblast": "SLS",
+    "ekatte": "66425",
+    "name": "Силистра",
+    "region": "BG32",
+    "document": "1483",
+    "abc": "19",
+    "country_id": "24"
+  },
+  {
+    "district_id": "21",
+    "oblast": "SLV",
+    "ekatte": "67338",
+    "name": "Сливен",
+    "region": "BG34",
+    "document": "1896",
+    "abc": "20",
+    "country_id": "24"
+  },
+  {
+    "district_id": "22",
+    "oblast": "SML",
+    "ekatte": "67653",
+    "name": "Смолян",
+    "region": "BG42",
+    "document": "1483",
+    "abc": "21",
+    "country_id": "24"
+  },
+  {
+    "district_id": "23",
+    "oblast": "SFO",
+    "ekatte": "68134",
+    "name": "София",
+    "region": "BG41",
+    "document": "1483",
+    "abc": "22",
+    "country_id": "24"
+  },
+  {
+    "district_id": "24",
+    "oblast": "SOF",
+    "ekatte": "68134",
+    "name": "София (столица)",
+    "region": "BG41",
+    "document": "1483",
+    "abc": "23",
+    "country_id": "24"
+  },
+  {
+    "district_id": "25",
+    "oblast": "SZR",
+    "ekatte": "68850",
+    "name": "Стара Загора",
+    "region": "BG34",
+    "document": "1896",
+    "abc": "24",
+    "country_id": "24"
+  },
+  {
+    "district_id": "26",
+    "oblast": "TGV",
+    "ekatte": "73626",
+    "name": "Търговище",
+    "region": "BG33",
+    "document": "1483",
+    "abc": "25",
+    "country_id": "24"
+  },
+  {
+    "district_id": "27",
+    "oblast": "HKV",
+    "ekatte": "77195",
+    "name": "Хасково",
+    "region": "BG42",
+    "document": "1896",
+    "abc": "26",
+    "country_id": "24"
+  },
+  {
+    "district_id": "28",
+    "oblast": "SHU",
+    "ekatte": "83510",
+    "name": "Шумен",
+    "region": "BG33",
+    "document": "1896",
+    "abc": "27",
+    "country_id": "24"
+  },
+  {
+    "district_id": "29",
+    "oblast": "JAM",
+    "ekatte": "87374",
+    "name": "Ямбол",
+    "region": "BG34",
+    "document": "1483",
+    "abc": "28",
+    "country_id": "24"
+  }
+]

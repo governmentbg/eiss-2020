@@ -1,0 +1,70 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.LoginVM
+@{
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+    ViewData["Title"] = "ЕИСС | Вход";
+    ViewBag.body_style = "login-screen";
+}
+<div class="login-box">
+    <div class="logo logo--eiis">
+        @*<a href="@Url.Action("Index","Home")"><b>Единна информационна система на съдилищата</b></a>*@
+    </div>
+    <!-- /.login-logo -->
+    <div class="login-box-body1">
+        @if (Model.LoginWithPassword)
+        {
+            <form id="account" method="post" class="quick-submit">
+                @Html.HiddenFor(x => x.LoginWithPassword)
+                <div style="padding:0 20px;">
+                    <label asp-for="Email"></label>
+                    <div class="input-group margin-bottom-sm">
+                        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw" aria-hidden="true"></i></span>
+                        <input asp-for="Email" class="form-control" type="text" placeholder="Електронна поща">
+
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <br />
+                    <label asp-for="Password"></label>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-key fa-fw" aria-hidden="true"></i></span>
+                        <input asp-for="Password" class="form-control" type="password" placeholder="Парола">
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <br />
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-unlock-alt"></i> Вход</button>
+                    </div>
+                </div>
+            </form>
+        }
+        @if ((Model.ExternalLogins?.Count ?? 0) > 0)
+        {
+            <form id="external-account" asp-action="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                <div style="padding:0 20px;">
+
+
+                    @*<div class="button__group">
+                        <div id="btn_providers">*@
+                    @foreach (var provider in Model.ExternalLogins)
+                    {
+                        <button type="submit" class="btn btn-block btn-social bg-yellow" name="provider" value="@provider.Name" title="Вход с @provider.DisplayName">Вход с @provider.DisplayName</button>
+                    }
+                    @if (ViewBag.errorMessage != null)
+                    {
+                        <div style="text-align:center;">
+                            <h4 class="text-danger">@ViewBag.errorMessage</h4>
+                        </div>
+                    }
+                </div>
+            </form>
+        }
+    </div>
+</div>
+@section footer{
+    <partial name="_Footer" />
+}
+<script>
+    window.onload = function (event) {
+        sessionStorage.removeItem('eiss_sign_sid');
+    };
+</script>

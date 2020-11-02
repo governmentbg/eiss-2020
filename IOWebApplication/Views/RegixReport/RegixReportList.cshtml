@@ -1,0 +1,128 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixReportListFilterVM
+
+@{
+    ViewData["Title"] = "Справка търсене във външни регистри";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.RegixTypeId, "GenericDropDown")</div>
+    <div class="col-lg-4">@Html.EditorFor(m => m.UserId, "SelectUser")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataRegixReportList", "RegixReport")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            RegixTypeId: $("#RegixTypeId").val(),
+                            UserId: $("#UserId").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'regixTypeName',
+                        data: 'regixTypeName',
+                        title: 'Вид справка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'userName',
+                        data: 'userName',
+                        title: 'Потребител',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'documentNumber',
+                        data: 'documentNumber',
+                        title: 'Документ',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'requestData',
+                        data: 'requestData',
+                        title: 'Критерии',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-center",
+                        name: 'dateWrt',
+                        data: 'dateWrt',
+                        title: 'Дата и час',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateReport', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateReport" type="text/x-handlebars-template">
+</script>
+
+<script>
+    $(function () {
+        initUserAutoComplete();
+    });
+</script>

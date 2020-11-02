@@ -1,0 +1,88 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="CaseLoadIndex" asp-action="AddElementTypeRule" asp-route-caseLoadElementTypeId="@Model.Id" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави правило
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseLoadElementTypeRuleMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseLoadElementTypeRuleMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseLoadElementTypeRule", "CaseLoadIndex")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.CaseLoadElementTypeId = @Model.Id;
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'sessionTypeLabel',
+                        data: 'sessionTypeLabel',
+                        title: 'Вид заседаниe',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionResultLabel',
+                        data: 'sessionResultLabel',
+                        title: 'Резултат от заседанието',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actTypeLabel',
+                        data: 'actTypeLabel',
+                        title: 'Тип акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isCreateMotiveText',
+                        data: 'isCreateMotiveText',
+                        title: 'Изготвяне на мотив',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isCreateCaseText',
+                        data: 'isCreateCaseText',
+                        title: 'Образуване на дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseLoadElementTypeRuleTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="caseLoadElementTypeRuleTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditElementTypeRule", "CaseLoadIndex")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

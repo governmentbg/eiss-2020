@@ -1,0 +1,17 @@
+﻿@model DocumentVM
+@{
+    var containerId = Guid.NewGuid().ToString();
+}
+@using IOWebApplication.Infrastructure.Models.ViewModels
+<div class="dynamic-form institutionCaseInfo" data-container="@containerId">
+    @for (int i = 0; i < Model.InstitutionCaseInfo.Count(); i++)
+    {
+        Model.InstitutionCaseInfo[i].Index = i;
+        ViewData.TemplateInfo.HtmlFieldPrefix = Model.InstitutionCaseInfo[i].GetPath;
+
+        <partial name="_DocumentInstitutionCaseInfoItem" model="@Model.InstitutionCaseInfo[i]" />
+        ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+    }
+    <div id="@containerId"></div>
+    <a href="#" class="add-item btn btn-xs btn-success" data-container="@containerId" data-url="@Url.Action("NewItem_DocumentInstitutionCaseInfo")" data-index="@Model.InstitutionCaseInfo.Count()"><i class="fa fa-plus"></i> Добави връзка към дело</a>
+</div>

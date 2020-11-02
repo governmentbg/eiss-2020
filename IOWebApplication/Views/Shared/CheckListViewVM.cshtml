@@ -1,0 +1,79 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CheckListViewVM
+
+@{
+    ViewData["Title"] = Model.Label;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frmCheckList" }))
+        {
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.ObjectId)
+            @Html.HiddenFor(x => x.OtherId)
+            @Html.HiddenFor(x => x.Label)
+            @Html.HiddenFor(x => x.ButtonLabel)
+            @Html.HiddenFor(x => x.ShowLogOperation)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <fieldset class="is-fieldset checklist">
+                <div class="check-tools">
+                    <a href="#" data-action="all" class="btn btn-xs btn-default">Маркирайте всички</a>
+                    <a href="#" data-action="none" class="btn btn-xs btn-default">Размаркирайте всички</a>
+                </div>
+                <legend class="legend_1">Изберете</legend>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    @Html.EditorFor(x => x.checkListVMs)
+                </div>
+            </fieldset>
+            <div class="form-group">
+                @if (!string.IsNullOrEmpty(Model.ButtonLabel))
+                {
+                    <input id="subButton" type="button" value="@Model.ButtonLabel" onclick={SubmitCheckList()} class="btn btn-success" />
+                }
+                else
+                {
+                    <input id="subButton" type="button" value="Запис" onclick={SubmitCheckList()} class="btn btn-success" />
+                }
+                <a href="@(ViewBag.backUrl)" class="btn btn-danger">Назад</a>
+                @if (Model.ShowLogOperation)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.ObjectId.ToString() })
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.check-tools a').click(function () {
+            if ($(this).data('action') == 'all') {
+                $('.checklist').find('input[type="checkbox"]').prop('checked', true);
+            } else {
+                $('.checklist').find('input[type="checkbox"]').prop('checked', false);
+            }
+        })
+    });
+
+    $(document).ready(function () {
+        $('#subButton').removeAttr("disabled");
+    });
+
+    function SubmitCheckList() {
+        $("#subButton").attr("disabled", true);
+        $('#frmCheckList').trigger('submit');
+    }
+</script>
+

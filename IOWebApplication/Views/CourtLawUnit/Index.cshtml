@@ -1,0 +1,143 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+
+@{
+    var periodType = (int)ViewBag.periodTypeId;
+    var lawUnitType = ViewBag.lawUnitTypeId;
+    ViewData["Title"] = $"{ViewBag.lawUnitTypeName} - {ViewBag.periodName}";
+    var visibleOrganization = false;
+    @if (NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(periodType))
+    {
+        visibleOrganization = true;
+    }
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="Add" asp-route-periodType="@periodType" asp-route-lawUnitType="@lawUnitType" class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+        @if (lawUnitType == NomenclatureConstants.LawUnitTypes.Judge && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(periodType))
+        {
+            <span>&nbsp;</span>
+            <a asp-action="OrderIndex" class="btn btn-def">
+                <i class="fa fa-expand"></i>
+                Ред на старшинство
+            </a>
+            <span>&nbsp;</span>
+            <a asp-action="Substitution" class="btn btn-warning">
+                <i class="fa fa-repeat"></i>
+                Заместване
+            </a>
+        }
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.periodType = @periodType;
+                        d.lawUnitType = @lawUnitType;
+                    }
+                },
+                columns: [
+                    {
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Имена',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: '@visibleOrganization' == 'True' ? '' : 'hidden',
+                        name: 'courtOrganizationName',
+                        data: 'courtOrganizationName',
+                        title: 'Структура'
+                    },
+                    {
+                        className: '@visibleOrganization' == 'True' ? '' : 'hidden',
+                        name: 'lawUnitPositionName',
+                        data: 'lawUnitPositionName',
+                        title: 'Длъжност'
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        @switch (lawUnitType)
+        {
+            case NomenclatureConstants.LawUnitTypes.Judge:
+                @if (periodType == NomenclatureConstants.PeriodTypes.Appoint || periodType == NomenclatureConstants.PeriodTypes.Move)
+                {
+                    <a href="@Url.Action("EditCourtLawUnitGroup")/{{this}}" class="btn btn-primary btn-sm" title="Групи"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Групи</span></a>
+                }
+                break;
+            case NomenclatureConstants.LawUnitTypes.Jury:
+                @if (periodType == NomenclatureConstants.PeriodTypes.Appoint)
+                {
+                    @*<a href="@Url.Action("EditCourtLawUnitGroup")/{{this}}" class="btn btn-primary btn-sm" title="Групи"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Специалности</span></a>*@
+                }
+                break;
+        }
+    </script>
+
+}

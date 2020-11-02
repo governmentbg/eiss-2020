@@ -1,0 +1,103 @@
+﻿@model CaseSessionActComplainResultEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на резултат" : "Преглед на резултат";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на резултат";
+    }
+    bool hasIsStartNewLifecycle = (bool)ViewBag.hasIsStartNewLifecycle;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditResult" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseSessionActComplainId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.ComplainCaseId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.ActResultId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.DateResult, "DateTime")</div>
+                            <div id="divStartNewLifecycle" class="col-lg-12">@Html.EditorFor(x => x.IsStartNewLifecycle, "Boolean")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                        </fieldset>
+                    </div>
+                    <div class="col-lg-6">
+                        @if (Model.CaseSessionActComplains.Count() > 0)
+                        {
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Пренасяне на резултата в:</legend>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionActComplains)</div>
+                            </fieldset>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                <a asp-action="Edit" asp-route-id="@Model.CaseSessionActComplainId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        ComplainCaseIdChange();
+        SH_StartNewLifecycle();
+    });
+
+    $('#ComplainCaseId').change(function () {
+        ComplainCaseIdChange();
+    });
+
+    function ComplainCaseIdChange() {
+        requestCombo('@Url.Action("GetDDL_CaseSessionAct", "CaseSessionAct")', { caseId: $('#ComplainCaseId').val() }, '#CaseSessionActId', @Model.CaseSessionActId, function () { $('#CaseSessionActId').trigger('change') });
+        requestCombo('@Url.Action("GetDDL_ActResult", "CaseSessionActComplain")', { CaseFromId: $('#ComplainCaseId').val(), CaseSessionActComplainId : @Model.CaseSessionActComplainId }, '#ActResultId', @(Model.ActResultId ?? 0), function () { $('#ActResultId').trigger('change') });
+    }
+
+    function SH_StartNewLifecycle() {
+        if ('@hasIsStartNewLifecycle' == 'True') {
+            $("#divStartNewLifecycle").show();
+        }
+        else {
+            $("#divStartNewLifecycle").hide();
+        }
+    }
+</script>
+

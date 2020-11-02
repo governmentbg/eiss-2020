@@ -1,0 +1,192 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@model SourceTypeSelectVM
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+<div id="cmContainer">
+</div>
+
+<div class="row">
+    @if (access.CanChange)
+    {
+        <a href="#" onclick="cmCreateMovement(); return false;" class="btn btn-sm btn-success" style="position:relative;left:15px"><i class="fa fa-plus"></i> Ново движение</a>
+    }
+    <a href="@Url.Action("Index_SprFromCaeId", "CaseMovement")?CaseId=@Model.SourceType" class="btn btn-warning btn-sm" style="position: absolute; right:15px" title="Справка"><i class="fa fa-map-marker"></i><span class="hidden-sm hidden-xs"> Справка</span></a>
+</div>
+
+<script>
+    $(function () {
+        cmLoadData();
+    });
+
+    function cmLoadData() {
+        requestGET_Json('@Url.Action("Select","CaseMovement")'
+            , { CaseId:@Model.SourceType}
+            , function (data) {
+                $('#cmContainer').html(TemplateToHtml('#caseMovementTemplate', data))
+            });
+    }
+
+    function cmCreateMovement() {
+        requestContent('@Url.Action("CreateMovement","CaseMovement")'
+            , { CaseId:@Model.SourceType, cmId:0}
+            , function (data) {
+                ShowModalDialog('Ново движение', data);
+            });
+    }
+
+    function cmEditMovement(id) {
+        requestContent('@Url.Action("CreateMovement","CaseMovement")'
+            , { CaseId:@Model.SourceType, cmId:id}
+            , function (data) {
+                ShowModalDialog('Редакция движение', data);
+            });
+    }
+
+    function cmStornoMovement(id) {
+        requestContent('@Url.Action("StornoMovement","CaseMovement")'
+            , { cmId:id}
+            , function (data) {
+                ShowModalDialog('Анулиране', data);
+            });
+    }
+
+    function cmAcceptMovement(id) {
+        swalConfirm('Потвърди приемането на делото!', function () {
+            postContent('@Url.Action("AcceptMovement","CaseMovement")'
+            , {Id:id}
+            , function (data) {
+                if (data.result == true) {
+                    cmLoadData();
+                    messageHelper.ShowSuccessMessage('Делото е прието успешно.');
+                } else {
+                    cmLoadData();
+                    messageHelper.ShowErrorMessage('Грешка при приемане на дело.');
+                }
+            });
+        });
+    }
+
+    function cmCreateReturnMovement(id) {
+        swalConfirm('Потвърди създаване на обратно връщане!', function () {
+            postContent('@Url.Action("CreateReturnMovement","CaseMovement")'
+            , {Id:id}
+            , function (data) {
+                if (data.result == true) {
+                    cmLoadData();
+                    messageHelper.ShowSuccessMessage('Делото е върнато успешно.');
+                } else {
+                    messageHelper.ShowErrorMessage('Грешка при връщане на дело.');
+                }
+            });
+        });
+    }
+
+    function cmEditAcceptMovement(id) {
+        requestContent('@Url.Action("EditAcceptMovement","CaseMovement")'
+            , { cmId:id}
+            , function (data) {
+                ShowModalDialog('Отразяване на изпълнение', data);
+            });
+    }
+
+</script>
+
+<script id="caseMovementTemplate" type="text/x-handlebars-template">
+    {{#if this}}
+    <div class="casemovement-header">
+        <div class="row">
+            <div class="col-lg-6">
+                <b>Вид </b>
+            </div>
+            <div class="col-lg-3">
+                <b>Изпратено към / Дата на изпращане </b>
+            </div>
+            <div class="col-lg-3">
+                <b>Приел / Дата на приемане</b>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+    {{#each this}}
+    <div class="casemovement-item">
+        <div class="row">
+            <div class="col-lg-6">
+                <b>{{movementTypeLabel}}</b>
+                {{#if description}}
+                <br />
+                <span class="remark">
+                    {{description}}
+                </span>
+                {{/if}}
+                {{#if isActive}}
+                {{else}}
+                <br />
+                <span class="storno">
+                    <b>{{isActiveText}}</b>
+                </span>
+                {{#if disableDescription}}
+                <br />
+                <span class="remark">
+                    {{disableDescription}}
+                </span>
+                {{/if}}
+                {{/if}}
+
+                {{#if isEdit}}
+                <br />
+                @if (access.CanChange)
+                {
+                    <a href="#" class="btn btn-sm btn-warning" onclick="cmEditMovement('{{id}}');"><i class="fa fa-edit"></i> Редакция</a>
+                }
+                &nbsp;
+                @if (access.CanChange)
+                {
+                    <a href="#" class="btn btn-sm btn-danger" onclick="cmStornoMovement('{{id}}');"><i class="fa fa-trash"></i> Анулиране</a>
+                }
+                &nbsp;
+                <br />
+                {{/if}}
+            </div>
+            <div class="col-lg-3">
+                {{nameFor}}
+                <br />
+                <span class="remark">{{dateTimeMin dateSend}}</span>
+                <br />
+                {{#if isAccept}}
+                @if (access.CanChange)
+                {
+                    <a href="#" class="btn btn-sm btn-primary" onclick="cmAcceptMovement('{{id}}');"><i class="glyphicon glyphicon-ok"></i> Приемане</a>
+                }
+                &nbsp;
+                {{/if}}
+            </div>
+            <div class="col-lg-3">
+                {{acceptLawUnitName}}
+                {{#if dateAccept}}
+                <br />
+                <span class="remark">{{dateTimeMin dateAccept}}</span>
+                {{else}}
+                {{/if}}
+                {{#if acceptDescription}}
+                <br />
+                <span class="remark">
+                    {{acceptDescription}}
+                </span>
+                {{/if}}
+                {{#if isEditAccept}}
+                <br />
+                @if (access.CanChange)
+                {
+                    <a href="#" class="btn btn-sm btn-primary" onclick="cmEditAcceptMovement('{{id}}');"><i class="fa fa-edit"></i> Изпълнение</a>
+                    <a href="#" class="btn btn-sm btn-info" onclick="cmCreateReturnMovement('{{id}}');"><i class="fa fa-refresh fa-spin"></i> Връщане</a>
+                }
+                &nbsp;
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    {{/each}}
+</script>

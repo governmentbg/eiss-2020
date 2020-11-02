@@ -1,0 +1,65 @@
+﻿@model BankAccountEditVM
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на сметка";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на сметка";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditBankAccount" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.SourceId)
+            @Html.HiddenFor(x => x.SourceType)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                @Html.EditorFor(x => x.IBAN)
+                @Html.EditorFor(x => x.BIC)
+                @Html.EditorFor(x => x.BankName)
+                @Html.EditorFor(x => x.IsMainAccount)
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="Common" asp-action="BankAccount" asp-route-sourceType="@Model.SourceType" asp-route-sourceId="@Model.SourceId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#IBAN').blur(function () {
+        var iban = $(this).val();
+        if (iban.length >= 8) {
+            var searchBic = iban.substr(4, 4);
+            if (searchBic.length > 0) {
+                requestGET_Json('@Url.Action("GetBankDataFromIban","Money")', { search: searchBic}, function (data) {
+                    $("#BIC").val(data.bic);
+                    $("#BankName").val(data.bankName);
+                });
+            }
+        }
+    });
+</script>

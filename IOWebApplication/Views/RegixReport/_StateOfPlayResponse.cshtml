@@ -1,0 +1,231 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Infrastructure.Constants
+@model RegixStateOfPlayVM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.StateOfPlayFilter.UIC, "objInline", new { label = "Справка за: БУЛСТАТ " })
+        <br />
+        <br />
+
+
+        <partial name="_StateOfPlaySubjectResponse" model="@Model.StateOfPlayResponse.StateSubject" />
+
+        <hr />
+        <br />
+        <br />
+        <b>Събитие:</b>
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.DocumentType, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.DocumentNumber, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.DocumentDate, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.ValidFromDate, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.DocumentName, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.AuthorName, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.EventType, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.EventDate, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.LegalBase, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateEvent.Case, "objInline")
+
+
+        <hr />
+        <br />
+        <br />
+        @Html.DisplayFor(x => x.StateOfPlayResponse.RepresentationType, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.RepresentationText, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.ScopeOfActivity, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.MainActivity2008, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.MainActivity2003, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.LifeTimeDate, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.LifeTimeDescription, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.AccountingRecordForm, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.State, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.ActivityType, "objInline")
+        @Html.DisplayFor(x => x.StateOfPlayResponse.ActivityDate, "objInline")
+
+        <hr />
+        <br />
+        <br />
+        <b>Вноски:</b>
+        <table>
+            <tr>
+                <td colspan="3">
+                    <table class="bordered">
+                        <tr>
+                            <td><b>Брой</b></td>
+                            <td><b>Сума</b></td>
+                        </tr>
+                        @foreach (var item in Model.StateOfPlayResponse.StateInstallment)
+                        {
+                            <tr>
+                                <td align="right">
+                                    @item.Count
+                                </td>
+                                <td align="right">
+                                    @item.Amount
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <hr />
+        <br />
+        <br />
+        <b>Форма на собственост:</b>
+        <table>
+            <tr>
+                <td colspan="3">
+                    <table class="bordered">
+                        <tr>
+                            <td><b>Вид</b></td>
+                            <td><b>Процент</b></td>
+                        </tr>
+                        @foreach (var item in Model.StateOfPlayResponse.StateOwnershipForm)
+                        {
+                            <tr>
+                                <td align="left">
+                                    @item.Form
+                                </td>
+                                <td align="right">
+                                    @item.Percent
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+
+        <hr />
+        <br />
+        <br />
+        <b>Източници на финансиране:</b>
+        <table>
+            <tr>
+                <td colspan="3">
+                    <table class="bordered">
+                        <tr>
+                            <td><b>Вид</b></td>
+                            <td><b>Процент</b></td>
+                        </tr>
+                        @foreach (var item in Model.StateOfPlayResponse.StateFundingSource)
+                        {
+                            <tr>
+                                <td align="left">
+                                    @item.Source
+                                </td>
+                                <td align="right">
+                                    @item.Percent
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+
+        <hr />
+        <br />
+        <br />
+        <b>Управители:</b>
+        @foreach (var item in Model.StateOfPlayResponse.StateManager)
+        {
+            <partial name="_StateOfPlaySubjectResponse" model="@item.RelatedSubject" />
+            @Html.DisplayFor(x => item.Position, "objInline")
+            <br />
+            <b>Представляващи управител @item.RelatedSubject.StateNaturalPersonSubject.CyrillicName:</b>
+            @foreach (var itemRepresent in item.RepresentedSubjects)
+            {
+                <partial name="_StateOfPlaySubjectResponse" model="@itemRepresent" />
+                <br />
+            }
+        }
+
+        <hr />
+        <br />
+        <br />
+        <b>Собственици/съдружници:</b>
+        @foreach (var item in Model.StateOfPlayResponse.StatePartner)
+        {
+            <partial name="_StateOfPlaySubjectResponse" model="@item.RelatedSubject" />
+            @Html.DisplayFor(x => item.Role, "objInline")
+            @Html.DisplayFor(x => item.Percent, "objInline")
+            @Html.DisplayFor(x => item.Amount, "objInline")
+            <br />
+        }
+
+        <hr />
+        <br />
+        <br />
+        <b>Правоприемство:</b>
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateAssignee.Type, "objInline")
+        @foreach (var item in Model.StateOfPlayResponse.StateAssignee.RelatedSubject)
+        {
+            <partial name="_StateOfPlaySubjectResponse" model="@item" />
+            <br />
+        }
+
+        <hr />
+        <br />
+        <br />
+        <b>Принадлежност:</b>
+        @Html.DisplayFor(x => x.StateOfPlayResponse.StateBelonging.Type, "objInline")
+        <partial name="_StateOfPlaySubjectResponse" model="@Model.StateOfPlayResponse.StateBelonging.RelatedSubject" />
+
+        <hr />
+        <br />
+        <br />
+        <b>Колективни органи:</b>
+        @foreach (var item in Model.StateOfPlayResponse.CollectiveBodies)
+        {
+            @Html.DisplayFor(x => item.Type, "objInline")
+
+            @foreach (var itemMember in item.StateMembers)
+            {
+                <partial name="_StateOfPlaySubjectResponse" model="@itemMember.RelatedSubject" />
+                @Html.DisplayFor(x => itemMember.Position, "objInline")
+                <br />
+                <b>Представляващи @itemMember.RelatedSubject.StateNaturalPersonSubject.CyrillicName:</b>
+                @foreach (var itemRepresent in itemMember.RepresentedSubjects)
+                {
+                    <partial name="_StateOfPlaySubjectResponse" model="@itemRepresent" />
+                    <br />
+                }
+            }
+        }
+
+        <hr />
+        <br />
+        <br />
+        <b>Допълнителни дейности по КИД2008:</b>
+        @foreach (var item in Model.StateOfPlayResponse.AdditionalActivities2008)
+        {
+            <br />
+            <b>@item</b>
+        }
+
+        <hr />
+        <br />
+        <br />
+        <b>Професии:</b>
+        @foreach (var item in Model.StateOfPlayResponse.Professions)
+        {
+            <br />
+            <b>@item</b>
+        }
+
+        <hr />
+        <br />
+        <br />
+
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

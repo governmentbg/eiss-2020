@@ -1,0 +1,100 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseLoadIndexFilterVM
+
+@{
+    ViewData["Title"] = "Натоварване на съдии извън дело";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1" })</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCourtLawUnitActivitySpr")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.DateFrom = $("#DateFrom").val();
+                        d.DateTo = $("#DateTo").val();
+                        d.LawUnitId = $("#LawUnitId").val();
+                    }
+
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'lawUnitLabel',
+                        data: 'lawUnitLabel',
+                        title: 'Име',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'loadIndex',
+                        data: 'loadIndex',
+                        title: 'Натоварване',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+
+</script>
+
+<script>
+    $(function () {
+        initLawUnit();
+    });
+</script>

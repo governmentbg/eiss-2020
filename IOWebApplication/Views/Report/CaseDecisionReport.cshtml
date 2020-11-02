@@ -1,0 +1,152 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model CaseDecisionFilterReportVM
+
+@{
+    ViewData["Title"] = "Регистър на съдебните решения по чл. 235, ал. 5 ГПК";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("CaseDecisionReport")" method="post">
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseDecisionReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'caseGroupName',
+                        data: 'caseGroupName',
+                        title: 'Вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: '№/година на делото',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'judgeReporterName',
+                        data: 'judgeReporterName',
+                        title: 'Съдия докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'depersonalizeUser',
+                        data: 'depersonalizeUser',
+                        title: 'Служител, обезличил съдебния акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'actDeclaredDate',
+                        data: 'actDeclaredDate',
+                        title: 'Дата на обявяване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actLink',
+                        data: 'actLink',
+                        title: 'Съдебен акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fileAct',
+                        data: 'fileAct',
+                        title: 'Съдебен акт (линк)',
+                        "render": function (value) {
+                            if (value) {
+                                var url = '@(Url.Action("Download", "Files",new { id = "666"}))';
+                                url = url.replace('666', value);
+                                return "<a style='cursor: pointer;' data-toggle='tooltip' title='Съдебен акт' href=" + url + ">" + "Съдебен акт (линк)" + "</a>";
+                            }
+                            else {
+                                return "";
+                            }
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fileMotive',
+                        data: 'fileMotive',
+                        title: 'Мотиви (линк)',
+                        "render": function (value) {
+                            if (value) {
+                                var url = '@(Url.Action("Download", "Files",new { id = "666"}))';
+                                url = url.replace('666', value);
+                                return "<a style='cursor: pointer;' data-toggle='tooltip' title='Мотиви' href=" + url + ">" + "Мотиви (линк)" + "</a>";
+                            }
+                            else {
+                                return "";
+                            }
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                ]
+            });
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+</script>

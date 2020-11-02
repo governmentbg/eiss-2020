@@ -1,0 +1,80 @@
+﻿@model UserProfileVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Account
+@{
+    ViewData["Title"] = "Редактиране на потребител";
+    bool canChange = (bool)ViewBag.canChange;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+
+        <form asp-action="@ViewBag.ActionName" method="post" autocomplete="off" id="userData">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Основни данни</legend>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            @Html.DisplayFor(x => x.Email, "obj")
+                        </div>
+                    </div>
+                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1,5" })
+                    @Html.EditorFor(x => x.WorkNotificationToMail)
+                    @Html.EditorFor(x => x.IsActive)
+                </fieldset>
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Роли</legend>
+                    @Html.EditorFor(x => x.Roles)
+                </fieldset>
+            </div>
+            <div class="form-group">
+                @if (canChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="Index" class="btn btn-danger">Назад</a>
+                @if (!string.IsNullOrEmpty(Model.Id))
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+    @if (IOWebApplication.Infrastructure.Constants.AccountConstants.PasswordLoginEnabled)
+    {
+        if (!string.IsNullOrEmpty(Model.Id))
+        {
+            <div class="col-md-6">
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Действия</legend>
+                    <a href="#" data-modal-title="Задаване на парола" data-modal-url="@Url.Action("ResetPassword", new { userId = Model.Id })" class="btn btn-def btn-sm modal-loader" title="Задаване на парола"><i class="fa fa-lock"></i><span class="hidden-sm hidden-xs"> Задаване на парола</span></a>
+                </fieldset>
+            </div>
+        }
+    }
+</div>
+
+<script>
+    $(function () {
+        initLawUnit();
+        @if (!canChange)
+        {
+            <text>
+                $('form#userData input').attr('disabled', 'disabled');
+            </text>
+        }
+
+    });
+</script>

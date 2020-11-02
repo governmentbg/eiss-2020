@@ -1,0 +1,34 @@
+﻿@model EisppChangeVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+@{
+    ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
+    bool isPostBack = (bool?)ViewBag.isPostBack == true;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        @await Html.PartialAsync("_Event", Model.OldEvent)
+        <form id="formEdit" asp-action="EisppChange" method="post">
+            @Html.HiddenFor(x => x.ModelJson)
+            @Html.HiddenFor(x => x.IsForSend)
+            @Html.HiddenFor(x => x.EventId)
+            @Html.HiddenFor(x => x.EventFromId)
+            @Html.HiddenFor(x => x.MQEpepId)
+            <div class="form-group">
+                <input type="submit" onclick="" value="Назад" class="btn btn-danger" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function PostToEventChange() {
+        $("#formEdit").submit();
+    }
+</script>

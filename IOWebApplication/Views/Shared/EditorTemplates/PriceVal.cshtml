@@ -1,0 +1,15 @@
+﻿@model decimal
+@{
+    var add_class = (string)ViewData["add_class"];
+    var _value = Model;
+    string textValue = "";
+    if (Math.Floor(_value) < _value)
+    {
+        textValue = _value.ToString();
+    }
+    else
+    {
+        textValue = Math.Floor(_value).ToString();
+    }
+}
+@Html.TextBox("", textValue, new { @class = add_class })

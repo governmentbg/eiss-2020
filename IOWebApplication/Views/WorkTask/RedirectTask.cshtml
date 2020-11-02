@@ -1,0 +1,68 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Infrastructure.Constants
+@model WorkTaskEditVM
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "wtModalForm" }))
+{
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.SourceId)
+    @Html.HiddenFor(x => x.SubSourceId)
+    @Html.HiddenFor(x => x.SourceType)
+    @Html.HiddenFor(x => x.ParentTaskId)
+    @Html.HiddenFor(x => x.TaskTypeId)
+    <div class="form-group">
+        <label class="control-label">Начин на изпълнение</label>
+        <div>
+            <label>@Html.RadioButtonFor(x => x.TaskExecutionId, WorkTaskConstants.TaskExecution.ByUser)&nbsp;От потребител</label>
+            &nbsp;&nbsp;&nbsp;
+            <label>@Html.RadioButtonFor(x => x.TaskExecutionId, WorkTaskConstants.TaskExecution.ByOrganization)&nbsp;От структура</label>
+        </div>
+    </div>
+    <div id="selectUser">
+        @Html.EditorFor(x => x.UserId, "SelectUser")
+    </div>
+    <div id="selectOrganization">
+        @Html.EditorFor(x => x.CourtOrganizationId, "GenericDropDown")
+    </div>
+    @if (!string.IsNullOrEmpty(Model.DescriptionCreated))
+    {
+        @Html.DisplayFor(x => x.DescriptionCreated)
+    }
+    @Html.EditorFor(x => x.DescriptionRedirect, "textarea")
+    @Html.EditorFor(x => x.DateEnd, "DateTime")
+    <div class="form-group">
+        <input type="submit" value="Запис" class="btn btn-success" />
+    </div>
+}
+<div id="modalMessageContainer">
+</div>
+<script>
+    $(function () {
+        attachAjaxForm('#wtModalForm', function (data) {
+            if (data.responseJSON.result == true) {
+                wtLoadData();
+                HideModal();
+                messageHelper.ShowSuccessMessage('Задачата е пренасочена успешно.');
+            } else {
+                 messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+            }
+
+        });
+        initUserAutoComplete();
+        initDatePicker();
+        $('input[name="TaskExecutionId"]').click(function () {
+            if ($(this).is(':checked')) {
+                switch ($(this).val()) {
+                    case '@WorkTaskConstants.TaskExecution.ByUser':
+                        $('#selectUser').show();
+                        $('#selectOrganization').hide();
+                        break;
+                    case '@WorkTaskConstants.TaskExecution.ByOrganization':
+                        $('#selectUser').hide();
+                        $('#selectOrganization').show();
+                        break;
+                }
+            }
+        })
+        $('input[name="TaskExecutionId"]:checked').trigger('click');
+    })
+</script>

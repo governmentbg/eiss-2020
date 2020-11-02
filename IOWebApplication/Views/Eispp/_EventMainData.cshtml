@@ -1,0 +1,51 @@
+﻿@model Event
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+    <div class="tab-pane active" id="tabMainData">
+        @Html.HiddenFor(x => x.CaseId)
+        @Html.HiddenFor(x => x.CasePersonId)
+        @Html.HiddenFor(x => x.ConnectedCaseId)
+        @Html.HiddenFor(x => x.PersonOldMeasureId)
+        @Html.HiddenFor(x => x.PersonMeasureId)
+        @Html.HiddenFor(x => x.CaseSessionActId)
+        @Html.HiddenFor(x => x.EventId)
+        @Html.HiddenFor(x => x.StructureId)
+        @Html.HiddenFor(x => x.EventKind)
+        @Html.HiddenFor(x => x.CriminalProceeding.Id)
+        <div class="row">
+            <div class="col-lg-8">
+                @Html.EditorFor(x => x.EventType, "EisppDropDown", null, new { Ddl = ViewBag.EventTypeDDL })
+            </div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.EventDate, "EisppDateTime", null, new { flags = 5 })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.CriminalProceeding.EisppNumber, "hd")</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4">
+                @Html.EditorFor(x => x.CaseSessionActId, "EisppDropDown", null, new { Ddl = ViewBag.CaseSessionActIdDDL })
+            </div>
+            <div class="col-lg-4">@Html.EditorFor(x => x.DocumentType, "EisppDropDown", null, new { Ddl = ViewBag.DocumentTypeDDL })</div>
+        </div>
+        <div class="case-srok">
+            @{
+                ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.EisppSrok";
+                @await Html.PartialAsync("_EisppSrok", Model.EisppSrok)
+            }
+        </div>
+        <div class="case-feature">
+            @{
+                ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.EventFeature";
+                @await Html.PartialAsync("_EventFeature", Model.EventFeature)
+            }
+        </div>
+        @{
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.CriminalProceeding.Case";
+            @await Html.PartialAsync("_EisppCase", Model.CriminalProceeding.Case)
+        }
+    </div>
+
+
+
+
+

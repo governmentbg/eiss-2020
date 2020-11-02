@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>IOWebApplication.Cdn</name>
+    </assembly>
+    <members>
+        <member name="M:Microsoft.Extensions.DependencyInjection.ICDNServiceCollectionExtension.AddApplicationServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Регистрира услугите на приложението в  IoC контейнера
+            </summary>
+            <param name="services">Регистрирани услуги</param>
+        </member>
+        <member name="M:Microsoft.Extensions.DependencyInjection.ICDNServiceCollectionExtension.AddAppDbContext(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Регистрира контекстите на приложението в IoC контейнера
+            </summary>
+            <param name="services">Регистрирани услуги</param>
+            <param name="Configuration">Настройки на приложението</param>
+        </member>
+    </members>
+</doc>

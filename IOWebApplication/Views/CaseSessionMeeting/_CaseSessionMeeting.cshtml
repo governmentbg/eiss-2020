@@ -1,0 +1,115 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    //if (Model.CaseStateId != NomenclatureConstants.SessionState.Provedeno)
+    {
+        <div class="row">
+            <div class="col-md-12 text-right pb-15">
+                <a asp-controller="CaseSessionMeeting" asp-action="Add" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-success btn-sm">
+                    <i class="fa fa-clock-o"></i>
+                    Добави сесия/тайно съвещание
+                </a>
+            </div>
+        </div>
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSessionMeetingMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+        $(function () {
+            var table = $('#caseSessionMeetingMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseSessionMeeting")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseSessionId = @Model.CaseSessionId;
+                    }
+                },
+                dom: 'rt',
+                deferLoading: deferLoadingOnTab('#caseSessionMeetingMainTable'),
+                columns: [
+                    {
+                        name: 'sessionMeetingTypeLabel',
+                        data: 'sessionMeetingTypeLabel',
+                        title: 'Вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От',
+                        sortable: true,
+                        searchable: true,
+                        render: function(data){
+                                    return moment(data).format("DD.MM.YYYY HH:mm");
+                                }
+                    },
+                    {
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY HH:mm");
+                        }
+                    },
+                    {
+                        name: 'courtHallLabel',
+                        data: 'courtHallLabel',
+                        title: 'Зала',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'secretaryUserNames',
+                        data: 'secretaryUserNames',
+                        title: 'Секретар',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionMeetingTemplateEdit', value);
+                        }
+                    },
+                ]
+            });
+        });
+</script>
+
+<script id="caseSessionMeetingTemplateEdit" type="text/x-handlebars-template">
+
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "CaseSessionMeeting")?id={{this}}&caseId=@Model.Id" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("Edit", "CaseSessionMeeting")?id={{this}}&caseId=@Model.Id" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+
+    @*<a href="@Url.Action("IndexMeetingUser", "CaseSessionMeeting")?caseSessionMeetingId={{this}}" class="btn btn-sm btn-def" title="Секретари"><i class="fa fa-male"></i><span class="hidden-sm hidden-xs"></span></a>*@
+</script>
+
+

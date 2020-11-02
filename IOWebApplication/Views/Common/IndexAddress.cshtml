@@ -1,0 +1,113 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Extensions
+@model AddressFilterVM
+
+@{
+    ViewData["Title"] = "Адреси";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.AddressTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CountryCode, "GenericDropDownString")</div>
+    <div class="col-lg-3">
+        <div class="form-group address--control">
+            <div class="row bg-address">
+                <div class="col-md-12">
+                    <label for="Ekatte" class="control-label">Населено място</label>
+                </div>
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.CityCode, "Ekatte", null, new { label = "Населено място" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataAddress")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.model = {
+                            AddressTypeId: $("#AddressTypeId").val(),
+                            CountryCode: $("#CountryCode").val(),
+                            CityCode: $("#CityCode").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        className: 'col-md-3',
+                        name: 'addressTypeLabel',
+                        data: 'addressTypeLabel',
+                        title: 'Вид адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-8',
+                        name: 'fullAddress',
+                        data: 'fullAddress',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("EditAddress", "Common")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(function () {
+        initEkatte();
+    });
+</script>

@@ -1,0 +1,21 @@
+﻿@model int
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+
+@{
+    ViewData["Title"] = "Натовареност по дело";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../CaseLoadIndex/_CaseLoadIndex.cshtml" model="@new CaseMainDataVM { Id = Model, CaseSessionId = null, IsND = true } " />
+    </div>
+</div>

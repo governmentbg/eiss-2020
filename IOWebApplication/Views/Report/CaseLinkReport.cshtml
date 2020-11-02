@@ -1,0 +1,208 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model CaseLinkFilterReportVM
+
+@{
+    ViewData["Title"] = "Справка за дела на други институции/инстанции";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("CaseLinkReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFromCase, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateToCase, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFromAct, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateToAct, "DateTime")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.FromCaseNumber, "Int32Nullable")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.ToCaseNumber, "Int32Nullable")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseLinkYear, "DateTimeYear")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseLinkNumber)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.DocumentGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.DocumentTypeId, "GenericDropDown")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.FromCourtId, "SelectCourt")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseMigrationTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionId, "SelectInstitution", null, new { institutionTypeContainer = $"#InstitutionTypeId" })</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionCaseTypeId, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseLinkReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            FromCaseNumber: $("#FromCaseNumber").val(),
+                            ToCaseNumber: $("#ToCaseNumber").val(),
+                            DateFromCase: $("#DateFromCase").val(),
+                            DateToCase: $("#DateToCase").val(),
+                            CaseMigrationTypeId: $("#CaseMigrationTypeId").val(),
+                            InstitutionCaseTypeId: $("#InstitutionCaseTypeId").val(),
+                            FromCourtId: $("#FromCourtId").val(),
+                            InstitutionTypeId: $("#InstitutionTypeId").val(),
+                            InstitutionId: $("#InstitutionId").val(),
+                            CaseLinkNumber: $("#CaseLinkNumber").val(),
+                            CaseLinkYear: $("#CaseLinkYear").val(),
+                            DocumentGroupId: $("#DocumentGroupId").val(),
+                            DocumentTypeId: $("#DocumentTypeId").val(),
+                            DateFromAct: $("#DateFromAct").val(),
+                            DateToAct: $("#DateToAct").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'caseData',
+                        data: 'caseData',
+                        title: 'Дело/документ',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'outDocument',
+                        data: 'outDocument',
+                        title: 'Документ',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actData',
+                        data: 'actData',
+                        title: 'Вид на съдебния акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionResult',
+                        data: 'sessionResult',
+                        title: 'Резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actDate',
+                        data: 'actDate',
+                        title: 'Дата на съдеб. акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'personName',
+                        data: 'personName',
+                        title: 'Адресант',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseInstitutionType',
+                        data: 'caseInstitutionType',
+                        title: 'Вид служебно дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseLinkType',
+                        data: 'caseLinkType',
+                        title: 'Вид съдебно дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseLinkNumber',
+                        data: 'caseLinkNumber',
+                        title: 'Номер служебно дело/година',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#DocumentGroupId').trigger('change');
+        $('#CaseGroupId').trigger('change');
+
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+
+    $('#DocumentGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_DocumentType", "Ajax")', { documentGroupId: $(this).val(), addDefaultElement: true }, '#DocumentTypeId', @Model.DocumentTypeId);
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+</script>
+
+@section scripts {
+    <script>
+        initCourts();
+        initInstitution();
+    </script>
+}

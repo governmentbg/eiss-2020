@@ -1,0 +1,173 @@
+﻿@model List<PriceVal>
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants
+@{
+
+    var price = (PriceDesc)ViewBag.price;
+    var maxRow = (int)ViewBag.maxRow;
+    var cols = (List<PriceColVM>)ViewBag.cols;
+    ViewBag.Title = "Стойности към тарифа " + price.Name;
+}
+
+@section breadcrumb{
+    <partial name="Breadcrumbs" model="@(List<BreadcrumbsVM>)ViewBag.breadcrumbs" />
+}
+
+@using (Html.BeginForm("PriceVal", "Price", FormMethod.Get, new { id = "frmParams" }))
+{
+    @Html.Hidden("priceDesc")
+    <div class="panel panel-primary">
+        <div class="panel-body">
+            Брой редове: @Html.TextBox("showRows", maxRow, new { @class = "valueInput" })
+            <button type="submit" class="btn btn-primary" onclick="if (!confirm('ВАЖНО : Незаписаните данни ще се отменят при промяна на броя на редовете!')) { return false; }">Зареди редове</button>
+        </div>
+    </div>
+}
+
+@Html.ValidationSummary()
+@using (Html.BeginForm())
+{
+    @Html.Hidden("priceDesc")
+    <table class="table table-striped table-hover ">
+        <tr>
+            @foreach (var col in cols)
+            {
+                var colName = string.Empty;
+                if (!string.IsNullOrEmpty(col.Name))
+                {
+                    colName = col.Name;
+                }
+                else
+                {
+                    colName = PriceColTypes.Names[col.ColType];
+                }
+
+                colName += ", " + PriceColTypes.LabelSign(col.ColType);
+
+                <th data-col="@col.Id">@colName</th>
+            }
+            <th></th>
+        </tr>
+        @{
+            var i = 0;
+            for (int row = 1; row <= maxRow; row++)
+            {
+                <tr>
+                    @foreach (var col in cols)
+                    {
+                        <td data-col="@col.Id">
+                            @if (col.ColType == PriceColTypes.RowKeyword)
+                            {
+
+                                @Html.TextBoxFor(x => x[i].Text, new { @class = "textInput" })
+
+                            }
+                            else
+                            {
+                                @Html.EditorFor(x => x[i].Value, "PriceVal", new { add_class = "valueInput" })
+                            }
+                            @Html.HiddenFor(x => x[i].PriceColId)
+                            @Html.HiddenFor(x => x[i].RowNo)
+                        </td>
+                        i++;
+                    }
+                    <td>
+                        <div class="btn-group">
+                            <a class="btn btn-xs btn-warning dropdown-toggle" data-toggle="dropdown" href="#"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="min-width: 200px;">
+                                <li>
+                                    <a href="#" data-row="@row" class="btn btn-xs insert-row" onclick="if (!confirm('ВАЖНО : Незаписаните данни ще се отменят при вмъкване на нов ред!'))return false;"><span class="text-success"><i class=" glyphicon glyphicon-plus"></i> Вмъкни нов ред над избрания</span></a>
+                                </li>
+                                <li>
+                                    <a href="#" data-row="@row" class="btn btn-xs remove-row" onclick="if (!confirm('ВАЖНО : Незаписаните данни ще се отменят при изтриването на този ред!'))return false;"><span class="text-danger"><i class=" glyphicon glyphicon-remove"></i> Премахни този ред</span></a>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+    <div class="form-group">
+        <input type="submit" value="Запис" class="btn btn-success" />
+    </div>
+}
+
+
+@section scripts{
+    <style>
+        .table-striped th {
+            font-size: 8pt;
+        }
+
+        .textInput {
+            border-top: 1px solid #eee;
+            border-left: 1px solid #eee;
+            border-right: 1px solid #bbb;
+            border-bottom: 1px solid #bbb;
+            width: 150px;
+            text-align: left;
+            padding-left: 5px;
+            font-weight: bold;
+        }
+
+        .comboInput {
+            border-top: 1px solid #eee;
+            border-left: 1px solid #eee;
+            border-right: 1px solid #bbb;
+            border-bottom: 1px solid #bbb;
+            width: 200px;
+            text-align: left;
+            padding-left: 5px;
+        }
+
+        .valueInput {
+            border-top: 1px solid #eee;
+            border-left: 1px solid #eee;
+            border-right: 1px solid #bbb;
+            border-bottom: 1px solid #bbb;
+            width: 75px;
+            text-align: right;
+            padding-right: 5px;
+        }
+
+        .groupEnd {
+            border-right: 1px solid #666 !important;
+        }
+    </style>
+    <script>
+        $(function () {
+            $('.insert-row').click(function () {
+                var insertAt = $(this).attr('data-row');
+                var hid = document.createElement('input');
+                $(hid).attr('type', 'hidden');
+                $(hid).attr('name', 'insertAt');
+                $(hid).attr('id', 'insertAt');
+                $(hid).val(insertAt);
+
+                $('#frmParams').append(hid).trigger('submit');
+            });
+
+            $('.remove-row').click(function () {
+                var removeAt = $(this).attr('data-row');
+                var hid = document.createElement('input');
+                $(hid).attr('type', 'hidden');
+                $(hid).attr('name', 'removeAt');
+                $(hid).attr('id', 'removeAt');
+                $(hid).val(removeAt);
+
+                $('#frmParams').append(hid).trigger('submit');
+            });
+
+            $('.valueInput').focus(function () {
+                var colID = $(this).parents('td:first').attr('data-col');
+                $(this).parents('table:first').find('th[data-col="' + colID + '"]').addClass('active');
+            });
+            $('.valueInput').blur(function () {
+                var colID = $(this).parents('td:first').attr('data-col');
+                $(this).parents('table:first').find('th[data-col="' + colID + '"]').removeClass('active');
+            });
+        });
+    </script>
+}

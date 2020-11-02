@@ -1,0 +1,234 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@inject IViewLocalizer Localizer
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.NotificationListTypeId, "GenericDropDown")
+        </div>
+        <div class="col-lg-9 text-right pb-15">
+            <div id="divBtnCaseSessionNotificationList">
+                <a asp-controller="CaseNotification" asp-action="CaseLawUnitNotificationList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-users"></i>
+                    Добави/Премахни от съдебен състав
+                </a>
+                <a asp-controller="CaseNotification" asp-action="CasePersonNotificationList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-user"></i>
+                    Добави/Премахни от лица
+                </a>
+                <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-isList="true"  asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-user"></i>
+                    Печат на всичко
+                </a>
+                <div class="cdn-files" data-genurl="@Url.Action("GenerateList", "CaseNotification", new { caseSessionId = Model.CaseSessionId, NotificationListTypeId = @SourceTypeSelectVM.CaseSessionNotificationList })"
+                     data-label="Списък за призоваване"
+                     data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationList" data-sourceid="@Model.CaseSessionId"
+                     data-editmode="all">
+                </div>
+            </div>
+            <div id="divBtnCaseSessionNotificationListMessage">
+                <a asp-controller="CaseNotification" asp-action="CaseLawUnitNotificationList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListMessage" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-users"></i>
+                    Добави/Премахни от съдебен състав
+                </a>
+                <a asp-controller="CaseNotification" asp-action="CasePersonNotificationList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListMessage" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-user"></i>
+                    Добави/Премахни от лица
+                </a>
+                <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListMessage"  asp-route-isList="true" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-user"></i>
+                    Печат на всичко
+                </a>
+                <div class="cdn-files" data-genurl="@Url.Action("GenerateList", "CaseNotification", new { caseSessionId = Model.CaseSessionId, NotificationListTypeId = SourceTypeSelectVM.CaseSessionNotificationListMessage })"
+                     data-label="Списък за съобщаване"
+                     data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListMessage" data-sourceid="@Model.CaseSessionId"
+                     data-editmode="all">
+                </div>
+            </div>
+            <div id="divBtnCaseSessionNotificationListNotification">
+                <a asp-controller="CaseNotification" asp-action="CaseLawUnitNotificationList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListNotification" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-users"></i>
+                    Добави/Премахни от съдебен състав
+                </a>
+                <a asp-controller="CaseNotification" asp-action="CasePersonNotificationList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListNotification" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-user"></i>
+                    Добави/Премахни от лица
+                </a>
+                <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListNotification" asp-route-isList="true" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-user"></i>
+                    Печат на всичко
+                </a>
+                <div class="cdn-files" data-genurl="@Url.Action("GenerateList", "CaseNotification", new { caseSessionId = Model.CaseSessionId, NotificationListTypeId = SourceTypeSelectVM.CaseSessionNotificationListNotification })"
+                     data-label="Списък за уведомяване"
+                     data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListNotification" data-sourceid="@Model.CaseSessionId"
+                     data-editmode="all">
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseNotificationListMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<partial name="_CdnScript" />
+
+<script>
+        $(function () {
+            var table = $('#caseNotificationListMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataNotificationList", "CaseNotification")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseSessionId = @Model.CaseSessionId;
+                        d.NotificationListTypeId = $("#NotificationListTypeId").val();
+                    }
+                },
+                deferLoading: deferLoadingOnTab('#caseNotificationListMainTable'),
+                columns: [
+                    {
+                        name: 'rowNumber',
+                        data: 'rowNumber',
+                        title: 'Пореден номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'personName',
+                        data: 'personName',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'personRole',
+                        data: 'personRole',
+                        title: 'Вид лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'addressString',
+                        data: 'addressString',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'remark',
+                        data: 'remark',
+                        title: 'Забележка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateSend',
+                        data: 'dateSend',
+                        title: 'Дата изпращане',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        width:145,
+                        "render": function (value) {
+                            return TemplateToHtml('#caseNotificationListTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+            $(document).on('click', '.orderButton', savePosition);
+
+            function savePosition(e) {
+                var element = e.currentTarget;
+                var data = element.dataset;
+
+                element.setAttribute("disabled", "");
+                $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("ChangeOrderNotificationList", "CaseNotification")',
+                    dataType: "json",
+                    data: data
+                }).fail(function (jqXHR, status, message) {
+                    if (jqXHR.responseText) {
+                        //messageHelper.ShowErrorMessage(jqXHR.responseText);
+                    }
+                }).always(function () {
+                    table.draw(false);
+                });
+            };
+
+        });
+
+    $(document).ready(function () {
+        LoadDataNotificationListType();
+        SH_Elements();
+    });
+
+    $('#NotificationListTypeId').change(function () {
+        SH_Elements();
+        refreshTable('#caseNotificationListMainTable');
+    });
+
+    function LoadDataNotificationListType() {
+        requestCombo('@Url.Action("GetDDL_NotificationListType", "CaseNotification")', {}, '#NotificationListTypeId', @(Model.NotificationListTypeId ?? SourceTypeSelectVM.CaseSessionNotificationList), function () { $('#NotificationListTypeId').trigger('change') });
+    }
+
+    function SH_Elements() {
+        //debugger;
+        $("#divBtnCaseSessionNotificationList").hide();
+        $("#divBtnCaseSessionNotificationListMessage").hide();
+        $("#divBtnCaseSessionNotificationListNotification").hide();
+
+        var notificationListTypeId = $('#NotificationListTypeId').val();
+        if (notificationListTypeId == @SourceTypeSelectVM.CaseSessionNotificationList) {
+            $("#divBtnCaseSessionNotificationList").show();
+        }
+
+        if (notificationListTypeId == @SourceTypeSelectVM.CaseSessionNotificationListMessage) {
+            $("#divBtnCaseSessionNotificationListMessage").show();
+        }
+
+        if (notificationListTypeId == @SourceTypeSelectVM.CaseSessionNotificationListNotification) {
+            $("#divBtnCaseSessionNotificationListNotification").show();
+        }
+    }
+
+</script>
+
+<script id="caseNotificationListTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-def btn-sm m-b-5" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-def btn-sm m-b-5" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
+    }
+    <a href="@Url.Action("EditNotificationList", "CaseNotification")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Адрес"><i class="fa fa-address-card"></i><span class="hidden-sm hidden-xs"></span></a>
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("AddNotificationFromNotificationList", "CaseNotification")?caseNotificationListId={{this}}" class="btn btn-def btn-sm m-b-5" title="Уведомление"><i class="fa fa-bell"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+

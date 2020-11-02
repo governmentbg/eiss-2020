@@ -1,0 +1,47 @@
+﻿@model DocumentLinkVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+<div data-index="@Model.Index" class="item-template document-link-item">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1"><a href="#" class="remove-item" title="Премахни връзката" data-alert="Потвърди премахването на връзката!"><i class="fa fa-remove"></i></a> Свързан документ</legend>
+        <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
+        @Html.HiddenFor(x => x.Id)
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="pull-right legacy-document-check" style="margin-top:-20px;">
+                    @Html.CheckBoxFor(x => x.IsLegacyDocument)
+                    @Html.LabelFor(x => x.IsLegacyDocument, new { @class = "text-muted" })
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-5">
+                @Html.EditorFor(x => x.CourtId, "SelectCourt", new { onChange = "courtSelectDocLink(this);" })
+            </div>
+            <div class="col-lg-3">
+                @Html.EditorFor(x => x.DocumentDirectionId, "DropDown", null, new { Ddl = (IEnumerable<SelectListItem>)ViewBag.DocumentDirectionDDL })
+            </div>
+            <div class="col-lg-2 legacy-document-edit" @if (!Model.IsLegacyDocument) { <text> style="display:none;" </text> }>
+                @Html.EditorFor(x => x.PrevDocumentNumber)
+            </div>
+            <div class="col-lg-2 legacy-document-edit" @if (!Model.IsLegacyDocument) { <text> style="display: none;" </text> }>
+                @Html.EditorFor(x => x.PrevDocumentDate, "DateTime")
+            </div>
+            <div class="col-lg-4 document-link-edit" @if (Model.IsLegacyDocument) { <text> style="display: none;" </text> }>
+                @Html.EditorFor(x => x.PrevDocumentId, "SelectDocument")
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                @Html.EditorFor(x => x.Description)
+            </div>
+        </div>
+    </fieldset>
+</div>
+<script>
+    $(function () {
+        initDatePicker();
+        initCourts();
+        initDocument();
+        $('.document-link-item .legacy-document-check input[type="checkbox"]').trigger('change');
+    });
+</script>

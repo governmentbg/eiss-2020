@@ -1,0 +1,87 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="caseLawUnitDismisalMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var table = $('#caseLawUnitDismisalMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListDataDismisal", "CaseLawUnit")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.caseId = @Model.Id;
+                }
+
+            },
+            columns: [
+                {
+                    name: 'caseLawUnitName',
+                    data: 'caseLawUnitName',
+                    title: ' Наименование',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'caseLawUnitRole',
+                    data: 'caseLawUnitRole',
+                    title: 'Вид лице',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'dismisalTypeLabel',
+                    data: 'dismisalTypeLabel',
+                    title: 'Тип',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'caseLawUnitAkt',
+                    data: 'caseLawUnitAkt',
+                    title: 'Акт',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'dismisalDate',
+                    data: 'dismisalDate',
+                    title: 'Дата',
+                    sortable: true,
+                    searchable: true,
+                    render: function (data) {
+                        return JsonBGdate(data);
+                    }
+                },
+                {
+                    name: 'description',
+                    data: 'description',
+                    title: 'Мотив',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#caseLawUnitDismisalTemplateEdit', value);
+                    }
+                }
+            ]
+        });
+    });
+</script>
+
+<script id="caseLawUnitDismisalTemplateEdit" type="text/x-handlebars-template">
+     
+</script>

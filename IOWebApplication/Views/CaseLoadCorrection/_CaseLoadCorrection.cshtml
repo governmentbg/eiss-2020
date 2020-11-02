@@ -1,0 +1,91 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseLoadCorrection" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-isMainActivity="@true" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseLoadCorrectionMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseLoadCorrectionMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseLoadCorrection")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'correctionDate',
+                        data: 'correctionDate',
+                        title: 'Дата на корекцията',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'caseLoadCorrectionActivityLabel',
+                        data: 'caseLoadCorrectionActivityLabel',
+                        title: 'Вид корекция',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'correctionLoadIndex',
+                        data: 'correctionLoadIndex',
+                        title: 'Индекс',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseLoadCorrectionTemplateEdit', value);
+                        }
+                    }
+                ]
+            }).order([[ 2, "asc" ]]);
+        });
+</script>
+
+<script id="caseLoadCorrectionTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "CaseLoadCorrection")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("Edit", "CaseLoadCorrection")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+

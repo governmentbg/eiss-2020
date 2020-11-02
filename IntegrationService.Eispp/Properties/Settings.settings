@@ -1,0 +1,39 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="IntegrationService.Eispp.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ServiceName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">EISPPIntegrationService</Value>
+    </Setting>
+    <Setting Name="EisppHostName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">212.122.184.121</Value>
+    </Setting>
+    <Setting Name="EisppQManager" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">EISSTest</Value>
+    </Setting>
+    <Setting Name="EisppPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1428</Value>
+    </Setting>
+    <Setting Name="EisppChanel" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">S_CONN</Value>
+    </Setting>
+    <Setting Name="EisppQName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">EISPPEISSR</Value>
+    </Setting>
+    <Setting Name="EisppResultQName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">qrcveiss</Value>
+    </Setting>
+    <Setting Name="EisppUser" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">MUSR_MQUSER</Value>
+    </Setting>
+    <Setting Name="EisppPassword" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">vssTESTmq9</Value>
+    </Setting>
+    <Setting Name="EisppQTimeout" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">15000</Value>
+    </Setting>
+    <Setting Name="ServiceDisplayName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">EISPP Integration service</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

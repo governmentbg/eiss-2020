@@ -1,0 +1,72 @@
+﻿@model CounterEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на брояч";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на брояч";
+    }
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.Label)
+                @Html.EditorFor(x => x.CounterTypeId, "GenericDropDown")
+                <div class="counter-data" data-type="@NomenclatureConstants.CounterTypes.Document">
+                    @Html.EditorFor(x => x.DocumentDirectionId, "GenericDropDown")
+                </div>
+                <div class="counter-data" data-type="@NomenclatureConstants.CounterTypes.Case">
+                    @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
+                </div>
+                <div class="counter-data" data-type="@NomenclatureConstants.CounterTypes.SessionAct">
+                    @Html.EditorFor(x => x.SessionActGroupId, "GenericDropDown")
+                </div>
+                @Html.EditorFor(x => x.ResetTypeId, "GenericDropDown")
+                @Html.EditorFor(x => x.Prefix)
+                @Html.EditorFor(x => x.Suffix)
+                @Html.EditorFor(x => x.DigitCount)
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="Index" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            $('#CounterTypeId').change(function () {
+                $('.counter-data').hide();
+                $('.counter-data[data-type="' + $(this).val() + '"]').show();
+            }).trigger('change');
+        });
+    </script>
+
+}

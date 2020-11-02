@@ -1,0 +1,76 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    ViewData["Title"] = "Добавяне на улици";
+    var multiselectStreet = "multiselectStreet";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form id="formEdit" asp-action="AddStreets" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer" class="row col-md-12">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    @Html.ValidationMessage("caseStreetsJson")
+                    @Html.Hidden("caseStreetsJson")
+                    @Html.Hidden("areaId")
+                    @Html.Hidden("cityId")
+                    <div class="col-md-2">
+                        <h2 id="h4Code" class="text-left">Улици</h2>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="control-label" for="CityCode">Филтър по населено място</label>
+                        @Html.DropDownList("CityCode", ViewBag.filterCity_ddl, null, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div id="multiselectStreet" class="row ms-transfer-container">
+                    <partial name="_MultiSelectTransfer" model=@multiselectStreet />
+                </div>
+                <div class="row">
+                    <br>
+                </div>
+            </div>
+
+
+            <div class="form-group row col-md-12">
+                <a id="submit_button" class="btn btn-success" />Запис</a>
+                <a asp-action="Index" asp-route-deliveryAreaId=@ViewBag.deliveryAreaId class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section scripts {
+    <script>
+        var $multiselectStreet = $("#multiselectStreet").multiselectiontransfer(
+            {
+                ajaxLeftUrl: "@Url.Action("EkStreetLeftList")",
+            }
+        );
+
+        $("#CityCode").change(function () {
+            var cityId = $("#CityCode").val();
+            $multiselectStreet.loadLeft({ cityId: cityId});
+            $multiselectStreet.clearRight();
+        });
+
+        $("#formEdit").submit(function (event) {
+            $("#caseStreetsJson").val($multiselectStreet.getSelectedId());
+            $("#areaId").val(@ViewBag.deliveryAreaId);
+            $("#cityId").val($("#CityCode").val());
+            return true;
+        });
+        $('#submit_button').click(function(){
+            $("#formEdit").submit();
+        });
+    </script>
+}
+

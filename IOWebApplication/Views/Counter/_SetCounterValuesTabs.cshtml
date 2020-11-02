@@ -1,0 +1,84 @@
+﻿@model CounterVM[]
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#tabDoc" data-toggle="tab">Документи</a></li>
+    <li><a href="#tabCase" data-toggle="tab">Дела</a></li>
+    <li><a href="#tabAct" data-toggle="tab">Актове</a></li>
+    <li><a href="#tabOther" data-toggle="tab">Други</a></li>
+</ul>
+<div class="tab-content">
+    <div class="tab-pane active" id="tabDoc">
+        @for (int i = 0; i < Model.Count(); i++)
+        {
+            if (Model[i].CounterTypeId == NomenclatureConstants.CounterTypes.Document)
+            {
+                <div class="row set-counter-val">
+                    @Html.HiddenFor(x => Model[i].Id)
+                    <div class="col-lg-6  counter-label">
+                        @Model[i].Label
+                    </div>
+                    <div class="col-lg-2">
+                        @Html.TextBoxFor(x => Model[i].CurrentValue, null, new { @class = "form-control" })
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    <div class="tab-pane" id="tabCase">
+        @for (int i = 0; i < Model.Count(); i++)
+        {
+            if (Model[i].CounterTypeId == NomenclatureConstants.CounterTypes.Case)
+            {
+                <div class="row set-counter-val">
+                    @Html.HiddenFor(x => Model[i].Id)
+                    <div class="col-lg-6 counter-label">
+                        @Model[i].Label
+                    </div>
+                    <div class="col-lg-2">
+                        @Html.TextBoxFor(x => Model[i].CurrentValue, null, new { @class = "form-control" })
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    <div class="tab-pane" id="tabAct">
+        @for (int i = 0; i < Model.Count(); i++)
+        {
+            if (Model[i].CounterTypeId == NomenclatureConstants.CounterTypes.SessionAct)
+            {
+                <div class="row set-counter-val">
+                    @Html.HiddenFor(x => Model[i].Id)
+                    <div class="col-lg-6 counter-label">
+                        @Model[i].Label
+                    </div>
+                    <div class="col-lg-2">
+                        @Html.TextBoxFor(x => Model[i].CurrentValue, null, new { @class = "form-control" })
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    <div class="tab-pane" id="tabOther">
+        @for (int i = 0; i < Model.Count(); i++)
+        {
+            if (!NomenclatureConstants.CounterTypes.OtherCounters.Contains(Model[i].CounterTypeId))
+            {
+                <div class="row set-counter-val">
+                    @Html.HiddenFor(x => Model[i].Id)
+                    <div class="col-lg-4 counter-label">
+                        @Model[i].CounterTypeName
+                    </div>
+                    <div class="col-lg-6 counter-label">
+                        @Model[i].Label
+                    </div>
+                    <div class="col-lg-2">
+                        @Html.TextBoxFor(x => Model[i].CurrentValue, null, new { @class = "form-control" })
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+

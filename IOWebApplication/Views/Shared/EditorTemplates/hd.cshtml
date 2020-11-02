@@ -1,0 +1,22 @@
+﻿@model object
+@{
+    var label = "";
+    if (ViewData["label"] != null)
+    {
+        label = (string)ViewData["label"];
+    }
+}
+<div class="form-group">
+    @if (!string.IsNullOrEmpty(label))
+    {
+        <label class="control-label">@label</label>
+    }
+    else
+    {
+        <label asp-for="@Model" class="control-label"></label>
+    }
+    <div>
+        @Html.Raw(Model?.ToString())
+        @Html.HiddenFor(x => x)
+    </div>
+</div>

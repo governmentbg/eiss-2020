@@ -1,0 +1,145 @@
+﻿@model PaymentVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    var actionName = "EditPayment";
+    var classColMd = "col-md-6";
+    if (Model.ForPopUp == true)
+    {
+        actionName = "Payment";
+        classColMd = "col-md-10";
+    }
+    if (Model.Id > 0)
+    {
+        if (Model.IsAvans == true)
+        {
+            ViewData["Title"] = "Редакция на авансово плащане";
+        }
+        else
+        {
+            ViewData["Title"] = "Редакция на плащане " + Model.PaymentNumber;
+        }
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на авансово плащане";
+    }
+    string bankAccountJson = @ViewBag.BankAccountJson;
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("PaymentList","Money")">Извършени плащания</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class=@classColMd>
+        <form asp-action=@actionName method="post" class="payment-form" id="cmModalForm">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.IsAvans)
+            @Html.HiddenFor(x => x.PosPaymentResultId)
+            @Html.HiddenFor(x => x.ObligationIds)
+            @Html.HiddenFor(x => x.ForPopUp)
+            @Html.Hidden("bankAccountJson", bankAccountJson)
+
+            @if (Model.Id > 0)
+            {
+                @Html.HiddenFor(x => x.PaymentTypeId)
+                @Html.HiddenFor(x => x.PaidDate)
+                @Html.HiddenFor(x => x.CourtBankAccountId)
+            }
+
+            @Html.ValidationSummary()
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.PaymentTypeId, "GenericDropDown")
+                @Html.EditorFor(x => x.PaidDate)
+                @Html.EditorFor(x => x.Amount)
+                @Html.EditorFor(x => x.Description)
+                @Html.EditorFor(x => x.CourtBankAccountId, "GenericDropDown")
+                @Html.EditorFor(x => x.SenderName)
+
+                <div id="bankData">
+                    @Html.EditorFor(x => x.PaymentInfo)
+                    @Html.EditorFor(x => x.PaymentDescription)
+                </div>
+
+                @if (Model.Id > 0 && Model.PaymentTypeId == NomenclatureConstants.PaymentType.Pos)
+                {
+                    <div class="cdn-files" data-label="Файл към плащането" data-sourcetype="@SourceTypeSelectVM.Payment" data-sourceid="@Model.Id" data-editmode="none"></div>
+                }
+            </div>
+
+            <div class="form-group">
+                <button type="button" id="btnPay" class="btn btn-success submit" disabled>Запис</button>
+                @if (Model.ForPopUp == false)
+                {
+                    <a asp-action="PaymentList" class="btn btn-danger">Назад</a>
+                }
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<partial name="_CdnScript" />
+
+<div id="messageContainerPayment">
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#PaymentTypeId').change(function () {
+            var typeId = $(this).val();
+            if (typeId == '@NomenclatureConstants.PaymentType.Bank') {
+                $('#bankData').show();
+                $('#PaidDate').enable(true);
+            }
+            else {
+                $('#bankData').hide();
+                $('#PaidDate').enable(false);
+            }
+        });
+
+        $('#PaymentTypeId').trigger('change');
+        if (@Model.Id == 0) {
+        }
+        else {
+            $('#saveContainer').find('#PaymentTypeId').enable(false);
+            $('#saveContainer').find('#PaidDate').enable(false);
+            $('#saveContainer').find('#CourtBankAccountId').enable(false);
+            $("#Amount").attr("readonly", true);
+        }
+    });
+
+    $(function () {
+        if ('@Model.ForPopUp' == 'True') {
+            attachAjaxForm('#cmModalForm', function (data) {
+                if (data.responseJSON.result == true) {
+                    ReloadDatatable();
+                    HideModal();
+                    messageHelper.ShowSuccessMessage('Плащането премина успешно.');
+                    if (data.responseJSON.paymenttypeid == '@NomenclatureConstants.PaymentType.Pos')
+                    {
+                        window.location.href = '@Url.Action("SaveAndShowFilePayment", "Money")?id=' + data.responseJSON.id +
+                            "&paymentType=" + data.responseJSON.paymenttypeid;
+                    }
+                } else {
+                    messageHelper.ShowErrorMessage(data.responseJSON.message, '#messageContainerPayment');
+                }
+            });
+            initDatePicker();
+        }
+    })
+</script>
+<script defer src="~/js/prod/pos.min.js"></script>

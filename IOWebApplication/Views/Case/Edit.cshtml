@@ -1,0 +1,283 @@
+﻿@model CaseEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
+
+@{
+    var caseProtokolLawUnit_Count = ViewBag.CaseProtokolLawUnit_Count;
+    if (Model.Id > 0)
+    {
+        if (Model.RegNumber != null)
+        {
+            ViewData["Title"] = "Редакция на дело " + Model.RegNumber;
+        }
+        else
+        {
+            ViewData["Title"] = "Образуване на дело";
+        }
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на съдебно дело";
+    }
+    var lastMigration = (CaseMigrationVM)ViewBag.lastMigration;
+    var eisppMigration = (CaseMigrationVM)ViewBag.eisppMigration;
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form id="frmCaseEdit" asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseGroupId)
+            @Html.HiddenFor(x => x.CourtTypeId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.DocumentId)
+            @Html.HiddenFor(x => x.DocumentName)
+            @Html.HiddenFor(x => x.DocumentTypeName)
+            @Html.HiddenFor(x => x.RegNumber)
+            @Html.HiddenFor(x => x.DocumentTypeId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="form-group">
+                    <label class="control-label">Иницииращ документ</label>
+                    <div>
+                        <a asp-controller="Document" asp-action="View" asp-route-id="@Model.DocumentId" target="_blank"><b>Вх.№ @Model.DocumentName - @Model.DocumentTypeName </b></a>
+                    </div>
+                </div>
+                @if (lastMigration != null && string.IsNullOrEmpty(Model.RegNumber))
+                {
+                    <div class="alert alert-info alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <h4><i class="icon fa fa-info"></i> Внимание!</h4>
+                        В избраното свързано дело <b>@(lastMigration.CaseRegNumber)</b> на @(lastMigration.SentToName) е създадено движение от вид <b>@(lastMigration.MigrationTypeName)</b>, за разглеждане в текущия съд.
+                        При образуване на това дело, то ще бъде присъединено към предходното производство.
+                    </div>
+                }
+                @if (eisppMigration != null && string.IsNullOrEmpty(Model.RegNumber))
+                {
+                    <div class="alert alert-info alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <h4><i class="icon fa fa-info"></i> Внимание!</h4>
+                        В избраното свързано дело <b>@(eisppMigration.CaseRegNumber)</b> на @(eisppMigration.SentToName) с номер от ЕИСПП @(Model.EISSPNumber) е създадено движение от вид <b>@(eisppMigration.MigrationTypeName)</b>.
+                        При образуване на това дело, то ще бъде присъединено към предходното производство.
+                    </div>
+                }
+                <div class="row">
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")
+                    </div>
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => x.CaseCharacterId, "GenericDropDown")
+                    </div>
+                </div>
+                @if (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
+                {
+                    <div class="row">
+                        <div class="col-lg-6">
+                            @Html.EditorFor(x => x.EISSPNumber, "EisppNumber")
+                        </div>
+                    </div>
+                }
+
+
+                @Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId", onChange = "caseCodeChange()" })
+                @Html.EditorFor(x => x.CourtGroupId, "GenericDropDown")
+                @if (Model.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                {
+                    @*@Html.EditorFor(x => x.ComplexIndex)*@
+                    <div class="row">
+                        <div class="col-lg-6">
+                            @Html.EditorFor(x => x.ComplexIndexActual, "GenericDropDown")
+                        </div>
+                        <div class="col-lg-6">
+                            @Html.EditorFor(x => x.ComplexIndexLegal, "GenericDropDown")
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @Html.EditorFor(x => x.LoadGroupLinkId, "GenericDropDown")
+                }
+                <div class="row">
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => x.CaseTypeUnitId, "GenericDropDown")
+                    </div>
+                    <div class="col-lg-6 hidable-combo">
+                        @Html.EditorFor(x => x.CaseTypeUnitReserves, "GenericDropDown")
+                    </div>
+                </div>
+                @if (Model.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                {
+                    @Html.EditorFor(x => x.CaseReasonId, "GenericDropDown")
+                }
+                @Html.EditorFor(x => x.ProcessPriorityId, "GenericDropDown")
+
+                @if (Model.CaseStateId != NomenclatureConstants.CaseState.Draft)
+                {
+                    <div class="row">
+                        <div class="col-lg-4">
+                            @Html.EditorFor(x => x.CaseStateId, "GenericDropDown")
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.RegNumber))
+                        {
+                            <div class="col-lg-4">
+                                @Html.EditorFor(x => x.CaseInforcedDate)
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    @Html.EditorFor(x => x.CaseStateId, "GenericDropDown")
+                }
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        @Html.EditorFor(x => x.IsNewCaseNewNumber, "Boolean")
+                    </div>
+                </div>
+
+                @if (string.IsNullOrEmpty(Model.RegNumber))
+                {
+                    <div class="form-group">
+                        <div class="col-lg-12 text-right">
+                            @Html.CheckBoxFor(x => x.IsOldNumber)
+                            @Html.LabelFor(x => x.IsOldNumber, new { @class = "text-muted" })
+                        </div>
+                    </div>
+                    <div class="row" id="divOldNumber" style="display: none;">
+                        <div class="col-md-6">
+                            @Html.EditorFor(x => x.OldNumber, "String", new { groupClass = "has-error" })
+                        </div>
+                        <div class="col-md-6">
+                            @Html.EditorFor(x => x.OldDate, "DateTime", new { groupClass = "has-error" })
+                        </div>
+                    </div>
+                }
+                @Html.EditorFor(x => x.CaseStateDescription, "Textarea")
+                @Html.EditorFor(x => x.Description, "Textarea")
+
+            </div>
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    @*<input type="submit" value="Запис" class="btn btn-success" />*@
+                    <input id="subButton" type="button" value="Запис" onclick={SubmitCaseEdit()} class="btn btn-success" />
+                }
+                @if (!string.IsNullOrEmpty(Model.RegNumber))
+                {
+                    <a asp-action="CasePreview" asp-route-id="@Model.Id" class="btn btn-danger">Назад</a>
+
+                    @if (caseProtokolLawUnit_Count == 0 && Model.CaseStateId == NomenclatureConstants.CaseState.New)
+                    {
+                        <a asp-controller="CaseSelectionProtokol" asp-action="Add" asp-route-caseId="@Model.Id" class="btn btn-info">Разпределение</a>
+                    }
+                }
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#subButton').removeAttr("disabled");
+            @if (!userContext.IsUserInRole(AccountConstants.Roles.Supervisor))
+            {
+                <text>
+                    $('#EISSPNumber').attr('disabled', 'disabled');
+                </text>
+            }
+            initCaseCode();
+            $('#CaseTypeId').change(function () {
+                var caseCode = '@Model.CaseCodeId';
+                if ($(this).val() != '@Model.CaseTypeId') {
+                    caseCode = '0';
+                }
+                let caseCharacterId = @(string.IsNullOrEmpty(Model.RegNumber) ? -1:Model.CaseCharacterId);
+                requestCombo('@Url.Action("GetDDL_CaseCharacter","Ajax")', { caseTypeId: $(this).val(), caseCharacterId: caseCharacterId }, '#CaseCharacterId', '@Model.CaseCharacterId');
+
+                loadCaseCode('#CaseCodeId_casecode', caseCode, 0);
+                requestCombo('@Url.Action("Get_CaseTypeUnits","Ajax")', { caseTypeId: $(this).val() }, '#CaseTypeUnitId', '@Model.CaseTypeUnitId',
+                    function (e) { $(e).trigger('change'); }
+                );
+                showHideEmtyCombo('@Url.Action("GetDDL_CaseReason","Ajax")', { caseTypeId: $(this).val() }, '#CaseReasonId', '@Model.CaseReasonId');
+
+            }).trigger('change');
+            $('#CaseTypeUnitId').change(function () {
+                requestGET_Json('@Url.Action("Get_CaseTypeUnitsReserves","Ajax")', { caseTypeUnitId: $(this).val() }, function (data) {
+                    showHideEmtyCombo(data, '#CaseTypeUnitReserves', '@Model.CaseTypeUnitReserves');
+                });
+            });
+
+
+            $('input#IsOldNumber').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#divOldNumber').show();
+                } else {
+                    $('#divOldNumber').hide();
+                }
+            }).trigger('change');
+        });
+
+        function getLoadGroup() {
+            if (@Model.CourtTypeId != @NomenclatureConstants.CourtType.VKS)
+            {
+                requestCombo('@Url.Action("GetDDL_LoadGroupLink","Ajax")', { courtTypeId:@Model.CourtTypeId, caseTypeId: $('#CaseTypeId').val(),caseCodeId:$('#CaseCodeId').val() }, '#LoadGroupLinkId', '@Model.LoadGroupLinkId');
+            }
+        }
+
+        function caseCodeChange() {
+            var code = $('#CaseCodeId').val();
+            requestCombo('@Url.Action("CourtGroup_SelectForDropDownList","CourtGroup")', { courtId: @Model.CourtId, CaseCodeId: code }, '#CourtGroupId', '@Model.CourtGroupId');
+            getLoadGroup();
+        }
+
+        function showHideEmtyCombo(data, combo, selected) {
+            fillCombo(data, combo,selected);
+            if (data.length > 0) {
+                $(combo).parent().show();
+            } else {
+                $(combo).parent().hide();
+            }
+        }
+
+        $('#CaseInforcedDate').change(function () {
+            debugger;
+            var selected = $("#CaseInforcedDate").val();
+            var stateId = $("#CaseStateId").val();
+            if ((selected.length != 0) &&
+                (stateId != @NomenclatureConstants.CaseState.Archive.ToString()) &&
+                (stateId != @NomenclatureConstants.CaseState.Deleted.ToString()) &&
+                (stateId != @NomenclatureConstants.CaseState.Destroy.ToString())) {
+                $("#CaseStateId").val(@NomenclatureConstants.CaseState.ComingIntoForce.ToString());
+            }
+        });
+
+        function SubmitCaseEdit() {
+            $("#subButton").attr("disabled", true);
+            $('#frmCaseEdit').trigger('submit');
+        }
+    </script>
+}
+

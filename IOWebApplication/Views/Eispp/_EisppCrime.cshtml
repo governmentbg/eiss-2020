@@ -1,0 +1,36 @@
+﻿@model Crime
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+<div class="eispp-checkbox-container">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Престъпление</legend>
+        @Html.HiddenFor(x => x.CrimeId)
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.EisppNumber, "hd")</div>
+            <div class="col-lg-10">
+                @Html.EditorFor(x => x.CrimeStatus.CrimeQualification, "SelectEISPPTblElementInt", null, new { tblCode = "eiss_pne" })
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.StartDateType, "EisppDropDown", null, new { Ddl = ViewBag.StartDateTypeDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.StartDateVM, "EisppDateTime", new { flags = 1 })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.EndDateVM, "EisppDateTime", new { flags = 1 })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.CrimeStatus.CompletitionDegree, "EisppDropDown", null, new { Ddl = ViewBag.CompletitionDegreeDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.CrimeStatus.Status, "EisppDropDown", null, new { Ddl = ViewBag.CrimeStatusDDL, @class = "crime-status" })</div>
+            @*<div class="col-lg-2">@Html.EditorFor(x => x.CrimeStatus.StatusDateVM, "EisppDateTime", new { flags = 1, @class = "crime-status-date" })</div>*@
+        </div>
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.CiminalProceedingCrime.Status, "EisppDropDown", null, new { Ddl = ViewBag.CiminalProceedingCrimeDDL })</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.CiminalProceedingCrime.StatusDateVM, "EisppDateTime")</div>
+        </div>
+        <legend class="legend_1">Участие на лица:</legend>
+        @for (int i = 0; i < Model.CPPersonCrimes?.Length; i++)
+        {
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.CPPersonCrimes[{i}]";
+            @await Html.PartialAsync("_EisppCrimePerson", Model.CPPersonCrimes[i])
+        }
+
+    </fieldset>
+</div>

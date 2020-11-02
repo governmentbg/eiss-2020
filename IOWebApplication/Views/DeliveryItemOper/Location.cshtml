@@ -1,0 +1,42 @@
+﻿@model DeliveryItemOperVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@{
+    ViewData["Title"] = "Кординати при запис на операцията";
+    var filterJson = ViewBag.filterJson;
+    var notificationId = ViewBag.notificationId;
+    var hereMaps_ApiKey = ViewBag.hereMaps_ApiKey;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        <img src="https://image.maps.ls.hereapi.com/mia/1.6/mapview?apiKey=@hereMaps_ApiKey&c=@Model.Lat,@Model.Long&t=0&z=15&w=600&h=600">
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 col-lg-6">
+        <form id="formEdit" asp-action="EditPost" method="post">
+            <div class="form-group">
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        </form>
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItemOper")" method="post">
+    @Html.HiddenFor(x => filterJson)
+    @Html.HiddenFor(x => x.DeliveryItemId)
+</form>
+
+    @section scripts {
+        <script>
+            function postToFilterDeliveryItems() {
+                $("#formPostFilter").submit();
+            }
+        </script>
+    }
+
+

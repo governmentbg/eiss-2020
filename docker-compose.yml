@@ -1,0 +1,137 @@
+version: '3.5'
+# vim:ft=yaml:ts=2:sts=2:sw=2:expandtab
+
+services:
+  loadbalancer:
+    image: jwilder/nginx-proxy
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - "./nginx-custom/settings.conf:/etc/nginx/conf.d/custom-settings.conf:ro"
+      - "./nginx-custom/vhost.d:/etc/nginx/vhost.d:ro"
+      - "./nginx-custom/certs:/etc/nginx/certs:ro"
+    ports:
+      - "8080:80"
+      - "8443:443"
+    environment:
+      ENABLE_IPV6: 'false'
+      DEFAULT_HOST: 'eiss.local'
+
+  integrations:
+    image: ${DOCKER_REGISTRY-}iowebapplicationapi
+    build:
+      context: .
+      shm_size: '256mb'
+      dockerfile: IOWebApplicationApi/Dockerfile
+    restart: always
+    depends_on:
+      - loadbalancer
+    environment:
+      VIRTUAL_HOST: 'integrations.eiss.local'
+      NETWORK_ACCESS: 'internal'
+      IS-BG_CDN_ENDPOINT: 'cdn'
+      IS-BG_LOG_ENDPOINT: 'elk'
+      IS-BG_SEARCH_ENDPOINT: 'search'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+
+  application:
+    container_name: IOWebApplication.App
+    image: ${DOCKER_REGISTRY-}iowebapplication
+    build:
+      context: .
+      shm_size: '256mb'
+      dockerfile: IOWebApplication/Dockerfile
+    volumes:
+      - /tmp
+    restart: always
+    depends_on:
+      - elk
+      - cdn
+      - eispp-proxy
+      - loadbalancer
+    environment:
+      VIRTUAL_HOST: 'eiss.local,www.eiss.local'
+      NETWORK_ACCESS: 'internal'
+      IS-BG_CDN_ENDPOINT: 'cdn'
+      IS-BG_LOG_ENDPOINT: 'elk'
+      IS-BG_SEARCH_ENDPOINT: 'search'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+
+  eispp-proxy:
+    container_name: eispp-proxy
+    image: nginx:1.16.1-alpine
+    volumes:
+      - "./eispp-proxy/certificates/eispp-test-cert.pem:/certs/eispp-test-cert.pem"
+      - "./eispp-proxy/certificates/eispp-test-key.pem:/certs/eispp-test-key.pem"
+      - "./eispp-proxy/nginx.conf:/etc/nginx/nginx.conf"
+    restart: always
+    expose:
+      - 80
+    environment:
+      VIRTUAL_HOST: 'eispp-proxy'
+      NETWORK_ACCESS: 'internal'
+    command: /bin/sh -c "echo '0.0.0.0 proxyvss.eispp-proxy.net' >> /etc/hosts ;env ; cat /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
+
+
+  elk:
+    image: io/elk-eiss:661
+    build:
+      context: elk-custom
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - elk-data:/var/lib/elasticsearch
+    expose:
+      - 5601
+      - 9200
+    environment:
+      ES_HEAP_SIZE: '512m'
+      LS_HEAP_SIZE: '512m'
+      CLUSTER_NAME: 'eiss-internal-logger'
+      VIRTUAL_HOST: 'logs.eiss.local,elk.eiss.local,search.eiss.local'
+      VIRTUAL_PORT: '5601'
+      NETWORK_ACCESS: 'internal'
+      ES_CONNECT_RETRY: '200'
+      # for linux sysctl -w vm.max_map_count=262144 (or more) on HOST
+    networks:
+      default:
+        aliases:
+          - logs
+          - search
+          - logs.eiss.local
+          - search.eiss.local
+
+  cdn:
+    image: ${DOCKER_REGISTRY-}iowebapplicationcdn
+    build:
+      context: .
+      shm_size: '256mb'
+      dockerfile: IOWebApplication.Cdn/Dockerfile
+    restart: always
+    environment:
+      VIRTUAL_HOST: 'cdn.eiss.local'
+      NETWORK_ACCESS: 'internal'
+      IS-BG_MONGO_HOST: 'mongo'
+      IS-BG_LOG_ENDPOINT: 'elk'
+      IS-BG_SEARCH_ENDPOINT: 'search'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+
+  queue:
+    image: rabbitmq:3.8.3-alpine
+    restart: always
+    ports:
+      - '4369'
+      - '5671-5672'
+      - '25672'
+      - '15672'
+    environment:
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: '16777216' # 16M
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
+
+volumes:
+  elk-data:

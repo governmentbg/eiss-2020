@@ -1,0 +1,78 @@
+﻿@model BalancePaymentVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    ViewData["Title"] = "Прихващане на Плащане";
+}
+
+<div class="row">
+    <div class="col-md-10">
+        @using (Html.BeginForm(FormMethod.Post, null, new { id = "cmModalForm" }))
+        {
+            @Html.HiddenFor(x => x.ObligationIds)
+            @Html.HiddenFor(x => x.MoneyGroupId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @Html.EditorFor(x => x.Id, "SelectPayment", new { onChange = "casePayment();", moneyGroupId = Model.MoneyGroupId })
+            @Html.EditorFor(x => x.Amount)
+            @Html.EditorFor(x => x.AmountObligationPay)
+            @Html.EditorFor(x => x.AmountForPay)
+            @Html.EditorFor(x => x.AmountPay)
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+            </div>
+        }
+    </div>
+</div>
+
+<div id="modalMessageContainer">
+</div>
+<script>
+    $(document).ready(function () {
+        $('#Amount').prop('readOnly', true);
+        $('#AmountObligationPay').prop('readOnly', true);
+        $('#AmountForPay').prop('readOnly', true);
+    });
+
+    $(function () {
+        attachAjaxForm('#cmModalForm', function (data) {
+            if (data.responseJSON.result == true) {
+                ReloadDatatable();
+                HideModal();
+                messageHelper.ShowSuccessMessage('Плащането премина успешно.');
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+            }
+        });
+    });
+
+    function casePayment() {
+        var id = $("#Id").val();
+        if (id == 0) {
+            $("#Amount").val(0);
+            $("#AmountObligationPay").val(0);
+            $("#AmountPay").val(0);
+        }
+        else {
+            postContent('@Url.Action("GetBalancePayment","Money")'
+                , { paymentId: $("#Id").val() }
+                , function (data) {
+                    if (data != null) {
+                        $("#Amount").val(data.amount);
+                        $("#AmountObligationPay").val(data.amountObligationPay);
+                        var paysum = Math.min(parseFloat($("#AmountForPay").val()), data.amount - data.amountObligationPay);
+                        $("#AmountPay").val(paysum);
+                    } else {
+                    }
+                });
+        }
+    }
+</script>
+
+<script>
+    $(function () {
+        initBalancePayment();
+    });
+</script>

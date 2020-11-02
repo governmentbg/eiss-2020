@@ -1,0 +1,74 @@
+﻿@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-lg-12">
+        <table id="selectAddressTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<div id="messageContainerAddress">
+</div>
+
+<script>
+    $(function () {
+        let _dt = $('#selectAddressTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("DocumentPersonAddress_Search", "Document")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.uic = '@ViewBag.uic';
+                        d.uicTypeId = '@ViewBag.uicTypeId';
+                        d.personSourceType = '@ViewBag.personSourceType';
+                        d.personSourceId = '@ViewBag.personSourceId';
+                    }
+                },
+                 buttons: [],
+                "bInfo": false,
+                filter: true,
+                columns: [
+                    {
+                        name: 'addressTypeName',
+                        data: 'addressTypeName',
+                        title: 'Вид адрес',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'fullAddress',
+                        data: 'fullAddress',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: null,
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a,b,item,d) {
+                            return '<a href="#" onclick="AppendAddressToCasePerson('+item.id+');return false;">избери</a>';
+                        }
+                    }
+                ]
+        });
+        _dt.state.clear();
+    });
+
+    function AppendAddressToCasePerson(addressId) {
+                postContent('@Url.Action("AddAddressFromSearch", "CasePerson")'
+                    , { casePersonId: '@ViewBag.casePersonId', addressId: addressId }
+                    , function (data) {
+                        if (data.result == true) {
+                            refreshTable('#mainTable');
+                            messageHelper.ShowSuccessMessage(data.message);
+                            HideModal();
+                        } else {
+                            messageHelper.ShowErrorMessage(data.message, '#messageContainerAddress');
+                        }
+                    });
+    }
+</script>

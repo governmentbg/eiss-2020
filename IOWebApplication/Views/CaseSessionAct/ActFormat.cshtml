@@ -1,0 +1,13 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseSessionActPrintVM
+@{
+    Layout = null;
+}
+<div class="act-body">
+    <partial name="ActHeaderChairman" model="@Model" />
+    <div>
+        @Html.Raw(Model.MainBody)
+    </div>
+    <partial name="ActFooter" model="@Model" />
+    <partial name="ActFooterSigns" model="@Model" />   
+</div>

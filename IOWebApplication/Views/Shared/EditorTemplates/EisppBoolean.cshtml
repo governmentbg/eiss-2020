@@ -1,0 +1,20 @@
+﻿@model bool?
+@{ 
+    bool value = Model ?? false;
+    var add_class = ((string)ViewData["class"] ?? "");
+    var isReadOnly = ((bool?) ViewData["IsSelectedReadOnly"] ?? false);
+}
+<div class="form-group">
+    <label asp-for="@Model" class="control-label">
+        @if (isReadOnly)
+        {
+            @Html.DisplayNameFor(model => model)
+            @Html.HiddenFor(model => model, new { @class = "eispp-checkbox " + add_class })
+        }
+        else
+        {
+            @Html.CheckBox("", value, new { @class = "eispp-checkbox " + add_class }) @Html.DisplayNameFor(model => model)
+        }
+
+    </label>
+</div>

@@ -1,0 +1,156 @@
+﻿@model WorkTaskFilterVM
+@{
+    ViewData["Title"] = "Преглед на задачи";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.TaskTypeId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.TaskStateId, "GenericDropDown")
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.CreatedBy)
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.AssignedTo)
+    </div>
+    <div class="col-lg-6 col-md-12">
+        @Html.EditorFor(m => m.SourceDescription)
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("IndexAll_LoadData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            dateFrom: $('#DateFrom').val(),
+                            dateTo: $('#DateTo').val(),
+                            taskTypeId: $('#TaskTypeId').val(),
+                            taskStateId: $('#TaskStateId').val(),
+                            createdBy: $('#CreatedBy').val(),
+                            assignedTo: $('#AssignedTo').val(),
+                            sourceDescription:$('#SourceDescription').val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'taskTypeName',
+                        data: 'taskTypeName',
+                        title: 'Вид задача',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateCreated',
+                        data: 'dateCreated',
+                        title: 'Създадена на',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    {
+                        name: 'userCreatedFullName',
+                        data: 'userCreatedFullName',
+                        title: 'Възложена от',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'userFullName',
+                        data: 'userFullName',
+                        title: 'Възложена на',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateEnd',
+                        data: 'dateEnd',
+                        title: 'В срок до',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+
+                    {
+                        name: 'taskStateName',
+                        data: 'taskStateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: null,
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-right noExport",
+                        "render": function (a,b,item,d) {
+                            return TemplateToHtml('#templateView', item);
+                        }
+                    }
+                ]
+            });
+
+            table.order([1, 'desc']);
+            initUserAutoComplete();
+        });
+        function ViewTask(st, sid) {
+            requestContent('@Url.Action("GetTaskObjectUrl")', { sourceType: st, sourceId: sid }, function (result) {
+                if (result) {
+                    document.location.href = result;
+                }
+            });
+        }
+    </script>
+    <script id="templateView" type="text/x-handlebars-template">
+        {{#if sourceDescription}}
+        {{sourceDescription}}
+        &nbsp;
+        {{/if}}
+        <a href="#" onclick="ViewTask({{sourceType}}, {{sourceId}}); return false;" class="btn btn-primary btn-sm" title="Преглед"><i class="fa fa-search"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+    </script>
+}

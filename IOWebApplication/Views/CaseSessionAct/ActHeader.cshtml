@@ -1,0 +1,82 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseSessionActPrintVM
+@{
+    Layout = null;
+}
+<partial name="ActHeaderChairman" model="@Model" />
+<div style="text-align:center;width:100%;">
+    <h2>@Model.ActTypeName.ToUpper()</h2>
+    @if (!string.IsNullOrEmpty(Model.ActRegNumber))
+    {
+        <h3>No @Model.ActRegNumber</h3>
+        <h3>гр. @Model.CourtCity, @Model.ActRegDate</h3>
+    }
+    else
+    {
+        <h3>Регистрационният номер ще бъде генериран след предаване за подпис на акта</h3>
+        <h3>гр. @Model.CourtCity</h3>
+    }
+    @if (Model.ActTypeCode != "protocol")
+    {
+        <h2>В ИМЕТО НА НАРОДА</h2>
+    }
+</div>
+<div>
+    @Model.CourtName
+</div>
+@if (!string.IsNullOrEmpty(Model.CompartmentName))
+{
+    <div>
+        @Model.CompartmentType : @Model.CompartmentName
+    </div>
+}
+@if (!string.IsNullOrEmpty(Model.DepartmentName))
+{
+    <div>
+        Състав: @Model.DepartmentName
+    </div>
+}
+<div>
+    Съдия-докладчик: @Model.JudgeReporter
+</div>
+@if (Model.JudgeList.Count() > 0)
+{
+    <div>
+        <table class="no-border">
+            <tr>
+                <td valign="top">Член: </td>
+                <td valign="top">
+                    @foreach (var item in Model.JudgeList)
+                    {
+                        <div>@item.Value</div>
+                    }
+                </td>
+            </tr>
+        </table>
+    </div>
+}
+@*@if (Model.SecretaryList.Count() > 0)
+    {
+        <div>
+            <table class="no-border">
+                <tr>
+                    <td valign="top">Секретар: </td>
+                    <td valign="top">
+                        @foreach (var item in Model.SecretaryList)
+                        {
+                            <div>@item</div>
+                        }
+                    </td>
+                </tr>
+            </table>
+        </div>
+    }*@
+<div>
+    В заседание: @Model.SessionTypeName
+</div>
+<div>
+    @Model.CaseTypeName No @Model.CaseRegNumber,
+</div>
+<div>
+    за да се произнесе взе предвид:
+</div>

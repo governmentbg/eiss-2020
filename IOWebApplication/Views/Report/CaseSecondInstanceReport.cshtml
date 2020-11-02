@@ -1,0 +1,44 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@model CaseSecondInstanceFilterReportVM
+
+@{
+    ViewData["Title"] = "Описна книга въззивни/касационни";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.FromNumber, "Int32Nullable")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.ToNumber, "Int32Nullable")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-4">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="submit" class="btn btn-primary">
+                Експорт в Excel
+                <i class="fa fa-file-excel-o" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeGroupInstance","Ajax")', { CaseGroupId: $(this).val(), caseInstanceId: @NomenclatureConstants.CaseInstanceType.FirstInstance }, '#CaseTypeId', @Model.CaseTypeId);
+    });
+</script>

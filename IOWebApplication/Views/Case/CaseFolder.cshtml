@@ -1,0 +1,115 @@
+﻿@model CaseVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@{
+    ViewData["Title"] = "Електронна папка по дело " + Model.RegNumber;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни делa</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs" id="caseTab">
+                <li class="active"><a href="#tabMainData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+                <li class=""><a href="#tabLawUnit" data-toggle="tab"><i class="fa fa-table"></i> Свързани данни</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="tabMainData">
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CaseGroupLabel)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CaseTypeLabel)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CaseCodeLabel)</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.EISSPNumber)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.ShortNumber)</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.RegNumber)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.RegDate)</div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tabLawUnit">
+                    <table id="tblElements" class="table table-hover table-striped"></table>
+                </div>
+
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+
+    $(document).ready(function () {
+
+        $('#tabMainData input[type="text"]').attr("disabled", true);
+
+        var table = $('#tblElements').DataTable({
+            ajax: {
+                "url": "@Url.Action("CaseFolder_ListData")",
+                "type": "POST",
+                "datatype": "json",
+                "data": function (d) {
+                    d.caseId = @(Model.Id);
+                }
+            },
+            columns: [
+
+                    {
+                        name: 'date',
+                        data: 'date',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'title',
+                        data: 'title',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'title',
+                        data: 'title',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "elementUrl",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+    });
+
+</script>
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="{{{this}}}" class="btn btn-warning btn-sm" title="Преглед"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>

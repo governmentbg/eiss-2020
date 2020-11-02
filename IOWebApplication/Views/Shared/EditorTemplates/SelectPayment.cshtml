@@ -1,0 +1,30 @@
+﻿@model int
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_payment";
+    var label = (string)ViewData["label"];
+    var moneyGroupId = 0;
+    if (ViewData["moneyGroupId"] != null)
+    {
+        moneyGroupId = (int)ViewData["moneyGroupId"];
+    }
+    var addClass = "";
+    if (string.IsNullOrEmpty(label))
+    {
+        addClass = "form-group";
+    }
+}
+
+<div class="payment-container @addClass" data-moneygroupid="@moneyGroupId" @if(ViewData["onChange"]!= null){ <text> onchange="@(ViewData["onChange"])" </text>  }>
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label"></label>
+        <input id="@fieldName" class="form-control payment-control" autocomplete="false" placeholder="Въведете част от името на вносителя или номер на плащането" />
+    }
+    else
+    {
+        <input id="@fieldName" class="form-control payment-control" autocomplete="false" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="payment-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

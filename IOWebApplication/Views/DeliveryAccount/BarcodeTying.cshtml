@@ -1,0 +1,33 @@
+﻿@model string
+
+@{
+    ViewData["Title"] = "Привързване на потребител към устройство";
+    List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="col-md-12 col-lg-6">
+    <form id="formEdit" asp-action="EditPost" method="post">
+        <style>
+             #barcode-holder {
+                 width: 400px;
+                 height: 400px;
+                 /*background: 'data:image/png;base64,@Model' 100% 100% no-repeat;*/
+             }
+        </style>
+        @if (@ViewBag.addr == "")
+        {
+            <div>ПРОБЛЕМ ПРИ ЧЕТЕНЕ БАРКОД ЗА СДВОЯВАНЕ</div>
+        }
+        else
+        {
+            <div>@ViewBag.addr</div>
+            <img id="barcode-holder" src="data:image/png;base64,@Model" />
+        }
+    </form>
+</div>

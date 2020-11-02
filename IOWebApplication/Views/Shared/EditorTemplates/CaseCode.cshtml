@@ -1,0 +1,25 @@
+﻿@model int?
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_casecode";
+    var label = (string)ViewData["label"];
+    var containerId = Guid.NewGuid().ToString();
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+<div class="casecode-container" data-container="@containerId" @if (ViewData["caseType"] != null) { <text> data-casetypeid="@ViewData["caseType"]" </text> } @if (ViewData["caseTypeContainer"] != null) { <text> data-casetypecontainer="@ViewData["caseTypeContainer"]" </text> } @if (ViewData["onChange"] != null) { <text> onchange="@(ViewData["onChange"])" </text> }>
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label has-auto-search @reqClass"></label>
+        <a href="#" onclick="searchCaseCode(this); return false;" class="pull-right auto-cmpt-search" title="Избери шифър на дело">Избери</a>
+        <input id="@fieldName" class="form-control casecode-control" autocomplete="false" />
+    }
+    else
+    {
+        <input id="@fieldName" class="form-control casecode-control" autocomplete="false" placeholder="@label" />
+    }
+    <span class="help-block description"></span>
+    <input asp-for="@Model" type="hidden" class="casecode-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+    <div id="@String.Format("{0}list", fieldName)" style="z-index:1050;"></div>
+</div>

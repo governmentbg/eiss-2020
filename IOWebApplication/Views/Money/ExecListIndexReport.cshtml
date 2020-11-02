@@ -1,0 +1,168 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@model ExecListFilterVM
+
+@{
+    ViewData["Title"] = "Справка за изпълнителни листове";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<form name="formFilter" id="formFilter" action="@Url.Action("ExecListReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.RegNumber)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.ExecListTypeId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.FullName)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.FullNameReceive)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.InstitutionId, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable();" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTableExecList" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTableExecList')) {
+            refreshTable('#mainTableExecList');
+        }
+        else {
+            table = $('#mainTableExecList').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataExecListReport", "Money")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            RegNumber: $("#RegNumber").val(),
+                            FullName: $("#FullName").val(),
+                            FullNameReceive: $("#FullNameReceive").val(),
+                            ExecListTypeId: $("#ExecListTypeId").val(),
+                            InstitutionId: $("#InstitutionId").val()
+                        };
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: '№ на изпълн. лист',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseData',
+                        data: 'caseData',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionAct',
+                        data: 'sessionAct',
+                        title: 'Съдебен акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'moneyTypeName',
+                        data: 'moneyTypeName',
+                        title: 'Основание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Размер',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Издаден срещу кого',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fullNameReceive',
+                        data: 'fullNameReceive',
+                        title: 'Издаден в полза на',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата на издаване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+</script>

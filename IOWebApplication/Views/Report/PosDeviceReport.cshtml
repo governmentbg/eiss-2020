@@ -1,0 +1,114 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model PosDeviceFilterReportVM
+
+@{
+    ViewData["Title"] = "Справка за ПОС терминал";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("PosDeviceReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-4">@Html.EditorFor(x => x.PosDeviceTid, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataPosDeviceReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            PosDeviceTid: $("#PosDeviceTid").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'courtName',
+                        data: 'courtName',
+                        title: 'Наименование на бюджетната организация/структура/звено',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'posDeviceCount',
+                        data: 'posDeviceCount',
+                        title: 'Брой устройства ПОС',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-right",
+                        name: 'paymentCount',
+                        data: 'paymentCount',
+                        title: 'Брой на ПОС - транзакции',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-right",
+                        name: 'paymentSum',
+                        data: 'paymentSum',
+                        title: 'Обща стойност на ПОС - транзакциите',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'bankData',
+                        data: 'bankData',
+                        title: 'BIC код и наименование на банката, обслужваща ПОС-устройство на бюджетната организация',
+                        sortable: true,
+                        searchable: false,
+                    },
+                ]
+            });
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+</script>

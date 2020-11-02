@@ -1,0 +1,170 @@
+﻿@using IOWebApplication.Infrastructure.Models.Cdn
+@model CdnFileSelect
+@{
+    int? sourceType = Model.SourceType;
+    string sourceId = Model.SourceId;
+    bool disabled = false;
+    if (ViewData["Disabled"] != null)
+    {
+        disabled = (bool)ViewData["Disabled"];
+    }
+    string disabledHtml = "";
+    if (disabled)
+    {
+        disabledHtml = "data-disabled=disabled";
+
+    }
+    string title = "Прикачени файлове";
+    if (ViewData["CdnTitle"] != null)
+    {
+        title = (string)ViewData["CdnTitle"];
+    }
+}
+
+
+<fieldset>
+    <legend>
+        @title
+        @if (!disabled)
+        {
+            <div class="pull-right">
+                <a class="btn btn-sm btn-success" style="margin-bottom:3px;" data-target="#cdnAppendFile" data-toggle="modal" href="#" onclick="ResetFileUploadForm();">Добави файл</a>
+            </div>
+        }
+    </legend>
+    <table cellspacing="0" class="cdn-file-list" width="100%" @disabledHtml></table>
+</fieldset>
+
+
+<div class="modal fade in" id="cdnAppendFile" role="dialog" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Добавяне на файл</h4>
+            </div>
+            <div class="modal-body">
+                <form action="@Url.Action("UploadFile", "CdnFile")" enctype="multipart/form-data" id="cdnUploadFile" method="post">
+                    <input name="sourceType" value="@Model.SourceType" type="hidden">
+                    <input name="sourceID" value="@Model.SourceId" type="hidden">
+                    <div class="form-group">
+                        <label class="control-label" for="files">Избери файл</label>
+                        <input id="files" name="files" type="file">
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control margin-top-5" name="title" placeholder="Описание" type="text">
+                    </div>
+                    <div class="form-group">
+                        <input class="btn btn-success" id="cdnUploadButton" value="Запис" type="submit">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $('.cdn-file-list').each(function (index, tblItem) {
+            var editVisible = true;
+            if ($(tblItem).attr('data-disabled')) {
+                editVisible = false;
+            }
+            $(tblItem).DataTable({
+                "searching": false,
+                "ajax": {
+                    "url": '@Url.Action("GetFileList", "CdnFile")',
+                    data: function (d) {
+                        //debugger;
+                        d.sourceType = @(sourceType);
+                        d.sourceID = '@sourceId';
+                    },
+                    "type": "POST",
+                },
+                fnDrawCallback: function (settings) {
+                    $(tblItem).parent().toggle(settings.fnRecordsDisplay() > 0);
+                },
+                "columns": [
+                    
+                    {
+                        data: 'fileDescription',
+                        title: 'Описание'
+                    },
+                    {
+                        data: null,
+                        title: 'Име на файла',
+                        "render": function (item) {
+                            //debugger;
+                            var url = '@(Url.Action("DownloadFile", "CdnFile",new { id = 666}))';
+                            url = url.replace('666', item.id);
+                            return "<a href=" + url + ">" + item.fileName + "</a>";
+                        }
+                    },
+                    {
+                        data: 'dateUploaded',
+                        title: 'Дата на зареждане',
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    }
+                    ,
+                    {
+                        data: null,
+                        sortable: false,
+                        "render": function (item) {
+                            if (item.canDelete) {
+                                return "<a href='#' onclick='CdnArchiveFile(" + item.id + ",\"" + item.fileName + "\");return false;' class='btn btn-xs btn-danger' title='Изтриване'>X</a>";
+                            } else {
+                                return "";
+                            }
+                        }
+                    }
+                ]
+
+            }).column(3).visible(editVisible);
+        });
+
+        $('form#cdnUploadFile').ajaxForm({
+            beforeSend: function () {
+                $('#cdnUploadButton').hide();
+            },
+
+            complete: function (xhr) {
+                $('#cdnUploadButton').show();
+                if (xhr.responseText == "ok") {
+                    ReloadCdnFileList();
+                    $('#cdnUploadButton').parents('div.modal:first').modal("hide");
+                } else {
+                    if (xhr.responseText.length > 100) {
+                        // percent.html("Проблем при зареждане на файл.");
+                    } else {
+                        // percent.html(xhr.responseText);
+                    }
+                }
+            }
+        });
+    });
+
+    function ReloadCdnFileList() {
+        $('.cdn-file-list').each(function (index, tblItem) {
+            var dt = $(tblItem).DataTable();
+            dt.ajax.reload();
+        });
+    }
+
+    function CdnArchiveFile(id, fileName) {
+        if (!confirm("Потвърдете изтриването на файл " + fileName + "!")) {
+            return false;
+        }
+        $.post('@Url.Action("DisableFile", "CdnFile")', { id: id }, function (data) {
+            if (data == "ok") {
+                ReloadCdnFileList();
+            }
+        })
+    }
+
+    function ResetFileUploadForm() {
+        $('#cdnUploadFile')[0].reset();
+        $('label[for="cdnFileInput"]').text("Избери файл");
+
+        return false;
+    }
+</script>

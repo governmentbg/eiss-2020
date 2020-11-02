@@ -1,0 +1,589 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using Newtonsoft.Json;
+@model DepersonalizationModel
+@{
+    ViewData["Title"] = "Обезличаване на документ";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+    var history = Html.Raw(JsonConvert.SerializeObject(Model.DepersonalizationHistory).Replace("\"", "\\\""));
+}
+
+@section menuHeader{
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+
+@section contentHeader{
+    <section class="content-header">
+        <h1>
+            @ViewData["Title"] @(Model.DocumentName != null ? $"- {Model.DocumentName}" : "")
+        </h1>
+        @if (ViewBag.breadcrumbs != null)
+        {
+            <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        }
+    </section>
+}
+@section head{
+    <style>
+        #test--env-container {
+            display: none !important;
+        }
+    </style>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Документ</h3>
+            </div>
+            <!-- /.box-header -->
+            <!-- form start -->
+
+            <div class="box-body">
+                <div class="docPage">
+                    @Html.Raw(Model.DocumentContent)
+                </div>
+                <div class="docEdit hidden">
+                    <textarea id="depersonalizationEditor" class="tinymceEditor"></textarea>
+                </div>
+            </div>
+            <!-- /.box-body -->
+
+            <div class="box-footer">
+                <form id="depersonalizationForm" action="@Html.Raw(Model.SubmitAction)" role="form" method="post">
+                    @Html.HiddenFor(x => x.CaseId)
+                    @Html.HiddenFor(x => x.SourceId)
+                    @*<input type="hidden" id="CaseId" name="CaseId" value="@Model.CaseId" />
+                        <input type="hidden" id="SourceId" name="SourceId" value="@Model.SourceId" />*@
+                    <input type="hidden" id="DocumentContent" name="DocumentContent" />
+                    <input type="hidden" id="DepersonalizationNewItems" name="DepersonalizationNewItems" />
+                    <input type="hidden" id="saveMode" name="saveMode" />
+                    <div id="depersonalizationButtons">
+                        <a href="#" id="btnSave" class="btn btn-success">Запис</a>
+                        <a href="@Model.CancelUrl" class="btn btn-danger">Назад</a>
+                        <a href="#" id="btnFinalize" class="btn btn-primary">Финализиране</a>
+                        <a href="#" id="btnEdit" class="btn btn-warning pull-right">Редакция</a>
+                    </div>
+                </form>
+                <div id="editButtons" class="hidden">
+                    <a href="#" id="btnEditSave" class="btn btn-success">Запази редакцията</a>
+                    <a href="#" id="btnEditCancel" class="btn btn-danger">Откажи редакцията</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div id="depersonalizationControl" class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tab_1" data-toggle="tab" aria-expanded="true">Замяна</a></li>
+                <li class=""><a href="#tab_2" data-toggle="tab" aria-expanded="false">История</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="tab_1">
+                    <div class="depersonalizationTab">
+                        <div class="form-group">
+                            <label for="searchField">Търси</label>
+                            <input type="text" class="form-control searchField" id="searchField" placeholder="текст за търсене">
+                        </div>
+                        <div class="form-group">
+                            <label for="replaceField">Замени</label>
+                            <input type="text" class="form-control" id="replaceField" placeholder="замени с текст">
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" id="cbCaseSensitive"> С малки и главни букви
+                                </label>
+                            </div>
+                        </div>
+                        <div id="results" class="hidden">
+                            <table id="searchResultsTable" class="table table-hover table-striped"></table>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="button" id="btnSearch" class="btn btn-primary">Маркирай</button>
+                        @*<button type="button" id="btnReplace" class="btn btn-primary replace-btn" disabled>Замени</button>*@
+                        <button type="button" id="btnReplaceAll" class="btn btn-warning replace-btn" disabled>Замени всички</button>
+                    </div>
+                </div>
+                <!-- /.tab-pane -->
+                <div class="tab-pane" id="tab_2">
+                    <div class="depersonalizationTab">
+                        <table id="historyTable" class="table table-hover table-striped"></table>
+                    </div>
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary" disabled>Изпълни избраните</button>
+                        <button type="button" class="btn btn-warning" disabled>Изпълни всички</button>
+                    </div>
+                </div>
+                <!-- /.tab-pane -->
+            </div>
+            <!-- /.tab-content -->
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        window.onload = function () {
+            const documentContent = document.querySelector('.docPage');
+            const searchButton = document.getElementById('btnSearch');
+            const replaceAllButton = document.getElementById('btnReplaceAll');
+            const editButton = document.getElementById('btnEdit');
+            const editSaveButton = document.getElementById('btnEditSave');
+            const editCancelButton = document.getElementById('btnEditCancel');
+            const saveButton = this.document.getElementById('btnSave');
+            const finalizeButton = this.document.getElementById('btnFinalize');
+            documentContent.onmouseup = copySelection;
+            searchButton.addEventListener('click', function (e) { hilightResult(true); });
+            replaceAllButton.onclick = replaceAll;
+            editButton.onclick = showEditor;
+            editSaveButton.onclick = hideEditorWithSave;
+            editCancelButton.onclick = hideEditor;
+            saveButton.onclick = saveData;
+            finalizeButton.onclick = function () {
+                saveData('finalize');
+            };
+
+            let elementsData = [];
+            const searchHistory = {};
+            let mustSaveHistory = false;
+            const historyData = JSON.parse('@history');
+
+            const resultsTable = $('#searchResultsTable').DataTable({
+                "filter": false,
+                "ordering": false,
+                pageLength: 5,
+                serverSide: false,
+                dom: 'rtip',
+                columns: [
+                    {
+                        name: 'result',
+                        data: 'result',
+                        title: 'Намерен текст',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: 'el',
+                        title: '',
+                        sortable: false,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            var result = "";
+                            elementsData[meta.row] = data;
+                            result = TemplateToHtml('#templateReplace', meta.row);
+
+                            return result;
+                        }
+                    }
+                ]
+            });
+
+            const historyTable = $('#historyTable').DataTable({
+                "filter": false,
+                "ordering": false,
+                pageLength: 5,
+                serverSide: false,
+                dom: 'rtip',
+                data: historyData,
+                columns: [
+                    {
+                        name: 'search',
+                        data: 'searchValue',
+                        title: 'Текст за търсене',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'replace',
+                        data: 'replaceValue',
+                        title: 'Текст за замяна',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: 'el',
+                        title: '',
+                        sortable: false,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            var result = "";
+                            result = TemplateToHtml('#templateHistory', meta.row);
+
+                            return result;
+                        }
+                    }
+                ]
+            });
+
+            resultsTable.on('draw', function () {
+                document.querySelectorAll('.btn-table-replace').forEach(function (el) {
+                    el.addEventListener('click', replace);
+                });
+
+                document.querySelectorAll('#searchResultsTable tr').forEach(function (el) {
+                    el.addEventListener('click', scrollToElement);
+                });
+            });
+
+            historyTable.on('draw', function () {
+                document.querySelectorAll('.btn-table-history').forEach(function (el) {
+                    el.addEventListener('click', highligthHistory);
+                });
+            });
+
+            function getHashCode(str) {
+                var FNV1_32A_INIT = 0x811c9dc5;
+                var hval = FNV1_32A_INIT;
+                for (var i = 0; i < str.length; ++i) {
+                    hval ^= str.charCodeAt(i);
+                    hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+                }
+                return hval >>> 0;
+            }
+
+            function addToHistory() {
+                if (mustSaveHistory) {
+                    const searchField = document.getElementById('searchField');
+                    const replaceField = document.getElementById('replaceField');
+                    const caseSensitive = !!document.querySelector('#cbCaseSensitive:checked') ? 1 : 0;
+
+                    if (searchField && searchField.value && searchField.value.trim() &&
+                        replaceField && replaceField.value && replaceField.value.trim()) {
+                        const key = getHashCode(searchField.value.trim() + replaceField.value.trim() + caseSensitive);
+
+                        searchHistory[key] = {
+                            searchValue: searchField.value.trim(),
+                            replaceValue: replaceField.value.trim(),
+                            isCaseSensitive: !!caseSensitive
+                        };
+                    }
+                }
+
+                console.log(searchHistory);
+            }
+
+            function copySelection() {
+                var text = "";
+                if (window.getSelection) {
+                    text = window.getSelection().toString();
+                } else if (document.selection && document.selection.type != "Control") {
+                    text = document.selection.createRange().text;
+                }
+
+                if (text) {
+                    const searchFields = document.getElementsByClassName('searchField');
+                    Array.from(searchFields).map(function (el) { el.value = text; });
+                }
+            }
+
+            function findAndReplace(searchText, replacement, searchNode, flags) {
+                if (!searchText || typeof replacement === 'undefined') {
+                    return;
+                }
+
+                flags = flags || 'g';
+                var regex = typeof searchText === 'string' ?
+                    new RegExp(searchText, flags) : searchText,
+                    childNodes = (searchNode || document.body).childNodes,
+                    cnLength = childNodes.length,
+                    excludes = 'html,head,style,title,link,meta,script,object,iframe';
+
+                while (cnLength--) {
+                    var currentNode = childNodes[cnLength];
+
+                    if (currentNode.nodeType === 1 &&
+                        (excludes + ',').indexOf(currentNode.nodeName.toLowerCase() + ',') === -1) {
+                        arguments.callee(searchText, replacement, currentNode, flags);
+                    }
+
+                    if (currentNode.nodeType !== 3 || !regex.test(currentNode.data)) {
+                        continue;
+                    }
+
+                    var parent = currentNode.parentNode,
+                        frag = (function () {
+                            var html = currentNode.data.replace(regex, replacement),
+                                wrap = document.createElement('div'),
+                                frag = document.createDocumentFragment();
+                            wrap.innerHTML = html;
+                            while (wrap.firstChild) {
+                                frag.appendChild(wrap.firstChild);
+                            }
+                            return frag;
+                        })();
+                    parent.insertBefore(frag, currentNode);
+                    parent.removeChild(currentNode);
+                }
+            }
+
+            function hilightResult(saveHistory) {
+                cleanHighlights();
+
+                if (typeof (saveHistory) === 'boolean') {
+                    mustSaveHistory = saveHistory;
+                }
+
+                const documentContent = document.querySelector('.docPage');
+                let searchText = document.getElementById('searchField').value;
+                const caseSensitive = !!document.querySelector('#cbCaseSensitive:checked');
+                let flags = 'g';
+                flags += caseSensitive ? '' : 'i';
+
+                if (searchText && searchText.length > 0 && searchText.trim().length > 0) {
+                    searchText = searchText.trim();
+                    findAndReplace(searchText, function (term) {
+                        return '<span class="keyword">' + term + '</span>';
+                    }, documentContent, flags);
+                }
+
+
+                setBtnDisabled(false);
+                renderTexts();
+            }
+
+            function cleanHighlights() {
+                const highlights = document.querySelectorAll('span.keyword');
+
+                highlights.forEach(function (el) {
+                    let parent = el.parentNode;
+                    el.replaceWith(el.textContent);
+                    parent.normalize();
+                });
+
+                resultsTable.clear().draw();
+                elementsData = [];
+            }
+
+            function cleanSearchFields(onlyReplace) {
+                const searchField = document.getElementById('searchField');
+                const replaceField = document.getElementById('replaceField');
+
+                if (searchField && !onlyReplace) {
+                    searchField.value = '';
+                }
+
+                if (replaceField) {
+                    replaceField.value = '';
+                }
+            }
+
+            function setBtnDisabled(disabled) {
+                disabled = disabled === undefined ? true : disabled;
+                disabled = disabled || !(document.querySelectorAll('span.keyword').length > 0);
+                const resultsDiv = document.getElementById('results');
+
+                document.querySelectorAll('.replace-btn').forEach(function (el) {
+                    if (disabled) {
+                        el.setAttribute('disabled', 'disabled');
+                    } else {
+                        el.removeAttribute('disabled');
+                    }
+                });
+
+                if (disabled && !resultsDiv.classList.contains('hidden')) {
+                    resultsDiv.classList.add('hidden');
+                }
+
+                if (!disabled && resultsDiv.classList.contains('hidden')) {
+                    resultsDiv.classList.remove('hidden');
+                }
+            }
+
+            function replaceAll() {
+                swalConfirm('Всички намерени съвпадения ще бъдат заменени!', function () {
+                    const highlights = document.querySelectorAll('span.keyword');
+                    let replaceText = document.getElementById('replaceField').value;
+
+                    if (highlights.length > 0 && replaceText && replaceText.length > 0 && replaceText.trim().length > 0) {
+                        replaceText = replaceText.trim();
+
+                        highlights.forEach(function (el) {
+                            let parent = el.parentNode;
+                            el.replaceWith(replaceText);
+                            parent.normalize();
+                        });
+
+                        addToHistory();
+                    }
+
+                    cleanSearchFields();
+                    setBtnDisabled(false);
+                });
+            }
+
+            function renderTexts() {
+                var texts = Array.from(document.querySelectorAll('span.keyword')).map(function (el) {
+                    let start = el.previousSibling ? el.previousSibling.nodeValue : '';
+                    if (start && typeof (start) === 'string' && start.length > 0) {
+                        start = start.substring(start.length - 15);
+                    } else {
+                        start = '';
+                    }
+
+                    let end = el.nextSibling ? el.nextSibling.nodeValue : '';
+                    if (end && typeof (end) === 'string' && end.length > 0) {
+                        end = end.substring(0, 15);
+                    } else {
+                        end = '';
+                    }
+
+                    let result = '' + start + el.outerHTML + end;
+
+                    return {
+                        el,
+                        result
+                    }
+                });
+
+                if (texts.length > 0) {
+                    resultsTable.rows.add(texts).page.len(5).draw();
+                }
+            }
+
+            function replace(e) {
+                e.stopPropagation();
+                const el = e.currentTarget;
+                let rowIndex = el.dataset.rowindex;
+                const elementToReplace = elementsData[rowIndex];
+                let replaceText = document.getElementById('replaceField').value;
+
+                if (elementToReplace && replaceText && replaceText.length > 0 && replaceText.trim().length > 0) {
+                    replaceText = replaceText.trim();
+                    let parent = elementToReplace.parentNode;
+                    elementToReplace.replaceWith(replaceText);
+                    parent.normalize();
+
+                    addToHistory();
+                    disableRow(el);
+                }
+
+                const activeRowsCount = document.querySelectorAll('#searchResultsTable tbody tr:not(.not-allowed)').length;
+
+                if (activeRowsCount == 0) {
+                    cleanSearchFields();
+                    document.getElementById('btnReplaceAll').setAttribute('disabled', 'disabled');
+                }
+            }
+
+            function highligthHistory(e) {
+                e.stopPropagation();
+                const el = e.currentTarget;
+                let rowIndex = el.dataset.rowindex;
+                const data = historyData[rowIndex];
+                const searchField = document.getElementById('searchField');
+                const replaceField = document.getElementById('replaceField');
+                const caseSensitiveField = document.getElementById('cbCaseSensitive');
+
+                searchField.value = data.searchValue;
+                replaceField.value = data.replaceValue;
+                caseSensitiveField.checked = data.isCaseSensitive;
+
+                hilightResult(false);
+                $('.nav-tabs a[href="#tab_1"]').tab('show');
+            }
+
+            function disableRow(btn) {
+                const row = btn.closest('tr');
+                btn.setAttribute('disabled', 'disabled');
+                row.classList.add('not-allowed');
+            }
+
+            function scrollToElement(e) {
+                const row = e.currentTarget;
+                const el = elementsData[row._DT_RowIndex];
+
+                if (el) {
+                    el.scrollIntoView();
+                }
+            }
+
+            function showEditor() {
+                const pages = document.getElementsByClassName('docPage');
+                const editors = document.getElementsByClassName('docEdit');
+                const buttonsContainer = document.getElementById('depersonalizationButtons');
+                const depControl = document.getElementById('depersonalizationControl');
+                const editButtonsContainer = document.getElementById('editButtons');
+
+                if (pages.length === 1 && editors.length === 1 && buttonsContainer && depControl && editButtonsContainer) {
+                    pages[0].classList.add('hidden');
+                    tinymce.get('depersonalizationEditor').setContent(pages[0].innerHTML);
+                    buttonsContainer.classList.add('hidden');
+                    depControl.classList.add('hidden');
+                    editButtonsContainer.classList.remove('hidden');
+                    editors[0].classList.remove('hidden');
+                }
+            }
+
+            function hideEditorWithSave() {
+                hideEditor(true);
+            }
+
+            function hideEditor(saveContent) {
+                const pages = document.getElementsByClassName('docPage');
+                const editors = document.getElementsByClassName('docEdit');
+                const buttonsContainer = document.getElementById('depersonalizationButtons');
+                const depControl = document.getElementById('depersonalizationControl');
+                const editButtonsContainer = document.getElementById('editButtons');
+
+                if (pages.length === 1 && editors.length === 1 && buttonsContainer && depControl && editButtonsContainer) {
+                    if (saveContent === true) {
+                        pages[0].innerHTML = tinymce.get('depersonalizationEditor').getContent();
+                    }
+
+                    editors[0].classList.add('hidden');
+                    buttonsContainer.classList.remove('hidden');
+                    depControl.classList.remove('hidden');
+                    editButtonsContainer.classList.add('hidden');
+                    pages[0].classList.remove('hidden');
+                }
+            }
+
+            function saveData(saveMode) {
+                const documentContentField = document.getElementById('DocumentContent');
+                const searchHistoryDataField = document.getElementById('DepersonalizationNewItems');
+                const form = document.getElementById('depersonalizationForm');
+                const saveModeField = document.getElementById('saveMode');
+                saveModeField.value = saveMode;
+                const documentContentHtml = document.getElementsByClassName('docPage')[0];
+                const historyData = Object.values(searchHistory);
+
+                if (documentContentField && searchHistoryDataField && form && documentContentHtml && historyData) {
+                    documentContentField.value = documentContentHtml.innerHTML;
+                    searchHistoryDataField.value = JSON.stringify(historyData);
+
+                    form.submit();
+                }
+            }
+
+            tinymce.init({
+                selector: 'textarea.tinymceEditor',
+                language: 'bg_BG',
+                height: 700,
+                menubar: 'file edit view insert format tools table tc help',
+                plugins: [
+                    'advlist autolink lists link image charmap print preview anchor',
+                    'searchreplace visualblocks code fullscreen',
+                    'insertdatetime media table paste code help wordcount'
+                ],
+                toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                visual_table_class: "table",
+                table_default_attributes: { border: 0 }
+            });
+        }
+
+
+    </script>
+    <script id="templateReplace" type="text/x-handlebars-template">
+        <button type="button" data-rowindex="{{this}}" class="btn btn-primary btn-sm btn-flat btn-table-replace" title="Замени"><i class="fa fa-check-square-o"></i><span class="hidden-sm hidden-xs"> Замени</span></button>
+    </script>
+    <script id="templateHistory" type="text/x-handlebars-template">
+        <button type="button" data-rowindex="{{this}}" class="btn btn-primary btn-sm btn-flat btn-table-history" title="Преглед"><i class="fa fa-star-o"></i><span class="hidden-sm hidden-xs"> Преглед</span></button>
+    </script>
+}

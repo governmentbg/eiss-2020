@@ -1,0 +1,65 @@
+﻿@model List<TableDescription>
+@using IOWebApplication.Infrastructure.Data.Models.Nomenclatures
+@{
+    Layout = null;
+    var tables = Model.Where(x => x.OrdinalPosition == 0);
+}
+@foreach (var tbl in tables)
+{
+    var cols = Model.Where(x => x.TableName == tbl.TableName && x.OrdinalPosition > 0)
+                    .Where(x => !string.IsNullOrEmpty(x.Description))
+                    .OrderBy(x => x.OrdinalPosition);
+    <h3>@tbl.TableName - @tbl.Description</h3>
+    <table style="border-collapse:collapse;width:100%;">
+        <tr>
+            <th style="width:25%;border:1px solid #aaa;">Поле</th>
+            <th style="width:15%;border:1px solid #aaa;">Вид</th>
+            <th style="width:45%;border:1px solid #aaa;">Описание</th>
+            <th style="width:15%;border:1px solid #aaa;">Задължително</th>
+        </tr>
+        @foreach (var col in cols)
+        {
+            <tr>
+                <td style="border:1px solid #aaa;">@col.ColumnName</td>
+                <td style="border:1px solid #aaa;">
+                    @switch (col.DataType)
+                    {
+                        case "bigint":
+                        case "integer":
+                            <text>Цяло число</text>
+                            break;
+                        case "numeric":
+                        case "double precision":
+                            <text>Дробно число</text>
+                            break;
+                        case "text":
+                        case "character varying":
+                            <text>Текст</text>
+                            break;
+                        case "boolean":
+                            <text>Двоична стойност</text>
+                            break;
+                        case "timestamp without time zone":
+                        case "timestamp with time zone":
+                        case "date":
+                            <text>Дата</text>
+                            break;
+                        case "bytea":
+                        case "jsonb":
+                            <text>Масив от данни</text>
+                            break;
+                        case "uuid":
+                            <text>Уникален идентификатор</text>
+                            break;
+                        default:
+                            <text>@col.DataType (DataType)</text>
+                            break;
+                    }
+
+                </td>
+                <td style="border:1px solid #aaa;">@col.Description</td>
+                <td style="border:1px solid #aaa;">@((col.IsNullable) ? "Задължително" : "Незадължително")</td>
+            </tr>
+        }
+    </table>
+}

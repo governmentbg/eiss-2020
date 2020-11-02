@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "Дела към мен";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainMovmentTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainMovmentTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("MyMovment_LoadData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                    }
+                },                
+                columns: [
+                    {
+                        name: 'caseName',
+                        data: 'caseName',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'userLawUnitName',
+                        data: 'userLawUnitName',
+                        title: 'Изпратено от',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Забележка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateSend',
+                        data: 'dateSend',
+                        title: 'Изпратена на',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    
+                    {
+                        name: 'actions',
+                        data: "viewUrl",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateMovmentView', value);
+                        }
+                    }
+                ]
+            });
+
+            table.order([3, 'desc']);
+        });
+    </script>    
+    <script id="templateMovmentView" type="text/x-handlebars-template">
+        <a href="{{{this}}}" class="btn btn-primary btn-sm" title="Преглед"><i class="fa fa-search"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+    </script>
+}

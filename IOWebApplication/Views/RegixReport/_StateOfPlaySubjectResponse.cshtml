@@ -1,0 +1,56 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@model RegixStateSubjectVM
+
+    <div>
+        @Html.DisplayFor(x => x.UIC, "objInline")
+        @Html.DisplayFor(x => x.SubjectType, "objInline")
+
+        @if (Model.StateLegalEntitySubject != null)
+        {
+            <br />
+            <b>Данни за нефизическо лице:</b>
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.Country, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.LegalForm, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.LegalStatute, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.SubjectGroup, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.CyrillicFullName, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.CyrillicShortName, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.LatinFullName, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.SubordinateLevel, "objInline")
+            @Html.DisplayFor(x => x.StateLegalEntitySubject.TRStatus, "objInline")
+        }
+        @if (Model.StateNaturalPersonSubject != null)
+        {
+            <br />
+            <b>Данни за физическо лице:</b>
+            @Html.DisplayFor(x => x.StateNaturalPersonSubject.Country, "objInline")
+            @if (!string.IsNullOrEmpty(Model.StateNaturalPersonSubject.EGN))
+            {
+                @Html.DisplayFor(x => x.StateNaturalPersonSubject.EGN, "objInline")
+            }
+            else if (!string.IsNullOrEmpty(Model.StateNaturalPersonSubject.LNC))
+            {
+                @Html.DisplayFor(x => x.StateNaturalPersonSubject.LNC, "objInline")
+            }
+            @Html.DisplayFor(x => x.StateNaturalPersonSubject.CyrillicName, "objInline")
+            @Html.DisplayFor(x => x.StateNaturalPersonSubject.LatinName, "objInline")
+            @Html.DisplayFor(x => x.StateNaturalPersonSubject.BirthDate, "objInline")
+            @Html.DisplayFor(x => x.StateNaturalPersonSubject.IdentificationDoc, "objInline")
+        }
+
+        <br />
+        <b>Адреси:</b>
+        @foreach (var item in Model.StateAddress)
+        {
+            @Html.DisplayFor(x => item.AddressText, "objInline", new { label = item.AddressType + ":" })
+        }
+
+        <br />
+        <b>Контакти:</b>
+        @foreach (var item in Model.StateCommunications)
+        {
+            @Html.DisplayFor(x => item.CommunicationText, "objInline", new { label = item.CommunicationType + ":" })
+        }
+
+        @Html.DisplayFor(x => x.Remark, "objInline")
+    </div>

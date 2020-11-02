@@ -1,0 +1,70 @@
+﻿@model CaseMoney
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция" : "Преглед";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Case")">Съдебни дела</a></li>
+        <li><a href="@Url.Action("CasePreview","Case", new { id = Model.CaseId})">Дело @ViewBag.RegNumber</a></li>
+        @if (Model.CaseSessionId != null)
+        {
+            <li><a href="@Url.Action("Preview", "CaseSession", new { id = Model.CaseSessionId })">@ViewBag.CaseSessionName</a></li>
+        }
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseSessionId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.CaseLawUnitId, "GenericDropDown")
+                @Html.EditorFor(x => x.MoneyTypeId, "GenericDropDown")
+                @Html.EditorFor(x => x.Amount)
+                @Html.EditorFor(x => x.PaidDate)
+                @Html.EditorFor(x => x.Description, "Textarea")
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                @if (Model.CaseSessionId == null)
+                {
+                    <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                }
+                else
+                {
+                    <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@Model.CaseSessionId" class="btn btn-danger">Назад</a>
+                }
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,44 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.TinyMCEVM;
+@{
+// Layout = null;
+}
+@{
+    ViewData["Title"] = "Преглед";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<form method="post">
+    <style>
+        table.mce-item-table, .mce-item-table td, .mce-item-table th, .mce-item-table caption {
+            border: none;
+        }
+    </style>
+    <div>
+        @Html.TextAreaFor(model => model.Text)
+    </div>
+</form>
+@section scripts {
+    <script>
+        tinymce.init({
+            selector: 'textarea#Text',
+            height: 500,
+            menubar: 'file edit view insert format tools table tc help',
+            plugins: [
+                'advlist autolink lists link image charmap print preview anchor',
+                'searchreplace visualblocks code fullscreen',
+                'insertdatetime media table paste code help wordcount'
+            ],
+            toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+            visual_table_class : "table",
+            table_default_attributes: { border : 0},
+            content_css: [
+                '@Url.Action("Preview", "HtmlTemplate", new { id = @Model.Id})/style.css'
+            ]
+        });
+    </script>
+}

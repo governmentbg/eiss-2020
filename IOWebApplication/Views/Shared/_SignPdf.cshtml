@@ -1,0 +1,12 @@
+﻿@model IOWebApplication.Core.Models.SignPdfInfo
+@{
+    ViewData["Title"] = "Подписване на PDF";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+}
+@section menuHeader{
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+@await Component.InvokeAsync(nameof(IOWebApplication.Components.SignPdfComponent), new { info = Model })
+

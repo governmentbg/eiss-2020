@@ -1,0 +1,41 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@model object
+@{
+    var breadcrumbs = (IEnumerable<BreadcrumbsVM>)Model;
+
+    if (breadcrumbs == null)
+    {
+        breadcrumbs = new List<BreadcrumbsVM>()
+{
+        new BreadcrumbsVM()
+        {
+            Title=(string)ViewData["Title"]
+    }
+};
+    }
+}
+@if (breadcrumbs != null && breadcrumbs.Count() > 0)
+{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        @foreach (var item in breadcrumbs)
+        {
+            @if (item.Active)
+            {
+                <li class="active">@item.Title</li>
+            }
+            else
+            {
+                <li>
+                    <a title="@item.Tooltip" @if ((item.Href ?? "").Contains("()")) { <text> href="#" onclick="@item.Href" </text>  } else { <text> href="@Html.Raw(item.Href ?? "#")" </text> }>
+                        @if (!string.IsNullOrEmpty(item.Icon))
+                        {
+                            <i class="@item.Icon"></i>
+                        }
+                        @item.Title
+                    </a>
+                </li>
+            }
+        }
+    </ol>
+}

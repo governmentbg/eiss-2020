@@ -1,0 +1,18 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CaseSessionActCoordinationVM
+@{
+    Layout = null;
+}
+<div style="text-align:center;width:100%;">
+    <h2>ОСОБЕНО МНЕНИЕ</h2>
+    <br />
+    <br />
+    <br />
+    <br />
+    към @Model.ActTypeName @Model.ActNumber/@Model.ActDate.Value.ToString("dd.MM.yyyy")
+    <br />
+    на @(Model.CaseLawUnitName), @Model.JudgeRoleLabel
+</div>
+<p>
+    @Html.Raw(Model.Content)
+</p>

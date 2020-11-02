@@ -1,0 +1,118 @@
+﻿@model CaseSessionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    ViewData["Title"] = "Добавяне на акт в ЗЗ";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form id="frmAddSessionAndAct" asp-action="AddSessionAndAct" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.ActSaveType)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="tab-pane active" id="tabSessionEditMainData">
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.SessionTypeId, "GenericDropDown")</div>
+                    </div>
+                    @*<div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
+                    </div>*@
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div id="divActKind" style="display:none;">
+                                @Html.EditorFor(x => x.ActKindId, "GenericDropDown")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+                    @if (access.CanChange)
+                    {
+                        <input id="subButton" type="button" value="Запис" onclick={SubmitAddSessionAndAct()} class="btn btn-success single-click-submit" />
+                        <input id="subButton1" type="button" value="Запис и изготвяне" onclick={SubmitAddSessionAndAct("btnCreateBlank")} class="btn btn-success single-click-submit" />
+                    }
+                    <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTabEditSession', $(e.target).attr('href'));
+        });
+        var activeTabEditSession = localStorage.getItem('activeTabEditSession');
+        if (activeTabEditSession) {
+            $('#caseSessionTab a[href="' + activeTabEditSession + '"]').tab('show');
+        }
+
+        SessionTypeIdChange();
+        $('#subButton').removeAttr("disabled");
+        $('#subButton1').removeAttr("disabled");
+    });
+
+    function SubmitAddSessionAndAct(ActSaveType) {
+        debugger;
+        $('#ActSaveType').val(ActSaveType);
+        $("#subButton").attr("disabled", true);
+        $("#subButton1").attr("disabled", true);
+        $('#frmAddSessionAndAct').trigger('submit');
+    }
+
+    $('#SessionTypeId').change(function () {
+        SessionTypeIdChange();
+    });
+
+    function SessionTypeIdChange() {
+        requestCombo('@Url.Action("GetActTypesFromCaseByCase", "CaseSessionAct")', { caseId: @Model.CaseId, SessionTypeId: $('#SessionTypeId').val() }, '#ActTypeId', @(Model.ActTypeId ?? 0), function () { $('#ActTypeId').trigger('change') });
+    }
+
+    function ActTypeIdChange() {
+        requestCombo('@Url.Action("Get_ActKindsByActType", "CaseSessionAct")', { actTypeId: $('#ActTypeId').val() }, '#ActKindId', @(Model.ActKindId ?? 0), function () {
+            if ($('#ActKindId').find('option').length > 1) {
+                $('#divActKind').show();
+                $('#subButton1').hide();
+            } else {
+                $('#divActKind').hide();
+                $('#subButton1').show();
+            }
+            $('#ActKindId').trigger('change')
+        });
+    }
+
+    $('#ActTypeId').change(function () {
+        ActTypeIdChange();
+    });
+
+</script>
+

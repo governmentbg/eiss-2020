@@ -1,0 +1,48 @@
+﻿@model CPPersonCrime
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@{
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+<div class="eispp-checkbox-container">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">@Html.EditorFor(x => Model.IsSelected, "EisppBoolean", null, new { IsSelectedReadOnly = Model.IsSelectedReadOnly, @class = "person-crime-select" })</legend>
+        @Html.HiddenFor(x => Model.PersonCrimeId)
+        @Html.HiddenFor(x => Model.PersonId)
+        @Html.HiddenFor(x => Model.CrimeId)
+
+        @Html.HiddenFor(x => Model.CrimeSanction.CrimeSanctionId)
+        @Html.HiddenFor(x => Model.CrimeSanction.StructureId)
+
+        <div class="row">
+            <div class="col-lg-3">
+                @Html.EditorFor(x => x.PersonName, "hd")
+            </div>
+
+            <div class="col-lg-2">
+                @Html.EditorFor(x => Model.CrimeSanction.SanctionDateVM, "EisppDateTime")
+            </div>
+            <div class="col-lg-2">
+                @Html.EditorFor(x => Model.CrimeSanction.Role, "EisppDropDown", null, new { Ddl = ViewBag.CrimeSanctionRoleDDL })
+            </div>
+            <div class="col-lg-2">
+                @Html.EditorFor(x => Model.CrimeSanction.SanctionType, "EisppDropDown", null, new { Ddl = ViewBag.SanctionTypeDDL })
+            </div>
+            <div class="col-lg-2">
+                @Html.EditorFor(x => Model.CrimeSanction.SanctionReason, "EisppDropDown", null, new { Ddl = ViewBag.SanctionReasonDDL })
+            </div>
+        </div>
+
+        @if (Model.CrimeSubjectStatisticData != null)
+        {
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.CrimeSubjectStatisticData";
+            @await Html.PartialAsync("_CrimeSubjectStatisticData", Model.CrimeSubjectStatisticData)
+        }
+
+        @for (int j = 0; j < Model.CrimeSanction.CrimePunishments?.Length; j++)
+        {
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.CrimeSanction.CrimePunishments[{j}]";
+            @await Html.PartialAsync("_CrimePunishment", Model.CrimeSanction.CrimePunishments[j])
+        }
+
+    </fieldset>
+</div>

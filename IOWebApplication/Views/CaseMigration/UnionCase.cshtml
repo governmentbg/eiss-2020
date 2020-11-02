@@ -1,0 +1,47 @@
+﻿@model CaseMigrationUnionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@{
+    ViewData["Title"] = "Обединяване на дела";
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="UnionCase" method="post">
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CaseInfo)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <p>
+                Забележка: Изберете друго дело на @userContext.CourtName, което да бъде присъединено към текущото производство
+            </p>
+            @Html.DisplayFor(x => x.CaseInfo, "obj")
+            @Html.EditorFor(x => x.CaseToUnionId, "SelectCase", new { courtId = userContext.CourtId })
+            @Html.EditorFor(x => x.Description, "Textarea")
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="Index" asp-route-caseId="@Model.CaseId" class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(function () {
+            initCase();
+        });
+    </script>
+}
+

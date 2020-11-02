@@ -1,0 +1,393 @@
+﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+@using IOWebApplication.Infrastructure.Constants;
+@using IOWebApplication.Core.Helper.GlobalConstants;
+@using IOWebApplication.Extensions
+@model DeliveryItemTransFilterVM;
+@inject IViewLocalizer Localizer
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+@{
+    ViewData["Title"] = DeliveryItemTransFilterVM.GetTitle(Model.ToNotificationStateId);
+    ViewData["DateFrom"] = DeliveryItemTransFilterVM.GetDateFromLabel(Model.ToNotificationStateId);
+    ViewData["DateTo"] = DeliveryItemTransFilterVM.GetDateToLabel(Model.ToNotificationStateId);
+    IEnumerable<SelectListItem> ForID_ddl = (List<SelectListItem>)ViewBag.ForID_ddl;
+    bool showCheckOnRegNum = false;
+}
+<form id="formFilter" asp-action="Edit" method="post">
+   @* @Html.HiddenFor(x => x.NotificationStateId)*@
+    @Html.HiddenFor(x => x.ToNotificationStateId)
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")
+        </div>
+        @if (Model.ToNotificationStateId != NomenclatureConstants.NotificationState.Send)
+        {
+            <div class="col-md-2">
+                @Html.EditorFor(x => x.RegDateFrom)
+            </div>
+            <div class="col-md-2">
+                @Html.EditorFor(x => x.RegDateTo)
+            </div>
+        }
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateFrom, "DateTimeViewDataLabel")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateTo, "DateTimeViewDataLabel")
+        </div>
+        @if (Model.ToNotificationStateId == NomenclatureConstants.NotificationState.Send)
+        {
+            <div class="col-md-2">
+            </div>
+            <div class="col-md-2">
+            </div>
+        }
+        <div class="col-md-2 text-right pb-15">
+            <br>
+            <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="LoadDeliveryTransItems()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+    <hr>
+    <div class="row for-show" style = "display:none">
+        <div class="col-md-6">
+            <label for="ForId" class="control-label">@Html.Raw(DeliveryItemTransFilterVM.GetForIdLabel(Model.ToNotificationStateId))</label>
+            @Html.DropDownListFor(model => model.ForId, @ForID_ddl.SetSelected(Model.ForId), new { @class = "form-control" })
+            <br />
+        </div>
+    </div>
+
+    <div class="row for-show" style = "display:none">
+        <div class="col-md-2 col-sm-3">
+            <div class="form-group">
+                <label asp-for="@showCheckOnRegNum" class="control-label">
+                    @Html.CheckBoxFor(model => showCheckOnRegNum)
+                    <label>&nbsp;Маркиране</label>
+                </label>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-3 check-on-regnum">
+            <div class="form-group">
+                <label for="regNumber" class="control-label">Въведете баркод:</label>
+                <input name="regNumber" id="regNumber" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-3 check-on-regnum">
+            <div class="form-group">
+                <label for="check_button" class="control-label"><br /></label>
+                <button type="button" id="check_button" name="check_button" onclick="findAndCheckDeliveryItem()" class="btn btn-success btn-block">Маркиране</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="row for-show" style = "display:none">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+<form name="formPrintPdfsPost" id="formPrintPdfsPost" action="@Url.Action("PrintPdfsFromDeliveryItemIds", "CaseNotification")" method="post">
+    <input type="hidden" id="deliveryItemIds" name="deliveryItemIds" value="">
+</form>
+<div class="row for-show" style = "display:none">
+    <div class="col-md-12">
+        <label id="labelRecap" name="labelRecap">Маркирани </label>
+    </div>
+</div>
+
+<div class="row for-show btn-submit" style = "display:none">
+    <div class="col-md-2">
+        <button id="submit_button" onclick="submitAllCheckDeliveryItem()" class="btn btn-success btn-block">@Html.Raw(DeliveryItemTransFilterVM.GetButtonLabel(Model.ToNotificationStateId))</button>
+    </div>
+    <div class="col-md-2">
+        <button id="print_button" onclick="printAllCheckDeliveryItem()" class="btn btn-def">Печат на маркираните</button>
+    </div>
+</div>
+
+<script>
+    var dataSet = [];
+
+    $(function () {
+        var table = $('#mainTable').DataTable({
+            data: dataSet,
+            serverSide: false,
+            'order': [[1, 'asc']],
+            "paging": false,
+            "lengthMenu": [[-1], ["Покажи всички"]],
+             dom: '<"row"<"col-sm-6 dataTables_buttons"B><"col-sm-6">>rtp',
+             buttons: {
+                dom: {
+                    button: {
+                        tag: 'button',
+                        className: 'btn'
+                    },
+                    container: {
+                        className: ''
+                    }
+                },
+                buttons: ['io_colvis', 'io_excel', 'io_pdf', 'io_print']
+             },
+             columns: [
+                {
+                    name: "checkRow",
+                    data: "checkRow",
+                    title: '<input type="checkbox" id="select-all" onclick="selectAll();">',
+                    sortable: true,
+                    searchable: false,
+                     "render": function (item, type, row, meta) {
+                         if (type === 'display' || type === 'filter') {
+                             return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" onchange="checkedRowChange(' + row.id + ')">';
+                         }
+                         return row.checkRow;
+                    }
+                },
+                {
+                    name: 'regNumber',
+                    data: 'regNumber',
+                    title: 'Рег. номер',
+                    width: 100,
+                    sortable: true,
+                    searchable: false
+                 },
+                 {
+                     name: 'caseInfo',
+                     data: 'caseInfo',
+                     title: 'Към дело',
+                     sortable: true,
+                     searchable: false
+                 },
+                {
+                    name: 'personName',
+                    data: 'personName',
+                    title: 'Име на лицето',
+                    sortable: true,
+                    searchable: false
+                },
+                {
+                    name: 'address',
+                    data: 'address',
+                    title: 'Адрес',
+                    sortable: true,
+                    searchable: false
+                },
+                {
+                    name: 'lawUnitName',
+                    data: 'lawUnitName',
+                    title: 'Призовкар',
+                    sortable: true,
+                    searchable: false
+                },
+                {
+                    name: 'areaName',
+                    data: 'areaName',
+                    title: 'Район',
+                    sortable: true,
+                    searchable: false
+                }
+            ]
+        });
+    });
+
+    function selectAll() {
+        var check = $("#select-all").is(':checked');
+        var rows = $('#mainTable').DataTable().rows({ 'search': 'applied' }).nodes();
+        $('input[type="checkbox"]', rows).prop('checked', check);
+        setMarkedLabel();
+    }
+
+    function checkedRowChange(id) {
+        var isCheck = $('#chk' + id.toString()).prop('checked');
+        $('#mainTable').DataTable()
+            .rows(function (idx, data, node) {
+                if (data.id === id)
+                    data.checkRow = isCheck;
+            })
+        setMarkedLabel();
+    }
+
+    function LoadDeliveryTransItems() {
+        $('#btnFilter').attr("disabled", true);
+        $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+        LoadForId_DDL();
+        $('.for-show').show();
+        $('#btnFilter').attr("disabled", false);
+    }
+
+    function LoadForId_DDL() {
+        var filterData = getFormData($('#formFilter'));
+        var oldVal = $("#ForId").val();
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("LoadForId_DDL")",
+            dataType: "json",
+            cache: false,
+            data: { filterData: filterData },
+            success: function (response) {
+                var tempStr = response.map(
+                    function myFunction(value) {
+                        return '<option title="' + value.text + '" value="' + value.value + '">' + value.text + "</option>";
+                    }
+                ).join();
+                $("#select-all").prop('checked', false);
+                $("#ForId").html(tempStr);
+                $("#ForId").val(oldVal);
+                if ($("#ForId").prop("selectedIndex") == -1)
+                    $("#ForId").prop("selectedIndex", 0);
+                var filterData = getFormData($('#formFilter'));
+                filterData.ForId = $("#ForId").val();
+                $('#filterJson').val(JSON.stringify(filterData));
+                LoadDataSet();
+            },
+            complete: function () { },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log({ jqXHR: jqXHR });
+                console.log({ textStatus: textStatus });
+                console.log({ errorThrown: errorThrown });
+            }
+        });
+    }
+
+    function LoadDataSet() {
+        if ($("#ForId").val() == "-2") {
+            $('.btn-submit').hide();
+        } else {
+            $('.btn-submit').show();
+        }
+        var filterData = JSON.parse($('#filterJson').val());
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("ListDataTrans")",
+            dataType: "json",
+            cache: false,
+            data: { filterData: filterData },
+            success: function (response) {
+                dataSet = response;
+                $("#select-all").prop('checked', false);
+                var table = $('#mainTable').DataTable();
+                table.clear();
+                table.rows.add(dataSet).draw();
+            },
+            complete: function () { },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log({ jqXHR: jqXHR });
+                console.log({ textStatus: textStatus });
+                console.log({ errorThrown: errorThrown });
+            }
+        });
+    }
+
+    function getMarkedDeliveryItemIds() {
+        var deliveryItemIds = [];
+        $('#mainTable').DataTable().$('input[type="checkbox"]').each(function () {
+             if (this.checked) {
+                 deliveryItemIds.push(this.value);
+            }
+        });
+        return deliveryItemIds;
+    }
+
+    function submitAllCheckDeliveryItem() {
+        if ($('#mainTable').DataTable() === undefined) return;
+
+        var deliveryItemIds = getMarkedDeliveryItemIds();
+        if (deliveryItemIds.length === 0) {
+            messageHelper.ShowErrorMessage('Изберете поне еднa призовка/съобщение.');
+            $(window).scrollTop(0);
+            return;
+        }
+        var filterData = JSON.parse($('#filterJson').val());
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("SaveTrans")",
+            dataType: "json",
+            cache: false,
+            data: { deliveryItemIds: deliveryItemIds, filterData : filterData },
+            success: function (response) {
+                if (response.result) {
+                    messageHelper.ShowSuccessMessage("@Html.Raw(@MessageConstant.Values.SaveOK)");
+                    $("#btnFilter").trigger("click");
+                }
+                else
+                {
+                    messageHelper.ShowErrorMessage("@Html.Raw(@MessageConstant.Values.SaveFailed)");
+                }
+            },
+            complete: function () { },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log({ jqXHR: jqXHR });
+                console.log({ textStatus: textStatus });
+                console.log({ errorThrown: errorThrown });
+            }
+        });
+    }
+    function printAllCheckDeliveryItem() {
+        if ($('#mainTable').DataTable() === undefined) return;
+
+        var deliveryItemIds = getMarkedDeliveryItemIds();
+        if (deliveryItemIds.length === 0) {
+            messageHelper.ShowErrorMessage('Изберете поне еднa призовка/съобщение.');
+            $(window).scrollTop(0);
+            return;
+        }
+        $('#print_button').attr("disabled", true);
+        $('#deliveryItemIds').val(JSON.stringify(deliveryItemIds));
+        $("#formPrintPdfsPost").submit();
+       
+        setTimeout(function(){ $('#print_button').attr("disabled", false); }, 3000);
+    }
+
+    function findAndCheckDeliveryItem() {
+        var regNum = $("#regNumber").val();
+        var rows = $('#mainTable').DataTable()
+            .rows(function (idx, data, node) {
+                if (data.regNumber === regNum.trim())
+                    data.checkRow = true;
+                return data.regNumber === regNum.trim() ?   true : false;
+            })
+            .nodes();
+        $('input[type="checkbox"]', rows).prop('checked', true);
+        setMarkedLabel();
+    }
+
+    function setMarkedLabel() {
+        var message = "Няма маркирани ";
+        var deliveryItemIds = getMarkedDeliveryItemIds();
+        if (deliveryItemIds.length > 0)
+            message = "Маркирани " + deliveryItemIds.length.toString();
+        message += " от " + dataSet.length.toString();
+        $('#labelRecap').html(message);
+    }
+
+    $("#ForId").change(function () {
+        if ($('#btnFilter').attr("disabled") === true) {
+            return;
+        }
+        var filterData = JSON.parse($('#filterJson').val());
+        filterData.ForId = $("#ForId").val();
+        $('#filterJson').val(JSON.stringify(filterData));
+        LoadDataSet();
+    });
+
+    $('#showCheckOnRegNum').change(function () {
+        if ($('#showCheckOnRegNum').is(":checked")) {
+            $('.check-on-regnum').show();
+        }
+        else {
+            $('.check-on-regnum').hide();
+        }
+    });
+
+    $( document ).ready(function() {
+        $("#showCheckOnRegNum").trigger("change");
+      //  $("#btnFilter").trigger("click");
+    });
+</script>

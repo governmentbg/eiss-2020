@@ -1,0 +1,100 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Infrastructure.Constants
+@model RegixPersonalIdentityV2VM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.PersonalIdentityV2Filter.EGN, "objInline", new { label = "Справка за: ЕГН/ЛНЧ " })
+        @Html.DisplayFor(x => x.PersonalIdentityV2Filter.IdentityDocumentNumber, "objInline")
+        <br />
+        <br />
+
+        @if (Model.PersonalIdentityV2Response.InfoError != "")
+        {
+            <b>Model.PersonalIdentityV2Response.InfoError</b>
+        }
+        else
+        {
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.EGN, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.PersonNames, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.PersonNamesLatin, "objInline")
+            <br />
+            <b>Категории за управление на водача</b>
+            <table>
+                <tr>
+                    <td colspan="3">
+                        <table class="bordered">
+                            <tr>
+                                <td><b>Категория</b></td>
+                                <td><b>От дата</b></td>
+                                <td><b>До дата</b></td>
+                                <td><b>Ограничения</b></td>
+                            </tr>
+
+                            @foreach (var item in Model.PersonalIdentityV2Response.PersonalIdentityV2CategоriesResponse)
+                            {
+                                <tr>
+                                    <td align="left">
+                                        @item.Category
+                                    </td>
+                                    <td align="center">
+                                        @item.DateCategory
+                                    </td>
+                                    <td align="center">
+                                        @item.EndDateCategory
+                                    </td>
+                                    <td align="left">
+                                        @item.Restrictions
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <br />
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.DLCommonRestrictions, "objInline")
+            <br />
+            @if (Model.PersonalIdentityV2Response.ForeignPersonNames.Trim() != "")
+            {
+                <b>Данни за чужденец</b>
+                @Html.DisplayFor(x => x.PersonalIdentityV2Response.ForeignPIN, "objInline")
+                @Html.DisplayFor(x => x.PersonalIdentityV2Response.ForeignPN, "objInline")
+                @Html.DisplayFor(x => x.PersonalIdentityV2Response.ForeignPersonNames, "objInline")
+                @Html.DisplayFor(x => x.PersonalIdentityV2Response.ForeignPersonNamesLatin, "objInline")
+                @Html.DisplayFor(x => x.PersonalIdentityV2Response.ForeignNationality, "objInline")
+                @Html.DisplayFor(x => x.PersonalIdentityV2Response.ForeignGender, "objInline")
+                @Html.DisplayFor(x => x.PersonalIdentityV2Response.ForeignBirthDate, "objInline")
+            }
+            else
+            {
+                <b>Липсват данни за чужденец</b>
+                <br />
+            }
+            <br />
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.RPRemarks, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.RPTypeofPermit, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.DocumentType, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.DocumentActualStatus, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.ActualStatusDate, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.DocumentStatusReason, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.IdentityDocumentNumber, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.IssueDate, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.IssuerName, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.ValidDate, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.BirthDate, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.BirthPlace, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.GenderName, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.Nationality, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.PermanentAddress, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.Height, "objInline")
+            @Html.DisplayFor(x => x.PersonalIdentityV2Response.EyesColor, "objInline")
+
+        }
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

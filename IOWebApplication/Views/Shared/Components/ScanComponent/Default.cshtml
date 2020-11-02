@@ -1,0 +1,146 @@
+﻿@model IOWebApplication.Core.Models.ScanInfoViewModel
+
+    <form id="scanForm" asp-action="scan" asp-controller="scan" method="post">
+        @Html.HiddenFor(model => model.ReturnUrl)
+        @Html.HiddenFor(model => model.FileContent)
+        @Html.HiddenFor(model => model.FileName)
+        @Html.HiddenFor(model => model.Mode)
+        @Html.HiddenFor(model => model.SourceId)
+        @Html.HiddenFor(model => model.SourceType)
+        @Html.HiddenFor(model => model.Title)
+    </form>
+
+<div id="scanMessageContainer" style="display:none">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger no-margin-bottom">
+                <button class="close sign-close">×</button>
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span id="scanErrorMessage"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="box box-success">
+            <div class="box-header with-border">
+                <h3 class="box-title">Сканиране на документ</h3>
+                <div class="pull-right">
+                    <select class="form-control" id="scanSources">
+                        <option value="" disabled selected>Изберете скенер</option>
+                    </select>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="scanner-page-container">
+                    <div class="row" id="previewHolder">
+                    </div>
+                </div>
+            </div>
+            <div class="box-footer">
+                <a href="@Model.ReturnUrl" class="btn btn-danger">Назад</a>
+                <button type="button" id="saveButton" class="btn btn-warning pull-right scanner-button" disabled>Запис</button>
+                <button type="button" id="addPages" class="btn btn-success pull-right margin-r-5 scanner-button" disabled>Добавете страници</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        scanner.loadScanners()
+            .then((data) => {
+                data.forEach((item, index, arr) => {
+                    $("#scanSources").append(new Option(item.name, index));
+                });
+            })
+            .catch((error) => {
+                $('#scanErrorMessage').text(error);
+                $('#scanMessageContainer').show();
+            });
+
+        $('#scanSources').on('change', (e) => {
+            scanner.setSource(e.target.value);
+            $('.scanner-button').removeAttr("disabled");
+        });
+
+        $('#addPages').on('click', (e) => {
+            scanner.scan(showPreview, showError)
+                .then((scanning) => {
+                    if (scanning) {
+                        loader.show();
+                    }
+                })
+                .catch((error) => {
+                    $('#scanErrorMessage').text(error);
+                    $('#scanMessageContainer').show();
+                });
+        });
+
+        $('#saveButton').on('click', (e) => {
+            ShowModalDialog('Запис на сканиран файл', TemplateToHtml('#saveTemplate'));
+            $('#modalSave').on('click', (e) => {
+                $('#FileName').val($('#modalFileName').val());
+                $('#Title').val($('#fileDescription').val());
+                HideModal();
+                scanner.getFile()
+                    .then((fileData) => {
+                        $('#FileContent').val(fileData);
+                        return scanner.release();
+                    })
+                    .then(() => {
+                        window.removeEventListener('beforeunload', unload, false);
+                        $('#scanForm').submit();
+                    })
+                    .catch((error) => {
+                        $('#scanErrorMessage').text(error);
+                        $('#scanMessageContainer').show();
+                    });
+            });
+        });
+
+        window.addEventListener('beforeunload', unload, false);
+    });
+
+    function showPreview(pageData) {
+        $('#previewHolder').append(TemplateToHtml('#pagePreviewTemplate', pageData));
+        loader.hide();
+    }
+
+    function showError(error) {
+        loader.hide();
+        $('#scanErrorMessage').text(error);
+        $('#scanMessageContainer').show();
+    }
+
+    function unload() {
+        event.preventDefault();
+        // Chrome requires returnValue to be set.
+        event.returnValue = '';
+
+        if (scanner.getIsinitialized()) {
+            scanner.release();
+        }
+    }
+
+</script>
+<script defer src="~/js/prod/scan.min.js"></script>
+<script id="pagePreviewTemplate" type="text/x-handlebars-template">
+    <div class="col-xs-6 col-md-3">
+        <a href="#" class="thumbnail">
+            <img src="data:image/jpeg;base64,{{this}}" alt="Преглед на страница">
+        </a>
+    </div>
+</script>
+<script id="saveTemplate" type="text/x-handlebars-template">
+    <div class="form-group">
+        <label for="modalFileName">Файл</label>
+        <input type="text" class="form-control" id="modalFileName" placeholder="Име на файл">
+    </div>
+    <div class="form-group">
+        <label for="fileDescription">Описание</label>
+        <input type="text" class="form-control" id="fileDescription" placeholder="Описание на файл">
+    </div>
+    <button type="button" id="modalSave" class="btn btn-default">Запис</button>
+</script>

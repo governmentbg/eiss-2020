@@ -1,0 +1,40 @@
+﻿@model UserSettingsModel
+@using IOWebApplication.Infrastructure.Models.ViewModels.Identity
+@{
+    ViewData["Title"] = "Персонализиране";
+
+    var calStyles = new List<SelectListItem>()
+{
+        new SelectListItem("Месец","month"),
+        new SelectListItem("Седмица","listWeek"),
+        new SelectListItem("Ден","agendaDay")
+    };
+    ViewBag.CalendarStyle_ddl = calStyles;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="UserSetting" method="post" autocomplete="off">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <fieldset class="is-fieldset">
+                    <legend class="legend_1">Начален екран</legend>
+                    @Html.EditorFor(x => x.CalendarVisible, "bool")
+                    @Html.EditorFor(x => x.CalendarStyle, "GenericDropDownString")
+                    @Html.EditorFor(x => x.WorkTaskVisible, "bool")
+                    @Html.EditorFor(x => x.CaseMoveVisible, "bool")
+                    @Html.EditorFor(x => x.NewsVisible, "bool")
+                </fieldset>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+            </div>
+        </form>
+    </div>
+</div>

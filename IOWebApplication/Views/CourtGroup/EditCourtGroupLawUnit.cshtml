@@ -1,0 +1,87 @@
+﻿@model CourtGroupVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+
+@{
+    ViewData["Title"] = "Съдии към група - " + Model.Label;
+    var multiselectJudge = "multiselectJudge";
+    var filterCaseGroupId = ViewBag.filterCaseGroupId;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        <form id="formEdit" asp-action="EditCourtGroupLawUnit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.Hidden("groupJudgeJson")
+            @Html.HiddenFor(x => filterCaseGroupId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer" class="row col-md-12">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-md-2">
+                        @Html.Label(@Model.CaseGroupLabel)
+                    </div>
+                </div>
+                <div class="row">
+                    <h4 id="h4Code" class="text-center">Съдии</h4>
+                </div>
+                <div id="multiselectJudge" class="row ms-transfer-container">
+                    <partial name="_MultiSelectTransfer" model=@multiselectJudge>
+                </div>
+                <div class="row">
+                    <br>
+                </div>
+            </div>
+
+
+            <div class="form-group row col-md-12">
+                <a id="submit_button" class="btn btn-success" />Запис</a>
+                <a asp-action="Index" asp-route-filterCaseGroupId="@ViewBag.filterCaseGroupId" class="btn btn-danger">Назад</a>
+                @*<a href="@Url.Action("HistoryCourtGroupLawUnit", "CourtGroup", new { id = @Model.Id, ilterCaseGroupId = @ViewBag.filterCaseGroupId })" class="btn btn-warning" title="История"><span class="hidden-sm hidden-xs"> История</span></a>*@
+
+                <div class="pull-right">
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                </div>
+            </div>
+            @*41?filterCaseGroupId=-1*@
+        </form>
+    </div>
+</div>
+<div id="divRightEdit" class="modal master-modal fade" tabindex="-1" role="dialog"></div>
+@section scripts {
+    <script>
+        function NotValidAlert() {
+            confirm("Има невалидни проценти натовареност");
+        };
+        var $multiselectJudge = $("#multiselectJudge").multiselectiontransfer(
+            {
+                havePercent : true,
+                ajaxLeftUrl: "@Url.Action("CourtGroupLawUnitLeftList")",
+                ajaxRightUrl: "@Url.Action("CourtGroupLawUnitRightList")",
+                templateRight: "#templatePercentRightEdit",
+                templateRightModal: "#templatePercentRightModal"
+            }
+        );
+
+        $multiselectJudge.loadLeft();
+        $multiselectJudge.loadRight({ courtGroupId: @Model.Id});
+
+        $("#formEdit").submit(function (event) {
+            $("#groupJudgeJson").val($multiselectJudge.getSelected());
+            if ($multiselectJudge.haveInValidpercent())
+            {
+                return false;
+            }
+            return true;
+        });
+        $('#submit_button').click(function(){
+            $("#formEdit").submit();
+        });
+    </script>
+}
+
+

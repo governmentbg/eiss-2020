@@ -1,0 +1,151 @@
+﻿@model CasePersonSentencePunishment
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция на наказание" : "Преглед на наказание";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на наказание";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditCasePersonSentencePunishment" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CasePersonSentenceId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.SentenceTypeId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.SentenceRegimeTypeId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.SentenceText, "Textarea")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.IsSummaryPunishment, "Boolean")</div>
+                            <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                            <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
+                        </fieldset>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="col-lg-12" id="divTime">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Време</legend>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.SentenseDays, "Int32")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.SentenseWeeks, "Int32")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.SentenseMonths, "Int32")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.SentenseYears, "Int32")</div>
+                            </fieldset>
+                        </div>
+
+                        <div id="divProbation" class="col-lg-12">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Изпитателен срок</legend>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.ProbationStartDate, "DateTime")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.ProbationDays, "Int32Nullable")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.ProbationWeeks, "Int32Nullable")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.ProbationMonths, "Int32Nullable")</div>
+                                <div class="col-lg-3">@Html.EditorFor(x => x.ProbationYears, "Int32Nullable")</div>
+                            </fieldset>
+                        </div>
+
+                        <div class="col-lg-12" id="divMoney">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Сума</legend>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.SentenseMoney, "Decimal")</div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                <a asp-action="IndexCasePersonSentencePunishment" asp-route-casePersonSentenceId="@Model.CasePersonSentenceId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        Is_PeriodProbation();
+    });
+
+    $('#SentenceTypeId').change(function () {
+        Is_PeriodProbation();
+    });
+
+    function Is_PeriodProbation() {
+        $("#divTime").hide();
+        $("#divMoney").hide();
+        $("#divProbation").hide();
+        var sentenceTypeId = $("#SentenceTypeId").val();
+        var modelId = @Model.Id;
+        debugger;
+        if (sentenceTypeId > 0) {
+            postContent('@Url.Action("Is_Period","CasePersonSentence")'
+                , { sentenceTypeId }
+                , function (data) {
+                    if (data.result == @NomenclatureConstants.SentenceType_Select.AllChoice) {
+                        $("#divTime").show();
+                        $("#divMoney").show();
+                    }
+                    else {
+                        if (data.result == @NomenclatureConstants.SentenceType_Select.HasPeriod) {
+                            $("#divTime").show();
+                            $("#divMoney").hide();
+                        }
+                        else {
+                            if (data.result == @NomenclatureConstants.SentenceType_Select.HasMoney) {
+                                $("#divTime").hide();
+                                $("#divMoney").show();
+                            }
+                        };
+                    };
+                });
+
+            postContent('@Url.Action("Is_Probation", "CasePersonSentence")'
+                , { sentenceTypeId }
+                , function (data) {
+                    if (data.result == true) {
+                        $("#divProbation").show();
+                    }
+                    else {
+                        $("#divProbation").hide();
+                    };
+                });
+        };
+    }
+
+</script>

@@ -1,0 +1,65 @@
+﻿@model IEnumerable<MQEpepVM>
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep
+@using static IOWebApplication.Infrastructure.Constants.EpepConstants;
+
+@{
+    bool isGlobalAdmin = (bool)ViewBag.isGlobalAdmin;
+}
+
+@if (Model.Any())
+{
+    <table class="table table-condensed" width="100%">
+        <tr>
+            <th>Дата</th>
+            @*<th>Операция</th>*@
+            <th>Статус</th>
+            @if (isGlobalAdmin)
+            {
+                <th>Описание</th>
+            }
+        </tr>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @(item.DateWrt.ToString("dd.MM.yyyy HH:mm"))
+                </td>
+                @*<td>
+                        @item.OperName
+                    </td>*@
+
+                @switch (item.StateId)
+                {
+                    case IntegrationStates.New:
+                        <td>Нова</td>
+                        break;
+                    case IntegrationStates.TransferOK:
+                        <td>Успешна</td>
+                        break;
+                    case IntegrationStates.WaitForParentIdError:
+                        <td>Изчаква предходен обект</td>
+                        break;
+                    case IntegrationStates.MissingCodeError:
+                    case IntegrationStates.DataContentError:
+                        <td>Грешка в данните</td>
+                        break;
+                    case IntegrationStates.TransferError:
+                    case IntegrationStates.TransferErrorLimitExceeded:
+                        <td>Грешка при трансфер</td>
+                        break;
+                    default:
+                        break;
+                }
+                @if (isGlobalAdmin)
+                {
+                    <td>@item.ErrorDescription</td>
+                }
+            </tr>
+        }
+    </table>
+}
+else
+{
+    <p>Няма данни.</p>
+}

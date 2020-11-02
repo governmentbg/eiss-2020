@@ -1,0 +1,79 @@
+﻿@model DocumentDecision
+@using IOWebApplication.Infrastructure.Data.Models.Documents
+
+@{
+    var cndEditMode = "none";
+    if (Model.Id > 0)
+    {
+        cndEditMode = "append";
+    }
+    if (Model.RegNumber != null)
+    {
+        ViewData["Title"] = "Редакция на решение " + Model.RegNumber;
+    }
+    else
+    {
+        ViewData["Title"] = "Изготвяне на решение";
+    }
+
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="EditDocumentDecision" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.DocumentId)
+            @Html.HiddenFor(x => x.RegNumber)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="save-container-data">
+                    <h1>@ViewBag.documentData</h1>
+                </div>
+
+                <div class="nav-tabs-custom" id="mainTabs">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tabMainData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+                        @if (ViewBag.caseView)
+                        {
+                            <li class=""><a href="#tabCase" data-toggle="tab"><i class="fa fa-user"></i> Дела за достъп</a></li>
+                        }
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tabMainData">
+                            @Html.EditorFor(x => x.DecisionTypeId, "GenericDropDown")
+                            @Html.EditorFor(x => x.Description)
+                            @Html.EditorFor(x => x.DocumentDecisionStateId, "GenericDropDown")
+                            <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.DocumentDecision" data-sourceid="@Model.DocumentId" data-editmode="@cndEditMode"></div>
+                        </div>
+                        <div class="tab-pane" id="tabCase">
+                            <partial name="_DocumentDecisionCase" model="@Model.Id" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-action="DocumentDecision" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.DocumentDecision" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<partial name="_CdnScript" />

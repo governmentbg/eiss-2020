@@ -1,0 +1,45 @@
+﻿<div class="modal master-modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Затвори"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Modal title</h4>
+            </div>
+            <div class="modal-body">
+
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script>
+    var onHideModalRegistered = false;
+
+    function ShowModalDialog(title, html, wide) {
+        $('.modal-dialog').removeClass('wide');
+        if (wide) {
+            $('.modal-dialog').addClass('wide');
+        }
+        $('.master-modal .modal-title').text(title);
+        $('.master-modal .modal-body').html(html);
+        $('.master-modal').modal("show");
+    }
+    function MakeBigModalDialog(container) {
+        var _width = $(window).width() * 90 / 100;
+        var _height = $(window).height() * 80 / 100;
+        $(container)
+            .dialog({
+                modal: true, width: _width, height: _height
+            });
+    }
+    function HideModal() {
+        $('.master-modal').modal('hide');
+    }
+
+    function ModalOnHideRegister(handler) {
+        if (!onHideModalRegistered) {
+            $('.master-modal').on('hidden.bs.modal', handler);
+            onHideModalRegistered = true;
+        }
+    }
+</script>

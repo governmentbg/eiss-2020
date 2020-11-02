@@ -1,0 +1,183 @@
+﻿@model string;
+@{
+    ViewData["Title"] = "Приемане на призовки/писма";
+    string filterJson = ViewBag.filterJson;
+    bool showCheckedForDay = false;
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        <div id="saveContainer">
+            <partial name="_SaveFormContent" model="@("#saveContainer")" />
+            <div class="row">
+                <div class="col-md-6">
+
+                    <div class="form-group">
+                        <label asp-for="@showCheckedForDay" class="control-label">
+                            @Html.CheckBoxFor(model => showCheckedForDay)
+                            <label>&nbsp;Да се покажат приетите за деня</label>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2 col-sm-3">
+                    <div class="form-group">
+                        <label for="regNumber" class="control-label">Въведете баркод:</label>
+                        <input name="regNumber" id="regNumber" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-3">
+                    <div class="form-group">
+                        <label for="submit_button" class="control-label"><br /></label>
+                        <button id="submit_button" class="btn btn-success btn-block">Приеми</button>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-3">
+                    <div class="form-group">
+                        <label for="back_button" class="control-label"><br /></label>
+                        <button onclick="postToFilter()" id="back_button" class="btn btn-danger btn-block">Назад</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content" class="row">
+        </div>
+    </div>
+</div>
+<form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
+    @Html.HiddenFor(x => filterJson)
+</form>
+
+@section scripts {
+    <script>
+        function postToFilter() {
+            $("#formPostFilter").submit();
+        }
+    </script>
+    <script id="templateCheckReceived" type="text/x-handlebars-template">
+        <div class="col-sm-12">
+            <div class="delivery-item-input">
+                <div class="row">
+                    <div class="col-sm-2">
+                        <label for="regNumber" class="control-label">Баркод:</label>
+                        <input name="regNumber" id="regNumber" class="form-control" value="{{this.regNumber}}" readonly>
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="courtName" class="control-label">От съд:</label>
+                        <input name="courtName" id="regNumber" class="form-control" value="{{this.fromCourtName}}" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="personName" class="control-label">Име на лицето:</label>
+                        <input name="personName" id="personName" class="form-control" value="{{this.personName}}" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <label for="address" class="control-label">Адрес:</label>
+                        <input name="address" id="address" class="form-control" value="{{this.address}}" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <label for="areaName" class="control-label">Район за разнасяне:</label>
+                        <input name="areaName" id="areaName" class="form-control" value="{{this.areaName}}" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="lawUnitName" class="control-label">Призовкар:</label>
+                        <input name="lawUnitName" id="lawUnitName" class="form-control" value="{{this.lawUnitName}}" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+    <script>
+        $('#submit_button').click(function () {
+            var regNum = $("#regNumber").val();
+            $('#submit_button').prop('disabled', true);
+            submitCheckedDeliveryItem(regNum);
+        });
+        $("#regNumber").keyup(
+            function (event) {
+                if (event.which == 13) {
+                    $('#submit_button').trigger('click');
+                }
+            }
+        );
+        $('#showCheckedForDay').change(function () {
+            if ($('#showCheckedForDay').is(":checked")) {
+                getReceivedForTodayDeliveryItem();
+            }
+            else
+            {
+                $("#content").html("");
+            }
+        });
+        function submitCheckedDeliveryItem(regNum) {
+            $.ajax({
+                method: "POST",
+                url: '@Url.Action("CheckReceivedEdit")',
+                dataType: "json",
+                cache: false,
+                data: { 'regNumber': regNum },
+                success: function (response) {
+                    if (response.messageErr && response.messageErr !== "") {
+                        swal({
+                            title: 'Проблем',
+                            text: response.messageErr,
+                            icon: "warning",
+                            buttons: ["", "Затвори"]
+                        })
+                    } else {
+                        console.log(response);
+                        var newHtml = TemplateToHtml("#templateCheckReceived", response.delivery);
+                        var oldHtml = $("#content").html();
+                        $("#content").html(newHtml + oldHtml);
+                    }
+                    $("#regNumber").val("");
+                    $("#regNumber").focus();
+                    $('#submit_button').prop('disabled', false);
+                },
+                complete: function () { },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log({ jqXHR: jqXHR });
+                    console.log({ textStatus: textStatus });
+                    console.log({ errorThrown: errorThrown });
+                }
+            });
+        }
+
+        function getReceivedForTodayDeliveryItem() {
+            $.ajax({
+                method: "POST",
+                url: '@Url.Action("GetCheckedForToday")',
+                dataType: "json",
+                cache: false,
+                data: {},
+                success: function (response) {
+                    var newHtml = "";
+                    response.deliveries.forEach(function (element) {
+                        newHtml += TemplateToHtml("#templateCheckReceived", element);
+                    });
+                    $("#content").html(newHtml );
+                    $("#regNumber").val("");
+                    $("#regNumber").focus();
+                    $('#submit_button').prop('disabled', false);
+                },
+                complete: function () { },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log({ jqXHR: jqXHR });
+                    console.log({ textStatus: textStatus });
+                    console.log({ errorThrown: errorThrown });
+                }
+            });
+        }
+    </script>
+
+}
+

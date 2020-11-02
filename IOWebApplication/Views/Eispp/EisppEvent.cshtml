@@ -1,0 +1,241 @@
+﻿@model EisppEventVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+@using IOWebApplication.Infrastructure.Constants
+@{
+    ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
+    var isGetCaseSaved = (bool?)ViewBag.IsGetCaseSaved;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        @using (Html.BeginForm())
+        {
+            @Html.ValidationSummary()
+            @Html.HiddenFor(x => x.SourceType)
+            @Html.HiddenFor(x => x.SourceId)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CaseCodeId)
+            @Html.HiddenFor(x => x.CaseTypeId)
+            <div class="row">
+                <div class="col-lg-2 col-md-6">
+                    <div id="divEISPP">
+                        @Html.EditorFor(x => x.EISPPNumber, "EisppNumber")
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-1">
+                    @Html.EditorFor(x => x.Year, "hd")
+                </div>
+                <div class="col-lg-1">
+                    @Html.EditorFor(x => x.ShortNumber, "hd")
+                </div>
+                <div class="col-lg-8">
+                    @Html.EditorFor(x => x.CaseType, "hd")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.EventType, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")
+                </div>
+            </div>
+
+            <div class="row case-person">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.CasePersonId, "GenericDropDown")
+                </div>
+            </div>
+
+            <div class="case-person-measure">
+                <div class="row">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.PersonOldMeasureId, "GenericDropDown")
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.PersonMeasureId, "GenericDropDown")
+                    </div>
+                </div>
+            </div>
+
+            <div class="row send-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.ConnectedCaseId, "GenericDropDownString")
+                </div>
+            </div>
+            <div class="row send-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.ExactCaseType, "GenericDropDown")
+                </div>
+            </div>
+            <div class="form-group">
+                @if (isGetCaseSaved != true)
+                {
+                    <input type="submit" value="Генерирай" class="btn btn-success" />
+                }
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    var onePersonEvent = JSON.parse('@Html.Raw(@ViewBag.OnePersonEvent_json)');
+
+    function ChangeEventType() {
+        var eventTypeId = $('#EventType').val();
+        var sessionActId = $('#CaseSessionActId').val();
+        var caseId = $('#CaseId').val();
+
+        var eventTypeOne = onePersonEvent.find(el => el.Value == eventTypeId);
+        if (!eventTypeOne) {
+            $('.case-person').hide();
+            $('#CasePersonId').attr("disabled", true);
+        } else {
+            $('.case-person').show();
+            $('#CasePersonId').attr("disabled", false);
+        }
+
+        if (eventTypeId == @EISPPConstants.EventType.GetCase) {
+            $('.send-case').show();
+            $('#ConnectedCaseId').attr("disabled", false);
+            $('#ExactCaseType').attr("disabled", false);
+        } else {
+            $('.send-case').hide();
+            $('#ConnectedCaseId').attr("disabled", true);
+            $('#ExactCaseType').attr("disabled", true);
+        }
+
+        if (eventTypeId == @EISPPConstants.EventType.CoercionMeasureChange) {
+            $('.case-person-measure').show();
+            $('#PersonOldMeasureId').attr("disabled", false);
+            $('#PersonMeasureId').attr("disabled", false);
+        } else {
+            $('.case-person-measure').hide();
+            $('#PersonOldMeasureId').attr("disabled", true);
+            $('#PersonMeasureId').attr("disabled", true);
+        }
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetCaseSessionActForEvent", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: { caseId: caseId, eventTypeId: eventTypeId},
+            success: function (response) {
+                fillCombo(response.sessionActDDL, $('#CaseSessionActId'));
+                setComboSelectedOrFirst($('#CaseSessionActId'), sessionActId);
+                setRulesRange($('#CaseSessionActId'), response.sessionActRequired);
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
+    function setCaseCauseRange(el) {
+        if (el.length === 0)
+            return;
+
+        $.validator.addMethod('caseCauseValidate', function (value, element, arg) {
+            return this.optional(element) || (value > "C");
+        },
+            'Изберете Свързано дело'
+        );
+
+        el.rules('add', {
+            required: true,
+            caseCauseValidate: 5,
+            messages: { required: 'Изберете Свързано дело' }
+        });
+        $("label[for='" + el.attr("id") + "']").addClass("io-req");
+    }
+    function setRulesRange(el, isAdd) {
+        if (el.length === 0)
+            return;
+        if (isAdd) {
+            var controlName = $("label[for='" + el.attr("id") + "']").text();
+            el.rules('add', {
+                required: true,
+                range: [1, 9999999999999],
+                messages: {
+                    required: 'Изберете ' + controlName + '!',
+                    range: 'Изберете ' + controlName + '!'
+                }
+            })
+            $("label[for='" + el.attr("id") + "']").addClass("io-req");
+        } else {
+            el.rules('remove', 'required');
+            el.rules('remove', 'range');
+            $("label[for='" + $(el).attr("id") + "']").removeClass("io-req");
+        }
+    }
+    function GetPersonMeasure() {
+        let casePersonId = $('#CasePersonId').val();
+        let personOldMeasureId = $('#PersonOldMeasureId').val();
+        let personMeasureId = $('#PersonMeasureId').val();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetPersonMeasure", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: { casePersonId: casePersonId},
+            success: function (response) {
+                fillCombo(response.personOldMeasureDDL, $('#PersonOldMeasureId'));
+                setComboSelectedOrFirst($('#PersonOldMeasureId'), personOldMeasureId);
+                fillCombo(response.personMeasureDDL, $('#PersonMeasureId'));
+                setComboSelectedOrFirst($('#PersonMeasureId'), personMeasureId);
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
+    function GetSentencePersonId() {
+        let caseSessionActId = $('#CaseSessionActId').val();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetSentencePersonId", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: { caseSessionActId: caseSessionActId},
+            success: function (response) {
+                if (response.casePersonId > 0) {
+                    setComboSelectedOrFirst($('#CasePersonId'), response.casePersonId);
+                    $('#CasePersonId').change();
+                }
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+    $(document).ready(function () {
+        $('#EventType').change(function () {
+            ChangeEventType();
+        });
+        $('#EventType').change();
+
+        setCaseCauseRange($('#ConnectedCaseId'));
+
+        $('#CaseSessionActId').change(function () {
+            GetSentencePersonId();
+        });
+        $('#CaseSessionActId').change();
+
+        $('#CasePersonId').change(function () {
+            GetPersonMeasure();
+        });
+        $('#CasePersonId').change();
+        $('#EISPPNumber').prop('readOnly', true);
+    });
+</script>

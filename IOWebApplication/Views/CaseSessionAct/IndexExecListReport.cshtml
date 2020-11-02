@@ -1,0 +1,133 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseSessionActELSprFilterVM
+
+@{
+    ViewData["Title"] = "Списък на изпълнителните листове по ЗП";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-4">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-4">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-4">@Html.EditorFor(m => m.RegNumber)</div>
+</div>
+<div class="row">
+    <div class="col-lg-4">@Html.EditorFor(m => m.LeftSide)</div>
+    <div class="col-lg-4">@Html.EditorFor(m => m.RightSide)</div>
+    <div class="col-lg-4">@Html.EditorFor(m => m.ActKindId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function ReloadDatatable()
+        {
+            refreshTable('#mainTable');
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataExecListSpr")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            RegNumber: $("#RegNumber").val(),
+                            LeftSide: $("#LeftSide").val(),
+                            RightSide: $("#RightSide").val(),
+                            ActKindId: $("#ActKindId").val()
+                        };
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'actKindName',
+                        data: 'actKindName',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'leftSide',
+                        data: 'leftSide',
+                        title: 'Кредитор',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'rightSide',
+                        data: 'rightSide',
+                        title: 'Длъжник',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <div class="row">
+            <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        </div>
+    </script>
+}

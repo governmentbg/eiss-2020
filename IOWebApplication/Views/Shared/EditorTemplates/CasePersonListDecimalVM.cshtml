@@ -1,0 +1,35 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CasePersonListDecimalVM
+
+@{
+    var visibleValueTwo = true;
+    if (ViewData["visibleValueTwo"] != null)
+    {
+        visibleValueTwo = (bool)ViewData["visibleValueTwo"];
+    }
+}
+
+<div class="row">
+    <div class="form-group">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="Label" type="hidden" />
+        <input asp-for="LabelOne" type="hidden" />
+        <input asp-for="LabelTwo" type="hidden" />
+        <div class="col-sm-6 text-right">
+            <label style="margin-top:32px">@Model.Label</label>
+        </div>
+        <div class="col-sm-3">
+            <label>@Model.LabelOne</label>
+            <input asp-for="ValueOne" class="form-control form-control-decimal">
+        </div>
+        @if (visibleValueTwo)
+        {
+            <div class="col-sm-3">
+                <label>@Model.LabelTwo</label>
+                <input asp-for="ValueTwo" class="form-control form-control-decimal">
+            </div>
+        }
+    </div>
+</div>
+
+

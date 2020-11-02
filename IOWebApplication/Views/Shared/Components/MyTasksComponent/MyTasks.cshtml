@@ -1,0 +1,68 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@model IEnumerable<WorkTaskVM>
+@{
+    int taskCount = (int)ViewBag.taskCount;
+    string userId = (string)ViewBag.userId;
+}
+@if (taskCount > 0)
+{
+    int maxTasks = 5;
+
+    <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">Моите задачи</h3>
+        </div>
+        <div class="box-body">
+            <div id="wtContainer">
+                @foreach (var task in Model)
+                {
+                    <div class="worktask-item">
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <b>@task.TaskTypeName</b>
+                                @if (!string.IsNullOrEmpty(task.DescriptionCreated))
+                                {
+                                    <br />
+                                    <span class="remark">
+                                        @task.DescriptionCreated
+                                    </span>
+                                }
+                                <br />
+                                <span class="remark">Възложена: @task.DateCreated.ToString("dd.MM.yyyy")</span>
+                            </div>
+                            <div class="col-lg-4">
+                                @task.UserCreatedFullName
+                                @if (task.DateEnd.HasValue)
+                                {
+                                    <br />
+                                    <span class="date-end @if (task.OverDue) { <text>text-danger</text>} ">
+                                        <b>Срок: @task.DateEnd.Value.ToString("dd.MM.yyyy")</b>
+                                    </span>
+                                }
+                            </div>
+                            <div class="col-lg-1">
+                                <span class="state@(task.TaskStateId)">@task.TaskStateName</span>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="pull-right" style="margin-right:5px;">
+                                    <a href="@task.ViewUrl" class="btn btn-sm btn-primary" title="@task.SourceInfo"><i class="glyphicon glyphicon-search"></i></a>
+                                </div>
+                                @task.SourceDescription
+
+                                @*<a href="@task.ViewUrl" class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-search"></i> @task.SourceInfo</a>*@
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (taskCount > maxTasks)
+                {
+                    int restTasks = taskCount - maxTasks;
+                    <div class="pull-left">
+                        Показани <b>@maxTasks</b> от <b>@taskCount</b> неприключени задачи.
+                        <a asp-action="Index" asp-controller="WorkTask" asp-route-userMode="1">Преглед на моите задачи</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,49 @@
+﻿@model DateTime?
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Models
+@using IOWebApplication.Infrastructure.Extensions
+@inject IEisppRulesService rulesService
+@{
+    var groupClass = "";
+    var add_class = ((string)ViewData["class"] ?? "");
+    if (ViewData["groupClass"] != null)
+    {
+        groupClass = (string)ViewData["groupClass"];
+    }
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+    var eisppRuleName = ViewData.ModelMetadata.GetEisppRuleFullName(ViewData.TemplateInfo.HtmlFieldPrefix, true);
+    (var ruleIds, var flags) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppRuleName);
+    if (flags == 0 && ViewData["flags"] != null)
+    {
+        flags = (int)ViewData["flags"];
+    }
+    if (flags == 3 || flags == 7 || flags == 30)
+    {
+        reqClass = "io-req";
+        if (string.IsNullOrEmpty(add_class))
+        {
+            add_class = "eispp-date-req";
+        }
+    }
+    eisppRuleName += flags.ToString();
+    var isReadOnly= flags==30 || (flags==3 && Model != null);
+}
+@if (flags > 0)
+{
+    <div class="form-group @groupClass">
+        @*<label class="control-label">@eisppRuleName</label>*@
+        <label asp-for="@Model" class="control-label @reqClass"></label>
+        <div class="input-group date">
+            <div class="input-group-addon">
+                <i class="fa fa-calendar"></i>
+            </div>
+            <input asp-for="@Model" class="form-control date-picker @add_class" type="text" autocomplete="off" readonly="@isReadOnly"
+                   value="@(Model.HasValue && Model.Value > DateTime.MinValue ? Model.Value.ToString("dd.MM.yyyy") : String.Empty)" />
+        </div>
+        <span asp-validation-for="@Model" class="text-danger"></span>
+    </div>
+}
+else
+{
+    @*<label class="control-label">@eisppRuleName</label>*@
+}

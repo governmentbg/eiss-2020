@@ -1,0 +1,81 @@
+﻿@model DocumentResolution
+@using IOWebApplication.Infrastructure.Data.Models.Documents
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на разпореждане към документ";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на разпореждане към документ";
+    }
+
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="actTab">
+        <li class="active"><a href="#tabMainActData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+        @if (Model.Id > 0)
+        {
+            <li class=""><a href="#tabWorkTask" data-toggle="tab"><i class="fa fa-exclamation"></i> Задачи</a></li>
+            <li class=""><a href="#tabDocTemplates" data-toggle="tab"><i class="fa fa-book"></i> Свързани документи</a></li>
+        }
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="tabMainActData">
+            <div class="row">
+                <div class="col-md-6">
+                    <partial name="_MainData" model="@Model" />
+                </div>
+                @if (Model.Id > 0)
+                {
+                    <div class="col-md-6">
+                        <div class="cdn-files" data-label="Разпореждане" data-sourcetype="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceid="@Model.Id" data-editmode="none"></div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="tab-pane" id="tabWorkTask">
+            <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.DocumentResolution,Model.Id) { TaskRequired=true})" />
+        </div>
+        <div class="tab-pane" id="tabDocTemplates">
+            <partial name="~/Views/DocumentTemplate/_DocumentTemplate.cshtml" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.DocumentResolution, SourceId = Model.Id })" />
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <partial name="_CdnScript" />
+
+    <script>
+        $(document).ready(function () {
+            initUserAutoComplete();
+            initLawUnit();
+        });
+
+        function editActBlank() {
+             let editUrl = "@Url.Action("Blank",new { id=Model.Id})";
+            @if (Model.RegDate != null)
+            {
+                <text>
+                    swalConfirm('Има генериран файл на съдебен акт, който е в процес на подписване или е подписан! След промяна на съдържанието на съдебния акт е необходимо да създадете нова задача за подписване, за да се генерира нов файл на съдебния акт със същия номер.', function () {
+                            document.location.href = editUrl;
+                        });
+                </text>
+            }else {
+                <text>document.location.href = editUrl;</text>
+            }
+
+        }
+    </script>
+}

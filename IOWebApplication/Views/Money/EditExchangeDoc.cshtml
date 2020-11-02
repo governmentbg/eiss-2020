@@ -1,0 +1,71 @@
+﻿@model ExchangeDocEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("ExchangeDocList","Money")">Списък протоколи</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="" method="post" id="cmModalFormExecList">
+            @Html.HiddenFor(x => x.Id)
+            @if (Model.RegDate != null)
+            {
+                @Html.HiddenFor(x => x.RegNumber)
+                @Html.HiddenFor(x => x.RegDate)
+            }
+
+            @Html.ValidationSummary()
+
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @if (Model.RegDate != null)
+                {
+                    <h2>@Model.RegNumber/@Model.RegDate?.ToString("dd.MM.yyyy")</h2>
+                }
+                <h2>@Model.InstitutionName</h2>
+
+                @if (@Model.Id > 0)
+                {
+                    <div class="cdn-files" data-label="Документи към протокол" data-sourcetype="@SourceTypeSelectVM.ExchangeDoc" data-sourceid="@Model.Id" data-editmode="none"></div>
+                }
+            </div>
+
+            <div class="form-group">
+                <a asp-action="ExecListIndex" class="btn btn-danger">Назад</a>
+
+                @if (Model.Id > 0)
+                {
+                    <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.ExchangeDoc" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
+
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<partial name="_CdnScript" />
+
+<div id="modalMessageContainer">
+</div>
+
+<script>
+</script>
+

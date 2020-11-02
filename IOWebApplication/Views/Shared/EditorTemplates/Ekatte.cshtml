@@ -1,0 +1,87 @@
+﻿@model string
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_ekatte";
+    var label = (string)ViewData["label"];
+}
+
+<div class="ekatte-container">
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label io-req"></label>
+        <input id="@fieldName" class="form-control ekatte-control" />
+    }
+    else
+    {
+        <input id="@fieldName" class="form-control ekatte-control" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="ekatte-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>
+
+@*<script>
+        if (!!'@Model') {
+            loadEkatte('@Model');
+        }
+
+        $.widget('custom.autocomplete_custom', $.ui.autocomplete, {
+            _renderMenu: function _renderMenu(ul, items) {
+                var that = this;
+                var category = '';
+                $.each(items, function (index, item) {
+                    if (item.category !== category) {
+                        ul.append('<li class="ui-autocomplete-category ui-state-disabled" aria-label="' + item.category + '">' + item.category + '</li>');
+                        category = item.category;
+                    }
+                    that._renderItemData(ul, item);
+                });
+            }
+        });
+
+        window.location_storage = {};
+
+        $('#@fieldName').autocomplete_custom({
+            minLength: 2,
+            delay: 0,
+            classes: {
+                'ui-autocomplete': 'autocomplete_custom'
+            },
+            source: function source(request, response) {
+                var _window = window,
+                    location_storage = _window.location_storage;
+
+                if (!!location_storage[request.term]) return response(location_storage[request.term]);
+                $.get('@Url.Action("SearchEkatte", "Ajax", new { area = "", query = "666" })'.replace('666', encodeURIComponent(request.term))).done(function (success) {
+                    location_storage[request.term] = success.data;
+                    return response(success.data);
+                }).fail(function (errors) {
+                    console.log(errors);
+                });
+            },
+            select: function select(event, ui) {
+                ui.item.value = ui.item.label + ', ' + ui.item.category;
+                var input_hidden = event.target.parentElement.querySelector('input[type="hidden"]');
+                input_hidden.value = ui.item.id;
+            }
+        }).change(function () {
+            var input = this;
+            if (!input.value || input.value < 2) {
+                var input_hidden = input.parentElement.querySelector('input[type="hidden"]');
+                input_hidden.value = '';
+            }
+        }).blur(function () {
+            var input = this;
+            if (!input.value || input.value < 2) {
+                var input_hidden = input.parentElement.querySelector('input[type="hidden"]');
+                input_hidden.value = '';
+            }
+        });
+
+        function loadEkatte(ekatte) {
+            $.get('@Url.Action("GetEkatte", "Ajax", new { area = "", id = "666" })'.replace('666', ekatte))
+                .done(function (data) {
+                    $('#@fieldName').val(data.label + ', ' + data.category);
+                }).fail(function (errors) {
+                    console.log(errors);
+                });
+        }
+    </script>*@

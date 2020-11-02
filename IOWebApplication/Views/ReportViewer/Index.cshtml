@@ -1,0 +1,20 @@
+﻿@model IEnumerable<Report>
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@{
+    ViewData["Title"] = "Оперативни нерегламентирани справки";
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<ul>
+    @foreach (var report in Model)
+    {
+        <li class=""><a href="@Url.Action("View",new {reportId=report.Id } )" target="_blank"> @report.ReportName</a></li>
+    }
+
+
+</ul>

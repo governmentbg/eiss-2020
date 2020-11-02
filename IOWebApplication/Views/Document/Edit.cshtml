@@ -1,0 +1,635 @@
+﻿@model DocumentVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    Model.CanChange = access.CanChange;
+    var docLabel = (string)ViewBag.docDirectionLabel;
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = $"Редакция на {docLabel} № {Model.RegNumber}";
+        if (!Model.CanChange)
+        {
+            ViewData["Title"] = $"Преглед на {docLabel} № {Model.RegNumber}";
+        }
+    }
+    else
+    {
+        ViewData["Title"] = $"Регистриране на {docLabel}";
+    }
+
+    ViewBag.MenuItemValue = "Doc1";
+    string DeliveryGroupLabel = string.Empty;
+    switch (Model.DocumentDirectionId)
+    {
+        case DocumentConstants.DocumentDirection.Incoming:
+            DeliveryGroupLabel = "Начин на получаване";
+            break;
+        case DocumentConstants.DocumentDirection.OutGoing:
+            DeliveryGroupLabel = "Начин на изпращане";
+            break;
+    }
+
+    var courtOrganizations = (List<SelectListItem>)ViewBag.CourtOrganizationId_ddl ?? new List<SelectListItem>();
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Document")">Съдебна регистратура</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.TemplateId)
+            @Html.HiddenFor(x => x.DocumentNumber)
+            @Html.HiddenFor(x => x.DocumentDate)
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DocumentDirectionId)
+            @Html.HiddenFor(x => x.PriorDocumentId)
+            @Html.HiddenFor(x => x.MultiRegistationId)
+            @Html.HiddenFor(x => x.HasDocumentResolutions)
+            @Html.ValidationSummary()
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="nav-tabs-custom" id="mainTabs">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tabMainData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+                        <li class=""><a href="#tabPerson" data-toggle="tab"><i class="fa fa-user"></i> Свързани лица</a></li>
+                        <li class=""><a href="#tabDocuments" data-toggle="tab"><i class="fa fa-file-text"></i> Свързани документи</a></li>
+                        <li class="" id="litabInstitutionCaseInfo"><a href="#tabInstitutionCaseInfo" data-toggle="tab"><i class="fa fa-balance-scale"></i> Свързани дела на външни институции</a></li>
+                        @if (Model.Id > 0)
+                        {
+                            <li class=""><a href="#tabWorkTask" data-toggle="tab"><i class="fa fa-exclamation"></i> Задачи</a></li>
+                        }
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tabMainData">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">Данни за документ</legend>
+                                @if (Model.Id > 0 && Model.IsOldNumber && Model.ActualDocumentDate.HasValue)
+                                {
+                                    <div class="pull-right text-danger">
+                                        Дата и час на регистрация: @Model.ActualDocumentDate.Value.ToString("dd.MM.yyyy HH:mm:ss")
+                                    </div>
+                                }
+                                @if (courtOrganizations.Any())
+                                {
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            @Html.EditorFor(x => x.CourtOrganizationId, "GenericDropDown")
+                                        </div>
+                                    </div>
+                                }
+                                <div class="form-group">
+                                    <div>
+                                        @if (Model.Id > 0)
+                                        {
+                                            @Html.HiddenFor(x => x.DocumentKindId)
+                                        }
+                                        @foreach (var dKind in (List<SelectListItem>)ViewBag.DocumentKinds)
+                                        {
+                                            <label>
+                                                @if (Model.Id > 0)
+                                                {
+                                                    @Html.RadioButtonFor(x => x.DocumentKindId, dKind.Value, new { disabled = "disabled" })
+                                                }
+                                                else
+                                                {
+                                                    @Html.RadioButtonFor(x => x.DocumentKindId, dKind.Value)
+                                                }
+                                                @dKind.Text
+                                            </label>
+                                            <span>&nbsp;&nbsp;&nbsp;</span>
+                                        }
+                                    </div>
+                                    <span asp-validation-for="@Model.DocumentKindId" class="text-danger"></span>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-7">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-md-12">@Html.EditorFor(x => x.DocumentGroupId, "GenericDropDown")</div>
+                                            <div class="col-lg-6 col-md-12"> @Html.EditorFor(x => x.DocumentTypeId, "GenericDropDown")</div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(DeliveryGroupLabel))
+                                        {
+                                            <div class="row">
+                                                <div class="col-lg-6 col-md-12">@Html.EditorFor(x => x.DeliveryGroupId, "GenericDropDown", new { label = DeliveryGroupLabel })</div>
+                                                <div class="col-lg-6 col-md-12">@Html.EditorFor(x => x.DeliveryTypeId, "GenericDropDown")</div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="col-md-5">
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                @Html.EditorFor(x => x.Description, "Textarea")
+                                                <div>
+                                                    @Html.CheckBoxFor(x => x.IsSecret)
+                                                    @Html.LabelFor(x => x.IsSecret)
+                                                    &nbsp;&nbsp;
+                                                    @Html.CheckBoxFor(x => x.IsRestictedAccess)
+                                                    @Html.LabelFor(x => x.IsRestictedAccess)
+                                                    @if (Model.Id == 0)
+                                                    {
+                                                        <div class="pull-right">
+                                                            <div>
+                                                                @Html.CheckBoxFor(x => x.IsMultiNumber)
+                                                                @Html.LabelFor(x => x.IsMultiNumber, new { @class = "text-muted" })
+                                                            </div>
+                                                            <div id="divCheckIsOldNumber">
+                                                                @Html.CheckBoxFor(x => x.IsOldNumber)
+                                                                @Html.LabelFor(x => x.IsOldNumber, new { @class = "text-muted" })
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                @if (Model.Id == 0)
+                                                {
+                                                    <div class="row" id="divOldNumber" style="display: none;">
+                                                        <div class="col-md-6">
+                                                            @Html.EditorFor(x => x.OldDocumentNumber, "String", new { groupClass = "has-error" })
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            @Html.EditorFor(x => x.OldDocumentDate, "DateTime", new { groupClass = "has-error" })
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" id="divMultiNumber" style="display: none;">
+                                                        <div class="col-md-offset-8 col-md-4">
+                                                            @Html.EditorFor(x => x.MultiDocumentCounter, "Int32", new { groupClass = "has-error" })
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (Model.Id > 0)
+                                {
+                                    @if (!string.IsNullOrEmpty(Model.MultiRegistationId))
+                                    {
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                @Html.DisplayFor(x => x.MultiRegistationInfo, "obj")
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </fieldset>
+                            <div id="newCase" class="case-info">
+                                <fieldset class="is-fieldset">
+                                    @if (!string.IsNullOrEmpty(Model.CaseRegisterNumber))
+                                    {
+                                        <legend class="legend_1">Данни за образувано дело: <a href="@Url.Action("CasePreview","Case",new { id=Model.CaseId})" target="_blank" title="Преглед на делото">@Model.CaseRegisterNumber</a></legend>
+
+                                    }
+                                    else
+                                    {
+                                        <legend class="legend_1">Данни за образуване на дело</legend>
+
+                                    }
+                                    <div class="row">
+                                        <div class="col-lg-4 col-md-6">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+                                        <div class="col-lg-4 col-md-6">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+                                        <div class="col-lg-2 col-md-6">@Html.EditorFor(x => x.ProcessPriorityId, "GenericDropDown")</div>
+                                        <div class="col-lg-2 col-md-6">
+                                            <div id="divEISPP">
+                                                @Html.EditorFor(x => x.EISSPNumber, "EisppNumber")
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="form-group">
+                                                <label class="control-label">Индикатори по делото</label>
+                                                <br />
+                                                @for (int i = 0; i < Model.CaseClassifications.Count; i++)
+                                                {
+                                                    <label class="doc-case-class-item"><input type="checkbox" asp-for="@Model.CaseClassifications[i].Checked" /> @Model.CaseClassifications[i].Label</label>
+                                                    <input type="hidden" asp-for="@Model.CaseClassifications[i].Label" />
+                                                    <input type="hidden" asp-for="@Model.CaseClassifications[i].Value" />
+                                                    <text>&nbsp;</text>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            @Html.CheckBoxFor(x => x.HasCaseInfo)
+                                            @Html.LabelFor(x => x.HasCaseInfo)
+                                            <span asp-validation-for="@Model.HasCaseInfo" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                            <div id="selectCase" class="case-info">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1">Свързано дело</legend>
+                                    @{ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.DocumentCaseInfo); }
+
+                                    <partial name="_DocumentCaseInfoVM" model="@Model.DocumentCaseInfo" />
+                                    @{ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty; }
+                                </fieldset>
+                            </div>
+
+                            @if (Model.Id > 0)
+
+                            {
+                                var cndEditMode = "append";
+                                if (access.CanChangeFull)
+                                {
+                                    cndEditMode = "all";
+                                }
+                                <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.Document" data-sourceid="@Model.Id" data-editmode="@cndEditMode"></div>
+                            }
+                        </div>
+                        <div class="tab-pane" id="tabPerson">
+                            <partial name="_DocumentPerson" model="@Model" />
+                        </div>
+                        <div class="tab-pane" id="tabDocuments">
+                            <partial name="_DocumentLink" model="@Model" />
+                        </div>
+                        <div class="tab-pane" id="tabInstitutionCaseInfo">
+                            <partial name="_DocumentInstitutionCaseInfo" model="@Model" />
+                        </div>
+
+                        <div class="tab-pane" id="tabWorkTask">
+                            <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.Document, Model.Id) { TaskRequired=true})" />
+                        </div>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="button" onclick="checkDocumentSubmit(this);" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                @if (ViewBag.canCorrect == true)
+                {
+                    <a asp-action="Correction" asp-route-id="@Model.Id" class="btn btn-warning">Корекция</a>
+                }
+                <a asp-action="Index" class="btn btn-danger">Назад</a>
+
+                @if (Model.Id > 0)
+                {
+
+                    if (Model.DocumentDirectionId != DocumentConstants.DocumentDirection.OutGoing)
+                    {
+                        <a href="@Url.Action("Obligation", "Money")?documentId=@Model.Id" class="btn btn-def" title="Суми към документа"><i class="fa fa-paypal"></i><span class="hidden-sm hidden-xs"> Суми към документа</span></a>
+                    }
+                    @if (Model.HasDocumentResolutions)
+                    {
+                        <a asp-action="ResolutionsByDocument" asp-controller="DocumentResolution" asp-route-documentId="@Model.Id" class="btn btn-warning">Разпореждания</a>
+                    }
+                    <div class="pull-right">
+                        @if (access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { LongId = Model.Id, DialogTitle = "Премахване на документ", ExpireSubmitUrl = Url.Action("Document_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "edit" })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function changeRegistryDocKind() {
+                        var docKindId = $('input[name="DocumentKindId"]:checked').val();
+                        var courtOrgId = $('#CourtOrganizationId').val();
+            $('#CaseTypeId').html('');
+
+                        requestCombo('@Url.Action("GetDDL_DocumentGroupByCourt", "Ajax")',
+                {
+                        documentKindId: docKindId,
+                    courtOrganizationId: courtOrgId
+                }, '#DocumentGroupId', '@(Model.DocumentGroupId)', function () {
+                $('#DocumentGroupId').trigger('change');
+                        });
+                        let noInstCase = ['3', '4', '5'];
+                        if (noInstCase.includes(docKindId)) {
+                $('#litabInstitutionCaseInfo').hide();
+                        } else {
+                $('#litabInstitutionCaseInfo').show()
+                        }
+                        if (docKindId == '@DocumentConstants.DocumentKind.InitialDocument') {
+                            if ('@Model.HasCaseInfo.ToString().ToLower()' == 'false') {
+                    $('#HasCaseInfo').removeAttr('checked').trigger('change');
+                            }
+                        }
+                    }
+        $(function () {
+            $('#CourtOrganizationId').change(function () {
+                            changeRegistryDocKind();
+                        });
+
+            $('input[name="DocumentKindId"]').click(function () {
+                            //$('#CaseTypeId').html('');
+                            if ($(this).is(':checked')) {
+                                changeRegistryDocKind();
+
+                    @*requestCombo('@Url.Action("GetDDL_DocumentGroupByCourt", "Ajax")',
+                        {
+                            documentKindId: $(this).val(),
+                            courtOrganizationId: $('#CourtOrganizationId').val()
+                        }, '#DocumentGroupId', '@(Model.DocumentGroupId)', function () {
+                        $('#DocumentGroupId').trigger('change');
+                    });
+                    let noInstCase = ['3', '4', '5'];
+                    if (noInstCase.includes($(this).val())) {
+                        $('#litabInstitutionCaseInfo').hide();
+                    } else {
+                        $('#litabInstitutionCaseInfo').show()
+                    }
+                    if ($(this).val() == '@DocumentConstants.DocumentKind.InitialDocument') {
+                        if ('@Model.HasCaseInfo.ToString().ToLower()' == 'false') {
+                            $('#HasCaseInfo').removeAttr('checked').trigger('change');
+                        }
+                    }*@
+                }
+            });
+            if ($('input[name="DocumentKindId"]:checked').length == 0) {
+                $('input[name="DocumentKindId"]:first').attr('checked', 'checked');
+            }
+            $('input[name="DocumentKindId"]:checked').trigger('click');
+
+            $('#DeliveryGroupId').change(function () {
+                requestCombo('@Url.Action("GetDDL_DeliveryType", "Ajax")', { deliveryGroupId: $(this).val() }, '#DeliveryTypeId', @(Model.DeliveryTypeId ?? 0), function () {
+                    $('#DeliveryTypeId').trigger('change');
+                    if ($('#DeliveryTypeId').find('option').length == 1) {
+                        $('#DeliveryTypeId').parent().hide();
+                    } else {
+                        $('#DeliveryTypeId').parent().show();
+                    }
+                });
+            }).trigger('change');
+            $('#DocumentGroupId').change(function () {
+                requestCombo('@Url.Action("GetDDL_DocumentTypeByCourt", "Ajax")', {
+                    documentGroupId: $(this).val(),
+                    courtOrganizationId: $('#CourtOrganizationId').val()
+                }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function () { $('#DocumentTypeId').trigger('change') });
+            });
+            $('#DocumentTypeId').change(function () {
+                requestCombo('@Url.Action("GetDDL_CaseTypeByDocType", "Ajax")',
+                    {
+                        documentTypeId: $(this).val(),
+                        courtOrganizationId: $('#CourtOrganizationId').val()
+                    }
+                    , '#CaseTypeId', '@(Model.CaseTypeId)', function () { $('#CaseTypeId').trigger('change') });
+            });
+            $('#divEISPP').hide();
+            $('#btnSelectFromEispp').hide();
+            $('#CaseTypeId').change(function () {
+                if ($(this).val() == null) {
+                    return;
+                }
+                var caseCode = '@Model.CaseCodeId';
+                if ($(this).val() != '@Model.CaseTypeId') {
+                    caseCode = '0';
+                }
+                loadCaseCode('#CaseCodeId_casecode', caseCode);
+                initCaseCodeValue = '0';
+
+                //divEISPP
+                requestGET_Json("@Url.Action("Get_CaseType", "Ajax")", { caseTypeId: $(this).val() }, function (cType) {
+                    if (cType != undefined && cType != null) {
+                        legacyCaseNumberInit(cType.caseInstanceId);
+                        if (cType && cType.caseGroupId == '@NomenclatureConstants.CaseGroups.NakazatelnoDelo') {
+                            $('#divEISPP').show();
+                            $('#btnSelectFromEispp').show();
+                        } else {
+                            $('#divEISPP').hide();
+                            $('#btnSelectFromEispp').hide();
+                        }
+                    }
+                });
+            });
+            $('.case-info').hide();
+            $(document).on('click', 'legend.address-legend span', function () {
+                $(this).parent().parent().find('.address-body').toggle();
+            });
+            initDynamicForms(function () {
+                //Callback after add new dynamic item
+                initEkatte();
+                initDocument();
+            });
+            initEkatte();
+            initCaseCode();
+            initCourts();
+            initCase();
+            initDocument();
+            $('.search-institution').click(function () {
+                requestContent('@Url.Action("SearchEntity", "Ajax")', { callback: 'selectEntityDocumentPerson' }, function (modalData) {
+                    ShowModalDialog('Избор на институция', modalData);
+                });
+            });
+            initCaseInfo();
+            @if (Model.Id > 0 && !Model.CanChange){<text>$('.dynamic-form .remove-item,.dynamic-form .add-item').remove();</text>}
+
+            $('a.tab-validation-error:first').tab("show").trigger('click');
+            $('input#IsOldNumber').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#divOldNumber').show();
+                } else {
+                    $('#divOldNumber').hide();
+                }
+            }).trigger('change');
+
+            $(document).on('change', '.document-link-item .legacy-document-check input[type="checkbox"]', function (e) {
+
+                var docLinkContainer = $(this).parents('.document-link-item:first');
+                console.log(this);
+                if ($(this).is(':checked')) {
+                    $(docLinkContainer).find('.legacy-document-edit').show();
+                    $(docLinkContainer).find('.document-link-edit').hide();
+                } else {
+                    $(docLinkContainer).find('.legacy-document-edit').hide();
+                    $(docLinkContainer).find('.document-link-edit').show();
+                }
+            });
+
+
+
+            $('input#IsMultiNumber').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#divMultiNumber').show();
+                    $('input#IsOldNumber').removeAttr('checked').trigger('change');
+                    $('div#divCheckIsOldNumber').hide();
+                    $('input#OldDocumentNumber').val('');
+                    $('input#OldDocumentDate').val('');
+                } else {
+                    $('#divMultiNumber').hide();
+                    $('div#divCheckIsOldNumber').show();
+                }
+            }).trigger('change');
+
+            var url = document.location.toString();
+            if (url.match('#')) {
+                $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+            }
+
+            // Change hash for page-reload
+            $('.nav-tabs a').on('shown.bs.tab', function (e) {
+                window.location.hash = e.target.hash;
+            })
+
+            $(document).on('change', '.address-body .address-type', function () {
+                let spanTitle = $(this).parents('.item-template:first').find('span.address-title:first');
+                if ($(this).val() != '-1') {
+                    $(spanTitle).text($(this).find('option:selected').text());
+                } else {
+                    $(spanTitle).text('Адрес');
+                }
+            });
+            $('.address-body .address-type').trigger('change');
+        });
+        function courtSelectDocLink(sender) {
+            var courtSelected = $(sender).find('.court-val').val();
+            //console.log(courtSelected);
+            $(sender).parents('.document-link-item').find('.document-container').data('courtId', courtSelected);
+
+        }
+        function autoCloseOthers(sender) {
+           $(sender).parents('.document-person-item:first').find('.address-body').hide();
+        }
+        function selectEntityDocumentPerson(sourceType,sourceId) {
+            let addItemButton = $('.document-persons .add-doc-person:first')[0];
+            requestContent('@Url.Action("NewItem_DocumentPerson_Institution")', { index: $(addItemButton).data('index'),sourceType:sourceType, sourceId:sourceId}, function (html) {
+                var index = $(addItemButton).data('index') + 1;
+                $(addItemButton).data('index', index);
+                var container = $(document.getElementById($(addItemButton).data('container')));
+                $(html).hide().appendTo(container).slideDown();
+                HideModal();
+            });
+            return false;
+        }
+        function courtSelect() {
+            let courtId = $('#DocumentCaseInfo_CourtId').val();
+            $('#DocumentCaseInfo_CourtId').parents('.documentCaseInfo:first').find('.case-container:first').data('court', courtId);
+            if (@(Model.DocumentCaseInfo.CaseId ?? 0) > 0) {
+                loadCase('#DocumentCaseInfo_CaseId_case', '@Model.DocumentCaseInfo.CaseId');
+            }
+        }
+        function initCaseInfo() {
+            $('input[name="DocumentKindId"]').change(function() {
+                    if ($(this).is (':checked')) {
+                        switch ($(this).val()) {
+                            case '@DocumentConstants.DocumentKind.InitialDocument':
+                                $('#newCase').show();
+                                if ($('#HasCaseInfo').is(':checked')) {
+                                    $('#selectCase').show();
+                                }
+                                break;
+                            case '@DocumentConstants.DocumentKind.CompliantDocument':
+                            case '@DocumentConstants.DocumentKind.OutCompliantDocument':
+                                $('#newCase').hide();
+                                $('#selectCase').show();
+                                $('#HasCaseInfo').prop('checked', true);
+                                break;
+                            default:
+                                $('.case-info').hide();
+                                $('#HasCaseInfo').prop('checked', false);
+                                break;
+                        }
+                    }
+            }).trigger('change');
+
+            $('#HasCaseInfo').change(function () {
+                        if ($(this).is (':checked')) {
+                    $('#selectCase').show();
+                        } else {
+                    $('#selectCase').hide();
+                        }
+                    });
+            $('#DocumentCaseInfo_HasLawAct').change(function () {
+                        if ($(this).is (':checked')) {
+                    $('.lawact-select').show();
+                        } else {
+                    $('.lawact-select').hide();
+                        }
+                    }).trigger('change');
+        }
+
+        function selectPersonData() {
+            let eisppNumber = $('#EISSPNumber').val();
+            let priorCaseId = $('#DocumentCaseInfo_CaseId').val();
+            let priorDocumentId = $('#PriorDocumentId').val();
+            if (eisppNumber || (priorCaseId && parseInt(priorCaseId) > 0) || priorDocumentId > 0){
+                requestContent('@Url.Action("DocumentPersons_SelectData")', { eisppNumber: eisppNumber, priorCaseId: priorCaseId, priorDocumentId: priorDocumentId }, function (html) {
+                    ShowModalDialog('Избиране на лица и адреси към документа', html, true);
+                });
+            } else {
+                alert('Избора на лица и адреси работи по ЕИСПП номер и/или по данни от свързано дело.');
+            }
+        }
+        function loadSelectedPersonData(model) {
+            let addPersonButton = $('.add-doc-person:first');
+            let index = $(addPersonButton).data('index');
+            postContent('@Url.Action("DocumentPersons_SelectData")', { model: model, index:index}, function (html) {
+                let container = $(addPersonButton).data('container');
+                $('#' + container).append(html);
+                initEkatte();
+                HideModal();
+                $(addPersonButton).data('index', index + model.persons.length);
+            });
+        }
+        function selectAddress(sender) {
+            let personContainer = $(sender).parents('.document-person-item:first').attr('id');
+            requestContent('@Url.Action("DocumentPersonAddress_Search")', { containerId: personContainer }, function (html) {
+                ShowModalDialog('Адреси към лице', html, true);
+            });
+        }
+
+        function checkDocumentSubmit(sender) {
+            $(sender).attr('disabled', 'disabled');
+            if ($('input#IsMultiNumber').is(':checked')) {
+                //debugger;
+                var multiCounter = 0;
+                try {
+                    multiCounter = parseInt($('#MultiDocumentCounter').val());
+                    if (multiCounter <= 0) {
+                        messageHelper.ShowErrorMessage('Невалидна стойност в поле "Брой документи"');
+                        return false;
+                    }
+                } catch (ex) {
+                    messageHelper.ShowErrorMessage('Невалидна стойност в поле "Брой документи"');
+                    return false;
+                }
+                let maxMultiCounter = 300;
+                let maxMultiCounterNoAsk = 50;
+                if (multiCounter > maxMultiCounter) {
+                    messageHelper.ShowErrorMessage('Максималната стойност в поле "Брой документи" е ' + maxMultiCounter.toString());
+                    return false;
+                }
+                if (multiCounter > maxMultiCounterNoAsk) {
+                    swalConfirm('Потвърдете множественото регистрирането на ' + multiCounter.toString() + ' документа!'
+                        , function () {
+                            $(sender).removeAttr('disabled').parents('form:first').trigger('submit');
+                        }
+                        , function () {
+                            $(sender).removeAttr('disabled');
+                        }
+                    );
+                } else {
+                    $(sender).removeAttr('disabled');
+                }
+            } else {
+                $(sender).removeAttr('disabled');
+            }
+        }
+    </script>
+    <partial name="_CdnScript" />
+}

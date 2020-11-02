@@ -1,0 +1,26 @@
+﻿@model int
+@{
+    string userId = (string)ViewBag.userId;
+}
+
+    <!-- Tasks Menu -->
+    <li class="dropdown tasks-menu">
+        <!-- Menu Toggle Button -->
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Непрочетени известия">
+            <i class="fa fa-bell-o"></i>
+            @if (Model > 0)
+            {
+                <span class="label label-warning">@Model</span>
+            }
+        </a>
+        <ul class="dropdown-menu">
+            <li class="header">Имате <b>@Model</b> непрочетени известия</li>
+            <li class="footer">
+                <a asp-action="Index" asp-controller="WorkNotification">Преглед на моите известия</a>
+            </li>
+            @*<li class="footer">
+            <a asp-action="Dashboard" asp-controller="WorkNotification">Преглед на вашите известия Dashboard</a>
+        </li>*@
+        </ul>
+    </li>
+

@@ -1,0 +1,83 @@
+﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+@model DeliveryItemListVM;
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Книга за получени и върнати призовки и други съдебни книжа";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<form id="formFilter" asp-action="Edit" method="post">
+    <div class="row">
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateFrom)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateTo)
+        </div>
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.FromCourtId, "GenericDropDown")
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.PersonName)
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResult()" value="Експорт в Excel " title="Експорт в Excel">
+                Експорт в Excel
+                <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
+            </button>
+        </div>
+    </div>
+    <hr>
+</form>
+
+<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+    <input type="hidden" id="filterJson" name="filterJson" value="">
+</form>
+
+@section scripts {
+
+    <script>
+        $('#FromCourtId').select2({
+            language: "bg"
+        });
+
+        $('#LawUnitId').select2({
+            language: "bg"
+        });
+
+        $(document).ready(function () {
+             $('#CaseGroupId').change(function () {
+                requestCombo(
+                    '@Url.Action("GetDDL_CaseType","Ajax")',
+                    { CaseGroupId: $(this).val() },
+                    '#CaseTypeId',
+                    @Model.CaseTypeId,
+                    function () {
+                        $('#CaseTypeId').trigger('change')
+                    });
+             });
+        });
+        function ExcelDataResult() {
+             $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+             $('#formPostEdit').attr('action', '@Url.Action("ExcelDataResult")');
+             $("#formPostEdit").submit();
+        }
+    </script>
+}

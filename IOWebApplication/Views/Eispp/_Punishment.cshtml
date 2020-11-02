@@ -1,0 +1,52 @@
+﻿@model Punishment
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@using IOWebApplication.Infrastructure.Extensions
+@inject IEisppRulesService rulesService
+@{
+    var eisppRule = ViewData.ModelMetadata.GetEisppRuleElement(ViewData.TemplateInfo.HtmlFieldPrefix);
+    (var ruleIds, var flags) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppRule);
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+@if (flags > 0)
+{
+<div class="punishment-container">
+    <h5><b>Наказание</b></h5>
+    @Html.HiddenFor(x => x.PunishmentId)
+    @Html.HiddenFor(x => x.StructureId)
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentType, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentTypeDDL, @class = "punishment-type" })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentActivity, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentActivityDDL })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "punishment-kind" })</div>
+        <div class="col-lg-3 punisment-serving-type-container">@Html.EditorFor(x => x.ServingType, "EisppDropDown", null, new { Ddl = ViewBag.ServingTypeDDL, @class = "punishment-serving-type" })</div>
+    </div>
+    <div class="row fine-amount">
+        <div class="col-lg-2">@Html.EditorFor(x => x.FineAmount)</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentActivityDateVM, "EisppDateTime")</div>
+        <div class="punishment-period">
+            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentYears)</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentMonths)</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentWeeks)</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentDays)</div>
+        </div>
+        <div class="col-lg-2 punishment-regime">@Html.EditorFor(x => x.PunishmentRegime, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentRegimeDDL })</div>
+    </div>
+    <fieldset class="is-fieldset punishment-probation-period">
+        <legend class="legend_1">Изпитателен срок</legend>
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationStartDateVM, "EisppDateTime")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationYears)</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationMonths)</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationWeeks)</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationDays)</div>
+        </div>
+    </fieldset>
+    <div class="punishment-probation">
+        @{
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.ProbationMeasure";
+            @await Html.PartialAsync("_ProbationMeasure", Model.ProbationMeasure)
+        }
+    </div>
+</div>
+}

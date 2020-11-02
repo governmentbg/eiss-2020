@@ -1,0 +1,11 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseSessionActPrintVM
+@{
+    Layout = null;
+}
+<div style="text-align:center;width:100%;">
+    <h2>@Model.BlankDecisionText</h2>
+</div>
+<div>
+    @Html.Raw(Model.Dispositiv)
+</div>

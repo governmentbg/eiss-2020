@@ -1,0 +1,40 @@
+﻿@model PriceDesc
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на тарифа";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на тарифа";
+    }
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="PriceDesc_Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            @Html.EditorFor(x => x.Keyword)
+            @Html.EditorFor(x => x.Name)
+            @Html.EditorFor(x => x.DateFrom, "datetime")
+            @Html.EditorFor(x => x.DateTo, "datetime")
+
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="PriceDesc" asp-route-courtId="@Model.CourtId" class="btn btn-danger">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>

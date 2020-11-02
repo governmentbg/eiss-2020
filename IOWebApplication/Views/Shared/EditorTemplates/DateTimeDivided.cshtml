@@ -1,0 +1,62 @@
+﻿@model DateTime?
+@using IOWebApplication.Infrastructure.Extensions
+@{
+
+    var dateValue = "";
+    var timeValue = "";
+    var addTimeClass = "visibility_hidden";
+    if (Model.HasValue)
+    {
+        dateValue = Model.Value.ToString("dd.MM.yyyy");
+        timeValue = Model.Value.ToString("HH:mm");
+        if (timeValue == "23:59" || timeValue == "00:00")
+        {
+            timeValue = "09:00";
+        }
+        else
+        {
+            addTimeClass = "";
+        }
+    }
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+
+    var disabledParam = "";
+    if (ViewData["disabledParam"] != null)
+    {
+        disabledParam = (string)ViewData["disabledParam"];
+    }
+}
+
+<div class="form-group datetime-divided">
+    <input type="hidden" asp-for="@Model" class="model-val" />
+    <label asp-for="@Model" class="control-label @reqClass"></label>
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="input-group">
+                <div class="input-group-addon">
+                    <i class="fa fa-calendar"></i>
+                </div>
+                <input class="form-control date-picker" type="text" autocomplete="off" value="@dateValue" @disabledParam />
+            </div>
+
+        </div>
+        <div class="col-lg-5">
+            <div class="input-group @addTimeClass">
+                @if (disabledParam == "")
+                {
+                    <label class="input-group-addon time-toggle" title="Въвеждане на час">
+                        <span class="glyphicon glyphicon-time"></span>
+                    </label>
+                }
+                else
+                {
+                    <label class="input-group-addon" title="Въвеждане на час">
+                        <span class="glyphicon glyphicon-time"></span>
+                    </label>
+                }
+                <input class="form-control time-picker" type="text" autocomplete="off" value="@timeValue" @disabledParam />
+            </div>
+        </div>
+    </div>
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

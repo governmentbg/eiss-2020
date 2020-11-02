@@ -1,0 +1,285 @@
+﻿@using IOWebApplication.Infrastructure.Models.Documents
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
+@model DocumentFilterVM
+@{
+    bool hasRegNumberOtherSystem = (bool)(ViewBag.HasRegNumberOtherSystem ?? false);
+    ViewData["Title"] = "Регистрирани документи";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">Съдебна регистратура</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-2 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.CourtOrganizationId, "GenericDropDown")
+    </div>
+    <div class="col-lg-2 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-2 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentNumber, "String")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentYear, "DateTimeYear")
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentDirectionId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentKindId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.PersonName, "String")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.PersonUIC, "String")
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        @Html.EditorFor(m => m.PersonRoleId, "GenericDropDown")
+    </div>
+</div>
+
+<fieldset class="is-fieldset">
+    <legend class="casereport-legend">Разширено търсене</legend>
+    <div class="legendbody">
+        <div class="row">
+            <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
+        </div>
+
+        <div class="row" id="linkCaseInfo">
+            <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
+            <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
+            @if (hasRegNumberOtherSystem)
+            {
+                <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+            }
+        </div>
+    </div>
+</fieldset>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            courtOrganizationId: $('#CourtOrganizationId').val(),
+                            documentDirectionId: $('#DocumentDirectionId').val(),
+                            documentKindId: $('#DocumentKindId').val(),
+                            documentGroupId: $('#DocumentGroupId').val(),
+                            documentTypeId: $('#DocumentTypeId').val(),
+                            dateFrom: $('#DateFrom').val(),
+                            dateTo: $('#DateTo').val(),
+                            documentNumber: $('#DocumentNumber').val(),
+                            documentYear: $('#DocumentYear').val(),
+                            personName: $('#PersonName').val(),
+                            personUIC: $('#PersonUIC').val(),
+                            personRoleId: $('#PersonRoleId').val(),
+                            LinkDelo_CourtId: $('#LinkDelo_CourtId').val(),
+                            LinkDelo_CaseId: $('#LinkDelo_CaseId').val(),
+                            RegNumberOtherSystem: $('#RegNumberOtherSystem').val(),
+                            CaseRegNumber: $('#CaseRegNumber').val(),
+                        };
+                    }
+                },
+                filter: false,
+                columnDefs: [{
+                    targets: [0],
+                    orderData: [7]
+                }],
+                columns: [
+                    {
+                        name: 'documentNumber',
+                        data: 'documentNumber',
+                        title: 'Номер на документ',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateNumber', item);
+                        }
+                    },
+                    {
+                        name: 'documentDate',
+                        data: 'documentDate',
+                        title: 'Дата и час',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    {
+                        name: 'documentDirectionName',
+                        data: 'documentDirectionName',
+                        title: 'Вх/Изх/Втр',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'documentTypeName',
+                        data: 'documentTypeName',
+                        title: 'Вид документ',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'userName',
+                        data: 'userName',
+                        title: 'Регистрирал',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'persons',
+                        title: "Свързани лица",
+                        sortable: false,
+                        searchable: false,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templatePerson', item);
+                        }
+                    },
+                    {
+                        name: 'case',
+                        title: "Номер на дело",
+                        sortable: false,
+                        searchable: false,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateCase', item);
+                        }
+                    },
+                    {
+                        name: 'documentNumberValue',
+                        data: 'documentNumberValue',
+                        title: '',
+                        sortable: true,
+                        searchable: false,
+                        className: 'hidden text-center noExport'
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true,
+                        visible:false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+            table.order([1, 'desc']);
+        }
+    }
+
+    $(document).on('click', 'legend.casereport-legend', function () {
+        $(this).parent().find('.legendbody').toggle();
+    });
+
+    $(document).ready(function () {
+        $(".legendbody").hide();
+    });
+
+    function courtSelect() {
+        let courtId = $('#LinkDelo_CourtId').val();
+        var courtData = $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court');
+        $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court', courtId);
+    }
+</script>
+
+<script>
+        $(function () {
+            $('#DocumentDirectionId').change(function () {
+                    requestCombo('@Url.Action("GetDDL_DocumentKind", "Ajax")', { documentDirectionId: $(this).val(),addDefaultElement:true }, '#DocumentKindId', '@(Model.DocumentKindId)', function (e) {
+                        $(e).trigger('change');
+                    });
+            }).trigger('change');
+            $('#DocumentKindId').change(function () {
+                    requestCombo('@Url.Action("GetDDL_DocumentGroup", "Ajax")', { documentKindId: $(this).val() ,addDefaultElement:true}, '#DocumentGroupId', '@(Model.DocumentGroupId)', function (e) {
+                        $(e).trigger('change');
+                    });
+            }).trigger('change');
+            $('#DocumentGroupId').change(function () {
+                    requestCombo('@Url.Action("GetDDL_DocumentType", "Ajax")', { documentGroupId: $(this).val(),addDefaultElement:true }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function (e) {
+                        $(e).trigger('change');
+                    });
+            }).trigger('change');
+        });
+</script>
+<script id="templatePerson" type="text/x-handlebars-template">
+    {{#each persons}}
+    <div>{{name}} ({{roleName}})</div>
+    {{/each}}
+</script>
+<script id="templateNumber" type="text/x-handlebars-template">
+    <a href="@Url.Action("View")/{{id}}" title="Преглед">{{documentNumber}}</a>
+</script>
+<script id="templateCase" type="text/x-handlebars-template">
+    {{#if caseId}}
+    {{#if isCaseRejected}}
+    <a href="@Url.Action("Edit", "Case")?id={{caseId}}" target="_blank" title="Данни за образуване">Отказано за образуване</a>
+    {{else}}
+    <a href="@Url.Action("CasePreview","Case")/{{caseId}}" target="_blank" title="Преглед дело">{{caseNumber}}</a>
+    {{/if}}
+    {{/if}}
+</script>
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i></a>
+    <a href="@Url.Action("View")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i></a>
+</script>
+
+@section scripts {
+    <script>
+        initCase();
+        initCourts();
+    </script>
+}

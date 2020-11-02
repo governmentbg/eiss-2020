@@ -1,0 +1,56 @@
+﻿@model DeliveryAreaAddressTestVM;
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+
+
+@{
+    ViewData["Title"] = "Тест райониране";
+}
+
+<div class="row">
+    <div class="col-md-12 col-lg-6">
+        <form asp-action="TestFindAdr" method="post">
+            @Html.EditorFor(x => x.Address)
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.AreaName)
+                </div>
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.LawUnitName)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.City)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.ResidentionArea)
+                </div>
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.Street)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    @Html.EditorFor(x => x.NumberType)
+                </div>
+                <div class="col-md-4">
+                    @Html.EditorFor(x => x.NumberFrom)
+                </div>
+                <div class="col-md-4">
+                    @Html.EditorFor(x => x.NumberTo)
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Тест райониране" class="btn btn-success" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        initEkatte();
+    });
+</script>

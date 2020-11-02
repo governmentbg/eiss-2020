@@ -1,0 +1,11 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@model DocumentResolutionVM
+@{
+    Layout = null;
+}
+<div class="act-body">
+    <partial name="ActHeader" model="@Model" />
+    <div>
+        @Html.Raw(Model.Content)
+    </div>
+</div>

@@ -1,0 +1,89 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Cases
+@model CaseMoneyClaim
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "mcmModalForm" }))
+{
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.CourtId)
+
+
+    <div class="row" id="CasePerson">
+        <div class="col-lg-6">@Html.EditorFor(x => x.CaseMoneyClaimGroupId, "GenericDropDown")</div>
+        <div id="claimType" class="col-lg-6">@Html.EditorFor(x => x.CaseMoneyClaimTypeId, "GenericDropDown")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">@Html.EditorFor(x => x.ClaimNumber)</div>
+        <div class="col-lg-6">@Html.EditorFor(x => x.ClaimDate, "DateTime")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.PartyNames, "Textarea")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.Motive, "Textarea")</div>
+    </div>
+
+    <div class="form-group">
+        @if (access.CanChange)
+        {
+            <input type="submit" value="Запис" class="btn btn-success" />
+        }
+    </div>
+}
+
+<div id="modalMessageContainer">
+</div>
+
+<script>
+    $(document).ready(function () {
+        CaseMoneyClaimGroupIdChange();
+    });
+
+    $(function () {
+        attachAjaxForm('#mcmModalForm', function (data) {
+            var resultSave = data.responseJSON.result;
+            if (resultSave > 0) {
+                cmcLoadData("Claim" + resultSave);
+                HideModal();
+                messageHelper.ShowSuccessMessage('Обстоятелството е създадена успешно.');
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+            }
+        });
+        initDatePicker();
+    })
+
+    $('#CaseMoneyClaimGroupId').change(function () {
+        CaseMoneyClaimGroupIdChange();
+    });
+
+    function CaseMoneyClaimGroupIdChange() {
+        requestCombo('@Url.Action("GetDDL_MoneyClaimType", "CaseFastProcess")', { moneyClaimGroupId: $('#CaseMoneyClaimGroupId').val() }, '#CaseMoneyClaimTypeId', @(Model.CaseMoneyClaimTypeId ?? 0), function () { $('#CaseMoneyClaimTypeId').trigger('change') });
+        SH_Elements();
+    }
+
+    $('#CaseMoneyClaimTypeId').change(function () {
+        SH_Elements();
+    });
+
+    function SH_Elements() {
+        var countCT = document.getElementById("CaseMoneyClaimTypeId").options.length;
+        if (countCT > 1) {
+            $("#claimType").show();
+        }
+        else {
+            $("#claimType").hide();
+        }
+    }
+</script>

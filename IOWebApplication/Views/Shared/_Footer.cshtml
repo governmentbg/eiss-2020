@@ -1,0 +1,77 @@
+﻿@{
+    var appVersion = Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion;
+}
+    <footer class="main-footer">
+        <style>
+            .font-size--dot7 {
+                font-size: .7em;
+            }
+
+            .flex {
+                display: flex;
+            }
+
+            .flex--right {
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .logo--left {
+                max-width: 200px;
+            }
+
+                .logo--left img {
+                    width: 100%;
+                    height: auto;
+                }
+
+            .logo--right {
+                max-width: 200px;
+            }
+
+                .logo--right img {
+                    width: 100%;
+                    height: auto;
+                }
+
+            @@media (max-width : 992px) {
+                .sm-flex--right {
+                    justify-content: flex-start;
+                }
+            }
+        </style>
+        <div class="row">
+            <div class="col-md-2 col-lg-2 flex">
+                <div class="logo--left">
+
+                    <img src="~/img/logo_eu_small2.png" />
+                </div>
+            </div>
+            <div class="col-lg-8 col-md-8 font-size--dot7">
+                <div style="border-bottom:1px solid #aaa;margin-bottom:5px;padding-bottom:5px;">
+                    <i class="fa fa-balance-scale"></i>
+                    <strong>Единна информационна система на съдилищата, </strong>
+                    <strong>Версия: @appVersion </strong>
+                    <strong>&copy; @DateTime.Now.Year - Информационно обслужване АД</strong>
+                    <div id="clock" class="clock pull-right"></div>
+                </div>
+                <strong>
+                    Проект „Създаване на модел за оптимизация на съдебната карта на българските съдилища и прокуратури и разработване на Единна информационна система на съдилищата”, се осъществява с финансовата подкрепа на Оперативна програма „Добро управление“ 2014-2020, съфинансирана от Европейския съюз чрез Европейския социален фонд“
+                </strong>
+            </div>
+            <div class="col-md-2 col-lg-2 flex flex--right sm-flex--right">
+                <div class="pull-right; logo--right">
+                    <img src="~/img/logo_opdu_small2.png" />
+                </div>
+            </div>
+        </div>
+        @*<div class="row">
+            <div class="col-lg-12">
+                <i class="fa fa-balance-scale"></i>
+                <strong>Единна информационна система за съдилищата, </strong>
+                <strong>Версия: @appVersion </strong>
+                <strong>&copy; @DateTime.Now.Year - Информационно обслужване АД</strong>
+                <div id="clock" class="clock pull-right"></div>
+            </div>
+        </div>*@
+    </footer>

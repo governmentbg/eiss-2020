@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1",
+    "order_number": "1",
+    "label": "Съдия",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "2",
+    "order_number": "2",
+    "label": "Заседател",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "3",
+    "order_number": "3",
+    "label": "Прокурор",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  },
+  {
+    "id": "4",
+    "order_number": "4",
+    "label": "Вещо лице",
+    "is_active": "true",
+    "date_start": "2000-01-01T00:00:00"
+  }
+]

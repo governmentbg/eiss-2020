@@ -1,0 +1,242 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@model ObligationThirdPersonFilterVM
+
+@{
+    ViewData["Title"] = "Задължения в полза на страни";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PersonUicSearch)</div>
+    <div class="col-lg-4">@Html.EditorFor(m => m.PersonNameSearch)</div>
+</div>
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.CaseRegNumber)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.MoneyTypeId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <button type="button" class="btn btn-primary" id="btnExecList" onclick="MakeExecList()" value="Изпълнителен лист" title="Изпълнителен лист">
+            Изпълнителен лист
+            <i class="fa fa-paypal" title="Изпълнителен лист"></i>
+        </button>
+    </div>
+</div>
+<br />
+<div class="row">
+    <div class="col-md-12">
+        <table id="obligationThirdPersonMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    var table;
+        function ReloadDatatable()
+        {
+            refreshTable('#obligationThirdPersonMainTable');
+        }
+
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#obligationThirdPersonMainTable')) {
+            refreshTable('#obligationThirdPersonMainTable');
+        }
+        else {
+            table = $('#obligationThirdPersonMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataObligationThirdPerson", "Money")",
+                    "type": "POST",
+                    "datatype": "json",
+                   data: function (d) {
+                       d.model = {
+                        PersonUicSearch: $("#PersonUicSearch").val(),
+                        PersonNameSearch: $("#PersonNameSearch").val(),
+                        DateFrom: $("#DateFrom").val(),
+                        DateTo: $("#DateTo").val(),
+                        MoneyTypeId: $("#MoneyTypeId").val(),
+                        CaseRegNumber: $("#CaseRegNumber").val()
+                       };
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: "checkRow",
+                        data: "checkRow",
+                        title: '<input type="checkbox" id="select-all" onclick="selectAll();">',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            return '<input type="checkbox" value="' + row.id + '">';
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'obligationDate',
+                        data: 'obligationDate',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'personName',
+                        data: 'personName',
+                        title: 'Задължено лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'personReceiveName',
+                        data: 'personReceiveName',
+                        title: 'В полза на',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'moneyTypeName',
+                        data: 'moneyTypeName',
+                        title: 'Вид сума',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'obligationInfo',
+                        data: 'obligationInfo',
+                        title: 'Основание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseData',
+                        data: 'caseData',
+                        title: 'Номер дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumberExecList',
+                        data: 'regNumberExecList',
+                        title: 'Изпълнителен лист',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateExecList', item);
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#obligationThirdPersonTemplate', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    function selectAll()
+    {
+        var check = $("#select-all").is(':checked');
+        var rows = table.rows({ 'search': 'applied' }).nodes();
+        $('input[type="checkbox"]', rows).prop('checked', check);
+    }
+
+    function GetAllCheckIds()
+    {
+        var ids = "";
+        table.$('input[type="checkbox"]').each(function () {
+            if (this.checked) {
+                if (ids != "") {
+                    ids = ids + ",";
+                }
+                ids = ids + this.value;
+            }
+        });
+        return ids;
+    }
+
+    function GetAllCheck()
+    {
+        if (table === undefined) return;
+        var ids = GetAllCheckIds();
+
+        if (ids == "") {
+            messageHelper.ShowErrorMessage('Изберете поне едно задължение за плащане.');
+            return;
+        }
+        requestContent('@Url.Action("Payment","Money")'
+            , { idStr:ids}
+            , function (data) {
+                ShowModalDialog('Плащане', data);
+            });
+    }
+
+    function MakeExecList() {
+        if (table === undefined) return;
+        var ids = GetAllCheckIds();
+
+        if (ids == "") {
+            messageHelper.ShowErrorMessage('Изберете поне едно задължение.');
+            return;
+        }
+        tinymce.remove('#Content');
+        requestContent('@Url.Action("ExecList", "Money")'
+            , { idStr: ids }
+            , function (data) {
+                ShowModalDialog('Изпълнителен лист', data);
+            });
+    }
+
+</script>
+
+<script id="obligationThirdPersonTemplate" type="text/x-handlebars-template">
+</script>
+
+<script id="templateExecList" type="text/x-handlebars-template">
+    {{#if execListId}}
+    <a href="@Url.Action("EditExecList","Money")/{{execListId}}" target="_blank" title="Преглед Изпълнителен лист">{{regNumberExecList}}</a>
+    {{/if}}
+</script>
+

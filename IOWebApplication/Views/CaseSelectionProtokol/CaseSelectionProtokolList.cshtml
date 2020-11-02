@@ -1,0 +1,219 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CaseSelectionProtokolFilterVM
+
+@{
+    ViewData["Title"] = "Информация за разпределение";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.Year, "DateTimeYear")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeRoleId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.SelectionModeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.ProtokolState, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">@Html.EditorFor(x => x.FullName)</div>
+    <div class="col-lg-6">@Html.EditorFor(m => m.UserId, "SelectUser")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.DocumentNumber)</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.CourtGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.LoadGroupLinkId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSelectionProtokolMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($("#DateFrom").val() == '' && $("#DateTo").val() == '' && $("#Year").val() == '') {
+            return messageHelper.ShowErrorMessage('Попълнете от дата до дата или година', messageContainer);
+        }
+        if ($.fn.dataTable.isDataTable('#caseSelectionProtokolMainTable')) {
+            refreshTable('#caseSelectionProtokolMainTable');
+        }
+        else {
+            $('#caseSelectionProtokolMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataReport", "CaseSelectionProtokol")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $('#DateFrom').val(),
+                            DateTo: $('#DateTo').val(),
+                            Year: $('#Year').val(),
+                            JudgeRoleId: $('#JudgeRoleId').val(),
+                            SelectionModeId: $('#SelectionModeId').val(),
+                            ProtokolState: $('#ProtokolState').val(),
+                            FullName: $('#FullName').val(),
+                            UserId: $('#UserId').val(),
+                            CaseGroupId: $('#CaseGroupId').val(),
+                            CaseTypeId: $('#CaseTypeId').val(),
+                            CaseRegNumber: $('#CaseRegNumber').val(),
+                            DocumentNumber: $('#DocumentNumber').val(),
+                            CourtGroupId: $('#CourtGroupId').val(),
+                            LoadGroupLinkId: $('#LoadGroupLinkId').val()
+                        };
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'selectionDate',
+                        data: 'selectionDate',
+                        title: 'Дата и час',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    {
+                        name: 'judgeRoleName',
+                        data: 'judgeRoleName',
+                        title: 'Тип разпределение',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'selectionModeName',
+                        data: 'selectionModeName',
+                        title: 'Начин на разпределение',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Разпределен',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseNumber',
+                        data: 'caseNumber',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'caseDate',
+                        data: 'caseDate',
+                        title: 'Дата на дело',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид дело',
+                        sortable: true,
+                        searchable: false,
+                        visible: false
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Шифри на дело',
+                        sortable: true,
+                        searchable: false,
+                        visible: false
+                    },
+                    {
+                        name: 'caseStateLabel',
+                        data: 'caseStateLabel',
+                        title: 'Статус на дело',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'selectionProtokolStateName',
+                        data: 'selectionProtokolStateName',
+                        title: 'Статус на протокол',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'userName',
+                        data: 'userName',
+                        title: 'Разпределящ',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSelectionProtokolTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="caseSelectionProtokolTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("PreviewDoc", "CaseSelectionProtokol")?id={{this}}" target="_blank" class="btn btn-dropbox btn-sm" title="Протокол от разпределение"><i class="fa fa-random"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+    });
+
+    $(function () {
+        initUserAutoComplete();
+    })
+</script>

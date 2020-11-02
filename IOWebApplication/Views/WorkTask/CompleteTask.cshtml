@@ -1,0 +1,46 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Common
+@model WorkTask
+@{
+    var actions = (List<SelectListItem>)ViewBag.TaskActionId_ddl;
+}
+
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "wtModalForm" }))
+{
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.SourceId)
+    @Html.HiddenFor(x => x.SourceType)
+    @Html.DisplayFor(x => x.TaskType.Label, "obj", new { label = "Вид задача" })
+    @Html.DisplayFor(x => x.UserCreated.LawUnit.FullName, "obj", new { label = "Автор" })
+    @Html.DisplayFor(x => x.DateCreated, "datetime")
+    @Html.DisplayFor(x => x.DescriptionCreated, "obj")
+    @if (Model.DateEnd.HasValue)
+    {
+        @Html.DisplayFor(x => x.DateEnd, "date")
+    }
+    @if (actions.Count() > 0)
+    {
+        @Html.EditorFor(x => x.TaskActionId, "GenericDropDown")
+    }
+    @Html.EditorFor(x => x.Description, "textarea")
+    <div class="form-group">
+        <input type="submit" value="Запис" class="btn btn-success" />
+    </div>
+}
+<script>
+    $(function () {
+        attachAjaxForm('#wtModalForm', function (data) {
+            if (data.responseJSON.result == true) {
+                HideModal();
+                messageHelper.ShowSuccessMessage('Задачата е приключена успешно.');
+                if (data.responseJSON.reloadNeeded == true) {
+                    setTimeout(function () {
+                        document.location.reload();
+                    }, 1000)
+                } else {
+                    wtLoadData();
+                }
+            }
+        });
+        initUserAutoComplete();
+    })
+</script>

@@ -1,0 +1,140 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.Cases
+@model CaseBankAccount
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool hasPerson = (bool)(ViewBag.HasPerson ?? false);
+}
+
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "cbaModalForm" }))
+{
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.CourtId)
+
+    <div class="row" id="divCasePerson">
+        <div class="col-lg-6">@Html.EditorFor(x => x.CasePersonId, "GenericDropDown")</div>
+    </div>
+
+    <div class="row" id="CasePerson">
+        <div class="col-lg-6">@Html.EditorFor(x => x.CaseBankAccountTypeId, "GenericDropDown")</div>
+        <div id="GetLast"><a href="#" onclick="GetBankLast(); return false;" class="btn btn-sm btn-def" style="margin-top:26px;"><i class="fa fa-check"></i></a></div>
+    </div>
+
+    <div id="BankAccount" class="row">
+        <div class="col-lg-6">@Html.EditorFor(x => x.IBAN)</div>
+        <div class="col-lg-6">@Html.EditorFor(x => x.BIC)</div>
+    </div>
+
+    <div id="divBankName" class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.BankName)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+    </div>
+
+    <div class="form-group">
+        @if (access.CanChange)
+        {
+            <input type="submit" value="Запис" class="btn btn-success" />
+        }
+    </div>
+}
+
+<div id="modalMessageContainer">
+</div>
+
+<script>
+    $(document).ready(function () {
+        CaseBankAccountTypeIdChange();
+        SH_DivPerson();
+    });
+
+    $('#CaseBankAccountTypeId').change(function () {
+        CaseBankAccountTypeIdChange();
+    });
+
+    $(function () {
+        attachAjaxForm('#cbaModalForm', function (data) {
+            var resultSave = data.responseJSON.result;
+            if (resultSave > 0) {
+                cmcLoadData("BankAccount");
+                HideModal();
+                messageHelper.ShowSuccessMessage('Банковата сметка е създадена успешно.');
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+            }
+        });
+        initDatePicker();
+    })
+
+    function CaseBankAccountTypeIdChange() {
+        SH_Elements();
+    }
+
+    function SH_DivPerson() {
+        if ('@hasPerson' == 'True') {
+            $('#divCasePerson').show();
+        }
+        else {
+            $('#divCasePerson').hide();
+        }
+    }
+
+    function SH_Elements() {
+        var bankaccountId = $('#CaseBankAccountTypeId').val();
+        if (bankaccountId == 1) {
+            $("#BankAccount").show();
+            $("#divBankName").show();
+            $("#GetLast").show();
+        }
+        else {
+            $("#BankAccount").hide();
+            $("#divBankName").hide();
+            $("#GetLast").hide();
+        }
+    }
+
+    $('#IBAN').blur(function () {
+        var iban = $(this).val();
+        if (iban.length >= 8) {
+            var searchBic = iban.substr(4, 4);
+            if (searchBic.length > 0) {
+                requestGET_Json('@Url.Action("GetBankDataFromIban","Money")', { search: searchBic}, function (data) {
+                    $("#BIC").val(data.bic);
+                    $("#BankName").val(data.bankName);
+                    console.log($("#BankName").val());
+                });
+            }
+        }
+    });
+
+    function GetBankLast() {
+        var personId = $("#CasePersonId").val();
+        var modelId = @Model.Id;
+        if (personId > 0) {
+            postContent('@Url.Action("GetBankAccountLast", "CaseFastProcess")'
+                , { CasePersonId: personId, id: modelId }
+                , function (data) {
+                    debugger;
+                    if (data.caseBankAccount.id > 0) {
+                        $("#IBAN").val(data.caseBankAccount.iban);
+                        $("#BIC").val(data.caseBankAccount.bic);
+                        $("#BankName").val(data.caseBankAccount.bankName);
+                    }
+                });
+        }
+    }
+
+    $('#CasePersonId').change(function () {
+        CasePersonIdChange();
+    });
+
+    function CasePersonIdChange() {
+        $("#IBAN").val("");
+        $("#BIC").val("");
+        $("#BankName").val("");
+        $("#Description").val("");
+    }
+</script>

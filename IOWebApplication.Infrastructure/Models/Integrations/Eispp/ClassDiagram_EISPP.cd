@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.Data">
+    <Position X="0.5" Y="0.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAAAAAAAAQAAgAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\Data.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Context" />
+      <Property Name="Result" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="Events" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.Context" Collapsed="true">
+    <Position X="2.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAACAgAAAACBAAAAMAAAEAAoAAAAAEABQAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\Context.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.Event">
+    <Position X="4.5" Y="0.5" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="CaseMigration" Type="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CaseMigration" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="2.312" />
+        <Point X="4.125" Y="2.312" />
+        <Point X="4.125" Y="2.875" />
+        <Point X="2.75" Y="2.875" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="DocRef" Type="IOWebApplication.Infrastructure.Models.Integrations.Eispp.DocumentRefference" ManuallyRouted="true">
+      <Path>
+        <Point X="5.375" Y="2.891" />
+        <Point X="5.375" Y="3.115" />
+        <Point X="3.51" Y="3.115" />
+        <Point X="3.51" Y="6.531" />
+        <Point X="2.25" Y="6.531" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAQAAgAACAAQAABAAAAAAEAAAAAAgAAAAAEABAEAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\Event.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="CaseMigration" />
+      <Property Name="DocRef" />
+      <Property Name="CriminalProceeding" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppResult" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAACAAAAAAAAAAgAAAAAAAABAAAAAAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\EisppResult.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CaseMigration">
+    <Position X="0.5" Y="2.75" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAQAAAIAAAAAAAAACEAAAAAAEBAAAIA=</HashCode>
+      <FileName>Models\Integrations\Eispp\CaseMigration.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.DocumentRefference" Collapsed="true">
+    <Position X="0.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\DocumentRefference.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CriminalProceeding">
+    <Position X="6.75" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AACCAAAAAAAAAAAAAEACAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\CriminalProceeding.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Case" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppCase">
+    <Position X="6.75" Y="2.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="CPPersonCrimes" Type="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CPPersonCrime" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="8.25" Y="3.245" />
+        <Point X="10.625" Y="3.245" />
+        <Point X="10.625" Y="2.565" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAQAAMAEAAAAAAAAAAAAAAAABAAAEAAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\EisppCase.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="CPPersonCrimes" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="Persons" />
+      <Property Name="Crimes" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppPerson">
+    <Position X="4.25" Y="3.25" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AmBAAUgAAAECAACGAAQAAQQBABIAAAAAAUAAECEABAg=</HashCode>
+      <FileName>Models\Integrations\Eispp\EisppPerson.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CPPersonCrime">
+    <Position X="9.25" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEEAAAAEQAAAIAAAAAAACAAAAIAAE=</HashCode>
+      <FileName>Models\Integrations\Eispp\CPPersonCrime.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="CrimeSanction" />
+      <Property Name="CrimeSubjectDetails" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.Crime">
+    <Position X="8.5" Y="3.75" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>gBBAAJIAIAAAAoAAgAQCAAEgAAAAAEAAAACAEEQAIBA=</HashCode>
+      <FileName>Models\Integrations\Eispp\Crime.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CrimeSanction">
+    <Position X="12.75" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAgAAAAAEAAAQAACAAQAAAgQCAAAEAAACAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\CrimeSanction.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="CrimePunishments" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CrimePunishment">
+    <Position X="11.75" Y="4.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>ACACAAAAAAAAAAAAAAAAAAAAAAEAAIAIAAAAQAAIAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\CrimePunishment.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IOWebApplication.Infrastructure.Models.Integrations.Eispp.CrimeSubjectDetails">
+    <Position X="16" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAgACAAAAA=</HashCode>
+      <FileName>Models\Integrations\Eispp\CrimeSubjectDetails.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

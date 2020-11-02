@@ -1,0 +1,149 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.DeliveryAreaFilterVM
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Списък райони";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<form id="formFilter" asp-action="Edit" method="post" class="quick-submit">
+    @Html.HiddenFor(x => x.CourtId)
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateFrom)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateTo)
+        </div>
+        <div class="col-md-2">
+           @Html.EditorFor(x => x.ExpiredType, "GenericDropDown")
+       </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateExpiredFrom)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateExpiredTo)
+        </div>
+        <div class="col-md-2 text-right pb-15">
+            <br/>
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadDeliveryAreas()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <hr>
+    </div>
+</form>
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a onclick=addFilterCourtDeliveryArea("@Url.Action("Add")") class="btn btn-success">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filter = getFormData($('#formFilter'));
+                    }
+                },
+                columns: [
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Служител',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+                    {
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+                    {
+                        name: 'dateExpired',
+                        data: 'dateExpired',
+                        title: 'Дата на анулиране',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+                    {
+                        className: 'col-md-2 text-right noExport',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        "render": function(data, type, row) {
+                            row.isNotExpired = (row.dateExpired === null); 
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        });
+        function addFilterCourtDeliveryArea(addr) {
+            window.location.href = addr + "?courtId=" + $("#CourtId").val();
+        }
+        function LoadDeliveryAreas() {
+            $('#mainTable').DataTable().ajax.reload();
+        }
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        {{#if isNotExpired}}
+           <a href="@Url.Action("Edit")/{{this.id}}" class="btn btn-warning btn-sm" title="Редакция">
+                <i class="fa fa-edit"></i>
+                <span class="hidden-sm hidden-xs"></span>
+            </a>
+        {{/if}}
+        <a href="@Url.Action("Index","DeliveryAreaAddress")?deliveryAreaId={{this.id}}" class="btn btn-def btn-sm" title="Адреси">
+            <i class="fa fa-address-book"></i>
+            <span class="hidden-sm hidden-xs"> Адреси</span>
+        </a>
+    </script>
+}

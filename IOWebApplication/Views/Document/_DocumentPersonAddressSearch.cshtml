@@ -1,0 +1,78 @@
+﻿@{
+    Layout = null;
+}
+<div class="row">
+    <div class="col-lg-12">
+        <table id="selectAddressTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<script>
+    $(function () {
+        let _dt = $('#selectAddressTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("DocumentPersonAddress_Search")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        let personSearchContainer = '@ViewBag.containerId';
+                        let personSearchUic = $('#' + personSearchContainer).find('[id$="Uic"]:first').val();
+                        let personSearchUicTypeId = $('#' + personSearchContainer).find('[id$="UicTypeId"]:first').val();
+                        let personSearchSourceType = $('#' + personSearchContainer).find('[id$="Person_SourceType"]:first').val();
+                        let personSearchSourceId = $('#' + personSearchContainer).find('[id$="Person_SourceId"]:first').val();
+
+                        d.uic = personSearchUic;
+                        d.uicTypeId = personSearchUicTypeId;
+                        d.personSourceType = personSearchSourceType;
+                        d.personSourceId = personSearchSourceId;
+                    }
+                },
+                 buttons: [],
+                "bInfo": false,
+                filter: true,
+                columns: [
+                    {
+                        name: 'addressTypeName',
+                        data: 'addressTypeName',
+                        title: 'Вид адрес',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'fullAddress',
+                        data: 'fullAddress',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: null,
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a,b,item,d) {
+                            return '<a href="#" onclick="AppendAddressToDocumentPerson('+item.id+');return false;">избери</a>';
+                        }
+                    }
+                ]
+        });
+        _dt.state.clear();
+    });
+
+    function AppendAddressToDocumentPerson(addressId) {
+        let personSearchContainer = '@ViewBag.containerId';
+        let personIndex = $('#' + personSearchContainer).data('index');
+        let addAddressButton = $('#' + personSearchContainer).find('.add-doc-address:first');
+        let adrIndex = $(addAddressButton).data('index');
+        requestContent('@Url.Action("NewItem_DocumentPersonAddress")', { personIndex: personIndex, index:adrIndex,addressId:addressId}, function (html) {
+            let container = $(addAddressButton).data('container');
+            autoCloseOthers(addAddressButton);
+            $('#' + container).append(html);
+            initEkatte();
+            HideModal();
+            $(addAddressButton).data('index',parseInt(adrIndex)+1);
+        });
+
+    }
+</script>

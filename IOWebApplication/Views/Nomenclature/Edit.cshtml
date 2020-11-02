@@ -1,0 +1,68 @@
+﻿@model object
+@using System.Reflection;
+@using IOWebApplication.Infrastructure.Data.Models;
+@using System.ComponentModel.DataAnnotations.Schema;
+
+@{
+    ViewData["Title"] = TempData.Peek("Title");
+    PropertyInfo[] properties = Model
+        .GetType()
+        .GetProperties();
+
+    PropertyInfo[] orderedProperties = properties
+        .Where(p => p.DeclaringType.Name == "BaseCommonNomenclature")
+        .Select(p => p)
+        .Union(properties.Where(p => p.DeclaringType.Name != "BaseCommonNomenclature")
+        .Select(p => p))
+        .ToArray();
+
+    string[] hiddenFields = new string[] { "Id", "OrderNumber" };
+
+    var nomInstance = (IOWebApplication.Infrastructure.Data.Models.Nomenclatures.BaseCommonNomenclature)Model;
+    var historyId = string.Format("{0}_{1}", TempData.Peek("NomenclatureName").ToString(), nomInstance.Id);
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Nomenclature", new {nomenclatureName = TempData.Peek("NomenclatureName")})">@ViewData["Title"]</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                @await Html.PartialAsync("_SaveFormContent", "#saveContainer")
+                @foreach (var property in orderedProperties)
+                {
+                    if (hiddenFields.Contains(property.Name) || property.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(ForeignKeyAttribute)) != null)
+                    {
+                        @Html.Hidden(property.Name, property.GetValue(Model, null))
+                    }
+                    else if (ViewData[property.Name + "_ddl"] != null)
+                    {
+                        @Html.Editor(property.Name, "GenericDropDown")
+                    }
+                    else
+                    {
+                        @Html.Editor(property.Name, property.GetValue(Model, null))
+
+                    }
+                }
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="Index" asp-route-nomenclatureName="@TempData.Peek("NomenclatureName")" asp-route-title="@TempData.Peek("Title")" class="btn btn-danger">Назад</a>
+                @if (nomInstance.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = historyId })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+

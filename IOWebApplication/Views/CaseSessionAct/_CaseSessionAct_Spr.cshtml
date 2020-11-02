@@ -1,0 +1,136 @@
+﻿@model CaseSessionActFilterVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.Year, "DateTimeYear")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
+</div>
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
+</div>
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.IsFinalDoc, "Boolean")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTableCaseSessionAct()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSessionActMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTableCaseSessionAct() {
+        if ($.fn.dataTable.isDataTable('#caseSessionActMainTable')) {
+            refreshTable('#caseSessionActMainTable');
+        }
+        else {
+            $('#caseSessionActMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSpr", "CaseSessionAct")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $('#DateFrom').val(),
+                            DateTo: $('#DateTo').val(),
+                            Year: $('#Year').val(),
+                            CaseRegNumber: $('#CaseRegNumber').val(),
+                            ActLawBaseId: $('#ActLawBaseId').val(),
+                            IsFinalDoc: $("#IsFinalDoc").is(":checked")
+                        };
+                    }
+                },
+                columns: [
+                    {
+                        name: 'caseLabel',
+                        data: 'caseLabel',
+                        title: 'Дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseLabel + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseSessionLabel',
+                        data: 'caseSessionLabel',
+                        title: 'Заседание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actTypeLabel',
+                        data: 'actTypeLabel',
+                        title: 'Вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actStateLabel',
+                        data: 'actStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Рег. номер',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("Preview", "CaseSession",new { id = 666}))#tabSessionAct';
+                            url = url.replace('666', row.caseSessionId);
+                            return (row.regNumber != null) ? "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.regNumber + "</a>" : row.regNumber;
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Рег. дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function(data){
+                                    return (data != null) ? moment(data).format("DD.MM.YYYY") : data;
+                                }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionActTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="caseSessionActTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit", "CaseSessionAct")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+<script>
+    $(function () {
+        initActLawBaseAutoComplete();
+    })
+</script>
+

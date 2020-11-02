@@ -1,0 +1,121 @@
+﻿@model CaseEvidenceFilterVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+<div class="row">
+    <div class="col-md-6 col-lg-4">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-md-6 col-lg-4">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        @Html.EditorFor(m => m.RegNumber)
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTableCaseEvidence()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseEvidenceMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTableCaseEvidence() {
+        if ($.fn.dataTable.isDataTable('#caseEvidenceMainTable')) {
+            refreshTable('#caseEvidenceMainTable');
+        }
+        else {
+            $('#caseEvidenceMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSpr", "CaseEvidence")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.DateFrom = $('#DateFrom').val();
+                        d.DateTo = $('#DateTo').val();
+                        d.RegNumber = $('#RegNumber').val();
+                    }
+                },
+                columns: [
+                    {
+                        name: 'caseName',
+                        data: 'caseName',
+                        title: 'Дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseName + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fileNumber',
+                        data: 'fileNumber',
+                        title: 'Номер на преписка',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        name: 'dateAccept',
+                        data: 'dateAccept',
+                        title: 'Дата на получаване',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'evidenceStateLabel',
+                        data: 'evidenceStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseEvidenceTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="caseEvidenceTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit", "CaseEvidence")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

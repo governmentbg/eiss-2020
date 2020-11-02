@@ -1,0 +1,147 @@
+﻿@model Court
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на съд";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на съд";
+    }
+    string courtLogo = Model.CourtLogo ?? "data:image/jpeg;base64, ";
+    string returnUrl = ViewBag.returnUrl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        <form action="@Url.Action("Edit","Court")" id="courtPost" method="post" enctype="multipart/form-data">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtTypeId)
+            @Html.HiddenFor(x => x.Label)
+            @Html.HiddenFor(x => x.Code)
+            @Html.HiddenFor(x => x.EcliCode)
+            @Html.HiddenFor(x => x.DateStart)
+            @Html.HiddenFor(x => x.DateEnd)
+            @Html.HiddenFor(x => returnUrl)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1">Основни данни</legend>
+                            <div class="row">
+                                <div class="col-md-12">@Html.EditorFor(x => x.CourtTypeId, "GenericDropDown")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">@Html.EditorFor(x => x.Code)</div>
+                                <div class="col-md-6">@Html.EditorFor(x => x.EcliCode)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">@Html.EditorFor(x => x.Label)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">@Html.EditorFor(x => x.DateStart)</div>
+                                <div class="col-md-6">@Html.EditorFor(x => x.DateEnd)</div>
+                            </div>
+                            <div class="form-group address--control">
+                                <div class="row bg-address">
+                                    <div class="col-md-12">
+                                        <label for="Ekatte" class="control-label">Населено място</label>
+                                    </div>
+                                    <div class="col-md-12">
+                                        @Html.EditorFor(x => x.CityCode, "Ekatte", null, new { label = "Населено място" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">@Html.EditorFor(x => x.CityName)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">@Html.EditorFor(x => x.Address)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">@Html.EditorFor(x => x.PhoneNumber)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">@Html.EditorFor(x => x.Email)</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">@Html.EditorFor(x => x.CourtRegionId, "GenericDropDown")</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <img id="courtLogo" name="courtLogo" src="@courtLogo" alt="Заредете лого" class="img-responsive" />
+                                </div>
+                                <div class="col-md-6"><input type="file" name="imageFile" id="imageFile" accept="image/gif, image/jpeg, image/png" onchange="previewIMAGE(this)" /></div>
+                            </div>
+                            <div class="row">
+                                <br />
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1">Данни за адрес</legend>
+                            @Html.EditorFor(x => x.CourtAddress)
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                    <a href="@returnUrl" class="btn btn-danger">Назад</a>
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+                    }
+                </div>
+            </div>
+</form>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        function disableReadOnly(el) {
+            $('#saveContainer').find(el).prop("disabled", true);
+            $('#saveContainer').find(el).attr("readonly", true);
+        }
+        disableReadOnly('#CourtTypeId');
+        disableReadOnly('#Label');
+        disableReadOnly('#Code');
+        disableReadOnly('#EcliCode');
+        disableReadOnly('#DateStart');
+        disableReadOnly('#DateEnd');
+        $('#CourtRegionId').select2({
+            language: "bg"
+        });
+    });
+    function previewIMAGE(input) {
+        console.log(input);
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#courtLogo')
+                    .attr('src', e.target.result);
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    $(function () {
+        initEkatte();
+    });
+</script>

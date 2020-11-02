@@ -1,0 +1,268 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using IOWebApplication.Infrastructure.Constants
+@inject IViewLocalizer Localizer
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@{
+    bool hasArrested = NomenclatureConstants.CaseTypes.CaseTypeArrested.Contains(Model.CaseTypeId ?? 0);
+}
+
+
+@if (Model.CaseSessionId == null)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            @if (access.CanChange)
+            {
+                <a asp-controller="CasePerson" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-success btn-sm m-b-5">
+                    <i class="fa fa-plus"></i>
+                    Добави
+                </a>
+                <a onclick="SearchInstitution(); return false;" class="btn btn-warning btn-sm m-b-5">
+                    <i class="fa fa-plus"></i>
+                    Лица/Институции
+                </a>
+                @*<a href="#" onclick="selectPersonData();" class="btn btn-def btn-sm m-b-5">
+                    <i class="fa fa-plus"></i>
+                    Свързани данни
+                </a>*@
+                <a asp-controller="CasePersonLink" asp-action="Index" asp-route-id="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-def btn-sm m-b-5">
+                    <i class="fa fa-user-plus"></i>
+                    Връзки свързани лица
+                </a>
+                <a asp-controller="CasePerson" asp-action="CasePersonPrint_SelectForCheck" asp-route-caseId="@Model.Id" class="btn btn-warning btn-sm m-b-5">
+                    <i class="fa fa-print"></i>
+                    Генериране
+                </a>
+            }
+            <div class="cdn-files" data-genurl="@Url.Action("CasePersonPrint_SelectForCheck","CasePerson",new { caseId = Model.Id })"
+                 data-label="Списък на лица по дело"
+                 data-sourcetype="@SourceTypeSelectVM.CasePerson" data-sourceid="@Model.Id"
+                 data-editmode="none">
+            </div>
+            @*<a asp-controller="CasePerson" asp-action="CasePersonPrint_SelectForCheck" asp-route-caseId="@Model.Id" class="btn btn-def btn-sm">
+                <i class="fa fa-print"></i>
+                Печат
+        </a>*@
+        </div>
+    </div>
+}
+else
+{
+    @if (access.CanChange)
+    {
+        <div class="row">
+            <div class="col-md-12 text-right pb-15">
+                <a href="#" title="Обнови" class="btn btn-def btn-sm" onclick="ReloadCasePerson();return false;"><i class="fa fa-files-o"></i> Обнови</a>
+            </div>
+        </div>
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="casePersonMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<partial name="_CdnScript" />
+
+<script>
+        $(function () {
+            var table = $('#casePersonMainTable').DataTable({
+                'order': [[0, 'asc']],
+                ajax: {
+                    "url": "@Url.Action("ListData", "CasePerson")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                        d.caseSessionId = @(Model.CaseSessionId??0);
+                    }
+
+                },
+                deferLoading: deferLoadingOnTab('#casePersonMainTable'),
+                filter: false,
+                columns: [
+                    {
+                        className: 'hidden',
+                        name: 'rowNumber',
+                        data: 'rowNumber',
+                        title: 'Пореден номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    //{
+                    //    name: 'uic',
+                    //    data: 'uic',
+                    //    title: 'ЕГН/ЕИК',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
+                    {
+                        className: 'col-md-5',
+                        name: 'fullName',
+                        data: 'fullName',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'roleName',
+                        data: 'roleName',
+                        title: 'Вид лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: '@hasArrested' == 'True' ? 'text-center' : 'hidden',
+                        name: 'isArrested',
+                        data: "isArrested",
+                        title: 'Задържан',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return value ? 'Да' : 'Не';
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-left noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#casePersonTemplateEdit', row);
+                        }
+                        //"render": function (value) {
+                        //    return TemplateToHtml('#casePersonTemplateEdit', value);
+                        //}
+                    }
+                ]
+            });
+
+            $(document).on('click', '.orderButton', savePosition);
+
+            function savePosition(e) {
+                var element = e.currentTarget;
+                var data = element.dataset;
+
+                element.setAttribute("disabled", "");
+                $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("ChangeOrderCasePerson", "CasePerson")',
+                    dataType: "json",
+                    data: data
+                }).fail(function (jqXHR, status, message) {
+                    if (jqXHR.responseText) {
+                        //messageHelper.ShowErrorMessage(jqXHR.responseText);
+                    }
+                }).always(function () {
+                    table.draw(false);
+                });
+            };
+        });
+
+    function selectPersonData() {
+       requestContent('@Url.Action("CasePersons_SelectData", "CasePerson")', { caseId: @Model.Id }, function (html) {
+           ShowModalDialog('Избиране на лица и адреси от свързани данни', html, true);
+       });
+    }
+</script>
+
+<script id="casePersonTemplateEdit" type="text/x-handlebars-template">
+    @if (Model.CaseSessionId == null)
+    {
+        @if (access.CanChange)
+        {
+            <a href="@Url.Action("Edit", "CasePerson")?id={{id}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+            <a href="@Url.Action("AddLikeAnotherPerson", "CasePerson")?personId={{id}}" class="btn btn-primary btn-sm m-b-5" title="Създай като"><i class="fa fa-copy"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+        else
+        {
+            <a href="@Url.Action("Edit", "CasePerson")?id={{id}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+    }
+    else
+    {
+        <a href="@Url.Action("View", "CasePerson")?id={{id}}" class="btn btn-warning btn-sm m-b-5" title="Преглед"><i class="fa fa-search"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    {{#if isIndividual}}
+    <a href="@Url.Action("IndexCasePersonDocument", "CasePerson")?casePersonId={{id}}" class="btn btn-def btn-sm m-b-5" title="Лични документи"><i class="fa fa-id-card-o"></i><span class="hidden-sm hidden-xs"></span></a>
+    {{/if}}
+    {{#if isViewPersonSentence}}
+    <a href="@Url.Action("Index", "CasePersonSentence")?casePersonId={{id}}" class="btn btn-def btn-sm m-b-5" title="Присъди"><i class="fa fa-user-circle-o"></i><span class="hidden-sm hidden-xs"></span></a>
+    <a href="@Url.Action("IndexCasePersonMeasure", "CasePerson")?casePersonId={{id}}" class="btn btn-def btn-sm m-b-5" title="Мерки"><i class="fa fa-hashtag"></i><span class="hidden-sm hidden-xs"></span></a>
+    {{/if}}
+    {{#if isViewPersonInheritance}}
+    <a href="@Url.Action("IndexInheritance", "CasePerson")?casePersonId={{id}}" class="btn btn-def btn-sm m-b-5" title="Наследство"><i class="fa fa-gift"></i><span class="hidden-sm hidden-xs"></span></a>
+    {{/if}}
+</script>
+
+<script>
+    function ReloadCasePerson(id) {
+        swalConfirm('Данните в модул Уведомления няма да бъдат обновени автоматично.', function () {
+            postContent('@Url.Action("ReloadPersonData","CasePerson")'
+                , { caseId: "@Model.Id", caseSessionId: "@Model.CaseSessionId"}
+                , function (data) {
+                    if (data.result == true) {
+                        refreshTable('#casePersonMainTable');
+                        if ($.fn.dataTable.isDataTable('#caseNotificationListMainTable')) {
+                            refreshTable('#caseNotificationListMainTable');
+                        }
+                        messageHelper.ShowSuccessMessage(data.message);
+                    } else {
+                        messageHelper.ShowErrorMessage(data.message);
+                    }
+                });
+        });
+    }
+
+    function SearchInstitution() {
+        requestContent('@Url.Action("SearchEntity", "Ajax")', { callback: 'selectEntityCasePerson' }, function (modalData) {
+            ShowModalDialog('Избор на лице/институция', modalData);
+        });
+    }
+
+    function selectEntityCasePerson(sourceType, sourceId) {
+        HideModal();
+        window.location.href = '@Url.Action("AddInstitution", "CasePerson")?sourceType=' + sourceType +
+            "&sourceId=" + sourceId + "&caseId=" + @Model.Id;
+    }
+
+</script>

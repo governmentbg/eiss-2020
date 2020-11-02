@@ -1,0 +1,86 @@
+﻿@model CaseSelectionProtokolLawUnitVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Constants
+@inject IUserContext userContext
+
+@{
+    var attributes = Model.EnableState == false ? (object)new { @class = "form-control lawUnitState", @readonly = "readonly" } : (object)new { @class = "form-control lawUnitState" };
+    var attributesDesc = Model.EnableState == false ? (object)new { @class = "form-control", @readonly = "readonly", placeholder = "Забележка" } : (object)new { @class = "form-control", placeholder = "Забележка" };
+}
+
+@if (Model != null)
+{
+<div data-index="@Model.Index" data-casegroup="@(Model.CaseGroupId??0)" class="lawunit item-template">
+    <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
+    @if (!Model.IsLoaded)
+    {
+        @*<a href="#" class="remove-item" title="Премахни лицето" data-alert="Потвърди премахването на лицето!"><i class="fa fa-remove"></i></a>*@
+        @*<b>Участник в разпределяне</b>*@
+        @*<div class="row">
+            <div class="col-lg-3">
+                <label>Имена</label>
+            </div>
+            @if (NomenclatureConstants.JudgeRole.JudgeRolesList.Contains((int)(ViewBag.RoleId)))
+            {
+                <div class="col-lg-1">
+                    <label>Натовареност</label>
+                </div>
+            }
+                <div class="col-lg-2">
+                    <label>Статус</label>
+                </div>
+                <div class="col-lg-6">
+                    <label>Забележка</label>
+                </div>
+            </div>*@
+
+
+    }
+
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.IsLoaded)
+    @Html.HiddenFor(x => x.CaseGroupId)
+    @Html.HiddenFor(x => x.SelectedFromCaseGroup)
+    @Html.HiddenFor(x => x.EnableState)
+  
+<div class="row">
+    <div class="col-lg-3 col-md-3">
+        @if (Model.IsLoaded)
+        {
+            <span class="list-lawunit-name">
+                @Model.LawUnitFullName
+            </span>
+            @Html.HiddenFor(x => x.LawUnitId)
+            @Html.HiddenFor(x => x.LawUnitFullName)
+        }
+        else
+        {
+            @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { label = "none", lawUnitTypes = Model.LawUnitTypeId, courtId = userContext.CourtId })
+        }
+    </div>
+    @*@if (Model.LawUnitTypeId != NomenclatureConstants.LawUnitTypes.Jury.ToString())*@
+        @if (NomenclatureConstants.JudgeRole.JudgeRolesList.Contains((int)(ViewBag.RoleId)))
+
+
+        {
+            <div class="col-lg-2  col-md-2">
+                @Html.HiddenFor(x => x.LoadIndex)
+                @Model.LoadIndex
+                @*@Html.TextBoxFor(x => x.LoadIndex, new { @readonly = "readonly", @class = "form-control" })*@
+            </div>
+        }
+        <div class="col-lg-2  col-md-3">
+            @Html.DropDownListFor(x => x.StateId, (List<SelectListItem>)ViewBag.states, attributes)
+        </div>
+        <div class="col-lg-5  col-md-4">
+            @Html.TextBoxFor(x => x.Description, attributesDesc)
+        </div>
+    </div>
+</div>
+    <script>
+        $(function () {
+            initLawUnit();
+        });
+    </script>
+}

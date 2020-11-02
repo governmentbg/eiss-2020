@@ -1,0 +1,95 @@
+﻿@{
+    var casePersonId = ViewBag.casePersonId;
+    var caseSessionId = ViewBag.caseSessionId;
+    ViewData["Title"] = "Адреси " + ViewBag.casePersonName;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+@if (caseSessionId == null)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-action="AddCasePersonAdr" asp-route-casePersonId="@casePersonId" class="btn btn-def btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCasePersonAddress")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.casePersonId = @casePersonId;
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'addressTypeName',
+                        data: 'addressTypeName',
+                        title: 'Вид адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fullAddress',
+                        data: 'fullAddress',
+                        title: 'Адрес',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'forNotification',
+                        data: 'forNotification',
+                        title: 'За известие',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return "ДА";
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="templateEdit" type="text/x-handlebars-template">
+        @if (caseSessionId == null)
+        {
+            <a href="@Url.Action("EditCasePersonAdr", "CasePerson")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        }
+    </script>
+}

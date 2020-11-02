@@ -1,0 +1,96 @@
+﻿@model long
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <button type="button" class="btn btn-success btn-sm" id="btnGetCheck" onclick="AddClick()" value="Добави" title="Добави">
+            Добави
+            <i class="fa fa-plus" title="Добави"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="documentDecisionCaseMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<partial name="_CdnScript" />
+
+<script>
+        $(function () {
+            var table = $('#documentDecisionCaseMainTable').DataTable({
+                'order': [[0, 'asc']],
+                ajax: {
+                    "url": "@Url.Action("DocumentDecisionCaseListData", "Document")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.documentDecisionId = @Model;
+                    }
+
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegDate',
+                        data: 'caseRegDate',
+                        title: 'Дата на дело',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'decisionName',
+                        data: 'decisionName',
+                        title: 'Решение',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#documentDecisionCaseTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="documentDecisionCaseTemplateEdit" type="text/x-handlebars-template">
+    <a onclick="EditClick({{this}})" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+<script>
+    function AddClick() {
+        requestContent('@Url.Action("AddDocumentDecisionCase", "Document")'
+            , { documentDecisionId: @Model }
+            , function (data) {
+                ShowModalDialog('Добавяне', data);
+            });
+    }
+    function EditClick(id) {
+        requestContent('@Url.Action("EditDocumentDecisionCase", "Document")'
+            , { id: id }
+            , function (data) {
+                ShowModalDialog('Редакция', data);
+            });
+    }
+</script>

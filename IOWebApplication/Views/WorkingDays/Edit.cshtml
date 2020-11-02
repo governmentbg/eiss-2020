@@ -1,0 +1,48 @@
+﻿@model WorkingDay
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на работни и почивни дни";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на работни и почивни дни";
+    }
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" asp-controller="WorkingDays" method="post">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.HiddenFor(x => x.Id)
+                @Html.EditorFor(x => x.Day, "DateTime")
+                @Html.EditorFor(x => x.CourtId, "GenericDropDown")
+                @Html.EditorFor(x => x.DayTypeId, "RadioButtonList", new { ddl = ViewBag.DayTypes })
+                @Html.EditorFor(x => x.Description)
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success" />
+                <a asp-action="Index" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+

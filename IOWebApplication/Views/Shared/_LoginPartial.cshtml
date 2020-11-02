@@ -1,0 +1,46 @@
+﻿@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
+@if (!string.IsNullOrEmpty(userContext.UserId))
+{
+    <!-- User Account Menu -->
+    <li class="dropdown user user-menu">
+        <!-- Menu Toggle Button -->
+        <a href="#" class="dropdown-toggle user-menu-name" data-toggle="dropdown">
+            <i class="fa fa-user-o"></i>
+            <span class="hidden-xs">@userContext.FullName</span>
+        </a>
+        <a href="#" class="dropdown-toggle user-menu-court" data-toggle="dropdown">
+            <i class="fa fa-university"></i>
+            <span class="hidden-xs">@userContext.CourtName</span>
+        </a>
+        <ul class="dropdown-menu">
+            <!-- The user image in the menu -->
+            <li class="user-header">
+                <div style="margin:10% 10%;">
+                    <a asp-controller="Account" asp-action="UserSetting" class="btn btn-block btn-default">
+                        <i class="fa fa-cog"></i> Персонализиране
+                    </a>
+                    <br />
+                    <a href="#" class="btn btn-block btn-default" onclick="selectCourt(); return false;">
+                        <i class="fa fa-university"></i> Смяна на съд
+                    </a>
+                </div>
+            </li>
+            <li class="user-footer">
+                @if (IOWebApplication.Infrastructure.Constants.AccountConstants.PasswordLoginEnabled)
+                {
+                    <div class="pull-left">
+                        <a asp-action="ChangePassword" asp-controller="Account" class="btn btn-default">Смяна на паролата</a>
+                    </div>
+                }
+                <div class="pull-right">
+                    <a asp-controller="Account" asp-action="LogOut" class="btn btn-def">Изход</a>
+                </div>
+            </li>
+        </ul>
+    </li>
+}
+else
+{
+    <li><a asp-controller="Account" asp-action="Login">Вход</a></li>
+}

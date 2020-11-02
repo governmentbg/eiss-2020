@@ -1,0 +1,54 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Core.Extensions
+@using IOWebApplication.Infrastructure.Constants
+@model RegixEmploymentContractsVM
+
+@{
+    var eikTypeName = "";
+    var contractsFilterTypeName = "";
+    if (Model.Report.Id > 0)
+    {
+        eikTypeName = ((EikTypeTypeEmploymentContractsVM)Model.EmploymentContractsFilter.EikTypeId).GetDisplayName();
+        contractsFilterTypeName = ((ContractsFilterTypeEmploymentContractsVM)Model.EmploymentContractsFilter.ContractsFilterTypeId).GetDisplayName();
+    }
+}
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.EmploymentContractsFilter.IdentityFilter, "objInline", new { label = "Справка за: " + eikTypeName + " " })
+        <b>
+            Статус на данните:
+        </b>
+        @contractsFilterTypeName
+        <br />
+        <br />
+
+        @foreach (var cl in Model.EmploymentContractsResponse)
+        {
+            <center>
+                <b>Договор</b>
+            </center>
+
+            @Html.DisplayFor(x => cl.ContractorBulstat, "objInline")
+            @Html.DisplayFor(x => cl.ContractorName, "objInline")
+            @Html.DisplayFor(x => cl.IndividualEIK, "objInline")
+            @Html.DisplayFor(x => cl.IndividualNames, "objInline")
+            @Html.DisplayFor(x => cl.StartDate, "objInline")
+            @Html.DisplayFor(x => cl.LastAmendDate, "objInline")
+            @Html.DisplayFor(x => cl.EndDate, "objInline")
+            @Html.DisplayFor(x => cl.Reason, "objInline")
+            @Html.DisplayFor(x => cl.TimeLimit, "objInline")
+            @Html.DisplayFor(x => cl.EcoCode, "objInline")
+            @Html.DisplayFor(x => cl.ProfessionCode, "objInline")
+            @Html.DisplayFor(x => cl.Remuneration, "objInline")
+            @Html.DisplayFor(x => cl.ProfessionName, "objInline")
+            <br />
+            <br />
+        }
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

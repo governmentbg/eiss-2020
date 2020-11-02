@@ -1,0 +1,80 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Core.Extensions
+@model RegixPensionIncomeAmountVM
+
+@{
+    var identifierType = "";
+    if (Model.Report.Id > 0)
+    {
+        identifierType = ((IdentifierTypePensionVM)Model.PensionIncomeAmountFilter.IdentifierTypeFilter).GetDisplayName();
+    }
+}
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.PensionIncomeAmountFilter.IdentifierFilter, "objInline", new { label = "Справка за: " + identifierType + " " })
+        <b>
+            От дата до дата:
+        </b>
+        @Model.PensionIncomeAmountFilter.DateFromFilter.ToString("dd.MM.yyyy") - @Model.PensionIncomeAmountFilter.DateToFilter.ToString("dd.MM.yyyy")
+        <br />
+        <br />
+
+        @Html.DisplayFor(x => x.PensionIncomeAmountResponse.Identifier, "objInline")
+        @Html.DisplayFor(x => x.PensionIncomeAmountResponse.Names, "objInline")
+        @Html.DisplayFor(x => x.PensionIncomeAmountResponse.TerritorialDivisionNOI, "objInline")
+        @Html.DisplayFor(x => x.PensionIncomeAmountResponse.PensionerStatus, "objInline")
+        @Html.DisplayFor(x => x.PensionIncomeAmountResponse.ContentText, "objInline")
+        @Html.DisplayFor(x => x.PensionIncomeAmountResponse.DateOfDeath, "objInline")
+
+        @if (Model.PensionIncomeAmountResponse.Payments.Count() == 0)
+        {
+            <b>Липсват данни за изплатени пенсии и добавки</b>
+        }
+        else
+        {
+            <table>
+                <tr>
+                    <td colspan="3">
+                        <table class="bordered">
+                            <tr>
+                                <td><b>Месец</b></td>
+                                <td><b>Общо получена сума</b></td>
+                                <td><b>Пенсии</b></td>
+                                <td><b>Добавка за чужда помощ</b></td>
+                                <td><b>Други добавки</b></td>
+                            </tr>
+
+                            @foreach (var item in Model.PensionIncomeAmountResponse.Payments)
+                            {
+                                <tr>
+                                    <td align="left">
+                                        @item.Month
+                                    </td>
+                                    <td align="right">
+                                        @item.TotalAmount
+                                    </td>
+                                    <td align="right">
+                                        @item.PensionAmount
+                                    </td>
+                                    <td align="right">
+                                        @item.AdditionForAssistance
+                                    </td>
+                                    <td align="right">
+                                        @item.OtherAddition
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        }
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

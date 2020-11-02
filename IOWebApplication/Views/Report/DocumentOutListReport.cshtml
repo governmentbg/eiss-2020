@@ -1,0 +1,151 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model DocumentOutListFilterReportVM
+
+@{
+    ViewData["Title"] = "Справка за документи от изходящ регистър";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" action="@Url.Action("DocumentOutListReportExportExcel")" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.DocumentGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.DocumentTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataDocumentOutListReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            DocumentGroupId: $("#DocumentGroupId").val(),
+                            DocumentTypeId: $("#DocumentTypeId").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                        };
+                    }
+                },
+                  filter:false,
+                columns: [
+                    {
+                        name: 'documentNumber',
+                        data: 'documentNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'documentYear',
+                        data: 'documentYear',
+                        title: 'Година',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'documentDate',
+                        data: 'documentDate',
+                        title: 'Дата на изпращане',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'documentData',
+                        data: 'documentData',
+                        title: 'Вид на документа',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseData',
+                        data: 'caseData',
+                        title: 'Вид дело',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'documentPersons',
+                        data: 'documentPersons',
+                        title: 'Адресант',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Текст',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'deliveryGroupName',
+                        data: 'deliveryGroupName',
+                        title: 'Начин на изпращане',
+                        sortable: true,
+                        searchable: false,
+                    },
+                ]
+            });
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#DocumentGroupId').trigger('change');
+        $('#CaseGroupId').trigger('change');
+
+        $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#formFilter").submit();
+        };
+    });
+
+    $('#DocumentGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_DocumentType", "Ajax")', { documentGroupId: $(this).val(), addDefaultElement: true }, '#DocumentTypeId', @Model.DocumentTypeId);
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+</script>

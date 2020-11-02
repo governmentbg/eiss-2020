@@ -1,0 +1,358 @@
+﻿@model CaseSelectionProtokolVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    ViewData["Title"] = "Ново разпределяне по дело";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-lg-10  col-md-12">
+        <form asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.CourtId)
+            @Html.HiddenFor(x => x.CaseGroupId)
+            @Html.HiddenFor(x => x.CourtGroupId)
+            @Html.HiddenFor(x => x.CaseCodeId)
+            @Html.HiddenFor(x => x.SelectionModeId)
+            @Html.ValidationSummary()
+
+
+            <fieldset class="is-fieldset">
+                @Html.EditorFor(x => x.JudgeRoleId, "GenericDropDown")
+                <div id="dismis">
+                    @Html.EditorFor(x => x.CaseLawUnitDismisalId, "GenericDropDown")
+                </div>
+            </fieldset>
+            <div id="lawUnitData">
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs" id="caseProtocolTab">
+                        <li class="active"><a id="tabbtnSelectByGroup" href="#tabSelectByGroup" data-id="@NomenclatureConstants.SelectionMode.SelectByGroups" data-toggle="tab"><i class="fa fa-random"></i> Автоматично разпределение</a></li>
+                        <li class=""><a id="tabbtnManualSelect" href="#tabManualSelect" data-id="@NomenclatureConstants.SelectionMode.ManualSelect" data-toggle="tab"><i class="fa fa-user-o"></i> Ръчно разпределение</a></li>
+                        <li class=""><a id="tabProtocolSelectByDuty" href="#tabSelectByDuty" data-id="@NomenclatureConstants.SelectionMode.SelectByDuty" data-toggle="tab"><i class="fa fa-clock-o"></i> Разпределение по дежурство</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tabSelectByGroup">
+                            <div id="dataJury">
+                                @Html.EditorFor(x => x.SpecialityId, "GenericDropDown")
+                            </div>
+                            <div id="dataJudge">
+                                @*@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")*@
+                                <a href="#" id="btnloadUnitsByGroup" onclick="loadUnitsByGroup(); return false;" class="btn btn-primary">Зареди списък</a>
+                                <a href="#" id="addLawUnitByCaseGroup" onclick="loadUnitsByCaseGroup(); return false;" class="btn btn-primary">Зареди от друго отделение</a>
+
+                            </div>
+                            <div>
+                                <span id="NoAvailableLawUnitsInCaseGroup" style="display:none" class="text-bold">Няма повече налични съдии</span>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tabManualSelect">
+                            @Html.EditorFor(x => x.Description, "textarea")
+                        </div>
+                        <div class="tab-pane" id="tabSelectByDuty">
+                            @Html.EditorFor(x => x.CourtDutyId, "GenericDropDown")
+                            <a href="#" id="btnloadUnitsByDuty" onclick="loadUnitsByDuty(); return false;" class="btn btn-primary">Зареди списък</a>
+                        </div>
+                    </div>
+                </div>
+
+
+                <fieldset class="is-fieldset" id="lawUnitListFieldset">
+                    <legend class="legend_1">Участници при разпределение</legend>
+                    <div class="dynamic-form">
+                        @*<div class="row">
+                                <div class="col-lg-3">
+                                    <label>Имена</label>
+                                </div>
+                                @if(NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(Model.JudgeRoleId))
+                                {
+                                <div class="col-lg-1">
+                                    <label>Натовареност</label>
+                                </div>}
+
+                                <div class="col-lg-2">
+                                    <label>Статус</label>
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Забележка</label>
+                                </div>
+                            </div>*@
+                        <div id="lawUnitList">
+                            @if (Model.LawUnits.Count() > 0)
+                            {
+                                <partial name="_LoadedLawUnits" model="@Model.LawUnits" />
+                            }
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <br />
+            <br />
+            <br />
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Разпредели" class="btn btn-success single-click-submit" />
+                <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>                
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        var oldJudgeRoleId = 0;
+        $(document).ready(function () {
+            $('#JudgeRoleId').trigger('change');
+
+            if (@Model.LawUnits.Count() == 0)
+            {
+                $('#lawUnitList').html('');
+            }
+            if ('@Model.SelectedTab' != "") {
+                $('#caseProtocolTab a[href="' + '@Model.SelectedTab' + '"]').tab('show');
+                if ('@Model.SelectedTab' == "#tabManualSelect" && @Model.LawUnits.Count() == 0) {
+                    loadUnitManual();
+                }
+            }
+            ManageButtonLawUnitByCaseGroup();
+        });
+
+        $('#JudgeRoleId').change(function () {
+            var roleId = $(this).val();
+            ManagelawUnitListFieldset($('#SelectionModeId').val());
+
+            if (oldJudgeRoleId > 0) {
+                var isNewJury = roleId == @NomenclatureConstants.JudgeRole.Jury || roleId == @NomenclatureConstants.JudgeRole.ReserveJury|| roleId == @NomenclatureConstants.JudgeRole.ExtJury;
+                var isOldJury = oldJudgeRoleId == @NomenclatureConstants.JudgeRole.Jury || oldJudgeRoleId == @NomenclatureConstants.JudgeRole.ReserveJury|| oldJudgeRoleId == @NomenclatureConstants.JudgeRole.ExtJury;
+                if (isNewJury != isOldJury) {
+                    $('#lawUnitList').html('');
+                    if ($('#SelectionModeId').val() == "@NomenclatureConstants.SelectionMode.ManualSelect") {
+                        loadUnitManual();
+                    }
+                }
+            }
+
+            if (   roleId == @NomenclatureConstants.JudgeRole.Jury || roleId == @NomenclatureConstants.JudgeRole.ReserveJury || roleId == @NomenclatureConstants.JudgeRole.ExtJury)
+
+            {
+                $("#dataJury").show();
+                $("#dismis").hide();
+                //2020.09.16
+                //$("#dataJudge").hide();
+                $("#dataJudge").show();
+                $("#tabProtocolSelectByDuty").hide();
+                  $("#tabbtnSelectByGroup").show();
+                //$("#lawUnitData").hide();
+            }
+            else
+            {
+                if (roleId == @NomenclatureConstants.JudgeRole.JudgeVAS)
+                {
+                $("#dataJury").hide();
+                    $("#dismis").hide();
+                    $("#dataJudge").hide();
+                    $("#tabProtocolSelectByDuty").hide();
+
+                    $("#tabbtnSelectByGroup").hide();
+                    $("#tabbtnManualSelect").trigger("click");
+
+                }
+
+            else
+                {
+                    $("#dataJury").hide();
+                    $("#dismis").show();
+                    $("#dataJudge").show();
+                    $("#tabProtocolSelectByDuty").show();
+                     $("#tabbtnSelectByGroup").show();
+                    //$("#lawUnitData").show();
+                    requestCombo('@Url.Action("GetDDL_FreeDismisal", "CaseLawUnit")', { caseId: @Model.CaseId, roleId: $(this).val() }, '#CaseLawUnitDismisalId', @(Model.CaseLawUnitDismisalId));
+
+                }}
+            oldJudgeRoleId = roleId;
+        });
+
+        $(document).on('change', '.lawUnitState', function () {
+            let span = $(this).parents('div.row:first').find('.list-lawunit-name');
+            if ($(this).val() == 2) {
+                $(span).addClass('disabled');
+            } else {
+                $(span).removeClass('disabled');
+                  $('#addLawUnitByCaseGroup').show();
+                        $('#NoAvailableLawUnitsInCaseGroup').hide();
+            }
+            ManageButtonLawUnitByCaseGroup();
+        });
+
+        function ManagelawUnitListFieldset(tabId) {
+                var roleId = $('#JudgeRoleId').val();
+                var isJury = roleId == @NomenclatureConstants.JudgeRole.Jury || roleId == @NomenclatureConstants.JudgeRole.ReserveJury|| roleId == @NomenclatureConstants.JudgeRole.ExtJury;
+                if (tabId == "@NomenclatureConstants.SelectionMode.SelectByGroups" && isJury) {
+                    //2020.09.16
+                    //$("#lawUnitListFieldset").hide();
+                    $("#lawUnitListFieldset").show();
+                }
+                else {
+                    $("#lawUnitListFieldset").show();
+            }
+            
+            if (tabId == "@NomenclatureConstants.SelectionMode.SelectByGroups")
+            { $('#btnloadUnitsByGroup').trigger('click');}
+
+             if (tabId == "@NomenclatureConstants.SelectionMode.SelectByDuty")
+             {
+                
+                 $('#btnloadUnitsByDuty').trigger('click');
+                 
+             }
+
+
+
+
+        }
+
+        $(function () {
+            $('.nav-tabs li a').click(function (e) {
+                var tabLink = this;
+                if ($('#lawUnitList').html().length > 0) {
+                    swalConfirm('При смяна на режима на разпределяне заредените участници ще се премахнат. Потвърдете смяната!', function () {
+
+                        $('#lawUnitList').html('');
+                        $("#addLawUnitByCaseGroup").hide();
+                        $(tabLink).trigger('click');
+                    });
+                    e.preventDefault();
+                    return false;
+                }
+                if ($(this).data('id') == "@NomenclatureConstants.SelectionMode.ManualSelect") {
+                    loadUnitManual();
+                }
+                ManagelawUnitListFieldset($(this).data('id'));
+                $('#SelectionModeId').val($(this).data('id'));
+            });
+
+            $('#tabSelectByGroup').trigger('click');
+
+            initDynamicForms();
+
+        });
+
+        function GetLawUnitsIds()
+        {
+            var ids = "";
+            $('div[class="lawunit item-template"]').each(function (index, item) {
+                if (ids != "")
+                    ids = ids + ",";
+                ids = ids + $(item).data('index');
+            });
+            return ids;
+        }
+
+        function GetLawUnitsCaseGroup()
+        {
+            var groups = "0";
+            var arr = [];
+            $('div[class="lawunit item-template"]').each(function (index, item) {
+                var groupId = $(item).data('casegroup');
+                if (groupId != "0" && arr.indexOf(groupId) < 0) {
+                    arr.push(groupId);
+                    groups = groups + "," + groupId;
+                }
+            });
+            return groups;
+        }
+
+        function ManageButtonLawUnitByCaseGroup()
+        {
+            var count = 0;
+            var hasInclude = false;
+            $(".lawUnitState").each(function (index, item) {
+                count++;
+                var stateId = $(item).val();
+                if (stateId == "-1" || stateId == "@NomenclatureConstants.SelectionProtokolLawUnitState.Include" || stateId == "@NomenclatureConstants.SelectionProtokolLawUnitState.AddedManually") {
+                    hasInclude = true;
+                }
+            });
+            if (count > 0 && hasInclude == false) {
+                $("#addLawUnitByCaseGroup").show();
+            }
+            else {
+                $("#addLawUnitByCaseGroup").hide();
+            }
+        }
+
+        function loadUnitsByGroup() {
+            requestContent('@Url.Action("LawUnits_LoadByGroup")',
+                { caseId: $('#CaseId').val(), judgeRoleId: $('#JudgeRoleId').val(), specialityId: $('#SpecialityId').val() }
+                , showLoadedUnits);
+        }
+        function loadUnitsByDuty() {
+            requestContent('@Url.Action("LawUnits_LoadByDuty")',
+                { courtDutyId: $('#CourtDutyId').val(), caseId:'@Model.CaseId' }
+                , showLoadedUnits);
+
+        }
+
+        function loadUnitManual() {
+            var lawUnitType = GetLawUnitType();
+            requestContent('@Url.Action("LawUnits_AddNew")',
+                { lawUnitTypeId: lawUnitType }
+                , showLoadedUnits);
+
+        }
+
+        function showLoadedUnits(data) {
+                $('#lawUnitList').html(data);
+                var loadedUnitsIndex = $('#lawUnitList').find('.lawunit.item-template').length;
+            ManageButtonLawUnitByCaseGroup();
+        }
+
+        function appendLoadedUnits(data) {
+            $("#lawUnitList").append(data);
+            var loadedUnitsIndex = $('#lawUnitList').find('.lawunit.item-template').length;
+            ManageButtonLawUnitByCaseGroup();
+        }
+
+        function loadUnitsByCaseGroup() {
+            var ids = GetLawUnitsIds();
+            var groups = GetLawUnitsCaseGroup();
+
+            requestContent('@Url.Action("LoadByCaseGroup","CaseSelectionProtokol")'
+                , {idStr : ids, groups: groups, caseId:'@Model.CaseId'}
+                , function (data) {
+                    if (data == 'empty') {
+                        $('#addLawUnitByCaseGroup').hide();
+                        $('#NoAvailableLawUnitsInCaseGroup').show();
+                    }
+                    else {
+                        ShowModalDialog('Избор на съдии', data);
+                    }
+                });
+        }
+
+        function GetLawUnitType() {
+            var roleId = $('#JudgeRoleId').val();
+            var lawUnitType = @NomenclatureConstants.LawUnitTypes.Judge;
+            if (roleId == @NomenclatureConstants.JudgeRole.Jury || roleId == @NomenclatureConstants.JudgeRole.ReserveJury|| roleId == @NomenclatureConstants.JudgeRole.ExtJury)
+            {
+                lawUnitType = @NomenclatureConstants.LawUnitTypes.Jury;
+            }
+            return lawUnitType;
+        }
+
+    </script>
+    <style>
+        span.list-lawunit-name.disabled {
+            color: #d53c3c;
+            font-style: italic;
+        }
+    </style>
+}

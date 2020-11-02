@@ -1,0 +1,105 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseSessionAct" asp-action="Add" asp-route-caseSessionId="@Model.CaseSessionId" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseSessionActMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseSessionActMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "CaseSessionAct")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseSessionId = @Model.CaseSessionId;
+                    }
+
+                },
+                deferLoading: deferLoadingOnTab('#caseSessionActMainTable'),
+                columns: [
+                    {
+                        name: 'actTypeLabel',
+                        data: 'actTypeLabel',
+                        title: 'Вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actResultLabel',
+                        data: 'actResultLabel',
+                        title: 'Вид на резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actStateLabel',
+                        data: 'actStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Рег. номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Рег. дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                                    return (data != null) ? moment(data).format("DD.MM.YYYY") : data;
+                                }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseSessionActTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+            table.order([4, 'desc']);
+        });
+</script>
+
+<script id="caseSessionActTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "CaseSessionAct")?id={{this}}&caseId=@Model.Id" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("Obligation", "Money")?caseSessionActId={{this}}" class="btn btn-def btn-sm m-b-5" title="Суми"><i class="fa fa-money"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+
+    <a href="@Url.Action("Index", "CaseSessionActLawBase")?caseSessionActId={{this}}" class="btn btn-def btn-sm m-b-5" title="Норм. текстове"><i class="fa fa-list"></i><span class="hidden-sm hidden-xs"></span></a>
+    <a href="@Url.Action("Index", "CaseSessionActComplain")?caseSessionActId={{this}}" class="btn btn-def btn-sm m-b-5" title="Обжалване"><i class="fa fa-gavel"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

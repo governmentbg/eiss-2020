@@ -1,0 +1,143 @@
+﻿@model CourtGroup
+@using IOWebApplication.Infrastructure.Data.Models.Common
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция група шифри";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне група шифри";
+    }
+    string caseTypeJson = @ViewBag.caseTypeJson;
+    var multiselectCode = "multiselectCode";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12">
+        <form id="formEdit" asp-action="Edit" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
+            
+            @Html.Hidden("caseTypeJson", caseTypeJson)
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer" class="row col-md-12">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    <div class="col-md-2">
+                        @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
+                    </div>
+                    <div class="col-md-6">
+                        @Html.EditorFor(x => x.Label)
+                    </div>
+                    <div class="col-md-2">
+                        @Html.EditorFor(x => x.DateFrom)
+                    </div>
+                    <div class="col-md-2">
+                        @Html.EditorFor(x => x.DateTo)
+                    </div>
+
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Description)
+                    </div>
+                </div>
+                <div class="row">
+                    @Html.ValidationMessage("caseCodesJson")
+                    @Html.Hidden("caseCodesJson")
+                    <div class="col-md-2">
+                        <h2 id="h4Code" class="text-left">Шифри</h2>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="control-label" for="filterCodeText">Филтър</label>
+                        <input class="form-control" type="text" id="filterCodeText" name="filterCodeText" value="">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="control-label" for="CaseTypeId">Филтър по тип дело</label>
+                        @Html.DropDownList("CaseTypeId", ViewBag.CaseTypeId_ddl, null, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div id="multiselectCode" class="row ms-transfer-container">
+                    <partial name="_MultiSelectTransfer" model=@multiselectCode />
+                </div>
+                <div class="row">
+                    <br>
+                </div>
+            </div>
+
+
+            <div class="form-group row col-md-12">
+                <a id="submit_button" class="btn btn-success" />Запис</a>
+                <a asp-action="Index" asp-route-filterCaseGroupId="@ViewBag.filterCaseGroupId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+@section scripts {
+    <script>
+        var $multiselectCode = $("#multiselectCode").multiselectiontransfer(
+            {
+                ajaxLeftUrl: "@Url.Action("CourtGroupCodeLeftList")",
+                ajaxRightUrl: "@Url.Action("CourtGroupCodeRightList")",
+                ajaxAllUrl: "@Url.Action("CourtGroupCodeAllList")"
+            }
+        );
+        var initCaseGroupId =  @ViewBag.filterCaseGroupId;
+        if (@Model.CaseGroupId > 0)
+           initCaseGroupId = @Model.CaseGroupId;
+
+        $multiselectCode.loadAll({ caseGroupId: initCaseGroupId, courtGroupId:@Model.Id, caseTypeId: 0 });
+        $("#filterCodeText").keyup(function () {
+            $multiselectCode.filterLeft($("#filterCodeText").val());
+        });
+
+        $("#CaseGroupId").change(function () {
+            var caseGroupId = $("#CaseGroupId").val();
+            $multiselectCode.loadAll({ caseGroupId : caseGroupId,  courtGroupId:@Model.Id, caseTypeId: 0 });
+
+            var caseTypes = jQuery.parseJSON($("#caseTypeJson").val());
+            var caseTypeGroup = caseTypes.filter(function (x) {
+                return x.CaseGroupId == caseGroupId;
+            });
+            var alltext = $("#CaseTypeId option[value='-1']").text();
+            var tempStr = '<option title="' + alltext + '" value="' + -1 + '">' + alltext + "</option>"
+            tempStr += caseTypeGroup.map(
+                function myFunction(value) {
+                    return '<option title="' + value.Label + '" value="' + value.Id + '">' + value.Label + "</option>";
+                }
+            ).join();
+            $("#CaseTypeId").html(tempStr);
+        });
+        $("#CaseTypeId").change(function () {
+            var caseTypeId = $("#CaseTypeId").val();
+            var caseGroupId = $("#CaseGroupId").val();
+            $multiselectCode.loadLeft({ caseGroupId : caseGroupId, caseTypeId : caseTypeId });
+        });
+        $("#filterCodeText").keyup(function () {
+            $multiselectCode.filterLeft($("#filterCodeText").val());
+        });
+
+        $("#formEdit").submit(function (event) {
+            $("#caseCodesJson").val($multiselectCode.getSelectedId());
+            return true;
+        });
+        $('#submit_button').click(function(){
+            $("#formEdit").submit();
+        });
+        $( document ).ready(function() {
+           $("#CaseGroupId").trigger('change');
+        });
+    </script>
+}
+

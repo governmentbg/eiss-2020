@@ -1,0 +1,29 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants
+@model SourceTypeSelectVM
+@if (Model.SourceId > 0)
+{
+    <div class="pull-right">
+        <div class="btn-group">
+            <button type="button" title="Заявки за интеграция с външни системи" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <i class="fa fa-exchange"></i> <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕПЕП</a></li>
+                @switch (Model.SourceType)
+                {
+                    case SourceTypeSelectVM.CaseSessionAct:
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.LegalActs" data-st="@SourceTypeSelectVM.EpepUser" data-si="@Model.SourceId">ЦУБИПСА</a></li>
+                        break;
+                    case SourceTypeSelectVM.CaseSelectionProtokol:
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.CSRD" data-st="@SourceTypeSelectVM.EpepUser" data-si="@Model.SourceId">ЦСРД</a></li>
+                        break;
+                    case SourceTypeSelectVM.Case:
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EISPP" data-st="@SourceTypeSelectVM.EpepUser" data-si="@Model.SourceId">ЕИСПП</a></li>
+                        break;
+                }
+            </ul>
+        </div>
+    </div>
+}
+

@@ -1,0 +1,4 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@using IOWebApplication.Core.Helper.GlobalConstants;
+@model WorkNotificationFilterVM;
+@await Component.InvokeAsync(nameof(IOWebApplication.Components.MyNotificationComponent), new {view = "MyNotifications", filter = Model })

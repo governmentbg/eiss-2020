@@ -1,0 +1,45 @@
+﻿@model IOWebApplication.Core.Models.NewsViewModel
+
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "rnModalForm" }))
+{
+    <div class="box-body">
+        <div>
+            <div>
+                <h4>
+                    <b>Заглавие:</b> @Model.Title
+                </h4>
+                <h4>
+                    @Html.Raw(Model.Content)
+                </h4>
+                <br />
+                <div class="direct-chat-info clearfix">
+                    <span class="direct-chat-name pull-left">@Model.Author</span>
+                    <span class="direct-chat-timestamp pull-right">@Model.PublishDate.ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            @if (Model.IsUnread)
+            {
+                <input type="submit" value="Прочетено" class="btn btn-success" />
+            }
+        </div>
+    </div>
+}
+
+<div id="modalMessageContainer">
+</div>
+
+<script>
+    $(function () {
+        attachAjaxForm('#rnModalForm', function (data) {
+            var resultSave = data.responseJSON.result;
+            debugger;
+            if (resultSave > 0) {
+                rnLoadData();
+                HideModal();
+            }
+        });
+    })
+</script>

@@ -1,0 +1,51 @@
+﻿@model List<CaseSessionActVM>
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    ViewData["Title"] = "Финализиращи актове към дело " + ViewBag.CaseName;
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Актове</legend>
+            @foreach (var caseSessionAct in Model.Where(x => x.IsFinalDoc))
+            {
+                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                    @{
+                        var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + ((!string.IsNullOrEmpty(caseSessionAct.EcliCode)) ? " " + caseSessionAct.EcliCode : string.Empty);
+                    }
+                    <div>
+                        @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                    </div>
+
+                    <div class="cdn-listview" style="margin-left:5px;">
+                        <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionAct" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                    </div>
+                </div>
+            }
+        </fieldset>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(function () {
+            $('div.cdn-listview').each(function (i, e) {
+                $(this).find('a').click(function () {
+                    let url = '@Url.Action("FileListView","Files")';
+                    if ($(this).data('url')) {
+                        url = $(this).data('url');
+                    }
+                    requestContent(url,
+                        { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                        function (html) {
+                            $(e).html(html);
+                        });
+                    return false;
+                });
+            });
+        });
+
+    </script>
+}
