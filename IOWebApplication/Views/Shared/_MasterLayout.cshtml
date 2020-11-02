@@ -6,7 +6,7 @@
     var settings = await userContext.Settings();
 
     var signToolsPath = configuration.GetValue<string>("SignToolsPath");
-    var certCheckPath = configuration.GetValue<string>("StampIT:CertCheckPath")";
+    var certCheckPath = configuration.GetValue<string>("StampIT:CertCheckPath");
     if (userContext.ClaimValue("PasswordLogin") == "true")
     {
         certCheckPath = "";
