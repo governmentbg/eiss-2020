@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Common;
+﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplicationService.Infrastructure.Contracts;
 using IOWebApplicationService.Infrastructure.Data.Common;
@@ -19,6 +16,7 @@ using IOWebApplicationService.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Constants;
 using MongoDB.Bson;
 using IOWebApplicationService.Infrastructure.Transactions;
+using IOWebApplication.Infrastructure.Models.Integrations.DW;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
@@ -26,26 +24,29 @@ namespace IOWebApplicationService.Infrastructure.Services
   {
     private readonly IRepository repo;
     private readonly IDWRepository dwRepo;
+    private readonly IDWErrorLogService serviceErrorLog;
     private readonly IDWCaseService caseService;
-    public DWSessionService(IRepository _repo, IDWRepository _dwRepo, IDWCaseService _caseService)
+    public DWSessionService(IRepository _repo, IDWRepository _dwRepo, IDWCaseService _caseService, IDWErrorLogService _serviceErrorLog)
     {
       this.repo = _repo;
       this.dwRepo = _dwRepo;
       caseService = _caseService;
+      this.serviceErrorLog = _serviceErrorLog;
     }
 
 
     public void SessionTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "SessionTransfer", 0, "Стартирал");
+
       IEnumerable<DWCaseSession> dwcasesSessions = SelectCasesSessionForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
-
-
-      while (dwcasesSessions.Any())
+      bool insertRow = true;
+      while (dwcasesSessions.Any() && insertRow)
       {
         List<int> updateList = new List<int>();
         foreach (var current_session in dwcasesSessions)
         {
-          bool insertRow = SessionInsertUpdate(current_session, court);
+          insertRow = SessionInsertUpdate(current_session, court);
           if (insertRow)
           {
 
@@ -54,7 +55,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         }
         dwRepo.SaveChanges();
-        
+
         UpdateCaseSession(updateList, dwcasesSessions);
 
         dwcasesSessions = SelectCasesSessionForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
@@ -64,21 +65,23 @@ namespace IOWebApplicationService.Infrastructure.Services
     {
       bool result = false;
       var idd = dwcasesSessions;
-      DateTime datewrt=DateTime.Now.Date;
+      DateTime datewrt = DateTime.Now.Date;
       try
       {
         DateTime dt = DateTime.Now;
         foreach (var item in updateList)
         {
-        //  using (TransactionScope tran = DWTransactions.GetTransactionScope())
+          //  using (TransactionScope tran = DWTransactions.GetTransactionScope())
           {
-            var update = repo.GetById<CaseSession>(item);
-            datewrt = update.DateWrt;
-            update.DateTransferedDW = dt;
-            repo.Update(update);
-            repo.SaveChanges();
-            repo.Detach(update);
-         //   tran.Complete();
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({item},'{UpdateDateTransferedVM.Tables.CaseSession}')");
+
+            //var update = repo.GetById<CaseSession>(item);
+            //datewrt = update.DateWrt;
+            //update.DateTransferedDW = dt;
+            //repo.Update(update);
+            //repo.SaveChanges();
+            //repo.Detach(update);
+            //   tran.Complete();
           }
         }
 
@@ -102,7 +105,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
         var i = datewrt;
-        throw ex;
+        //throw ex;
       }
 
 
@@ -204,7 +207,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "case_session", current.Id, ex.Message);
       }
 
       return result;
@@ -232,16 +235,16 @@ namespace IOWebApplicationService.Infrastructure.Services
                               .Select(x => new DWCaseSession()
                               {
                                 Id = x.Id,
-                                //CompartmentName = x.Compartment.Label,
-                                CourtHallId = x.CourtHallId,
+                                      //CompartmentName = x.Compartment.Label,
+                                      CourtHallId = x.CourtHallId,
                                 CourtHallName = x.CourtHall.Name,
                                 DateExpired = x.DateExpired,
                                 DateExpiredStr = x.DateExpired.HasValue ? x.DateExpired.Value.ToString("dd.MM.yyyy HH:mm") : "",
                                 DateFrom = x.DateFrom,
                                 DateFromStr = x.DateFrom.ToString("dd.MM.yyyy HH:mm"),
                                 DateTo = x.DateTo,
-                                // DateToStr = x.DateTo.Value.ToString("dd.MM.yyyy HH:mm"),
-                                DateToStr = x.DateTo.HasValue ? x.DateTo.Value.ToString("dd.MM.yyyy HH:mm") : "",
+                                      // DateToStr = x.DateTo.Value.ToString("dd.MM.yyyy HH:mm"),
+                                      DateToStr = x.DateTo.HasValue ? x.DateTo.Value.ToString("dd.MM.yyyy HH:mm") : "",
                                 DescriptionExpired = x.DescriptionExpired,
                                 SessionStateId = x.SessionStateId,
                                 SessionStateName = x.SessionState.Label,
@@ -250,7 +253,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 UserExpiredId = x.UserExpiredId,
                                 UserExpiredName = x.User.LawUnit.FullName,
                                 CaseId = x.Case.Id,
-                                DateReturned = act.Where(a => a.CaseSessionId == x.Id).OrderByDescending(a => a.ActDeclaredDate).FirstOrDefault().ActDeclaredDate,
+                                DateReturned = (act.Any()) ? act.Where(a => a.CaseSessionId == x.Id).OrderByDescending(a => a.ActDeclaredDate).FirstOrDefault().ActDeclaredDate : null,
                                 DateTransferedDW = DateTime.Now,
                                 DateWrt = x.DateWrt,
                                 Description = x.Description,
@@ -272,7 +275,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
 
                               }).OrderBy(x => x.CourtId).Take(selectedRowCount);
-                              
+
 
       //foreach (var ccase in result)
       //{ ccase.DWCaseLawUnits = SelectCaseLawUnitsTransfer(ccase.CaseId,null); }
@@ -350,7 +353,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_result", current.Id, ex.Message);
       }
 
       return result;
@@ -449,7 +452,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         {
 
-
+          current.DateTransferedDW = DateTime.Now;
           dwRepo.Add<DWCaseSessionLawUnit>(current);
 
           result = true;
@@ -480,7 +483,7 @@ namespace IOWebApplicationService.Infrastructure.Services
           saved.LawUnitFullName = current.LawUnitFullName;
           saved.LawUnitId = current.LawUnitId;
           saved.DwCount = current.DwCount;
-
+          saved.DateTransferedDW = DateTime.Now;
           saved.CourtId = current.CourtId; saved.DwCount = current.DwCount;
           saved.CourtName = current.CourtName;
           saved.CourtRegionId = current.CourtRegionId;
@@ -509,7 +512,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_lawunit", current.Id, ex.Message);
       }
 
       return result;

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Linq;
 using DataTables.AspNet.Core;
 using IOWebApplication.Components;
@@ -32,6 +29,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
+            SetHelpFile(HelpFileValues.Nom18);
             return View();
         }
 
@@ -47,6 +45,11 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        private void SetViewBag()
+        {
+            SetHelpFile(HelpFileValues.Nom18);
+        }
+
         /// <summary>
         /// Добавяне на периоди към съд
         /// </summary>
@@ -58,6 +61,8 @@ namespace IOWebApplication.Controllers
                 CourtId = userContext.CourtId,
                 DateFrom = DateTime.Now
             };
+            SetViewBag();
+
             return View(nameof(Edit), model);
         }
 
@@ -69,6 +74,8 @@ namespace IOWebApplication.Controllers
         public IActionResult Edit(int id)
         {
             var model = service.GetById<CourtLoadResetPeriod>(id);
+            SetViewBag();
+
             return View(nameof(Edit), model);
         }
 
@@ -83,6 +90,7 @@ namespace IOWebApplication.Controllers
             ValidateModel(model);
             if (!ModelState.IsValid)
             {
+                SetViewBag();
                 return View(nameof(Edit), model);
             }
 
@@ -97,6 +105,8 @@ namespace IOWebApplication.Controllers
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
+            SetViewBag();
+
             return View(nameof(Edit), model);
         }
 

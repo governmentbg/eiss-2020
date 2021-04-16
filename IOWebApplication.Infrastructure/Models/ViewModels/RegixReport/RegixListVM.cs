@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -29,7 +26,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
         [Display(Name = "Документ")]
         public string DocumentNumber { get; set; }
 
+        public string DocumentOnlyNumber { get; set; }
+
         [Display(Name = "Дата и час")]
         public DateTime DateWrt { get; set; }
+
+        public int? RegixRequestTypeId { get; set; }
     }
 }

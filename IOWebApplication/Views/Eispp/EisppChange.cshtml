@@ -23,6 +23,7 @@
             @Html.HiddenFor(x => x.ModelJson)
             @Html.HiddenFor(x => x.MQEpepId)
             @Html.HiddenFor(x => x.EventFromId)
+            @Html.HiddenFor(x => x.Mode)
             <div class="row">
                 <div class="col-md-6">
                     <a href="#" onclick="showOldEvent()" class="btn btn-def col-md-6 col-lg-6">Преглед на старо състояние</a>
@@ -60,10 +61,6 @@
 
 
 <script>
-    function deletePackageJson() {
-        $('form').attr('action', '@Url.Action("DeletePackageJson")');
-        $("form").submit();
-    }
 
     function showOldEvent() {
         $('#formEdit').attr('action', '@Url.Action("OldEvent", "Eispp")');

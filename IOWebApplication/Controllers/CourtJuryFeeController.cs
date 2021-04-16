@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,6 +27,7 @@ namespace IOWebApplication.Controllers
         public IActionResult Index()
         {
             ViewBag.breadcrumbs = service.Breadcrumbs_ForCourtJuryFee().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom5);
             return View();
         }
 
@@ -52,6 +50,8 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = service.Breadcrumbs_ForCourtJuryFeeEdit(id).DeleteOrDisableLast();
             else
                 ViewBag.breadcrumbs = service.Breadcrumbs_ForCourtJuryFeeAdd().DeleteOrDisableLast();
+
+            SetHelpFile(HelpFileValues.Nom5);
         }
 
         /// <summary>

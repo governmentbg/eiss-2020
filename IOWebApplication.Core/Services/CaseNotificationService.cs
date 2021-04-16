@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
@@ -46,6 +43,7 @@ namespace IOWebApplication.Core.Services
         private readonly ICdnService cdnService;
         private readonly IWorkNotificationService workNotificationService;
         private readonly ICasePersonLinkService casePersonLinkService;
+        private readonly IMQEpepService epepService;
 
         public CaseNotificationService(
         ILogger<CaseNotificationService> _logger,
@@ -59,6 +57,7 @@ namespace IOWebApplication.Core.Services
         ICdnService _cdnService,
         IWorkNotificationService _workNotificationService,
         ICasePersonLinkService _casePersonlinkService,
+        IMQEpepService _epepService,
         IRepository _repo,
         IUserContext _userContext)
         {
@@ -72,6 +71,7 @@ namespace IOWebApplication.Core.Services
             casePersonService = _casePersonService;
             caseLawUnitService = _caseLawUnitService;
             nomenclatureService = _nomenclatureService;
+            epepService = _epepService;
             cdnService = _cdnService;
             workNotificationService = _workNotificationService;
             casePersonLinkService = _casePersonlinkService;
@@ -79,30 +79,30 @@ namespace IOWebApplication.Core.Services
 
         public IQueryable<CaseNotificationVM> CaseNotification_Select(int CaseId, int? caseSessionId, int? caseSessionActId)
         {
-             var result = repo.AllReadonly<CaseNotification>()
-                .Include(x => x.NotificationType)
-                .Include(x => x.NotificationState)
-                .Include(x => x.HtmlTemplate)
-                .Where(x => x.CaseId == CaseId && ((x.CaseSessionId ?? 0) == (caseSessionId ?? 0)) &&
-                            ((caseSessionActId ?? 0) == 0 || (x.CaseSessionActId ?? 0) == (caseSessionActId ?? 0)))
-                .Where(IsNotExpired())
-                .Select(x => new CaseNotificationVM()
-                {
-                    Id = x.Id,
-                    CaseId = x.CaseId,
-                    CaseSessionId = x.CaseSessionId,
-                    CaseSessionActId = x.CaseSessionActId,
-                    NotificationTypeLabel = (x.NotificationType != null) ? x.NotificationType.Label : string.Empty,
-                    NotificationTypeId = x.NotificationTypeId,
-                    CasePersonName = x.IsMultiLink == true && x.CaseNotificationMLinks != null
-                                    ? string.Join("<br>", x.CaseNotificationMLinks.Where(l => l.IsActive && l.IsChecked).Select(m => m.PersonSummonedName)) + "<br>  чрез: " + x.NotificationPersonName
-                                    : x.NotificationPersonName,
-                    NotificationStateLabel = (x.NotificationState != null) ? x.NotificationState.Label : string.Empty,
-                    HtmlTemplateLabel = (x.HtmlTemplate != null) ? x.HtmlTemplate.Label : string.Empty,
-                    RegNumber = x.RegNumber,
-                    RegDate = x.RegDate,
-                    NotificationNumber = x.NotificationNumber, 
-                }).AsQueryable();
+            var result = repo.AllReadonly<CaseNotification>()
+               .Include(x => x.NotificationType)
+               .Include(x => x.NotificationState)
+               .Include(x => x.HtmlTemplate)
+               .Where(x => x.CaseId == CaseId && ((x.CaseSessionId ?? 0) == (caseSessionId ?? 0)) &&
+                           ((caseSessionActId ?? 0) == 0 || (x.CaseSessionActId ?? 0) == (caseSessionActId ?? 0)))
+               .Where(IsNotExpired())
+               .Select(x => new CaseNotificationVM()
+               {
+                   Id = x.Id,
+                   CaseId = x.CaseId,
+                   CaseSessionId = x.CaseSessionId,
+                   CaseSessionActId = x.CaseSessionActId,
+                   NotificationTypeLabel = (x.NotificationType != null) ? x.NotificationType.Label : string.Empty,
+                   NotificationTypeId = x.NotificationTypeId,
+                   CasePersonName = x.IsMultiLink == true && x.CaseNotificationMLinks != null
+                                   ? string.Join("<br>", x.CaseNotificationMLinks.Where(l => l.IsActive && l.IsChecked).Select(m => m.PersonSummonedName)) + "<br>  чрез: " + x.NotificationPersonName
+                                   : x.NotificationPersonName,
+                   NotificationStateLabel = (x.NotificationState != null) ? x.NotificationState.Label : string.Empty,
+                   HtmlTemplateLabel = (x.HtmlTemplate != null) ? x.HtmlTemplate.Label : string.Empty,
+                   RegNumber = x.RegNumber,
+                   RegDate = x.RegDate,
+                   NotificationNumber = x.NotificationNumber,
+               }).AsQueryable();
             var sql = result.ToSql();
             return result;
         }
@@ -145,10 +145,10 @@ namespace IOWebApplication.Core.Services
                         .FirstOrDefault();
             }
             CaseType aCaseType = aCase?.CaseType;
-            if (aCase != null && aCaseType == null )
-               aCaseType = repo.AllReadonly<CaseType>()
-                               .Where(x => x.Id == aCase.CaseTypeId)
-                               .FirstOrDefault();
+            if (aCase != null && aCaseType == null)
+                aCaseType = repo.AllReadonly<CaseType>()
+                                .Where(x => x.Id == aCase.CaseTypeId)
+                                .FirstOrDefault();
             if (aCase != null)
             {
                 if (aCaseType != null)
@@ -223,7 +223,7 @@ namespace IOWebApplication.Core.Services
                     caseNotificationMLinks.CourtId = model.CourtId;
                 }
         }
-        public bool CaseNotification_SaveData(CaseNotification model, List<CaseNotificationMLink> caseNotificationMLinks)
+        public bool CaseNotification_SaveData(CaseNotification model, List<CaseNotificationMLink> caseNotificationMLinks, int[] complainIds)
         {
             try
             {
@@ -248,7 +248,7 @@ namespace IOWebApplication.Core.Services
                     {
                         model.IsMultiLink = false;
                     }
-               
+
                     model.CasePersonL1Id = model.CasePersonId;
                     model.CasePersonL2Id = null;
                     model.CasePersonL3Id = null;
@@ -256,12 +256,13 @@ namespace IOWebApplication.Core.Services
                     model.LinkDirectionSecondId = null;
 
                     CaseNotificationLinkVM casePersonLink = null;
-                    if (model.IsMultiLink != true && model.CasePersonLinkId > 0) {
-                        var oldLinks = new List<int>() { model.CasePersonLinkId ?? 0};
-                         var casePersonLinks = casePersonLinkService.GetLinkForPerson(model.CasePersonId ?? 0, NomenclatureConstants.FilterPersonOnNotification, model.NotificationTypeId ?? 0, oldLinks);
-                         casePersonLink = casePersonLinks.Where(x => x.Id == model.CasePersonLinkId).FirstOrDefault();
-                         if (casePersonLink != null)
-                         {
+                    if (model.IsMultiLink != true && model.CasePersonLinkId > 0)
+                    {
+                        var oldLinks = new List<int>() { model.CasePersonLinkId ?? 0 };
+                        var casePersonLinks = casePersonLinkService.GetLinkForPerson(model.CasePersonId ?? 0, NomenclatureConstants.FilterPersonOnNotification, model.NotificationTypeId ?? 0, oldLinks);
+                        casePersonLink = casePersonLinks.Where(x => x.Id == model.CasePersonLinkId).FirstOrDefault();
+                        if (casePersonLink != null)
+                        {
                             model.CasePersonL1Id = casePersonLink.PersonId;
                             model.CasePersonL2Id = casePersonLink.PersonRelId;
                             if (!casePersonLink.isXFirst)
@@ -278,7 +279,7 @@ namespace IOWebApplication.Core.Services
                     model.NotificationDeliveryTypeId = model.NotificationDeliveryTypeId.EmptyToNull();
                     model.DeliveryOperId = model.DeliveryOperId.EmptyToNull();
                     model.DeliveryAreaId = model.DeliveryAreaId.EmptyToNull();
-                    
+
                     if (model.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)
                     {
                         var casePerson = repo.AllReadonly<CasePerson>()
@@ -288,14 +289,15 @@ namespace IOWebApplication.Core.Services
 
                         model.NotificationPersonName = casePerson.FullName;
                         model.NotificationPersonDuty = casePerson.PersonRole.Label;
-                        if (casePersonLink != null) {
+                        if (casePersonLink != null)
+                        {
                             model.NotificationPersonName = casePersonLink.Label;
                             model.NotificationPersonDuty = "";
                         }
 
                         model.NotificationNumber = casePerson.NotificationNumber;
-                      
- 
+
+
                         var casePersonAddress = repo.AllReadonly<CasePersonAddress>()
                                                 .Include(x => x.Address)
                                                 .Where(x => x.Id == model.CasePersonAddressId)
@@ -337,11 +339,33 @@ namespace IOWebApplication.Core.Services
                     }
                     if (model.NotificationAddress != null)
                         nomenclatureService.SetFullAddress(model.NotificationAddress);
+                    var htmlTemplate = repo.AllReadonly<HtmlTemplate>()
+                                           .FirstOrDefault(x => x.Id == model.HtmlTemplateId);
+                    if (htmlTemplate?.HaveSessionActComplain == true &&
+                        htmlTemplate?.HaveMultiActComplain == true &&
+                        complainIds != null)
+                    {
+                        model.CaseNotificationComplains = new List<CaseNotificationComplain>();
+                        foreach (var id in complainIds)
+                        {
+                            var caseNotificationComplain = new CaseNotificationComplain()
+                            {
+                                CaseNotificationId = model.Id,
+                                CaseSessionActComplainId = id,
+                                DateWrt = DateTime.Now,
+                                UserId = userContext.UserId,
+                                IsChecked = true
+                            };
+                            model.CaseNotificationComplains.Add(caseNotificationComplain);
+                        }
+                    }
+
                     if (model.Id > 0)
                     {
                         //Update
                         var saved = repo.All<CaseNotification>()
                                         .Include(x => x.CaseNotificationMLinks)
+                                        .Include(x => x.CaseNotificationComplains)
                                         .Where(x => x.Id == model.Id)
                                         .FirstOrDefault();
                         if (saved.CaseNotificationMLinks == null || saved.CaseNotificationMLinks.Count == 0)
@@ -383,6 +407,37 @@ namespace IOWebApplication.Core.Services
 
                             }
                         }
+                        if (saved.CaseNotificationComplains == null || saved.CaseNotificationComplains.Count == 0)
+                        {
+                            saved.CaseNotificationComplains = model.CaseNotificationComplains;
+                        }
+                        else
+                        {
+                            foreach (var complain in saved.CaseNotificationComplains)
+                            {
+                                bool isChecked = model.CaseNotificationComplains?
+                                                      .Any(x => x.IsChecked && x.CaseSessionActComplainId == complain.CaseSessionActComplainId) ?? false;
+                                if (complain.IsChecked != isChecked)
+                                {
+                                    complain.IsChecked = isChecked;
+                                    complain.DateWrt = DateTime.Now;
+                                    complain.UserId = userContext.UserId;
+                                    repo.Update(complain);
+                                }
+                            }
+                            if (model.CaseNotificationComplains != null)
+                            {
+                                foreach (var complain in model.CaseNotificationComplains)
+                                {
+                                    if (!saved.CaseNotificationComplains.Any(x => x.CaseSessionActComplainId == complain.CaseSessionActComplainId))
+                                    {
+                                        saved.CaseNotificationComplains.Add(complain);
+                                        repo.Add(complain);
+                                    }
+                                }
+                            }
+                        }
+
                         bool operIsChanged = (saved.DeliveryOperId != model.DeliveryOperId);
                         saved.CasePersonId = model.CasePersonId;
                         saved.CasePersonLinkId = model.CasePersonLinkId;
@@ -420,6 +475,17 @@ namespace IOWebApplication.Core.Services
                         saved.ToCourtId = model.ToCourtId;
                         saved.ExpertDeadDate = model.ExpertDeadDate;
                         saved.ExpertReport = model.ExpertReport;
+                        saved.HaveDispositiv = model.HaveDispositiv;
+                        saved.IsFromEmail = model.IsFromEmail;
+                        saved.DocumentSenderPersonId = model.DocumentSenderPersonId;
+                        if (model.NotificationStateId == NomenclatureConstants.NotificationState.UnDeliveredMail)
+                        {
+                            CreateDeliveryItem(saved, operIsChanged);
+                            saved.NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
+                            saved.NotificationStateId = NomenclatureConstants.NotificationState.Ready;
+                            saved.DateSend = null;
+                            saved.IsFromEmail = true;
+                        }
 
                         if (model.DatePrint != null)
                             saved.DatePrint = model.DatePrint;
@@ -430,6 +496,7 @@ namespace IOWebApplication.Core.Services
                         repo.Update(saved);
                         repo.SaveChanges();
                         CreateDeliveryItem(saved, operIsChanged);
+                        epepService.AppendCaseNotification(model, EpepConstants.ServiceMethod.Update);
                     }
                     else
                     {
@@ -441,6 +508,15 @@ namespace IOWebApplication.Core.Services
                                     model.DeliveryDate = DateTime.Now;
                             }
                             model.CaseNotificationMLinks = caseNotificationMLinks;
+                            if (model.NotificationStateId == NomenclatureConstants.NotificationState.UnDeliveredMail)
+                            {
+                                CreateDeliveryItem(model, true);
+                                model.NotificationDeliveryGroupId = NomenclatureConstants.NotificationDeliveryGroup.WithSummons;
+                                model.NotificationStateId = NomenclatureConstants.NotificationState.Ready;
+                                model.DateSend = null;
+                                model.IsFromEmail = true;
+                            }
+
                             model.DateWrt = DateTime.Now;
                             model.UserId = userContext.UserId;
                             CaseNotification_SetMLinkCaseId(model);
@@ -448,6 +524,7 @@ namespace IOWebApplication.Core.Services
                             repo.Add<CaseNotification>(model);
                             repo.SaveChanges();
                             CreateDeliveryItem(model, true);
+                            epepService.AppendCaseNotification(model, EpepConstants.ServiceMethod.Add);
                         }
                     }
 
@@ -480,7 +557,8 @@ namespace IOWebApplication.Core.Services
                         await SaveScanedFile(notification.Id.ToString(), notification.NotificationStateId, returnFiles).ConfigureAwait(false);
                         notification.ReturnInfo = model.ReturnInfo;
                         notification.ReturnDate = model.ReturnDate;
-                    } else
+                    }
+                    else
                     {
                         saved.DeliveryInfo = model.ReturnInfo;
                         await SaveScanedFile($"DI{model.Id}", model.NotificationStateId, returnFiles).ConfigureAwait(false);
@@ -510,11 +588,31 @@ namespace IOWebApplication.Core.Services
             }
         }
 
+        private void SetPersonIsIsDeceased(List<CasePerson> casePersons, List<CasePerson> caseSessionPersons, CaseSessionNotificationListVM notificationListVM)
+        {
+            string casePersonIdentificator = caseSessionPersons
+                                                      .Where(x => x.Id == notificationListVM.PersonId)
+                                                      .Select(x => x.CasePersonIdentificator)
+                                                      .FirstOrDefault();
+            if (casePersons.Any(p => p.CasePersonIdentificator == casePersonIdentificator && p.IsDeceased == true))
+                notificationListVM.PersonName += " починал";
+        }
 
         public IQueryable<CaseSessionNotificationListVM> CaseSessionNotificationList_Select(int caseSessionId, int NotificationListTypeId)
         {
             List<CaseSessionNotificationListVM> result = new List<CaseSessionNotificationListVM>();
-
+            int caseId = repo.AllReadonly<CaseSession>()
+                             .Where(x => x.Id == caseSessionId)
+                             .Select(x => x.CaseId)
+                             .FirstOrDefault();
+            var casePersons = repo.AllReadonly<CasePerson>()
+                                .Where(x => x.CaseId == caseId &&
+                                            x.CaseSessionId == null)
+                                .ToList();
+            var caseSessionPersons = repo.AllReadonly<CasePerson>()
+                                         .Where(x => x.CaseId == caseId &&
+                                         x.CaseSessionId == caseSessionId)
+                                         .ToList();
             var caseSessionNotificationListVMs = repo.AllReadonly<CaseSessionNotificationList>()
                                                      .Include(x => x.CasePerson)
                                                      .ThenInclude(x => x.PersonRole)
@@ -524,6 +622,7 @@ namespace IOWebApplication.Core.Services
                                                      .ThenInclude(x => x.JudgeRole)
                                                      .Include(x => x.NotificationAddress)
                                                      .Where(x => x.CaseSessionId == caseSessionId &&
+                                                                 x.DateExpired == null &&
                                                                  ((NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList) ? (x.NotificationListTypeId == NotificationListTypeId || x.NotificationListTypeId == null) : x.NotificationListTypeId == NotificationListTypeId))
                                                      .Select(x => new CaseSessionNotificationListVM()
                                                      {
@@ -537,6 +636,9 @@ namespace IOWebApplication.Core.Services
                                                          PersonType = x.NotificationPersonType,
                                                          RoleKindId = (x.CasePerson != null) ? x.CasePerson.PersonRole.RoleKindId : NomenclatureConstants.RoleKind.LeftSide,
                                                          AddressString = (x.NotificationAddress != null) ? x.NotificationAddress.FullAddressNotification() : "",
+                                                         IsDeleted = (x.CasePerson != null) ?
+                                                                      casePersons.Any(p => p.CasePersonIdentificator == x.CasePerson.CasePersonIdentificator && p.DateExpired != null) :
+                                                                      false,
                                                          Remark = ""
                                                      }).OrderBy(x => x.RowNumber).ToList();
 
@@ -550,17 +652,15 @@ namespace IOWebApplication.Core.Services
                                         .Where(x => x.CaseId == caseSession.CaseId &&
                                                     x.CaseSessionId == caseSession.Id &&
                                                     ((NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList) ?
-                                                       x.NotificationTypeId == NomenclatureConstants.NotificationType.Subpoena || 
-                                                       x.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnSession ||
-                                                       x.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
-                                                       x.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail ||
-                                                       x.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember50 ||
-                                                       x.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember56 :
-                                                    ((NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListNotification) ? 
-                                                        x.NotificationTypeId == NomenclatureConstants.NotificationType.Notification : 
+                                                       x.NotificationTypeId == NomenclatureConstants.NotificationType.Subpoena || x.NotificationTypeId == null :
+                                                      ((NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListNotification) ?
+                                                        x.NotificationTypeId == NomenclatureConstants.NotificationType.Notification :
                                                         x.NotificationTypeId == NomenclatureConstants.NotificationType.Message))) //&&x.CaseSessionActId == null)
                                         .Where(IsNotExpired())
                                         .ToList();
+            long[] caseNotificationIds = caseNotifications.Select(c => (long)c.Id)
+                                                          .ToArray();
+
             // Точен вид документ, името на бланката, изх.№ / дата, Начин на изпращане, имената на получател/адресат от регистратурата
             var docTemplates = repo.AllReadonly<DocumentTemplate>()
                                    .Include(x => x.Document)
@@ -569,14 +669,14 @@ namespace IOWebApplication.Core.Services
                                    .ThenInclude(x => x.DocumentPersons)
                                    .Include(x => x.DocumentType)
                                    .Include(x => x.HtmlTemplate)
-                                   .Where(x => x.SourceType == SourceTypeSelectVM.CaseNotification &&
-                                               caseNotifications.Any(n => n.Id == x.SourceId))
+                                   .Where(x => x.SourceType == SourceTypeSelectVM.CaseNotification)
+                                   .Where(x => caseNotificationIds.Contains(x.SourceId))
                                    .ToList();
 
             foreach (var item in caseSessionNotificationListVMs)
             {
-                var notifications = caseNotifications.Where(x => ((item.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ? 
-                                                                   x.CasePersonL1Id == item.PersonId && x.IsMultiLink != true : 
+                var notifications = caseNotifications.Where(x => ((item.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ?
+                                                                   x.CasePersonL1Id == item.PersonId && x.IsMultiLink != true :
                                                                    x.CaseLawUnitId == item.PersonId)).ToList();
                 var notificationsL = caseNotifications.Where(x => x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson &&
                                                                   x.IsMultiLink == true &&
@@ -589,10 +689,6 @@ namespace IOWebApplication.Core.Services
                     CaseSessionNotificationListVM notificationListVM = new CaseSessionNotificationListVM();
                     notificationListVM.Id = item.Id;
                     notificationListVM.CaseSessionId = item.CaseSessionId;
-                    
-                    notificationListVM.PersonName = notification.NotificationPersonName;
-                    if (string.IsNullOrEmpty(notificationListVM.PersonName) || notification.IsMultiLink == true)
-                        notificationListVM.PersonName = item.PersonName;
 
                     notificationListVM.PersonRole = item.PersonRole;
                     notificationListVM.PersonId = item.PersonId;
@@ -600,30 +696,61 @@ namespace IOWebApplication.Core.Services
                     notificationListVM.NotificationPersonType = item.NotificationPersonType;
                     notificationListVM.PersonType = item.PersonType;
                     notificationListVM.RoleKindId = item.RoleKindId;
+
+                    notificationListVM.PersonName = notification.NotificationPersonName;
+                    if (string.IsNullOrEmpty(notificationListVM.PersonName) || notification.IsMultiLink == true)
+                        notificationListVM.PersonName = item.PersonName;
+                    SetPersonIsIsDeceased(casePersons, caseSessionPersons, notificationListVM);
+
                     notificationListVM.Remark = (notification.HtmlTemplate?.Label ?? "") + " - " +
                                                 (notification.NotificationState?.Label ?? "");
                     if (notification.DeliveryDate != null)
-                        notificationListVM.Remark += " на " + notification.DeliveryDate?.ToString(FormattingConstant.NormalDateFormat);
-                    if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnSession)
-                        notificationListVM.Remark = "Уведомен в заседание";
-                    if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnPhone)
+                        notificationListVM.Remark += " на " + notification.DeliveryDate?.ToString(FormattingConstant.NormalDateFormatHHMM);
+                    notificationListVM.Remark += (notification.DeliveryInfo != null ? " Данни за известяване: " + notification.DeliveryInfo + " " : string.Empty);
+                    switch (notification.NotificationDeliveryGroupId)
                     {
-                        notificationListVM.Remark = "Уведомен по телефон/факс" + 
-                                                    (notification.DeliveryDate != null ? " Дата на уведомяване: " + notification.DeliveryDate?.ToString(FormattingConstant.NormalDateFormat) : string.Empty) +
-                                                    (notification.DeliveryInfo != null ? " Данни за известяване: " + notification.DeliveryInfo : string.Empty);
+                        case NomenclatureConstants.NotificationDeliveryGroup.OnSession:
+                            notificationListVM.Remark = "Уведомен в заседание";
+                            break;
+                        case NomenclatureConstants.NotificationDeliveryGroup.OnEMail:
+                            notificationListVM.Remark = "Уведомен по електронна поща";
+                            if (!string.IsNullOrEmpty(notification.NotificationAddress?.Email))
+                                notificationListVM.Remark += ": " + notification.NotificationAddress.Email;
+                            break;
+                        case NomenclatureConstants.NotificationDeliveryGroup.OnPhone:
+                            notificationListVM.Remark = "Уведомен по телефон/факс";
+                            if (!string.IsNullOrEmpty(notification.NotificationAddress?.Phone))
+                                notificationListVM.Remark += ": " + notification.NotificationAddress.Phone;
+                            break;
+                        case NomenclatureConstants.NotificationDeliveryGroup.OnMember50:
+                            notificationListVM.Remark = "Уведомен по чл. 50 ал. 2 от ГПК";
+                            break;
+                        case NomenclatureConstants.NotificationDeliveryGroup.OnMember56:
+                            notificationListVM.Remark = "Уведомен по чл. 56 ал. 2 от ГПК";
+                            break;
+                        case NomenclatureConstants.NotificationDeliveryGroup.WillBeen:
+                            notificationListVM.Remark = "Ще бъде доведен / ще бъде призован";
+                            break;
+                        default:
+                            break;
                     }
-                    if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnEMail)
-                        notificationListVM.Remark = "Уведомен по електронна поща";
-                    if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnMember50)
-                        notificationListVM.Remark = "Уведомен по чл. 50 ал. 2 от ГПК";
-                    if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnMember56)
-                        notificationListVM.Remark = "Уведомен по чл. 56 ал. 2 от ГПК";
+
+                    if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
+                        notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnSession ||
+                        notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnMember50 ||
+                        notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnMember56 ||
+                        notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.WillBeen)
+                    {
+                        notificationListVM.Remark += (notification.DeliveryDate != null ? " Дата на уведомяване: " + notification.DeliveryDate?.ToString(FormattingConstant.NormalDateFormatHHMM) + " " : string.Empty) +
+                                                     (notification.DeliveryInfo != null ? " Данни за известяване: " + notification.DeliveryInfo + " " : string.Empty);
+                    }
+
                     var docTemplate = docTemplates.FirstOrDefault(x => x.SourceId == notification.Id);
                     if (docTemplate != null)
                     {
-                        notificationListVM.Remark += "</br>" + docTemplate.DocumentType?.Label + 
-                                                     (docTemplate.HtmlTemplate != null ? " " + docTemplate.HtmlTemplate.Label : string.Empty); 
-                        if (docTemplate.Document != null )
+                        notificationListVM.Remark += "</br>" + docTemplate.DocumentType?.Label +
+                                                     (docTemplate.HtmlTemplate != null ? " " + docTemplate.HtmlTemplate.Label : string.Empty);
+                        if (docTemplate.Document != null)
                         {
                             notificationListVM.Remark += " Изпратен(а, о) на " + docTemplate.Document.DocumentDate.ToString(FormattingConstant.NormalDateFormat);
                             if (docTemplate.Document.DeliveryGroup != null)
@@ -636,12 +763,16 @@ namespace IOWebApplication.Core.Services
                     notificationListVM.DateSend = notification.RegDate;
                     notificationListVM.AddressString = notification.NotificationAddress?.FullAddressNotification() ?? "";
                     if (notification.IsMultiLink == true)
-                        notificationListVM.AddressString += "<br>чрез "+ notification.NotificationPersonName;
+                        notificationListVM.AddressString += "<br>чрез " + notification.NotificationPersonName;
                     result.Add(notificationListVM);
                 }
 
                 if (!notifications.Any())
+                {
+                    SetPersonIsIsDeceased(casePersons, caseSessionPersons, item);
                     result.Add(item);
+
+                }
             }
 
             return result.OrderBy(x => x.RowNumber).AsQueryable();
@@ -654,7 +785,7 @@ namespace IOWebApplication.Core.Services
 
             if (isCasePerson)
             {
-                var casePersons = casePersonService.CasePerson_Select(caseId, caseSessionId).ToList();
+                var casePersons = casePersonService.CasePerson_Select(caseId, caseSessionId, false, false, false).ToList();
 
                 foreach (var person in casePersons)
                     checkListVMs.Add(new CheckListVM()
@@ -699,7 +830,8 @@ namespace IOWebApplication.Core.Services
 
         private bool CaseNotificationList_CasePerson(CheckListViewVM checkListViewVM)
         {
-            var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == checkListViewVM.ObjectId && 
+            var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == checkListViewVM.ObjectId &&
+                                                                                                          x.DateExpired == null &&
                                                                                                           (checkListViewVM.OtherId == SourceTypeSelectVM.CaseSessionNotificationList ? (x.NotificationListTypeId == checkListViewVM.OtherId || x.NotificationListTypeId == null) : x.NotificationListTypeId == checkListViewVM.OtherId)).ToList();
             var maxNumber = (caseSessionNotificationLists.Count > 0) ? caseSessionNotificationLists.Max(x => x.RowNumber) : 0;
 
@@ -768,6 +900,7 @@ namespace IOWebApplication.Core.Services
         private bool CaseNotificationList_LawUnit(CheckListViewVM checkListViewVM)
         {
             var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == checkListViewVM.ObjectId &&
+                                                                                                          x.DateExpired == null &&
                                                                                                           (checkListViewVM.OtherId == SourceTypeSelectVM.CaseSessionNotificationList ? (x.NotificationListTypeId == checkListViewVM.OtherId || x.NotificationListTypeId == null) : x.NotificationListTypeId == checkListViewVM.OtherId)).ToList();
             var maxNumber = (caseSessionNotificationLists.Count > 0) ? caseSessionNotificationLists.Max(x => x.RowNumber) : 0;
 
@@ -859,7 +992,8 @@ namespace IOWebApplication.Core.Services
                 .ThenInclude(x => x.JudgeRole)
                 .Include(x => x.CaseSession)
                 .Include(x => x.NotificationAddress)
-                .Where(x => x.CaseSession.CaseId == caseId)
+                .Where(x => x.CaseSession.CaseId == caseId &&
+                            x.DateExpired == null)
                 .Select(x => new CaseSessionNotificationListVM()
                 {
                     Id = x.Id,
@@ -911,7 +1045,7 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<CaseNotification>()
                        .Any(x => x.CaseSessionId == CaseSessionId &&
-                               //    x.CaseSessionActId == null &&
+                                   //    x.CaseSessionActId == null &&
                                    x.NotificationTypeId == NotificationTypeId &&
                                    ((NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ? x.CasePersonId == PersonId : x.CaseLawUnitId == PersonId) &&
                                    x.DateExpired == null);
@@ -930,7 +1064,14 @@ namespace IOWebApplication.Core.Services
                 FileContentBase64 = Convert.ToBase64String(pdfBytes)
             };
             //scanRequest.FileId
-            return await cdnService.MongoCdn_AppendUpdate(printRequest).ConfigureAwait(false);
+            var result = await cdnService.MongoCdn_AppendUpdate(printRequest).ConfigureAwait(false);
+
+            if (notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+            {
+                epepService.AppendCaseNotificationFile(Id);
+            }
+
+            return result;
 
         }
         public async Task<CdnDownloadResult> ReadPrintedFile(int Id)
@@ -942,7 +1083,7 @@ namespace IOWebApplication.Core.Services
         }
         public async Task<CdnDownloadResult> ReadDraftFile(int Id)
         {
-            CdnItemVM aFile = cdnService.Select(SourceTypeSelectVM.CaseNotificationPrint, Id.ToString()).Where(x => x.FileName == "draft.html" ).FirstOrDefault();
+            CdnItemVM aFile = cdnService.Select(SourceTypeSelectVM.CaseNotificationPrint, Id.ToString()).Where(x => x.FileName == "draft.html").FirstOrDefault();
             if (aFile != null)
                 return await cdnService.MongoCdn_Download(aFile).ConfigureAwait(false);
             return null;
@@ -990,7 +1131,8 @@ namespace IOWebApplication.Core.Services
                         IsChecked = true
                     };
                     links.Add(link);
-                } else
+                }
+                else
                 {
                     var link = links.FirstOrDefault(x => x.CasePersonLinkId == linkVM.Id);
                     link.CasePersonSummonedId = linkVM.isXFirst ? linkVM.PersonId : linkVM.PersonRelId;
@@ -1017,15 +1159,33 @@ namespace IOWebApplication.Core.Services
         {
             var result = repo.AllReadonly<CaseNotification>()
                              .Include(x => x.CaseNotificationMLinks)
+                             .Include(x => x.CaseNotificationComplains)
                              .Where(x => x.Id == id)
                              .FirstOrDefault();
             if (result != null)
             {
                 if (result.IsMultiLink == true)
                     result.CasePersonLinkId = -2;
+
+                result.DeliveryDateCC = result.DeliveryDate;
+                result.DeliveryInfoCC = result.DeliveryInfo;
             }
-            result.DeliveryDateCC = result.DeliveryDate;
             return result;
+        }
+        public void InitCaseNotificationComplains(CaseNotification caseNotification)
+        {
+            if (caseNotification?.CaseNotificationComplains != null &&
+                !caseNotification.CaseNotificationComplains.Any() &&
+                caseNotification.CaseSessionActComplainId > 0)
+            {
+                var complain = new CaseNotificationComplain()
+                {
+                    CaseNotificationId = caseNotification.Id,
+                    CaseSessionActComplainId = caseNotification.CaseSessionActComplainId,
+                    IsChecked = true
+                };
+                caseNotification.CaseNotificationComplains.Add(complain);
+            }
         }
         public CaseNotification ReadWithMlinkById(int? id)
         {
@@ -1042,19 +1202,20 @@ namespace IOWebApplication.Core.Services
         {
             int notificationTypeId = NomenclatureConstants.NotificationType.FromListType(notificationListTypeId);
             var caseNotifications = repo.AllReadonly<CaseNotification>()
-                                        .Where(x => x.CaseId == CaseId && 
-                                                    x.CaseSessionId == caseSessionId && 
-                                                    x.DateExpired == null && 
+                                        .Where(x => x.CaseId == CaseId &&
+                                                    x.CaseSessionId == caseSessionId &&
+                                                    x.DateExpired == null &&
                                                     (caseSessionActId == null || x.CaseSessionActId == caseSessionActId));
             List<int> result;
             if (existsInNotificationList)
             {
                 var caseSessionNotificationListVMs = repo.AllReadonly<CaseSessionNotificationList>()
                                                          .Where(x => x.CaseSessionId == caseSessionId &&
+                                                                     x.DateExpired == null &&
                                                                      (x.NotificationListTypeId ?? SourceTypeSelectVM.CaseSessionNotificationList) == notificationListTypeId);
-                var notifications = caseNotifications.Where(x => caseSessionNotificationListVMs.Any(item => (item.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)  ? 
-                                                                                                             x.CasePersonId == item.CasePersonId && x.IsMultiLink != true : 
-                                                                                                             x.CaseLawUnitId == item.CaseLawUnitId)&&
+                var notifications = caseNotifications.Where(x => caseSessionNotificationListVMs.Any(item => (item.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ?
+                                                                                                             x.CasePersonId == item.CasePersonId && x.IsMultiLink != true :
+                                                                                                             x.CaseLawUnitId == item.CaseLawUnitId) &&
                                                                  x.NotificationTypeId == notificationTypeId
                                                                 ).ToList();
                 var notificationsL = caseNotifications.Where(x => caseSessionNotificationListVMs.Any(item => x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson &&
@@ -1064,7 +1225,7 @@ namespace IOWebApplication.Core.Services
                                                                   x.NotificationTypeId == notificationTypeId
                 ).ToList();
                 notifications.AddRange(notificationsL);
-                foreach(var notification in notifications)
+                foreach (var notification in notifications)
                 {
                     if (notification.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)
                     {
@@ -1090,7 +1251,9 @@ namespace IOWebApplication.Core.Services
                      .OrderBy(x => x.NotificationNumber)
                      .Select(x => x.Id)
                      .ToList();
-            } else {
+            }
+            else
+            {
                 result = caseNotifications.Select(x => x.Id).ToList();
             }
             return result;
@@ -1101,7 +1264,7 @@ namespace IOWebApplication.Core.Services
             return x => x.DateExpired == null;
         }
 
-        public bool SaveExpireInfoPlus(ExpiredInfoVM model) 
+        public bool SaveExpireInfoPlus(ExpiredInfoVM model)
         {
             var saved = repo.GetById<CaseNotification>(model.Id);
             if (saved != null)
@@ -1159,7 +1322,7 @@ namespace IOWebApplication.Core.Services
             {
 
                 List<CdnItemVM> files = cdnService.Select(SourceTypeSelectVM.DocumentPdf, docTemplate.DocumentId.ToString()).Where(x => x.FileName.EndsWith(".pdf")).ToList();
-                foreach(var file in files)
+                foreach (var file in files)
                 {
                     var content = await cdnService.MongoCdn_Download(file).ConfigureAwait(false);
                     if (content?.FileContentBase64 != null)
@@ -1174,29 +1337,116 @@ namespace IOWebApplication.Core.Services
             var aCase = repo.AllReadonly<Case>()
                             .Where(x => x.Id == caseId)
                             .FirstOrDefault();
-            var deliveryGroup = repo.AllReadonly<NotificationDeliveryGroup>()
-                .Where(x => x.IsActive)
-                .Where(x => x.DateStart <= today)
-                .Where(x => (x.DateEnd ?? today) >= today);
+            var deliveryGroup = repo.AllReadonly<DeliveryTypeGroup>()
+                                    .Where(x => x.NotificationTypeId == notificationTypeId &&
+                                                x.NotificationDeliveryGroup.IsActive &&
+                                                x.NotificationDeliveryGroup.DateStart <= today &&
+                                               (x.NotificationDeliveryGroup.DateEnd ?? today) >= today)
+                                    .Select(x => x.NotificationDeliveryGroup);
 
-            if (notificationTypeId != NomenclatureConstants.NotificationType.Subpoena ||
-                aCase?.CaseGroupId != NomenclatureConstants.CaseGroups.GrajdanskoDelo)
-                deliveryGroup = deliveryGroup.Where(x => x.Id != NomenclatureConstants.NotificationDeliveryGroup.OnMember56);
-            if (notificationTypeId != NomenclatureConstants.NotificationType.Message ||
-                aCase?.CaseGroupId != NomenclatureConstants.CaseGroups.GrajdanskoDelo)
+            if (aCase?.CaseGroupId != NomenclatureConstants.CaseGroups.GrajdanskoDelo &&
+                aCase?.CaseGroupId != NomenclatureConstants.CaseGroups.Trade)
+            {
                 deliveryGroup = deliveryGroup.Where(x => x.Id != NomenclatureConstants.NotificationDeliveryGroup.OnMember50);
+            }
             deliveryGroup = deliveryGroup.OrderBy(x => x.OrderNumber);
 
             var result = deliveryGroup.Select(x => new SelectListItem()
-                {
-                    Text = x.Label,
-                    Value = x.Id.ToString()
-                }).ToList() ?? new List<SelectListItem>();
+            {
+                Text = x.Label,
+                Value = x.Id.ToString()
+            }).ToList() ?? new List<SelectListItem>();
 
             result = result
                 .Prepend(new SelectListItem() { Text = "Избери", Value = "-1" })
                 .ToList();
             return result;
+        }
+
+        public bool IsNotificationDeliveryGroupByEpep(int caseId, int casePersonId, string casePersonLinkIds)
+        {
+            //Ако няма пуснато заявление за това дело да не чете надолу излишно
+            var decisionCases = repo.AllReadonly<DocumentDecisionCase>()
+                        .Include(x => x.DocumentDecision)
+                        .Include(x => x.DocumentDecision.Document)
+                        .Include(x => x.DocumentDecision.Document.DocumentPersons)
+                        .Where(x => x.CaseId == caseId)
+                        .Where(x => x.DecisionRequestTypeId == NomenclatureConstants.DecisionRequestTypes.RequestNotification)
+                        .Where(x => x.DecisionTypeId == NomenclatureConstants.DecisionTypes.FullAccess)
+                        .ToList();
+
+            if (decisionCases.Count == 0) return false;
+
+            List<int> personIds = new List<int>();
+            personIds.Add(casePersonId);
+
+            if (string.IsNullOrEmpty(casePersonLinkIds) == false)
+            {
+                int[] links = casePersonLinkIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(Int32.Parse).ToArray();
+                var casePersonLinks = repo.AllReadonly<CasePersonLink>()
+                             .Where(x => x.CaseId == caseId)
+                             .Where(x => links.Contains(x.Id))
+                             .ToList();
+
+                personIds.AddRange(casePersonLinks.Where(x => x.CasePersonId > 0).Select(x => x.CasePersonId));
+                personIds.AddRange(casePersonLinks.Where(x => x.CasePersonRelId > 0).Select(x => x.CasePersonRelId));
+                personIds.AddRange(casePersonLinks.Where(x => (x.CasePersonSecondRelId ?? 0) > 0).Select(x => x.CasePersonSecondRelId ?? 0));
+            }
+            var personGuids = repo.AllReadonly<CasePerson>()
+                .Where(x => x.CaseId == caseId)
+                .Where(x => personIds.Contains(x.Id))
+                .Select(x => x.CasePersonIdentificator);
+
+            var persons = repo.AllReadonly<CasePerson>()
+                .Where(x => x.CaseId == caseId)
+                .Where(x => x.DateExpired == null)
+                .Where(x => personGuids.Contains(x.CasePersonIdentificator))
+                .ToList();
+
+            //Или ЕГН/ЕИК или тип институция и SourceType/SourceId
+            return persons.Where(x => decisionCases.
+                        Where(a => a.DocumentDecision.Document.DocumentPersons
+                                .Where(b => (b.UicTypeId == x.UicTypeId && b.Uic == x.Uic) ||
+                                    (b.Person_SourceType == SourceTypeSelectVM.Instutution &&
+                                     b.Person_SourceType == x.Person_SourceType &&
+                                     b.Person_SourceId == x.Person_SourceId))
+                                .Any())
+                        .Any())
+                   .Any();
+        }
+        public List<SelectListItem> DocumentSenderPersonDDL(int caseId)
+        {
+            var docs = repo.AllReadonly<DocumentCaseInfo>()
+                            .Where(x => x.CaseId == caseId &&
+                                        x.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument &&
+                                        x.Document.DateExpired == null)
+                            .Select(x => x.Document);
+
+            var result = repo.AllReadonly<DocumentPerson>()
+                             .Where(x => docs.Any(d => x.DocumentId == d.Id) &&
+                                         x.IsPerson)
+                             .Select(x => new SelectListItem()
+                             {
+                                 Text = x.FullName,
+                                 Value = x.Id.ToString()
+                             }).ToList() ?? new List<SelectListItem>();
+
+            result = result
+                .Prepend(new SelectListItem() { Text = "Избери", Value = "-1" })
+                .ToList();
+            return result;
+        }
+
+        public List<CaseNotification> GetNotPrintedEpep()
+        {
+            var mongoFiles = repo.AllReadonly<MongoFile>()
+                                 .Where(x => x.SourceType == SourceTypeSelectVM.CaseNotificationPrint);
+
+            return repo.AllReadonly<CaseNotification>()
+                       .Where(x => x.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.ByEPEP &&
+                                   mongoFiles.Any(fl => fl.SourceIdNumber == x.Id && fl.FileName == "draft.html") &&
+                                   !mongoFiles.Any(fl => fl.SourceIdNumber == x.Id && fl.FileName != "draft.html"))
+                       .ToList();
         }
     }
 }

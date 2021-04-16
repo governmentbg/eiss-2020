@@ -1,11 +1,9 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Data.Models.Regix;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -79,6 +77,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Column("delivery_type_id")]
         public int? DeliveryTypeId { get; set; }
 
+        [Column("post_office_date")]
+        public DateTime? PostOfficeDate { get; set; }
+
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]
         public DateTime? DateExpired { get; set; }
@@ -127,6 +128,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [InverseProperty(nameof(DocumentLink.Document))]
         public virtual ICollection<DocumentLink> DocumentLinks { get; set; }
 
+        public virtual ICollection<RegixReport> RegixReports { get; set; }
+
         public Document()
         {
             DocumentPersons = new HashSet<DocumentPerson>();
@@ -134,6 +137,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
             DocumentInstitutionCaseInfo = new HashSet<DocumentInstitutionCaseInfo>();
             DocumentLinks = new HashSet<DocumentLink>();
             DocumentResolutions = new HashSet<DocumentResolution>();
+            RegixReports = new HashSet<RegixReport>();
         }
     }
 }

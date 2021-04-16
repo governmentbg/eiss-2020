@@ -1,13 +1,12 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using Microsoft.AspNetCore.Mvc;
@@ -50,7 +49,7 @@ namespace IOWebApplication.Controllers
         }
         public JsonResult SaveReaded(long id)
         {
-            bool result = service.SaveWorkNotificationRead(id);
+            bool result = (service.SaveWorkNotificationRead(id) != null);
             return Json(result);
         }
 
@@ -64,6 +63,30 @@ namespace IOWebApplication.Controllers
             var data = service.SelectWorkNotifications(filterData);
             return request.GetResponse(data);
         }
-
+        public IActionResult RedirectToSource(int id)
+        {
+            var model = service.SaveWorkNotificationRead(id);
+            if (model == null)
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+                return RedirectToAction("Index");
+            }
+            switch (model.SourceType)
+            {
+                case SourceTypeSelectVM.Case:
+                    return RedirectToAction("CasePreview", "Case", new { id = model.SourceId });
+                case SourceTypeSelectVM.CaseNotification:
+                    return RedirectToAction("Edit", "CaseNotification", new { id = model.SourceId });
+                case SourceTypeSelectVM.CaseSession:
+                    {
+                        if (model.WorkNotificationTypeId == NomenclatureConstants.WorkNotificationType.DeadLine)
+                            return RedirectToAction("Preview", "CaseSession", new { id = model.SourceId, tab = "#tabSessionMainData" });
+                        else
+                            return RedirectToAction("Preview", "CaseSession", new { id = model.SourceId, tab = "#tabPersonNotification" });
+                    }
+                default:
+                    return RedirectToAction("Index");
+            }
+        }
     }
 }

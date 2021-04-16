@@ -1,10 +1,8 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Data.Common
 {
@@ -98,8 +96,12 @@ namespace IOWebApplication.Infrastructure.Data.Common
         /// </summary>
         /// <returns>Error code</returns>
         int SaveChanges();
+        Task<int> SaveChangesAsync();
 
         IEnumerable<T> ExecuteProc<T>(string procedureName, params object[] args) where T : class;
         IEnumerable<T> ExecuteSQL<T>(string query, params object[] args) where T : class;
+
+        int TrackerCount { get; }
+        void RefreshDbContext(string connectionString);
     }
 }

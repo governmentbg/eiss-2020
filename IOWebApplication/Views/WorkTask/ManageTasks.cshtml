@@ -1,0 +1,46 @@
+﻿@model WorkTaskManageVM
+@{
+    var canSave = !string.IsNullOrEmpty(Model.TaskIds);
+}
+@using (Html.BeginForm(FormMethod.Post, new { onsubmit = "validationCheck(event);" }))
+{
+    @Html.HiddenFor(x => x.TaskIds)
+
+    @if (Model.ShowUser)
+    {
+        @Html.EditorFor(x => x.NewUserId, "SelectUser")
+    }
+    @Html.EditorFor(x => x.Description, "textarea")
+    @if (Model.ShowUser)
+    {
+        <span class="text-remark">Забележка: Задачите за подписване не могат да бъдат пренасочвани!</span>
+        <br />
+        <br />
+    }
+    <div class="form-group">
+        @if (canSave)
+        {
+            <input type="submit" value="Запис" class="btn btn-success submit single-click-submit" />
+        }
+    </div>
+}
+
+<script>
+    $(function () {
+        initUserAutoComplete();
+    });
+    function validationCheck(e) {
+        if ($('#Description').val().length < 5) {
+            swal({
+                title: 'Грешка',
+                text: 'Моля, въведете Основание',
+                icon: "warning"
+            });
+            e.preventDefault();
+            $(e.target).find('input[type="submit"]').removeAttr('disabled');
+            return false;
+        }
+
+        return true;
+    }
+</script>

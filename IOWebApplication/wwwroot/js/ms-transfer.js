@@ -78,11 +78,13 @@
                     right_edit.percent = $(divRightEdit).find('#percent_modal').val();
                     right_edit.reason = $(divRightEdit).find('#reason_modal').val();
                     right_edit.comment = right_edit.reason + " предишен % " + right_edit.old_percent;
+                    right_edit.is_changed = true;
                 }
                 var saveDelete = function () {
                     right_edit.is_delete = true;
                     right_edit.reason = $(divRightEdit).find('#reason_modal').val();
                     right_edit.comment = "ИЗТРИВАНЕ " + right_edit.reason;
+                    right_edit.is_changed = true;
                 }
                 var editHtml = TemplateToHtml(self._opts.templateRightModal, right_edit);
                 var divRightEdit = self._opts.divRightEdit;
@@ -225,6 +227,12 @@
             },
             showRight: function () {
                 var self = this;
+                self.right_arr = self.right_arr.map(x => {
+                    x.changed_css = '';
+                    if (typeof x.is_changed !== "undefined" && x.is_changed)
+                        x.changed_css = 'multi-transfer-changed_css';
+                    return x;
+                })
                 self.right_arr.sort(sort_by('orderPlus', false, function (a) { return a }));
                 var newHtml = TemplateToHtml(self._opts.templateRight, { data: self.right_arr });
                 self.$container.find(self._opts.divRight).html(newHtml);
@@ -240,9 +248,6 @@
             moveSelectedLeftToRight: function () {
                 var self = this;
                 if (!self.isIntegerPercent(self.$container.find(self._opts.inputPercent).val())) {
-                    console.log(self._opts.templateErrMultiTransfer);
-                    console.log(self._opts.errMsgPercentAll);
-
                     var newHtml = TemplateToHtml(self._opts.templateErrMultiTransfer, self._opts.errMsgPercentAll);
                     $("#messageContainer").html(newHtml);
                     $("#messageContainer").show();
@@ -265,6 +270,7 @@
                 self.left_arr.forEach(function (x) {
                     if (move_arr.indexOf(x.id) >= 0) {
                         x.percent = self._opts.percent;
+                        x.is_changed = true;
                         self.right_arr.push(x);
                     };
                 });

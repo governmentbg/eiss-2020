@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
@@ -87,6 +84,9 @@ namespace IOWebApplication.Core.Services
                     repo.SaveChanges();
                     //courtLoadPeriodService.GetLoadPeriod(null, model.Id);
                 }
+
+                CourtDutyLawUnit_SaveData(new CheckListViewVM() { ObjectId = model.Id, checkListVMs = model.CheckCourtDutyLawUnits });
+
                 return true;
             }
             catch (Exception ex)
@@ -115,13 +115,13 @@ namespace IOWebApplication.Core.Services
         /// <param name="law"></param>
         /// <param name="courtDutyLawUnits"></param>
         /// <returns></returns>
-        private CheckListVM FillCheckListVM(LawUnit law, IList<CourtDutyLawUnit> courtDutyLawUnits)
+        private CheckListVM FillCheckListVM(LawUnit law, IList<CourtDutyLawUnit> courtDutyLawUnits = null)
         {
             CheckListVM checkListVM = new CheckListVM
             {
                 Value = law.Id.ToString(),
                 Label = law.FullName,
-                Checked = courtDutyLawUnits.Any(x => x.LawUnitId == law.Id && (x.DateFrom <= DateTime.Now && ((x.DateTo != null) ? x.DateTo >= DateTime.Now : true)))
+                Checked = (courtDutyLawUnits == null) ? false : courtDutyLawUnits.Any(x => x.LawUnitId == law.Id && (x.DateFrom <= DateTime.Now && ((x.DateTo != null) ? x.DateTo >= DateTime.Now : true)))
             };
 
             return checkListVM;
@@ -133,11 +133,11 @@ namespace IOWebApplication.Core.Services
         /// <param name="courtId"></param>
         /// <param name="dutyId"></param>
         /// <returns></returns>
-        private IList<CheckListVM> FillCheckListVMs(int courtId, int dutyId)
+        public IList<CheckListVM> FillCheckListVMs(int courtId, int? dutyId)
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var courtDutyLowUnits = CourtDutyLowUnit_Select(dutyId);
+            var courtDutyLowUnits = (dutyId == null) ? null : CourtDutyLowUnit_Select(dutyId ?? 0);
             IQueryable<LawUnit> lawUnits = commonService.LawUnit_JudgeByCourtDate(courtId, DateTime.Now);
 
             foreach (var law in lawUnits)
@@ -282,6 +282,17 @@ namespace IOWebApplication.Core.Services
       }
           
 
+            return result;
+        }
+
+        public CourtDuty GetCourtDuty_ById(int Id)
+        {
+            var result = repo.GetById<CourtDuty>(Id) ?? new CourtDuty();
+
+            if (result.Id < 1)
+                return null;
+
+            result.CheckCourtDutyLawUnits = FillCheckListVMs(result.CourtId, result.Id).ToList();
             return result;
         }
     }

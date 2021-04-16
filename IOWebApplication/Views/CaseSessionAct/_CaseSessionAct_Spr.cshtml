@@ -1,5 +1,6 @@
 ﻿@model CaseSessionActFilterVM
 @using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
@@ -8,6 +9,9 @@
     <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
 </div>
 <div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
 </div>
 <div class="row">
@@ -47,7 +51,10 @@
                             Year: $('#Year').val(),
                             CaseRegNumber: $('#CaseRegNumber').val(),
                             ActLawBaseId: $('#ActLawBaseId').val(),
-                            IsFinalDoc: $("#IsFinalDoc").is(":checked")
+                            JudgeReporterId: $('#JudgeReporterId').val(),
+                            IsFinalDoc: $("#IsFinalDoc").is(":checked"),
+                            RegNumber: $('#RegNumber').val(),
+                            ActTypeId: $('#ActTypeId').val(),
                         };
                     }
                 },
@@ -61,6 +68,13 @@
                             url = url.replace('666', row.caseId);
                             return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseLabel + "</a>";
                         },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия-докладчик',
                         sortable: true,
                         searchable: true
                     },
@@ -131,6 +145,7 @@
 <script>
     $(function () {
         initActLawBaseAutoComplete();
+        initLawUnit();
     })
 </script>
 

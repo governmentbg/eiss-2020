@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper.QueryableExtensions;
+﻿using AutoMapper.QueryableExtensions;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -24,9 +21,11 @@ namespace IOWebApplication.Core.Services
     {
         private readonly ICommonService commonService;
         private readonly IRelationManyToManyDateService relationService;
+        private readonly ICaseLawUnitService caseLawUnitService;
         public CourtLawUnitService(
             ILogger<CourtLawUnitService> _logger,
             ICommonService _commonService,
+            ICaseLawUnitService _caseLawUnitService,
             IRepository _repo,
             IUserContext _userContext,
             IRelationManyToManyDateService _relationService)
@@ -35,6 +34,7 @@ namespace IOWebApplication.Core.Services
             repo = _repo;
             userContext = _userContext;
             commonService = _commonService;
+            caseLawUnitService = _caseLawUnitService;
             relationService = _relationService;
         }
 
@@ -92,8 +92,16 @@ namespace IOWebApplication.Core.Services
             {
                 //Проверка за припокриване на периоди
                 DateTime dateNow = DateTime.Now.Date;
+                List<int> periods = new List<int>();
+                if (model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday || model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill)
+                {
+                    periods.Add(NomenclatureConstants.PeriodTypes.Holiday);
+                    periods.Add(NomenclatureConstants.PeriodTypes.Ill);
+                }
+                else
+                    periods.Add(model.PeriodTypeId);
                 var exists = repo.AllReadonly<CourtLawUnit>()
-                                .Where(x => x.Id != model.Id && x.CourtId == model.CourtId && x.PeriodTypeId == model.PeriodTypeId &&
+                                .Where(x => x.Id != model.Id && x.CourtId == model.CourtId && periods.Contains(x.PeriodTypeId) &&
                                 x.LawUnitId == model.LawUnitId &&
                                 ((x.DateTo ?? dateNow).Date >= model.DateFrom.Date && (x.DateTo ?? dateNow).Date <= (model.DateTo ?? dateNow).Date ||
                                   (model.DateTo ?? dateNow).Date >= x.DateFrom.Date && (model.DateTo ?? dateNow).Date <= (x.DateTo ?? dateNow).Date)
@@ -101,12 +109,12 @@ namespace IOWebApplication.Core.Services
 
                 if (exists == true)
                 {
-                    return (result: false, errorMessage: "За избрания служител вече има въведени данни за въведения период.");
+                    return (result: false, errorMessage: "За избрания служител вече има въведени данни за периода.");
                 }
 
 
                 //Ако е назначаване или преместване тогава да се сетва
-                if (model.PeriodTypeId != NomenclatureConstants.PeriodTypes.Appoint && model.PeriodTypeId != NomenclatureConstants.PeriodTypes.Move)
+                if (!NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(model.PeriodTypeId))
                 {
                     model.CourtOrganizationId = null;
                     model.LawUnitPositionId = null;
@@ -219,7 +227,7 @@ namespace IOWebApplication.Core.Services
             DateTime enddatenull = dateSelect.AddDays(1);
             var courtLawUnit = repo.AllReadonly<CourtLawUnit>()
                                    .Where(c => c.CourtId == forCourtId &&
-                                          (c.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint || c.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move) &&
+                                          NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId) &&
                                           c.DateFrom <= dateSelect &&
                                           (c.DateTo ?? enddatenull) >= dateSelect);
             var courtLawUnitIllHoliday = repo.AllReadonly<CourtLawUnit>()
@@ -359,19 +367,6 @@ namespace IOWebApplication.Core.Services
                                 .FirstOrDefault();
         }
 
-        public CourtLawUnit GetGeneralJudgeCourtLawUnit(int courtId)
-        {
-            DateTime dateNow = DateTime.Now.Date;
-            DateTime dateEnd = dateNow.AddDays(1);
-
-            return repo.AllReadonly<CourtLawUnit>()
-                                .Include(x => x.LawUnit)
-                                .Where(x => x.CourtId == courtId)
-                                .Where(x => x.LawUnitPositionId == NomenclatureConstants.LawUnitPosition.GeneralJudge)
-                                .Where(x => dateNow >= x.DateFrom && dateNow <= (x.DateTo ?? dateEnd))
-                                .FirstOrDefault();
-        }
-
         public IQueryable<CourtLawUnitVM> CourtLawUnitOrder_Select(int courtId)
         {
             return repo.AllReadonly<CourtLawUnitOrder>()
@@ -381,6 +376,7 @@ namespace IOWebApplication.Core.Services
                                 .Select(x => new CourtLawUnitVM
                                 {
                                     Id = x.Id,
+                                    OrderNumber = x.OrderNumber,
                                     LawUnitId = x.LawUnitId,
                                     LawUnitName = x.LawUnit.FullName
                                 })
@@ -433,13 +429,65 @@ namespace IOWebApplication.Core.Services
             return hasChange;
         }
 
-        public bool CourtLawUnitOrder_ActualizeForCase(int caseId)
+        public SaveResultVM CourtLawUnitOrder_ActualizeForCase(int caseId)
         {
-            return false;
-            //var courtOrder = CourtLawUnitOrder_Select(userContext.CourtId).ToArray();
-            //var caseLawUnits = repo.AllReadonly<CaseLawUnit>()
-            //                            .Where()
+            var lawunitOrder = CourtLawUnitOrder_Select(userContext.CourtId).ToList();
+
+            if (!lawunitOrder.Any())
+            {
+                return new SaveResultVM(false);
+            }
+
+            var dtNow = DateTime.Now;
+            var lawunitsSelect = repo.AllReadonly<CaseLawUnit>()
+                                  .Where(x => x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow)
+                                  .Where(x => x.CaseId == caseId);
+
+            var caseLawunits = lawunitsSelect.Where(x => x.CaseSessionId == null).ToList();
+
+            var casePredsedatelId = caseLawunits.Where(x => x.JudgeDepartmentRoleId == NomenclatureConstants.JudgeDepartmentRole.Predsedatel)
+                                                .Select(x => x.LawUnitId).FirstOrDefault();
+
+            var newPredsedatel = (from o in lawunitOrder
+                                  from c in caseLawunits
+                                  where o.LawUnitId == c.LawUnitId
+                                  orderby o.OrderNumber
+                                  select new
+                                  {
+                                      LawUnitId = o.LawUnitId,
+                                      CaseLawUnitId = c.Id
+                                  }).FirstOrDefault();
+
+            if (newPredsedatel == null)
+            {
+                return new SaveResultVM(false);
+            }
+
+            if ((newPredsedatel.LawUnitId == 0) || (casePredsedatelId == newPredsedatel.LawUnitId))
+            {
+                return new SaveResultVM(false);
+            }
+
+            if (
+            caseLawUnitService.GetCaseLawUnitChangeDepRol_Save(new Infrastructure.Models.ViewModels.Case.CaseLawUnitChangeDepRolVM()
+            {
+                CaseId = caseId,
+                CaseLawUnitId = newPredsedatel.CaseLawUnitId,
+                CaseSessionId = null,
+                DepartmentId = null
+            }))
+            {
+                return new SaveResultVM(true);
+            }
+            else
+            {
+                {
+                    return new SaveResultVM(false);
+                }
+            }
         }
+
+
 
         public IQueryable<CourtLawUnitSubstitutionVM> CourtLawUnitSubstitution_Select(CourtLawUnitSubstitutionFilter filter)
         {

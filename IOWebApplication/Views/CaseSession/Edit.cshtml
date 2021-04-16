@@ -125,9 +125,27 @@
             , function (data) {
                 if (data.result == false) {
                     swalConfirm('Съставът по делото не е пълен!', function () {
-                        CheckExistSecretaryOfAllMeeting();
+                        CheckIsExistJudgeLawUnitInCase();
                     }, function () {
                             $('#subButton').removeAttr("disabled");
+                    });
+                } else {
+                    CheckIsExistJudgeLawUnitInCase();
+                }
+            });
+    }
+
+    function CheckIsExistJudgeLawUnitInCase() {
+        var caseId = @Model.CaseId;
+
+        postContent('@Url.Action("IsExistJudgeLawUnitInCase", "CaseLawUnit")'
+            , { caseId: caseId }
+            , function (data) {
+                if (data.result == false) {
+                    swalConfirm('Не фигурирате по това дело!', function () {
+                        CheckExistSecretaryOfAllMeeting();
+                    }, function () {
+                        $('#subButton').removeAttr("disabled");
                     });
                 } else {
                     CheckExistSecretaryOfAllMeeting();

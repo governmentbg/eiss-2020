@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -57,6 +54,18 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Изготвени РКО")]
         public string ExpenseOrderDates { get; set; }
+
+        [Display(Name = "Съдебен секретар РКО")]
+        public string ExpenseOrderUsers { get; set; }
+
+        [Display(Name = "Съдия РКО")]
+        public string ExpenseOrderJudge { get; set; }
+
+        [Display(Name = "Продължителност на СЗ")]
+        public string SessionTime { get; set; }
+
+        [Display(Name = "Резултат от СЗ")]
+        public string SessionResult { get; set; }
     }
 
     public class ObligationJuryFilterReportVM
@@ -79,8 +88,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Вид сметка")]
         public int MoneyGroupId { get; set; }
 
-        [Display(Name = "Съдебни заседатели")]
-        public bool OnlyJury { get; set; }
+        [Display(Name = "Име на лице")]
+        public string PersonName { get; set; }
+
+        [Display(Name = "Вид лице")]
+        public string PersonType { get; set; }
+
+        [Display(Name = "Вид лице")]
+        public string PersonTypeLabel { get; set; }
     }
 
 }

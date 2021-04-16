@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -163,7 +160,8 @@ namespace IOWebApplication.Controllers
                 model = new CaseBankAccount()
                 {
                     CaseId = caseId,
-                    CourtId = userContext.CourtId
+                    CourtId = userContext.CourtId,
+                    CaseBankAccountTypeId = NomenclatureConstants.CaseBankAccountType.BankAccount
                 };
             }
             SetViewBag_BankAccount(caseId);
@@ -263,7 +261,8 @@ namespace IOWebApplication.Controllers
                 model = new CaseMoneyClaim()
                 {
                     CaseId = caseId,
-                    CourtId = userContext.CourtId
+                    CourtId = userContext.CourtId,
+                    CaseMoneyClaimGroupId = NomenclatureConstants.CaseMoneyClaimGroup.Contract
                 };
             }
             SetViewBag_MoneyClaim();
@@ -312,10 +311,10 @@ namespace IOWebApplication.Controllers
                 }
             }
 
-            if (model.ClaimDate == null)
-            {
-                return "Въведете дата.";
-            }
+            //if (model.ClaimDate == null)
+            //{
+            //    return "Въведете дата.";
+            //}
 
             //if ((model.ClaimNumber ?? string.Empty) == string.Empty)
             //{
@@ -382,7 +381,7 @@ namespace IOWebApplication.Controllers
                     CaseMoneyClaimId = moneyClaimId ?? 0,
                     CurrencyId = NomenclatureConstants.Currency.BGN,
                     MainCaseMoneyCollectionId = mainMoneyCollectionId,
-                    CaseMoneyCollectionGroupId = (mainMoneyCollectionId > 0) ? NomenclatureConstants.CaseMoneyCollectionGroup.Money : 0,
+                    CaseMoneyCollectionGroupId = NomenclatureConstants.CaseMoneyCollectionGroup.Money,
                     CasePersonListDecimals = service.FillPersonList(caseId, null),
                     JointDistribution = true,
                     MoneyCollectionEndDateTypeId = NomenclatureConstants.MoneyCollectionEndDateType.WithDate

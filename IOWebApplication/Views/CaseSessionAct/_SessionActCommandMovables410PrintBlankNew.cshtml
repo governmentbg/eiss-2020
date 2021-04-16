@@ -16,10 +16,10 @@
         <b>ЗАПОВЕД № @Model.CaseSessionActPrint.ActRegNumber</b><br />
         <b>ЗА ИЗПЪЛНЕНИЕ НА ЗАДЪЛЖЕНИЕ ЗА ПРЕДАВАНЕ НА ДВИЖИМИ ВЕЩИ</b><br />
         <b>по чл. 410 от ГПК</b><br />
-        @Model.CaseSessionActPrint.CourtCity на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy")г.<br />
+        @Model.CaseSessionActPrint.CourtCity на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") г.<br />
     </center>
     <div class="just">
-        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName в проведеното на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy")г. в закрито разпоредително заседание по @Model.CaseSessionActPrint.CaseTypeName № @Model.CaseSessionActPrint.CaseRegNumber/@Model.CaseSessionActPrint.CaseRegYear г., по описа на съда за @Model.CaseSessionActPrint.CaseRegYear г. @Model.CaseSessionActPrint.DepartmentName, докладвано от @Model.CaseSessionActPrint.JudgeReporter – районен съдия, като разгледа подаденото заявление за издаване на заповед за изпълнение по реда на чл. 410 и сл. ГПК, и след като прецени, че са налице предпоставките за уважаване на искането и на основание чл. 411, ал. 3 ГПК<br />
+        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName в проведеното на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") г. в закрито разпоредително заседание по @Model.CaseSessionActPrint.CaseTypeName № @Model.CaseSessionActPrint.CaseRegNumber/@Model.CaseSessionActPrint.CaseRegYear г., по описа на съда за @Model.CaseSessionActPrint.CaseRegYear г.@(string.IsNullOrEmpty(Model.CaseSessionActPrint.DepartmentName) ? string.Empty : " " + Model.CaseSessionActPrint.DepartmentName), докладвано от @Model.CaseSessionActPrint.JudgeReporter – районен съдия, като разгледа подаденото заявление за издаване на заповед за изпълнение по реда на чл. 410 и сл. ГПК, и след като прецени, че са налице предпоставките за уважаване на искането и на основание чл. 411, ал. 3 ГПК<br />
     </div>
     <center>
         <b>РАЗПОРЕЖДА:</b><br />
@@ -53,7 +53,7 @@
             @Html.Raw("която " + caseMoneyCollection.CaseMoneyCollectionTypeLabel + "<br />")
             foreach (var caseMoneyCollectionExtra in caseMoneyCollection.CaseMoneyCollectionExtras)
             {
-                @Html.Raw("с " + caseMoneyCollectionExtra.PretendedAmount + " " + caseMoneyCollection.CurrencyCode + " /" + caseMoneyCollectionExtra.PretendedAmountString + "/ " + caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + " от " + caseMoneyCollectionExtra.DateFrom?.ToString("dd.MM.yyyy") + "г. до " + caseMoneyCollectionExtra.DateTo?.ToString("dd.MM.yyyy") + "г.<br />")
+                @Html.Raw("с " + caseMoneyCollectionExtra.PretendedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionExtra.CurrencyCode + " /" + caseMoneyCollectionExtra.PretendedAmountString + "/ " + caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + " от " + caseMoneyCollectionExtra.DateFrom?.ToString("dd.MM.yyyy") + " г. до " + caseMoneyCollectionExtra.DateTo?.ToString("dd.MM.yyyy") + " г.<br />")
             }
         }
 
@@ -64,11 +64,20 @@
             @Html.Raw(caseMoneyClaim.Motive + "<br />");
             @Html.Raw("</div>")
         }
+
+        if (!string.IsNullOrEmpty(caseMoneyClaim.PartyNames))
+        {
+            @Html.Raw("<br />");
+            @Html.Raw("<div class='just'>")
+            @Html.Raw(caseMoneyClaim.PartyNames + "<br />");
+            @Html.Raw("</div>")
+        }
     }
+
     както и сумите:<br />
     @foreach (var caseMoneyExpense in Model.CaseFastProcessView.CaseMoneyExpenses)
     {
-        @Html.Raw("&nbsp;&nbsp; - " + caseMoneyExpense.Amount + " " + caseMoneyExpense.CurrencyCode + " /" + caseMoneyExpense.AmountString + "/ " + caseMoneyExpense.CaseMoneyExpenseTypeLabel + "<br />")
+        @Html.Raw("&nbsp;&nbsp; - " + caseMoneyExpense.Amount.ToString("### ### ##0.00") + " " + caseMoneyExpense.CurrencyCode + " /" + caseMoneyExpense.AmountString + "/ " + caseMoneyExpense.CaseMoneyExpenseTypeLabel + (!string.IsNullOrEmpty(caseMoneyExpense.Description) ? " " + caseMoneyExpense.Description : string.Empty) + "<br />")
         @if (!caseMoneyExpense.JointDistributionBool)
         {
             @if (caseMoneyExpense.MoneyExpensePeople.Where(x => x.PersonAmount > 0).ToList().Count > 0)
@@ -76,7 +85,7 @@
                 @Html.Raw("&nbsp;&nbsp;&nbsp; Разделно на:" + "<br />");
                 foreach (var caseMoneyExpensePerson in caseMoneyExpense.MoneyExpensePeople.Where(x => x.PersonAmount > 0))
                 {
-                    @Html.Raw("&nbsp;&nbsp;&nbsp; " + caseMoneyExpensePerson.CasePersonLabel + " в размер на " + caseMoneyExpensePerson.PersonAmount + " " + caseMoneyExpensePerson.CurrencyCode + " /" + caseMoneyExpensePerson.PersonAmountString + "/ " + "<br />");
+                    @Html.Raw("&nbsp;&nbsp;&nbsp; " + caseMoneyExpensePerson.CasePersonLabel + " в размер на " + caseMoneyExpensePerson.PersonAmount.ToString("### ### ##0.00") + " " + caseMoneyExpensePerson.CurrencyCode + " /" + caseMoneyExpensePerson.PersonAmountString + "/ " + "<br />");
                 }
             }
         }
@@ -97,7 +106,7 @@
     {
         if (caseBankAccount.CaseBankAccountTypeId == 1)
         {
-            @Html.Raw("&nbsp;&nbsp; - внесена по следната банкова сметка на заявителя/кредитора IBAN: " + caseBankAccount.LabelIBAN + " BIC: " + caseBankAccount.LabelBIC + " " + caseBankAccount.BankName + "<br />");
+            @Html.Raw("&nbsp;&nbsp; - внесена по следната банкова сметка на заявителя/кредитора IBAN: " + caseBankAccount.LabelIBAN + " BIC: " + caseBankAccount.LabelBIC + " " + caseBankAccount.BankName + (!string.IsNullOrEmpty(caseBankAccount.Description) ? " " + caseBankAccount.Description : string.Empty) + "<br />");
         }
         else
         {

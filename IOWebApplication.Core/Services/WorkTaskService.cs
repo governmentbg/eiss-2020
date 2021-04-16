@@ -1,13 +1,11 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -176,8 +174,13 @@ namespace IOWebApplication.Core.Services
                     .Where(x => EF.Functions.ILike(x.ParentDescription ?? "", filter.ParentDescription.ToEndingPaternSearch()));
         }
 
-        public IQueryable<WorkTaskVM> SelectAll(WorkTaskFilterVM filter)
+        public IEnumerable<WorkTaskVM> SelectAll(WorkTaskFilterVM filter)
         {
+            Expression<Func<WorkTaskVM, bool>> userSearch = x => true;
+            if (!string.IsNullOrEmpty(filter.AssignedTo))
+            {
+                userSearch = x => x.UserId == filter.AssignedTo;
+            }
             return repo.AllReadonly<WorkTask>()
                             .Include(x => x.TaskType)
                             .Include(x => x.TaskState)
@@ -197,20 +200,27 @@ namespace IOWebApplication.Core.Services
                                 SourceType = x.SourceType,
                                 SourceId = x.SourceId,
                                 SourceDescription = x.SourceDescription,
+                                ParentDescription = x.ParentDescription,
                                 DateCreated = x.DateCreated,
                                 DateAccepted = x.DateAccepted,
                                 DateCompleted = x.DateCompleted,
                                 DateEnd = x.DateEnd,
+                                UserId = x.UserId,
                                 UserFullName = ((x.User != null) ? x.User.LawUnit.FullName : x.CourtOrganization.Label) ?? "",
+                                UserCreatedId = x.UserCreatedId,
                                 UserCreatedFullName = x.UserCreated.LawUnit.FullName,
                                 Description = x.Description,
                                 DescriptionCreated = x.DescriptionCreated,
+                                TaskStateId = x.TaskStateId,
                                 TaskTypeName = x.TaskType.Label,
                                 TaskStateName = x.TaskState.Label
                             })
-                            .Where(x => EF.Functions.ILike(x.UserCreatedFullName, filter.CreatedBy.ToPaternSearch()))
-                            .Where(x => EF.Functions.ILike(x.UserFullName, filter.AssignedTo.ToPaternSearch()))
-                            .OrderBy(x => x.DateCreated);
+                            .Where(x => x.UserCreatedId == (filter.CreatedBy ?? x.UserCreatedId))
+                            .Where(userSearch);
+            //Преработено на autocomplete
+            //.Where(x => EF.Functions.ILike(x.UserCreatedFullName, filter.CreatedBy.ToPaternSearch()))
+            //.Where(x => EF.Functions.ILike(x.UserFullName, filter.AssignedTo.ToPaternSearch()));
+
         }
         public IEnumerable<WorkTaskVM> Select(int sourceType, long sourceId)
         {
@@ -296,6 +306,8 @@ namespace IOWebApplication.Core.Services
             {
                 case SourceTypeSelectVM.Document:
                     return urlHelper.Action("View", "Document", new { id = sourceId, tab = "tabname" }).Replace("tabname", "#tabWorkTask", StringComparison.InvariantCultureIgnoreCase);
+                case SourceTypeSelectVM.DocumentResolution:
+                    return urlHelper.Action("Edit", "DocumentResolution", new { id = sourceId, tab = "tabname" }).Replace("tabname", "#tabWorkTask", StringComparison.InvariantCultureIgnoreCase);
                 case SourceTypeSelectVM.Case:
                     return urlHelper.Action("CasePreview", "Case", new { id = sourceId });
                 case SourceTypeSelectVM.CaseSession:
@@ -310,10 +322,43 @@ namespace IOWebApplication.Core.Services
                     return urlHelper.Action("Edit", "CaseSessionAct", new { id = sourceId, tab = "tabname" }).Replace("tabname", "#tabWorkTask", StringComparison.InvariantCultureIgnoreCase);
                 case SourceTypeSelectVM.CaseSessionActCoordination:
                     return urlHelper.Action("Edit", "CaseSessionActCoordination", new { id = sourceId });
+                case SourceTypeSelectVM.ExecList:
+                    return urlHelper.Action("EditExecList", "Money", new { id = sourceId, tab = "tabname" }).Replace("tabname", "#tabWorkTask", StringComparison.InvariantCultureIgnoreCase);
                 default:
                     return string.Empty;
             }
         }
+
+        public string GetTaskParentObjectUrl(int sourceType, long sourceId)
+        {
+            string result = string.Empty;
+            int? caseId = null;
+
+            switch (sourceType)
+            {
+                case SourceTypeSelectVM.CaseNotification:
+                    caseId = repo.GetById<CaseNotification>((int)sourceId)?.CaseId;
+                    break;
+                case SourceTypeSelectVM.CaseSessionAct:
+                    caseId = repo.GetById<CaseSessionAct>((int)sourceId)?.CaseId;
+                    break;
+                case SourceTypeSelectVM.CaseSessionActCoordination:
+                    caseId = repo.GetById<CaseSessionActCoordination>((int)sourceId)?.CaseId;
+                    break;
+                case SourceTypeSelectVM.ExecList:
+                    caseId = repo.AllReadonly<ExecList>().Where(x => x.Id == (int)sourceId)
+                        .Select(x => x.ExecListObligations.Select(a => a.Obligation.CaseId).FirstOrDefault())
+                        .FirstOrDefault();
+                    break;
+            }
+            if (!caseId.HasValue)
+            {
+                return null;
+            }
+
+            return urlHelper.Action("CasePreview", "Case", new { id = caseId });
+        }
+
 
         private void SetDoActionUrl(WorkTaskVM model)
         {
@@ -358,6 +403,13 @@ namespace IOWebApplication.Core.Services
                     break;
                 case WorkTaskConstants.Types.DocumentResolution_Sign:
                     model.DoActionUrl = urlHelper.Action("SendForSign", "DocumentResolution", new { id = model.SourceId, taskId = model.Id });
+                    break;
+                case WorkTaskConstants.Types.ExecList_SentToSign:
+                    model.DoActionUrl = urlHelper.Action("DoTask_SentForSign", "Money", new { id = model.Id });
+                    model.DoActionWarning = "Ако съществува вече създаден документ, той ще бъде презареден от актуалната бланка.";
+                    break;
+                case WorkTaskConstants.Types.ExecList_Sign:
+                    model.DoActionUrl = urlHelper.Action("SendForSign", "Money", new { id = model.SourceId, taskId = model.Id });
                     break;
                 default:
                     model.DoActionUrl = null;
@@ -408,12 +460,15 @@ namespace IOWebApplication.Core.Services
                 entity.DateCreated = DateTime.Now;
                 entity.UserCreatedId = userContext.UserId;
                 entity.TaskStateId = WorkTaskConstants.States.New;
-                var taskType = repo.GetById<TaskType>(model.TaskTypeId);
-                if (taskType.SelfTask == true || entity.UserId == userContext.UserId)
+                if (!model.DisableSelfAcceptCheck)
                 {
-                    entity.UserId = userContext.UserId;
-                    entity.DateAccepted = DateTime.Now;
-                    entity.TaskStateId = WorkTaskConstants.States.Accepted;
+                    var taskType = repo.GetById<TaskType>(model.TaskTypeId);
+                    if (taskType.SelfTask == true || entity.UserId == userContext.UserId)
+                    {
+                        entity.UserId = userContext.UserId;
+                        entity.DateAccepted = DateTime.Now;
+                        entity.TaskStateId = WorkTaskConstants.States.Accepted;
+                    }
                 }
                 CreateTaskSourceDescription(entity);
                 repo.Add(entity);
@@ -492,6 +547,21 @@ namespace IOWebApplication.Core.Services
                         model.ParentDescription = info.pd;
                     }
                     break;
+                case SourceTypeSelectVM.ExecList:
+                    {
+                        var info = repo.AllReadonly<Infrastructure.Data.Models.Money.ExecList>()
+                                        .Where(x => x.Id == (int)model.SourceId)
+                                        .Select(x => new
+                                        {
+                                            sd = $"{x.ExecListType.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
+                                            pd = x.ExecListObligations.Select(a => a.Obligation.Case.RegNumber).FirstOrDefault(),
+                                        })
+                                        .FirstOrDefault();
+
+                        model.SourceDescription = info.sd;
+                        model.ParentDescription = info.pd;
+                    }
+                    break;
             }
         }
 
@@ -544,6 +614,7 @@ namespace IOWebApplication.Core.Services
                 saved.Description = model.Description;
                 saved.DateCompleted = DateTime.Now;
                 saved.TaskStateId = WorkTaskConstants.States.Completed;
+                CreateTaskSourceDescription(saved);
                 CompleteTask_UpdateOthers(saved);
                 repo.Update(saved);
                 repo.SaveChanges();
@@ -576,6 +647,13 @@ namespace IOWebApplication.Core.Services
                         selectToDelete = x =>
                             (x.TaskTypeId == WorkTaskConstants.Types.DocumentResolution_SentToSign) ||
                             (x.TaskTypeId == WorkTaskConstants.Types.DocumentResolution_Sign);
+                    }
+                    break;
+                case WorkTaskConstants.Types.ExecList_SentToSign:
+                    {
+                        selectToDelete = x =>
+                            (x.TaskTypeId == WorkTaskConstants.Types.ExecList_SentToSign) ||
+                            (x.TaskTypeId == WorkTaskConstants.Types.ExecList_Sign);
                     }
                     break;
             }
@@ -624,35 +702,62 @@ namespace IOWebApplication.Core.Services
                                                              .Any();
 
                         var actModel = repo.GetById<CaseSessionAct>((int)model.SourceId);
-                        if (!hasUnCompletedCoTasks && (actModel.ActDeclaredDate == null))
+                        if (!hasUnCompletedCoTasks)
                         {
-                            using (TransactionScope ts = new TransactionScope())
+                            if (actModel.ActDeclaredDate == null)
                             {
-
-                                actModel.ActStateId = NomenclatureConstants.SessionActState.Enforced;
-                                actModel.ActDeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
-                                actModel.DateWrt = DateTime.Now;
-
-                                caseDeadlineService.DeadLineMotive(actModel);
-
-                                repo.Update(actModel);
-                                repo.SaveChanges();
-
-
-                                lifecycleService.CaseLifecycle_SaveFirst_ForCaseType(actModel.CaseSessionId);
-
-                                if (actModel.IsFinalDoc)
+                                using (TransactionScope ts = new TransactionScope())
                                 {
-                                    lifecycleService.CaseLifecycle_CloseInterval(actModel.CaseId ?? 0, actModel.Id, actModel.ActDeclaredDate ?? DateTime.Now);
+
+                                    actModel.ActStateId = NomenclatureConstants.SessionActState.Enforced;
+                                    actModel.ActDeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
+                                    actModel.DateWrt = DateTime.Now;
+
+                                    //Автоматично влизане в сила на актове, неподлежащи на обжалване
+                                    if (actModel.CanAppeal == false)
+                                    {
+                                        actModel.ActStateId = NomenclatureConstants.SessionActState.ComingIntoForce;
+                                        actModel.ActInforcedDate = actModel.ActDeclaredDate;
+                                    }
+
+                                    caseDeadlineService.DeadLineMotive(actModel);
+
+                                    repo.Update(actModel);
+
+                                    // Автоматизиране на статус - решено
+                                    var caseCase = repo.GetById<Case>(actModel.CaseId);
+                                    if ((caseCase.CaseStateId == NomenclatureConstants.CaseState.AnnouncedForResolution) && (actModel.ActTypeId == NomenclatureConstants.ActType.Answer))
+                                    {
+                                        caseCase.CaseStateId = NomenclatureConstants.CaseState.Resolution;
+                                        caseCase.DateWrt = DateTime.Now;
+                                        caseCase.UserId = userContext.UserId;
+                                        repo.Update(caseCase);
+                                    }
+
+                                    repo.SaveChanges();
+
+
+                                    lifecycleService.CaseLifecycle_SaveFirst_ForCaseType(actModel.CaseSessionId);
+
+                                    if (actModel.IsFinalDoc)
+                                    {
+                                        lifecycleService.CaseLifecycle_CloseInterval(actModel.CaseId ?? 0, actModel.Id, actModel.ActDeclaredDate ?? DateTime.Now);
+                                    }
+
+                                    mqEpepService.AppendCaseSessionAct(actModel, EpepConstants.ServiceMethod.Add);
+                                    mqEpepService.AppendCaseSessionAct_Private(actModel.Id, EpepConstants.ServiceMethod.Add);
+
+                                    caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
+
+                                    ts.Complete();
+                                    return new SaveResultVM(true, "", "reload");
                                 }
-
-                                mqEpepService.AppendCaseSessionAct(actModel, EpepConstants.ServiceMethod.Add);
-                                mqEpepService.AppendCaseSessionAct_Private(actModel.Id, EpepConstants.ServiceMethod.Add);
-
-                                caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
-
-                                ts.Complete();
-                                return new SaveResultVM(true, "", "reload");
+                            }
+                            else
+                            {
+                                //ако вече е постановен - само изпраща новите версии към ЕПЕП
+                                mqEpepService.AppendCaseSessionAct(actModel, EpepConstants.ServiceMethod.Update);
+                                mqEpepService.AppendCaseSessionAct_Private(actModel.Id, EpepConstants.ServiceMethod.Update);
                             }
                         }
                     }
@@ -672,6 +777,7 @@ namespace IOWebApplication.Core.Services
                                 repo.Update(actModel);
                                 repo.SaveChanges();
                                 mqEpepService.AppendCaseSessionAct_PrivateMotive(actModel.Id, EpepConstants.ServiceMethod.Add);
+                                caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
                                 ts.Complete();
                                 return new SaveResultVM(true, "", "reload");
                             }
@@ -887,6 +993,72 @@ namespace IOWebApplication.Core.Services
             {
                 return false;
             }
+        }
+
+        public bool ExpireTasks(long[] taskIds, string description)
+        {
+            var tasks = repo.All<WorkTask>()
+                            .Where(x => taskIds.Contains(x.Id))
+                            .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                            .ToList();
+
+            if (!tasks.Any())
+            {
+                return false;
+            }
+            foreach (var task in tasks)
+            {
+                task.TaskStateId = WorkTaskConstants.States.Deleted;
+                task.DescriptionCreated = (task.DescriptionCreated ?? "");
+                task.DescriptionCreated += $"; Отменена на {DateTime.Now:dd.MM.yyyy HH:mm:ss} от {userContext.FullName};{description}";
+                repo.Update(task);
+            }
+
+            repo.SaveChanges();
+            return true;
+
+        }
+
+        public bool RerouteTasks(long[] taskIds, string newUserId, string description)
+        {
+            var tasks = repo.All<WorkTask>()
+                             .Where(x => taskIds.Contains(x.Id))
+                             .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                             .Where(x => !WorkTaskConstants.Types.TaskCantReroute.Contains(x.TaskTypeId))
+                             .ToList();
+
+            if (!tasks.Any())
+            {
+                return false;
+            }
+            foreach (var task in tasks)
+            {
+
+
+                var newTask = new WorkTaskEditVM()
+                {
+                    DescriptionCreated = task.DescriptionCreated,
+                    ParentTaskId = task.ParentTaskId,
+                    SourceType = task.SourceType,
+                    SourceId = task.SourceId,
+                    TaskTypeId = task.TaskTypeId,
+                    TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser,
+                    DateEnd = task.DateEnd,
+                    UserId = newUserId,
+                    DisableSelfAcceptCheck = true
+                };
+                if (CreateTask(newTask))
+                {
+
+                    task.TaskStateId = WorkTaskConstants.States.Redirected;
+                    task.DescriptionCreated = (task.DescriptionCreated ?? "");
+                    task.DescriptionCreated += $"; Пренасочена на {DateTime.Now:dd.MM.yyyy HH:mm:ss} от {userContext.FullName};{description}";
+                    repo.Update(task);
+                }
+            }
+
+            repo.SaveChanges();
+            return true;
         }
     }
 }

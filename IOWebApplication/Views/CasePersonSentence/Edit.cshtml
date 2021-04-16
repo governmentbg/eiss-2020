@@ -95,7 +95,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-lg-6">@Html.EditorFor(x => x.EffectiveDateFrom, "DateTime")</div>
-                                <div class="col-lg-6">@Html.EditorFor(x => x.ExecInstitutionId, "GenericDropDown")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.ExecInstitutionId, "SelectInstitution", null, new { institutionTypeIds = "3,8,13" })</div>
                             </div>
                             <div class="row">
                                 <div class="col-lg-6">@Html.EditorFor(x => x.ExecIncomingDocument)</div>
@@ -161,3 +161,8 @@
 
 </script>
 
+<script>
+    $(function () {
+        initInstitution();
+    });   
+</script>

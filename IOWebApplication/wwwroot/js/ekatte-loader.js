@@ -1,9 +1,12 @@
 ﻿var ekatteUrls = {
     ekatteSearch: rootDir + 'Ajax/SearchEkatte?area=&query=',
+    ekatteEisppSearch: rootDir + 'Ajax/SearchEkatteEispp?area=&query=',
     ekatteGet: rootDir + 'Ajax/GetEkatte?id=',
     streetSearch: rootDir + 'Ajax/SearchStreet?area=&query=',
     streetGet: rootDir + 'Ajax/GetStreet?street_code=',
-    eisppEkatteGet: rootDir + 'Ajax/GetEkatteByEisppCode?eisppCode='
+    eisppEkatteGet: rootDir + 'Ajax/GetEkatteByEisppCode?eisppCode=',
+    eisppEkatteGetCategory: rootDir + 'Ajax/GetEkatteByEisppCodeCategory?eisppCode='
+    
 };
 
 function initEkatteDDL() {
@@ -221,5 +224,94 @@ function initEisppEkatte() {
             .done(function (success) {
                 $(_control).html(success.label);
             });
+    });
+}
+function loadEkatteCrime(ekatteControl, ekatte, callback) {
+    $.get(ekatteUrls.eisppEkatteGetCategory + ekatte)
+        .done(function (data) {
+            $(ekatteControl).val(data.label + ', ' + data.category);
+            if (callback) {
+                callback();
+            }
+        }).fail(function (errors) {
+            console.log(errors);
+        });
+}
+function initEisppEkatteCrime() {
+    $('.crime-address-control').each(function (i, e) {
+        let ekatteControl = $(e).find('.crime-ekatte-control')[0];
+        if ($(ekatteControl).data('isloaded') === 'true') {
+            return;
+        }
+        $(ekatteControl).data('isloaded', 'true');
+
+        $(e).find('select[id$="_Country"]').change(function () {
+            if ($(this).val() === '8805') {
+                $(e).find('.bg-address').show();
+                $(e).find('.foreign-address').hide();
+            } else {
+                $(e).find('.bg-address').hide();
+                $(e).find('.foreign-address').show();
+            }
+        }).trigger('change');
+
+        $.widget('custom.autocomplete_custom', $.ui.autocomplete, {
+            _renderMenu: function _renderMenu(ul, items) {
+                let that = this;
+                var category = '';
+                $.each(items, function (index, item) {
+                    if (item.category !== category) {
+                        ul.append('<li class="ui-autocomplete-category ui-state-disabled" aria-label="' + item.category + '">' + item.category + '</li>');
+                        category = item.category;
+                    }
+                    that._renderItemData(ul, item);
+                });
+            }
+        });
+
+        $(ekatteControl).autocomplete_custom({
+            minLength: 3,
+            delay: 100,
+            classes: {
+                'ui-autocomplete': 'autocomplete_custom'
+            },
+            source: function source(request, response) {
+                $.get(ekatteUrls.ekatteEisppSearch + encodeURIComponent(request.term)).done(function (success) {
+                     return response(success.data);
+                }).fail(function (errors) {
+                    console.log(errors);
+                });
+            },
+            select: function select(event, ui) {
+                ui.item.value = ui.item.label + ', ' + ui.item.category;
+                var input_hidden = event.target.parentElement.querySelector('input[type="hidden"]');
+                input_hidden.value = ui.item.id;
+            }
+        }).change(function () {
+            var input = this;
+            if (!input.value || input.value < 2) {
+                var input_hidden = input.parentElement.querySelector('input[type="hidden"]');
+                input_hidden.value = '';
+            }
+        }).blur(function () {
+            var input = this;
+            if (!input.value || input.value < 2) {
+                var input_hidden = input.parentElement.querySelector('input[type="hidden"]');
+                input_hidden.value = '';
+            }
+        });
+
+        var ekatteVal = $(e).find('.ekatte-val').val();
+        if (ekatteVal) {
+            loadEkatteCrime(ekatteControl, ekatteVal, function () {
+                let addressContainer = $(ekatteControl).parents('.crime-address-control:first');
+                //let resAreaControl = $(addressContainer).find('input[id$="ResidentionAreaCode_street"]');
+                //let resAreaVal = $(addressContainer).find('input[id$="ResidentionAreaCode"]:first').val();
+
+                //if (resAreaVal) {
+                //    loadStreet(resAreaControl, ekatteVal, resAreaVal);
+                //}
+            });
+        }
     });
 }

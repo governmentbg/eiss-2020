@@ -1,104 +1,112 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
+﻿using IO.SignTools.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Http;
 using IOWebApplication.Infrastructure.Models.Cdn;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.GridFS;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Services
 {
-    public class CdnService : ICdnService
+    public class CdnService : BaseCdnService, ICdnService
     {
-        private readonly IRepository repo;
-        private readonly IGridFSBucket gridFsBucket;
+        public IIOSignToolsService SignTools { get; }
+
 
         public CdnService(
-            IRepository _repo, 
+            IRepository _repo,
+            IIOSignToolsService _signTools,
             IConfiguration _config,
-            IMongoClient mongoClient)
+            IMongoClient mongoClient) : base(_config, _repo, mongoClient)
         {
-            repo = _repo;
-            string fileDbName = _config.GetValue<string>("FileDbName");
-
-            var database = mongoClient.GetDatabase(fileDbName);
-            gridFsBucket = new GridFSBucket(database);
+            SignTools = _signTools;
         }
 
-        public bool DeleteMongoFileData(string mongoFileId)
-        {
-            var saved = repo.All<MongoFile>(x => x.FileId == mongoFileId).FirstOrDefault();
-            
-            if (saved != null)
-            {
-                repo.Delete(saved);
-                repo.SaveChanges();
-                return true;
-            }
 
-            return false;
-        }
 
-        public async Task<CdnDownloadResult> MongoCdn_Download(long mongoFileId)
+        public async Task<CdnDownloadResult> MongoCdn_Download(long mongoFileId, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None)
         {
             int _id = (int)mongoFileId;
             string fileId = repo.AllReadonly<MongoFile>().Where(x => x.Id == _id).Select(x => x.FileId).FirstOrDefault();
-            
-            return await MongoCdn_Download(fileId);
+
+            return await MongoCdn_Download(fileId, postProcess);
         }
-        
-        public async Task<CdnDownloadResult> MongoCdn_Download(string fileId)
+
+        public async Task<CdnDownloadResult> MongoCdn_Download(string fileId, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None)
         {
-            return await MongoCdn_Download(new CdnFileSelect() { FileId = fileId });
+            return await MongoCdn_Download(new CdnFileSelect() { FileId = fileId }, postProcess);
         }
-       
-        public async Task<CdnDownloadResult> MongoCdn_Download(CdnFileSelect request)
+
+        public async Task<CdnDownloadResult> MongoCdn_Download(CdnFileSelect request, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None)
         {
             string fileId = request.FileId;
             string title = String.Empty;
-            
-            if (string.IsNullOrEmpty(fileId))
+            var fileItem = Select(request.SourceType, request.SourceId, request.FileId).FirstOrDefault();
+            if (fileItem == null)
             {
-                var file = Select(request.SourceType, request.SourceId).FirstOrDefault();
-                
-                if (file == null)
-                {
-                    return null;
-                }
-
-                fileId = file.FileId;
-                title = file.Title;
+                return null;
             }
+            title = fileItem.Title;
 
-            CdnDownloadResult downloadInfo = await GetFileById(fileId);
+
+            CdnDownloadResult downloadInfo = await GetFileById(fileItem, postProcess);
             downloadInfo.FileTitle = title;
 
             return downloadInfo;
         }
 
-        private async Task<CdnDownloadResult> GetFileById(string fileId)
+        private async Task<CdnDownloadResult> GetFileById(CdnItemVM fileItem, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None)
         {
-            using (var file = await gridFsBucket.OpenDownloadStreamAsync(ObjectId.Parse(fileId)))
+            using (var file = await gridFsBucket.OpenDownloadStreamAsync(ObjectId.Parse(fileItem.FileId)))
             {
                 byte[] fileContent = new byte[(int)file.Length];
                 file.Read(fileContent, 0, (int)file.Length);
+                byte[] newContent = fileContent;
+                if (fileItem.FileName.EndsWith(".pdf", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    try
+                    {
+                        switch (postProcess)
+                        {
+                            case CdnFileSelect.PostProcess.Flatten:
+
+                                {
+                                    string addText = "";
+                                    int[] actSourceTypes = { SourceTypeSelectVM.CaseSessionActPdf, SourceTypeSelectVM.CaseSessionActDepersonalized };
+                                    if (actSourceTypes.Contains(fileItem.SourceType))
+                                    {
+                                        int actId = int.Parse(fileItem.SourceId);
+                                        var actModel = repo.AllReadonly<CaseSessionAct>().Where(x => x.Id == actId).FirstOrDefault();
+                                        if (actModel != null)
+                                        {
+                                            if (actModel.ActDeclaredDate != null)
+                                            {
+                                                addText = $" Актът е постановен на {actModel.ActDeclaredDate:dd.MM.yyyy}";
+                                            }
+                                        }
+                                    }
+                                    newContent = flattenSignatures(fileContent, addText);
+
+                                }
+                                break;
+                        }
+                    }
+                    catch { }
+                }
 
                 CdnDownloadResult result = new CdnDownloadResult()
                 {
-                    FileId = fileId,
+                    FileId = fileItem.FileId,
                     ContentType = file.FileInfo.Metadata.GetValue("contentType").AsString,
                     FileName = file.FileInfo.Filename,
-                    FileContentBase64 = Convert.ToBase64String(fileContent)
+                    FileContentBase64 = Convert.ToBase64String(newContent)
                 };
 
                 await file.CloseAsync();
@@ -106,144 +114,14 @@ namespace IOWebApplication.Infrastructure.Services
                 return result;
             }
         }
-
-        public async Task<bool> MongoCdn_DeleteFile(string id)
+        private byte[] flattenSignatures(byte[] signedDoc, string additionalText = "")
         {
-            await gridFsBucket.DeleteAsync(ObjectId.Parse(id));
-
-            return DeleteMongoFileData(id);
-        }
-
-        public async Task<bool> MongoCdn_DeleteFiles(CdnFileSelect request)
-        {
-            bool result = true;
-            var selectedFiles = Select(request.SourceType, request.SourceId, request.FileId);
-
-            foreach (var _file in selectedFiles)
+            using (MemoryStream ms = new MemoryStream(signedDoc))
             {
-                result &= await MongoCdn_DeleteFile(_file.FileId);
-            }
-
-            return result;
-        }
-        public async Task<CdnUploadResult> MongoCdn_UploadFile(CdnUploadRequest request)
-        {
-            CdnUploadResult result = new CdnUploadResult() { Succeded = false };
-            Dictionary<string, object> metadata = new Dictionary<string, object>();
-            metadata.Add("contentType", request.ContentType);
-            metadata.Add("sourceType", request.SourceType);
-            metadata.Add("sourceId", request.SourceId);
-            metadata.Add("title", request.Title);
-
-            var options = new GridFSUploadOptions
-            {
-                Metadata = new BsonDocument(metadata)
-            };
-
-            request.FileContent = Convert.FromBase64String(request.FileContentBase64);
-
-            try
-            {
-                string mongoFileId = (await gridFsBucket.UploadFromBytesAsync(request.FileName, request.FileContent, options)).ToString();
-
-                if (!string.IsNullOrEmpty(mongoFileId))
-                {
-                    result.Succeded = SaveMongoFileData(request, mongoFileId);
-                }
-
-                result.FileId = mongoFileId;
-            }
-            catch (Exception ex)
-            {
-                result.ErrorMessage = ex.Message;  
-            }
-            
-            return result;
-        }
-
-        public bool SaveMongoFileData(CdnUploadRequest file, string mongoFileId)
-        {
-            try
-            {
-                var mongoFile = new MongoFile()
-                {
-                    FileId = mongoFileId,
-                    SourceType = file.SourceType,
-                    SourceId = file.SourceId,
-                    Title = file.Title,
-                    FileSize = file.FileContent.Length,
-                    FileName = file.FileName,
-                    UserUploaded = file.UserUploaded,
-                    DateUploaded = DateTime.Now
-                };
-
-                if (long.TryParse(mongoFile.SourceId, out long parsedId))
-                {
-                    mongoFile.SourceIdNumber = parsedId;
-                }
-
-                if (file.SignersCount > 0)
-                {
-                    mongoFile.SignersCount = file.SignersCount;
-                }
-
-                repo.Add(mongoFile);
-                repo.SaveChanges();
-
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
+                return SignTools.FlattenSignature(ms, additionalText).flattenPdf;
             }
         }
-        public IEnumerable<CdnItemVM> Select(int sourceType, string sourceId, string fileId = null)
-        {
-            int[] sourceTypes = new List<int>(){
-                sourceType
-            }.ToArray();
-
-            return Select(sourceTypes, sourceId, fileId);
-        }
-        public IEnumerable<CdnItemVM> Select(int[] sourceTypes, string sourceId, string fileId = null)
-        {
-            //Expression<Func<MongoFile, bool>> whereSearch = x => sourceTypes.Contains(x.SourceType) && x.SourceId == sourceId;
-            if (!string.IsNullOrEmpty(fileId))
-            {
-                //whereSearch = x => x.FileId == fileId;
-                return repo.AllReadonly<MongoFile>()
-                                .Where(x => x.FileId == fileId)
-                                .Select(x => new CdnItemVM
-                                {
-                                    SourceType = x.SourceType,
-                                    SourceId = x.SourceId,
-                                    FileId = x.FileId,
-                                    Title = x.Title ?? x.FileName,
-                                    FileName = x.FileName,
-                                    UserUploaded = x.UserUploaded,
-                                    DateUploaded = x.DateUploaded,
-                                    FileSize = x.FileSize
-                                }).OrderBy(x => x.DateUploaded);
-            }
-            else
-            {
-                return repo.AllReadonly<MongoFile>()
-                                .Where(x => x.SourceId == sourceId && sourceTypes.Contains(x.SourceType))
-                                .Select(x => new CdnItemVM
-                                {
-                                    SourceType = x.SourceType,
-                                    SourceId = x.SourceId,
-                                    FileId = x.FileId,
-                                    Title = x.Title ?? x.FileName,
-                                    FileName = x.FileName,
-                                    UserUploaded = x.UserUploaded,
-                                    DateUploaded = x.DateUploaded,
-                                    FileSize = x.FileSize
-                                }).OrderBy(x => x.DateUploaded);
-
-            }
-            //return model;
-        }
+       
 
         public async Task<string> LoadHtmlFileTemplate(CdnFileSelect request)
         {

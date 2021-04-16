@@ -1,12 +1,15 @@
 ﻿@model ExpiredInfoVM
-<form id="frmExpireObject" action="@Html.Raw(Model.ExpireSubmitUrl)" method="post">
+<form id="frmExpireObject" action="@Html.Raw(Model.ExpireSubmitUrl)" onsubmit="validationCheck(event);" method="post">
     @Html.HiddenFor(x => x.Id)
     @Html.HiddenFor(x => x.LongId)
+    @Html.HiddenFor(x => x.StringId)
+    @Html.HiddenFor(x => x.FileContainerName)
     @Html.HiddenFor(x => x.ExpireSubmitUrl)
     @Html.HiddenFor(x => x.ReturnUrl)
+    @Html.HiddenFor(x => x.OtherBool, "Boolean")
     @Html.EditorFor(x => x.DescriptionExpired, "Textarea")
     <div class="form-group">
-        <input type="submit" value="Премахване" class="btn btn-danger submit" />
+        <input type="submit" id="btnExpireObjectSubmit" onclick="validationCheck();" value="Премахване" class="btn btn-danger submit" />
     </div>
 </form>
 <div id="modalMessageContainer">
@@ -15,12 +18,44 @@
     $(function () {
         attachAjaxForm('#frmExpireObject', function (data) {
             if (data.responseJSON.result == true) {
-                document.location.href = data.responseJSON.redirectUrl;
+                if (data.responseJSON.fileContainer) {
+                    LoadFiles(data.responseJSON.fileContainer);
+                    HideModal();
+                } else {
+                    if (data.responseJSON.redirectUrl.indexOf("()") !== -1) {
+                        let funcName = data.responseJSON.redirectUrl.replace("()", "");
+                        console.log(funcName);
+                        if (typeof window[funcName] == "function") {
+                            window[funcName]();
+                        }
+                    } else {
+                        document.location.href = data.responseJSON.redirectUrl;
+                    }
+                }
             } else {
                 messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+                $('#btnExpireObjectSubmit').removeAttr('disabled');
             }
-        }, undefined, function () {
+        }, function (error) {
+            console.log(error);
+            $('#modalMessageContainer').html('Проблем при запис.');
+            $('#btnExpireObjectSubmit').removeAttr('disabled');
+        }, function () {
             $('#modalMessageContainer').html('');
         });
     })
+    function validationCheck(e) {
+        if ($('#DescriptionExpired').val().length < 5) {
+            swal({
+                title: 'Грешка',
+                text: 'Моля, въведете Причина за премахването',
+                icon: "warning"
+            });
+            e.preventDefault();
+            $(e.target).find('input[type="submit"]').removeAttr('disabled');
+            return false;
+        }
+
+        return true;
+    }
 </script>

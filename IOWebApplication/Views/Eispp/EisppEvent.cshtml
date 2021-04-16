@@ -45,7 +45,7 @@
                     @Html.EditorFor(x => x.EventType, "GenericDropDown")
                 </div>
             </div>
-            <div class="row">
+            <div class="row case-session-act">
                 <div class="col-lg-10">
                     @Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")
                 </div>
@@ -57,27 +57,40 @@
                 </div>
             </div>
 
-            <div class="case-person-measure">
-                <div class="row">
-                    <div class="col-lg-10">
-                        @Html.EditorFor(x => x.PersonOldMeasureId, "GenericDropDown")
-                    </div>
+            <div class="row case-person-measure-old">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.PersonOldMeasureId, "GenericDropDown")
                 </div>
-                <div class="row">
-                    <div class="col-lg-10">
-                        @Html.EditorFor(x => x.PersonMeasureId, "GenericDropDown")
-                    </div>
+            </div>
+            <div class="row case-person-measure">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.PersonMeasureId, "GenericDropDown")
                 </div>
             </div>
 
-            <div class="row send-case">
+            <div class="row get-case">
                 <div class="col-lg-10">
                     @Html.EditorFor(x => x.ConnectedCaseId, "GenericDropDownString")
                 </div>
             </div>
-            <div class="row send-case">
+            <div class="row get-case">
                 <div class="col-lg-10">
                     @Html.EditorFor(x => x.ExactCaseType, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row send-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.CaseMigrationId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row send-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.ReasonId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row complaint-received">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.CaseComplaintId, "GenericDropDown")
                 </div>
             </div>
             <div class="form-group">
@@ -109,24 +122,53 @@
         }
 
         if (eventTypeId == @EISPPConstants.EventType.GetCase) {
-            $('.send-case').show();
+            $('.get-case').show();
             $('#ConnectedCaseId').attr("disabled", false);
             $('#ExactCaseType').attr("disabled", false);
         } else {
-            $('.send-case').hide();
+            $('.get-case').hide();
             $('#ConnectedCaseId').attr("disabled", true);
             $('#ExactCaseType').attr("disabled", true);
         }
 
-        if (eventTypeId == @EISPPConstants.EventType.CoercionMeasureChange) {
+        if (eventTypeId == @EISPPConstants.EventType.SendCase) {
+            $('.send-case').show();
+            $('#CaseMigrationId').attr("disabled", false);
+            $('#ReasonId').attr("disabled", false);
+        } else {
+            $('.send-case').hide();
+            $('#CaseMigrationId').attr("disabled", true);
+            $('#ReasonId').attr("disabled", true);
+        }
+        if (eventTypeId == @EISPPConstants.EventType.ComplaintReceived) {
+            $('.complaint-received').show();
+            $('#CaseComplaintId').attr("disabled", false);
+        } else {
+            $('.complaint-received').hide();
+            $('#CaseComplaintId').attr("disabled", true);
+        }
+
+
+        if (eventTypeId == @EISPPConstants.EventType.CoercionMeasureChange ||
+            eventTypeId == @EISPPConstants.EventType.CoercionMeasureCreate ||
+            eventTypeId == @EISPPConstants.EventType.CoercionMeasureRefused)
+        {
             $('.case-person-measure').show();
-            $('#PersonOldMeasureId').attr("disabled", false);
             $('#PersonMeasureId').attr("disabled", false);
         } else {
             $('.case-person-measure').hide();
-            $('#PersonOldMeasureId').attr("disabled", true);
             $('#PersonMeasureId').attr("disabled", true);
         }
+        if (eventTypeId == @EISPPConstants.EventType.CoercionMeasureChange ||
+            eventTypeId == @EISPPConstants.EventType.CoercionMeasureCancellation )
+        {
+            $('.case-person-measure-old').show();
+            $('#PersonOldMeasureId').attr("disabled", false);
+        } else {
+            $('.case-person-measure-old').hide();
+            $('#PersonOldMeasureId').attr("disabled", true);
+        }
+
         $.ajax({
             type: "POST",
             url: '@Url.Action("GetCaseSessionActForEvent", "EISPP")',
@@ -136,7 +178,9 @@
             success: function (response) {
                 fillCombo(response.sessionActDDL, $('#CaseSessionActId'));
                 setComboSelectedOrFirst($('#CaseSessionActId'), sessionActId);
-                setRulesRange($('#CaseSessionActId'), response.sessionActRequired);
+                var isVisible = (eventTypeId != @EISPPConstants.EventType.ComplaintReceived);
+                setRulesRange($('#CaseSessionActId'), response.sessionActRequired, isVisible);
+                GetPersonMeasure();
             },
             complete: function () { },
             error: log_ajax_err
@@ -160,10 +204,17 @@
         });
         $("label[for='" + el.attr("id") + "']").addClass("io-req");
     }
-    function setRulesRange(el, isAdd) {
+    function setRulesRange(el, isAdd, isVisible) {
         if (el.length === 0)
             return;
-        if (isAdd) {
+        if (isVisible) {
+            $('.case-session-act').show();
+            el.attr("disabled", false);
+        } else {
+            $('.case-session-act').hide();
+            el.attr("disabled", true);
+        }
+        if (isAdd && isVisible) {
             var controlName = $("label[for='" + el.attr("id") + "']").text();
             el.rules('add', {
                 required: true,
@@ -184,12 +235,16 @@
         let casePersonId = $('#CasePersonId').val();
         let personOldMeasureId = $('#PersonOldMeasureId').val();
         let personMeasureId = $('#PersonMeasureId').val();
+        let eventTypeId = $('#EventType').val();
         $.ajax({
             type: "POST",
             url: '@Url.Action("GetPersonMeasure", "EISPP")',
             dataType: "json",
             cache: false,
-            data: { casePersonId: casePersonId},
+            data: {
+                casePersonId: casePersonId,
+                eventId: eventTypeId
+            },
             success: function (response) {
                 fillCombo(response.personOldMeasureDDL, $('#PersonOldMeasureId'));
                 setComboSelectedOrFirst($('#PersonOldMeasureId'), personOldMeasureId);

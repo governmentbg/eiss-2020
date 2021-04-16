@@ -5,6 +5,7 @@
 
 @{
     bool isGlobalAdmin = (bool)ViewBag.isGlobalAdmin;
+    bool isSupervisor = (bool)ViewBag.isSupervisor;
 }
 
 @if (Model.Any())
@@ -40,26 +41,40 @@
                     case IntegrationStates.WaitForParentIdError:
                         <td>Изчаква предходен обект</td>
                         break;
-                    case IntegrationStates.MissingCodeError:
-                    case IntegrationStates.DataContentError:
-                        <td>Грешка в данните</td>
+                    case IntegrationStates.MissingLawyerError:
+                        <td>Ненамерен адвокат</td>
                         break;
+
                     case IntegrationStates.TransferError:
                     case IntegrationStates.TransferErrorLimitExceeded:
                         <td>Грешка при трансфер</td>
                         break;
                     default:
+                        <td>Грешка в данните</td>
                         break;
                 }
                 @if (isGlobalAdmin)
                 {
-                    <td>@item.ErrorDescription</td>
+                    <td>@item.Id; @item.ErrorDescription</td>
                 }
             </tr>
         }
     </table>
+    @if (isSupervisor && Model.Any(x => EpepConstants.IntegrationStates.ResetMQErrorStates.Contains(x.StateId)))
+    {
+        <a href="#" onclick="loadMqResetData();return false;" class="btn btn-sm btn-warning">Повторен трансфер</a>
+    }
 }
 else
 {
     <p>Няма данни.</p>
 }
+<script>
+    function loadMqResetData() {
+        var _url = "@Html.Raw(ViewBag.resetUrl)" + '&returnToMQ=true';
+        requestContent(_url, null, function (html) {
+            let _title = $('.master-modal .modal-title:first').text();
+            ShowModalDialog(_title, html, true);
+        });
+    }
+</script>

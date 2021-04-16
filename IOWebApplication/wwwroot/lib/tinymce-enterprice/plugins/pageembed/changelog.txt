@@ -1,0 +1,6 @@
+Version 1.1.0 (2020-02-13)
+  Added 'tiny_pageembed_inline_styles' setting to allow inlining of page embed styles #EMPA-29
+Version 1.0.1
+  Added touch event listener to embeds for mobile #TINY-4093
+Version 1.0.0
+  Initial release.

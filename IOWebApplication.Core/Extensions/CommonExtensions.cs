@@ -1,10 +1,14 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
+﻿using Audit.Core;
+using Audit.Core.Providers;
+using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Audit;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Linq.Expressions;
 
@@ -21,13 +25,13 @@ namespace IOWebApplication.Core.Extensions
         /// <param name="source"></param>
         public static void CopyFrom(this NamesBase model, NamesBase source, bool copySourceData = true)
         {
-            model.Uic = source.Uic;
+            model.Uic = source.Uic?.Trim();
             model.UicTypeId = source.UicTypeId;
-            model.FirstName = source.FirstName;
-            model.MiddleName = source.MiddleName;
-            model.FamilyName = source.FamilyName;
-            model.Family2Name = source.Family2Name;
-            model.DepartmentName = source.DepartmentName;
+            model.FirstName = source.FirstName?.Trim();
+            model.MiddleName = source.MiddleName?.Trim();
+            model.FamilyName = source.FamilyName?.Trim();
+            model.Family2Name = source.Family2Name?.Trim();
+            model.DepartmentName = source.DepartmentName?.Trim();
             model.LatinName = source.LatinName;
             model.FullName = source.MakeFullName();
 
@@ -100,7 +104,7 @@ namespace IOWebApplication.Core.Extensions
             {
                 case NomenclatureConstants.UicTypes.EIK:
                 case NomenclatureConstants.UicTypes.Bulstat:
-                    return model.FullName;
+                    return model.FullName ?? "";
                 default:
                     string result = model.FirstName;
                     if (!string.IsNullOrEmpty(model.MiddleName))
@@ -115,7 +119,7 @@ namespace IOWebApplication.Core.Extensions
                     {
                         result += " " + model.Family2Name;
                     }
-                    return result;
+                    return result ?? "";
             }
         }
 
@@ -165,6 +169,70 @@ namespace IOWebApplication.Core.Extensions
             }
 
             return result;
+        }
+        public static string FullAddressNotificationMailTel(this Address model, bool addTel, bool addEmail)
+        {
+            string result = string.Empty;
+
+            if (model != null)
+            {
+                result = FullAddressNotification(model);
+
+                if (addTel && !string.IsNullOrEmpty(model.Phone))
+                    result = result + $" ,тел: {model.Phone}";
+                if (addEmail && !string.IsNullOrEmpty(model.Email))
+                    result = result + $" ,e-mail: {model.Email}";
+            }
+
+            return result;
+        }
+
+
+        public static void ParseFromEvent(this AuditLog model, AuditEvent auditEvent)
+        {
+            if (auditEvent == null)
+            {
+                return;
+            }
+
+            if (auditEvent.CustomFields.ContainsKey("currentContext"))
+            {
+                JObject obj = (JObject)auditEvent.CustomFields["currentContext"];
+
+                ContextInfoModel currentContext = obj.ToObject<ContextInfoModel>();
+                model.Operation = currentContext.Operation;
+                model.BaseObject = currentContext.BaseObject;
+                model.ObjectType = currentContext.ObjectType;
+                model.ObjectInfo = currentContext.ObjectInfo;
+            }
+
+            if (auditEvent.CustomFields.ContainsKey("currentIp"))
+            {
+                model.ClientIP = (string)auditEvent.CustomFields["currentIp"];
+            }
+        }
+
+        public static bool IsDataTableRequest(this ActionExecutedContext context)
+        {
+
+            if (context?.HttpContext?.Request?.HasFormContentType == true)
+                if (context?.HttpContext?.Request?.Form?.ContainsKey("draw") == true)
+                {
+                    return true;
+                }
+
+            return false;
+        }
+
+        public static bool IsJsonResult(this ActionExecutedContext context)
+        {
+
+            if (context?.Result is Microsoft.AspNetCore.Mvc.JsonResult)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

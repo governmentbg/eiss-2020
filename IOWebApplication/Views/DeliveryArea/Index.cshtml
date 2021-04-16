@@ -1,4 +1,6 @@
 ﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.DeliveryAreaFilterVM
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Constants
 @inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Списък райони";
@@ -20,16 +22,33 @@
             @Html.EditorFor(x => x.DateTo)
         </div>
         <div class="col-md-2">
-           @Html.EditorFor(x => x.ExpiredType, "GenericDropDown")
-       </div>
+            @Html.EditorFor(x => x.ExpiredType, "GenericDropDown")
+        </div>
         <div class="col-md-2">
             @Html.EditorFor(x => x.DateExpiredFrom)
         </div>
         <div class="col-md-2">
             @Html.EditorFor(x => x.DateExpiredTo)
         </div>
+    </div>
+    <div class="row  address--control">
+        <div class="col-md-2  bg-address">
+            @Html.EditorFor(x => x.CityCode, "EkatteDropDown")
+        </div>
+        <div class="col-md-2 bg-address">
+            @Html.EditorFor(x => x.ResidentionAreaCode, "EkStreet", null, new { streetType = NomenclatureConstants.EkStreetTypes.Area })
+        </div>
+        <div class="col-md-2 bg-address">
+            @Html.EditorFor(x => x.StreetCode, "EkStreet", null, new { streetType = NomenclatureConstants.EkStreetTypes.Street })
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.Number, "Int32Nullable")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.Block, "Int32Nullable")
+        </div>
         <div class="col-md-2 text-right pb-15">
-            <br/>
+            <br />
             <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadDeliveryAreas()" value="Филтриране" title="Филтриране">
                 Филтриране
                 <i class="fa fa-search" title="Търсене"></i>
@@ -119,7 +138,7 @@
                         sortable: false,
                         searchable: false,
                         "render": function(data, type, row) {
-                            row.isNotExpired = (row.dateExpired === null); 
+                            row.isNotExpired = (row.dateExpired === null);
                             return TemplateToHtml('#templateEdit', row);
                         }
                     }
@@ -132,14 +151,22 @@
         function LoadDeliveryAreas() {
             $('#mainTable').DataTable().ajax.reload();
         }
+        $(function () {
+            initEkatteDDL();
+        });
+        $(document).ready(function () {
+            $('#CityCode').select2({
+                language: "bg"
+            });
+        });
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
         {{#if isNotExpired}}
-           <a href="@Url.Action("Edit")/{{this.id}}" class="btn btn-warning btn-sm" title="Редакция">
-                <i class="fa fa-edit"></i>
-                <span class="hidden-sm hidden-xs"></span>
-            </a>
+        <a href="@Url.Action("Edit")/{{this.id}}" class="btn btn-warning btn-sm" title="Редакция">
+            <i class="fa fa-edit"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>
         {{/if}}
         <a href="@Url.Action("Index","DeliveryAreaAddress")?deliveryAreaId={{this.id}}" class="btn btn-def btn-sm" title="Адреси">
             <i class="fa fa-address-book"></i>

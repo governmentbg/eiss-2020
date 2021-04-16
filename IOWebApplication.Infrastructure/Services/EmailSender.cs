@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Net;

@@ -12,6 +12,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.DecisionRequestTypeId, "GenericDropDown")
                 @Html.EditorFor(x => x.CaseId, "SelectCase", new { courtId = userContext.CourtId })
                 @Html.EditorFor(x => x.DecisionTypeId, "GenericDropDown")
                 @Html.EditorFor(x => x.Description)

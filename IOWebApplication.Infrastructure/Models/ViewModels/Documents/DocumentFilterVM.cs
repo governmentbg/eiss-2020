@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Extensions;
+﻿using IOWebApplication.Infrastructure.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -34,6 +31,9 @@ namespace IOWebApplication.Infrastructure.Models.Documents
         [Display(Name = "До дата")]
         public DateTime? DateTo { get; set; }
 
+        [Display(Name = "Описание")]
+        public string Description { get; set; }
+
         [Display(Name = "Имена / Наименование на лице")]
         public string PersonName { get; set; }
 
@@ -48,6 +48,9 @@ namespace IOWebApplication.Infrastructure.Models.Documents
 
         [Display(Name = "Свързано дело номер")]
         public int? LinkDelo_CaseId { get; set; }
+
+        [Display(Name = "Свързано дело забележка")]
+        public string LinkDelo_Description { get; set; }
 
         [Display(Name = "Дело от друга система")]
         public string RegNumberOtherSystem { get; set; }

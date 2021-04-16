@@ -42,7 +42,15 @@
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+</div>
+
+<div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SessionResultId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActIsFinalDoc, "Boolean")</div>
 </div>
 
 <div class="row">
@@ -81,9 +89,11 @@
                             ActDateTo: $("#DateTo").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
+                            SessionResultId: $("#SessionResultId").val(),
                             CaseCodeId: $("#CaseCodeId").val(),
                             SessionTypeId: $("#SessionTypeId").val(),
-                            ActDateToId: $("#ActDateToId").val()
+                            ActDateToId: $("#ActDateToId").val(),
+                            ActIsFinalDoc: $("#ActIsFinalDoc").is(":checked")
                         };
                     }
                 },

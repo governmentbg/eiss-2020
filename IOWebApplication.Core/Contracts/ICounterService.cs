@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Money;
@@ -67,5 +64,7 @@ namespace IOWebApplication.Core.Contracts
         bool Counter_GetExecListCounter(ExecList model);
         bool Counter_GetExchangeCounter(ExchangeDoc model);
         bool Counter_GetDocumentResolutionCounter(DocumentResolution model);
+        string Counter_GetCaseEisppNumber(int courtId);
+        string Counter_GetCrimeEisppNumber(int courtId);
     }
 }

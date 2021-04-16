@@ -1,11 +1,12 @@
 ﻿@model DeliveryItem
 @using IOWebApplication.Infrastructure.Data.Models.Delivery
 @using IOWebApplication.Extensions
-
+ 
 @{
     ViewData["Title"] = "Промяна на район и призовкар в призовка/съобщение";
     var filterJson = ViewBag.filterJson;
     List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
@@ -61,6 +62,13 @@
             <div class="form-group">
                 <input type="submit" value="Запис" class="btn btn-success" />
                 @await Html.PartialAsync("_ButtonClose")
+                <div class="pull-right">
+                    @if (Model.DateExpired == null && Model.CaseNotificationId == null)
+                    {
+                        @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, ReturnUrl = breadcrumbs.ReturnOnClickFromLast(), DialogTitle = "Премахване на уведомление", ExpireSubmitUrl = Url.Action("DeliveryItem_ExpiredInfo") })
+                    }
+                    <span>&nbsp;</span>
+                </div>
             </div>
 </form>
 </div>

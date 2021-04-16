@@ -44,23 +44,23 @@
                $('.eiss-case-select').show();
            }
         }).trigger('change');
-        $('.legacy-case-check').hide();
+        //$('.legacy-case-check').hide();
     });
     function caseSelect() {
         requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#DocumentCaseInfo_CaseId').val() }, '#DocumentCaseInfo_SessionActId', '@Model.SessionActId');
     }
-    function legacyCaseNumberInit(instance) {
-        switch (instance) {
-            case 2:
-            case 3:
-                $('.legacy-case-check').show();
-                $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
-                break;
-            default:
-                $('#DocumentCaseInfo_IsLegacyCase').removeAttr('checked');
-                $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
-                $('.legacy-case-check').hide();
-                break;
-        }
-    }
+    //function legacyCaseNumberInit(instance) {
+    //    switch (instance) {
+    //        case 2:
+    //        case 3:
+    //            $('.legacy-case-check').show();
+    //            $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
+    //            break;
+    //        default:
+    //            $('#DocumentCaseInfo_IsLegacyCase').removeAttr('checked');
+    //            $('#DocumentCaseInfo_IsLegacyCase').trigger('change');
+    //            $('.legacy-case-check').hide();
+    //            break;
+    //    }
+    //}
 </script>

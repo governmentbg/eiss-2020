@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -45,12 +42,47 @@ namespace IOWebApplication.Core.Services
             workingDaysService = _workingDaysService;
             nomService = _nomService;
         }
+        public void DeadLineOnSessionResult(CaseSessionResult sessionResult)
+        {
+            DeadLineDeclaredForResolve(sessionResult);
+            DeadLineeOpenSessionResultComplete(sessionResult);
+            DeadLineCompanyCaseCompleteOnResult(sessionResult);
+        }
+        public void DeadLineOnCase(Case caseModel)
+        {
+            DeadLineCompanyCase(caseModel);
+            DeadLineDeclaredForResolveComplete(caseModel);
+        }
+        public void DeadLineOnSession(CaseSession session)
+        {
+            DeadLineOpenSessionResult(session);
+            if (session.DateExpired != null) {
+                repo.SaveChanges();
+                var deadlines = repo.AllReadonly<CaseDeadline>()
+                         .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
+                                     x.SourceId == session.Id &&
+                                     x.DateExpired == null)
+                         .ToList();
+                SaveDeadLineExpired(deadlines);
+                repo.SaveChanges();
+                var caseSessionAct = repo.AllReadonly<CaseSessionAct>()
+                                         .Where(x => x.CaseSessionId == session.Id);
+                deadlines = repo.AllReadonly<CaseDeadline>()
+                       .Where(x => x.SourceType == SourceTypeSelectVM.CaseSessionAct &&
+                                   caseSessionAct.Any(sa => x.SourceId == sa.Id) &&
+                                   x.DateExpired == null)
+                       .ToList();
+                SaveDeadLineExpired(deadlines);
+            }
+        }
+
+
         private bool sessionHaveResult(CaseSession session, int resultId)
         {
             var caseSessionResults = session.CaseSessionResults;
             if (caseSessionResults == null || !caseSessionResults.Any())
                 caseSessionResults = repo.AllReadonly<CaseSessionResult>()
-                                         .Where(x => x.IsActive)
+                                         .Where(x => x.IsActive && x.DateExpired == null)
                                          .Where(x => x.CaseSessionId == session.Id)
                                          .ToList();
             return caseSessionResults.Any(x => x.SessionResultId == resultId);
@@ -67,7 +99,7 @@ namespace IOWebApplication.Core.Services
             deadline.UserExpiredId = userContext.UserId;
             deadline.DescriptionExpired = "";
         }
-        private void setDateEnd(CaseDeadline deadline, DeadlineType deadlineType, bool isSpecial = false) 
+        private void setDateEnd(CaseDeadline deadline, DeadlineType deadlineType, bool isSpecial = false)
         {
             int? months = isSpecial ? deadlineType.DeadlineSpecialMonths : deadlineType.DeadlineMonths;
             if (months != null)
@@ -105,6 +137,20 @@ namespace IOWebApplication.Core.Services
                 }
             }
         }
+        private void ExpireWorkNotifications(CaseDeadline deadline)
+        {
+            var workNotifications = repo.AllReadonly<WorkNotification>()
+                                 .Where(x => x.CaseDeadlineId == deadline.Id && x.DateExpired == null)
+                                 .ToList();
+            foreach (var workNotification in workNotifications)
+            {
+                workNotification.DateExpired = deadline.DateExpired ?? deadline.DateComplete;
+                workNotification.DescriptionExpired = deadline.DescriptionExpired;
+                workNotification.UserExpiredId = deadline.UserExpiredId ?? deadline.UserId;
+                repo.Update(workNotification);
+            }
+        }
+
         private bool SaveDeadLine(CaseDeadline deadline)
         {
             if (deadline != null)
@@ -142,28 +188,32 @@ namespace IOWebApplication.Core.Services
                         repo.Add(deadline);
                     else
                         repo.Update(deadline);
-                    var workNotifications = repo.AllReadonly<WorkNotification>()
-                                                .Where(x => x.CaseDeadlineId == deadline.Id && x.DateExpired == null)
-                                                .ToList();
-                    foreach(var workNotification in workNotifications)
-                    {
-                        workNotification.DateExpired = deadline.DateExpired ?? deadline.DateComplete;
-                        workNotification.DescriptionExpired = deadline.DescriptionExpired;
-                        workNotification.UserExpiredId = deadline.UserExpiredId ?? deadline.UserId;
-                        repo.Update(workNotification);
-                    }
+                    ExpireWorkNotifications(deadline);
                 }
             }
             return false;
         }
+        private void SaveDeadLineExpired(List<CaseDeadline> deadlines)
+        {
+            foreach (var deadline in deadlines)
+            {
+                setExpired(deadline);
+                SaveDeadLine(deadline);
+            }
+        }
         #region DeclaredForResolve
         public void DeadLineDeclaredForResolve(CaseSessionResult sessionResult)
         {
-            var deadline = DeadLineDeclaredForResolveStart(sessionResult);
-            SaveDeadLine(deadline);
+            {
+                var deadline = DeadLineDeclaredForResolveStart(sessionResult);
+                SaveDeadLine(deadline);
+            }
             var deadlines = DeadLineDeclaredForResolveExpire(sessionResult);
             foreach (var deadlineExp in deadlines)
+            {
                 repo.Update(deadlineExp);
+                ExpireWorkNotifications(deadlineExp);
+            }
         }
         public CaseDeadline DeadLineDeclaredForResolveStart(CaseSessionResult sessionResult)
         {
@@ -183,7 +233,8 @@ namespace IOWebApplication.Core.Services
             bool isSet = false;
             if (deadline != null)
             {
-                if (sessionResult.SessionResultId == NomenclatureConstants.CaseSessionResult.AnnouncedForResolution)
+                if (sessionResult.SessionResultId == NomenclatureConstants.CaseSessionResult.AnnouncedForResolution ||
+                    sessionResult.DateExpired != null)
                 {
                     if (deadline.DateExpired != null)
                     {
@@ -199,6 +250,7 @@ namespace IOWebApplication.Core.Services
                 } else
                 {
                     setExpired(deadline);
+                    isSet = true;
                 }
             } else {
                 if (sessionResult.SessionResultId == NomenclatureConstants.CaseSessionResult.AnnouncedForResolution)
@@ -243,6 +295,46 @@ namespace IOWebApplication.Core.Services
                     result.Add(deadline);
                 }
             }
+            if (!sessionHaveResult(session, NomenclatureConstants.CaseSessionResult.AnnouncedForResolution))
+            {
+                var deadlines = repo.AllReadonly<CaseDeadline>()
+                                   .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
+                                               x.SourceId == session.Id &&
+                                               x.CaseId == session.CaseId &&
+                                               x.DeadlineTypeId == NomenclatureConstants.DeadlineType.DeclaredForResolve &&
+                                               x.DateComplete == null &&
+                                               x.DateExpired == null)
+                                   .ToList();
+                foreach (var deadline in deadlines)
+                {
+                    setExpired(deadline);
+                    deadline.ResultExpiredId = sessionResult.Id;
+                    if (!result.Any(x => x.Id == deadline.Id))
+                        result.Add(deadline);
+                }
+            }
+            return result;
+        }
+        public List<CaseDeadline> DeadLineDeclaredForResolveExpireOnSession(CaseSession session)
+        {
+            var result = new List<CaseDeadline>();
+            if (!sessionHaveResult(session, NomenclatureConstants.CaseSessionResult.AnnouncedForResolution) ||
+                session.DateExpired != null)
+            {
+                var deadlines = repo.AllReadonly<CaseDeadline>()
+                                   .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
+                                               x.SourceId == session.Id &&
+                                               x.CaseId == session.CaseId &&
+                                               x.DeadlineTypeId == NomenclatureConstants.DeadlineType.DeclaredForResolve &&
+                                               x.DateComplete == null &&
+                                               x.DateExpired == null)
+                                   .ToList();
+                foreach (var deadline in deadlines)
+                {
+                    setExpired(deadline);
+                    result.Add(deadline);
+                }
+            }
             return result;
         }
         public void DeadLineDeclaredForResolveComplete(Case aCase)
@@ -264,14 +356,23 @@ namespace IOWebApplication.Core.Services
                 }
             }
             foreach (var deadlineComplete in result)
+            {
                 repo.Update(deadlineComplete);
+                ExpireWorkNotifications(deadlineComplete);
+            }
         }
         #endregion DeclaredForResolve
 
         #region Motive
         private DateTime? MotiveDateStart(CaseSessionAct sessionAct)
         {
-            return sessionAct.ActDate;// ActDeclaredDate
+            var dateStart = sessionAct.ActDate?.AddDays(1).Date;// ActDeclaredDate
+            if (dateStart != null)
+                while (!workingDaysService.IsWorkingDay(userContext.CourtId, dateStart.Value))
+                {
+                    dateStart = dateStart.Value.AddDays(1).Date;
+                }
+            return dateStart;
         }
         private DateTime? MotiveDateEnd(CaseSessionAct sessionAct)
         {
@@ -382,12 +483,25 @@ namespace IOWebApplication.Core.Services
         public void DeadLineOpenSessionResult(CaseSession session)
         {
             var deadline = DeadLineOpenSessionResultStart(session);
-            SaveDeadLine(deadline);
+            if (deadline != null)
+            {
+                SaveDeadLine(deadline);
+            } else
+            {
+                var deadlines = repo.AllReadonly<CaseDeadline>()
+                     .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
+                                 x.SourceId == session.Id &&
+                                 x.DeadlineTypeId == NomenclatureConstants.DeadlineType.OpenSessionResult &&
+                                 x.DateExpired == null)
+                     .ToList();
+                SaveDeadLineExpired(deadlines);
+            }
             // Да се направи work_notification na секретарите
             var oldDeadLine = repo.AllReadonly<CaseDeadline>()
                      .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
                                  x.SourceId == session.Id &&
-                                 x.DeadlineTypeId == NomenclatureConstants.DeadlineType.OpenSessionResult)
+                                 x.DeadlineTypeId == NomenclatureConstants.DeadlineType.OpenSessionResult &&
+                                 x.DateExpired == null)
                      .FirstOrDefault();
             if (oldDeadLine != null && oldDeadLine.Id > 0)
             {

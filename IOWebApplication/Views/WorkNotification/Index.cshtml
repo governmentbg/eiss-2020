@@ -80,6 +80,20 @@
                  },
                 columns: [
                     {
+                        name: 'dateCreated',
+                        data: 'dateCreated',
+                        title: 'Дата на получаване',
+                        sortable: true,
+                        searchable: false,
+                        width: 70,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("@FormattingConstant.NormalDateFormatJS");
+                            else
+                                return "";
+                    }
+                    },
+                    {
                         name: 'title',
                         data: 'title',
                         title: 'Нотификация',
@@ -155,7 +169,7 @@
         <span class="hidden-sm hidden-xs">Маркирай като прочетено</span>
     </a>
     {{/if}}
-    <a href="{{this.sourceUrl}}" class="btn btn-def btn-sm" title="{{this.linkLabel}}">
+    <a href='@Url.Action("RedirectToSource")/{{this.id}}' class="btn btn-def btn-sm" title="{{this.linkLabel}}">
         <i class="fa fa-eye"></i>
     </a>
 </script>

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -160,6 +157,7 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseTypeId_ddl = nomService.GetDDL_CaseTypeForCourt(userContext.CourtId);
             ViewBag.filterCaseGroupId = filterCaseGroupId;
             ViewBag.caseTypeJson = JsonConvert.SerializeObject(nomService.CaseTypeNow(userContext.CourtId).Select(x => new { x.Id, x.Label, x.CaseGroupId }).ToList());
+            SetHelpFile(HelpFileValues.Nom17);
         }
 
         /// <summary>
@@ -225,6 +223,7 @@ namespace IOWebApplication.Controllers
             ViewBag.filterCaseGroupId = filterCaseGroupId;
             var model = service.GetCourtGroupVMById(id);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForEditCourtGroupLawUnit(filterCaseGroupId).DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom17);
             return View(nameof(EditCourtGroupLawUnit), model);
         }
         /// <summary>
@@ -252,7 +251,10 @@ namespace IOWebApplication.Controllers
         public IActionResult EditCourtGroupLawUnit(CourtGroupVM model, string groupJudgeJson, int filterCaseGroupId)
         {
             if (!ModelState.IsValid)
+            {
+                SetHelpFile(HelpFileValues.Nom17);
                 return View(nameof(EditCourtGroupLawUnit), model);
+            }
             ViewBag.filterCaseGroupId = filterCaseGroupId;
             model = service.GetCourtGroupVMById(model.Id);
             List<MultiSelectTransferPercentVM> judge_codes;

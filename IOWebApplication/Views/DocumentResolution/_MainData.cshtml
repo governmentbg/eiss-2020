@@ -36,7 +36,7 @@
                     </div>
                 </div>
             }
-            @Html.EditorFor(x => x.JudgeDecisionLawunitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
+            @Html.EditorFor(x => x.JudgeDecisionLawunitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
             @Html.EditorFor(x => x.UserDecisionId, "SelectUser")
             @Html.EditorFor(x => x.Description, "Textarea")
         </fieldset>

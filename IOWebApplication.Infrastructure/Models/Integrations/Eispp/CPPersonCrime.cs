@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 
 namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
@@ -89,5 +86,12 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		[XmlIgnore]
 		[Display(Name = "Име на лицето")]
 		public string PersonName { get; set; }
+
+		[XmlIgnore]
+		public int CaseCrimeId { get; set; }
+		[XmlIgnore]
+		public int CasePersonId { get; set; }
+		[XmlIgnore]
+		public string EISPPNumber { get; set; }
 	}
 }

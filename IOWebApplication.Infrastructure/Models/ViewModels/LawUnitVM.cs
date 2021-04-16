@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper;
+﻿using AutoMapper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using System;
@@ -50,6 +47,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Имена")]
         public string FullName { get; set; }
+
+        [Display(Name = "Показване на неназначени лица")]
+        public bool ShowFree { get; set; }
     }
 
     public class JuryYearDays

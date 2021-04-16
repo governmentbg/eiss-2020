@@ -56,7 +56,14 @@
                         data: 'caseRegNumber',
                         title: 'Дело номер',
                         sortable: false,
-                        searchable: false
+                        searchable: false,
+                        render: function (a, b, item, d) {
+                            if (item.caseRegNumber) {
+                                return item.caseRegNumber;
+                            } else {
+                                return item.caseStateName;
+                            }
+                        }
                     }
                     ,
                     {

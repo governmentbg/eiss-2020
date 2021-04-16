@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IntegrationService.Epep.Contracts;
+﻿using IntegrationService.Epep.Contracts;
 using IO.SignTools.Contracts;
 using IO.SignTools.Services;
 using IOWebApplication.Core.Contracts;
@@ -30,8 +27,8 @@ namespace IntegrationService.Epep.Services
         /// <param name="Configuration">Настройки на приложението</param>
         public static void ConfigureServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // services.AddLogging();
             services.AddHostedService<EpepTimedHostedService>();
-
 
             services.AddScoped<IConsoleTaskExecuteMessageService, ConsoleTaskExecuteMessageService>();
             services.AddScoped<IConsoleTaskRecieverService, ConsoleTaskRecieverService>();
@@ -48,7 +45,6 @@ namespace IntegrationService.Epep.Services
                       options.MultipartHeadersCountLimit = int.MaxValue;
                       options.MultipartHeadersLengthLimit = int.MaxValue;
                   });
-
         }
 
         /// <summary>

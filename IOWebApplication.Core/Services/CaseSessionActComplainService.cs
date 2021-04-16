@@ -1,11 +1,9 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -25,6 +23,8 @@ namespace IOWebApplication.Core.Services
         private readonly ICasePersonService casePersonService;
         private readonly ICaseLawUnitService caseLawUnitService;
         private readonly ICaseLifecycleService caseLifecycleService;
+        private readonly ICaseMigrationService caseMigrationService;
+
 
         public CaseSessionActComplainService(ILogger<CaseSessionActComplainService> _logger,
                                              IRepository _repo,
@@ -32,7 +32,8 @@ namespace IOWebApplication.Core.Services
                                              IUserContext _userContext,
                                              ICasePersonService _casePersonService,
                                              ICaseLawUnitService _caseLawUnitService,
-                                             ICaseLifecycleService _caseLifecycleService)
+                                             ICaseLifecycleService _caseLifecycleService,
+                                             ICaseMigrationService _caseMigrationService)
         {
             logger = _logger;
             repo = _repo;
@@ -41,6 +42,7 @@ namespace IOWebApplication.Core.Services
             casePersonService = _casePersonService;
             caseLawUnitService = _caseLawUnitService;
             caseLifecycleService = _caseLifecycleService;
+            caseMigrationService = _caseMigrationService;
         }
 
         #region CaseSessionActComplain
@@ -131,6 +133,10 @@ namespace IOWebApplication.Core.Services
         {
             DateFrom = NomenclatureExtensions.ForceStartDate(DateFrom);
             DateTo = NomenclatureExtensions.ForceEndDate(DateTo);
+            DateFromActReturn = NomenclatureExtensions.ForceStartDate(DateFromActReturn);
+            DateToActReturn = NomenclatureExtensions.ForceEndDate(DateToActReturn);
+            DateFromSendDocument = NomenclatureExtensions.ForceStartDate(DateFromSendDocument);
+            DateToSendDocument = NomenclatureExtensions.ForceEndDate(DateToSendDocument);
 
             var caseSessionActComplains = repo.AllReadonly<CaseSessionActComplain>()
                                               .Include(x => x.Case)
@@ -165,6 +171,7 @@ namespace IOWebApplication.Core.Services
                                                                                                                                           a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true) &&
                                                           (!string.IsNullOrEmpty(CaseRegNumber) ? x.Case.RegNumber.ToLower().Contains(CaseRegNumber.ToLower()) : true) &&
                                                           (!string.IsNullOrEmpty(ActRegNumber) ? x.CaseSessionAct.RegNumber.ToLower().Contains(ActRegNumber.ToLower()) : true))
+                                              .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
                                               .ToList();
 
             var result = new List<CaseSessionActComplainSprVM>();
@@ -289,7 +296,7 @@ namespace IOWebApplication.Core.Services
                         (document.DocumentCaseInfo.Any(x => x.SessionActId != null)))
                     {
                         var caseSessionAct = repo.GetById<CaseSessionAct>(document.DocumentCaseInfo.Select(x => x.SessionActId).FirstOrDefault());
-                        var casePersons = casePersonService.CasePerson_Select(caseSessionAct.CaseId ?? 0, null).Where(x => x.CaseSessionId == null).ToList();
+                        var casePersons = casePersonService.CasePerson_Select(caseSessionAct.CaseId ?? 0, null, false, false, false).Where(x => x.CaseSessionId == null).ToList();
 
                         //caseSessionAct.CanAppeal = true;
                         //caseSessionAct.DateWrt = DateTime.Now;
@@ -388,20 +395,35 @@ namespace IOWebApplication.Core.Services
         /// <summary>
         /// Извличане на данни за акт за комбобокс
         /// </summary>
+        /// <param name="caseId"></param>
         /// <param name="caseSessionActId"></param>
+        /// <param name="htmlTemplateId"></param>
         /// <param name="addDefaultElement"></param>
         /// <param name="addAllElement"></param>
         /// <returns></returns>
-        public List<SelectListItem> GetDropDownListForAct(int caseSessionActId, bool addDefaultElement = true, bool addAllElement = false)
+        public List<SelectListItem> GetDropDownListForAct(int caseId, int caseSessionActId, int htmlTemplateId, bool addDefaultElement = true, bool addAllElement = false)
         {
-            var result = repo.AllReadonly<CaseSessionActComplain>()
-                             .Where(x => x.CaseSessionActId == caseSessionActId &&
-                                         x.DateExpired == null)
-                             .Select(x => new SelectListItem()
-                             {
-                                 Text = (x.ComplainDocument.DocumentType.Label ?? "") + " " + x.ComplainDocument.DocumentNumber + "/" + x.ComplainDocument.DocumentDate.ToString("dd.MM.yyyy"),
-                                 Value = x.Id.ToString()
-                             }).ToList() ?? new List<SelectListItem>();
+            bool complainActFree = repo.AllReadonly<HtmlTemplate>()
+                                   .FirstOrDefault(x => x.Id == htmlTemplateId)?
+                                   .HaveActComplainFree ?? false;
+            var caseSessionActComplain = repo.AllReadonly<CaseSessionActComplain>()
+                                             .Where(x => x.DateExpired == null);
+
+            
+            if (complainActFree)
+            {
+                 caseSessionActComplain = caseSessionActComplain.Where(x => x.CaseSessionAct.CaseId == caseId);
+            }
+            else
+            {
+                caseSessionActComplain = caseSessionActComplain.Where(x => x.CaseSessionActId == caseSessionActId);
+            }
+
+            var result = caseSessionActComplain.Select(x => new SelectListItem()
+            {
+                Text = (x.ComplainDocument.DocumentType.Label ?? "") + " " + x.ComplainDocument.DocumentNumber + "/" + x.ComplainDocument.DocumentDate.ToString("dd.MM.yyyy"),
+                Value = x.Id.ToString()
+            }).ToList() ?? new List<SelectListItem>();
 
             if (result.Count > 0)
             {
@@ -618,7 +640,9 @@ namespace IOWebApplication.Core.Services
 
                 if (model.IsStartNewLifecycle)
                 {
-                    caseLifecycleService.CaseLifecycle_NewIntervalSave(model.CaseId, DateTime.Now);
+                    var caseSessionAct = repo.GetById<CaseSessionAct>(model.ActResultId);
+                    var dateAccept = caseMigrationService.GetDateTimeAcceptCaseAfterComplain(model.CaseId, caseSessionAct.CaseId ?? 0);
+                    caseLifecycleService.CaseLifecycle_NewIntervalSave(model.CaseId, dateAccept ?? DateTime.Now);
                 }
 
                 return true;
@@ -812,7 +836,7 @@ namespace IOWebApplication.Core.Services
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePersons = casePersonService.CasePerson_Select(caseId, null).Where(x => x.CaseSessionId == null).ToList();
+            var casePersons = casePersonService.CasePerson_Select(caseId, null, false, false, false).Where(x => x.CaseSessionId == null).ToList();
             var caseSessionActComplainPeople = CaseSessionActComplainPerson_Select(CaseSessionActComplainId).ToList();
 
             foreach (var person in casePersons.Where(x => x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.Now.AddYears(100)) >= DateTime.Now))

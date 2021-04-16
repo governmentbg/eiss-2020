@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
@@ -42,7 +39,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [Column("claim_date")]
         [Display(Name = "Дата")]
-        [Required(ErrorMessage = "Въведете {0}.")]
+        //[Required(ErrorMessage = "Въведете {0}.")]
         public DateTime? ClaimDate { get; set; }
 
         [Column("party_names")]

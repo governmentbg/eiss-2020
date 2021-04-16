@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -102,6 +99,7 @@ namespace IOWebApplication.Core.Services
                                     .ThenInclude(x => x.CourtHall)
                                     .Where(x => x.Case.CourtId == userContext.CourtId)
                                     .Where(x => x.LawUnitId == lawUnitId && x.CaseSessionId > 0)
+                                    .Where(x => (x.DateTo ?? x.CaseSession.DateFrom.AddYears(100)) >= x.CaseSession.DateFrom)
                                     .Where(x => x.CaseSession.DateFrom >= start && x.CaseSession.DateFrom <= end)
                                     .Where(x => x.CaseSession.DateExpired == null)
                                     .Where(x => x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno)
@@ -133,7 +131,7 @@ namespace IOWebApplication.Core.Services
         public IEnumerable<CalendarVM> SelectSessionHallUse(int CourtHallId, DateTime start, DateTime end)
         {
             List<CalendarVM> result = new List<CalendarVM>();
-            var caseSessionHallUseVMs = caseSessionService.CaseSessionHallUse_Select(userContext.CourtId, CourtHallId, start, end);
+            var caseSessionHallUseVMs = caseSessionService.CaseSessionHallUse_Select(userContext.CourtId, CourtHallId, start, end, null);
             foreach (var caseSessionHallUse in caseSessionHallUseVMs)
             {
                 var calendarVM = new CalendarVM()

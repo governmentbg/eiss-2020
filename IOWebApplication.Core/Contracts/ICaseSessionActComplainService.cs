@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -43,7 +40,7 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CaseSessionActComplainPersonVM> CaseSessionActComplainPerson_Select(int CaseSessionActComplainId);
         bool CaseSessionActComplainPerson_SaveData(CheckListViewVM model);
         CheckListViewVM CheckListViewVM_FillCasePerson(int CaseSessionActComplainId);
-        List<SelectListItem> GetDropDownListForAct(int caseSessionActId, bool addDefaultElement = true, bool addAllElement = false);
+        List<SelectListItem> GetDropDownListForAct(int caseId, int caseSessionActId, int htmlTemplateId, bool addDefaultElement = true, bool addAllElement = false);
         #endregion
     }
 }

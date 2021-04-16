@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -22,10 +19,11 @@ namespace IOWebApplication.Core.Contracts
         CaseSession CaseSessionById(int caseSessionId);
         CaseSessionVM CaseSessionVMById(int caseSessionId);
         IQueryable<CaseSessionResultVM> CaseSessionResult_Select(int CaseSessionId, bool IsViewExpired = false);
-        bool CaseSessionResult_SaveData(CaseSessionResult model);
+        bool CaseSessionResult_SaveData(CaseSessionResultEditVM model);
         bool IsExistMainResult(int caseSessionId, int SelectResultId = 0);
-        IQueryable<CaseSessionHallUseVM> CaseSessionHallUse_Select(int CourtId, int? CourtHallId, DateTime? DateFrom, DateTime? DateТо);
+        IQueryable<CaseSessionHallUseVM> CaseSessionHallUse_Select(int CourtId, int? CourtHallId, DateTime? DateFrom, DateTime? DateТо, int? JudgeReporterId);
         IQueryable<CaseSessionResultVM> CaseSessionResult_SelectByCaseId(int CaseId);
+        bool IsExistCaseSessionResult(int CaseSessionId);
         List<SelectListItem> CaseSessionResultStringList_SelectByCaseId(int CaseId);
         bool CourtHallBusy(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int ModelId);
         IQueryable<CaseSessionVM> CaseSessionSpr_Select(CaseSessionFilterVM model);
@@ -38,5 +36,11 @@ namespace IOWebApplication.Core.Contracts
         bool IsCanExpired(int CaseSessionId);
         bool IsLastConductedSession(int CaseSessionId);
         IEnumerable<CalendarVM> CaseSessionHallUseCalendar_Select(int CourtId, int? CourtHallId, DateTime? DateFrom, DateTime? DateТо);
+        byte[] ListDataSprExportExcel(CaseSessionFilterVM model);
+        bool CaseSessionResult_ExpiredInfo(ExpiredInfoVM model);
+        bool CaseSession_ExpiredInfo(ExpiredInfoVM model);
+        bool IsExistCaseSession(int CaseId);
+        List<CheckListVM> GetCheckListCaseSession(int caseId);
+        CaseSessionResultEditVM GetSessionResultEditVMById(int Id);
     }
 }

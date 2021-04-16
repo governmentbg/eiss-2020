@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.EISPP;
@@ -243,7 +240,7 @@ namespace IOWebApplication.Core.Services
             }
         }
         private bool IsNodeForSkip(string rulesPath, int eventType) {
-            if (rulesPath == "VHD" || rulesPath == "VHD.SBE" || rulesPath == "KST")
+            if (rulesPath == "VHD" || rulesPath == "VHD.SBE" || rulesPath == "KST" || rulesPath == "VHD.SBE.NPR.DLO.PNE.ADR")
                 return false;
             rulesPath = rulesPath.Replace("VHD.SBE.", "", StringComparison.InvariantCultureIgnoreCase);
 
@@ -273,7 +270,7 @@ namespace IOWebApplication.Core.Services
             if (isDeleteEvent)
                 return (attrVal == "0" || string.IsNullOrEmpty(attrVal));
 
-            bool autoAdd = (rulesPath == "VHD.SBE" || rulesPath == "KST");
+            bool autoAdd = (rulesPath == "VHD.SBE" || rulesPath == "KST" );
             bool isPunishment = rulesPath.EndsWith("FZL.NKZ", StringComparison.InvariantCultureIgnoreCase);
             bool isCrimeSubjectStatisticData = rulesPath.EndsWith("NPRFZLPNE.SBC", StringComparison.InvariantCultureIgnoreCase);
             bool autoAddAll = rulesPath.EndsWith("FZL", StringComparison.InvariantCultureIgnoreCase);
@@ -313,6 +310,8 @@ namespace IOWebApplication.Core.Services
         }
         private void CheckAttrib(int structureId, string rulesPath, string attrName, string attrVal, int eventType)
         {
+            if (attrName == "resSid")
+                return;
             rulesPath = MakeRulesPathAttr(rulesPath, attrName);
             (var ruleIDs, var flags) = GetEisppRuleIds(eventType, rulesPath);
             if (flags != 0 && ruleIDs.Length > 0)
@@ -349,7 +348,11 @@ namespace IOWebApplication.Core.Services
                             person.Measures = person.Measures.Where(x => x.IsSelected).ToArray();
                         if (person.Punishments != null) 
                         {
-                            foreach(var punishment in person.Punishments)
+                            person.Punishments = person.Punishments
+                                                       .Where(x => x.PunishmentKind < 90000 && 
+                                                                  x.IsSelected)
+                                                       .ToArray();
+                            foreach (var punishment in person.Punishments)
                             {
                                 ClearPunishmentUnnecessaryField(punishment);
                             }
@@ -362,9 +365,13 @@ namespace IOWebApplication.Core.Services
                     foreach(var cpPersonCrimes in eisppEvent.CriminalProceeding.Case.CPPersonCrimes)
                     {
                         if (cpPersonCrimes.CrimeSanction?.CrimePunishments != null)
-                            cpPersonCrimes.CrimeSanction.CrimePunishments = cpPersonCrimes.CrimeSanction.CrimePunishments.Where(x => x.IsSelected).ToArray();
+                            cpPersonCrimes.CrimeSanction.CrimePunishments = cpPersonCrimes.CrimeSanction.CrimePunishments.Where(x => x.IsSelected && x.PunishmentKind < 90000).ToArray();
                     }
-                    
+                    foreach(var crime in eisppEvent.CriminalProceeding.Case.Crimes)
+                    {
+                        crime.IsSelected = eisppEvent.CriminalProceeding.Case.CPPersonCrimes.Any(x => x.CrimeId == crime.CrimeId);
+                    }
+                    eisppEvent.CriminalProceeding.Case.Crimes = eisppEvent.CriminalProceeding.Case.Crimes.Where(x => x.IsSelected).ToArray();
                 }
             }
         }
@@ -446,5 +453,70 @@ namespace IOWebApplication.Core.Services
                     break;
             }
         }
-    } 
+        /// <summary>
+        /// От пробационни мерки прави наказания
+        /// </summary>
+        /// <param name="eisppEvent">Събитие</param>
+        public void CreatePunismentFromProbationMeasuares(EisppPackage model)
+        {
+            int sid = -20000;
+            foreach (var eisppEvent in model.Data.Events)
+            {
+                if (eisppEvent.CriminalProceeding.Case.Persons != null)
+                {
+                    foreach (var person in eisppEvent.CriminalProceeding.Case.Persons.Where(x => x.IsSelected))
+                    {
+                        if (person.Punishments != null)
+                        {
+                            var punishments = new List<Punishment>();
+                            foreach (var punishment in person.Punishments.Where(x => x.IsSelected))
+                            {
+                                if (punishment.PunishmentKind == PunismentKind.probation && punishment.ProbationMeasures != null)
+                                {
+                                    bool isSetFirst = false;
+                                    foreach (var probationMeasure in punishment.ProbationMeasures.Where(x => x.IsSelected))
+                                    {
+                                        if (!isSetFirst)
+                                        {
+                                            punishment.ProbationMeasure = probationMeasure;
+                                            isSetFirst = true;
+                                        }
+                                        else
+                                        {
+                                            var newPunishment = new Punishment();
+                                            newPunishment.ProbationMeasure = probationMeasure;
+                                            newPunishment.PunishmentId = sid--;
+                                            newPunishment.CasePersonSentencePunishmentId = punishment.CasePersonSentencePunishmentId;
+                                            newPunishment.PunishmentType = punishment.PunishmentType;
+                                            newPunishment.PunishmentKind = punishment.PunishmentKind;
+                                            newPunishment.PunishmentRegime = punishment.PunishmentRegime;
+                                            newPunishment.ServingType = punishment.ServingType;
+                                            newPunishment.StructureId = punishment.StructureId;
+                                            newPunishment.IsSelected = punishment.IsSelected;
+                                            newPunishment.PunishmentYears = punishment.PunishmentYears;
+                                            newPunishment.PunishmentMonths = punishment.PunishmentMonths;
+                                            newPunishment.PunishmentWeeks = punishment.PunishmentWeeks;
+                                            newPunishment.PunishmentDays = punishment.PunishmentDays;
+                                            newPunishment.ProbationYears = punishment.ProbationYears;
+                                            newPunishment.ProbationMonths = punishment.ProbationMonths;
+                                            newPunishment.ProbationWeeks = punishment.ProbationWeeks;
+                                            newPunishment.ProbationDays = punishment.ProbationDays;
+                                            newPunishment.PunishmentActivity = punishment.PunishmentActivity;
+                                            newPunishment.PunishmentActivityDate = punishment.PunishmentActivityDate;
+                                            punishments.Add(newPunishment);
+                                        }
+                                        probationMeasure.MeasureId = sid--;
+                                    }
+                                }
+                            }
+                            var personPunishments = person.Punishments.ToList();
+                            personPunishments.AddRange(punishments);
+                            person.Punishments = personPunishments.ToArray();
+                        }
+                    }
+                }
+            }
+        }
+
+    }
 }

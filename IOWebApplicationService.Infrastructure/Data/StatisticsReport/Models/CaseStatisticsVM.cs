@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -203,6 +200,73 @@ namespace IOWebApplicationService.Infrastructure.Data.StatisticsReport.Models
         }
     }
 
+    public class StatisticsExcelReportCaseTypeRowVM
+    {
+        public int SheetIndex { get; set; }
+
+        public int RowIndex { get; set; }
+
+        public int CourtTypeId { get; set; }
+
+        public string CaseTypeIds { get; set; }
+
+        public List<int> CaseType
+        {
+            get
+            {
+                return CaseTypeIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+        public string DocumentTypeIds { get; set; }
+
+        public List<int> DocumentType
+        {
+            get
+            {
+                return DocumentTypeIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+
+        public string NoDocumentTypeIds { get; set; }
+
+        public List<int> NoDocumentType
+        {
+            get
+            {
+                return NoDocumentTypeIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+        public string CaseCodeIds { get; set; }
+
+        public List<int> CaseCode
+        {
+            get
+            {
+                return CaseCodeIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+
+        public string NoCaseCodeIds { get; set; }
+
+        public List<int> NoCaseCode
+        {
+            get
+            {
+                return NoCaseCodeIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+
+        public string ForColumnIds { get; set; }
+
+        public List<int> ForColumns
+        {
+            get
+            {
+                return ForColumnIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+    }
+
     public class StatisticsNomDataVM
     {
         public List<StatisticsCourtTypeCaseTypeVM> courtTypeCaseTypesCols { get; set; }
@@ -212,5 +276,7 @@ namespace IOWebApplicationService.Infrastructure.Data.StatisticsReport.Models
         public List<StatisticsExcelReportCaseCodeRowVM> excelReportCaseCodeRows { get; set; }
 
         public List<StatisticsExcelReportComplainIndexVM> excelReportComplainResults { get; set; }
+
+        public List<StatisticsExcelReportCaseTypeRowVM> excelReportCaseTypeRows { get; set; }
     }
 }

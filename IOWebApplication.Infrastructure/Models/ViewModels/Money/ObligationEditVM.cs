@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -50,7 +47,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public int? PersonReceiveId { get; set; }
 
         [Display(Name = "В полза на")]
-        public string CountryReceiveId { get; set; }
+        public int ReceiveSourceTypeId { get; set; }
+
+        [Display(Name = "Въведете име или част от име")]
+        public long? ReceiveSourceId { get; set; }
 
         [Display(Name = "Банкова сметка")]
         [RegularExpression("[a-zA-Z]{2}[0-9]{2}[a-zA-Z0-9]{4}[0-9]{6}([a-zA-Z0-9]?){0,16}", ErrorMessage = "Невалиден IBAN.")]

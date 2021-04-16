@@ -191,7 +191,7 @@
                     {
                         name: 'regNumberExpenseOrder',
                         data: 'regNumberExpenseOrder',
-                        title: 'Разходен ордер',
+                        title: 'РКО',
                         sortable: true,
                         searchable: true,
                         "render": function (a, b, item, d) {
@@ -201,7 +201,7 @@
                         </text>
                         }
 
-                        @if (Model.CaseSessionActId > 0)
+                        @if (Model.CaseSessionActId > 0 || Model.CaseSessionId > 0)
                         {
                          <text>
                         ,
@@ -209,7 +209,7 @@
                             className: "text-right",
                             name: 'regNumberExecList',
                             data: 'regNumberExecList',
-                            title: 'Изпълнителен лист',
+                            title: 'ИЛ',
                             sortable: true,
                             searchable: true,
                             "render": function (a, b, item, d) {

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -41,16 +38,20 @@ namespace IOWebApplication.Controllers
 
         public IActionResult Index(int caseSessionId)
         {
-            SetViewbag(caseSessionId);
+            SetViewbag(caseSessionId, null);
             return View();
         }
 
-        void SetViewbag(int CaseSessionId)
+        void SetViewbag(int CaseSessionId, int? SessionStateId)
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSession(CaseSessionId);
             ViewBag.caseSessionId = CaseSessionId;
             ViewBag.SessionMeetingTypeId_ddl = nomService.GetDropDownList<SessionMeetingType>(false);
             ViewBag.CourtHallId_ddl = commonService.GetDropDownList_CourtHall(userContext.CourtId);
+            
+            if (SessionStateId != null)
+                ViewBag.SessionStateId_ddl = nomService.GetDDL_SessionStateRoute(SessionStateId ?? 0);
+            
             SetHelpFile(HelpFileValues.SessionMainData);
         }
 
@@ -94,9 +95,10 @@ namespace IOWebApplication.Controllers
                 DateTo = (modelSession.DateTo ?? modelSession.DateFrom),
                 CourtHallId = modelSession.CourtHallId,
                 IsAutoCreate = false,
+                SessionStateId = modelSession.SessionStateId,
                 CaseSessionMeetingUser = service.GetCheckListCaseSessionMeetingUser(caseSessionId)
             };
-            SetViewbag(caseSessionId);
+            SetViewbag(caseSessionId, modelSession.SessionStateId);
             return View(nameof(Edit), model);
         }
 
@@ -117,7 +119,7 @@ namespace IOWebApplication.Controllers
             {
                 throw new NotFoundException("Търсенata от Вас сесия не е намерен и/или нямате достъп до нея.");
             }
-            SetViewbag(model.CaseSessionId);
+            SetViewbag(model.CaseSessionId, model.SessionStateId);
             return View(nameof(Edit), model);
         }
 
@@ -132,30 +134,44 @@ namespace IOWebApplication.Controllers
 
             if (model.DateFrom == null)
                 return "Няма въведена начална дата";
-            //else
-            //{
-            //    if (model.DateFrom < caseSession.DateFrom)
-            //        return "Началната дата е преди началната дата на заседанието";
-            //}
-
-            //if (model.DateFrom >= DateTime.Now)
-            //    return "Сесията трябва да е с минала начална дата";
 
             if (model.DateTo != null)
             {
-                //if (model.DateTo >= DateTime.Now)
-                //    return "Сесията трябва да е с минала крайна дата";
-
                 if (model.DateFrom > model.DateTo)
                     return "Началната дата е по-голяма от крайната";
-
-                //if (model.DateTo > caseSession.DateTo)
-                //    return "Крайната дата е след датата на заседанието";
             }
 
             if (service.IsExistMeetengInSession(model.DateFrom, model.DateTo, model.CaseSessionId, model.Id))
             {
                 return "Има сесия в това заседание съвпадаща като време";
+            }
+
+            if (model.IsAutoCreate ?? false)
+            {
+                if (model.SessionStateId < 1)
+                {
+                    return "Изберете статус на заседание.";
+                }
+                
+                if (model.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
+                {
+                    if (caseSession.DateFrom > DateTime.Now)
+                        return "Не може да отразите проведено заседание с бъдеща дата/час.";
+
+                    var dateNow = DateTime.Now;
+                    if (service.IsExistMeetengInSessionAfterDate(dateNow, caseSession.Id, model.Id) || (model.DateTo >= dateNow))
+                    {
+                        return "Има сесии в това заседание, които не са проведени.";
+                    }
+                }
+
+                if (model.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno)
+                {
+                    if (caseSession.DateFrom <= DateTime.Now)
+                    {
+                        return "Не може да насрочвате/коригирате заседание с минала дата/час.";
+                    }
+                }
             }
 
             return string.Empty;
@@ -172,7 +188,7 @@ namespace IOWebApplication.Controllers
             model.DateFrom = model.DateFrom.MakeEndSeconds();
             model.DateTo = model.DateTo.MakeEndSeconds();
 
-            SetViewbag(model.CaseSessionId);
+            SetViewbag(model.CaseSessionId, model.SessionStateId);
             
             if (model.CaseSessionMeetingUser == null)
                 model.CaseSessionMeetingUser = new List<Infrastructure.Models.ViewModels.CheckListVM>();
@@ -197,7 +213,16 @@ namespace IOWebApplication.Controllers
                 SetAuditContext(service, SourceTypeSelectVM.CaseSessionMeeting, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Edit), new { id = model.Id });
+                if ((!sessionService.IsExistCaseSessionResult(model.CaseSessionId)) && (model.SessionStateId == NomenclatureConstants.SessionState.Provedeno))
+                {
+                    SetSuccessMessage(MessageConstant.Values.SaveOK + " Моля, добавете резултат от заседание.");
+                    return RedirectToAction("AddResult", "CaseSession", new { caseSessionId = model.CaseSessionId });
+                }
+                else
+                {
+                    SetSuccessMessage(MessageConstant.Values.SaveOK);
+                    return RedirectToAction("Preview", "CaseSession", new { id = model.CaseSessionId });
+                }
             }
             else
             {

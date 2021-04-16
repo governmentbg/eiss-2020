@@ -5,6 +5,7 @@
 
 <div>
     @{ViewData.TemplateInfo.HtmlFieldPrefix = "Report"; }
+    @Html.HiddenFor(m => m.RegixRequestTypeId)
 
     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(x => x.DocumentId, "SelectDocument")</div>

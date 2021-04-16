@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -20,6 +17,7 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 
 namespace IOWebApplication.Core.Services
 {
@@ -49,8 +47,9 @@ namespace IOWebApplication.Core.Services
 
         public IQueryable<DeliveryAreaVM> DeliveryAreaSelect(DeliveryAreaFilterVM filter)
         {
-            var lawUnit = repo.AllReadonly<LawUnit>().AsQueryable();
-            return repo.AllReadonly<DeliveryArea>()
+            var lawUnit = repo.AllReadonly<LawUnit>();
+            var addresses = repo.AllReadonly<DeliveryAreaAddress>();
+            var deliveryAreas = repo.AllReadonly<DeliveryArea>()
                 .Where(x => (filter.CourtId <= 0 || x.CourtId == filter.CourtId) &&
                             (
                               ((filter.DateFrom ?? DateTime.MinValue) <= (x.DateFrom ?? DateTime.MinValue) && (x.DateFrom ?? DateTime.MinValue) <= (filter.DateTo ?? DateTime.MaxValue)) ||
@@ -60,7 +59,47 @@ namespace IOWebApplication.Core.Services
                             ) &&
                             (filter.ExpiredType != 0 || (x.DateExpired != null && (filter.DateExpiredFrom ?? DateTime.MinValue) <= (x.DateExpired ?? DateTime.MinValue) && (x.DateExpired ?? DateTime.MinValue) <= (filter.DateExpiredTo ?? DateTime.MaxValue))) &&
                             (filter.ExpiredType != 1 || x.DateExpired == null)
-                 ) 
+                 );
+            bool haveAddrFilter = false;
+            if (!string.IsNullOrEmpty(filter.CityCode) && filter.CityCode != "-1")
+            {
+                haveAddrFilter = true;
+                addresses = addresses.Where(a => a.CityCode == filter.CityCode &&
+                                            (string.IsNullOrEmpty(filter.ResidentionAreaCode) || a.ResidentionAreaCode == filter.ResidentionAreaCode) &&
+                                            (string.IsNullOrEmpty(filter.StreetCode) || a.StreetCode == filter.StreetCode) 
+                                           );
+            };
+            if (filter.Number > 0 || filter.Block > 0)
+            {
+                int maxNum = 99999;
+                haveAddrFilter = true;
+                int block = 0;
+                if (filter.Block > 0)
+                    block = filter.Block??0;
+                int typeNumBlock;
+                if (block % 2 == 0)
+                    typeNumBlock = NomenclatureConstants.DeliveryAddressNumberType.BlockEven;
+                else
+                    typeNumBlock = NomenclatureConstants.DeliveryAddressNumberType.BlockOdd;
+                int streetNum = 0;
+                if (filter.Number > 0)
+                    streetNum = filter.Number ?? 0;
+                int typeNumStreet;
+                if (block % 2 == 0)
+                    typeNumStreet = NomenclatureConstants.DeliveryAddressNumberType.EvenNumber;
+                else
+                    typeNumStreet = NomenclatureConstants.DeliveryAddressNumberType.OddNumber;
+
+                addresses = addresses.Where(x => (block > 0 && (x.NumberType == typeNumBlock || x.NumberType == NomenclatureConstants.DeliveryAddressNumberType.Block) &&
+                                                               (x.NumberFrom ?? 0) <= block && block <= (x.NumberTo ?? maxNum)) ||
+                                                 (streetNum > 0 && (x.NumberType == typeNumStreet || x.NumberType == NomenclatureConstants.DeliveryAddressNumberType.OddEvenNumber) &&
+                                                               (x.NumberFrom ?? 0) <= streetNum && streetNum <= (x.NumberTo ?? maxNum)));
+            }
+            if (haveAddrFilter)
+            {
+                deliveryAreas = deliveryAreas.Where(x => addresses.Any(a => a.DeliveryAreaId == x.Id && a.DateExpired == null));
+            }
+            return deliveryAreas
                 .Select(x => new DeliveryAreaVM()
                 {
                     Id = x.Id,
@@ -70,8 +109,7 @@ namespace IOWebApplication.Core.Services
                     DateFrom = x.DateFrom,
                     DateTo = x.DateTo,
                     DateExpired = x.DateExpired
-                })
-                .AsQueryable();
+                });
         }
         public int? GetDeliveryAreaIdByLawUnitId(int courtId, int? lawUnitId)
         {
@@ -344,5 +382,6 @@ namespace IOWebApplication.Core.Services
             }
 
         }
+        
     }
 }

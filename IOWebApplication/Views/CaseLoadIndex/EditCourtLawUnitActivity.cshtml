@@ -47,6 +47,8 @@
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
+                        @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на дейност", ExpireSubmitUrl = Url.Action("CourtLawUnitActivity_ExpiredInfo") })
+                        <span>&nbsp;</span>
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }

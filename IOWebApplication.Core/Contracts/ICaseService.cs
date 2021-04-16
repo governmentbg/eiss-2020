@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
@@ -26,13 +23,12 @@ namespace IOWebApplication.Core.Contracts
         bool TestHistory(int id);
         CaseEditVM Case_SelectForEdit(int id);
         bool CheckCaseOldNumber(int CaseGroupId, string oldNumber, DateTime oldDate);
-
         IQueryable<CaseFolderItemVM> Case_SelectFolder(int id);
         IEnumerable<LabelValueVM> GetCasesByCourt(int courtId, int? caseId, string query);
         IEnumerable<SelectListItem> GetDDL_SessionActsByCase(int caseId, bool addDefaultElement = false);
         CaseElectronicFolderVM CaseElectronicFolder_Select(int CaseId);
         CaseProceedingsVM CaseProceedings_Select(int CaseId);
-        bool SaveDataDepersonalizationHistory(int CaseId, IEnumerable<DepersonalizationHistoryItem> model, int actId);
+        bool SaveDataDepersonalizationHistory(int CaseId, IEnumerable<DepersonalizationHistoryItem> model, int actId, bool saveDepersonalizeUser);
         IEnumerable<DepersonalizationHistoryItem> GetDepersonalizationHistory(int CaseId);
         IQueryable<CaseVM> CaseReport_Select(int courtId, CaseFilterReport model);
         Task<byte[]> CaseArchive(int CaseId);
@@ -46,7 +42,6 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CaseSprVM> CaseActReport_Select(int courtId, CaseFilterReport model);
         IQueryable<CaseSprVM> CaseFirstLifecyclie_Select(int courtId, CaseFilterReport model);
         bool IsRegisterCompany(int caseId);
-
         byte[] CaseWithoutFinalExportExcel(CaseFilterReport model);
         bool IsCaseRestricted(int CaseId);
     }

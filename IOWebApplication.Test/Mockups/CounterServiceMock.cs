@@ -1,11 +1,9 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Money;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
 using System.Collections.Generic;
@@ -38,6 +36,16 @@ namespace IOWebApplication.Test.Mockups
         }
 
         public bool Counter_GetCaseCounter(Case model, int? oldNumber = null, DateTime? oldDate = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Counter_GetCaseEisppNumber(int courtId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Counter_GetCrimeEisppNumber(int courtId)
         {
             throw new NotImplementedException();
         }
@@ -140,9 +148,15 @@ namespace IOWebApplication.Test.Mockups
             throw new NotImplementedException();
         }
 
+        public SystemParam SystemParam_Select(string paramName)
+        {
+            throw new NotImplementedException();
+        }
+
         bool IBaseService.SaveExpireInfo<T>(ExpiredInfoVM model)
         {
             throw new NotImplementedException();
         }
+       
     }
 }

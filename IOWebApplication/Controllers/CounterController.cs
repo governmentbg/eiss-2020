@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -25,15 +22,15 @@ namespace IOWebApplication.Controllers
             nomService = _nomService;
             commonService = _commonService;
         }
-        public IActionResult InitAllCounters()
-        {
-            if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
-            {
-                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
-            }
-            service.InitAllCounters();
-            return Content("InitAllCounters done.");
-        }
+        //public IActionResult InitAllCounters()
+        //{
+        //    if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+        //    {
+        //        return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+        //    }
+        //    service.InitAllCounters();
+        //    return Content("InitAllCounters done.");
+        //}
 
         public IActionResult SetCounterValues()
         {

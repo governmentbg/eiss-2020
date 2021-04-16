@@ -3,7 +3,7 @@
 @model CaseFilterReport
 
 @{
-    ViewData["Title"] = "Заседания с не написани съдебни актове от всички съдии";
+    ViewData["Title"] = "Заседания с ненаписани съдебни актове от всички съдии";
 }
 
 @section breadcrumb{
@@ -17,9 +17,9 @@
     <div class="col-lg-3">
         @Html.EditorFor(m => m.DateFrom, "DateTime")
     </div>
-    <div class="col-lg-3">
+    @*<div class="col-lg-3">
         @Html.EditorFor(m => m.DateTo, "DateTime")
-    </div>
+    </div>*@
     <div class="col-lg-3">
         @Html.EditorFor(m => m.ActDateToSpr, "DateTime")
     </div>
@@ -61,7 +61,7 @@
                     "data": function (d) {
                         d.model = {
                             DateFrom: $("#DateFrom").val(),
-                            DateTo: $("#DateTo").val(),
+                            //DateTo: $("#DateTo").val(),
                             ActDateToSpr: $("#ActDateToSpr").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),

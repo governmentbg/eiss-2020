@@ -1,0 +1,183 @@
+﻿@model CasePersonLinkSideVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Extensions
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    ViewData["Title"] = "Групово добавяне";
+
+    var breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+    string personIdsJson = (string)ViewBag.personIdsJson;
+    string IsPostBack = "false";
+    if (!string.IsNullOrEmpty(personIdsJson))
+    {
+        IsPostBack = "true";
+    }
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<form id="AddSide" asp-action="AddSide" method="post">
+    @Html.ValidationSummary()
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.CourtId)
+    @Html.HiddenFor(x => personIdsJson)
+    <div id="saveContainer">
+        <partial name="_SaveFormContent" model="@("#saveContainer")" />
+        <div class="col-lg-6">
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.RoleKindId, "GenericDropDown")
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table id="casePersonLinks" class="table table-hover table-striped"></table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.LinkDirectionId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.CasePersonRelId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.DateFrom)
+                </div>
+                <div class="col-md-6">
+                    @Html.EditorFor(x => x.DateTo)
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                }
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        </div>
+
+    </div>
+</form>
+
+<script>
+    var dataSet = [];
+    $(function () {
+        var table = $('#casePersonLinks').DataTable({
+            data: dataSet,
+            serverSide: false,
+            'order': [[1, 'asc']],
+            "paging": false,
+            "lengthMenu": [[-1], ["Покажи всички"]],
+            dom: '<"row">',
+            columns: [
+                {
+                    name: "isChecked",
+                    data: "isChecked",
+                    title: '<input type="checkbox" id="select-all" onclick="selectAll();">',
+                    sortable: false,
+                    searchable: false,
+                    "render": function (item, type, row, meta) {
+                        if (type === 'display' || type === 'filter') {
+                            if (row.isChecked) {
+                                return '<input id = "chk' + row.id + '" type="checkbox" checked value="' + row.id + '" data-linkid="' + row.casePersonLinkId + '" onchange="checkedRowChange(' + row.id + ')">';
+                            } else {
+                                return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" data-linkid="' + row.casePersonLinkId + '" onchange="checkedRowChange(' + row.id + ')">';
+                            }
+                        }
+                        return row.isChecked;
+                    }
+                },
+                {
+                    name: 'personName',
+                    data: 'personName',
+                    title: 'Представлявани',
+                    sortable: true,
+                    searchable: false
+                }
+            ]
+        });
+    });
+    function selectAll() {
+        var check = $("#select-all").is(':checked');
+        var rows = $('#casePersonLinks').DataTable().rows({ 'search': 'applied' }).nodes();
+        $('input[type="checkbox"]', rows).prop('checked', check);
+    }
+
+    function checkedRowChange(id) {
+        var isCheck = $('#chk' + id.toString()).prop('checked');
+        $('#casePersonLinks').DataTable().rows(function (idx, data, node) {
+            if (data.id === id)
+                data.isChecked = isCheck;
+        });
+    }
+
+    $('#LinkDirectionId').change(function () {
+        var linkId = $(this).val();
+        var caseId = $("#CaseId").val();
+        var casePersonRelId = $("#CasePersonRelId").val();
+        if (casePersonRelId == null)
+            casePersonRelId = -1;
+        if (linkId > 0) {
+            requestGET_Json('@Url.Action("FilterPersonY","CasePersonLink")', { caseId: caseId, linkDirectionId: linkId }, function (model) {
+                fillCombo(model.ddlPersonRel, '#CasePersonRelId', casePersonRelId);
+            });
+        }
+    });
+    function RoleKindIdChange(personIds) {
+        var roleKindId = $("#RoleKindId").val();
+        var caseId = $("#CaseId").val();
+        $.ajax({
+            type: "Get",
+            url: "@Url.Action("GetPersonXBySide")",
+            dataType: "json",
+            cache: false,
+            data: { caseId: caseId, roleKindId: roleKindId },
+            success: function (response) {
+                if (personIds !== null) {
+                    console.log(response);
+                    response = response.map(x => {
+                        x.isChecked = personIds.includes(x.id);
+                        return x;
+                    });
+                    console.log(response);
+                }
+                dataSet = response;
+                $("#select-all").prop('checked', false);
+                var table = $('#casePersonLinks').DataTable();
+                table.clear();
+                table.rows.add(dataSet).draw();
+             },
+             error: log_ajax_err
+        });
+    };
+    $('#RoleKindId').change(function () {
+        RoleKindIdChange(null);
+    })
+    $('#AddSide').submit(function () {
+        let str = JSON.stringify(dataSet.filter(x => x.isChecked).map(m => m.id));
+        $('#personIdsJson').val(str)
+    });
+    $(document).ready(function () {
+        if (@IsPostBack)
+        {
+            let personIds = JSON.parse('@personIdsJson');
+            RoleKindIdChange(personIds);
+        }
+        
+    });
+</script>

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -237,7 +234,7 @@ namespace IOWebApplication.Core.Services
 
                     if (_changeCorrection)
                     {
-                        caseSave.CorrectionLoadIndex = GetSumCorrectionForCaseId(saved.CaseId); 
+                        caseSave.CorrectionLoadIndex = GetCaseLoadCorrection(saved.CaseId); 
                         caseSave.DateWrt = DateTime.Now;
                         caseSave.UserId = userContext.UserId;
                         repo.Update(caseSave);
@@ -252,12 +249,30 @@ namespace IOWebApplication.Core.Services
                     repo.Add<CaseLoadCorrection>(model);
                     repo.SaveChanges();
 
-                    caseSave.CorrectionLoadIndex = GetSumCorrectionForCaseId(model.CaseId);
+                    caseSave.CorrectionLoadIndex = GetCaseLoadCorrection(model.CaseId);
                     caseSave.DateWrt = DateTime.Now;
                     caseSave.UserId = userContext.UserId;
                     repo.Update(caseSave);
                     repo.SaveChanges();
                 }
+
+                // тази част я има и като метод в CaseLoadIndexService
+                var caseLoadIndices = repo.AllReadonly<CaseLoadIndex>()
+                                          .Include(x => x.Case)
+                                          .Where(x => x.CaseId == model.CaseId &&
+                                                      x.DateExpired == null)
+                                          .ToList();
+
+                foreach (var caseLoad in caseLoadIndices)
+                {
+                    var caseLoadCorrectionIdex = GetCaseLoadCorrectionToDate(model.CaseId, caseLoad.DateActivity);
+                    caseLoad.BaseIndex = caseLoadCorrectionIdex > 0 ? caseLoad.Case.LoadIndex * caseLoadCorrectionIdex : caseLoad.Case.LoadIndex;
+                    caseLoad.DateWrt = DateTime.Now;
+                    caseLoad.UserId = userContext.UserId;
+                    repo.Update(caseLoad);
+                }
+                repo.SaveChanges();
+
                 return true;
             }
             catch (Exception ex)
@@ -277,7 +292,7 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<SelectListItem> GetDDL_CaseLoadCorrectionActivity(int CaseGroupId, int CaseInstanceId, bool addDefaultElement = true, bool addAllElement = false)
         {
-            var selectListItems = repo.All<CaseLoadCorrectionActivity>()
+            var selectListItems = repo.AllReadonly<CaseLoadCorrectionActivity>()
                                         .Where(x => (x.CaseGroupId == CaseGroupId) &&
                                                     (x.CaseInstanceId == CaseInstanceId) &&
                                                     ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
@@ -325,6 +340,23 @@ namespace IOWebApplication.Core.Services
         {
             var caseLoadCorrections = repo.AllReadonly<CaseLoadCorrection>()
                                           .Where(x => x.CaseId == CaseId &&
+                                                      x.DateExpired == null)
+                                          .ToList() ?? new List<CaseLoadCorrection>();
+
+            var result = (decimal)0;
+            if (caseLoadCorrections.Count > 0)
+            {
+                result = caseLoadCorrections.Sum(x => x.CorrectionLoadIndex) - (caseLoadCorrections.Count - 1);
+            }
+
+            return result;
+        }
+
+        public decimal GetCaseLoadCorrectionToDate(int CaseId, DateTime dateTime)
+        {
+            var caseLoadCorrections = repo.AllReadonly<CaseLoadCorrection>()
+                                          .Where(x => x.CaseId == CaseId &&
+                                                      x.CorrectionDate.Date <= dateTime.Date &&
                                                       x.DateExpired == null)
                                           .ToList() ?? new List<CaseLoadCorrection>();
 

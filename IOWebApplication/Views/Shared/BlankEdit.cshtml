@@ -113,7 +113,7 @@
                     }
                     @if (Model.HasPreviewButton)
                     {
-                        <input type="submit" name="btnPreview" value="Преглед" class="btn btn-primary" />
+                        <input type="submit" name="btnPreview" value="Преглед" formtarget="_blank" class="btn btn-primary" />
 
                     }
                 </div>
@@ -132,7 +132,7 @@
         tinymce.activeEditor.getContainer().style.height = '400px';
     }
     function submitWithReset(sender) {
-        swalConfirm('Обновяването на данните ще премахне всички ваши промени по бланката на акта! Потвърдете зареждането на актуалните данните по бланката!', function () {
+        swalConfirm('Обновяването на данните ще премахне всички ваши промени по бланката! Потвърдете зареждането на актуалните данните по бланката!', function () {
             var mainForm = $(sender).parents('form:first');
             $('#reset_mode').val('reset_blank');
             $(mainForm).trigger('submit');

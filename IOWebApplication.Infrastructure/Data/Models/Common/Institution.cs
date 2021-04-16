@@ -1,8 +1,6 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -28,6 +26,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("eispp_code")]
         [Display(Name ="ЕИСПП код")]
         public string EISPPCode { get; set; }
+
+        [Column("date_from")]
+        [Display(Name = "Дата от")]
+        [Required(ErrorMessage = "Въведете {0}.")]
+        public DateTime DateFrom { get; set; }
+
+        [Column("date_to")]
+        [Display(Name = "Дата до")]
+        public DateTime? DateTo { get; set; }
 
         [Column("court_region_id")]
         public int? CourtRegionId { get; set; }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplicationService.Infrastructure.Data.DW.Models;
@@ -60,6 +57,7 @@ namespace IOWebApplicationService.Infrastructure.Data.DW
     public DbSet<DWDocumentInstitutionCaseInfo> DWDocumentInstitutionCaseInfo { get; set; }
 
     public DbSet<DWDocumentCaseInfo> DWDocumentCaseInfo { get; set; }
+    public DbSet<DWErrorLog> DWErrorLog { get; set; }
     #region Common
 
     //public DbSet<Court> Courts { get; set; }

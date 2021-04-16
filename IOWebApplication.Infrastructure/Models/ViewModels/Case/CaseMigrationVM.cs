@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -23,9 +20,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string SentFromName { get; set; }
         public string SentToName { get; set; }
         public int? SendToCortId { get; set; }
-
         public bool CanEdit { get; set; }
         public bool CanAccept { get; set; }
         public DateTime DateWrt { get; set; }
+        public string OutDocumentLabel { get; set; }
+        public DateTime? OutDocumentDate { get; set; }
+        public bool? IsReturned { get; set; }
+        public string CaseStateName { get; set; }
     }
 }

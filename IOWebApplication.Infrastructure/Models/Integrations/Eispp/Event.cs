@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
@@ -130,8 +127,8 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [Display(Name = "Акт/Протокол")]
         [XmlIgnore]
         public int? CaseSessionActId { get; set; }
-
-
+        [XmlIgnore]
+        public int? CaseComplaintId { get; set; }
         /// <summary>
         /// Отменена мяркa
         /// </summary>

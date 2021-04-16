@@ -20,6 +20,7 @@
     <div class="col-lg-3">
         @Html.EditorFor(m => m.DateTo, "DateTime")
     </div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 <div class="row">
@@ -51,7 +52,8 @@
                     "data": function (d) {
                         d.model = {
                             DateFrom: $("#DateFrom").val(),
-                            DateTo: $("#DateTo").val()
+                            DateTo: $("#DateTo").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val()
                         };
                     }
                 },
@@ -76,6 +78,13 @@
                             else
                                 return "";
                         }
+                    },
+                    {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
                     },
                     {
                         name: 'courtLabel',
@@ -113,6 +122,13 @@
                         searchable: true
                     },
                     {
+                        name: 'isExistFinalAct',
+                        data: 'isExistFinalAct',
+                        title: 'Финализиращ акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'actions',
                         data: "id",
                         title: "",
@@ -136,5 +152,7 @@
 </script>
 
 <script>
-    
+    $(function () {
+        initLawUnit();
+    })
 </script>

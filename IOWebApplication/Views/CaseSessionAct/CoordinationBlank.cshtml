@@ -9,7 +9,7 @@
     <br />
     <br />
     <br />
-    към @Model.ActTypeName @Model.ActNumber/@Model.ActDate.Value.ToString("dd.MM.yyyy")
+    към @Model.ActTypeName @if (Model.ActDate != null) {<text>@Model.ActNumber/@Model.ActDate.Value.ToString("dd.MM.yyyy")</text>}
     <br />
     на @(Model.CaseLawUnitName), @Model.JudgeRoleLabel
 </div>

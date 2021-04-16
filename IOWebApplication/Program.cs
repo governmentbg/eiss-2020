@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -35,7 +32,7 @@ namespace IOWebApplication
                     {
                         options.ListenAnyIP(8080, listenOptions =>
                         {
-                            listenOptions.UseHttps("", "");
+                            listenOptions.UseHttps("Certificates/eiss.local.pfx", "123456");
                         });
                     }
                 })

@@ -44,7 +44,7 @@
 
 <script>
     function LoadTable() {
-
+        changeTitle();
         if ($.fn.dataTable.isDataTable('#caseSelectionProtokolMainTable')) {
             refreshTable('#caseSelectionProtokolMainTable');
         }
@@ -62,7 +62,7 @@
                         };
                     },
                     "dataSrc": function (json) {
-                        if (json.additionalParameters.total) {
+                        if (json.additionalParameters.total >= 0) {
 
                             var str1 = "Общо разпределени дела в групaта: ";
                             var res = str1.concat(json.additionalParameters.total);
@@ -76,6 +76,8 @@
                     }
                 },
                 filter: false,
+             
+            
                 columns: [
                     {
                         name: 'lawUnitFullName',
@@ -128,4 +130,17 @@
     $(function () {
         initLawUnit();
     })
+
+ 
+
+    $('#GroupId').change(function () {
+        changeTitle();
+    });
+
+    function changeTitle() {
+
+
+        $("h1").text("Разпределени дела в група: " + $("#GroupId option:selected").text());
+        $("title").text("Разпределени дела в група: " + $("#GroupId option:selected").text());
+    }
 </script>

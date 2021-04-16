@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.Integrations.CSRD;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -29,7 +26,7 @@ namespace IOWebApplication.Core.Contracts
     IQueryable<CaseSelectionProtokolReportVM> CaseSelectionProtokol_SelectForReport(int courtId, CaseSelectionProtokolFilterVM model);
 
 
-    IEnumerable<CaseSelectionProtokolLawUnitVM> LawUnit_LoadJudgeByCaseGroup(int courtId, int caseGroupId, string lawUnitsIds, int caseId,int judgeRole);
+    IEnumerable<CaseSelectionProtokolLawUnitVM> LawUnit_LoadJudgeByCaseGroup(int courtId, CheckListVM[] CaseGroups, string lawUnitsIds, int caseId,int judgeRole);
     int[] CaseGroup_WithLawUnits(int courtId, string idStr);
     List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> Return_Available_CaseGroup_forAdditionalSelect(string idStr, string groups, int caseId);
 
@@ -55,5 +52,7 @@ namespace IOWebApplication.Core.Contracts
     bool HasJudgeChoiceWithoutDismisal(int courtId, int caseID);
     List<SelectListItem> SelectSelectionMode_ForDropDownList();
     List<SelectListItem> SelectJudgeRole_ForDropDownList();
+     Int32 IfJuryReturnCaseIdToRedirect(int id);
+    CaseSessionMeeting NextCaseOpenSessionMeeting(int case_id, DateTime dateAfterSearch);
   }
 }

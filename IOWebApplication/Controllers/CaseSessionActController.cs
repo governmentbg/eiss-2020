@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -25,7 +22,6 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
-using Rotativa.AspNetCore.Options;
 using Rotativa.Extensions;
 
 namespace IOWebApplication.Controllers
@@ -36,9 +32,10 @@ namespace IOWebApplication.Controllers
         private readonly ICaseSessionActCoordinationService coordinationService;
         private readonly INomenclatureService nomService;
         private readonly ICommonService commonService;
+        private readonly ICaseService caseService;
+        private readonly ICaseLawUnitService caseLawUnitService;
         private readonly ICaseSessionService sessionService;
         private readonly ICaseSessionMeetingService sessionMeetingService;
-        private readonly ICaseService caseService;
         private readonly ICdnService cdnService;
         private readonly IWorkTaskService taskService;
         private readonly ICasePersonService casePersonService;
@@ -51,6 +48,7 @@ namespace IOWebApplication.Controllers
             ICaseSessionActService _service,
             INomenclatureService _nomService,
             ICommonService _commonService,
+            ICaseLawUnitService _caseLawUnitService,
             ICaseSessionActCoordinationService _coordinationService,
             ICaseSessionMeetingService _sessionMeetingService,
             ICaseSessionService _sessionService,
@@ -70,6 +68,7 @@ namespace IOWebApplication.Controllers
             sessionMeetingService = _sessionMeetingService;
             cdnService = _cdnService;
             caseService = _caseService;
+            caseLawUnitService = _caseLawUnitService;
             coordinationService = _coordinationService;
             taskService = _taskService;
             casePersonService = _casePersonService;
@@ -91,6 +90,7 @@ namespace IOWebApplication.Controllers
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31),
                 IsFinalDoc = false
             };
+            ViewBag.ActTypeId_ddl = nomService.GetDropDownList<ActType>(false, true);
             SetHelpFile(HelpFileValues.CourtActsandProtocols);
             return View(filter);
         }
@@ -109,7 +109,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public IActionResult Add(int caseSessionId)
+        public IActionResult Add(int caseSessionId, bool autoSave = false, int? prevActId = null, int? actTypeId = null, int? actKindId = null)
         {
             if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionAct, null, AuditConstants.Operations.Append, caseSessionId))
             {
@@ -119,7 +119,10 @@ namespace IOWebApplication.Controllers
             if (caseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno && caseSession.DateFrom.Date > DateTime.Now.Date)
             {
                 SetErrorMessage("Не можете да добавяте акт в насрочено заседание с бъдеща дата.");
-                return RedirectToAction("Preview", "CaseSession", new { id = caseSessionId });
+                return RedirectToAction("Preview", "CaseSession", new
+                {
+                    id = caseSessionId
+                });
             }
 
             if ((caseSession.SessionStateId != NomenclatureConstants.SessionState.Provedeno)
@@ -136,6 +139,22 @@ namespace IOWebApplication.Controllers
                 CourtId = userContext.CourtId,
                 ActStateId = NomenclatureConstants.SessionActState.Project
             };
+            if (prevActId.HasValue)
+            {
+                model.RelatedActId = prevActId.Value;
+                if (autoSave)
+                {
+                    ViewBag.autoSave = true;
+                }
+            }
+            if (actTypeId.HasValue)
+            {
+                model.ActTypeId = actTypeId.Value;
+            }
+            if (actKindId.HasValue)
+            {
+                model.ActKindId = actKindId.Value;
+            }
             SetViewbag(model);
             return View(nameof(Edit), model);
         }
@@ -211,7 +230,7 @@ namespace IOWebApplication.Controllers
                 ViewBag.hasDefacedAct = actFiles.Any(x => x.SourceType == SourceTypeSelectVM.CaseSessionActDepersonalized);
                 ViewBag.hasDefacedMotives = actFiles.Any(x => x.SourceType == SourceTypeSelectVM.CaseSessionActMotiveDepersonalized);
                 ViewBag.hasEditFinishDoc = !caseLifecycleService.CaseLifecycle_IsExistLifcycleAfter(model.CaseId ?? 0, model.Id);
-                ViewBag.canAccessFile = service.CheckActBlankAccess(model.Id).canAccess;
+                ViewBag.canAccessFile = service.CheckActBlankAccess(model.Id, model).canAccess;
             }
             else
             {
@@ -219,19 +238,33 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSession(model.CaseSessionId);
 
             var caseSession = sessionService.CaseSessionById(model.CaseSessionId);
-            var caseCase = service.GetById<Case>(caseSession.CaseId);
+            var caseCase = caseSession.Case;
             ViewBag.CaseGroupId = caseCase.CaseGroupId;
             ViewBag.ActTypeId_ddl = service.GetActTypesByCase(model.CaseSessionId);
             ViewBag.ActResultId_ddl = caseSessionActComplainService.GetDropDownList_ActResultFromCaseSessionActComplainResult(model.Id);
             bool actStateInitial = string.IsNullOrEmpty(model.RegNumber);
             ViewBag.ActStateId_ddl = nomService.GetDDL_CaseSessionActState(actStateInitial, !actStateInitial);
-            ViewBag.SecretaryUserId_ddl = sessionMeetingService.GetDDL_MeetingUserBySessionId(model.CaseSessionId);
-            ViewBag.ActISPNReasonId_ddl = nomService.GetDropDownList<ActISPNReason>();
-            ViewBag.ActISPNDebtorStateId_ddl = nomService.GetDropDownList<ActISPNDebtorState>();
+            var hasSecretary = caseLawUnitService.CaseLawUnit_Select(model.CaseId.Value, null, false, true)
+                                    .Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.Secretary)
+                                    .Any();
+            if (hasSecretary)
+            {
+                ViewBag.SecretaryUserId_ddl = sessionMeetingService.GetDDL_MeetingUserBySessionId(model.CaseSessionId);
+            }
+            else
+            {
+                ViewBag.ManualSecretaryUser = true;
+            }
+
             ViewBag.RelatedActId_ddl = service.GetDropDownList_CaseSessionActEnforced(model.CaseId ?? 0);
 
             ViewBag.isDivorce = false;
             ViewBag.isISPNcase = caseCase.IsISPNcase == true;
+            if (ViewBag.isISPNcase == true)
+            {
+                ViewBag.ActISPNReasonId_ddl = nomService.GetDropDownList<ActISPNReason>();
+                ViewBag.ActISPNDebtorStateId_ddl = nomService.GetDropDownList<ActISPNDebtorState>();
+            }
             if (model.Id > 0)
             {
                 int[] codeDivorce = nomService.GetCaseCodeGroupingByGroup(NomenclatureConstants.CaseCodeGroupings.Divorce);
@@ -242,28 +275,80 @@ namespace IOWebApplication.Controllers
                         ViewBag.isDivorce = true;
                 }
             }
+            if ((model.SignJudgeLawUnitId ?? 0) <= 0)
+            {
+                model.SignJudgeLawUnitId = service.GetCaseLawUnitsByAct(model.Id, model.CaseSessionId)
+                                            .Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                            .Select(x => x.LawUnitId)
+                                            .FirstOrDefault();
+            }
 
             ViewBag.isRegisterCompany = false;
             if (caseCase.CaseGroupId == NomenclatureConstants.CaseGroups.Company)
             {
                 ViewBag.isRegisterCompany = caseService.IsRegisterCompany(caseCase.Id);
             }
-
+            if (caseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
+            {
+                var hasResults = sessionService.CaseSessionResult_Select(caseSession.Id).Any();
+                if (!hasResults)
+                {
+                    ViewBag.sessionNoResults = true;
+                }
+            }
             var actComplainResults = nomService.GetDDL_ActComplainResult(caseCase.CaseTypeId);
             ViewBag.ActComplainResultId_ddl = actComplainResults;
             ViewBag.hasComplainResult = actComplainResults.Count > 1;
             var actComplainIndex = nomService.GetDDL_ActComplainIndex(caseCase.Id);
             ViewBag.ActComplainIndexId_ddl = actComplainIndex;
             ViewBag.hasComplainIndex = actComplainIndex.Count > 1;
+
+            setNextActUrl(model);
             SetHelpFile(HelpFileValues.SessionAct);
         }
 
+        private void setNextActUrl(CaseSessionAct model)
+        {
+            if (model.RegDate == null)
+            {
+                return;
+            }
+            var hasNextAct = service.GetByRelatedActId(model.Id) != null;
+            if (hasNextAct)
+            {
+                return;
+            }
+            string actCode = $"{model.ActTypeId}";
+            if (model.ActKindId > 0)
+            {
+                actCode += $",{model.ActKindId}";
+            }
+            var nextActCode = nomService.GetInnerCodeFromCodeMappingStr("act_nextact", actCode);
+            if (nextActCode == null || string.IsNullOrEmpty(nextActCode.InnerCode))
+            {
+                return;
+            }
+
+            string[] nextActValues = nextActCode.InnerCode.Split(',');
+            int nextActTypeId = int.Parse(nextActValues[0]);
+            int nextActKindId = 0;
+            ViewBag.nextActLabel = nextActCode.Description;
+            ViewBag.nextActUrl = Url.Action(nameof(Add), new { caseSessionId = model.CaseSessionId, autoSave = true, prevActId = model.Id, actTypeId = nextActTypeId });
+            if (nextActValues.Length > 1)
+            {
+                nextActKindId = int.Parse(nextActValues[1]);
+                ViewBag.nextActUrl = Url.Action(nameof(Add), new { caseSessionId = model.CaseSessionId, autoSave = true, prevActId = model.Id, actTypeId = nextActTypeId, actKindId = nextActKindId });
+            }
+        }
+
+        [DisableAudit]
         public IActionResult Get_ActKindsByActType(int actTypeId)
         {
             var model = service.GetActKindsByActType(actTypeId);
             return Json(model);
         }
 
+        [DisableAudit]
         public IActionResult Get_ActKindInfo(int actKindId)
         {
             var model = service.GetById<ActKind>(actKindId);
@@ -295,6 +380,14 @@ namespace IOWebApplication.Controllers
                 }
             }
 
+            if ((model.ActInforcedDate.HasValue || model.ActStateId == NomenclatureConstants.SessionActState.ComingIntoForce) && model.ActDeclaredDate == null)
+            {
+                return "Актът не е постановен. Не можете да го промените в статус Влязъл в сила.";
+            }
+            if (model.ActDeclaredDate == null && model.ActStateId == NomenclatureConstants.SessionActState.Enforced)
+            {
+                return "Постановяването на актове се извършва с приключване на последната задача за подпис.";
+            }
             //if (model.ActKindId > 0)
             //{
             //    var actKind = service.GetById<ActKind>(model.ActKindId ?? 0);
@@ -357,7 +450,7 @@ namespace IOWebApplication.Controllers
                 Title = "Изготвяне на съдебен акт",
                 SourceType = sourceType,
                 SourceId = id.ToString(),
-                HtmlHeader = await this.RenderViewAsync("ActHeaderChairman", actModel),
+                HtmlHeader = await this.RenderViewAsync("ActHeaderLegacy", actModel),
                 //HtmlContent = html,
                 //HtmlFooter = actModel.Dispositiv,
                 FooterIsEditable = true,
@@ -541,8 +634,26 @@ namespace IOWebApplication.Controllers
             }
 
             byte[] pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true).GetByte(this.ControllerContext);
+            var contentDispositionHeader = new System.Net.Mime.ContentDisposition
+            {
+                Inline = true,
+                FileName = "sessionActPreview.pdf"
+            };
+            return File(pdfBytes, NomenclatureConstants.ContentTypes.Pdf);
+        }
 
-            return File(pdfBytes, NomenclatureConstants.ContentTypes.Pdf, "sessionActPreview.pdf");
+        private async Task<IActionResult> blankMotivePreview(BlankEditVM model)
+        {
+            byte[] pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = model.HtmlContent }, true).GetByte(this.ControllerContext);
+
+            var contentDispositionHeader = new System.Net.Mime.ContentDisposition
+            {
+                Inline = true,
+                FileName = "sessionActMotivePreview.pdf"
+            };
+
+            Response.Headers.Add("Content-Disposition", contentDispositionHeader.ToString());
+            return File(pdfBytes, NomenclatureConstants.ContentTypes.Pdf);
         }
 
         private async Task<bool> saveCompleteBlank(string id, string html)
@@ -571,6 +682,7 @@ namespace IOWebApplication.Controllers
             if (string.IsNullOrEmpty(html))
             {
                 //html = await this.RenderViewAsync("ActPrepare", actModel);
+                //TODO: да се направи първоначално зареждане данните от дело/акта
             }
 
             var model = new BlankEditVM()
@@ -579,6 +691,7 @@ namespace IOWebApplication.Controllers
                 SourceType = sourceType,
                 SourceId = id.ToString(),
                 HtmlContent = html,
+                HasPreviewButton = true,
                 ReturnUrl = Url.Action(nameof(Edit), new { id })
             };
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSessionAct(id);
@@ -587,7 +700,7 @@ namespace IOWebApplication.Controllers
             return View("BlankEdit", model);
         }
         [HttpPost]
-        public async Task<IActionResult> BlankMotives(BlankEditVM model)
+        public async Task<IActionResult> BlankMotives(BlankEditVM model, string btnPreview = null)
         {
             var htmlRequest = new CdnUploadRequest()
             {
@@ -605,6 +718,10 @@ namespace IOWebApplication.Controllers
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
+            if (!string.IsNullOrEmpty(btnPreview))
+            {
+                return await blankMotivePreview(model);
+            }
             return RedirectToAction(nameof(BlankMotives), new { id = model.SourceId });
         }
         public async Task<IActionResult> DepersonalizeAct(int id)
@@ -619,8 +736,7 @@ namespace IOWebApplication.Controllers
                 SourceId = id.ToString(),
                 //DocumentName = $"{actModel.ActTypeName} {actModel.ActRegNumber}/{actModel.ActRegDate:dd.MM.yyyy}",
                 DocumentContent = html,
-                CancelUrl = Url.Action("Edit", new { id = id }),
-                DepersonalizationHistory = caseService.GetDepersonalizationHistory(actModel.CaseId)
+                CancelUrl = Url.Action("Edit", new { id = id })
             };
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSessionAct(id);
             SetHelpFile(HelpFileValues.SessionAct);
@@ -664,7 +780,8 @@ namespace IOWebApplication.Controllers
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 var replaceItems = JsonConvert.DeserializeObject<IEnumerable<DepersonalizationHistoryItem>>(model.DepersonalizationNewItems);
-                caseService.SaveDataDepersonalizationHistory(model.CaseId, replaceItems, int.Parse(model.SourceId));
+                //Само ако е финализаращо обезличаване
+                caseService.SaveDataDepersonalizationHistory(model.CaseId, replaceItems, int.Parse(model.SourceId), isFinal);
                 mqEpepService.AppendCaseSessionAct_Public(int.Parse(model.SourceId), EpepConstants.ServiceMethod.Add);
             }
             else
@@ -849,7 +966,6 @@ namespace IOWebApplication.Controllers
                 actHTML = blankComplete;
             }
 
-
             string htmlALL = string.Empty;
 
             htmlALL = await this.RenderPartialViewAsync("~/Views/Shared/", "CreatePdf.cshtml", new BlankEditVM() { HtmlContent = actHTML, AppendWatermarkforTest = false }, true);
@@ -866,9 +982,29 @@ namespace IOWebApplication.Controllers
             };
 
             await cdnService.MongoCdn_AppendUpdate(pdfRequest);
+
+            var coordinations = coordinationService.CaseSessionActCoordination_Select(actModel.Id).Where(x => (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.AcceptWithOpinion) || (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.DontAccept)).ToList();
+            foreach (var coordination in coordinations)
+            {
+                string coordinationHtml = await this.RenderViewAsync("CoordinationBlank", coordination);
+
+                var pdfBytesCoordination = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = coordinationHtml }, true).GetByte(this.ControllerContext);
+                var pdfRequestCoordination = new CdnUploadRequest()
+                {
+                    SourceType = SourceTypeSelectVM.CaseSessionActCoordinationPdf,
+                    SourceId = coordination.Id.ToString(),
+                    FileName = "sessionActCoordination.pdf",
+                    ContentType = NomenclatureConstants.ContentTypes.Pdf,
+                    Title = $"Особено мнение към {actModel.ActTypeName} {actModel.ActRegNumber}/{actModel.ActRegDate} на {coordination.CaseLawUnitName},{coordination.JudgeRoleLabel}",
+                    FileContentBase64 = Convert.ToBase64String(pdfBytesCoordination)
+                };
+
+                await cdnService.MongoCdn_AppendUpdate(pdfRequestCoordination);
+            }
+
             var actFullModel = service.CaseSessionAct_GetFullInfo(actModel.Id);
             var dpRules = service.AutoDepersonalizeAct_GenerateRules(actFullModel);
-            caseService.SaveDataDepersonalizationHistory(actModel.CaseId, dpRules, actModel.Id);
+            caseService.SaveDataDepersonalizationHistory(actModel.CaseId, dpRules, actModel.Id, false);
             if (!string.IsNullOrEmpty(actModel.ActRegDate))
             {
                 //Само регистрирани актове получава бланка за обезличаване и файлове с особено мнение
@@ -884,24 +1020,7 @@ namespace IOWebApplication.Controllers
                 await cdnService.MongoCdn_AppendUpdate(defacedActBlankRequest);
 
 
-                var coordinations = coordinationService.CaseSessionActCoordination_Select(actModel.Id).Where(x => (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.AcceptWithOpinion) || (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.DontAccept)).ToList();
-                foreach (var coordination in coordinations)
-                {
-                    string coordinationHtml = await this.RenderViewAsync("CoordinationBlank", coordination);
 
-                    var pdfBytesCoordination = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = coordinationHtml }, true).GetByte(this.ControllerContext);
-                    var pdfRequestCoordination = new CdnUploadRequest()
-                    {
-                        SourceType = SourceTypeSelectVM.CaseSessionActCoordinationPdf,
-                        SourceId = coordination.Id.ToString(),
-                        FileName = "sessionActCoordination.pdf",
-                        ContentType = NomenclatureConstants.ContentTypes.Pdf,
-                        Title = $"Особено мнение към {actModel.ActTypeName} {actModel.ActRegNumber}/{actModel.ActRegDate} на {coordination.CaseLawUnitName},{coordination.JudgeRoleLabel}",
-                        FileContentBase64 = Convert.ToBase64String(pdfBytesCoordination)
-                    };
-
-                    await cdnService.MongoCdn_AppendUpdate(pdfRequestCoordination);
-                }
             }
             return string.Empty;
         }
@@ -960,8 +1079,7 @@ namespace IOWebApplication.Controllers
                 SourceId = id.ToString(),
                 DocumentName = $"Мотиви",
                 DocumentContent = html,
-                CancelUrl = Url.Action("Edit", new { id = id }),
-                DepersonalizationHistory = caseService.GetDepersonalizationHistory(actModel.CaseId)
+                CancelUrl = Url.Action("Edit", new { id = id })
             };
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSessionAct(id);
             SetHelpFile(HelpFileValues.SessionAct);
@@ -1005,7 +1123,7 @@ namespace IOWebApplication.Controllers
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 var replaceItems = JsonConvert.DeserializeObject<IEnumerable<DepersonalizationHistoryItem>>(model.DepersonalizationNewItems);
-                caseService.SaveDataDepersonalizationHistory(model.CaseId, replaceItems, int.Parse(model.SourceId));
+                caseService.SaveDataDepersonalizationHistory(model.CaseId, replaceItems, int.Parse(model.SourceId), false);
                 mqEpepService.AppendCaseSessionAct_PublicMotive(int.Parse(model.SourceId), EpepConstants.ServiceMethod.Add);
             }
             else
@@ -1016,7 +1134,7 @@ namespace IOWebApplication.Controllers
             return RedirectToAction(nameof(Edit), new { id = model.SourceId });
         }
 
-        public IActionResult RegisterAct(int id)
+        public async Task<IActionResult> RegisterAct(int id)
         {
             var _act = service.GetById<CaseSessionAct>(id);
             if (_act == null)
@@ -1029,6 +1147,12 @@ namespace IOWebApplication.Controllers
             {
                 SetSuccessMessage("Актът е регистриран успешно.");
                 this.SaveLogOperation(this.ControllerName, nameof(Edit), "Регистриране на акт", IO.LogOperation.Models.OperationTypes.Patch, id);
+                var actModel = service.CaseSessionAct_GetForPrint(id);
+                string actHTML = await GetActHTML(actModel);
+                if (!string.IsNullOrEmpty(actHTML))
+                {
+                    await PrepareSessionActPdfFile(actModel, actHTML);
+                }
             }
             else
             {
@@ -1062,6 +1186,11 @@ namespace IOWebApplication.Controllers
                     return RedirectToAction(nameof(SendActForSign), new { id, taskId });
                 }
             }
+            if (string.IsNullOrEmpty(_act.RegNumber) || _act.RegDate == null)
+            {
+                SetErrorMessage("Проблем при регистриране на съдебен акт. Моля, опитайте отново по-късно.");
+                return RedirectToAction("Edit", new { id = id });
+            }
 
             Uri urlSuccess = new Uri(Url.Action("Edit", "CaseSessionAct", new { id = id, taskId = taskId }), UriKind.Relative);
             Uri url = new Uri(Url.Action("Edit", "CaseSessionAct", new { id = id }), UriKind.Relative);
@@ -1087,8 +1216,30 @@ namespace IOWebApplication.Controllers
 
             return View("_SignPdf", model);
         }
-        public IActionResult SendActForSignCoordination(int id, int coordinationId, long taskId)
+        public async Task<IActionResult> SendActForSignCoordination(int id, int coordinationId, long taskId)
         {
+            var _act = service.GetById<CaseSessionAct>(id);
+            if (_act == null)
+            {
+                return Redirect_Denied("Търсения от Вас обект не беше намерен!");
+            }
+            var registerResult = service.CaseSessionAct_RegisterAct(_act);
+            if (!registerResult.Result)
+            {
+                SetErrorMessage(registerResult.ErrorMessage);
+                return RedirectToAction("Edit", new { id = id });
+            }
+            else
+            {
+                if (registerResult.SaveMethod == "register")
+                {
+                    var actModel = service.CaseSessionAct_GetForPrint(id);
+                    var actHTML = await GetActHTML(actModel);
+                    await PrepareSessionActPdfFile(actModel, actHTML);
+                    return RedirectToAction(nameof(SendActForSignCoordination), new { id, coordinationId, taskId });
+                }
+            }
+
             Uri urlSuccess = new Uri(Url.Action("Edit", "CaseSessionAct", new { id = id, taskId = taskId }), UriKind.Relative);
             Uri url = new Uri(Url.Action("Edit", "CaseSessionAct", new { id = id }), UriKind.Relative);
 
@@ -1376,6 +1527,8 @@ namespace IOWebApplication.Controllers
             var model = new CaseSessionActELSprFilterVM();
             model.DateFrom = DateTime.Now.AddDays(-7);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report37);
+
             return View(model);
         }
 
@@ -1388,10 +1541,13 @@ namespace IOWebApplication.Controllers
 
         private void SetViewbagIndexActReport()
         {
+            ViewBag.SessionResultId_ddl = nomService.GetDropDownList<SessionResult>();
+            ViewBag.ProcessPriorityId_ddl = nomService.GetDropDownList<ProcessPriority>();
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.ActTypeId_ddl = nomService.GetDropDownList<ActType>();
             ViewBag.DocumentGroupId_ddl = nomService.GetDDL_DocumentGroupByDirection(DocumentConstants.DocumentDirection.Incoming);
             ViewBag.ActComplainResultId_ddl = nomService.GetDDL_ActComplainResult();
+            ViewBag.ActStateId_ddl = nomService.GetDropDownList<ActState>();
         }
 
         public IActionResult IndexActReport()
@@ -1402,6 +1558,8 @@ namespace IOWebApplication.Controllers
                 DateTo = NomenclatureExtensions.GetEndYear(),
             };
             SetViewbagIndexActReport();
+            SetHelpFile(HelpFileValues.Report21);
+
             return View(filter);
         }
 

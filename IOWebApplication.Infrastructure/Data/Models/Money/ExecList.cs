@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
@@ -31,7 +28,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         public string RegNumber { get; set; }
 
         [Column("reg_date")]
-        public DateTime RegDate { get; set; }
+        public DateTime? RegDate { get; set; }
 
         [Column("is_active")]
         public bool IsActive { get; set; }
@@ -72,6 +69,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Display(Name = "Съдия")]
         public int? LawUnitSignId { get; set; }
 
+        [Column("exec_list_state_id")]
+        [Display(Name = "Статус")]
+        public int? ExecListStateId { get; set; }
+
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -87,6 +88,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
 
         [ForeignKey(nameof(LawUnitSignId))]
         public virtual LawUnit LawUnitSign { get; set; }
+
+        [ForeignKey(nameof(ExecListStateId))]
+        public virtual ExecListState ExecListState { get; set; }
 
         public virtual ICollection<ExecListObligation> ExecListObligations { get; set; }
 

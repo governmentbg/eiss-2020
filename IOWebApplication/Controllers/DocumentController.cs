@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper;
@@ -15,19 +12,15 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
-//using IO.RegixClient;
 using IOWebApplication.Infrastructure.Models.Documents;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using Microsoft.AspNetCore.Mvc;
-using Nest;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace IOWebApplication.Controllers
 {
@@ -41,6 +34,7 @@ namespace IOWebApplication.Controllers
         private readonly IEisppService eisppService;
         private readonly ICdnService cdnService;
         private readonly IRegixReportService regixService;
+        private readonly IMQEpepService epepService;
         public DocumentController(
             IDocumentService _docService,
             IDocumentTemplateService _templateService,
@@ -49,7 +43,8 @@ namespace IOWebApplication.Controllers
             IWorkTaskService _taskService,
             IEisppService _eisppService,
             ICdnService _cdnService,
-            IRegixReportService _regixService
+            IRegixReportService _regixService,
+            IMQEpepService _epepService
         )
         {
             docService = _docService;
@@ -60,6 +55,7 @@ namespace IOWebApplication.Controllers
             eisppService = _eisppService;
             cdnService = _cdnService;
             regixService = _regixService;
+            epepService = _epepService;
         }
 
 
@@ -117,6 +113,8 @@ namespace IOWebApplication.Controllers
                 ViewBag.HasRegNumberOtherSystem = true;
             }
             SetHelpFile(HelpFileValues.CourtRegistry);
+
+            //var r = docService.SystemParam_Select("max_filesize_sourcetype_1");
 
             return View(model);
         }
@@ -180,13 +178,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(long id)
+        public async Task<IActionResult> Edit(long id)
         {
             if (!CheckAccess(docService, SourceTypeSelectVM.Document, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = docService.Document_GetById(id);
+            var model = await docService.Document_GetById(id).ConfigureAwait(false);
             if (model == null)
             {
                 throw new NotFoundException("Търсения от Вас документ не е намерен и/или нямате достъп до него.");
@@ -200,13 +198,13 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        public IActionResult Correction(long id)
+        public async Task<IActionResult> Correction(long id)
         {
             if (!CheckAccess(docService, SourceTypeSelectVM.Document, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = docService.Document_GetById(id);
+            var model = await docService.Document_GetById(id).ConfigureAwait(false);
             if (model == null)
             {
                 throw new NotFoundException("Търсения от Вас документ не е намерен и/или нямате достъп до него.");
@@ -222,13 +220,13 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <param name="taskId"></param>
         /// <returns></returns>
-        public IActionResult View(long id, long? taskId = null)
+        public async Task<IActionResult> View(long id, long? taskId = null)
         {
             if (!CheckAccess(docService, SourceTypeSelectVM.Document, id, AuditConstants.Operations.View))
             {
                 return Redirect_Denied();
             }
-            var model = docService.Document_GetById(id);
+            var model = await docService.Document_GetById(id).ConfigureAwait(false);
             if (model == null)
             {
                 throw new NotFoundException("Търсения от Вас документ не е намерен и/или нямате достъп до него.");
@@ -257,7 +255,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         [HttpPost]
         [RequestFormLimits(ValueCountLimit = 4096)]
-        public IActionResult Edit(DocumentVM model)
+        public async Task<IActionResult> Edit(DocumentVM model)
         {
             ValidateModel(model);
             if (!ModelState.IsValid)
@@ -267,7 +265,7 @@ namespace IOWebApplication.Controllers
             }
             ModelState.Clear();
             long currentId = model.Id;
-            if (docService.Document_SaveData(model))
+            if (await docService.Document_SaveData(model).ConfigureAwait(true))
             {
                 SetAuditContext(docService, SourceTypeSelectVM.Document, model.Id, currentId == 0);
 
@@ -422,13 +420,29 @@ namespace IOWebApplication.Controllers
                     ModelState.AddModelError($"{nameof(DocumentVM.InstitutionCaseInfo)}[{i}].CaseNumber", "Въведете номер дело");
                 }
             }
-            if (model.DocumentKindId == DocumentConstants.DocumentKind.InitialDocument)
+            switch (model.DocumentKindId)
             {
-                if ((model.CaseTypeId ?? 0) <= 0)
-                {
-                    ModelState.AddModelError($"{nameof(DocumentVM.CaseTypeId)}", "Изберете 'Точен вид дело'");
-                }
+                case DocumentConstants.DocumentKind.InitialDocument:
+                    {
+                        if ((model.CaseTypeId ?? 0) <= 0)
+                        {
+                            ModelState.AddModelError($"{nameof(DocumentVM.CaseTypeId)}", "Изберете 'Точен вид дело'");
+                        }
+                    }
+                    break;
+                //case DocumentConstants.DocumentKind.CompliantDocument:
+                //    {
+                //        if (model.DocumentCaseInfo.CaseId <= 0)
+                //        {
+                //            ModelState.AddModelError("DocumentCaseInfo_CaseId_case", "");
+                //            ModelState.AddModelError("DocumentCaseInfo.CaseId", "Изберете дело.");
+                //        }
+                //    }
+                //    break;
+                default:
+                    break;
             }
+
             if (model.CaseTypeId > 0)
             {
                 var caseType = docService.GetById<CaseType>(model.CaseTypeId.Value);
@@ -437,7 +451,7 @@ namespace IOWebApplication.Controllers
                     if ((
                         !model.HasCaseInfo
                         || (model.DocumentCaseInfo.CaseId <= 0 && (string.IsNullOrEmpty(model.DocumentCaseInfo.CaseRegNumber)))
-                        ) 
+                        )
                         && (model.InstitutionCaseInfo.Count == 0))
                     {
                         ModelState.AddModelError($"{nameof(DocumentVM.HasCaseInfo)}", "Изберете 'Свързано дело' или добавете дело на външна институция");
@@ -452,9 +466,8 @@ namespace IOWebApplication.Controllers
             {
                 ModelState.AddModelError("", "Въведете поне едно свързано лице.");
             }
-            if (model.HasCaseInfo)
+            if (model.HasCaseInfo || (model.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument))
             {
-
                 if (model.DocumentCaseInfo.IsLegacyCase)
                 {
 
@@ -469,11 +482,9 @@ namespace IOWebApplication.Controllers
                         model.DocumentCaseInfo.CaseShortNumber = caseNumberDecoded.ShortNumber;
                         model.DocumentCaseInfo.CaseYear = caseNumberDecoded.Year;
                     }
-
                 }
                 else
                 {
-
                     if (model.DocumentCaseInfo.CourtId <= 0)
                     {
                         ModelState.AddModelError("DocumentCaseInfo.CourtId", "Изберете съд.");
@@ -488,10 +499,18 @@ namespace IOWebApplication.Controllers
                             }
                         }
                     }
-                    if (model.DocumentCaseInfo.CaseId <= 0)
+                    if ((model.DocumentCaseInfo.CaseId ?? 0) <= 0)
                     {
                         ModelState.AddModelError("DocumentCaseInfo_CaseId_case", "");
                         ModelState.AddModelError("DocumentCaseInfo.CaseId", "Изберете дело.");
+                    }
+                }
+
+                if (model.DocumentGroupId == NomenclatureConstants.DocumentGroup.DocumentForComplain_AccompanyingDocument)
+                {
+                    if ((model.DocumentCaseInfo.SessionActId <= 0) || (!model.DocumentCaseInfo.HasLawAct))
+                    {
+                        ModelState.AddModelError("DocumentCaseInfo.HasLawAct", "Изберете съдебен акт.");
                     }
                 }
             }
@@ -569,6 +588,8 @@ namespace IOWebApplication.Controllers
             {
                 ViewBag.canCorrect = userContext.IsUserInFeature(AccountConstants.Features.DocumentReactivate);
             }
+            model.RegixRequestReason.RegixReasonDocumentId = model.Id;
+            model.RegixRequestReason.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromDocument;
         }
 
         /// <summary>
@@ -857,8 +878,13 @@ namespace IOWebApplication.Controllers
         /// <param name="index"></param>
         /// <param name="uic"></param>
         /// <param name="adrTypeId"></param>
+        /// <param name="regixReasonDocumentId"></param>
+        /// <param name="regixReasonCaseId"></param>
+        /// <param name="regixReasonDescription"></param>
+        /// <param name="regixReasonGuid"></param>
         /// <returns></returns>
-        public IActionResult NewItem_DocumentPersonAddressByEGN(int personIndex, int index, string uic, int adrTypeId)
+        public IActionResult NewItem_DocumentPersonAddressByEGN(int personIndex, int index, string uic, int adrTypeId,
+            long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid)
         {
             var model = new DocumentPersonAddressVM()
             {
@@ -868,17 +894,29 @@ namespace IOWebApplication.Controllers
             };
             ViewData.TemplateInfo.HtmlFieldPrefix = model.GetPath;
             SetViewBag_NewAddress();
+            string baseInfo = "Регистрацията на документа не е завършена от потребител";
+            if (regixReasonDocumentId > 0)
+            {
+                var doc = docService.GetById<Document>(regixReasonDocumentId);
+                if (doc != null)
+                {
+                    baseInfo = $"Документ {doc.DocumentNumber}";
+                }
+            }
+
             switch (adrTypeId)
             {
                 case NomenclatureConstants.AddressType.Permanent:
-                    var pAdres = regixService.GetPermanentAddress(uic);
+                    var pAdres = regixService.GetPermanentAddressAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, NomenclatureConstants.RegixRequestTypes.FromDocument);
                     model.Address = pAdres.ToEntity();
                     commonService.Address_LocationCorrection(model.Address);
+                    AddAuditInfo("Преглед", baseInfo, $"Проверка в НБД за постоянен адрес на лице по ЕГН {uic}");
                     break;
                 case NomenclatureConstants.AddressType.Current:
-                    var tAdres = regixService.GetCurrentAddress(uic);
+                    var tAdres = regixService.GetCurrentAddressAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, NomenclatureConstants.RegixRequestTypes.FromDocument);
                     model.Address = tAdres.ToEntity();
                     commonService.Address_LocationCorrection(model.Address);
+                    AddAuditInfo("Преглед", baseInfo, $"Проверка в НБД за настоящ адрес на лице по ЕГН {uic}");
                     break;
             }
             if (model.Address == null)
@@ -1108,6 +1146,11 @@ namespace IOWebApplication.Controllers
             if (id > 0)
             {
                 ViewBag.caseView = (documentType.DecisionCaseSelect ?? false) == true;
+                var epepUser = epepService.EpepUser_GetByDocument(documentId);
+                if (epepUser != null)
+                {
+                    ViewBag.epepUserId = epepUser.Id;
+                }
             }
             SetHelpFile(HelpFileValues.DecisionTask);
         }
@@ -1170,6 +1213,7 @@ namespace IOWebApplication.Controllers
             var document = docService.GetById<Document>(documentDecision.DocumentId);
 
             ViewBag.DecisionTypeId_ddl = nomService.GetDDL_DecisionType(document.DocumentTypeId);
+            ViewBag.DecisionRequestTypeId_ddl = nomService.GetDropDownList<DecisionRequestType>(false);
         }
 
         public IActionResult AddDocumentDecisionCase(long documentDecisionId)
@@ -1224,6 +1268,12 @@ namespace IOWebApplication.Controllers
                 return Json(new { result = false, message = MessageConstant.Values.DescriptionExpireRequired });
             }
 
+            var checkStatus = docService.CheckCanExpireDocument(model.LongId);
+            if (!checkStatus.Result)
+            {
+                return Json(new { result = false, message = checkStatus.ErrorMessage });
+            }
+
             if (!docService.IsCanExpireCompliantDocument(model.LongId))
             {
                 return Json(new { result = false, message = "Този документ не може да бъде премахнат, тъй като е разгледан или в процес на разглеждане." });
@@ -1255,6 +1305,7 @@ namespace IOWebApplication.Controllers
                 DateFrom = NomenclatureExtensions.GetStartYear(),
                 DateTo = NomenclatureExtensions.GetEndYear()
             };
+            SetHelpFile(HelpFileValues.Report29);
 
             return View(filter);
         }
@@ -1301,6 +1352,7 @@ namespace IOWebApplication.Controllers
                 DocumentId = caseCase.DocumentId
             };
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(id);
+            SetHelpFile(HelpFileValues.OtherInstitution);
 
             return View(model);
         }
@@ -1349,6 +1401,7 @@ namespace IOWebApplication.Controllers
             ViewBag.InstitutionTypeId_ddl = nomService.GetDropDownList<InstitutionType>();
             ViewBag.InstitutionCaseTypeId_ddl = nomService.GetDropDownList<InstitutionCaseType>();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForDocumentInstitutionCaseInfoCase(caseId);
+            SetHelpFile(HelpFileValues.OtherInstitution);
         }
 
         [HttpPost]

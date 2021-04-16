@@ -25,12 +25,12 @@
                 </td>
                 <td>@sign</td>
             </tr>
-            @if ((Model.JudgeList.Count > 0) && (!Model.ChairmanSignOnly))
+            @if ((Model.AllJudgeList.Count > 0) && (!Model.ChairmanSignOnly))
             {
                 <tr>
                     <td align="right">
                         <b>
-                            @if (Model.JudgeList.Count == 1)
+                            @if (Model.AllJudgeList.Count == 1)
                             {
                                 <text>Член-съдия:</text>
                             }
@@ -43,7 +43,7 @@
                     <td></td>
                 </tr>
                 int i = 0;
-                foreach (var item in Model.JudgeList)
+                foreach (var item in Model.AllJudgeList)
                 {
                     i++;
                     <tr>
@@ -54,7 +54,7 @@
                     </tr>
                 }
             }
-            @if ((Model.JuryList.Count > 0) && (!Model.ChairmanSignOnly))
+            @if (Model.JuryList.Count > 0 && NomenclatureConstants.ActType.JurySign.Contains(Model.ActTypeId))
             {
                 <tr>
                     <td align="right">

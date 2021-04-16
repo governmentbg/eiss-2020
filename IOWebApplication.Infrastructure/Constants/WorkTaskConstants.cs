@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -40,6 +37,8 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int DocumentResolution_SentToSign = 14;
             public const int DocumentResolution_Sign = 15;
             public const int ForDocumentResolution = 16;
+            public const int ExecList_SentToSign = 17;
+            public const int ExecList_Sign = 18;
 
             /// <summary>
             /// Задачи, които се приключват сами и неможе да се приключват ръчно
@@ -49,7 +48,11 @@ namespace IOWebApplication.Infrastructure.Constants
             /// задачи, които немогат да бъдат редактирани и пренасочвани
             /// </summary>
             public static int[] TaskCantUpdate = { CaseSessionAct_Coordinate, CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign };
-            public static int[] TaskCanChangeUser = { CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign};
+            public static int[] TaskCanChangeUser = { CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign };
+            /// <summary>
+            /// Задачи, които не могат да бъдат пренасочвани през Преглед на всички задачи
+            /// </summary>
+            public static int[] TaskCantReroute = { Document_Sign, CaseSessionAct_Sign, CaseSessionActCoordination_Sign, CaseSessionActMotives_Sign };
         }
 
         public class States
@@ -75,7 +78,7 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int Redirected = 4;
 
             /// <summary>
-            /// Изтрита
+            /// Отменена
             /// </summary>
             public const int Deleted = 5;
 

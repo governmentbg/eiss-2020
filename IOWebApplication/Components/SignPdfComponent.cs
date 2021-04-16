@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.SignTools.Contracts;
+﻿using IO.SignTools.Contracts;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -16,16 +13,17 @@ namespace IOWebApplication.Components
 {
     public class SignPdfComponent : ViewComponent
     {
-        private readonly IIOSignToolsService signTools;
+        //private readonly IIOSignToolsService signTools;
         private readonly ILogger logger;
         private readonly ICdnService cdn;
 
         public SignPdfComponent(
-            IIOSignToolsService signTools,
-            ILogger<SignPdfComponent> logger,
-            ICdnService cdn)
+            ICdnService cdn,
+            //IIOSignToolsService signTools,
+            ILogger<SignPdfComponent> logger
+            )
         {
-            this.signTools = signTools;
+            //this.signTools = signTools;
             this.logger = logger;
             this.cdn = cdn;
         }
@@ -49,7 +47,7 @@ namespace IOWebApplication.Components
 
                 using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(pdf.FileContentBase64)))
                 {
-                    var (hash, tempPdfId) = await signTools.GetPdfHash(ms, info.Reason, info.Location);
+                    var (hash, tempPdfId) = await cdn.SignTools.GetPdfHash(ms, info.Reason, info.Location);
 
                     model.PdfUrl = Url.Action("GetFile", "PDF", new { pdfContentId = pdf.FileId });
                     model.PdfId = tempPdfId;

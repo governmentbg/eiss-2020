@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -49,5 +46,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "До номер")]
         [Range(1, int.MaxValue, ErrorMessage = "Въведете стойност по-голяма от 0")]
         public int? ToNumber { get; set; }
+
+        [Display(Name = "Съдия докладчик")]
+        public int JudgeReporterId { get; set; }
+
+        [Display(Name = "Съдебен състав")]
+        public int DepartmentId { get; set; }
     }
 }

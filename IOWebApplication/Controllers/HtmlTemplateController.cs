@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
@@ -393,7 +390,7 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_HtmlTemplatePreview(id).DeleteOrDisableLast();
 
             var model = service.GetById<HtmlTemplate>(id);
-            var htmlModel = printDocumentService.ConvertToTinyMCVM(model);
+            var htmlModel = printDocumentService.ConvertToTinyMCVM(model, model.HaveSessionAct == true);
             ViewBag.PreviewTitle = model.Label;
             return View("Preview", htmlModel);
         }
@@ -401,7 +398,7 @@ namespace IOWebApplication.Controllers
         public IActionResult PreviewRaw(int id)
         {
             var model = service.GetById<HtmlTemplate>(id);
-            var htmlModel = printDocumentService.ConvertToTinyMCVM(model);
+            var htmlModel = printDocumentService.ConvertToTinyMCVM(model, model.HaveSessionAct == true);
             ViewBag.PreviewTitle = model.Label;
             return View("PreviewRaw", htmlModel);
         }
@@ -410,8 +407,34 @@ namespace IOWebApplication.Controllers
         public IActionResult Style(int id)
         {
             var model = service.GetById<HtmlTemplate>(id);
-            var htmlModel = printDocumentService.ConvertToTinyMCVM(model);
-            return Content(htmlModel.Style, "text/css");
+            var htmlModel = printDocumentService.ConvertToTinyMCVM(model, false);
+            var deffStyle = @"table.bordered {
+                border-collapse: collapse;
+            }
+
+            table.bordered td {
+                padding: 3px 5px;
+                border: 1px solid #777;
+            }
+            table.table-report {
+                border-collapse: collapse;
+                table-layout:fixed; 
+                width:190mm;
+            }
+            table.table-report td {
+                padding: 3px 5px;
+                border: 1px solid #777;
+                white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+                white-space: -webkit-pre-wrap;          /* Chrome & Safari */ 
+                white-space: -pre-wrap;                 /* Opera 4-6 */
+                white-space: -o-pre-wrap;               /* Opera 7 */
+                white-space: pre-wrap;                  /* CSS3 */
+                word-wrap: break-word;                  /* Internet Explorer 5.5+ */
+                word-break: break-all;
+                white-space: normal;
+            }
+";
+            return Content(htmlModel?.Style ?? deffStyle, "text/css");
         }
 
         /// <summary>
@@ -481,5 +504,6 @@ namespace IOWebApplication.Controllers
             }
             return View(nameof(EditHtmlTemplateCreate), model);
         }
+
     }
 }

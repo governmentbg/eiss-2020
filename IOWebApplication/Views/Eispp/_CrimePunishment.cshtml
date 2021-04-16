@@ -1,6 +1,7 @@
 ﻿@model CrimePunishment
 @using IOWebApplication.Infrastructure.Models.Integrations.Eispp
 @using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Core.Helper.GlobalConstants
 @inject IEisppRulesService rulesService
 @{
     var eisppRule = ViewData.ModelMetadata.GetEisppRuleElement(ViewData.TemplateInfo.HtmlFieldPrefix);
@@ -9,21 +10,26 @@
 }
 @if (flags > 0)
 {
-<div class="crime-punishment-container eispp-checkbox-container">
-    <fieldset class="is-fieldset">
-        <legend class="legend_1">@Html.EditorFor(x => x.IsSelected, "EisppBoolean", null, null)</legend>
+    <div class="crime-punishment-container eispp-checkbox-container">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">@Html.EditorFor(x => x.IsSelected, "EisppBoolean", null, null)</legend>
 
-        @Html.HiddenFor(x => x.CrimePunishmentId)
-        <div class="row">
-            <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "crime-punishment-kind" })</div>
-            <div class="col-lg-2 crime-fine-amount">@Html.EditorFor(x => x.FineAmount)</div>
-            <div class="crime-punishment-period">
-                <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentYears)</div>
-                <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentMonths)</div>
-                <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentWeeks)</div>
-                <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentDays)</div>
+            @Html.HiddenFor(x => x.CrimePunishmentId)
+            <div class="row">
+                <div class="col-lg-3">
+                    @Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "crime-punishment-kind" })
+                    <div class="punishment-kind-error" style="display:none; margin-bottom:15px;">
+                        <label class="control-label">@MessageConstant.Values.EisppPunismentMpsNotSend</label>
+                    </div>
+                </div>
+                <div class="col-lg-2 crime-fine-amount">@Html.EditorFor(x => x.FineAmount)</div>
+                <div class="crime-punishment-period">
+                    <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentYears)</div>
+                    <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentMonths)</div>
+                    <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentWeeks)</div>
+                    <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentDays)</div>
+                </div>
             </div>
-        </div>
-    </fieldset>
-</div>
+        </fieldset>
+    </div>
 }

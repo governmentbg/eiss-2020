@@ -1,8 +1,7 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
+﻿using IOWebApplication.Infrastructure.Constants;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
@@ -45,5 +44,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string TaskStateName { get; set; }
         public int? TaskActionId { get; set; }
         public string TaskActionName { get; set; }
+        public bool CanCheckForManage
+        {
+            get
+            {
+                return WorkTaskConstants.States.NotFinished.Contains(this.TaskStateId);
+            }
+        }
     }
 }

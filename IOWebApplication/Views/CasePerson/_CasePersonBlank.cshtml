@@ -4,7 +4,12 @@
     Layout = null;
 }
 
-<div style="font-family: 'Times New Roman'">
+<div style="
+        font-family: 'Times New Roman';
+        width: 190mm;
+        margin-left: auto;
+        margin-right: auto;
+">
     <center>
         <b>@Model.Title</b>
     </center>
@@ -25,16 +30,18 @@
             <th>Участие</th>
             <th>Име на лицето</th>
             <th>Адрес</th>
+            <th>Връзки</th>
             <th>Забележка</th>
         </tr>
 
         @foreach (var notList in Model.NotificationLists)
         {
-            <tr>
+            <tr style="page-break-inside: avoid">
                 <td align="center" width="10%">@notList.RowNumber</td>
                 <td width="10%">@notList.PersonRole</td>
                 <td width="10%">@notList.PersonName</td>
-                <td width="30%">@notList.AddressString</td>
+                <td width="15%">@notList.AddressString</td>
+                <td width="15%">@notList.LinkForPersonString</td>
                 <td width="25%">@notList.Remark</td>
             </tr>
         }

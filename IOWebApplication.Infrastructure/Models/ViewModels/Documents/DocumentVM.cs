@@ -1,10 +1,8 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper;
+﻿using AutoMapper;
 using IOWebApplication.Infrastructure.Attributes;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -84,6 +82,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Указания")]
         public int? DeliveryTypeId { get; set; }
 
+        [Display(Name = "Дата на пощенско клеймо")]
+        public DateTime? PostOfficeDate { get; set; }
+
         [Display(Name = "Описание")]
         public string Description { get; set; }
 
@@ -144,6 +145,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public IList<DocumentInstitutionCaseInfoVM> InstitutionCaseInfo { get; set; }
         public IList<DocumentLinkVM> DocumentLinks { get; set; }
 
+        public RegixRequestReasonVM RegixRequestReason { get; set; }
+
         public DocumentVM()
         {
             DocumentDate = DateTime.Now;
@@ -155,6 +158,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
             IsOldNumber = false;
             IsMultiNumber = false;
             MultiDocumentCounter = 1;
+            RegixRequestReason = new RegixRequestReasonVM();
         }
 
         public static MapperConfiguration GetMapping()

@@ -27,12 +27,14 @@
     var isPrinted = (Model.DatePrint != null).ToString().ToLower();
     var hideDropDown = (DeliveryItem.IsNotificationStateForOperOnly(Model.NotificationStateId) &&
                         Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.WithCourier &&
-                        Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.WithCityHall
+                        Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.WithCityHall &&
+                        Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.OnEMail
                         ).ToString().ToLower();
 
     string casePersonLinksJson = service.CasePersonLinksJson(Model, NomenclatureConstants.FilterPersonOnNotification, Model.NotificationTypeId ?? 0);
     int initNotificationTypeId = Model.NotificationTypeId ?? 0;
     List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+    string isFromEmail = Model.IsFromEmail == true? "true" : "false" ;
 }
 
 @section breadcrumb{
@@ -69,7 +71,7 @@
                                     @Html.Hidden("NotificationTypeSummonsJson", NotificationTypeSummonsJson)
                                     @Html.Hidden("NotificationTypeGovernmentJson", NotificationTypeGovernmentJson)
                                     @Html.Hidden("casePersonLinksJson", casePersonLinksJson)
-
+                                    @Html.HiddenFor(x => x.MultiComplainIdResultVM)
                                     <div id="saveContainer">
                                         <partial name="_SaveFormContent" model="@("#saveContainer")" />
                                         @if (@Model.NotificationPersonType == 1)
@@ -94,9 +96,6 @@
                                             <div class="col-lg-6">@Html.EditorFor(x => x.NotificationDeliveryGroupId, "GenericDropDown")</div>
                                             <div class="col-lg-6" id="DeliveryDateDiv">@Html.EditorFor(x => x.DeliveryDate, "DateTimeWithTime")</div>
                                         </div>
-                                        <div class="row" id="DeliveryInfoDiv">
-                                            <div class="col-lg-12">@Html.EditorFor(x => x.DeliveryInfo, "Textarea")</div>
-                                        </div>
                                         @if (@Model.NotificationPersonType == 1)
                                         {
                                             <div class="row" id="CasePersonAddr">
@@ -109,13 +108,17 @@
                                                 <div class="col-lg-12">@Html.EditorFor(x => x.LawUnitAddressId, "GenericDropDownLong")</div>
                                             </div>
                                         }
-                                        <div class="row" id="NotificationTypeDiv">
-                                            <div class="col-lg-6">@Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")</div>
-                                            <div class="col-lg-6">@Html.EditorFor(x => x.HtmlTemplateId, "GenericDropDown")</div>
+                                        <div class="row" id="DeliveryInfoDiv">
+                                            <div class="col-lg-12">@Html.EditorFor(x => x.DeliveryInfo, "Textarea")</div>
                                         </div>
-                                        <div class="row" id="SessionActDiv">
+                                        <div class="row">
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")</div>
+                                            <div class="col-lg-6 html-template">@Html.EditorFor(x => x.HtmlTemplateId, "GenericDropDown")</div>
+                                        </div>
+                                        <div class="row session-act">
                                             <div class="col-lg-6">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
                                             <div class="col-lg-6" id="CaseSessionActComplain">@Html.EditorFor(x => x.CaseSessionActComplainId, "GenericDropDown")</div>
+                                            <div class="col-lg-12" id="MultiComplain">@Html.EditorFor(x => x.MultiComplainIdVM, "GenericDropDownMultiple")</div>
                                         </div>
                                         <div id="ExpertReportDiv">
                                             <div class="row">
@@ -123,6 +126,11 @@
                                             </div>
                                             <div class="row">
                                                 <div class="col-lg-12">@Html.EditorFor(x => x.ExpertReport, "TextArea")</div>
+                                            </div>
+                                        </div>
+                                        <div id="DocumentSenderPersonDiv">
+                                            <div class="row">
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.DocumentSenderPersonId, "GenericDropDown")</div>
                                             </div>
                                         </div>
                                         <div class="row rajon-add">
@@ -152,22 +160,30 @@
                                             <div class="col-lg-6" id="LawUnitIdDiv">@Html.EditorFor(x => x.LawUnitId, "GenericDropDown")</div>
                                         </div>
 
-                                        <div class="row on-ps-hide">
+                                        <div class="row on-momment-hide">
                                             <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
                                         </div>
-                                        <div class="row on-ps-hide">
-                                            <div class="col-lg-6">
+                                        <div class="row">
+                                            <div class="col-lg-6 on-momment-hide">
                                                 <div>
                                                     @Html.EditorFor(x => x.HaveAppendixVM, "Boolean")
+                                                </div>
+                                                <div class="session-act">
+                                                    @Html.EditorFor(x => x.HaveDispositivVM, "Boolean")
                                                 </div>
                                                 <div>
                                                     @Html.EditorFor(x => x.IsOfficialNotification, "Boolean")
                                                 </div>
                                             </div>
-                                            <div class="col-lg-6">@Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")</div>
+                                            <div class="col-lg-6 notification-state">@Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")</div>
                                         </div>
-                                        <div class="row on-ps-hide"  id="DeliveryDateDivCC">
-                                            <div class="col-lg-6">@Html.EditorFor(x => x.DeliveryDateCC, "DateTimeWithTime")</div>
+                                        <div class="on-momment-hide" id="DeliveryDateDivCC">
+                                            <div class="row">
+                                                <div class="col-lg-6">@Html.EditorFor(x => x.DeliveryDateCC, "DateTimeWithTime")</div>
+                                            </div>
+                                            <div class="row" id="DeliveryInfoDiv">
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.DeliveryInfoCC, "Textarea")</div>
+                                            </div>
                                         </div>
 
                                         <div class="form-group">
@@ -177,7 +193,7 @@
                                             }
                                             @await Html.PartialAsync("_ButtonClose")
 
-                                            @if (Model.Id > 0 && !@NomenclatureConstants.NotificationDeliveryGroup.OnMoment(Model.NotificationDeliveryGroupId))
+                                            @if (Model.Id > 0 && !@NomenclatureConstants.NotificationDeliveryGroup.OnMomentWithOutMail(Model.NotificationDeliveryGroupId))
                                             {
                                                 if (Model.DatePrint == null)
                                                 {
@@ -289,7 +305,13 @@
         }
         function setReadOnlyAllDatePrint() {
             $('#editCaseNotification select,#editCaseNotification textarea').each(function (index, value) {
-                if (this.id != 'NotificationStateId')
+                let isForDisable = (this.id != 'NotificationStateId');
+                if (@isFromEmail) {
+                    $rajonContainerThis = $(this).parents('.rajon-add:first');
+                    if ($rajonContainerThis.length > 0)
+                        isForDisable = false;
+                }
+                if (isForDisable)
                     setReadOnly($(this));
             });
             $('.btn-rajon').first().hide();
@@ -382,12 +404,13 @@
             var casePersonId = $("#CasePersonId").val();
             var addressId = $('#CasePersonAddressId').val();
             var notificationTypeId = $("#NotificationTypeId").val();
+            var notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
             $.ajax({
                 type: "Get",
                 url: "@Url.Action("LoadDropDownListForPerson")",
                 dataType: "json",
                 cache: false,
-                data: { casePersonId: casePersonId, casePersonLinkId: linkId, notificationTypeId: notificationTypeId},
+                data: { casePersonId: casePersonId, casePersonLinkId: linkId, notificationTypeId: notificationTypeId, notificationDeliveryGroupId: notificationDeliveryGroupId},
                 success: function (response) {
                     fillCombo(response.linkList, $("#CasePersonLinkId"));
                     setComboSelectedOrFirst($("#CasePersonLinkId"),linkId);
@@ -399,6 +422,7 @@
                     } else {
                         $("#divCasePersonLinks").show();
                     }
+                    CheckDeliveryGroupForEpep();
                 },
                 error: log_ajax_err
             });
@@ -408,10 +432,12 @@
             var casePersonId = $("#CasePersonId").val();
             var addressId = $('#CasePersonAddressId').val();
             var notificationTypeId = $("#NotificationTypeId").val();
+            var notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
             var caseNotificationId = $('#Id').val();
             if (linkId != -2) {
-                requestCombo('@Url.Action("LoadAddrForPerson")', { casePersonId: casePersonId, casePersonLinkId: linkId }, "#CasePersonAddressId", addressId, function () { });
+                requestCombo('@Url.Action("LoadAddrForPerson")', { casePersonId: casePersonId, casePersonLinkId: linkId, notificationDeliveryGroupId: notificationDeliveryGroupId }, "#CasePersonAddressId", addressId, function () { });
                 $("#divCasePersonLinks").hide();
+                CheckDeliveryGroupForEpep();
                 return;
             }
             $.ajax({
@@ -419,7 +445,7 @@
                 url: "@Url.Action("LoadMLinkForPerson")",
                 dataType: "json",
                 cache: false,
-                data: { caseNotificationId: caseNotificationId, casePersonId: casePersonId, notificationTypeId: notificationTypeId},
+                data: { caseNotificationId: caseNotificationId, casePersonId: casePersonId, notificationTypeId: notificationTypeId, notificationDeliveryGroupId: notificationDeliveryGroupId},
                 success: function (response) {
                     fillCombo(response.addrList, $('#CasePersonAddressId'));
                     setComboSelectedOrFirst($('#CasePersonAddressId'), addressId);
@@ -430,6 +456,8 @@
                     table.clear();
                     table.rows.add(dataSet).draw();
                     $("#divCasePersonLinks").show();
+
+                    CheckDeliveryGroupForEpep();
                 },
                 error: log_ajax_err
             });
@@ -454,6 +482,9 @@
                     setReadOnly($('#LawUnitId'));
                 }
             }
+            $('#MultiComplainIdVM').select2({
+                language: "bg"
+            });
 
             if (@hideDropDown) {
                 setReadOnly($('#saveContainer').find('#NotificationStateId'));
@@ -471,13 +502,15 @@
                 CasePersonLinkIdChange();
             }
             $('#editCaseNotification').submit(function () {
-                $('#casePersonLinksJson').val(JSON.stringify(dataSet))
+                $('#casePersonLinksJson').val(JSON.stringify(dataSet));
+                $('#MultiComplainIdResultVM').val($('#MultiComplainIdVM').val());
             });
             if (@isPrinted)
                 setReadOnlyAllDatePrint();
             setReadOnlyAllDeliveryDiv();
             NotificationDeliveryGroupIdChange(true);
             $('#NotificationStateId').change();
+            CheckDeliveryGroupForEpep();
         });
         function changeOnReady() {
             $('#CasePersonId').trigger('change');
@@ -489,6 +522,9 @@
         function NotificationTypeIdChange() {
             var htmlTemplateId = @(Model.HtmlTemplateId ?? 0);
             var notificationTypeId = $("#NotificationTypeId").val();
+            var notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+            if (notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper)
+                notificationTypeId = @NomenclatureConstants.NotificationType.GovernmentPaper;
             $.ajax({
                 type: "GET",
                 url: '@Url.Action("GetDDL_HtmlTemplate", "Ajax")',
@@ -511,26 +547,32 @@
         $('#NotificationTypeId').change(function () {
             NotificationTypeIdChange();
         });
-
-        $('#HtmlTemplateId').change(function () {
-            var htmlTemplateId = $('#HtmlTemplateId').val();
+        function GetHtmlTemplate(htmlTemplateId) {
             var htmlTemplate = htmlTemplateArr.find(el => el.value == htmlTemplateId);
             if (!htmlTemplate) {
                 htmlTemplate = {
                     haveSessionAct: false,
                     haveSessionActComplain: false,
-                    haveExpertReport: false
+                    requiredSessionActComplain: false,
+                    haveExpertReport: false,
+                    haveMultiActComplain: false,
+                    haveDocumentSenderPerson: false,
                 }
             }
+            return htmlTemplate;
+        }
+        $('#HtmlTemplateId').change(function () {
+            var htmlTemplateId = $('#HtmlTemplateId').val();
+            var htmlTemplate = GetHtmlTemplate(htmlTemplateId);
             if (htmlTemplate) {
                 if (htmlTemplate.haveSessionAct) {
                     $('#CaseSessionActId').prop("disabled", false);
-                    $("#SessionActDiv").show();
+                    $(".session-act").show();
                 } else {
                     $('#CaseSessionActId').prop("disabled", true);
-                    $("#SessionActDiv").hide();
+                    $(".session-act").hide();
                 }
-                if (htmlTemplate.haveSessionActComplain) {
+                if (htmlTemplate.haveSessionActComplain && htmlTemplate.requiredSessionActComplain && !htmlTemplate.haveMultiActComplain) {
                     $('#CaseSessionActComplainId').rules('add', {
                         required: true,
                         messages: {
@@ -541,10 +583,17 @@
                     $('#CaseSessionActComplainId').prop("disabled", false);
                     $('#CaseSessionActComplain').show();
                     $('#CaseSessionActId').change();
+                    $('#MultiComplain').hide();
                 } else {
                     $('#CaseSessionActComplainId').rules('remove', 'required');
                     $('#CaseSessionActComplainId').prop("disabled", true);
                     $('#CaseSessionActComplain').hide();
+                }
+                if (htmlTemplate.haveSessionActComplain && htmlTemplate.haveMultiActComplain) {
+                    $('#MultiComplain').show();
+                }
+                if (htmlTemplate.haveSessionActComplain) {
+                    LoadCaseSessionActComplain();
                 }
                 if (htmlTemplate.haveExpertReport) {
                     $('#ExpertDeadDate').rules('add', {
@@ -570,28 +619,51 @@
                     $('#ExpertReport').prop("disabled", true);
                     $("#ExpertReportDiv").hide();
                 }
+                if (htmlTemplate.haveDocumentSenderPerson) {
+                    $('#DocumentSenderPersonId').prop("disabled", false);
+                    $("#DocumentSenderPersonDiv").show();
+                } else {
+                    $('#DocumentSenderPersonId').prop("disabled", true);
+                    $("#DocumentSenderPersonDiv").hide();
+                }
             }
         });
-        $('#CaseSessionActId').change(function () {
+        function LoadCaseSessionActComplain() {
             var caseSessionActId = $("#CaseSessionActId").val();
-            var complainId = "@Model.CaseSessionActComplainId";
-             $.ajax({
-                type: "POST",
-                url: '@Url.Action("CaseSessionActComplainDDL")',
-                dataType: "json",
-                cache: false,
-                data: { caseSessionActId: caseSessionActId },
-                success: function (response) {
-                    fillCombo(response, $('#CaseSessionActComplainId'));
-                    $('#CaseSessionActComplainId').val(complainId);
-                    if ($('#CaseSessionActComplainId').val() != complainId) {
-                        $('#CaseSessionActComplainId').prop("selectedIndex", 0);
-                    };
-                },
-                complete: function () { },
-                error: log_ajax_err
-            });
-
+            var complainId = $("#CaseSessionActComplainId").val();
+            var complainIdInit =  "@Model.CaseSessionActComplainId";
+            var htmlTemplateId = $('#HtmlTemplateId').val();
+            var htmlTemplate = GetHtmlTemplate(htmlTemplateId);
+            if (htmlTemplate.haveSessionActComplain && htmlTemplate.haveMultiActComplain) {
+                requestComboMulti('@Url.Action("CaseSessionActComplainMultiDDL")',
+                    { caseId: '@Model.CaseId', caseNotificationId: '@Model.Id', caseSessionActId: caseSessionActId, htmlTemplateId: htmlTemplateId },
+                    '#MultiComplainIdVM',
+                    $('#MultiComplainIdVM').val()
+                );
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("CaseSessionActComplainDDL")',
+                    dataType: "json",
+                    cache: false,
+                    data: {  caseId: '@Model.CaseId', caseSessionActId: caseSessionActId, htmlTemplateId: htmlTemplateId },
+                    success: function (response) {
+                        fillCombo(response, $('#CaseSessionActComplainId'));
+                        $('#CaseSessionActComplainId').val(complainId);
+                        if ($('#CaseSessionActComplainId').prop("selectedIndex") < 0) {
+                            $('#CaseSessionActComplainId').val(complainIdInit);
+                            if ($('#CaseSessionActComplainId').prop("selectedIndex") < 0) {
+                                $('#CaseSessionActComplainId').prop("selectedIndex", 0);
+                            }
+                        };
+                    },
+                    complete: function () { },
+                    error: log_ajax_err
+                });
+            }
+        }
+        $('#CaseSessionActId').change(function loadCaseSessionActComplain() {
+            LoadCaseSessionActComplain();
         });
         $('#CasePersonId').change(function () {
             CasePersonIdChange();
@@ -667,6 +739,20 @@
         $('#NotificationStateId').change(function () {
             setDateDeliveryCC("#DeliveryDateCC");
         });
+        function FillNotificationType() {
+            var notificationTypeId = $("#NotificationTypeId").val();
+            var types;
+            if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper) {
+                types = jQuery.parseJSON($("#NotificationTypeGovernmentJson").val());
+            } else {
+                types = jQuery.parseJSON($("#NotificationTypeSummonsJson").val());
+            }
+            fillCombo(types, $("#NotificationTypeId"));
+            $("#NotificationTypeId").val(notificationTypeId);
+            if ($("#NotificationTypeId").val() != notificationTypeId) {
+                $("#NotificationTypeId").prop("selectedIndex", 0);
+            };
+        }
         function NotificationDeliveryGroupIdChange(runAjax) {
             var NotificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
             var NotificationStateId = $("#NotificationStateId").val();
@@ -675,7 +761,8 @@
                 NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
                 NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail ||
                 NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember50 ||
-                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember56 );
+                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember56 ||
+                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WillBeen);
 
             if (isNotificationDeliveryGroupIdOnMomment)
             {
@@ -706,37 +793,17 @@
             } else {
                 $(".rajon-add").hide();
             }
-            if (NotificationDeliveryGroupId.toString() === "@NomenclatureConstants.NotificationDeliveryGroup.WithCourier") {
-                $(".courier-add").show();
+            FillNotificationType();
+            if (isNotificationDeliveryGroupIdOnMomment &&
+                NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail
+            ) {
+                $('.html-template').hide();
             } else {
-                $(".courier-add").hide();
+                $('.html-template').show();
             }
-            if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithSummons ||
-                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCityHall ||
-                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCourier ||
-                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.ByEPEP ||
-                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper)
-            {
-                $("#NotificationTypeDiv").show();
-                var notificationTypeId = $("#NotificationTypeId").val();
-                var types;
-                @*if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithSummons)
-                    types = jQuery.parseJSON($("#NotificationTypeSummonsJson").val());*@
-                if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper) {
-                    types = jQuery.parseJSON($("#NotificationTypeGovernmentJson").val());
-                } else {
-                    types = jQuery.parseJSON($("#NotificationTypeSummonsJson").val());
-                }
-                fillCombo(types, $("#NotificationTypeId"));
-                $("#NotificationTypeId").val(notificationTypeId);
-                if ($("#NotificationTypeId").val() != notificationTypeId) {
-                    $("#NotificationTypeId").prop("selectedIndex", 0);
-                };
-                $("#NotificationTypeId").change();
-            } else {
-                $("#NotificationTypeDiv").hide();
-            }
-            if (isNotificationDeliveryGroupIdOnMomment)
+            if (isNotificationDeliveryGroupIdOnMomment&&
+                NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail &&
+                NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnPhone)
             {
                 $("#CasePersonAddr").hide();
                 $("#CaseLawUnitAddr").hide();
@@ -744,7 +811,9 @@
                 $("#CasePersonAddr").show();
                 $("#CaseLawUnitAddr").show();
             }
-            if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper) {
+            if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper ||
+                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail)
+            {
                 setRulesAddr('#CasePersonAddressId', false);
                 setRulesAddr('#LawUnitAddressId', false);
             } else {
@@ -754,19 +823,31 @@
 
             if (isNotificationDeliveryGroupIdOnMomment)
             {
-                $(".on-ps-hide").hide();
+                if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail) {
+                    $(".notification-state").show();
+                } else {
+                    $(".notification-state").hide();
+                }
+                $(".on-momment-hide").hide();
                 $("#DeliveryInfoDiv").show();
                 $("#DeliveryDateDiv").show();
                 $("#DeliveryDiv").hide();
                 setDateDelivery("#DeliveryDate", true);
             } else {
-                $(".on-ps-hide").show();
+                $(".on-momment-hide").show();
                 $("#DeliveryInfoDiv").hide();
                 $("#DeliveryDateDiv").hide();
                 $("#DeliveryDiv").show();
                 setDateDelivery("#DeliveryDate", false);
+                $(".notification-state").show();
             }
+
             setDateDeliveryCC("#DeliveryDateCC");
+            if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
+                NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail)
+            {
+                CasePersonIdChange();
+            }
         };
 
         function fillComboFromSelect2(items, combo, selected) {
@@ -854,9 +935,9 @@
                     "render": function (item, type, row, meta) {
                         if (type === 'display' || type === 'filter') {
                             if (row.isChecked) {
-                                return '<input id = "chk' + row.id + '" type="checkbox" checked value="' + row.id + '" onchange="checkedRowChange(' + row.id + ')">';
+                                return '<input id = "chk' + row.id + '" type="checkbox" checked value="' + row.id + '" data-linkid="' + row.casePersonLinkId + '" onchange="checkedRowChange(' + row.id + ')">';
                             } else {
-                                return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" onchange="checkedRowChange(' + row.id + ')">';
+                                return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" data-linkid="' + row.casePersonLinkId + '" onchange="checkedRowChange(' + row.id + ')">';
                             }
                         }
                         return row.isChecked;
@@ -876,6 +957,7 @@
         var check = $("#select-all").is(':checked');
         var rows = $('#casePersonLinks').DataTable().rows({ 'search': 'applied' }).nodes();
         $('input[type="checkbox"]', rows).prop('checked', check);
+        CheckDeliveryGroupForEpep();
     }
 
     function checkedRowChange(id) {
@@ -885,6 +967,58 @@
                 if (data.id === id)
                     data.isChecked = isCheck;
             })
+        CheckDeliveryGroupForEpep();
+    }
+
+    function GetAllCheckIds() {
+        var ids = "";
+        $('#casePersonLinks').DataTable().$('input[type="checkbox"]').each(function () {
+            if (this.checked) {
+                if (ids != "") {
+                    ids = ids + ",";
+                }
+                ids = ids + this.getAttribute('data-linkid');
+            }
+        });
+        return ids;
+    }
+
+    function CheckDeliveryGroupForEpep() {
+        if ('@Model.Id' > 0) return;
+        var deliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        var linkId = $("#CasePersonLinkId").val();
+        var casePersonId = $("#CasePersonId").val();
+        var casePersonLinks = "";
+        if (linkId > 0)
+        {
+            casePersonLinks = linkId.toString();
+        }
+        else if (linkId == -2)
+        {
+            casePersonLinks = GetAllCheckIds();
+        }
+
+        postContent('@Url.Action("IsNotificationDeliveryGroupByEpep", "CaseNotification")'
+            , {
+                caseId: '@Model.CaseId',
+                casePersonId: casePersonId,
+                casePersonLinkIds: casePersonLinks
+            }
+            , function (data) {
+                if (data.result == true)
+                {
+                    $("#NotificationDeliveryGroupId").val('@NomenclatureConstants.NotificationDeliveryGroup.ByEPEP');
+                    $("#NotificationDeliveryGroupId").trigger('change');
+                }
+                else
+                {
+                    if (deliveryGroupId == '@NomenclatureConstants.NotificationDeliveryGroup.ByEPEP')
+                    {
+                        $("#NotificationDeliveryGroupId").val('@NomenclatureConstants.NotificationDeliveryGroup.WithSummons');
+                        $("#NotificationDeliveryGroupId").trigger('change');
+                    }
+                }
+            });
     }
 </script>
 <partial name="_CdnScript" />

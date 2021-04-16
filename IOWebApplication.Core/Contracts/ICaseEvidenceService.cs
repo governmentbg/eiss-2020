@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using System;
@@ -13,7 +10,7 @@ namespace IOWebApplication.Core.Contracts
 {
     public interface ICaseEvidenceService: IBaseService
     {
-        IQueryable<CaseEvidenceVM> CaseEvidence_Select(int CaseId, DateTime? DateFrom, DateTime? DateTo, string RegNumber);
+        IQueryable<CaseEvidenceVM> CaseEvidence_Select(int CaseId, DateTime? DateFrom, DateTime? DateTo, string RegNumber, string CaseRegNumber, int EvidenceTypeId);
         bool CaseEvidence_SaveData(CaseEvidence model);
         IQueryable<CaseEvidenceMovementVM> CaseEvidenceMovement_Select(int CaseEvidenceId);
         bool CaseEvidenceMovement_SaveData(CaseEvidenceMovement model);

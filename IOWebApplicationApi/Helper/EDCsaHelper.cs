@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Org.BouncyCastle.Asn1.Sec;
+﻿using Org.BouncyCastle.Asn1.Sec;
 using System;
 using System.Collections.Generic;
 using System.Linq;

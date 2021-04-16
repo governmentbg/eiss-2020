@@ -15,6 +15,12 @@
             Добави
         </a>
     </div>
+    <div class="col-md-12 text-right pb-15">
+        <a asp-action="RecalcCaseLoadIndexAllCase" class="btn btn-success btn-sm">
+            <i class="fa fa-refresh"></i>
+            Преизчисли всичко
+        </a>
+    </div>
 </div>
 <div class="row">
     <div class="col-md-12">
@@ -78,6 +84,6 @@
 
     <script id="templateEdit" type="text/x-handlebars-template">
         <a href="@Url.Action("EditElementGroupe")/{{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
-        <a href="@Url.Action("IndexElementType")?CaseLoadElementGroupId={{this}}" class="btn btn-primary btn-sm" title="Елементи към група"><i class="fa fa-sitemap"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a href="@Url.Action("IndexElementType")?CaseLoadElementGroupId={{this}}" class="btn btn-primary btn-sm m-b-5" title="Елементи към група"><i class="fa fa-sitemap"></i><span class="hidden-sm hidden-xs"></span></a>
     </script>
 }

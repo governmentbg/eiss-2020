@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -63,6 +60,8 @@ namespace IOWebApplication.Core.Services
             filter.CaseRegNumber = filter.CaseRegNumber.ToShortCaseNumber() ?? filter.CaseRegNumber;
             DateTime dNull = DateTime.Now;
             filter.ResetCourtByType(userContext.CourtId);
+            var deliveryOpers = repo.AllReadonly<DeliveryItemOper>();
+                                    
             return repo.AllReadonly<DeliveryItem>()
                 .Where(x =>
                          (filter.NotificationStateId <= 0 || x.NotificationStateId == filter.NotificationStateId) &&
@@ -70,10 +69,28 @@ namespace IOWebApplication.Core.Services
                          (filter.FromCourtId <= 0 || x.FromCourtId == filter.FromCourtId) &&
                          (filter.FilterType != NomenclatureConstants.DeliveryItemFilterType.FromOther || x.FromCourtId != filter.CourtId) &&
                          (filter.FilterType != NomenclatureConstants.DeliveryItemFilterType.ToOther || x.CourtId != filter.FromCourtId) &&
-                         (filter.DateSendFrom == null || x.DateSend >= (filter.DateSendFrom ?? dNull).Date) &&
-                         (filter.DateSendTo == null || (x.DateSend ?? filter.DateSendTo) <= (filter.DateSendTo ?? dNull).Date) &&
-                         (filter.DateAcceptedFrom == null || x.DateAccepted >= (filter.DateAcceptedFrom ?? dNull).Date) &&
-                         (filter.DateAcceptedTo == null || (x.DateAccepted ?? filter.DateAcceptedTo) <= (filter.DateSendTo ?? dNull).Date) &&
+                         (filter.DateSendFrom == null || ((((x.DateSend ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Send).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
+                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
+                                     ).Min(o => (DateTime?)o.DateOper)) >= (filter.DateSendFrom ?? dNull).Date) &&
+                         (filter.DateSendTo == null || (((((x.DateSend ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Send).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
+                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
+                                     ).Min(o => (DateTime?)o.DateOper)) ?? dNull).Date <= (filter.DateSendTo ?? dNull).Date) &&
+                         (filter.DateAcceptedFrom == null || (((x.DateAccepted ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
+                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
+                                     ).Min(o => (DateTime?)o.DateOper)) >= (filter.DateAcceptedFrom ?? dNull).Date) &&
+                         (filter.DateAcceptedTo == null || ((((x.DateAccepted ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
+                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
+                                     ).Min(o => (DateTime?)o.DateOper)) ?? dNull).Date <= (filter.DateAcceptedTo ?? dNull).Date) &&
                          (string.IsNullOrEmpty(filter.RegNumber) || EF.Functions.ILike(x.RegNumber,filter.RegNumber.ToPaternSearch())) &&
                          (string.IsNullOrEmpty(filter.CaseRegNumber) || 
                              (x.CaseNotificationId != null ?
@@ -95,9 +112,19 @@ namespace IOWebApplication.Core.Services
                     Address = x.Address == null ? "" : x.Address.FullAddressNotification(),
                     StateName = x.NotificationState == null ? "" : x.NotificationState.Label,
                     RegNumber = x.RegNumber,
-                    DateSend = x.DateSend,
-                    DateAccepted = x.DateAccepted,
-                    DeliveryDate = x.DeliveryDate,
+                    DateSend = (((x.DateSend ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Send).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id &&
+                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
+                                     ).Min(o => (DateTime?)o.DateOper),
+                    DateAccepted = ((x.DateAccepted ?? deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.Received).Max(o => (DateTime?)o.DateOper)) ??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && o.DeliveryOperId == NomenclatureConstants.NotificationState.ForDelivery).Max(o => (DateTime?)o.DateOper))??
+                                     deliveryOpers.Where(o => o.DeliveryItemId == x.Id && 
+                                      (o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit1 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit2 || o.DeliveryOperId == NomenclatureConstants.DeliveryOper.Visit3)
+                                     ).Min(o => (DateTime?)o.DateOper)
+                                                       ,
+                    DeliveryDate = deliveryOpers.Where(o => o.DeliveryItemId == x.Id).Max(o => (DateTime?)o.DateOper),
                     CaseInfo = x.CaseInfo,
                     NotificationDeliveryGroupId = x.CaseNotification == null ? 0 : x.CaseNotification.NotificationDeliveryGroupId ?? 0
                 })
@@ -661,8 +688,8 @@ namespace IOWebApplication.Core.Services
                                    (filter.LawUnitId <= 0 || filter.LawUnitId == x.LawUnitId) &&
                                    (filter.CaseGroupId <= 0 || filter.CaseGroupId == x.CaseGroupId) &&
                                    (filter.CaseTypeId <= 0 || filter.CaseTypeId == x.CaseTypeId) &&
-                                   (filter.DateFrom == null || filter.DateFrom >= x.DateAccepted) &&
-                                   (filter.DateTo == null || filter.DateTo >= x.DateAccepted) &&
+                                   (filter.DateFrom == null || filter.DateFrom <= ((x.DateAccepted ?? x.DateSend) ?? x.RegDate)) &&
+                                   (filter.DateTo == null || filter.DateTo >= ((x.DateAccepted ?? x.DateSend) ?? x.RegDate)) &&
                                    (forCurrentCourt || userContext.CourtId != x.FromCourtId)
                               )
                        .Where(IsNotExpired())
@@ -672,6 +699,7 @@ namespace IOWebApplication.Core.Services
                            NotificationTypeLabel = (x.NotificationType == null ? "" : x.NotificationType.Label) + " " +
                                                    (x.CaseNotification.HaveАppendix == true ? " +прил.": "") + " " +
                                                    (x.CaseNotification.CaseSession.DateTo != null ? x.CaseNotification.CaseSession.DateTo.Value.ToString(FormattingConstant.NormalDateFormat) : "")
+                                                   //+" "+ ((x.DateAccepted ?? x.DateSend) ?? x.RegDate).Value.ToString(FormattingConstant.NormalDateFormat)
                                                    ,
                            CaseInfo = x.CaseInfo ?? "",
                            PersonName = x.PersonName,
@@ -718,8 +746,8 @@ namespace IOWebApplication.Core.Services
                                    (filter.LawUnitId <= 0 || filter.LawUnitId == x.LawUnitId) &&
                                    (filter.CaseGroupId <= 0 || filter.CaseGroupId == x.CaseGroupId) &&
                                    (filter.CaseTypeId <= 0 || filter.CaseTypeId == x.CaseTypeId) &&
-                                   (filter.DateFrom == null || filter.DateFrom >= x.DateAccepted || x.DateAccepted == null) &&
-                                   (filter.DateTo == null || filter.DateTo >= x.DateAccepted || x.DateAccepted == null) &&
+                                   (filter.DateFrom == null || filter.DateFrom <= ((x.DateAccepted ?? x.DateSend) ?? x.RegDate)) &&
+                                   (filter.DateTo == null || filter.DateTo >= ((x.DateAccepted ?? x.DateSend) ?? x.RegDate)) &&
                                    (x.PersonName.Contains(filter.PersonName)) 
                               )
                        .Where(IsNotExpired())
@@ -729,7 +757,7 @@ namespace IOWebApplication.Core.Services
                            CaseInfo = x.CaseInfo ?? "",
                            FromCourtName = x.FromCourt.Label,
                            DateFrom = x.DateSend,
-                           DateFromStr = (x.DateSend == null ? x.CaseNotification.RegDate.ToString(FormattingConstant.NormalDateFormatHHMM) : x.DateSend.Value.ToString(FormattingConstant.NormalDateFormatHHMM)) ?? "",
+                           DateFromStr = ((x.DateAccepted ?? x.DateSend) ?? x.RegDate) != null ? ((x.DateAccepted ?? x.DateSend) ?? x.RegDate).Value.ToString(FormattingConstant.NormalDateFormatHHMM) : "",
                            LawUnitName = x.LawUnit.FullName,
                            DocumentType = (x.NotificationType == null ? "" : x.NotificationType.Label) + 
                                           (x.HtmlTemplate == null ? "" : ", " + x.HtmlTemplate.Label) + " " +
@@ -1208,7 +1236,7 @@ namespace IOWebApplication.Core.Services
 
             return result;
         }
-        public bool DeliveryItemSaveState(int deliveryItemId, int notificationStateId, DateTime? deliveryDate)
+        public bool DeliveryItemSaveState(int deliveryItemId, int notificationStateId, DateTime? deliveryDate, string deliveryInfo)
         {
             try
             {
@@ -1226,6 +1254,7 @@ namespace IOWebApplication.Core.Services
                     oper.DateOper = deliveryDate ?? DateTime.Now;
                 }
                 saved.DeliveryDate = deliveryDate ?? DateTime.Now;
+                saved.DeliveryInfo = deliveryInfo;
                 saved.DateWrt = DateTime.Now;
                 saved.UserId = userContext.UserId;
                 UpdateOperToNotification(saved, oper);

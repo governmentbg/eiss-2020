@@ -1,0 +1,23 @@
+﻿@model EisppAddress
+@using IOWebApplication.Infrastructure.Models.Integrations.Eispp
+@using IOWebApplication.Infrastructure.Constants
+@Html.HiddenFor(x => x.AddressId)
+<div class="row crime-address-control">
+    @Html.HiddenFor(x => x.AddressType)
+    <div class="col-lg-4">@Html.EditorFor(x => x.Country, "EisppDropDown", null, new { Ddl = ViewBag.CountriesDDL })</div>
+    <div class="col-lg-4 bg-address">@Html.EditorFor(x => x.SettlementBg, "EisppEkatte")</div>
+    <div class="col-lg-4 bg-address">@Html.EditorFor(x => x.StreetName)</div>
+    <div class="col-lg-4 foreign-address">@Html.EditorFor(x => x.SettlementAbroad)</div>
+</div>
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(x => x.Building)</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Number)</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Entrance)</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Floor)</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Appartment)</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.Localization, "EisppDropDown", null, new { Ddl = ViewBag.LocalizationDDL })</div>
+    <div class="col-lg-10">@Html.EditorFor(x => x.Description)</div>
+
+</div>
+
+

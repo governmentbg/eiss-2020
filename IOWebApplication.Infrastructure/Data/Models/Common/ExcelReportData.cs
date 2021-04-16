@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.Collections.Generic;
@@ -49,6 +46,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [Column("cell_value")]
         public string CellValue { get; set; }
+
+        [Column("cell_value_int")]
+        public int? CellValueInt { get; set; }
+
+        //1 - String, 2 - Int
+        [Column("cell_value_type")]
+        public int? CellValueType { get; set; }
 
         [ForeignKey(nameof(ExcelReportTemplateId))]
         public virtual ExcelReportTemplate ExcelReportTemplate { get; set; }

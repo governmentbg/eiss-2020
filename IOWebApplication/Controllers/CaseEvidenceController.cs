@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,8 +48,10 @@ namespace IOWebApplication.Controllers
             {
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31),
-                RegNumber = string.Empty
+                RegNumber = string.Empty,
+                CaseRegNumber = string.Empty
             };
+            ViewBag.EvidenceTypeId_ddl = nomService.GetDropDownList<EvidenceType>();
             SetHelpFile(HelpFileValues.Evidence);
             return View(filter);
         }
@@ -80,7 +79,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult ListData(IDataTablesRequest request, int caseId)
         {
-            var data = service.CaseEvidence_Select(caseId, null, null, string.Empty);
+            var data = service.CaseEvidence_Select(caseId, null, null, string.Empty, string.Empty, 0);
             return request.GetResponse(data);
         }
 
@@ -93,9 +92,9 @@ namespace IOWebApplication.Controllers
         /// <param name="RegNumber"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataSpr(IDataTablesRequest request, DateTime DateFrom, DateTime DateTo, string RegNumber)
+        public IActionResult ListDataSpr(IDataTablesRequest request, DateTime DateFrom, DateTime DateTo, string RegNumber, string CaseRegNumber, int EvidenceTypeId)
         {
-            var data = service.CaseEvidence_Select(0, DateFrom, DateTo, (RegNumber??string.Empty));
+            var data = service.CaseEvidence_Select(0, DateFrom, DateTo, (RegNumber??string.Empty), CaseRegNumber, EvidenceTypeId);
             return request.GetResponse(data);
         }
 
@@ -201,7 +200,7 @@ namespace IOWebApplication.Controllers
                 SetAuditContext(service, SourceTypeSelectVM.CaseEvidence, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Edit), new { id = model.Id });
+                return RedirectToAction("CasePreview", "Case", new { id = model.CaseId });
             }
             else
             {
@@ -374,6 +373,8 @@ namespace IOWebApplication.Controllers
             var model = new CaseEvidenceSprFilterVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = new DateTime(DateTime.Now.Year, 12, 31);
+            SetHelpFile(HelpFileValues.Register5);
+
             return View(model);
         }
 

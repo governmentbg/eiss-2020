@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +44,23 @@ namespace IOWebApplication.Infrastructure.Extensions
                 _message.Content = new StringContent(jsonData, Encoding.UTF8, "application/json");
             }
             return await client.SendAsync(_message);
+        }
+
+        public static T[] ValueToArray<T>(this T value)
+        {
+            var result = new List<T>();
+            result.Add(value);
+            return result.ToArray();
+        }
+
+        public static int[] StringToIntArray(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return new List<int>().ToArray();
+            }
+
+            return value.Split(',').Select(x => int.Parse(x)).ToArray();
         }
     }
 }

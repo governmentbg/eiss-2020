@@ -1,0 +1,612 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
+			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
+			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
+			mso-style-name: "EISS Style5 ЕИССCxSpLast";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h2 style='margin-left:54.95pt;text-indent:-19.5pt'>
+			<a name="_Toc58420176">
+				1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>ЗАДАЧА ЗА РАЗПОРЕЖДАНЕ
+			</a>
+		</h2>
+
+		<p class=MsoNormal>
+			Задача за разпореждане може да се създаде към входящ
+			иницииращ документ, съпровождащ документ по дело или документ от обща
+			администрация. Задача за разпореждане може да се изпрати на потребител или
+			структура (група потребители) за <span style='line-height:115%'>
+				разпореждане по
+				документ
+			</span>.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на информация за входящ иницииращ документ
+			(6.1.1 Регистриране на входящ иницииращ документ) и входящ съпровождащ документ
+			(6.1.2.
+		</p>
+
+		<p class=MsoNormal>
+			Регистриране на съпровождащ документ) и избор на бутон <img width=43 height=27 id="Picture 143314" src="dispositiontask_files/image001.jpg"> в
+			таб Задачи има възможност за създаване на задача за разпореждане. Задачата за разпореждане
+			се използва за разпореждане по регистриран документ по дело.
+		</p>
+
+		<p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;text-indent:0cm'>
+			<img width=605 height=137 id="Picture 141397"
+				 src="dispositiontask_files/image002.png">
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				Създаването на нова задача за
+				разпореждане става посредством избор на бутон
+			</span><img width=85 height=33
+						id="Picture 143477" src="dispositiontask_files/image003.jpg"><span style='line-height:115%'>
+				. Отваря се модален прозорец за попълване на следните
+				данни:
+			</span>
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=324 height=231 id="Picture 143519"
+				 src="dispositiontask_files/image004.jpg">
+		</p>
+
+		<p class=MsoNormal>Вид задача –  избира се задача За разпореждане;</p>
+
+		<p class=MsoNormal>
+			Начин на изпълнение – избира се посредством маркиране на
+			радио бутон за изпълнение на задачата от потребител или от структура. При
+			насочване на задача към потребител тя се визуализира в персонализирания  му екран
+			и системата очаква приемане и изпълнение само от конкретния потребител. При
+			избор за изпълнение от структура, задачата се визуализира в персонализираните
+			екрани на всички служители, назначени в съответната структура (организационна
+			единица на съда). Системата очаква приемане от изпълнител, след приемане от
+			първия потребител задачата се премахва от персонализираните екрани на
+			останалите потребителите. Системата очаква изпълнение само от потребителя приел
+			задачата;
+		</p>
+
+		<p class=MsoNormal>
+			Изберете потребител – при въвеждане на минимум три
+			последователни символа, системата автоматично търси и предлага за избор списък
+			от потребители, към които да бъде насочена задачата;
+		</p>
+
+		<p class=MsoNormal>
+			Срок за изпълнение – при необходимост се въвежда срок за
+			изпълнение на поставената задача, като този срок се визуализира в календара на
+			изпълнителя на задачата;
+		</p>
+
+		<p class=MsoNormal>
+			Описание – поясняващо поле, в което могат да бъдат вписани
+			допълнителни данни, по преценка на потребител. Полето няма задължителен
+			характер.
+		</p>
+
+		<p class=MsoNormal>
+			Избира се бутон <img width=43 height=27 id="Picture 141188"
+						src="dispositiontask_files/image005.jpg">, с което задачата е успешно
+			създадена.
+		</p>
+
+		<p class=MsoNormal>
+			След запис на задачата към регистрирания документ в таб
+			Задачи се визуализира следната информация:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=184 id="Picture 141402"
+				 src="dispositiontask_files/image006.png">
+		</p>
+
+		<p class=MsoNormal>
+			При насочване на задачата за изпълнение от друг потребител,
+			създадената задача може да бъде редактирана от автора &#1117;, до момента на
+			приемане на задачата за изпълнение, посредством бутон Редакция. При избор на
+			бутон Редакция се отваря модален прозорец със същите полета каквито при
+			създаване на нова задача.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка:</b> Ако задачата е насочена към и се очаква
+			изпълнение от един и същи потребител, бутон Редакция е активен до пренасочване
+			или изпълнение на задачата.
+		</p>
+
+		<p class=MsoNormal>
+			Потребителят, към когото е насочена задачата, получава
+			нотификация за нова задача в инструмент Задачи в лентата с менюта и
+			инструменти. Задачата се визуализира и в панел Моите задачи в Персонализирания
+			екран на потребителя, а ако в задачата е посочен краен срок за изпълнение,
+			съответно се визуализира и в панел Календар:
+		</p>
+
+		<p class=MsoNormal>
+			През бутон Преглед <img width=41 height=35
+						   id="Picture 141455" src="dispositiontask_files/image007.jpg"> от панел Моите
+			задачи на началния екран на системата или бутон Преглед <img width=81
+																	  height=31 id="Picture 141460" src="dispositiontask_files/image008.jpg"> в
+			екрана с пълния списък на задачи към потребител, се отваря документа, по който
+			е необходимо да се извърши действието. В таб Задачи, посредством Бутон Приеми,
+		</p>
+
+		<p class=MsoNormal>
+			потребителя може да приеме задачата за изпълнение или да
+			пренасочи задачата към друг служител, посредством бутон Пренасочване.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=604 height=192 id="Picture 141435"
+				 src="dispositiontask_files/image009.png">
+		</p>
+
+		<p class=MsoNormal>
+			Бутон Пренасочване е достъпен както за автора на задачата,
+			така и за получателя на задачата. Посредством този бутон, задачата може да бъде
+			пренасочена за изпълнение от друг потребител.
+		</p>
+
+		<p class=MsoNormal style='text-indent:42.55pt'>
+			<span style='line-height:115%'>
+				<img width=604 height=188 id="Picture 141436"
+					 src="dispositiontask_files/image010.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal align=center style='margin-left:35.4pt;text-align:center'>
+			<img width=263 height=201 id="Picture 141371"
+				 src="dispositiontask_files/image011.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			При пренасочване на задачата за изпълнение от друг служител
+			се отваря модален прозорец със следните полета:
+		</p>
+
+		<p class=MsoNormal>
+			Начин на изпълнение – с аналогичните опции, както при
+			създаване на задачата, избира се посредством маркиране на радио бутон за изпълнение
+			на задачата от потребител или от структура.
+		</p>
+
+		<p class=MsoNormal>
+			Изберете потребител – при въвеждане на минимум три
+			последователни символа, системата автоматично търси и предлага за избор списък
+			от потребители, към които да бъде насочена задачата;
+		</p>
+
+		<p class=MsoNormal>
+			Забележка за пренасочването – поясняващо поле, в което могат
+			да бъдат вписани допълнителни данни, при необходимост. Полето няма задължителен
+			характер;
+		</p>
+
+		<p class=MsoNormal>
+			Срок за изпълнение – при необходимост се въвежда срок за
+			изпълнение на поставената задача, като този срок се визуализира в календара на
+			изпълнителя на задачата.
+		</p>
+
+		<p class=MsoNormal>
+			Пренасочването на задачата, автоматично генерира нов запис
+			за задача със съответните данни:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=555 height=180 id="Picture 141440"
+				 src="dispositiontask_files/image012.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+42.55pt'>
+			При приемане на задачата статуса се променя, като се активира бутон
+			Изпълни <img width=85 height=27 id="Picture 141444"
+					  src="dispositiontask_files/image013.jpg">. След потвърждаване на изпълнението
+			се отваря следния прозорец:
+		</p>
+
+		<p class=MsoNormal align=center style='margin-left:35.45pt;text-align:center'>
+			<img width=251 height=193 id="Picture 141494"
+				 src="dispositiontask_files/image014.jpg">
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Поле тип – по подразбиране разпореждане;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Съдия – избира се чрез автоматично попълване след търсене по
+			минимум три последователни символа от имената или идентификатор на съдия, 
+			който ще изготви/подпише разпореждането;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Изготвил – данни за текущия потребител, който може да подготви
+			проект на разпореждането, преди да бъде изпратено за подпис от съдия;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Описание – въвежда се допълнителна информация при необходимост.
+			Полето не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Запис <img width=43 height=27
+										id="Picture 141511" src="dispositiontask_files/image015.png">се отваря екран, в
+			който чрез избор на бутон Изготвяне на акт <img width=111 height=24
+															id="Picture 141513" src="dispositiontask_files/image016.jpg">се визуализира
+			вграден текстов редактор за изготвяне на разпореждането. Екранът е разделен на
+			две секции-уводна (заглавна) част и основна част.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=477 height=139 id="Picture 141531"
+				 src="dispositiontask_files/image017.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			В заглавната
+			част няма възможност за редакция.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			В основната
+			част има възможност чрез вградения текстов редактор да се въвежда директно
+			текста на съдебния акт/разпореждане или посредством копиране от външен файл
+			(създаден извън системата) да се прехвърли във вградения текстов редактор.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+35.4pt'>
+			Изготвената версия на съдебния акт/разпореждане може да бъде прегледана
+			посредством избор на бутон Преглед <img width=70 height=24 id="Picture 141532"
+												 src="dispositiontask_files/image018.jpg">, след което се генерира файл във pdf
+			формат, който може да бъде записан локално на компютъра на потребителя или да
+			бъде отворен за преглед. След отваряне се визуализира изготвения съдебен
+			акт/разпореждане.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			При избор на
+			бутон Запис<img width=47 height=25 id="Picture 141538"
+						 src="dispositiontask_files/image019.jpg">, се преминава към избор на бутон
+			Задачи и създаването на Нова задача:
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			<img width=493 height=93 id="Picture 141540" src="dispositiontask_files/image020.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			Визуализира
+			се следния прозорец:
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			<img width=256 height=193 id="Picture 143862"
+				 src="dispositiontask_files/image021.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			След избор
+			на бутон Запис, задачата е изпратена за подпис и очаква да бъде приета или
+			пренасочена.
+		</p>
+
+		<p class=MsoNormal>
+			След изготвяне на съдебния акт/протокол при необходимост се
+			преминава към насочване на задача за Изпращане за съгласуване (задачата е
+			опционална – стъпките са описани в точка 7.6 Задача за съгласуване) или
+			директно на задача за Изпращане за подпис (задачата е задължителна – стъпките
+			са описани в точка 7.7 Задача за подпис).
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			<span style='line-height:115%'>
+				След
+				подписване на документа се генерира номер на документа и автоматично се
+				приключва задачата за подписване:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=173
+				 id="Picture 143012" src="dispositiontask_files/image022.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След изготвяне и подписване на Разпореждане към входящ
+			документ при преглед на съответния документ се визуализира бутон Разпореждания,
+			който води до списъчен екран с всички изготвени към съответния документ
+			разпореждания, независимо от статуса в който се намират.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=200
+				 id="Picture 143016" src="dispositiontask_files/image023.png">
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=115
+				 id="Picture 143017" src="dispositiontask_files/image024.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			Всички регистрирани подписани
+			Разпореждания към входящи документи се достъпват от под меню Разпореждания по
+			регистрирани документи в меню Документи (6.6 Разпореждания по документи).
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span lang=EN-US style='color:#0070C0'>{</span><span style='color:#0070C0'>dispositiontask</span><span lang=EN-US style='color:#0070C0'>}</span>
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

@@ -53,6 +53,17 @@
                     <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
                 }
                 <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@Model.CaseSessionId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @if (access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на съпровождащ документ", ExpireSubmitUrl = Url.Action("CaseSessionDoc_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
             </div>
         </form>
     </div>

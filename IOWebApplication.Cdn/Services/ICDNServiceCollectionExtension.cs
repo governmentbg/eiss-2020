@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
@@ -33,6 +30,7 @@ namespace Microsoft.Extensions.DependencyInjection
             });
             services.AddScoped<IMongoService, MongoService>();
             services.AddScoped<ICdnService, CdnService>();
+            services.AddScoped<IBaseCdnService, BaseCdnService>();
         }
 
         /// <summary>
@@ -46,7 +44,7 @@ namespace Microsoft.Extensions.DependencyInjection
                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"))
            );
 
-           services.AddScoped(typeof(IRepository), typeof(Repository));
+            services.AddScoped(typeof(IRepository), typeof(Repository));
 
             // Настройки на Одит лога 
             //Audit.Core.Configuration.Setup()

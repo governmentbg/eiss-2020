@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -21,5 +18,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         
         [Display(Name = "Съдия-докладчик")]
         public int? LawUnitId { get; set; }
+
+        [Display(Name = "Основен вид дело")]
+        public string CaseGroupId { get; set; }
+
+        public string CaseGroupIds { get; set; }
+
+        [Display(Name = "Съдебен състав")]
+        public string DepartmentId { get; set; }
+
+        public string DepartmentIds { get; set; }
     }
 }

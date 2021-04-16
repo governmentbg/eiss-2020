@@ -1,0 +1,79 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@model int
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+<div>
+    <div id="pcContainer">
+    </div>
+</div>
+
+<script>
+    $(function () {
+        pcLoadData("");
+    })
+
+    function pcLoadData() {
+        requestGET_Json('@Url.Action("GetDataCasePersonSentencePunishmentCrime", "CasePersonSentence")'
+            , { CasePersonSentencePunishmentId:@Model}
+            , function (data) {
+                $('#pcContainer').html(TemplateToHtml('#casePersonSentencePunishmentCrimeTemplate', data));
+            });
+    }
+
+    function pcCreatePunishmentCrime() {
+        requestContent('@Url.Action("CasePersonSentencePunishmentCrime", "CasePersonSentence")'
+            , { CasePersonSentencePunishmentId:@Model, id: null }
+            , function (data) {
+                ShowModalDialog('Добавяне на участие', data);
+            });
+    }
+
+    function pcEditPunishmentCrime(id) {
+        requestContent('@Url.Action("CasePersonSentencePunishmentCrime", "CasePersonSentence")'
+            , { CasePersonSentencePunishmentId:@Model, id:id}
+            , function (data) {
+                if ('@access.CanChange' == 'True') {
+                    ShowModalDialog('Редакция на участие', data);
+                }
+                else {
+                    ShowModalDialog('Преглед на участие', data);
+                }
+            });
+    }
+
+</script>
+
+<script id="casePersonSentencePunishmentCrimeTemplate" type="text/x-handlebars-template">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1" data-position="BankAccount"> Участие в престъпления</legend>
+        {{#each this}}
+        <div class="row">
+            <div class="col-lg-4"><b>Престъпление: </b>{{caseCrimeLabel}}</div>
+            <div class="col-lg-4"><b>Роля на лицето в престъплението: </b>{{personRoleInCrimeLabel}}</div>
+            <div class="col-lg-3"><b>Рецидив: </b>{{recidiveTypeLabel}}</div>
+
+            <div class="col-lg-1">
+                @if (access.CanChange)
+                {
+                    <a href="#" class="btn btn-xs btn-warning" onclick="pcEditPunishmentCrime('{{id}}'); return false;" title="Редакция"><i class="fa fa-edit"></i></a>
+                }
+                else
+                {
+                    <a href="#" class="btn btn-xs btn-def" onclick="pcEditPunishmentCrime('{{id}}'); return false;" title="Преглед"><i class="fa fa-eye"></i></a>
+                }
+            </div>
+        </div>
+        <br />
+        {{/each}}
+        <div class="row">
+            @if (access.CanChange)
+            {
+                <a href="#" onclick="pcCreatePunishmentCrime(); return false;" class="btn btn-xs btn-success" style="position:relative;left:15px"><i class="fa fa-plus"></i> Добавяне на участие</a>
+            }
+        </div>
+    </fieldset>
+</script>

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.RegixClient;
+﻿using IO.RegixClient;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper;
@@ -217,6 +214,8 @@ namespace IOWebApplication.Core.Services
                 model.CaseSessionActId = (reportVM.CaseSessionActId ?? 0) > 0 ? reportVM.CaseSessionActId : null;
                 model.DocumentId = (reportVM.DocumentId ?? 0) > 0 ? reportVM.DocumentId : null;
                 model.Description = reportVM.Description;
+                model.RegixGuid = reportVM.RegixGuid;
+                model.RegixRequestTypeId = (reportVM.RegixRequestTypeId ?? 0) > 0 ? reportVM.RegixRequestTypeId : null;
                 model.UserId = userContext.UserId;
                 model.DateWrt = DateTime.Now;
                 repo.Add<RegixReport>(model);
@@ -232,7 +231,7 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public bool PersonData_SaveData(RegixPersonDataVM model)
+        private (bool result, PersonDataResponseType response) PersonalDataSave(RegixPersonDataVM model)
         {
             try
             {
@@ -241,17 +240,35 @@ namespace IOWebApplication.Core.Services
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.PersonData, JsonConvert.SerializeObject(model.PersonDataFilter),
                          JsonConvert.SerializeObject(response), true) == false)
                 {
-                    return false;
+                    return (result: false, response: null);
                 }
 
                 model.Report.Id = saved.Id;
-                return true;
+                return (result: true, response: response);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Грешка при запис на PersonData");
-                return false;
+                return (result: false, response: null);
             }
+        }
+
+        public bool PersonData_SaveData(RegixPersonDataVM model)
+        {
+            (bool result, PersonDataResponseType response) = PersonalDataSave(model);
+            return result;
+        }
+
+        private PersonDataResponseType GetPersonalDataAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        {
+            RegixPersonDataVM model = new RegixPersonDataVM();
+            model.PersonDataFilter.EgnFilter = egn;
+            model.PersonDataFilter.PersonNamesCheck = true;
+            FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+
+            (bool result, PersonDataResponseType response) = PersonalDataSave(model);
+
+            return result == true ? response : new PersonDataResponseType();
         }
 
         private void MapPersonData(PersonDataResponseType fromObj, RegixPersonDataResponseVM toObj)
@@ -289,33 +306,102 @@ namespace IOWebApplication.Core.Services
             return model;
         }
 
+        private void FillReport(RegixReportVM model, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        {
+            model.CourtId = userContext.CourtId;
+            model.CaseId = regixReasonCaseId;
+            model.DocumentId = regixReasonDocumentId;
+            model.Description = regixReasonDescription;
+            model.RegixGuid = regixReasonGuid;
+            model.RegixRequestTypeId = regixRequestTypeId;
+        }
+
+        public PermanentAddressResponseType GetPermanentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        {
+            RegixPersonAddressVM model = new RegixPersonAddressVM();
+            model.PersonAddressFilter.EgnFilter = egn;
+            FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+
+            (bool result, PermanentAddressResponseType response) = PermanentAddressSave(model);
+
+            return result == true ? response : new PermanentAddressResponseType();
+        }
+
+        public TemporaryAddressResponseType GetCurrentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        {
+            RegixPersonAddressVM model = new RegixPersonAddressVM();
+            model.PersonAddressFilter.EgnFilter = egn;
+            FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+
+            (bool result, TemporaryAddressResponseType response) = CurrentAddressSave(model);
+
+            return result == true ? response : new TemporaryAddressResponseType();
+        }
+
+        private (bool result, PermanentAddressResponseType response) PermanentAddressSave(RegixPersonAddressVM model)
+        {
+            try
+            {
+                var response = GetPermanentAddress(model.PersonAddressFilter.EgnFilter);
+                string responseJson = JsonConvert.SerializeObject(response);
+
+                RegixReport saved = new RegixReport();
+                if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.PersonPermanentAddress, JsonConvert.SerializeObject(model.PersonAddressFilter), responseJson, true) == false)
+                {
+                    return (result: false, response: null);
+                }
+
+                model.Report.Id = saved.Id;
+                return (result: true, response: response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на PermanentAddressSave");
+                return (result: false, response: null);
+            }
+        }
+
+        private (bool result, TemporaryAddressResponseType response) CurrentAddressSave(RegixPersonAddressVM model)
+        {
+            try
+            {
+                var response = GetCurrentAddress(model.PersonAddressFilter.EgnFilter);
+                string responseJson = JsonConvert.SerializeObject(response);
+
+                RegixReport saved = new RegixReport();
+                if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.PersonCurrentAddress, JsonConvert.SerializeObject(model.PersonAddressFilter), responseJson, true) == false)
+                {
+                    return (result: false, response: null);
+                }
+
+                model.Report.Id = saved.Id;
+                return (result: true, response: response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на CurrentAddressSave");
+                return (result: false, response: null);
+            }
+        }
+
         public bool PersonAddress_SaveData(RegixPersonAddressVM model)
         {
             try
             {
-                string responseJson = "";
                 if (model.AddressTypeId == NomenclatureConstants.RegixType.PersonPermanentAddress)
                 {
-                    var response = GetPermanentAddress(model.PersonAddressFilter.EgnFilter);
-                    responseJson = JsonConvert.SerializeObject(response);
+                    (bool result, PermanentAddressResponseType response) = PermanentAddressSave(model);
+                    return result;
                 }
                 else if (model.AddressTypeId == NomenclatureConstants.RegixType.PersonCurrentAddress)
                 {
-                    var response = GetCurrentAddress(model.PersonAddressFilter.EgnFilter);
-                    responseJson = JsonConvert.SerializeObject(response);
+                    (bool result, TemporaryAddressResponseType response) = CurrentAddressSave(model);
+                    return result;
                 }
                 else
                 {
                     return false;
                 }
-                RegixReport saved = new RegixReport();
-                if (RegixReport_SaveData(saved, model.Report, model.AddressTypeId, JsonConvert.SerializeObject(model.PersonAddressFilter), responseJson, true) == false)
-                {
-                    return false;
-                }
-
-                model.Report.Id = saved.Id;
-                return true;
             }
             catch (Exception ex)
             {
@@ -717,7 +803,7 @@ namespace IOWebApplication.Core.Services
             return model;
         }
 
-        public bool ActualStateV3_SaveData(RegixActualStateV3VM model)
+        private (bool result, ActualStateResponseV3 response) ActualStateV3Save(RegixActualStateV3VM model)
         {
             try
             {
@@ -726,18 +812,36 @@ namespace IOWebApplication.Core.Services
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.ActualStateV3, JsonConvert.SerializeObject(model.ActualStateV3Filter),
                          JsonConvert.SerializeObject(response), true) == false)
                 {
-                    return false;
+                    return (result: false, response: null);
                 }
 
                 model.Report.Id = saved.Id;
-                return true;
+                return (result: true, response: response);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Грешка при запис на ActualStateV3");
-                return false;
+                return (result: false, response: null);
             }
         }
+
+        public bool ActualStateV3_SaveData(RegixActualStateV3VM model)
+        {
+            (bool result, ActualStateResponseV3 response) = ActualStateV3Save(model);
+            return result;
+        }
+
+        private ActualStateResponseV3 GetActualStateV3AndSave(string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        {
+            RegixActualStateV3VM model = new RegixActualStateV3VM();
+            model.ActualStateV3Filter.UIC = uic;
+            FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+
+            (bool result, ActualStateResponseV3 response) = ActualStateV3Save(model);
+
+            return result == true ? response : new ActualStateResponseV3();
+        }
+
 
         private List<string> GetAllMainObject(Dictionary<string, string> jsonKeyValues)
         {
@@ -1061,13 +1165,13 @@ namespace IOWebApplication.Core.Services
             return (result: true, errorMessage: "");
         }
 
-        public IEnumerable<PersonSearchVM> PersonSearch(int uicType, string uic)
+        public IEnumerable<PersonSearchVM> PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             List<PersonSearchVM> result = new List<PersonSearchVM>();
             switch (uicType)
             {
                 case NomenclatureConstants.UicTypes.EGN:
-                    var responseNBD = GetPersonalData(uic);
+                    var responseNBD = GetPersonalDataAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
                     if (responseNBD != null)
                     {
                         var itemNBD = new PersonSearchVM()
@@ -1084,7 +1188,7 @@ namespace IOWebApplication.Core.Services
                     //var adr = GetPermanentAddress(uic);
                     break;
                 case NomenclatureConstants.UicTypes.EIK:
-                    var responseTR = GetActualStateV3(uic);
+                    var responseTR = GetActualStateV3AndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
                     if (responseTR != null && responseTR.Deed != null)
                     {
                         var itemTR = new PersonSearchVM()
@@ -1098,7 +1202,7 @@ namespace IOWebApplication.Core.Services
                     }
                     break;
                 case NomenclatureConstants.UicTypes.Bulstat:
-                    var responseBS = GetStateOfPlay(uic);
+                    var responseBS = GetStateOfPlayAndSave(uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
                     if (responseBS != null && responseBS.Subject != null)
                     {
                         var itemBS = new PersonSearchVM()
@@ -1141,7 +1245,7 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        public bool StateOfPlay_SaveData(RegixStateOfPlayVM model)
+        public (bool result, StateOfPlay response) StateOfPlaySave(RegixStateOfPlayVM model)
         {
             try
             {
@@ -1150,17 +1254,34 @@ namespace IOWebApplication.Core.Services
                 if (RegixReport_SaveData(saved, model.Report, NomenclatureConstants.RegixType.StateOfPlay, JsonConvert.SerializeObject(model.StateOfPlayFilter),
                          JsonConvert.SerializeObject(response), true) == false)
                 {
-                    return false;
+                    return (result: false, response: null);
                 }
 
                 model.Report.Id = saved.Id;
-                return true;
+                return (result: true, response: response);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Грешка при запис на StateOfPlay");
-                return false;
+                return (result: false, response: null);
             }
+        }
+
+        public bool StateOfPlay_SaveData(RegixStateOfPlayVM model)
+        {
+            (bool result, StateOfPlay response) = StateOfPlaySave(model);
+            return result;
+        }
+
+        private StateOfPlay GetStateOfPlayAndSave(string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        {
+            RegixStateOfPlayVM model = new RegixStateOfPlayVM();
+            model.StateOfPlayFilter.UIC = uic;
+            FillReport(model.Report, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId);
+
+            (bool result, StateOfPlay response) = StateOfPlaySave(model);
+
+            return result == true ? response : new StateOfPlay();
         }
 
         private string GetFromNomenclature(Nomenclatures nomenclature, string definitionCode, Infrastructure.Models.Regix.GetStateOfPlay.NomenclatureEntry nomenclatureCode)
@@ -1698,11 +1819,16 @@ namespace IOWebApplication.Core.Services
             if (model.RegixTypeId > 0)
                 regixTypeWhere = x => x.RegixTypeId == model.RegixTypeId;
 
+            Expression<Func<RegixReport, bool>> regixRequestTypeWhere = x => true;
+            if (model.RegixRequestTypeId > 0)
+                regixRequestTypeWhere = x => x.RegixRequestTypeId == model.RegixRequestTypeId;
+
             return repo.AllReadonly<RegixReport>()
                                 .Where(x => x.CourtId == courtId)
                                 .Where(dateSearch)
                                 .Where(userWhere)
                                 .Where(regixTypeWhere)
+                                .Where(regixRequestTypeWhere)
                                 .Select(x => new RegixReportListVM
                                 {
                                     Id = x.Id,
@@ -1713,7 +1839,9 @@ namespace IOWebApplication.Core.Services
                                              x.Document.DocumentNumber + "/" +
                                              x.Document.DocumentDate.ToString(FormattingConstant.NormalDateFormat)) : "",
                                     DateWrt = x.DateWrt,
+                                    RequestRemark = x.Description,
                                     Request = JsonConvert.DeserializeObject<RegixReportListRequestVM>(x.RequestData),
+                                    RegixRequestTypeName = x.RegixRequestType.Label,
                                 }).AsQueryable();
         }
 
@@ -1731,8 +1859,11 @@ namespace IOWebApplication.Core.Services
                            DocumentNumber = x.DocumentId != null ? (x.Document.DocumentType.Label + " " +
                                                                     x.Document.DocumentNumber + "/" +
                                                                     x.Document.DocumentDate.ToString(FormattingConstant.NormalDateFormat)) : string.Empty,
+                           DocumentOnlyNumber = x.DocumentId != null ? (x.Document.DocumentNumber + "/" +
+                                                                       x.Document.DocumentDate.ToString(FormattingConstant.NormalDateFormat)) : string.Empty,
                            ActRegNumber = x.CaseSessionActId != null ? (x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty,
                            DateWrt = x.DateWrt,
+                           RegixRequestTypeId = x.RegixRequestTypeId
                        }).AsQueryable();
         }
     }

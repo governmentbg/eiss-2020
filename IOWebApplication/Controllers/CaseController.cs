@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DataTables.AspNet.Core;
@@ -31,6 +28,7 @@ namespace IOWebApplication.Controllers
         private readonly ICaseClassificationService classficationService;
         private readonly ICaseSelectionProtokolService caseSelectProtokolService;
         private readonly ICourtDepartmentService courtDepartmentService;
+        private readonly IDocumentResolutionService docResolutionService;
 
         public CaseController(
             ICaseService _service,
@@ -38,7 +36,8 @@ namespace IOWebApplication.Controllers
             ICommonService _commonService,
             ICaseClassificationService _classficationService,
             ICaseSelectionProtokolService _caseSelectProtokolService,
-            ICourtDepartmentService _courtDepartmentService)
+            ICourtDepartmentService _courtDepartmentService,
+            IDocumentResolutionService _docResolutionService)
         {
             service = _service;
             nomService = _nomService;
@@ -46,6 +45,7 @@ namespace IOWebApplication.Controllers
             classficationService = _classficationService;
             caseSelectProtokolService = _caseSelectProtokolService;
             courtDepartmentService = _courtDepartmentService;
+            docResolutionService = _docResolutionService;
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace IOWebApplication.Controllers
             }
             else
             {
-                if (!CheckAccess(service, SourceTypeSelectVM.Case, id, AuditConstants.Operations.Init))
+                if (!CheckAccess(service, SourceTypeSelectVM.Case, id, AuditConstants.Operations.View))
                 {
                     return Redirect_Denied();
                 }
@@ -136,6 +136,7 @@ namespace IOWebApplication.Controllers
                 {
                     model.IsOldNumber = true;
                 }
+                model.Description = document.Description;
             }
 
             //Ако не е образувано делото (чернова) - се предлага по подразбиране Образувано
@@ -168,10 +169,24 @@ namespace IOWebApplication.Controllers
             var isInsert = string.IsNullOrEmpty(model.RegNumber);
             if (service.Case_SaveData(model))
             {
-                SetAuditContext(service, SourceTypeSelectVM.Case, model.Id, currentId == 0);
+                if (isInsert && !string.IsNullOrEmpty(model.RegNumber))
+                {
+                    CheckAccess(service, SourceTypeSelectVM.Case, model.Id, AuditConstants.Operations.Init);
+                }
+                else
+                {
+                    SetAuditContext(service, SourceTypeSelectVM.Case, model.Id, currentId == 0);
+                }
                 this.SaveLogOperation(isInsert, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Edit), new { id = model.Id });
+                if (isInsert)
+                {
+                    return RedirectToAction(nameof(Edit), new { id = model.Id });
+                }
+                else
+                {
+                    return RedirectToAction(nameof(CasePreview), new { id = model.Id });
+                }
             }
             else
             {
@@ -290,6 +305,10 @@ namespace IOWebApplication.Controllers
             {
                 throw new NotFoundException("Търсеното от Вас дело не е намерено и/или нямате достъп до него.");
             }
+            if (string.IsNullOrEmpty(model.RegNumber))
+            {
+                return RedirectToAction(nameof(Edit), new { id });
+            }
             SetViewbag(id);
             ViewBag.isAutorized = this.CurrentContext.CanAccess;
             ViewBag.isFastProcess = nomService.CaseCodeGroup_Check(NomenclatureConstants.CaseCodeGroupAlias.CaseFastProcess, model.CaseCodeId ?? 0);
@@ -355,6 +374,10 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.CaseClassificationId_ddl = nomService.GetDropDownList<Classification>();
             ViewBag.CaseStateId_ddl = nomService.GetDropDownList<CaseState>();
+
+            ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+            ViewBag.CourtDepartmentOtdelenieId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
+
         }
 
         void SetViewbag(int id)
@@ -388,14 +411,35 @@ namespace IOWebApplication.Controllers
             ViewBag.lastMigration = service.Case_GetPriorCase(model.DocumentId);
             ViewBag.eisppMigration = service.Case_GetPriorCaseEISPP(model.DocumentId, model.EISSPNumber);
             ViewBag.ProcessPriorityId_ddl = nomService.GetDropDownList<ProcessPriority>();
-            ViewBag.CaseReasonId_ddl = nomService.GetDropDownList<CaseReason>();
+            //ViewBag.CaseReasonId_ddl = nomService.GetDropDownList<CaseReason>();
             ViewBag.ComplexIndexActual_ddl = nomService.GetDDL_ComplexIndex();
             ViewBag.ComplexIndexLegal_ddl = nomService.GetDDL_ComplexIndex();
+            var savedCase = service.GetById<Case>(model.Id);
+            ViewBag.savedCaseStateId = savedCase.CaseStateId;
+            if (NomenclatureConstants.CaseState.UnregisteredManageble.Contains(savedCase.CaseStateId))
+            {
+                ViewBag.unregisteredManagebleCase = true;
+                var docResolution = docResolutionService.Select(savedCase.DocumentId).FirstOrDefault();
+                if (docResolution != null)
+                {
+                    ViewBag.hasDocResolution = true;
+                    ViewBag.docResolutionId = docResolution.Id;
+                }
+                else
+                {
+                    ViewBag.hasDocResolution = false;
+                }
+            }
+
             if (!string.IsNullOrEmpty(model.RegNumber))
             {
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(model.Id);
             }
-            SetHelpFile(HelpFileValues.CaseEdit);
+
+            if (string.IsNullOrEmpty(model.RegNumber))
+                SetHelpFile(HelpFileValues.Assignment);
+            else
+                SetHelpFile(HelpFileValues.CaseEdit);
         }
 
         /// <summary>
@@ -409,8 +453,8 @@ namespace IOWebApplication.Controllers
                 CaseCodeId = -1,
                 CaseGroupId = -1,
                 CaseTypeId = -1,
-                DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
-                DateTo = new DateTime(DateTime.Now.Year, 12, 31)
+                //DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
+                //DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
             SetViewbagReport();
             return View("CaseReport", filter);
@@ -486,6 +530,8 @@ namespace IOWebApplication.Controllers
                 DateTo = NomenclatureExtensions.GetEndYear(),
             };
             SetViewbagIndex();
+            SetHelpFile(HelpFileValues.Report3);
+
             return View(filter);
         }
 
@@ -514,6 +560,7 @@ namespace IOWebApplication.Controllers
                 DateTo = NomenclatureExtensions.GetEndYear(),
             };
             SetViewbagIndex();
+            SetHelpFile(HelpFileValues.Report6);
             return View(filter);
         }
 
@@ -542,6 +589,7 @@ namespace IOWebApplication.Controllers
                 DateFrom = NomenclatureExtensions.GetStartYear(),
                 DateTo = NomenclatureExtensions.GetEndYear(),
             };
+            SetHelpFile(HelpFileValues.Report7);
             return View(filter);
         }
 
@@ -571,6 +619,7 @@ namespace IOWebApplication.Controllers
                 DateToSpr = DateTime.Now
             };
             SetViewbagIndex();
+            SetHelpFile(HelpFileValues.Report5);
             return View(filter);
         }
 
@@ -601,6 +650,7 @@ namespace IOWebApplication.Controllers
                 ActDeclaredDateTo = NomenclatureExtensions.GetEndYear(),
             };
             SetViewbagIndex();
+            SetHelpFile(HelpFileValues.Report4);
             return View(filter);
         }
 
@@ -630,6 +680,7 @@ namespace IOWebApplication.Controllers
                 DateToSpr = DateTime.Now
             };
             SetViewbagIndex();
+            SetHelpFile(HelpFileValues.Report1);
             return View(filter);
         }
 
@@ -671,6 +722,8 @@ namespace IOWebApplication.Controllers
             };
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.DocumentGroupId_ddl = nomService.GetDropDownList<DocumentGroup>();
+            SetHelpFile(HelpFileValues.Report30);
+
             return View(filter);
         }
 
@@ -701,6 +754,8 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.SessionTypeId_ddl = nomService.GetDDL_SessionTypeWithoutClosedSession();
             ViewBag.SessionDateToId_ddl = nomService.GetDDL_SessionToDate();
+            SetHelpFile(HelpFileValues.Report9);
+
             return View(filter);
         }
 
@@ -734,7 +789,10 @@ namespace IOWebApplication.Controllers
             };
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.SessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
+            ViewBag.SessionResultId_ddl = nomService.GetDropDownList<SessionResult>();
             ViewBag.ActDateToId_ddl = nomService.GetDDL_ActToDate();
+            SetHelpFile(HelpFileValues.Report22);
+
             return View(filter);
         }
 
@@ -766,6 +824,8 @@ namespace IOWebApplication.Controllers
             };
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>().Where(x => x.Value != NomenclatureConstants.CaseGroups.NakazatelnoDelo.ToString()).ToList();
             ViewBag.ProcessPriorityId_ddl = nomService.GetDropDownList<ProcessPriority>();
+            SetHelpFile(HelpFileValues.Report10);
+
             return View(filter);
         }
 
@@ -798,6 +858,7 @@ namespace IOWebApplication.Controllers
             };
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>().Where(x => x.Value != NomenclatureConstants.CaseGroups.NakazatelnoDelo.ToString()).ToList();
             ViewBag.ProcessPriorityId_ddl = nomService.GetDropDownList<ProcessPriority>();
+            SetHelpFile(HelpFileValues.Report11);
             return View(filter);
         }
 
@@ -821,6 +882,11 @@ namespace IOWebApplication.Controllers
             string html = await this.RenderPartialViewAsync("~/Views/Case/", "CaseProceedings.cshtml", model, true);
             var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }).GetByte(this.ControllerContext);
             return File(pdfBytes, System.Net.Mime.MediaTypeNames.Application.Pdf, "CaseProceedings" + id.ToString() + ".pdf");
+        }
+
+        public IActionResult GetDepersonalizationHistory(int caseId)
+        {
+            return Json(service.GetDepersonalizationHistory(caseId));
         }
     }
 }

@@ -149,6 +149,7 @@ function ReplaceControlsInContent(containerSelector, page_title) {
         clone.find('span.text-custom-danger').remove();
         clone.find('a.clearInput,a.auto-cmpt-search').remove();
         clone.find('div.input-group-addon').remove();
+        clone.find('label.time-toggle').remove();
     } catch (e) {
         error = error + e.name + ': ' + e.message + '  ; ';
     }

@@ -10,6 +10,10 @@
 {
     <div class="row">
         <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CasePersonLink" asp-action="AddSide" asp-route-caseId="@Model.Id" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Групово добавяне
+            </a>
             <a asp-controller="CasePersonLink" asp-action="Add" asp-route-caseId="@Model.Id" class="btn btn-success btn-sm">
                 <i class="fa fa-plus"></i>
                 Добави

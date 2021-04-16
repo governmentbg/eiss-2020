@@ -1,12 +1,10 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,15 +31,48 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [Column("case_crime_id")]
         [Display(Name = "Престъпление")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Престъпление")]
         public int CaseCrimeId { get; set; }
 
         [Column("person_role_in_crime_id")]
         [Display(Name = "Роля на лицето в престъплението")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Роля на лицето в престъплението")]
         public int PersonRoleInCrimeId { get; set; }
 
         [Column("recidive_type_id")]
         [Display(Name = "Рецидив")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Рецидив")]
         public int RecidiveTypeId { get; set; }
+
+        public int? SentenceTypeId { get; set; }
+
+        //--------Пари-------------------------
+        [Column("sentence_money")]
+        [Display(Name = "Размер, лв")]
+        public decimal SentenseMoney { get; set; }
+        //--------Време-------------------------
+        [Column("sentence_days")]
+        [Display(Name = "Дни")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете дни в интервала 0-9999")]
+        public int SentenseDays { get; set; }
+        
+        [Column("sentence_weeks")]
+        [Display(Name = "Седмици")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете седмици в интервала 0-9999")]
+        public int SentenseWeeks { get; set; }
+        
+        [Column("sentence_months")]
+        [Display(Name = "Месеци")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете месеци в интервала 0-9999")]
+        public int SentenseMonths { get; set; }
+
+        [Column("sentence_years")]
+        [Display(Name = "Години")]
+        [Range(0, int.MaxValue, ErrorMessage = "Въведете години в интервала 0-9999")]
+        public int SentenseYears { get; set; }
+
+        [ForeignKey(nameof(SentenceTypeId))]
+        public virtual SentenceType SentenceType { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

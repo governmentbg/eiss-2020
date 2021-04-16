@@ -123,7 +123,7 @@
         requestContent('@Url.Action("CaseMoneyExpense","CaseFastProcess")'
             , { caseId:@Model, id: null }
             , function (data) {
-                ShowModalDialog('Добавяне на претендиран разноски', data);
+                ShowModalDialog('Добавяне на претендирани разноски', data);
             });
     }
 
@@ -132,10 +132,10 @@
             , { caseId:@Model, id:id}
             , function (data) {
                 if ('@access.CanChange' == 'True') {
-                    ShowModalDialog('Редакция на претендиран разноски', data);
+                    ShowModalDialog('Редакция на претендирани разноски', data);
                 }
                 else {
-                    ShowModalDialog('Преглед на претендиран разноски', data);
+                    ShowModalDialog('Преглед на претендирани разноски', data);
                 }
             });
     }
@@ -491,7 +491,7 @@
         <div class="row">
             @if (access.CanChange)
             {
-                <a href="#" onclick="cmcCreateMoneyExpense(); return false;" class="btn btn-xs btn-success" style="position:relative;left:15px"><i class="fa fa-money"></i> Добавяне на претендиран разноски</a>
+                <a href="#" onclick="cmcCreateMoneyExpense(); return false;" class="btn btn-xs btn-success" style="position:relative;left:15px"><i class="fa fa-money"></i> Добавяне на претендирани разноски</a>
             }
         </div>
     </fieldset>

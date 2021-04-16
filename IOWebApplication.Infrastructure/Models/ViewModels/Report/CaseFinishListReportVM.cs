@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -41,7 +38,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public int CaseLifecycleMonths { get; set; }
 
         [Display(Name = "Първоинстанционен съд")]
-        public string InitialCourtName { get; set; }
+        public string InitialCourtName
+        {
+            get
+            {
+                return string.IsNullOrEmpty(NewLinkNumber) == false ? NewLinkNumber : OldLinkNumber;
+            }
+        }
+
+        public string OldLinkNumber { get; set; }
+
+        public string NewLinkNumber { get; set; }
     }
 
     /// <summary>

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -23,7 +20,7 @@ namespace IOWebApplication.Core.Contracts
         List<WorkNotification> NewWorkNotificationSecretary(CaseDeadline caseDeadline);
         List<SelectListItem> ReadTypeId_SelectDDL();
         bool SaveWorkNotification(WorkNotification workNotification);
-        bool SaveWorkNotificationRead(long id);
+        WorkNotification SaveWorkNotificationRead(long id);
         IQueryable<WorkNotification> SelectWorkNotifications(WorkNotificationFilterVM filterData);
 
     }

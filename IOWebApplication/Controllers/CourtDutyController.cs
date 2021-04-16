@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,6 +29,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
+            SetHelpFile(HelpFileValues.Nom8);
             return View();
         }
 
@@ -55,8 +53,11 @@ namespace IOWebApplication.Controllers
         {
             var model = new CourtDuty()
             {
-                CourtId = userContext.CourtId
+                CourtId = userContext.CourtId,
+                CheckCourtDutyLawUnits = service.FillCheckListVMs(userContext.CourtId, null).ToList()
             };
+            SetHelpFile(HelpFileValues.Nom8);
+
             return View(nameof(Edit), model);
         }
 
@@ -67,8 +68,23 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult Edit(int id)
         {
-            var model = service.GetById<CourtDuty>(id);
+            var model = service.GetCourtDuty_ById(id);
+            SetHelpFile(HelpFileValues.Nom8);
+
             return View(nameof(Edit), model);
+        }
+
+        private string IsValid(CourtDuty model)
+        {
+            if (!model.CheckCourtDutyLawUnits.Any(x => x.Checked))
+            {
+                return "Няма избрани съдии.";
+            }
+            
+            if (model.DateTo != null && model.DateTo < model.DateFrom)
+                return "Дата до не може да е по малка от Дата от";
+
+            return string.Empty;
         }
 
         /// <summary>
@@ -79,8 +95,16 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult Edit(CourtDuty model)
         {
+            SetHelpFile(HelpFileValues.Nom8);
             if (!ModelState.IsValid)
             {
+                return View(nameof(Edit), model);
+            }
+
+            string _isvalid = IsValid(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
                 return View(nameof(Edit), model);
             }
 
@@ -89,7 +113,8 @@ namespace IOWebApplication.Controllers
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Edit), new { id = model.Id });
+                return RedirectToAction(nameof(Index));
+                //return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
             else
             {

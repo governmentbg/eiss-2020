@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper;
+﻿using AutoMapper;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using System;
 using System.Collections.Generic;
@@ -15,6 +12,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public string FullName { get; set; }
         public string Code { get; set; }
         public string EISPPCode { get; set; }
+        public DateTime DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
 
         public static MapperConfiguration GetMapping()
         {

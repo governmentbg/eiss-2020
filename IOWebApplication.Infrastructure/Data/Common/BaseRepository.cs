@@ -1,12 +1,10 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Data.Common
 {
@@ -161,6 +159,11 @@ namespace IOWebApplication.Infrastructure.Data.Common
         public int SaveChanges()
         {
             return this.Context.SaveChanges();
+        }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await this.Context.SaveChangesAsync();
         }
 
         /// <summary>

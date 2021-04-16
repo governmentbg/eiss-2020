@@ -1,11 +1,9 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper.QueryableExtensions;
+﻿using AutoMapper.QueryableExtensions;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Extensions;
@@ -24,11 +22,13 @@ namespace IOWebApplication.Core.Services
     public class DocumentResolutionService : BaseService, IDocumentResolutionService
     {
         private readonly ICounterService counterService;
+        private readonly ICaseMigrationService migrationService;
         private readonly IWorkTaskService worktaskService;
         public DocumentResolutionService(
             ILogger<DocumentResolutionService> _logger,
             IRepository _repo,
             IUserContext _userContext,
+            ICaseMigrationService _migrationService,
             ICounterService _counterService,
             IWorkTaskService _worktaskService)
         {
@@ -36,6 +36,7 @@ namespace IOWebApplication.Core.Services
             repo = _repo;
             userContext = _userContext;
             counterService = _counterService;
+            migrationService = _migrationService;
             worktaskService = _worktaskService;
         }
 
@@ -169,6 +170,57 @@ namespace IOWebApplication.Core.Services
             }
         }
 
+        public SaveResultVM UpdateAfterSign(long id)
+        {
+            var model = repo.GetById<DocumentResolution>(id);
+            if (model == null)
+            {
+                return new SaveResultVM(false, "Грешен идентификатор на решение");
+            }
+            var caseModel = repo.AllReadonly<Case>().Where(x => x.DocumentId == model.DocumentId).FirstOrDefault();
 
+            var precCaseId = repo.AllReadonly<Document>()
+                                      .Include(x => x.DocumentCaseInfo)
+                                      .Where(x => x.Id == model.DocumentId)
+                                      .SelectMany(x => x.DocumentCaseInfo.Select(s => s.CaseId))
+                                      .FirstOrDefault() ?? 0;
+
+            if (caseModel == null || precCaseId <= 0)
+            {
+                return new SaveResultVM(false);
+            }
+
+            switch (caseModel.CaseStateId)
+            {
+                case NomenclatureConstants.CaseState.Rejected:
+                    //Когато има дело и то е с Отказ от образуване и съществува движение на делото към текущия съд - се връща на подателя
+                    var lastMigration = migrationService.Case_GetPriorCase(model.DocumentId);
+                    if(lastMigration != null)
+                    {
+                        //var newMigration = new CaseMigration()
+                        //{
+                        //    CaseId = lastMigration.CaseId,
+                        //    CourtId = model.CourtId,
+                        //    PriorCaseId = lastMigration.CaseId,
+                        //    InitialCaseId = lastMigration.InitialCaseId,
+                        //    CaseMigrationTypeId = incommingMigrationTypeId,
+                        //    SendToTypeId = NomenclatureConstants.CaseMigrationSendTo.Court,
+                        //    SendToCourtId = model.CourtId,
+                        //    Description = model.Description,
+                        //    DateWrt = DateTime.Now,
+                        //    UserId = userContext.UserId,
+                        //    OutCaseMigrationId = lastMigration.Id
+                        //};
+                        //repo.Add(newMigration);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+
+
+            return new SaveResultVM(true);
+        }
     }
 }

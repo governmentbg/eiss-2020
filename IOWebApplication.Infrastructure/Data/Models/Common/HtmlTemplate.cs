@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -86,6 +83,18 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Насочено е към жалба към aкт/протокол")]
         public bool? HaveSessionActComplain { get; set; }
 
+        [Column("required_session_act_complain")]
+        [Display(Name = "Задължителна има жалба към aкт/протокол")]
+        public bool? RequiredSessionActComplain { get; set; }
+
+        [Column("have_multi_act_complain")]
+        [Display(Name = "Насочено е към много жалби")]
+        public bool? HaveMultiActComplain { get; set; }
+
+        [Column("have_act_complain_free")]
+        [Display(Name = "Допуска се избиране на жалба която не е насочена към избраният акт")]
+        public bool? HaveActComplainFree { get; set; }
+
         [Column("have_expert_report")]
         [Display(Name = "Има данни за експериза")]
         public bool? HaveExpertReport { get; set; }
@@ -105,6 +114,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("is_create")]
         [Display(Name = "Създадена в системата")]
         public bool? IsCreate { get; set; }
+
+        /// <summary>
+        /// Да се избира ли лице от делото в DocumentTemplate
+        /// </summary>
+        [Column("have_case_person")]
+        [Display(Name = "Избор на лице от делото")]
+        public bool? HaveCasePerson { get; set; }
+
+        [Column("have_document_sender_person")]
+        [Display(Name = "Има подател нa съпровождащ документ")]
+        public bool? HaveDocumentSenderPerson { get; set; }
 
         [ForeignKey(nameof(HtmlTemplateTypeId))]
         public virtual HtmlTemplateType HtmlTemplateType { get; set; }

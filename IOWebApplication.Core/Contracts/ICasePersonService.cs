@@ -1,9 +1,7 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -14,7 +12,7 @@ namespace IOWebApplication.Core.Contracts
 {
     public interface ICasePersonService : IBaseService
     {
-        IQueryable<CasePersonListVM> CasePerson_Select(int caseId, int? caseSessionId, bool checkSessionDate = false, bool showExpired = false);
+        IQueryable<CasePersonListVM> CasePerson_Select(int caseId, int? caseSessionId, bool checkSessionDate, bool showExpired, bool setRowNumberFromCase);
 
         (bool result, string errorMessage) CasePerson_SaveData(CasePersonVM model);
 
@@ -60,9 +58,9 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="uic"></param>
         /// <param name="fullName"></param>
         /// <returns></returns>
-        IQueryable<CasePersonReportVM> CasePerson_SelectForReport(int courtId, string uic, string fullName, string caseRegnumber);
+        IQueryable<CasePersonReportVM> CasePerson_SelectForReport(int courtId, string uic, string fullName, string caseRegnumber, DateTime? DateFrom, DateTime? DateTo, DateTime? FinalDateFrom, DateTime? FinalDateTo, DateTime? WithoutFinalDateTo);
 
-        List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId);
+        List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId, int notificationDeliveryGroupId);
         List<SelectListItem> GetDDL_AddressByCasePersonAddress(int casePersonId);
         List<CasePersonAddress> Get_CasePersonAddress(int casePersonId);
 
@@ -73,7 +71,7 @@ namespace IOWebApplication.Core.Contracts
         (List<SelectListItem> person_ddl, List<SelectListItem> linkDirection_ddl) CasePersonForLinkRel_SelectForDropDownList(int casePersonId);
         (List<SelectListItem> men, List<SelectListItem> women, List<PersonDataVM> personData) GetCasePersonForDivorce(int actId);
         (bool result, string errorMessage) CasePersonAddress_AddFromSearch(int casePersonId, int addressId);
-        
+
         IQueryable<CasePersonInheritanceVM> CasePersonInheritance_Select(int CasePersonId);
         bool CasePersonInheritance_SaveData(CasePersonInheritance model);
 
@@ -85,5 +83,11 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetForEispp(int caseId);
         (bool result, string errorMessage) CheckCasePersonExpired(CasePerson model);
         bool IsPersonDead(int casePersonId);
+        bool CasePerson_SaveExpiredPlus(ExpiredInfoVM model);
+
+
+        List<SelectListItem> GetAddressByCasePerson_DropDown(int casePersonId);
+
+        SaveResultVM CasePersonAddress_IsUsed(CasePersonAddress model);
     }
 }

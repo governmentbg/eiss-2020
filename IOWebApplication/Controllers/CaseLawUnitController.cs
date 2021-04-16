@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Linq;
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
@@ -155,8 +152,9 @@ namespace IOWebApplication.Controllers
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
 
-            ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { id = model.ObjectId });
-            return View("CheckListViewVM", model);
+            //ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { id = model.ObjectId });
+            //return View("CheckListViewVM", model);
+            return RedirectToAction("Preview", "CaseSession", new { id = model.ObjectId });
         }
 
         /// <summary>
@@ -207,6 +205,7 @@ namespace IOWebApplication.Controllers
             SetViewbag(lawUnitId);
             model.DismisalKindId = ViewBag.DismisalKind;
             return View(nameof(EditDismisal), model);
+
         }
 
         /// <summary>
@@ -214,16 +213,17 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditDismisal(int id)
+        public IActionResult ViewDismisal(int id)
         {
             if (!CheckAccess(service, SourceTypeSelectVM.CaseLawUnitDismisal, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
+            
             var model = service.GetById<CaseLawUnitDismisal>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
+                throw new NotFoundException("Търсеният от Вас отвод не е намерен и/или нямате достъп до него.");
             }
             SetViewbag(model.CaseLawUnitId);
             return View(nameof(EditDismisal), model);
@@ -234,7 +234,8 @@ namespace IOWebApplication.Controllers
             var caseLawUnit = service.GetById<CaseLawUnit>(caseLawUnitId);
             //ViewBag.DismisalTypeId_ddl = nomService.GetDropDownList<DismisalType>(false);
             ViewBag.DismisalTypeId_ddl = nomService.GetDismisalTypes_SelectForDropDownList(caseLawUnitId);
-            ViewBag.CaseSessionActId_ddl = actService.GetDropDownList(caseLawUnit.CaseId);
+            //  ViewBag.CaseSessionActId_ddl = actService.GetDropDownList(caseLawUnit.CaseId);
+            ViewBag.CaseSessionActId_ddl = actService.GetDropDownListForDismisal(caseLawUnit.CaseId);
             var caseCase = service.GetById<Case>(caseLawUnit.CaseId);
             ViewBag.CaseName = caseCase.RegNumber;
             ViewBag.caseId = caseCase.Id;
@@ -274,14 +275,14 @@ namespace IOWebApplication.Controllers
             {
                 if (model.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod || model.DismisalTypeId == NomenclatureConstants.DismisalType.SamoOtvod)
                 {
-                    if (model.CaseSessionActId < 0)
+                    if ((model.CaseSessionActId??-1) < 0)
                         return "Няма избран акт";
                     else
                     {
                         var sessionAct = actService.GetById<CaseSessionAct>(model.CaseSessionActId);
 
-                        if (sessionAct.ActStateId != NomenclatureConstants.SessionActState.Enforced)
-                            return "Актът трябва да е постановен";
+                        if (!((sessionAct.ActStateId == NomenclatureConstants.SessionActState.Enforced)|| (sessionAct.ActStateId == NomenclatureConstants.SessionActState.ComingIntoForce)))
+                            return "Актът трябва да е постановен или влязъл в сила ";
 
                         if (sessionAct.RegNumber == string.Empty)
                             return "Актът няма генериран номер";
@@ -300,7 +301,7 @@ namespace IOWebApplication.Controllers
                 {
 
                     var lastDate = actService.GetLastSignCaseDate(model.CaseLawUnitId, model.CaseSessionActId ?? -1);
-                    if (lastDate.AddSeconds(-lastDate.Second) >= model.DismisalDate.AddSeconds(-model.DismisalDate.Second))
+                    if (lastDate.AddSeconds(-lastDate.Second) > model.DismisalDate.AddSeconds(-model.DismisalDate.Second))
                     {
                         return $"Избраният акт е с дата({lastDate.ToString("dd.MM.yyyy")}) по-късна от дaтата на отвеждането";
                     }
@@ -311,7 +312,7 @@ namespace IOWebApplication.Controllers
                 {
 
                     var lastDate = actService.GetLastSignCaseDate(model.CaseLawUnitId, null);
-                    if (lastDate.AddSeconds(-lastDate.Second) >= model.DismisalDate.AddSeconds(-model.DismisalDate.Second))
+                    if (lastDate.AddSeconds(-lastDate.Second) > model.DismisalDate.AddSeconds(-model.DismisalDate.Second))
                     {
                         return $"Датата на отвеждане е по-ранна от последната дата на подпис ({lastDate.ToString("dd.MM.yyyy")})";
 
@@ -329,7 +330,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditDismisal(CaseLawUnitDismisal model)
+        public IActionResult EditDismisal(CaseLawUnitDismisal model, string btnRedirectSelection = null)
         {
             SetViewbag(model.CaseLawUnitId);
 
@@ -349,8 +350,19 @@ namespace IOWebApplication.Controllers
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseLawUnitDismisal, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
-                SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(EditDismisal), new { id = model.Id });
+
+                //return RedirectToAction(nameof(EditDismisal), new { id = model.Id });
+                if (btnRedirectSelection is null)
+                {
+                    SetSuccessMessage(MessageConstant.Values.SaveOK);
+                    return RedirectToAction("CasePreview", "Case", new { id = model.CaseId });
+
+                }
+                else
+                {
+                    SetSuccessMessage("Извеждането от състав по дело е успено. Извършете преразпреление.");
+                    return RedirectToAction("Add", "CaseSelectionProtokol", new { caseId = model.CaseId });
+                }
             }
             else
             {
@@ -466,7 +478,7 @@ namespace IOWebApplication.Controllers
                 SetAuditContext(service, SourceTypeSelectVM.CaseLawUnit, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(EditManualRoles), new { id = model.Id });
+                return RedirectToAction("CasePreview", "Case", new { id = model.CaseId });
             }
             else
             {
@@ -502,7 +514,6 @@ namespace IOWebApplication.Controllers
                 return RedirectToAction("CasePreview", "Case", new { id = caseId });
             }
 
-            
             return View(nameof(CaseLawUnitChangeDepRol), model);
         }
 
@@ -513,15 +524,17 @@ namespace IOWebApplication.Controllers
             if (service.GetCaseLawUnitChangeDepRol_Save(model))
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                if(model.CaseSessionId > 0)
+                if (model.CaseSessionId > 0)
                 {
                     this.SaveLogOperation(IO.LogOperation.Models.OperationTypes.Patch, model.CaseSessionId);
+                    return RedirectToAction("Preview", "CaseSession", new { id = model.CaseSessionId });
                 }
                 else
                 {
                     this.SaveLogOperation(IO.LogOperation.Models.OperationTypes.Patch, model.CaseId);
+                    return RedirectToAction("CasePreview", "Case", new { id = model.CaseId });
                 }
-                return RedirectToAction(nameof(CaseLawUnitChangeDepRol), new { caseId = model.CaseId });
+                //return RedirectToAction(nameof(CaseLawUnitChangeDepRol), new { caseId = model.CaseId });
             }
             else
             {
@@ -555,6 +568,12 @@ namespace IOWebApplication.Controllers
         {
             var result = service.LawUnitSubstitution_Apply(substsitution_id, from, to, caseSessionId);
             return Json(new { isOk = result });
+        }
+
+        [HttpPost]
+        public JsonResult IsExistJudgeLawUnitInCase(int caseId)
+        {
+            return Json(new { result = service.IsExistJudgeLawUnitInCase(caseId) });
         }
     }
 }

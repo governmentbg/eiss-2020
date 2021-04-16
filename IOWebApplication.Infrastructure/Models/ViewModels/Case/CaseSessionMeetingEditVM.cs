@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -37,6 +34,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int? CourtHallId { get; set; }
 
         public bool? IsSessionProvedeno { get; set; }
+
+        [Display(Name = "Статус на заседание")]
+        public int? SessionStateId { get; set; }
 
         public virtual List<CheckListVM> CaseSessionMeetingUser { get; set; }
     }

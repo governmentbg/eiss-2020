@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -60,7 +57,7 @@ namespace IOWebApplication.Core.Contracts
         List<NotificationState> DeliveryItemTransNotificationState(int toNotificationStateId);
         List<SelectListItem> SelectNewLawUnitType();
         List<SelectListItem> NotificationDeliveryGroupSelect();
-        bool DeliveryItemSaveState(int deliveryItemId, int notificationStateId, DateTime? deliveryDate);
+        bool DeliveryItemSaveState(int deliveryItemId, int notificationStateId, DateTime? deliveryDate, string deliveryInfo);
         DeliveryItem getDeliveryItemWithNotification(int id);
         List<Select2ItemVM> GetCourtsSelect2(List<DeliveryArea> deliveryAreaList);
         string GetNotificationInfo(int notificationId);

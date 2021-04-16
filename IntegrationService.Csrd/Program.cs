@@ -1,17 +1,17 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IntegrationService.Csrd.Services;
+﻿using IntegrationService.Csrd.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 
 namespace IntegrationService.Csrd
 {
     class Program
     {
+
         static void Main(string[] args)
         {
             BuildHost(args)
@@ -28,12 +28,14 @@ namespace IntegrationService.Csrd
                      configHost.SetBasePath(Directory.GetCurrentDirectory());
                      configHost.AddEnvironmentVariables(prefix: "ASPNETCORE_");
                      configHost.AddCommandLine(args);
+
                  })
                  .ConfigureServices((hostContext, services) =>
                  {
-                     
+
                      services.AddAppDbContext(hostContext.Configuration);
                      services.ConfigureServices(hostContext.Configuration);
+                     //SetHttpHandlers(hostContext.Configuration);
                      services.ConfigureHttpClients(hostContext.Configuration);
                  })
                  .ConfigureAppConfiguration((hostContext, configApp) =>
@@ -51,6 +53,7 @@ namespace IntegrationService.Csrd
                     configLogging.AddDebug();
                 }).Build();
         }
+
 
         /// <summary>
         /// Stupid name, because it is NOT a WebHost, 

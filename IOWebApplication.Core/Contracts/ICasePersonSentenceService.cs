@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -30,6 +27,7 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CasePersonSentencePunishmentVM> CasePersonSentencePunishment_Select(int CasePersonSentenceId);
         bool CasePersonSentencePunishment_SaveData(CasePersonSentencePunishment model);
         CasePersonSentencePunishmentVM CasePersonSentencePunishment_GetById(int id);
+        bool IsExistMainPunishment(int CasePersonSentenceId, int? WithoutId);
         IQueryable<CasePersonSentencePunishmentCrimeVM> CasePersonSentencePunishmentCrime_Select(int CasePersonSentencePunishmentId);
         bool CasePersonSentencePunishmentCrime_SaveData(CasePersonSentencePunishmentCrime model);
         List<SelectListItem> GetDropDownList_CasePersonSentence(int CasePersonId, int ModelId, bool addDefaultElement = true, bool addAllElement = false);
@@ -37,5 +35,6 @@ namespace IOWebApplication.Core.Contracts
         CasePersonSentenceBulletinEditVM CasePersonSentenceBulletin_GetById(int id);
         (bool result, string errorMessage) CasePersonSentenceBulletin_SaveData(CasePersonSentenceBulletinEditVM model);
         CasePersonSentence CasePersonSentence_GetByPerson(int personId);
+        bool IsEISPPNumberExists(int caseId, string eisppNumber);
     }
 }

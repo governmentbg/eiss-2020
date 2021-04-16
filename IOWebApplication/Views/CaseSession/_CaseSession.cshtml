@@ -1,5 +1,6 @@
 ﻿@model CaseMainDataVM
 @using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
 }
@@ -41,6 +42,28 @@
                 //title: table.container(),
                 deferLoading: deferLoadingOnTab('#caseSessionMainTable'),
                 columns: [
+                    {
+                        name: 'sessionWornings',
+                        data: 'sessionWornings',
+                        title: '',
+                        "render": function (item, type, row, meta) {
+                            if (row.sessionWornings == @NomenclatureConstants.SessionWornings.AllOk) {
+                                return "<span class='text-green'><i class='' title=''></i></span>";
+                            }
+                            else {
+                                if (row.sessionWornings == @NomenclatureConstants.SessionWornings.NotExistAct) {
+                                    return "<span class='text-red'><i class='fa fa-exclamation-circle fa-lg' title='Липсва акт'></i></span>";
+                                }
+                                else {
+                                    if (row.sessionWornings == @NomenclatureConstants.SessionWornings.NotExistResult) {
+                                        return "<span class='text-yellow'><i class='fa fa-exclamation-circle fa-lg' title='Липсва резултат'></i></span>";
+                                    }
+                                }
+                            }
+                        },
+                        sortable: false,
+                        searchable: false
+                    },
                     {
                         className: 'col-md-1',
                         name: 'dateFrom',

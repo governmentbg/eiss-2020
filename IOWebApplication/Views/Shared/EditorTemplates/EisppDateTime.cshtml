@@ -17,6 +17,10 @@
     {
         flags = (int)ViewData["flags"];
     }
+    if (ViewData["flags"] != null && (int)ViewData["flags"] == 55)
+    {
+        flags = 5;
+    }
     if (flags == 3 || flags == 7 || flags == 30)
     {
         reqClass = "io-req";

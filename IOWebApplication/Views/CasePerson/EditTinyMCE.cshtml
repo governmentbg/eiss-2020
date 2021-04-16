@@ -1,0 +1,67 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.TinyMCEVM;
+
+@{
+    ViewData["Title"] = "Преглед";
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<form id="formEditTinyMCE" method="post" action="@Url.Action("EditTinyMCE", "CasePerson")">
+    <style>
+        table.mce-item-table, .mce-item-table td, .mce-item-table th, .mce-item-table caption {
+            border: none;
+        }
+    </style>
+    @Html.HiddenFor(x => x.Style)
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.SourceId)
+    @Html.HiddenFor(x => x.SourceType)
+    @Html.HiddenFor(x => x.SmartShrinkingPDF)
+    @Html.HiddenFor(x => x.PageOrientation)
+    @Html.HiddenFor(x => x.Title)
+    <div>
+        @Html.TextAreaFor(model => model.Text)
+    </div>
+    <div>
+        @if (access.CanChange)
+        {
+            <button onclick="saveTinyMCE()" class="btn btn-success">Запис</button>
+            <button onclick="previewPDF()" class="btn btn-def"><i class="fa fa-file-pdf-o"></i>Преглед</button>
+        }
+        @await Html.PartialAsync("_ButtonClose")
+    </div>
+</form>
+@section scripts {
+    <script>
+        tinymce.init({
+            selector: 'textarea#Text',
+            height: 800,
+            menubar: 'file edit view insert format tools table tc help',
+            plugins: [
+                'advlist autolink lists link image charmap print preview anchor',
+                'searchreplace visualblocks code fullscreen',
+                'insertdatetime media table paste code help wordcount'
+            ],
+            toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+            visual_table_class : "table",
+            table_default_attributes: { border : 0},
+            content_css: [
+                '@Url.Action("Preview", "HtmlTemplate", new { id = Model.Id})/style.css'
+            ]
+        });
+        function previewPDF() {
+             $('#formEditTinyMCE').attr('action', '@Url.Action("DraftTinyMCE", "CaseNotification")');
+             $("#formEditTinyMCE").submit();
+        }
+        function saveTinyMCE() {
+             $('#formEditTinyMCE').attr('action', '@Url.Action("EditTinyMCE", "CasePerson")');
+             $("#formEditTinyMCE").submit();
+        }
+    </script>
+}

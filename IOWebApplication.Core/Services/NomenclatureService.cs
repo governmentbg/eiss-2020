@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -42,6 +39,7 @@ namespace IOWebApplication.Core.Services
         public List<SelectListItem> GetDropDownList<T>(bool addDefaultElement = true, bool addAllElement = false, bool orderByNumber = true) where T : class, ICommonNomenclature
         {
             var result = repo.All<T>()
+                        .Where(x => x.IsActive)
                         .ToSelectList(addDefaultElement, addAllElement, orderByNumber);
 
             return result;
@@ -156,6 +154,32 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        public HierarchicalNomenclatureDisplayModel GetEkatteEispp(string query)
+        {
+            var result = new HierarchicalNomenclatureDisplayModel();
+            query = query?.ToLower();
+
+            var ekatte = repo.All<EkEkatte>()
+                .Include(e => e.Munincipality)
+                .Include(e => e.District)
+                .Where(e => !string.IsNullOrEmpty(e.EisppCode))
+                .Where(e => e.Name.Contains(query ?? e.Name, StringComparison.InvariantCultureIgnoreCase))
+                .Select(e => new HierarchicalNomenclatureDisplayItem()
+                {
+                    Id = e.EisppCode,
+                    Label = String.Format("{0} {1}", e.TVM, e.Name),
+                    Category = String.Format("общ. {0}, обл. {1}", e.Munincipality.Name, e.District.Name)
+                });
+
+            result.Data.AddRange(ekatte);
+
+            result.Data = result.Data
+                .OrderBy(d => d.Category)
+                .ToList();
+
+            return result;
+        }
+
         public HierarchicalNomenclatureDisplayItem GetEkatteById(string id)
         {
             var result = repo.All<EkEkatte>()
@@ -183,6 +207,22 @@ namespace IOWebApplication.Core.Services
                 .FirstOrDefault();
             }
 
+            return result;
+        }
+
+        public HierarchicalNomenclatureDisplayItem GetEkatteByEisppCodeCategory(string eisppCode)
+        {
+            var result = repo.All<EkEkatte>()
+                .Include(e => e.Munincipality)
+                .Include(e => e.District)
+                .Where(e => e.EisppCode == eisppCode)
+                .Select(e => new HierarchicalNomenclatureDisplayItem()
+                {
+                    Id = e.Ekatte,
+                    Label = String.Format("{0} {1}", e.TVM, e.Name),
+                    Category = String.Format("общ. {0}, обл. {1}", e.Munincipality.Name, e.District.Name)
+                })
+                .FirstOrDefault();
             return result;
         }
 
@@ -403,18 +443,87 @@ namespace IOWebApplication.Core.Services
                        .OrderBy(x => x.Label)
                        .ToSelectList(addDefaultElement);
         }
-        public List<LabelValueVM> GetDDL_CaseCode(int caseTypeId, string search = null, int? caseCodeId = null, bool byLoadGroup = false)
+
+        public List<SelectListItem> GetDDL_CaseTypes(string caseGroupIds, bool addDefaultElement = true)
         {
-            return Get_CaseCode(caseTypeId, search, caseCodeId, byLoadGroup)
-                        .Select(x => new LabelValueVM
-                        {
-                            Value = x.Id.ToString(),
-                            Label = x.Code + " " + x.Label,
-                            Description = x.LawBaseDescription
-                        }).ToList();
+            var listIds = new List<int>();
+            if (!string.IsNullOrEmpty(caseGroupIds))
+                listIds = caseGroupIds.Split(',').Select(Int32.Parse).ToList();
+            return repo.AllReadonly<CaseType>(x => (listIds.Count > 0 ? listIds.Contains(x.CaseGroupId) : false))
+                       .OrderBy(x => x.Label)
+                       .ToSelectList(addDefaultElement);
         }
 
-        public IQueryable<CaseCode> Get_CaseCode(int caseTypeId, string search = null, int? caseCodeId = null, bool byLoadGroup = false)
+        public List<LabelValueVM> GetDDL_CaseCode(int[] caseTypeIds, string search = null, int? caseCodeId = null, bool byLoadGroup = false)
+        {
+            var isSingleAndEmpty = false;
+            if (caseTypeIds == null || (caseTypeIds?.Length == 0 && caseTypeIds?.FirstOrDefault() == 0))
+            {
+                isSingleAndEmpty = true;
+            }
+            if (isSingleAndEmpty && (caseCodeId ?? 0) == 0)
+            {
+                return new List<LabelValueVM>();
+            }
+            DateTime today = DateTime.Today;
+            Expression<Func<CaseTypeCode, bool>> whereLink = x => caseTypeIds.Contains(x.CaseTypeId);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                whereLink = x => caseTypeIds.Contains(x.CaseTypeId) &&
+                (x.CaseCode.Code.Contains(search, StringComparison.InvariantCultureIgnoreCase) || x.CaseCode.Label.Contains(search, StringComparison.InvariantCultureIgnoreCase) || (x.CaseCode.LawBaseDescription ?? "").Contains(search, StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            Expression<Func<CaseCode, bool>> whereCode = x => true;
+            if (caseCodeId > 0)
+            {
+                whereLink = x => x.CaseCodeId == caseCodeId;
+                whereCode = x => x.Id == caseCodeId;
+            }
+
+            Expression<Func<CaseTypeCode, bool>> whereLoadGroup = x => true;
+            if (byLoadGroup && (caseCodeId ?? 0) == 0)
+            {
+                var typeInstances = repo.AllReadonly<CaseType>(x => caseTypeIds.Contains(x.Id))
+                                    .Select(x => (int?)x.CaseInstanceId).ToArray();
+                var codes = repo.AllReadonly<LoadGroupLinkCode>()
+                                    .Include(x => x.LoadGroupLink)
+                                    .Where(x => x.LoadGroupLink.CourtTypeId == userContext.CourtTypeId
+                                        && typeInstances.Contains(x.LoadGroupLink.CaseInstanceId)
+                                        )
+                                    .Select(x => x.CaseCodeId)
+                                    .ToArray();
+
+                whereLoadGroup = x => codes.Contains(x.CaseCodeId);
+            }
+
+            return repo.AllReadonly<CaseTypeCode>()
+                            .Include(x => x.CaseCode)
+                            .Where(whereLink)
+                            .Where(whereLoadGroup)
+                            .Select(x => x.CaseCode)
+                            .Where(whereCode)
+                            .Where(x => x.IsActive)
+                            .Where(x => x.DateStart <= today)
+                            .Where(x => (x.DateEnd ?? today) >= today)
+                            .OrderBy(x => x.Label)
+                            .Select(x => new LabelValueVM
+                            {
+                                Value = x.Id.ToString(),
+                                Label = x.Code + " " + x.Label,
+                                Description = x.LawBaseDescription
+                            }).ToList(); ;
+
+            //return Get_CaseCode(caseTypeId, search, caseCodeId, byLoadGroup)
+            //            .Select(x => new LabelValueVM
+            //            {
+            //                Value = x.Id.ToString(),
+            //                Label = x.Code + " " + x.Label,
+            //                Description = x.LawBaseDescription
+            //            }).ToList();
+        }
+
+        private IQueryable<CaseCode> Get_CaseCode(int caseTypeId, string search = null, int? caseCodeId = null, bool byLoadGroup = false)
         {
             if (caseTypeId <= 0 && (caseCodeId ?? 0) == 0)
             {
@@ -690,6 +799,8 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.LoadGroup)
                 .Include(x => x.GroupCodes)
                 .Where(x => x.CourtTypeId == courtTypeId && x.CaseInstanceId == caseInstanceId)
+                //Визуализират се групите по натовареност само с въведен базов индекс #41096
+                .Where(x => x.LoadIndex > 0M)
                 .Where(codeFilter)
                 .Where(x => x.LoadGroup.IsActive)
                 .Where(x => x.LoadGroup.DateStart <= today)
@@ -708,7 +819,10 @@ namespace IOWebApplication.Core.Services
 
         public List<HtmlTemplateDdlVM> GetDDL_HtmlTemplate(int notificationTypeId, int caseId, bool addDefaultElement = true)
         {
+
             var notificationType = repo.GetById<NotificationType>(notificationTypeId);
+            int htmlTemplateTypeId = notificationType?.HtmlTemplateTypeId ?? notificationTypeId;
+
             var caseCase = repo.GetById<Case>(caseId);
             var court = repo.GetById<Court>(caseCase.CourtId);
             var courtType = court.CourtTypeId;
@@ -716,13 +830,13 @@ namespace IOWebApplication.Core.Services
 
             var list = repo.All<HtmlTemplate>()
                 .Include(x => x.HtmlTemplateLinks)
-                .Where(x => (x.HtmlTemplateTypeId == (notificationType == null ? 0 : notificationType.HtmlTemplateTypeId)) &&
+                .Where(x => (x.HtmlTemplateTypeId == htmlTemplateTypeId) &&
                             (x.HtmlTemplateLinks.Any(p => (p.CourtTypeId ?? courtType) == courtType && (p.CaseGroupId ?? caseGroupe) == caseGroupe)))
                 .ToList();
             if (!list.Any())
                 list = repo.All<HtmlTemplate>()
                 .Include(x => x.HtmlTemplateLinks)
-                .Where(x => (x.HtmlTemplateTypeId == (notificationType == null ? 0 : notificationType.HtmlTemplateTypeId)) &&
+                .Where(x => (x.HtmlTemplateTypeId == htmlTemplateTypeId) &&
                             (!x.HtmlTemplateLinks.Any()))
                 .ToList();
             var result = list.Select(x => new HtmlTemplateDdlVM()
@@ -730,11 +844,16 @@ namespace IOWebApplication.Core.Services
                 Value = x.Id.ToString(),
                 Alias = x.Alias,
                 Text = x.Label,
-                HaveExpertReport = x.HaveExpertReport,
-                HaveSessionAct = x.HaveSessionAct,
-                HaveSessionActComplain = x.HaveSessionActComplain
-            }).OrderBy(x => x.Text).ToList();
-
+                HaveExpertReport = x.HaveExpertReport ?? false,
+                HaveSessionAct = x.HaveSessionAct ?? false,
+                HaveSessionActComplain = x.HaveSessionActComplain ?? false,
+                RequiredSessionActComplain = x.RequiredSessionActComplain ?? false,
+                HaveMultiActComplain = x.HaveMultiActComplain ?? false,
+                HaveDocumentSenderPerson = x.HaveDocumentSenderPerson ?? false
+            }).ToList();
+            if (notificationTypeId != NomenclatureConstants.HtmlTemplateTypes.All3Notification)
+                result.AddRange(GetDDL_HtmlTemplate(NomenclatureConstants.HtmlTemplateTypes.All3Notification, caseId, false));
+            result = result.OrderBy(x => x.Text).ToList();
             if (addDefaultElement)
             {
                 result = result
@@ -818,7 +937,8 @@ namespace IOWebApplication.Core.Services
                 NomenclatureConstants.NotificationState.Delivered47,
                 NomenclatureConstants.NotificationState.Delivered50,
                 NomenclatureConstants.NotificationState.Delivered51,
-                NomenclatureConstants.NotificationState.UnDelivered
+                NomenclatureConstants.NotificationState.UnDelivered,
+                NomenclatureConstants.NotificationState.UnDeliveredMail
              };
             var notificationStates = repo.All<NotificationDeliveryGroupState>()
                                         .Include(x => x.NotificationState)
@@ -1081,8 +1201,8 @@ namespace IOWebApplication.Core.Services
 
             return repo.AllReadonly<CourtTypeSessionType>()
                                     .Include(x => x.SessionType)
-                                    .Where(x => x.CourtTypeId == caseInfo.courtType && 
-                                                x.CaseTypeId == caseInfo.caseType && 
+                                    .Where(x => x.CourtTypeId == caseInfo.courtType &&
+                                                x.CaseTypeId == caseInfo.caseType &&
                                                 x.SessionType.IsActive &&
                                                 x.SessionType.SessionTypeGroup == SessionTypeGroupId)
                                     .Select(x => x.SessionType)
@@ -1339,14 +1459,28 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<Bank>().Where(x => x.CodeForSearch.ToUpper() == codeSearch.ToUpper()).FirstOrDefault();
         }
 
-        public List<SelectListItem> GetDDL_CaseTypeGroupInstance(int caseGroupId, int caseInstanceId)
+        public List<SelectListItem> GetDDL_CaseTypeGroupInstance(int caseGroupId, int caseInstanceId, string caseInstanceIds)
         {
-            return repo.AllReadonly<CaseType>(x => x.CaseGroupId == caseGroupId && x.CaseInstanceId == caseInstanceId)
+            Expression<Func<CaseType, bool>> caseInstanceWhere = x => true;
+            if (caseInstanceId > 0)
+                caseInstanceWhere = x => x.CaseInstanceId == caseInstanceId;
+
+            Expression<Func<CaseType, bool>> caseInstanceContainsWhere = x => true;
+            if (string.IsNullOrEmpty(caseInstanceIds) == false)
+            {
+                string[] instances = caseInstanceIds.Split(",").ToArray();
+                caseInstanceContainsWhere = x => instances.Contains(x.CaseInstanceId.ToString());
+            }
+
+            return repo.AllReadonly<CaseType>()
+                    .Where(x => x.CaseGroupId == caseGroupId)
+                    .Where(caseInstanceWhere)
+                    .Where(caseInstanceContainsWhere)
                    .OrderBy(x => x.Label)
                    .ToSelectList(true);
         }
 
-        public List<SelectListItem> GetDDL_HtmlTemplateByDocType(int documentTypeId, int caseId, int sourceType, int courtTypeId)
+        public List<SelectListItem> GetDDL_HtmlTemplateByDocType(int documentTypeId, int caseId, int sourceType, int courtTypeId, bool setDefault)
         {
             var info = repo.AllReadonly<Case>()
                                 .Include(x => x.Court)
@@ -1360,10 +1494,12 @@ namespace IOWebApplication.Core.Services
 
             var regDate = info == null ? DateTime.Now : info.RegDate;
             var caseGroupId = info == null ? 0 : info.CaseGroupId;
-            var templateType = repo.AllReadonly<DocumentType>()
+            var documentType = repo.AllReadonly<DocumentType>()
                                         .Where(x => x.Id == documentTypeId)
-                                        .Select(x => x.HtmlTemplateTypeId)
                                         .FirstOrDefault();
+
+            int htmlTemplateTypeId = documentType == null ? 0 : documentType.HtmlTemplateTypeId ?? 0;
+            int defaultHtmlTemplateId = documentType == null ? 0 : documentType.DefaultHtmlTemplateId ?? 0;
 
             Expression<Func<HtmlTemplate, bool>> linkWhere = x => x.HtmlTemplateLinks
                          .Where(a => (a.IsActive ?? true) == true &&
@@ -1372,7 +1508,7 @@ namespace IOWebApplication.Core.Services
                                      (a.CourtTypeId ?? courtTypeId) == courtTypeId).Any();
 
             var list = repo.All<HtmlTemplate>()
-                               .Where(x => x.HtmlTemplateTypeId == templateType && (x.DateTo ?? regDate) >= regDate)
+                               .Where(x => x.HtmlTemplateTypeId == htmlTemplateTypeId && (x.DateTo ?? regDate) >= regDate)
                                .Where(linkWhere)
                                .Select(x => new { x.Id, x.Label })
                                .ToList();
@@ -1395,7 +1531,8 @@ namespace IOWebApplication.Core.Services
             var result = list.OrderBy(x => x.Label).Select(x => new SelectListItem()
             {
                 Text = x.Label,
-                Value = x.Id.ToString()
+                Value = x.Id.ToString(),
+                Selected = setDefault == false ? false : (x.Id == defaultHtmlTemplateId ? true : false)
             }).ToList();
             result = result.Prepend(new SelectListItem() { Text = "Общ формуляр", Value = "-1" }).ToList();
 
@@ -1477,9 +1614,9 @@ namespace IOWebApplication.Core.Services
 
         public List<SelectListItem> GetDDL_ActComplainResult(int CaseTypeId, bool addDefaultElement = true, bool addAllElement = false)
         {
-            var selectListItems = repo.All<ActComplainResultCaseType>()
+            var selectListItems = repo.AllReadonly<ActComplainResultCaseType>()
                                       .Include(x => x.ActComplainResult)
-                                      .Where(x => x.CaseTypeId == CaseTypeId)
+                                      .Where(x => x.CaseTypeId == CaseTypeId && x.ActComplainResult.IsActive)
                                       .Select(x => new SelectListItem()
                                       {
                                           Text = x.ActComplainResult.Label,
@@ -1520,7 +1657,7 @@ namespace IOWebApplication.Core.Services
 
         public List<SelectListItem> GetDDL_ActComplainResult(bool addDefaultElement = true, bool addAllElement = false)
         {
-            var selectListItems = repo.All<ActComplainResult>()
+            var selectListItems = repo.AllReadonly<ActComplainResult>()
                                       .Where(x => x.IsActive)
                                       .Select(x => new SelectListItem()
                                       {
@@ -1557,7 +1694,8 @@ namespace IOWebApplication.Core.Services
             var selectListItems = repo.All<ActComplainIndexCourtTypeCaseGroup>()
                                       .Include(x => x.ActComplainIndex)
                                       .Where(x => x.CourtTypeId == caseCase.Court.CourtTypeId &&
-                                                  x.CaseGroupId == caseCase.CaseGroupId)
+                                                  x.CaseGroupId == caseCase.CaseGroupId &&
+                                                  x.ActComplainIndex.IsActive)
                                       .Select(x => new SelectListItem()
                                       {
                                           Text = (!string.IsNullOrEmpty(x.ActComplainIndex.Code) ? x.ActComplainIndex.Code + " " : string.Empty) + x.ActComplainIndex.Label,
@@ -1811,6 +1949,14 @@ namespace IOWebApplication.Core.Services
                        .ToSelectList();
         }
 
+        public List<SelectListItem> GetDDL_SessionStateRoute(int currentStateId)
+        {
+            return repo.AllReadonly<SessionStateRoute>()
+                       .Include(x => x.SessionStateTo)
+                       .Where(x => x.SessionStateFromId == currentStateId)
+                       .Select(x => x.SessionStateTo)
+                       .ToSelectList();
+        }
 
         public List<SelectListItem> GetDDL_Specyality_ByLowUnit_Type(int lawunitTypeId, bool addDefaultElement = true, bool addAllElement = false)
         {
@@ -1838,6 +1984,13 @@ namespace IOWebApplication.Core.Services
 
             return result;
         }
+        public CodeMapping GetInnerCodeFromCodeMappingStr(string alias, string outerCode)
+        {
+            return repo.AllReadonly<CodeMapping>()
+                                .Where(x => x.Alias == alias &&
+                                            x.OuterCode == outerCode)
+                                .FirstOrDefault();
+        }
 
         public int GetInnerCodeFromCodeMapping(string alias, string outerCode)
         {
@@ -1847,6 +2000,16 @@ namespace IOWebApplication.Core.Services
                                  .Select(x => x.InnerCode)
                                  .FirstOr("0"));
         }
+
+        public string GetOuterCodeFromCodeMapping(string alias, string innerCode)
+        {
+            return repo.AllReadonly<CodeMapping>()
+                               .Where(x => x.Alias == alias &&
+                                           x.InnerCode == innerCode)
+                               .Select(x => x.OuterCode)
+                               .FirstOrDefault();
+        }
+
 
         public List<SelectListItem> GetDDL_CaseSessionResult(bool addDefaultElement = true, bool addAllElement = false)
         {
@@ -1901,12 +2064,19 @@ namespace IOWebApplication.Core.Services
             return selectListItems;
         }
 
-        public List<SelectListItem> GetDDL_CaseTypeFromCourtType(int caseGroupId, bool addDefaultElement = true)
+        public List<SelectListItem> GetDDL_CaseTypeFromCourtType(int caseGroupId, string caseInstanceIds, bool addDefaultElement = true)
         {
-            var court = repo.GetById<Court>(userContext.CourtId);
+            Expression<Func<CourtTypeCaseType, bool>> caseInstanceContainsWhere = x => true;
+            if (string.IsNullOrEmpty(caseInstanceIds) == false)
+            {
+                string[] instances = caseInstanceIds.Split(",").ToArray();
+                caseInstanceContainsWhere = x => instances.Contains(x.CaseType.CaseInstanceId.ToString());
+            }
+
             var selectListItems = repo.AllReadonly<CourtTypeCaseType>()
-                                      .Where(x => x.CourtTypeId == court.CourtTypeId &&
+                                      .Where(x => x.CourtTypeId == userContext.CourtTypeId &&
                                                   x.CaseType.CaseGroupId == caseGroupId)
+                                      .Where(caseInstanceContainsWhere)
                                       .Select(x => new SelectListItem()
                                       {
                                           Text = x.CaseType.Label,
@@ -1929,7 +2099,7 @@ namespace IOWebApplication.Core.Services
         {
             var selectListItems = repo.All<ActComplainIndexCourtTypeCaseGroup>()
                                       .Include(x => x.ActComplainIndex)
-                                      .Where(x => x.CourtTypeId == userContext.CourtTypeId)
+                                      .Where(x => x.CourtTypeId == userContext.CourtTypeId && x.ActComplainIndex.IsActive)
                                       .Select(x => new SelectListItem()
                                       {
                                           Text = (!string.IsNullOrEmpty(x.ActComplainIndex.Code) ? x.ActComplainIndex.Code + " " : string.Empty) + x.ActComplainIndex.Label,
@@ -2520,6 +2690,157 @@ namespace IOWebApplication.Core.Services
                                 Value = x.Id.ToString(),
                                 Label = x.Label
                             });
+        }
+
+        public List<SelectListItem> GetDDL_ObligationJuryReportPersonType()
+        {
+            var selectListItems = new List<SelectListItem>();
+            selectListItems.Add(new SelectListItem() { Text = "Всички", Value = "-1" });
+            selectListItems.Add(new SelectListItem() { Text = "Съдебни заседатели", Value = SourceTypeSelectVM.LawUnitPrefix + NomenclatureConstants.LawUnitTypes.Jury });
+            selectListItems.Add(new SelectListItem() { Text = "Вещи лица", Value = SourceTypeSelectVM.CasePersonPrefix + NomenclatureConstants.PersonRole.Expert });
+            selectListItems.Add(new SelectListItem() { Text = "Експерти", Value = SourceTypeSelectVM.CasePersonPrefix + NomenclatureConstants.PersonRole.Consultant });
+            selectListItems.Add(new SelectListItem() { Text = "Преводачи", Value = SourceTypeSelectVM.CasePersonPrefix + NomenclatureConstants.PersonRole.Translator });
+
+            return selectListItems;
+        }
+
+        public int[] GetHtmlTemplateForCasePerson()
+        {
+            return repo.AllReadonly<HtmlTemplate>()
+                       .Where(x => (x.HaveCasePerson ?? false) == true)
+                       .Select(x => x.Id)
+                       .ToArray();
+        }
+
+        public List<SelectListItem> GetDDL_MoneyCountryReceiver()
+        {
+            var selectListItems = new List<SelectListItem>();
+            selectListItems.Add(new SelectListItem() { Text = "Избери", Value = "-1" });
+            selectListItems.Add(new SelectListItem() { Text = SourceTypeSelectVM.GetSourceTypeName(SourceTypeSelectVM.Court), Value = SourceTypeSelectVM.Court.ToString() });
+            selectListItems.Add(new SelectListItem() { Text = SourceTypeSelectVM.GetSourceTypeName(SourceTypeSelectVM.Instutution), Value = SourceTypeSelectVM.Instutution.ToString() });
+
+            return selectListItems;
+        }
+
+        public IQueryable<LawBaseVM> LawBase_Select(int CaseId)
+        {
+            var caseCase = GetCaseWithIncluded(CaseId);
+            return repo.AllReadonly<LawBase>()
+                       .Where(x => x.CourtTypeId == caseCase.Court.CourtTypeId &&
+                                   x.CaseInstanceId == caseCase.CaseType.CaseInstanceId &&
+                                   x.CaseGroupId == caseCase.CaseGroupId)
+                       .Select(x => new LawBaseVM()
+                       {
+                           Id = x.Id,
+                           Code = x.Code,
+                           Label = x.Label,
+                           CourtTypeLabel = x.CourtType.Label,
+                           CaseInstanceLabel = x.CaseInstance.Label,
+                           CaseGroupLabel = x.CaseGroup.Label,
+                           IsActive = x.IsActive
+                       })
+                       .AsQueryable();
+        }
+
+        public bool LawBase_SaveData(LawBaseEditVM model)
+        {
+            try
+            {
+                if (model.Id > 0)
+                {
+                    //Update
+                    var saved = repo.GetById<LawBase>(model.Id);
+                    saved.Code = model.Label;
+                    saved.Label = model.Label;
+                    saved.IsActive = model.IsActive;
+                    saved.DateStart = model.DateStart;
+                    saved.DateEnd = model.DateEnd;
+                    repo.Update(saved);
+                    repo.SaveChanges();
+                }
+                else
+                {
+                    //Insert
+                    var saved = new LawBase()
+                    {
+                        Id = model.Id,
+                        CaseGroupId = model.CaseGroupId,
+                        CaseInstanceId = model.CaseInstanceId,
+                        CourtTypeId = model.CourtTypeId,
+                        Code = model.Label,
+                        Label = model.Label,
+                        IsActive = model.IsActive,
+                        DateStart = model.DateStart,
+                        DateEnd = model.DateEnd,
+                        OrderNumber = 0
+                    };
+                    repo.Add<LawBase>(saved);
+                    repo.SaveChanges();
+                    model.Id = saved.Id;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на нормативен текст={ model.Id }");
+                return false;
+            }
+        }
+
+        public Case GetCaseWithIncluded(int CaseId)
+        {
+            return repo.AllReadonly<Case>()
+                       .Include(x => x.Court)
+                       .Include(x => x.CaseType)
+                       .Where(x => x.Id == CaseId)
+                       .FirstOrDefault();
+        }
+
+        public LawBaseEditVM LawBase_GetById(int id)
+        {
+            return repo.AllReadonly<LawBase>()
+                       .Where(x => x.Id == id)
+                       .Select(x => new LawBaseEditVM()
+                       {
+                           Id = x.Id,
+                           CourtTypeId = x.CourtTypeId,
+                           CaseInstanceId = x.CaseInstanceId,
+                           CaseGroupId = x.CaseGroupId,
+                           Code = x.Code,
+                           Label = x.Label,
+                           DateStart = x.DateStart,
+                           DateEnd = x.DateEnd,
+                           IsActive = x.IsActive
+                       })
+                       .FirstOrDefault();
+        }
+
+        public IEnumerable<SelectListItem> GetDDL_LawBase(int CaseId, bool addDefaultElement = true, bool addAllElement = false)
+        {
+            var result = LawBase_Select(CaseId).Where(x => x.IsActive).ToList().Select(x => new SelectListItem() { Value = x.Id.ToString(), Text = x.Label }) ?? new List<SelectListItem>();
+
+            if (addDefaultElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Избери", Value = "-1" })
+                    .ToList();
+            }
+
+            if (addAllElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Всички", Value = "-2" })
+                    .ToList();
+            }
+
+            return result;
+        }
+
+        public bool IsExistsNameLawBase(string Label)
+        {
+            var _label = Label.ToUpper();
+            return repo.AllReadonly<LawBase>()
+                       .Any(x => x.Label.ToUpper().Contains(_label));
         }
     }
 }

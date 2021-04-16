@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,8 +40,11 @@ namespace IOWebApplication.Controllers
                 CourtId = courtId ?? userContext.CourtId,
                 ExpiredType = 1
             };
+            ViewBag.CityCode_ddl = areaAddressService.GetEkatteByCourt(filter.CourtId);
             ViewBag.ExpiredType_ddl = areaAddressService.ExpiredTypeDDL();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryAreas().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom3);
+
             return View(filter);
         }
 
@@ -107,13 +107,14 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.LawUnitId_ddl = courtLawUnitService.LawUnitForCourt_SelectDDL(NomenclatureConstants.LawUnitTypes.MessageDeliverer, forCourtId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryArea(deliveryAreaId).DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom3);
         }
         [HttpPost]
         public IActionResult DeliveryArea_ExpiredInfo(ExpiredInfoVM model)
         {
             if (service.SaveExpireInfo<DeliveryArea>(model))
             {
-                SetSuccessMessage(MessageConstant.Values.CaseNotificationExpireOK);
+                SetSuccessMessage(MessageConstant.Values.DeliveryAreaExpireOK);
                 return Json(new { result = true, redirectUrl = model.ReturnUrl }); // Url.Action("CaseNotification", new { id = model.Id }) });
             }
             else

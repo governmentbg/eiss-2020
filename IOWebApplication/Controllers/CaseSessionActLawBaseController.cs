@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -63,7 +60,7 @@ namespace IOWebApplication.Controllers
                 return Redirect_Denied();
             }
             var act = service.GetById<CaseSessionAct>(caseSessionActId);
-            SetViewbag(caseSessionActId);
+            SetViewbag(caseSessionActId, act.CaseId ?? 0);
             var model = new CaseSessionActLawBase()
             {
                 CourtId = act.CourtId,
@@ -80,14 +77,14 @@ namespace IOWebApplication.Controllers
                 return Redirect_Denied();
             }
             var model = service.GetById<CaseSessionActLawBase>(id);
-            SetViewbag(model.CaseSessionActId);
+            SetViewbag(model.CaseSessionActId, model.CaseId ?? 0);
             return View(nameof(Edit), model);
         }
 
         [HttpPost]
         public IActionResult Edit(CaseSessionActLawBase model)
         {
-            SetViewbag(model.CaseSessionActId);
+            SetViewbag(model.CaseSessionActId, model.CaseId ?? 0);
 
             if (!ModelState.IsValid)
             {
@@ -99,7 +96,7 @@ namespace IOWebApplication.Controllers
                 SetAuditContext(service, SourceTypeSelectVM.CaseSessionActLawBase, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Edit), new { id = model.Id });
+                return RedirectToAction(nameof(Index), new { caseSessionActId = model.CaseSessionActId });
             }
             else
             {
@@ -108,9 +105,9 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        void SetViewbag(int caseSessionActId)
+        void SetViewbag(int caseSessionActId, int CaseId)
         {
-            ViewBag.LawBaseId_ddl = nomService.GetDropDownList<LawBase>();
+            ViewBag.LawBaseId_ddl = nomService.GetDDL_LawBase(CaseId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSessionActLawBase(caseSessionActId);
             SetHelpFile(HelpFileValues.SessionAct);
         }

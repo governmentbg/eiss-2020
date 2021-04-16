@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -12,20 +9,15 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.Integrations.CSRD;
-using IOWebApplication.Infrastructure.Models.Regix.FetchNomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client.Framing;
-using Remotion.Linq.Clauses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace IOWebApplication.Core.Services
 {
@@ -38,6 +30,7 @@ namespace IOWebApplication.Core.Services
     private readonly IWorkNotificationService notificationService;
     private readonly ICaseDeadlineService caseDeadlineService;
     private readonly ICommonService commonService;
+    private readonly ICourtLawUnitService courtLawUnitService;
     private readonly ICdnService cdnService;
     public CaseSelectionProtokolService(ILogger<CaseSelectionProtokolService> _logger,
         IRepository _repo,
@@ -47,6 +40,7 @@ namespace IOWebApplication.Core.Services
         IWorkNotificationService _notificationService,
         INomenclatureService _nomService,
         ICommonService _commonService,
+        ICourtLawUnitService _courtLawUnitService,
         ICaseDeadlineService _caseDeadlineService,
        ICdnService _cdnService)
 
@@ -61,6 +55,7 @@ namespace IOWebApplication.Core.Services
       commonService = _commonService;
       caseDeadlineService = _caseDeadlineService;
       cdnService = _cdnService;
+      courtLawUnitService = _courtLawUnitService;
     }
     /// <summary>
     /// Зарежда списък с спротокли за избор на съдебен състав
@@ -97,13 +92,38 @@ namespace IOWebApplication.Core.Services
       courtLoadPeriodService.CalculateAllKoef(caseSelectionProtokolVM);
 
       ///Изключване за голямо отклонение
+      ///
+      decimal case_deviation = 10;
+      decimal deviation_percent = 10;
+
+      try
+      {
+        var param_deviation = SystemParam_Select("case_deviation");
+        case_deviation = decimal.Parse(param_deviation.ParamValue);
+      }
+      catch (Exception)
+      {
+
+
+      }
+
+      try
+      {
+        var param_deviation_percent = SystemParam_Select("case_deviation_percent");
+        deviation_percent = decimal.Parse(param_deviation_percent.ParamValue);
+      }
+      catch (Exception)
+      {
+
+
+      }
       foreach (var lu1 in caseSelectionProtokolVM.LawUnits)
 
       {
-        if (NomenclatureConstants.SelectionProtokolLawUnitState.ActiveState.Contains(lu1.StateId))
+        if (NomenclatureConstants.SelectionProtokolLawUnitState.ActiveState.Contains(lu1.StateId) && lu1.CaseCount > case_deviation)
         {
 
-          foreach (var lu2 in caseSelectionProtokolVM.LawUnits)
+          foreach (var lu2 in caseSelectionProtokolVM.LawUnits.Where(x => NomenclatureConstants.SelectionProtokolLawUnitState.ActiveState.Contains(x.StateId)))
 
           {
             if (lu1.LawUnitId != lu2.LawUnitId)
@@ -112,8 +132,11 @@ namespace IOWebApplication.Core.Services
               {
                 decimal diff = lu1.CasesCountIfWorkAllPeriodInGroup - lu2.CasesCountIfWorkAllPeriodInGroup;
                 decimal deviation = diff / (lu2.CasesCountIfWorkAllPeriodInGroup + (decimal)0.001) * 100M;
-                //Залагам отклонение 10 % да се направи на константа
-                if (deviation > 10M)
+                //Залагам отклонение 40%  до 10 дела  и отспоред конфигурацията  над 10
+                decimal curent_deviation_percent = deviation_percent;
+                if (lu1.CaseCount < 10)
+                { curent_deviation_percent = 40; }
+                if (deviation > curent_deviation_percent)
                 {
                   lu1.ExcludeByBigDeviation = true;
                   break;
@@ -127,7 +150,7 @@ namespace IOWebApplication.Core.Services
           }
         }
       }
-      ///Изключване за голямо отклонение
+      //Изключване за голямо отклонение
 
 
       List<int> lawUnits = new List<int>();
@@ -154,30 +177,66 @@ namespace IOWebApplication.Core.Services
       }
       //int maxLoadindex = (protokolLawUnits.Select(x => x.KoefNormalized).Max());
       bool exitLoop = false;
-      while (exitLoop == false)
 
+      //Добавя билети размесени START
+      //while (exitLoop == false)
+
+      //{
+      //  bool allKoefFinished = true;
+      //  foreach (var item in protokolLawUnits)
+      //  {
+      //    if (item.KoefNormalized <= 0) continue;
+
+      //    if (item.KoefNormalized >= (decimal)0.5)
+      //    {
+      //      lawUnits.Add(item.LawUnitId);
+      //      item.KoefNormalized--;
+      //      allKoefFinished = false;
+      //    }
+      //  }
+      //  if (allKoefFinished)
+      //  {
+      //    exitLoop = true;
+      //  }
+      //}
+      //Добавя билети размесени END
+
+      //Добавя билети последователно Start
+
+
+      foreach (var item in protokolLawUnits)
       {
-        bool allKoefFinished = true;
-        foreach (var item in protokolLawUnits)
+        while (item.KoefNormalized > 0)
         {
-          if (item.KoefNormalized <= 0) continue;
-
-          if (item.KoefNormalized >= (decimal)0.5)
-          {
-            lawUnits.Add(item.LawUnitId);
-            item.KoefNormalized--;
-            allKoefFinished = false;
-          }
-        }
-        if (allKoefFinished)
-        {
-          exitLoop = true;
+          lawUnits.Add(item.LawUnitId);
+          item.KoefNormalized = item.KoefNormalized - 1;
         }
       }
 
-      Random rnd = new Random();
-      int r = rnd.Next(lawUnits.Count);
-      caseSelectionProtokol.SelectedLawUnitId = lawUnits[r];
+
+      //Добавя билети последователно END
+      //Избор след като 2 пъти рандом се избере един  съдия
+      List<int> LawUnnitsSelectedForFirstTime = new List<int>();
+      exitLoop = false;
+      int r = 0;
+      while (exitLoop == false)
+      {
+        Random rnd = new Random();
+        r = rnd.Next(lawUnits.Count);
+
+        if (LawUnnitsSelectedForFirstTime.Contains(lawUnits[r]))
+        {
+          caseSelectionProtokol.SelectedLawUnitId = lawUnits[r];
+          exitLoop = true;
+        }
+        else
+        { LawUnnitsSelectedForFirstTime.Add(lawUnits[r]); }
+
+
+      }
+
+
+
 
 
       if (caseSelectionProtokolVM.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
@@ -189,6 +248,63 @@ namespace IOWebApplication.Core.Services
 
     }
 
+    //private void SetSelectedLawUnit_SaveCaseLawUnit(CaseSelectionProtokol caseSelectionProtokol, CaseSelectionProtokolVM caseSelectionProtokolVM)
+    //{
+
+    //  courtLoadPeriodService.MakeDaylyLoadPeriodLawuitRowsByGroup(caseSelectionProtokolVM);
+    //  courtLoadPeriodService.CalculateAllKoef(caseSelectionProtokolVM);
+
+
+    //  List<int> lawUnits = new List<int>();
+    //  var protokolLawUnits = new List<CaseSelectionProtokolLawUnitVM>();
+
+    //  decimal activeNormalizedKoef = 0;
+    //  foreach (var item in caseSelectionProtokolVM.LawUnits)
+    //  {
+    //    if (NomenclatureConstants.SelectionProtokolLawUnitState.ActiveState.Contains(item.StateId))
+    //    {
+    //      CaseSelectionProtokolLawUnitVM itemNew = new CaseSelectionProtokolLawUnitVM();
+    //      itemNew.LawUnitId = item.LawUnitId;
+    //      itemNew.KoefNormalized = item.KoefNormalized;
+    //      activeNormalizedKoef = activeNormalizedKoef + item.KoefNormalized;
+    //      protokolLawUnits.Add(itemNew);
+    //    }
+    //  }
+    //  //Нормализиране на активнике коефициенти към 100
+    //  foreach (var item in protokolLawUnits)
+    //  {
+    //    item.KoefNormalized = item.KoefNormalized / activeNormalizedKoef * 100;
+
+
+    //  }
+    //  //int maxLoadindex = (protokolLawUnits.Select(x => x.KoefNormalized).Max());
+    //  for (int i = 101; i >= 1; i--)
+    //  {
+    //    foreach (var item in protokolLawUnits)
+    //    {
+    //      if (item.KoefNormalized <= 0) continue;
+    //      decimal percent = (decimal)item.KoefNormalized / (decimal)i;
+    //      if (percent >= (decimal)0.5)
+    //      {
+    //        lawUnits.Add(item.LawUnitId);
+    //        item.LoadIndex--;
+    //      }
+    //    }
+    //  }
+
+    //  Random rnd = new Random();
+    //  int r = rnd.Next(lawUnits.Count);
+    //  caseSelectionProtokol.SelectedLawUnitId = lawUnits[r];
+
+
+    //  if (caseSelectionProtokolVM.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+    //  {
+
+    //    courtLoadPeriodService.UpdateDailyLoadPeriod(caseSelectionProtokolVM.CourtGroupId, caseSelectionProtokolVM.CourtDutyId, lawUnits[r]);
+    //  }
+    //  courtLoadPeriodService.MergeCaseSelectionProtokolAndVM(caseSelectionProtokol, caseSelectionProtokolVM);
+
+    //}
     //Ако е съдия докладчик да провери дали вече има разпределен защото не може повече от един
     private bool CheckForJudgeReporter(CaseSelectionProtokolVM model, List<CaseLawUnit> caseLawUnits, ref string errorMessage)
     {
@@ -419,7 +535,7 @@ namespace IOWebApplication.Core.Services
           if (!model.IsProtokolNoSelection)
           {
             SetSelectedLawUnit_SaveCaseLawUnit(caseSelectionProtokol, model);
-            caseSelectionProtokol.LawUnits = SetTotalCourtCaseCount_LawUnit(caseSelectionProtokol.LawUnits, caseSelectionProtokol.CourtId, caseSelectionProtokol.SelectedLawUnitId);
+            caseSelectionProtokol.LawUnits = SetTotalCourtCaseCount_LawUnit(caseSelectionProtokol.LawUnits, caseSelectionProtokol.CourtId, caseSelectionProtokol.JudgeRoleId, caseSelectionProtokol.SelectedLawUnitId);
 
           }
           //Insert
@@ -461,13 +577,17 @@ namespace IOWebApplication.Core.Services
       var endDate = today.AddDays(1);
       var result = repo.AllReadonly<CourtLawUnitGroup>()
                               .Include(x => x.LawUnit)
+                              .ThenInclude(x => x.Courts)
                               .Include(x => x.CourtGroup)
+
                               .Where(x => x.CourtGroupId == courtGroupId)
                               .Where(x => x.DateFrom <= today && (x.DateTo ?? endDate) >= today)
 
                                //За да не вхаща тези които не са назначени в момента
                                .Where(x => x.LawUnit.DateFrom <= today && (x.LawUnit.DateTo ?? endDate) >= today)
                               //За да не вхаща тези които не са назначени в момента
+                              .Where(x => x.LawUnit.Courts.Where(c => c.CourtId == courtId && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId) && c.DateFrom <= today && (c.DateTo ?? endDate) >= today).Any())
+
                               .Select(x => new CaseSelectionProtokolLawUnitVM
                               {
                                 IsLoaded = true,
@@ -538,7 +658,7 @@ namespace IOWebApplication.Core.Services
         StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Include,
         EnableState = true
       }).ToArray();
-
+      result = AddJuryCrossMeatings(caseId, courtId, result);
       return LawUnit_SetIndex(result);
     }
     /// <summary>
@@ -597,9 +717,15 @@ namespace IOWebApplication.Core.Services
                                         .Include(x => x.CaseLawUnit)
                                         .Where(x => x.CaseLawUnit.CaseId == caseId).ToList();
 
+      //Списък на използвани преразпределения
+      List<int> caseProtocol = repo.AllReadonly<CaseSelectionProtokol>()
+                                 .Where(x => x.CaseId == caseId && x.CaseLawUnitDismisalId != null)
+
+                                 .Select(x => (x.CaseLawUnitDismisalId ?? 0)).ToList();
+      //Списък на използвани преразпределения
       var caseLawUnit = repo.AllReadonly<CaseLawUnit>()
-                             .Where(x => x.CaseId == caseId)
-                             .Where(x => x.CaseSessionId == null).ToList();
+                                   .Where(x => x.CaseId == caseId)
+                                   .Where(x => x.CaseSessionId == null).ToList();
 
       var today = DateTime.Now.Date;
       var endDate = today.AddDays(1).Date;
@@ -618,9 +744,24 @@ namespace IOWebApplication.Core.Services
       {
         model[i].EnableState = true;
 
+        //Сетват се тези които са с незаето преразпределение
+        var dismisal = caseLawUnitDismis.Where(x => x.CaseLawUnit.LawUnitId == model[i].LawUnitId)
+                               .Where(x => x.CaseLawUnit.JudgeRoleId == judgeRoleId)
+                               .Where(x => x.DismisalTypeId == NomenclatureConstants.DismisalType.Prerazpredelqne)
+                               .Where(x => caseProtocol.Contains(x.Id) == false)
+                               .FirstOrDefault();
+        if (dismisal != null)
+        {
+          model[i].StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Exclude;
+          model[i].Description = "Прерзпределение:" + dismisal.Description;
+          model[i].EnableState = false;
+          continue;
+        }
+        //Сетват се тези които са с незаето преразпределение
+
         //Сетват се тези които са с отвод
         if (caseLawUnitDismis.Where(x => x.CaseLawUnit.LawUnitId == model[i].LawUnitId)
-                              .Where(x => x.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod).Any())
+                                      .Where(x => x.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod).Any())
         {
           model[i].StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Exclude;
           model[i].Description = "Отвод";
@@ -739,6 +880,7 @@ namespace IOWebApplication.Core.Services
              CourtId = x.CourtId,
              CourtName = x.Court.Label,
              SelectionDate = x.SelectionDate.ToString("dd.MM.yyyy HH:mm"),
+             SelectionDateDateTime = x.SelectionDate,
              RegNumber = x.Case.RegNumber,
              JudgeRoleName = x.JudgeRole.Label,
              JudgeRoleId = x.JudgeRoleId,
@@ -763,6 +905,7 @@ namespace IOWebApplication.Core.Services
              ComparentmentName = x.CompartmentName,
              DismisalReason = x.CaseLawUnitDismisal.Description,
              DismisalId = x.CaseLawUnitDismisalId,
+
              LawUnits = x.LawUnits.Select(p => new CaseSelectionProtokolLawUnitPreviewVM
              {
                Id = p.LawUnitId,
@@ -808,6 +951,8 @@ namespace IOWebApplication.Core.Services
             result.PrevUserName = prevProtocol.User.LawUnit.FullName;
           }
 
+
+
         }
         catch (Exception)
         {
@@ -816,6 +961,25 @@ namespace IOWebApplication.Core.Services
         }
 
 
+
+      }
+      if (NomenclatureConstants.JudgeRole.JuriRolesList.Contains(result.JudgeRoleId ?? 0))
+      {
+        var _case = repo.GetById<Case>(result.CaseId);
+
+        if (_case.JudicalCompositionId != null)
+        {
+          result.ComparentmentName = repo.GetById<CourtDepartment>(_case.JudicalCompositionId).Label.ToString();
+        }
+        var meeating = NextCaseOpenSessionMeeting(result.CaseId, (result.SelectionDateDateTime ?? DateTime.Now));
+        if (meeating != null)
+        {
+          result.NextMeatingDate = meeating.DateFrom.ToString("dd.MM.yyyy HH:mm");
+        }
+        else
+        {
+          result.NextMeatingDate = "";
+        }
 
       }
       return result;
@@ -901,10 +1065,12 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.CaseSelectionProtokol.SelectionMode)
                 .Include(x => x.CaseSelectionProtokol.Case)
                 .Include(x => x.CaseSelectionProtokol.Case.CaseState)
+                .Include(x => x.CaseSelectionProtokol.Case.Document)
                 .Include(x => x.CaseSelectionProtokol.SelectionProtokolState)
                 .Include(x => x.CaseSelectionProtokol.User)
                 .Include(x => x.CaseSelectionProtokol.User.LawUnit)
                 .Where(x => x.CaseSelectionProtokol.Case.CourtId == courtId)
+                .Where(x => x.CaseSessionId == null)
                 .Where(dateSearch)
                 .Where(nameSearch)
                 .Where(caseRegnumberSearch)
@@ -924,10 +1090,13 @@ namespace IOWebApplication.Core.Services
                   CaseId = x.CaseSelectionProtokol.CaseId,
                   CaseNumber = x.CaseSelectionProtokol.Case.RegNumber,
                   CaseDate = x.CaseSelectionProtokol.Case.RegDate,
+                  DocumentId = x.Case.DocumentId,
+                  DocumentNumber = x.Case.Document.DocumentNumber,
+                  DocumentNumberVal = x.Case.Document.DocumentNumberValue,
                   Uic = x.CaseSelectionProtokol.SelectedLawUnit.Uic,
                   FullName = x.LawUnit.FullName,
                   SelectionDate = x.CaseSelectionProtokol.SelectionDate,
-                  JudgeRoleName = (x.CaseSelectionProtokol.SelectedLawUnitId == x.LawUnitId) ? x.CaseSelectionProtokol.JudgeRole.Label: x.CaseSelectionProtokol.JudgeRole.Label+ " (избран като член от състав)",
+                  JudgeRoleName = (x.CaseSelectionProtokol.SelectedLawUnitId == x.LawUnitId) ? x.CaseSelectionProtokol.JudgeRole.Label : x.CaseSelectionProtokol.JudgeRole.Label + " (избран като член от състав)",
                   SelectionModeName = (x.CaseSelectionProtokol.SelectedLawUnitId == x.LawUnitId) ? x.CaseSelectionProtokol.SelectionMode.Label : "Постоянен състав",
                   CaseStateLabel = x.CaseSelectionProtokol.Case.CaseState.Label,
                   SelectionProtokolStateName = x.CaseSelectionProtokol.SelectionProtokolState.Label,
@@ -940,21 +1109,28 @@ namespace IOWebApplication.Core.Services
     /// Зарежда съдии по група дела
     /// </summary>
     /// <param name="courtId">ID на съд</param>
-    /// <param name="caseGroupId">ID група за разпределение</param>
+    /// <param name="CaseGroups">ID група за разпределение</param>
     /// <param name="lawUnitsIds">списък на използвани групи</param>
     /// <param name="caseId">Id na </param>
     /// <returns></returns>
-    public IEnumerable<CaseSelectionProtokolLawUnitVM> LawUnit_LoadJudgeByCaseGroup(int courtId, int caseGroupId, string lawUnitsIds, int caseId, int judgeRole)
+    public IEnumerable<CaseSelectionProtokolLawUnitVM> LawUnit_LoadJudgeByCaseGroup(int courtId, CheckListVM[] CaseGroups, string lawUnitsIds, int caseId, int judgeRoleId)
     {
-      string[] existsIds = (lawUnitsIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+      int[] existsIds = (lawUnitsIds ?? "0").Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToArray(); ;
+
+      int[] groups = CaseGroups.Where(x => x.Checked).Select(x => int.Parse(x.Value)).ToArray();
       var today = DateTime.Now;
       var endDate = today.AddDays(1);
       var result = repo.AllReadonly<CourtLawUnitGroup>()
                               .Include(x => x.LawUnit)
+                              .ThenInclude(x => x.Courts)
                               .Include(x => x.CourtGroup)
-                              .Where(x => x.CourtGroup.CaseGroupId == caseGroupId && x.CourtId == courtId)
+                              //.Where(x => x.CourtGroup.CaseGroupId == caseGroupId && x.CourtId == courtId)
+                              .Where(x => groups.Contains(x.CourtGroup.CaseGroupId) && x.CourtId == courtId)
                               .Where(x => x.DateFrom <= today && (x.DateTo ?? endDate) >= today &&
-                                     existsIds.Contains(x.LawUnitId.ToString()) == false)
+                                     existsIds.Contains(x.LawUnitId) == false)
+                             .Where(x => x.LawUnit.Courts.Where(c => c.CourtId == courtId && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId) && c.DateFrom <= today && (c.DateTo ?? endDate) >= today).Any())
+
+
                               .Select(x => new CaseSelectionProtokolLawUnitVM
                               {
                                 IsLoaded = true,
@@ -962,11 +1138,13 @@ namespace IOWebApplication.Core.Services
                                 LawUnitId = x.LawUnitId,
                                 LawUnitFullName = x.LawUnit.FullName,
                                 SelectedFromCaseGroup = true,
-                                CaseGroupId = caseGroupId,
+                                CaseGroupId = x.CourtGroup.CaseGroupId,
                                 StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Include
-                              }).Distinct().ToArray();
+                              })
+                              .GroupBy(x => x.LawUnitId)
+                              .Select(grp => grp.FirstOrDefault()).ToArray();
 
-      SetDataExcludeLawUnit(result, caseId, courtId, judgeRole);
+      SetDataExcludeLawUnit(result, caseId, courtId, judgeRoleId);
       return LawUnit_SetIndex(result);
     }
 
@@ -1170,6 +1348,56 @@ namespace IOWebApplication.Core.Services
       return result;
     }
 
+    //public IEnumerable<CaseSelectionProtokolLawUnitPreviewVM> GetComparentmentJudges(int case_id, int judge_id)
+    //{
+    //  IEnumerable<CaseSelectionProtokolLawUnitPreviewVM> result = null;
+    //  var _case = repo.AllReadonly<Case>()
+    //                        .Where(x => x.Id == case_id).FirstOrDefault();
+
+    //  var compartment = repo.AllReadonly<Compartment>()
+    //                                   .Where(x => x.LawUnitId == judge_id)
+    //                                   .Where(x => x.CourtId == _case.CourtId)
+    //                                    .Where(x => x.DateTo == null).FirstOrDefault();
+
+    //  if (compartment != null)
+    //  {
+    //    var comparement_lu = repo.AllReadonly<CompartmentLawUnit>()
+    //                             .Where(x => x.CompartmentId == compartment.Id).Select(x => x.LawUnitId).ToArray();
+
+    //    //Съдиите от състава на избрания съдя
+    //    result = repo.AllReadonly<CourtLawUnit>()
+    //                                 .Where(x => comparement_lu.Contains(x.LawUnitId))
+    //                                    .Select(x => new CaseSelectionProtokolLawUnitPreviewVM
+    //                                    {
+    //                                      Id = x.LawUnitId,
+    //                                      LawUnitFullName = x.LawUnit.FullName,
+
+    //                                    }).Distinct().ToList();
+    //  }
+    //  if (result != null)
+    //  {
+    //    var date = DateTime.Now;
+    //    //добавени членове в делото
+    //    int case_law_units_count = repo.AllReadonly<CaseLawUnit>()
+    //                       .Where(x => x.CaseId == case_id)
+    //                       .Where(x => x.CaseSessionId == null)
+    //                       .Where(x => NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(x.JudgeRoleId))
+    //                       .Where(x => x.CaseId == case_id && (x.DateFrom.Date <= date.Date && (x.DateTo ?? date.AddDays(1)).Date >= date.Date))
+    //                       .Count();
+
+    //    //възможна бройка
+    //    var availabe_judges_places = repo.AllReadonly<CaseLawUnitCount>()
+    //                                 .Where(x => x.CaseId == case_id)
+    //                                 .Where(x => NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(x.JudgeRoleId))
+    //                                 .Select(x => x.PersonCount)
+    //                                 .DefaultIfEmpty(0)
+    //                                 .Sum();
+    //    if (result.Count() > availabe_judges_places - case_law_units_count)
+    //    {
+    //      result = null;
+    //    }
+    //  }
+
     // return result;
     // }
     /// <summary>
@@ -1245,7 +1473,9 @@ namespace IOWebApplication.Core.Services
       if (model.SelectedLawUnitId != null)
       {
         CaseLowUnitsFroSelectionProtocom_insert(id);
+        courtLawUnitService.CourtLawUnitOrder_ActualizeForCase(model.CaseId);
         caseDeadlineService.DeadLineCompanyCaseByCaseId(model.CaseId);
+
       }
       return true;
     }
@@ -1527,6 +1757,7 @@ namespace IOWebApplication.Core.Services
             notificationService.SaveWorkNotification(notification);
           }
         }
+        commonService.UpdateCaseJudicalCompositionOtdelenie(selectionProtokol.CaseId);
       }
 
       catch (Exception ex)
@@ -1630,7 +1861,7 @@ namespace IOWebApplication.Core.Services
     /// <param name="lawUnits">Списък от съдии</param>
     /// <param name="courtId">ID на съд</param>
     /// <returns></returns>
-    private List<CaseSelectionProtokolLawUnit> SetTotalCourtCaseCount_LawUnit(ICollection<CaseSelectionProtokolLawUnit> lawUnits, int courtId, int? selectedLawUnit = -1)
+    private List<CaseSelectionProtokolLawUnit> SetTotalCourtCaseCount_LawUnit(ICollection<CaseSelectionProtokolLawUnit> lawUnits, int courtId, int? judge_role_id, int? selectedLawUnit = -1)
     {
       List<CaseSelectionProtokolLawUnit> result = new List<CaseSelectionProtokolLawUnit>();
 
@@ -1642,6 +1873,7 @@ namespace IOWebApplication.Core.Services
         var countCC = repo.AllReadonly<CourtLoadPeriodLawUnit>()
                              .Include(x => x.CourtLoadPeriod)
 
+
                           //За да отчете период за нулиране на натоварване
                           .Where(x => (x.CourtLoadPeriod.CourtLoadResetPeriod.DateTo ?? dt) >= dt && x.CourtLoadPeriod.CourtLoadResetPeriod.DateFrom < dt)
                           .Where(x => x.CourtLoadPeriod.CourtLoadResetPeriod.CourtId == courtId)
@@ -1649,9 +1881,11 @@ namespace IOWebApplication.Core.Services
                              .Select(x => x.DayCases).Sum();
 
 
-        if (item.Id == selectedLawUnit && countCC > 0)
+        if (item.LawUnitId == selectedLawUnit && countCC > 0 && judge_role_id == NomenclatureConstants.JudgeRole.JudgeReporter)
 
-        { countCC = countCC - 1; }
+        {
+          countCC = countCC - 1;
+        }
         item.CaseCourtCount = (int)countCC;
         result.Add(item);
       }
@@ -1964,32 +2198,34 @@ namespace IOWebApplication.Core.Services
         .Where(x => x.CourtLoadPeriod.CourtLoadResetPeriod.CourtId == courtId)
         .Where(x => x.CourtLoadPeriod.CourtGroupId == courtGropId)
         .Where(x => (x.CourtLoadPeriod.CourtLoadResetPeriod.DateTo ?? dateNow) >= dateNow)
+        .Where(x => (x.CourtLoadPeriod.CourtLoadResetPeriod.DateFrom) <= dateNow)
         .Where(x => (x.LawUnitId ?? 0) > 0)
         .Where(searchLawUnitId)
         .GroupBy(x => new
         {
           x.LawUnitId,
-          x.LawUnit.FullName,
-          x.CourtLoadPeriod.CourtGroupId
-          //,
-          //  dateFrom = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
-          //OrderByDescending(a => a.DateFrom.Date).Select(a => a.DateFrom.Date).FirstOrDefault(),
-          //  loadIndex = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
-          //OrderByDescending(a => a.DateFrom.Date).Select(a => a.LoadIndex).FirstOrDefault(),
+          x.LawUnit.FullName
+                //,x.CourtLoadPeriod.CourtGroupId
+                //,
+                //  dateFrom = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
+                //OrderByDescending(a => a.DateFrom.Date).Select(a => a.DateFrom.Date).FirstOrDefault(),
+                //  loadIndex = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
+                //OrderByDescending(a => a.DateFrom.Date).Select(a => a.LoadIndex).FirstOrDefault(),
 
-        })
+              })
                                 .Select(g => new CaseSelectionProtokolLawUnitPreviewVM
                                 {
                                   LawUnitId = g.Key.LawUnitId ?? 0,
                                   LawUnitFullName = (g.Key.FullName == null ? "Общо" : g.Key.FullName),
-                                  CaseCount = (int)Math.Round(g.Sum(x => g.Key.LawUnitId == null ? x.TotalDayCases : x.DayCases)),
+                                        //CaseCount = g.Sum(x => (g.Key.LawUnitId != null) ? x.DayCases : x.DayCases)),
+                                        CaseCount = g.Sum(x => (int)Math.Round(x.DayCases)),
                                   CaseCourtTotalCount = 1
-                                  //,
-                                  //FromDateInGROUP = g.Key.dateFrom,
-                                  //LoadIndex = g.Key.loadIndex
+                                        //,
+                                        //FromDateInGROUP = g.Key.dateFrom,
+                                        //LoadIndex = g.Key.loadIndex
 
 
-                                }).ToList();
+                                      }).ToList();
 
       foreach (var item in result)
       {
@@ -2025,7 +2261,7 @@ namespace IOWebApplication.Core.Services
       DateTime endDate = date.AddDays(1);
       var lawUnits = repo.AllReadonly<CourtLawUnit>()
                                    .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge)
-                                   .Where(x => x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint || x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move)
+                                   .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                    .Where(x => x.CourtId == courtId)
                                    .Where(x => x.DateFrom <= date && (x.DateTo ?? endDate) >= date)
                                   .ToList();
@@ -2059,14 +2295,16 @@ namespace IOWebApplication.Core.Services
 
                 }
                 ).ToList();
-      SelectListItem department= new SelectListItem()
+      SelectListItem department = new SelectListItem()
       {
         Text = "Постоянен състав",
         Value = "4"
 
       };
       result.Add(department);
-
+      result = result
+                     .Prepend(new SelectListItem() { Text = "Всички", Value = "-2" })
+                     .ToList();
 
       return result;
     }
@@ -2075,7 +2313,7 @@ namespace IOWebApplication.Core.Services
       List<SelectListItem> result = null;
 
       var judge_roles = repo.AllReadonly<JudgeRole>()
-        .Where(x=>NomenclatureConstants.JudgeRole.JuriRolesList.Contains(x.Id)|| NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(x.Id))
+        .Where(x => NomenclatureConstants.JudgeRole.JuriRolesList.Contains(x.Id) || NomenclatureConstants.JudgeRole.JudgeRolesList.Contains(x.Id))
                          .OrderBy(x => x.OrderNumber).ToList();
 
       result = (from l in judge_roles
@@ -2088,14 +2326,144 @@ namespace IOWebApplication.Core.Services
 
                 }
                 ).ToList();
-   
-        result = result
-                    .Prepend(new SelectListItem() { Text = "Всички", Value = "-2" })
-                    .ToList();
 
- 
+      result = result
+                  .Prepend(new SelectListItem() { Text = "Всички", Value = "-2" })
+                  .ToList();
+
+
 
       return result;
+    }
+    public Int32 IfJuryReturnCaseIdToRedirect(int id)
+    {
+      Int32 result = 0;
+      var model = repo.GetById<CaseSelectionProtokol>(id);
+
+      if (NomenclatureConstants.JudgeRole.JuriRolesList.Contains(model.JudgeRoleId))
+      {
+        result = model.CaseId;
+      }
+      return result;
+    }
+
+    public CaseSessionMeeting NextCaseOpenSessionMeeting(int case_id, DateTime dateAfterSearch)
+    {
+
+      DateTime current_time = dateAfterSearch;
+
+      var next_meeting = repo.AllReadonly<CaseSessionMeeting>()
+                                                 .Include(x => x.CaseSession)
+                                                 .ThenInclude(x => x.CaseLawUnits)
+                                                 .Include(x => x.Case)
+                                                 .Where(x => (x.CaseId == case_id) &&
+                                                             //(x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
+                                                             (x.CaseSession.SessionType.SessionTypeGroup == NomenclatureConstants.CaseSessionTypeGroup.PublicSession) &&
+                                                             (x.CaseSession.DateExpired == null) &&
+                                                             (x.DateExpired == null) &&
+                                                             (x.DateFrom > current_time)
+                                                           )
+                                                 .OrderBy(x => x.DateFrom).FirstOrDefault();
+
+
+
+      return next_meeting;
+    }
+
+    private CaseSelectionProtokolLawUnitVM[] AddJuryCrossMeatings(int case_id, int court_id, CaseSelectionProtokolLawUnitVM[] current_lawunits)
+    {
+
+
+      DateTime current_time = DateTime.Now;
+
+      var next_case_meeting = NextCaseOpenSessionMeeting(case_id, DateTime.Now);
+
+      if (next_case_meeting != null)
+      {
+        var all_cross_meetings = repo.AllReadonly<CaseSessionMeeting>()
+                                                   .Include(x => x.CaseSession)
+                                                   .ThenInclude(x => x.CaseLawUnits)
+                                                   .Include(x => x.Case)
+                                                    .Where(x => (x.CourtId == court_id) &&
+                                                             (x.Case.Id != case_id) &&
+                                                             //(x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
+                                                             (x.CaseSession.SessionType.SessionTypeGroup == NomenclatureConstants.CaseSessionTypeGroup.PublicSession) &&
+                                                             (x.CaseSession.DateExpired == null) &&
+                                                             (x.DateExpired == null) &&
+                                                             (x.DateFrom > current_time) &&
+                                                             (
+                                                             ((x.DateFrom <= next_case_meeting.DateFrom) && (x.DateTo >= next_case_meeting.DateFrom)) ||
+                                                              ((next_case_meeting.DateFrom <= x.DateFrom) && (next_case_meeting.DateTo >= x.DateFrom))
+                                                             )
+                                                             )
+                                                   .ToList();
+        var courtlawUnitHolidayOrIll = repo.AllReadonly<CourtLawUnit>()
+                           .Include(x => x.LawUnit)
+
+                             .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury &&
+                             (
+                               ((x.DateFrom <= next_case_meeting.DateFrom) && ((x.DateTo ?? next_case_meeting.DateFrom) >= next_case_meeting.DateFrom)) ||
+                               ((next_case_meeting.DateFrom <= x.DateFrom) && (next_case_meeting.DateTo >= x.DateFrom))
+                               )
+                             &&
+                              ((x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill) || (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday))
+                              && (x.CourtId == next_case_meeting.CourtId)
+                           ).ToList();
+
+
+        foreach (var lu in current_lawunits)
+        {
+
+          var isCross = string.Empty;
+
+
+          foreach (var caseSessionMeeting in all_cross_meetings)
+          {
+            if (caseSessionMeeting.CaseSession.CaseLawUnits.Any(x => x.LawUnitId == lu.LawUnitId))
+            {
+              if (isCross == string.Empty)
+                isCross = "Участва в ОСЗ на дата: " + caseSessionMeeting.DateFrom.ToString("dd.MM.yyyy") + " по дело: " + caseSessionMeeting.Case.RegNumber + "/" + caseSessionMeeting.Case.RegDate.ToString("dd.MM.yyyy");
+              else
+                isCross += ", на дата: " + caseSessionMeeting.DateFrom.ToString("dd.MM.yyyy") + " по дело: " + caseSessionMeeting.Case.RegNumber + "/" + caseSessionMeeting.Case.RegDate.ToString("dd.MM.yyyy");
+
+            }
+          }
+          if (isCross.Length > 0)
+          {
+            lu.StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Exclude;
+            lu.Description = isCross;
+
+          }
+
+          //--------------------------------------------------------
+          var clu = courtlawUnitHolidayOrIll.Where(x => x.LawUnitId == lu.LawUnitId && x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill).FirstOrDefault();
+
+          if (clu != null)
+          {
+            lu.StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Exclude;
+            lu.Description = "Болничен от: " + clu.DateFrom.Date.ToString("dd.MM.yyyy" + " г.");
+            if (clu.DateTo != null)
+            { lu.Description = lu.Description + " до: " + clu.DateTo.Value.ToString("dd.MM.yyyy" + " г."); }
+            continue;
+          }
+
+          //Сетват се тези които са отпуска
+          clu = courtlawUnitHolidayOrIll.Where(x => x.LawUnitId == lu.LawUnitId && x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday).FirstOrDefault();
+          if (clu != null)
+          {
+            lu.StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Exclude;
+            lu.Description = "Отпуск от: " + clu.DateFrom.Date.ToString("dd.MM.yyyy" + " г.");
+            if (clu.DateTo != null)
+            { lu.Description = lu.Description + " до: " + clu.DateTo.Value.ToString("dd.MM.yyyy" + " г."); }
+            continue;
+          }
+          //--------------------------------------------------------
+
+        }
+
+
+      }
+      return current_lawunits;
     }
 
   }

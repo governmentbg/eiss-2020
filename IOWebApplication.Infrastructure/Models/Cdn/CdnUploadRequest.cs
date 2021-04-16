@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace IOWebApplication.Infrastructure.Models.Cdn
 {
@@ -38,5 +35,7 @@ namespace IOWebApplication.Infrastructure.Models.Cdn
         public int SignersCount { get; set; }
 
         public bool FileUploadEnabled { get; set; }
+
+        public int MaxFileSize { get; set; }
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -58,6 +55,8 @@ namespace IOWebApplication.Controllers
                 DeliveryAreaId = deliveryAreaId ?? 0,
                 ExpiredType = 1
             };
+            SetHelpFile(HelpFileValues.Nom3);
+
             return View(filter);
         }
 
@@ -92,7 +91,13 @@ namespace IOWebApplication.Controllers
                ModelState.AddModelError(nameof(DeliveryAreaAddress.BlockName), "Въведете име на блок");
             if (model.NumberType == NomenclatureConstants.DeliveryAddressNumberType.NumberName && string.IsNullOrEmpty(model.BlockName))
                 ModelState.AddModelError(nameof(DeliveryAreaAddress.BlockName), "Въведете подномер");
-
+            if ((model.NumberType == NomenclatureConstants.DeliveryAddressNumberType.EvenNumber ||
+                 model.NumberType == NomenclatureConstants.DeliveryAddressNumberType.OddNumber ||
+                 model.NumberType == NomenclatureConstants.DeliveryAddressNumberType.OddEvenNumber) && 
+                string.IsNullOrEmpty(model.StreetCode) &&
+                (model.NumberFrom > 0 || model.NumberTo > 0)
+              )
+                ModelState.AddModelError(nameof(DeliveryAreaAddress.NumberType), "За да се районира от номер до номер улица трябва да е въведена улица");
             if (!ModelState.IsValid)
             {
                 return View(nameof(Edit), model);
@@ -139,16 +144,17 @@ namespace IOWebApplication.Controllers
         void SetViewbag(int deliveryAreaId,int editDeliveryAreaId, int deliveryAreaAddressId)
         {
             ViewBag.editDeliveryAreaId = editDeliveryAreaId;
-            ViewBag.CityCode_ddl = service.GetEkatte(deliveryAreaId);
+            ViewBag.CityCode_ddl = service.GetEkatteByArea(deliveryAreaId);
             ViewBag.NumberType_ddl = nomService.GetDDL_DeliveryNumberType();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryAreaAddressEdit(editDeliveryAreaId, deliveryAreaAddressId).DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom3);
         }
         [HttpPost]
         public IActionResult DeliveryAreaAddress_ExpiredInfo(ExpiredInfoVM model)
         {
             if (service.SaveExpireInfo<DeliveryAreaAddress>(model))
             {
-                SetSuccessMessage(MessageConstant.Values.CaseNotificationExpireOK);
+                SetSuccessMessage(MessageConstant.Values.DeliveryAreaAddressExpireOK);
                 return Json(new { result = true, redirectUrl = model.ReturnUrl }); 
             }
             else
@@ -160,6 +166,7 @@ namespace IOWebApplication.Controllers
         public IActionResult IndexDuplication()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryAreaAddressesDuplication().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom3);
             return View();
         }
         [HttpPost]
@@ -212,9 +219,10 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult AddStreets(int deliveryAreaId)
         {
-            ViewBag.filterCity_ddl = service.GetEkatte(deliveryAreaId);
+            ViewBag.filterCity_ddl = service.GetEkatteByArea(deliveryAreaId);
             ViewBag.deliveryAreaId = deliveryAreaId;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryAreaAddresses(deliveryAreaId);
+            SetHelpFile(HelpFileValues.Nom3);
 
             return View();
         }

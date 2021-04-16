@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -34,6 +31,7 @@ namespace IOWebApplication.Controllers
             {
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1)
             };
+            SetHelpFile(HelpFileValues.RecusalRegister);
             return View(model);
         }
 
@@ -57,11 +55,13 @@ namespace IOWebApplication.Controllers
         public IActionResult View(int id)
         {
             var model = service.LawUnitManualJudge_Select(id, null, null, null, null).FirstOrDefault();
+            SetHelpFile(HelpFileValues.RecusalRegister);
             return View(model);
         }
         private void SetViewBag()
         {
             ViewBag.JudgeRoleId_ddl = nomService.GetDropDownList<JudgeRole>();
+            SetHelpFile(HelpFileValues.RecusalRegister);
         }
         [HttpPost]
         public IActionResult Edit(CaseLawUnitManualJudge model)

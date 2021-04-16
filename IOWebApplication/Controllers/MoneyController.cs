@@ -1,13 +1,11 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -41,6 +39,7 @@ namespace IOWebApplication.Controllers
         private readonly IPrintDocumentService printDocumentService;
         private readonly IPriceService priceService;
         private readonly ICdnService cdnService;
+        private readonly IWorkTaskService taskService;
 
 
         public MoneyController(IMoneyService _service, INomenclatureService _nomService, ICaseSessionService _sessionService,
@@ -48,7 +47,8 @@ namespace IOWebApplication.Controllers
                               ICaseLawUnitService _caseLawUnitService,
                               IPrintDocumentService _printDocumentService,
                               IPriceService _priceService,
-                              ICdnService _cdnService)
+                              ICdnService _cdnService,
+                              IWorkTaskService _taskService)
         {
             service = _service;
             nomService = _nomService;
@@ -60,6 +60,7 @@ namespace IOWebApplication.Controllers
             printDocumentService = _printDocumentService;
             priceService = _priceService;
             cdnService = _cdnService;
+            taskService = _taskService;
         }
 
         /// <summary>
@@ -226,8 +227,8 @@ namespace IOWebApplication.Controllers
 
             if ((model.ExecListTypeId ?? 0) == NomenclatureConstants.ExecListTypes.Country)
             {
-                if (string.IsNullOrEmpty(model.CountryReceiveId))
-                    ModelState.AddModelError(nameof(ObligationEditVM.CountryReceiveId), "Изберете В полза на");
+                if ((model.ReceiveSourceId ?? 0) <= 0)
+                    ModelState.AddModelError(nameof(ObligationEditVM.ReceiveSourceId), "Изберете В полза на");
 
                 if (model.MoneySign == NomenclatureConstants.MoneySign.SignMinus)
                     ModelState.AddModelError(nameof(ObligationEditVM.MoneySign), "Разход не може да бъде В полза на Държавата");
@@ -271,7 +272,19 @@ namespace IOWebApplication.Controllers
                 }
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(EditObligation), new { id = model.Id });
+                if ((model.CaseSessionId ?? 0) > 0)
+                {
+                    return RedirectToAction("Preview", "CaseSession", new { id = model.CaseSessionId });
+                }
+                else
+                {
+                    return RedirectToAction("Obligation", new
+                    {
+                        caseSessionActId = model.CaseSessionActId,
+                        documentId = model.DocumentId,
+                        caseSessionId = model.CaseSessionId
+                    });
+                }
             }
             else
             {
@@ -302,7 +315,7 @@ namespace IOWebApplication.Controllers
                     ViewBag.Person_SourceId_ddl = casePersonService.CasePerson_SelectForDropDownList(caseSession.CaseId, null);
                     ViewBag.PersonReceiveId_ddl = casePersonService.CasePerson_SelectForDropDownList(caseSession.CaseId, null);
                     ViewBag.ExecListTypeId_ddl = nomService.GetDropDownList<ExecListType>();
-                    ViewBag.CountryReceiveId_ddl = service.CountryReceive_SelectForDropDownList(caseSession.CaseId);
+                    ViewBag.ReceiveSourceTypeId_ddl = nomService.GetDDL_MoneyCountryReceiver();
                 }
                 else if (sourceType == SourceTypeSelectVM.CaseLawUnit)
                     ViewBag.Person_SourceId_ddl = caseLawUnitService.CaseLawUnitForCaseObligation_SelectForDropDownList(caseSession.CaseId);
@@ -371,7 +384,10 @@ namespace IOWebApplication.Controllers
             var model = new ObligationForPayFilterVM();
             model.Status = MoneyConstants.ObligationStatus.StatusNotEnd;
             model.Sign = sign == 0 ? NomenclatureConstants.MoneySign.SignPlus : sign;
-            SetHelpFile(HelpFileValues.Finance);
+            if (model.Sign == NomenclatureConstants.MoneySign.SignMinus)
+                SetHelpFile(HelpFileValues.Finance1);
+            else
+                SetHelpFile(HelpFileValues.Finance2);
             return View(model);
         }
 
@@ -486,7 +502,7 @@ namespace IOWebApplication.Controllers
             model.DateTo = DateTime.Now;
             model.UserId = userContext.UserId;
             model.ActivePayment = true;
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance5);
 
             return View(model);
         }
@@ -510,7 +526,7 @@ namespace IOWebApplication.Controllers
             ViewBag.PaymentTypeId_ddl = nomService.GetDropDownList<PaymentType>();
             ViewBag.CourtBankAccountId_ddl = commonService.BankAccount_SelectDDL(userContext.CourtId, 0, true);
             ViewBag.BankAccountJson = JsonConvert.SerializeObject(commonService.CourtBankAccountForCourt_Select(userContext.CourtId));
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance4);
         }
 
         /// <summary>
@@ -888,23 +904,33 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
-        /// Запис на разходен ордер в pdf
+        /// Запис на файл за РКО
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<IActionResult> PreviewRawExpenseOrder(int id)
-        {
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateExpenseOrder(id);
+        public async Task<bool> SaveFileExpenseOrder(int id)
+        {            
+            (TinyMCEVM htmlModel, string errorMessage) = printDocumentService.FillHtmlTemplateExpenseOrder(id);
             if (htmlModel != null)
             {
                 string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
                 var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }).GetByte(this.ControllerContext);
-                return File(pdfBytes, System.Net.Mime.MediaTypeNames.Application.Pdf, "Payment" + id.ToString() + ".pdf");
+                var pdfRequest = new CdnUploadRequest()
+                {
+                    SourceType = SourceTypeSelectVM.ExpenseOrder,
+                    SourceId = id.ToString(),
+                    FileName = "expenseOrder.pdf",
+                    ContentType = "application/pdf",
+                    Title = "РКО",
+                    FileContentBase64 = Convert.ToBase64String(pdfBytes)
+                };
+                bool result = await cdnService.MongoCdn_AppendUpdate(pdfRequest);
+                Response.Headers.Clear();
+
+                return result;
             }
             else
-            {
-                return StatusCode(StatusCodes.Status204NoContent);
-            }
+                return false;
         }
 
         /// <summary>
@@ -916,7 +942,7 @@ namespace IOWebApplication.Controllers
             var model = new ExpenseOrderFilterVM();
             model.DateFrom = DateTime.Now;
             model.DateTo = DateTime.Now;
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance7);
             return View(model);
         }
 
@@ -965,7 +991,7 @@ namespace IOWebApplication.Controllers
         void SetViewBagExpenseOrder()
         {
             ViewBag.ExpenseOrderStateId_ddl = nomService.GetDropDownList<ExpenseOrderState>();
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance7);
         }
 
         /// <summary>
@@ -987,8 +1013,13 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditExpenseOrder(ExpenseOrderEditVM model)
+        public async Task<IActionResult> EditExpenseOrder(ExpenseOrderEditVM model)
         {
+            if (model.LawUnitSignId <= 0)
+            {
+                ModelState.AddModelError(nameof(ExpenseOrderEditVM.LawUnitSignId), "Изберете подписващ съдия");
+            }
+
             SetViewBagExpenseOrder();
             if (!ModelState.IsValid)
             {
@@ -998,6 +1029,7 @@ namespace IOWebApplication.Controllers
             (bool result, string errormessage) = service.ExpenseOrder_Update(model);
             if (result == true)
             {
+                await SaveFileExpenseOrder(model.Id);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditExpenseOrder), new { id = model.Id });
@@ -1034,6 +1066,7 @@ namespace IOWebApplication.Controllers
                 model.Iban = expenseOrder.Iban;
                 model.BIC = expenseOrder.BIC;
                 model.BankName = expenseOrder.BankName;
+                model.LawUnitSignId = expenseOrder.LawUnitSignId ?? 0;
             }
 
             return PartialView("EditExpenseOrder", model);
@@ -1045,8 +1078,13 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ExpenseOrder(ExpenseOrderEditVM model)
+        public async Task<IActionResult> ExpenseOrder(ExpenseOrderEditVM model)
         {
+            if (model.LawUnitSignId <= 0)
+            {
+                ModelState.AddModelError(nameof(ExpenseOrderEditVM.LawUnitSignId), "Изберете подписващ съдия");
+            }
+
             if (!ModelState.IsValid)
             {
                 string messageModalResult = string.Join(", ", ModelState.Values
@@ -1055,7 +1093,11 @@ namespace IOWebApplication.Controllers
                 return Json(new { result = false, message = messageModalResult, id = model.Id });
             }
             (bool result, string errormessage) = service.ExpenseOrder_Save(model);
-            if (result == false)
+            if (result == true)
+            {
+                await SaveFileExpenseOrder(model.Id);
+            }
+            else
             {
                 if (errormessage == "")
                     errormessage = MessageConstant.Values.SaveFailed;
@@ -1118,12 +1160,14 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult ExecListIndex()
         {
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForExecList().DeleteOrDisableLast();
+
             SetViewBagExecListIndex();
             var model = new ExecListFilterVM();
             model.DateFrom = DateTime.Now.AddDays(-7);
             model.DateTo = DateTime.Now;
             model.ActiveExecList = true;
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance8);
 
             return View(model);
         }
@@ -1138,6 +1182,8 @@ namespace IOWebApplication.Controllers
             var model = new ExecListFilterVM();
             model.DateFrom = DateTime.Now.AddDays(-7);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report36);
+
             return View(model);
         }
 
@@ -1196,10 +1242,15 @@ namespace IOWebApplication.Controllers
 
         void SetViewBagExecList(ExecListEditVM model)
         {
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForExecListEdit(model.Id).DeleteOrDisableLast();
+
             if (model.ExecListTypeId == NomenclatureConstants.ExecListTypes.ThirdPerson)
                 ViewBag.ExecListLawBaseId_ddl = nomService.GetDDL_ExecListLawBase(model.CaseGroupId);
 
-            SetHelpFile(HelpFileValues.Finance);
+            if (model.Id > 0)
+                ViewBag.ExecListStateId_ddl = nomService.GetDropDownList<ExecListState>();
+
+            SetHelpFile(HelpFileValues.Finance8);
         }
 
         /// <summary>
@@ -1237,7 +1288,6 @@ namespace IOWebApplication.Controllers
             (bool result, string errormessage) = service.ExecList_Update(model);
             if (result == true)
             {
-                await SaveFileExecList(model.Id);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditExecList), new { id = model.Id });
@@ -1298,7 +1348,6 @@ namespace IOWebApplication.Controllers
             (bool result, string erroMessage) = service.ExecList_Save(model);
             if (result == true)
             {
-                await SaveFileExecList(model.Id);
             }
             else
             {
@@ -1306,17 +1355,18 @@ namespace IOWebApplication.Controllers
                     erroMessage = MessageConstant.Values.SaveFailed;
             }
 
-            return Json(new { result = result, message = erroMessage });
+            return Json(new { result = result, message = erroMessage, id = model.Id });
         }
 
         /// <summary>
         /// Извличане на данни за получател на сума
         /// </summary>
-        /// <param name="receiveId"></param>
+        /// <param name="sourceType"></param>
+        /// <param name="sourceId"></param>
         /// <returns></returns>
-        public IActionResult LastDataForReceive(string receiveId)
+        public IActionResult LastDataForReceive(int sourceType, long sourceId)
         {
-            var result = service.LastDataForReceive_Select(receiveId);
+            var result = service.LastDataForReceive_Select(sourceType, sourceId);
             return Json(new
             {
                 iban = result.Iban,
@@ -1324,32 +1374,7 @@ namespace IOWebApplication.Controllers
                 bankName = result.BankName
             });
         }
-
-        /// <summary>
-        /// Запис на изпълнителен лист в pdf
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<bool> SaveFileExecList(int id)
-        {
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateExecList(id);
-            string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
-            var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }).GetByte(this.ControllerContext);
-            var pdfRequest = new CdnUploadRequest()
-            {
-                SourceType = SourceTypeSelectVM.ExecList,
-                SourceId = id.ToString(),
-                FileName = "execList.pdf",
-                ContentType = "application/pdf",
-                Title = "Изпълнителен лист",
-                FileContentBase64 = Convert.ToBase64String(pdfBytes)
-            };
-            bool result = await cdnService.MongoCdn_AppendUpdate(pdfRequest);
-            Response.Headers.Clear();
-
-            return result;
-        }
-
+        
         /// <summary>
         /// Файлове за обект
         /// </summary>
@@ -1419,7 +1444,7 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.InstitutionId_ddl = commonService.GetDDL_Institution(NomenclatureConstants.InstitutionTypes.NAP);
             var model = new ExchangeDocFilterVM();
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance9);
 
             return View(model);
         }
@@ -1471,7 +1496,7 @@ namespace IOWebApplication.Controllers
         public IActionResult EditExchangeDoc(int id)
         {
             var model = service.ExchangeDoc_GetById(id);
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance9);
 
             return View(nameof(EditExchangeDoc), model);
         }
@@ -1530,7 +1555,7 @@ namespace IOWebApplication.Controllers
             var model = new ObligationThirdPersonFilterVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
-            SetHelpFile(HelpFileValues.Finance);
+            SetHelpFile(HelpFileValues.Finance3);
 
             return View(model);
         }
@@ -1549,5 +1574,272 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        /// <summary>
+        /// Зареждане на бланка за ИЛ
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="del"></param>
+        /// <returns></returns>
+        private async Task<BlankEditVM> InitBlankFromTemplateExecList(int id, bool del)
+        {
+            int sourceType = SourceTypeSelectVM.ExecListBlank;
+            if (del)
+            {
+                var deleted = await cdnService.MongoCdn_DeleteFiles(new CdnFileSelect() { SourceType = sourceType, SourceId = id.ToString() });
+            }
+            string html = await cdnService.LoadHtmlFileTemplate(new CdnFileSelect() { SourceType = sourceType, SourceId = id.ToString() });
+            if (string.IsNullOrEmpty(html))
+            {
+                TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateExecList(id);
+                html = htmlModel.Text;
+            }
+
+            var model = new BlankEditVM()
+            {
+                Title = "Изготвяне на " + SourceTypeSelectVM.GetSourceTypeName(sourceType).ToLower(),
+                SourceType = sourceType,
+                SourceId = id.ToString(),
+                HtmlHeader = string.Empty,
+                HtmlContent = html,
+                HtmlFooter = string.Empty,
+                FooterIsEditable = false,
+                ReturnUrl = Url.Action(nameof(EditExecList), new { id }),
+                HasPreviewButton = true,
+            };
+
+            return model;
+        }
+
+        /// <summary>
+        /// Бланка за ИЛ
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="del"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> BlankExecList(int id, bool del = false)
+        {
+            BlankEditVM blankModel = await InitBlankFromTemplateExecList(id, del);
+
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForExecListEdit(id);
+            return View("BlankEdit", blankModel);
+        }
+
+        private async Task<IActionResult> blankPreviewExecList(BlankEditVM model)
+        {
+            byte[] pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = model.HtmlContent }, true, GetFooterInfoUrl(userContext.CourtId)).GetByte(this.ControllerContext);
+
+            return File(pdfBytes, NomenclatureConstants.ContentTypes.Pdf);
+        }
+
+        public async Task<bool> BlankExecListSave(string sourceId, string actHTML)
+        {
+            var htmlRequest = new CdnUploadRequest()
+            {
+                SourceType = SourceTypeSelectVM.ExecListBlank,
+                SourceId = sourceId,
+                FileName = "draft.html",
+                ContentType = "text/html",
+                FileContentBase64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(actHTML))
+            };
+            return await cdnService.MongoCdn_AppendUpdate(htmlRequest);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BlankExecList(BlankEditVM model, string btnPreview = null)
+        {
+            if (string.IsNullOrEmpty(btnPreview))
+            {
+                if (await BlankExecListSave(model.SourceId, model.HtmlContent ?? ""))
+                {
+                    return RedirectToAction(nameof(EditExecList), new { id = model.SourceId });
+                }
+                else
+                {
+                    SetErrorMessage(MessageConstant.Values.SaveFailed);
+                }
+            }
+            else
+            {
+                return await blankPreviewExecList(model);
+            }
+
+            return RedirectToAction(nameof(BlankExecList), new { id = model.SourceId });
+        }
+
+        private async Task<string> GetExecListHTML(int id)
+        {
+            string html = await cdnService.LoadHtmlFileTemplate(new CdnFileSelect() { SourceType = SourceTypeSelectVM.ExecListBlank, SourceId = id.ToString() });
+            if (string.IsNullOrEmpty(html))
+            {
+                return null;
+            }
+            return html;
+        }
+
+
+        public async Task<bool> SaveFileFromBlankExecList(string html, int id)
+        {
+            var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }).GetByte(this.ControllerContext);
+            var pdfRequest = new CdnUploadRequest()
+            {
+                SourceType = SourceTypeSelectVM.ExecList,
+                SourceId = id.ToString(),
+                FileName = "execList.pdf",
+                ContentType = "application/pdf",
+                Title = "Изпълнителен лист",
+                FileContentBase64 = Convert.ToBase64String(pdfBytes)
+            };
+            bool result = await cdnService.MongoCdn_AppendUpdate(pdfRequest);
+            Response.Headers.Clear();
+
+            return result;
+        }
+
+        public async Task<IActionResult> QuickSentForSignExecList(int execListid)
+        {
+            string actHTML = await GetExecListHTML(execListid);
+            if (string.IsNullOrEmpty(actHTML))
+            {
+                SetErrorMessage("Няма изготвен ИЛ.");
+                return RedirectToAction("EditExecList", new { id = execListid });
+            }
+
+            var newTask = new WorkTaskEditVM()
+            {
+                SourceType = SourceTypeSelectVM.ExecList,
+                SourceId = execListid,
+                TaskTypeId = WorkTaskConstants.Types.ExecList_SentToSign,
+                TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser
+            };
+
+            if (taskService.CreateTask(newTask))
+            {
+                return await DoTask_SentForSign(newTask.Id);
+            }
+            else
+            {
+                SetErrorMessage("Проблем при изпращане за подпис");
+                return RedirectToAction("EditExecList", new { id = execListid });
+            }
+        }
+
+        public async Task<IActionResult> DoTask_SentForSign(long id)
+        {
+            var task = taskService.Select_ById(id);
+            switch (task.SourceType)
+            {
+                case SourceTypeSelectVM.ExecList:
+                    var actId = (int)task.SourceId;
+                    var actModel = service.ExecList_GetById(actId);
+
+                    string actHTML = await GetExecListHTML(actId);
+                    if (string.IsNullOrEmpty(actHTML))
+                    {
+                        SetErrorMessage("Няма изготвен ИЛ.");
+                        return RedirectToAction("EditExecList", new { id = actId });
+                    }
+
+                    await SaveFileFromBlankExecList(actHTML, actId);
+
+                    var newTask = new WorkTaskEditVM()
+                    {
+                        ParentTaskId = id,
+                        SourceType = SourceTypeSelectVM.ExecList,
+                        SourceId = actId,
+                        TaskTypeId = WorkTaskConstants.Types.ExecList_Sign,
+                        TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser,
+                        UserId = commonService.Users_GetUserIdByLawunit(actModel.LawUnitSignId),
+                    };
+
+                    if (taskService.CreateTask(newTask))
+                    {
+                        SetSuccessMessage("Задачата за подпис е създадена успешно.");
+                        taskService.CompleteTask(id);
+                    }
+                    else
+                    {
+                        SetErrorMessage("Проблем при създаване на задача");
+                    }
+
+                    return RedirectToAction("EditExecList", new { id = actId });
+                default:
+                    return null;
+            }
+        }
+
+        public async Task<IActionResult> SendForSign(long id, long taskId)
+        {
+            int idInt = (int)id;
+
+            Uri urlSuccess = new Uri(Url.Action(nameof(SignedOk), new { taskId }), UriKind.Relative);
+            Uri url = new Uri(Url.Action("EditExecList", new { id = id }), UriKind.Relative);
+
+            var model = new SignPdfInfo()
+            {
+                SourceId = id.ToString(),
+                SourceType = SourceTypeSelectVM.ExecList,
+                DestinationType = SourceTypeSelectVM.ExecList,
+                Location = userContext.CourtName,
+                Reason = "Подписване на ИЛ",
+                SuccessUrl = urlSuccess,
+                CancelUrl = url,
+                ErrorUrl = url
+            };
+
+            var execList = service.GetById<ExecList>(idInt);
+
+            var registerResult = service.ExecListRegister(execList);
+            if (!registerResult.Result)
+            {
+                SetErrorMessage(registerResult.ErrorMessage);
+                return RedirectToAction("EditExecList", new { id = id });
+            }
+            else
+            {
+                if (registerResult.SaveMethod == "register")
+                {
+                    string actHTML = await GetExecListHTML(idInt);
+                    //Ако се запише номер да попълня датата и номера за и да презапиша html
+                    actHTML = actHTML.Replace("{F_EXEC_LIST_NO}", execList.RegNumber);
+                    actHTML = actHTML.Replace("{F_TODAY}", execList.RegDate.DateToStr(FormattingConstant.NormalDateFormat));
+
+                    await BlankExecListSave(model.SourceId, actHTML);
+                    await SaveFileFromBlankExecList(actHTML, idInt);
+                    return RedirectToAction(nameof(SendForSign), new { id, taskId });
+                }
+            }
+
+            var lu = taskService.GetLawUnitByTaskId(taskId);
+            if (lu != null)
+            {
+                model.SignerName = lu.FullName;
+                model.SignerUic = lu.Uic;
+            }
+
+            return View("_SignPdf", model);
+        }
+
+        public IActionResult SignedOk(long taskId)
+        {
+            var task = taskService.Select_ById(taskId);
+            if (task != null && task.TaskStateId != WorkTaskConstants.States.Completed)
+            {
+                switch (task.TaskTypeId)
+                {
+                    case WorkTaskConstants.Types.ExecList_Sign:
+                        taskService.CompleteTask(taskId);
+                        var saveResult = taskService.UpdateAfterCompleteTask(task);
+                        if (saveResult.Result)
+                        {
+                            SetSuccessMessage("Подписването на документа премина успешно.");
+                        }
+                        break;
+                }
+
+                return RedirectToAction(nameof(EditExecList), new { id = task.SourceId });
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
     }
 }

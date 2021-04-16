@@ -1,0 +1,923 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 3.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: center;
+			text-indent: 35.45pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h3 style='margin-left:71.45pt;text-indent:-36.0pt'>
+			<a name="_Toc58420411"></a><a name="_Toc39426362">
+				1.1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Служители
+			</a>
+		</h3>
+
+		<p class=MsoNormal>
+			В меню Служители става създаването на профили на служители,
+			назначаване на служители, командироване в друг съд, въвеждане на болнични дни и
+			отпуски на служителите.
+		</p>
+
+		<h4 align=left style='margin-left:0cm;text-align:left;text-indent:0cm'>
+			<a name="_Toc58420412">
+				<i>
+					<span style='font-size:11.0pt;line-height:115%;
+font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+						1.1.1.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>
+					</span>
+				</i><i>
+					<span style='font-size:11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>Служители</span>
+				</i>
+			</a>
+		</h4>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			<span style='line-height:115%'>
+				В
+				екрана на меню Служители -&gt; Служители се визуализират всички служители
+				назначени и командировани в конкретен съд.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=174
+				 id="Picture 141505" src="nom2_files/image001.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством бутон  <img width=61 height=23
+							  id="Picture 141673" src="nom2_files/image002.jpg"> има възможност за добавяне
+			на нов съдия, чрез въвеждане на необходимите данни:
+		</p>
+
+		<p class=MsoCaption style='text-indent:0cm;line-height:115%'>
+			<img width=605
+				 height=165 id="Picture 141851" src="nom2_files/image003.jpg">
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Вид на идентификатор – по подразбиране е избран вид идентификатор
+			ЕГН;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Идентификатор – въвежда се ЕГН на лицето;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Имена за лицето – въвеждат се в съответните полета: Собствено
+			име, Бащино име, Фамилия и Фамилия 2;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата от – въвежда се начална дата на активност на профила на
+			служителя. По подразбиране е въведена текуща дата, която може да бъде променена
+			от потребител;
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата до – въвежда се крайна дата на активност на профила на
+			служителя. Полето не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на всички изискуеми данни и избор на бутон
+			Запис<img width=47 height=25 id="Picture 143324" src="nom2_files/image004.jpg">
+			успешно се добавя нов профил на служител.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=165
+				 id="Picture 141853" src="nom2_files/image005.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В дясната част на екрана се визуализира секция Адреси, в
+			която могат да бъдат въведени данни за адресът/ите за служителя, посредством
+			бутон Добави адрес. Секцията не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			Нов адрес за съответния служител се въвежда при избор на
+			бутон Добави адрес <img width=84 height=25 id="Picture 141762"
+						   src="nom2_files/image006.jpg"> като се зареждат полета в следният екран:
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=422
+				 height=201 id="Picture 141763" src="nom2_files/image007.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			<b>
+				Забележка:
+			</b>Въвеждат се данните за адрес, като задължително трябва да се въведат вид
+			адрес, държава и населено място.
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Вид адрес – избор на вид на адрес от номенклатура;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Държава – избор от номенклатура за конкретната държава за лицето,
+			като по подразбиране в полето е заредено България;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Населено място – чрез автоматично попълване след търсене по част
+			от името (въвеждат се минимум три букви от населеното място) и се предлага
+			потребителя да избере съответното населено място;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Квартал/ж.к. – чрез автоматично попълване след търсене по част от
+			името (въвеждат се минимум три букви от квартал/ж.к.);
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Улица - чрез автоматично попълване след търсене по част от името
+			(въвеждат се минимум три букви от наименованието на улица);
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Ул. номер – въвежда се номера на улицата;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Под-номер - въвежда се под-номера на улицата;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Блок – въвежда се номер на блок;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Вход - въвежда се номер на вход;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Етаж - въвеждат се данни за етаж;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Апартамент/офис - въвеждат се данни за апартамент/офис;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Забележка – при необходимост може да се въведе допълнителна
+			информация;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Телефон – въвежда се стационарен телефон или мобилен номер;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Факс - въвежда се номер на факс;
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Електронна поща – въвежда се електронна поща на лицето.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			<b>Забележка:</b>
+			Адрес в друга държава – в свободно текстово поле се въвежда адрес.
+		</p>
+
+		<p class=MsoNormal>
+			Посредством бутон <img width=81 height=32 id="Picture 141764"
+							 src="nom2_files/image008.jpg"> има възможност за корекция на данните на
+			служителя:
+		</p>
+
+		<p class=MsoCaption style='text-indent:0cm;line-height:115%'>
+			<img width=605
+				 height=170 id="Picture 141508" src="nom2_files/image009.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Екранът за редакция съдържа аналогични полета като тези при
+			въвеждане. Не може да се редактира идентификатор на служителя.
+		</p>
+
+		<h4 align=left style='margin-left:0cm;text-align:left;text-indent:0cm'>
+			<a name="_Toc58420413">
+				<i>
+					<span style='font-size:11.0pt;line-height:115%;
+font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+						1.1.1.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>
+					</span>
+				</i><i>
+					<span style='font-size:11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>Назначаване</span>
+				</i>
+			</a>
+		</h4>
+
+		<p class=MsoNormal>
+			От меню Служители-&gt;Назначаване или посредством  избор на бутон
+			<img width=109 height=32 id="Picture 141856" src="nom2_files/image010.jpg"> от
+			меню Служители-&gt;Служители има възможност за назначаване на въведен служител
+			в даден съд.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=603 height=94
+				 id="Picture 141858" src="nom2_files/image011.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			От екран със списък с всички създадени профили на служители
+			в даден съд посредством избор на бутон Добави <img width=63 height=25
+															   id="Picture 141791" src="nom2_files/image012.jpg">след зареждане на съответната
+			екранна форма се въвеждат необходими данни за назначаване на служителя:
+		</p>
+
+		<p class=MsoCaption style='text-indent:0cm;line-height:115%'>
+			<img width=605
+				 height=185 id="Picture 141509" src="nom2_files/image013.jpg">
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Служител – при въвеждане на минимум три последователни символа,
+			системата автоматично търси и предлага за избор списък от служители;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Структура – избира се от падащ списък с организационни единици,
+			въведени в организационната структура на конкретния съд;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Длъжност – избира се от падащ списък с възможни длъжности за
+			служители;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата от – въвежда се начална дата на активност на служителя на
+			избраната длъжност. По подразбиране е въведена текуща дата, която може да бъде
+			променена от потребител;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата до – въвежда се крайна дата на активност на служителя на
+			избраната длъжност. Полето не е със задължителен характер;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Забележка – при необходимост може да се въведе допълнителна
+			информация.
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Покажи история на промените – чрез този бутон се визуализира
+			историята на действията (Дата, Операция, Потребител)
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на всички изискуеми данни и избор на бутон
+			Запис<img width=47 height=25 id="Picture 143325" src="nom2_files/image014.jpg">
+			успешно се добавя ново назначаване на служител.
+		</p>
+
+		<p class=MsoNormal>
+			От екран с назначени служители посредством въвеждане на
+			минимум три последователни символа, системата автоматично търси и предлага за
+			избор списък от назначени служители.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=103
+				 id="Picture 141859" src="nom2_files/image015.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством бутон Редакция<img width=35 height=30
+									 id="Picture 143468" src="nom2_files/image016.jpg"> има възможност за редакция
+			на въведеното назначаване на служител. Екранът за редакция съдържа аналогични
+			полета като тези при въвеждане.
+		</p>
+
+		<h4 align=left style='margin-left:0cm;text-align:left;text-indent:0cm'>
+			<a name="_Toc58420414">
+				<i>
+					<span style='font-size:11.0pt;line-height:115%;
+font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+						1.1.1.3<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>
+					</span>
+				</i><i>
+					<span style='font-size:11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>Болнични дни</span>
+				</i>
+			</a>
+		</h4>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			От меню Служители-&gt;Болнични
+			дни става въвеждане на периоди на болнични за служители.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=131
+				 id="Picture 141860" src="nom2_files/image017.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Въвеждане на болнични става посредством избор на бутон
+			Добави <img width=81 height=30 id="Picture 141804" src="nom2_files/image018.jpg"> чрез
+			въвеждане на необходимите данни:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=127
+				 id="Picture 141518" src="nom2_files/image019.jpg">
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Служител - при въвеждане на минимум три последователни символа,
+			системата автоматично търси и предлага за избор списък от служители;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата от – въвежда се начална дата на болничен на служителя. По
+			подразбиране е въведена текуща дата, която може да бъде променена от
+			потребител;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата до – въвежда се крайна дата на болничен на служителя. Полето
+			не е със задължителен характер;
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Забележка – при необходимост може да се въведе допълнителна
+			информация.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на всички изискуеми данни и избор на бутон
+			Запис<img width=47 height=25 id="Picture 143326" src="nom2_files/image020.jpg">
+			успешно се добавя нов период на болнични на служителя.
+		</p>
+
+		<h4 align=left style='margin-left:0cm;text-align:left;text-indent:0cm'>
+			<a name="_Toc58420415">
+				<i>
+					<span style='font-size:11.0pt;line-height:115%;
+font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+						1.1.1.4<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>
+					</span>
+				</i><i>
+					<span style='font-size:11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>Командироване</span>
+				</i>
+			</a>
+		</h4>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			От меню
+			Служители-&gt;Командироване или посредством  избор на бутон <img width=102
+																	   height=26 id="Picture 141844" src="nom2_files/image021.jpg"> от меню
+			Служители-&gt;Служители има възможност за командироване на въведен служител в
+			друг съд. Командироването става чрез добавяне на служителя в съда, в който ще е
+			командирован (изтегляне от  командироващия съд), с което на служителя от
+			основния съд, в който е назначен се добавя период на командироване.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=103
+				 id="Picture 141862" src="nom2_files/image022.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Въвеждане на командироване става посредством избор на бутон
+			Добави <img width=81 height=30 id="Picture 141808" src="nom2_files/image023.jpg"> чрез
+			въвеждане на необходимите данни, аналогични на тези при назначаване:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=183
+				 id="Picture 141543" src="nom2_files/image024.jpg">
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Служител - при въвеждане на минимум три последователни символа,
+			системата автоматично търси и предлага за избор списък от всички служители в
+			системата;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Структура – избира се от падащ списък с организационни единици,
+			въведени в организационната структура на конкретния съд;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Длъжност – избира се от падащ списък с възможни длъжности за
+			служители;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата от – въвежда се начална дата на активност на командироване
+			на служителя в съда. По подразбиране е въведена текуща дата, която може да бъде
+			променена от потребител;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата до – въвежда се крайна дата на командироване на служителя на
+			избраната длъжност. Полето не е със задължителен характер;
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Забележка – при необходимост може да се въведе допълнителна
+			информация.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			След
+			въвеждане на всички изискуеми данни и избор на бутон Запис<img width=47
+																		height=25 id="Picture 143327" src="nom2_files/image025.jpg"> успешно се добавя
+			ново командироване на служител.
+		</p>
+
+		<p class=MsoNormal>
+			От екран с командировани служители посредством въвеждане на
+			минимум три последователни символа, системата автоматично търси и предлага за
+			избор списък от командировани служители.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=101
+				 id="Picture 141865" src="nom2_files/image026.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством бутон Редакция<img width=35 height=30
+									 id="Picture 143469" src="nom2_files/image027.jpg"> има възможност за редакция
+			на въведеното командироване на служител. Екранът за редакция съдържа аналогични
+			полета като тези при въвеждане.
+		</p>
+
+		<h4 align=left style='margin-left:0cm;text-align:left;text-indent:0cm'>
+			<a name="_Toc58420416">
+				<i>
+					<span style='font-size:11.0pt;line-height:115%;
+font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+						1.1.1.5<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>
+					</span>
+				</i><i>
+					<span style='font-size:11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>Отпуски</span>
+				</i>
+			</a>
+		</h4>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			От меню Служители-&gt;Отпуски
+			става въвеждане на периоди на отпуски за служителите.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=146
+				 id="Picture 141882" src="nom2_files/image028.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Въвеждане на отпуски става посредством избор на бутон Добави
+			<img width=81 height=30 id="Picture 141837" src="nom2_files/image029.jpg"> чрез
+			въвеждане на необходимите данни:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=542 height=139
+				 id="Picture 142275" src="nom2_files/image030.jpg"> 
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Служител - при въвеждане на минимум три последователни символа,
+			системата автоматично търси и предлага за избор списък от служители;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата от – въвежда се начална дата на отпуска на служителя. По
+			подразбиране е въведена текуща дата, която може да бъде променена от
+			потребител;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата до – въвежда се крайна дата на отпуска на служителя. Полето
+			не е със задължителен характер.
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Збележка – при необходимост може да се въведе допълнителна
+			информация;
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на всички изискуеми данни и избор на бутон
+			Запис<img width=47 height=25 id="Picture 143328" src="nom2_files/image031.jpg">
+			успешно се добавя нов период на отпуска на служител.
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

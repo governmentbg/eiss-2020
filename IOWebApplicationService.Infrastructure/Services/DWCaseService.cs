@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Common;
+﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplicationService.Infrastructure.Contracts;
 using IOWebApplicationService.Infrastructure.Data.Common;
@@ -18,6 +15,7 @@ using System.Transactions;
 using IOWebApplicationService.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Infrastructure.Models.Integrations.DW;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
@@ -25,36 +23,41 @@ namespace IOWebApplicationService.Infrastructure.Services
   {
     private readonly IRepository repo;
     private readonly IDWRepository dwRepo;
+    private readonly IDWErrorLogService serviceErrorLog;
     private readonly ICasePersonLinkService serviceCasePersonLink;
-    public DWCaseService(IRepository _repo, IDWRepository _dwRepo, ICasePersonLinkService _serviceCasePersonLink)
+    public DWCaseService(IRepository _repo, IDWRepository _dwRepo, ICasePersonLinkService _serviceCasePersonLink, IDWErrorLogService _serviceErrorLog)
     {
       this.repo = _repo;
       this.dwRepo = _dwRepo;
       this.serviceCasePersonLink = _serviceCasePersonLink;
+      this.serviceErrorLog = _serviceErrorLog;
     }
     public void CaseTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "CaseTransfer", 0, "Стартирал");
       IEnumerable<DWCase> dwcases = SelectCasesForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
 
-
-      while (dwcases.Any())
+      bool insertRow = true;
+      while (dwcases.Any()&&  insertRow )
       {
         //using (TransactionScope ts = new TransactionScope())
 
 
         foreach (var current_case in dwcases)
         {
-          bool insertRow = CaseInsertUpdate(court, current_case);
+          insertRow = CaseInsertUpdate(court, current_case);
           if (insertRow)
           {
-            var main_case = repo.GetById<Case>(current_case.CaseId);
-            main_case.DateTransferedDW = DateTime.Now;
-            repo.Update<Case>(main_case);
+
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current_case.CaseId},'{UpdateDateTransferedVM.Tables.Case}')");
+            //var main_case = repo.GetById<Case>(current_case.CaseId);
+            //main_case.DateTransferedDW = DateTime.Now;
+            //repo.Update<Case>(main_case);
           }
 
         }
         dwRepo.SaveChanges();
-        repo.SaveChanges();
+        //repo.SaveChanges();
         //  ts.Complete();
         //}
 
@@ -142,13 +145,14 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         if (result)
         { CaseLawUnitTransfer(court, current.CaseId); }
+      
 
 
       }
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((court.CourtId??0), court.CourtName, "case", current.CaseId, ex.Message);
       }
 
       return result;
@@ -323,7 +327,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         {
 
-
+          current.DateTransferedDW = DateTime.Now;
           dwRepo.Add<DWCaseLawUnit>(current);
 
           result = true;
@@ -354,6 +358,7 @@ namespace IOWebApplicationService.Infrastructure.Services
           saved.LawUnitFullName = current.LawUnitFullName;
           saved.LawUnitId = current.LawUnitId;
           saved.DwCount = current.DwCount;
+          saved.DateTransferedDW = DateTime.Now;
 
           saved.CourtId = current.CourtId; saved.DwCount = current.DwCount;
           saved.CourtName = current.CourtName;
@@ -382,7 +387,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_lawunit", current.Id, ex.Message);
       }
 
       return result;
@@ -477,7 +482,7 @@ namespace IOWebApplicationService.Infrastructure.Services
     public bool CasePersonInsertUpdate(DWCourt court, DWCasePerson current)
     {
       bool result = false;
-      current.LinkRelationsString=LinkRelationsString_Select( current.Id);
+      current.LinkRelationsString = LinkRelationsString_Select(current.Id);
       try
       {
         DWCasePerson saved = dwRepo.All<DWCasePerson>().Where(x => x.Id == current.Id).FirstOrDefault();
@@ -485,7 +490,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         {
 
-
+          current.DateTransferedDW = DateTime.Now;
           dwRepo.Add<DWCasePerson>(current);
 
           result = true;
@@ -505,9 +510,9 @@ namespace IOWebApplicationService.Infrastructure.Services
           saved.PersonRoleId = current.PersonRoleId;
           saved.PersonRoleName = current.PersonRoleName;
           saved.Person_SourceId = current.Person_SourceId;
-    
+
           saved.Person_SourceType = current.Person_SourceType;
-       
+
           saved.Uic = current.Uic;
           saved.UicTypeId = current.UicTypeId;
           saved.UicTypeName = current.UicTypeName;
@@ -519,7 +524,7 @@ namespace IOWebApplicationService.Infrastructure.Services
           saved.MilitaryRangId = current.MilitaryRangId;
           saved.MilitaryRangName = current.MilitaryRangName;
           saved.IsInitialPerson = current.IsInitialPerson;
-          current.CasePersonIdentificator = current.CasePersonIdentificator;
+          saved.CasePersonIdentificator = current.CasePersonIdentificator;
           saved.DateFrom = current.DateFrom;
           saved.DateTo = current.DateTo;
           saved.DateFromStr = current.DateFromStr;
@@ -544,7 +549,7 @@ namespace IOWebApplicationService.Infrastructure.Services
           saved.UserExpiredId = current.UserExpiredId;
           saved.UserExpiredName = current.UserExpiredName;
           saved.LinkRelationsString = current.LinkRelationsString;
-
+          saved.DateTransferedDW = DateTime.Now;
           saved.DwCount = current.DwCount;
 
           saved.CourtId = current.CourtId; saved.DwCount = current.DwCount;
@@ -575,7 +580,8 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "case_person", current.Id, ex.Message);
+
       }
 
       return result;
@@ -593,12 +599,16 @@ namespace IOWebApplicationService.Infrastructure.Services
       DateTime oldDate = new DateTime(1900, 01, 01);
 
 
+      Expression<Func<CasePerson, bool>> selectedCourt = x => true;
+      if (court.CourtId != null)
+        selectedCourt = x => x.CourtId == court.CourtId;
 
       result = repo.AllReadonly<CasePerson>()
 
                               .Where(x => x.CaseSessionId == null)
 
                              .Where(x => x.DateWrt > (x.DateTransferedDW ?? oldDate))
+                             .Where(selectedCourt)
 
                               .Select(x => new DWCasePerson()
                               {
@@ -612,9 +622,9 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 PersonMaturityId = x.PersonMaturityId,
                                 PersonMaturityName = x.PersonMaturity.Label,
                                 Person_SourceId = x.Person_SourceId,
-                             
+
                                 Person_SourceType = x.Person_SourceType,
-                            
+
                                 Uic = x.Uic,
                                 UicTypeId = x.UicTypeId,
                                 UicTypeName = x.UicType.Label,
@@ -630,8 +640,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 DateTo = x.DateTo,
                                 DateFromStr = x.DateFrom.ToString("dd.MM.yyyy"),
                                 DateToStr = x.DateTo.HasValue ? x.DateTo.Value.ToString("dd.MM.yyyy") : "",
-                                //////////////////
-                                RowNumber = x.RowNumber,
+                                      //////////////////
+                                      RowNumber = x.RowNumber,
                                 ForNotification = x.ForNotification,
                                 NotificationNumber = x.NotificationNumber,
                                 UserId = x.UserId,
@@ -662,7 +672,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 EISPPCode = court.EISPPCode,
                                 CityCode = court.CityCode,
                                 CityName = court.CityName,
-                          
+
 
 
                               }
@@ -679,29 +689,31 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void CasePersonTransfer(DWCourt court)
     {
-
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "CasePersonTransfer", 0, "Стартирал");
       IEnumerable<DWCasePerson> dw = SelectCasePersonTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
 
-
-      while (dw.Any())
+      bool insertRow = true;
+      while (dw.Any() && insertRow)
       {
-      
+
 
 
         foreach (var current in dw)
         {
-          bool insertRow = CasePersonInsertUpdate(court, current);
+          insertRow = CasePersonInsertUpdate(court, current);
           if (insertRow)
           {
-            var main = repo.GetById<CasePerson>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CasePerson>(main);
+                        var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CasePerson}')");
+
+            //var main = repo.GetById<CasePerson>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CasePerson>(main);
           }
 
         }
         dwRepo.SaveChanges();
-        repo.SaveChanges();
-        
+       // repo.SaveChanges();
+
 
         dw = SelectCasePersonTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
 
@@ -714,7 +726,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       }
     }
 
-    public string LinkRelationsString_Select( int personId)
+    public string LinkRelationsString_Select(int personId)
     {
       string linkRelationsString = "";
 
@@ -723,9 +735,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       foreach (var pl in personLinks)
       {
 
-  
 
-        linkRelationsString = linkRelationsString + pl.Label+ "; ";
+
+        linkRelationsString = linkRelationsString + pl.Label + "; ";
       }
 
       return linkRelationsString;
@@ -739,41 +751,42 @@ namespace IOWebApplicationService.Infrastructure.Services
       try
       {
 
-      
-      IEnumerable<DWCaseLifecycle> dw = SelectCaseLifecycleTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
+        serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "CaseLifecycleTransfer", 0, "Стартирал");
+        IEnumerable<DWCaseLifecycle> dw = SelectCaseLifecycleTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
 
-
-      while (dw.Any())
-      {
-
-
-        foreach (var current in dw)
+        bool insertRow = true;
+        while (dw.Any() && insertRow)
         {
-          bool insertRow = CaseLifecycleInsertUpdate(current);
-          if (insertRow)
+
+
+          foreach (var current in dw)
           {
-            var main = repo.GetById<CaseLifecycle>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseLifecycle>(main);
+            insertRow = CaseLifecycleInsertUpdate(current);
+            if (insertRow)
+            {
+              var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseLifecycle}')");
+
+              //var main = repo.GetById<CaseLifecycle>(current.Id);
+              //main.DateTransferedDW = DateTime.Now;
+              //repo.Update<CaseLifecycle>(main);
+            }
+
           }
+          dwRepo.SaveChanges();
+          //repo.SaveChanges();
+          //  ts.Complete();
+          //}
+
+          dw = SelectCaseLifecycleTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
+
+
 
         }
-        dwRepo.SaveChanges();
-        repo.SaveChanges();
-        //  ts.Complete();
-        //}
-
-        dw = SelectCaseLifecycleTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
-
-
-
-      }
 
       }
       catch (Exception ex)
       {
-        var e = ex;
-        throw;
+        //serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_lifecycle", current.CaseId, ex.Message);
       }
 
     }
@@ -834,8 +847,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       }
       catch (Exception ex)
       {
-        var ee = ex;
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_lifecycle", current.CaseId, ex.Message);
       }
 
       return result;

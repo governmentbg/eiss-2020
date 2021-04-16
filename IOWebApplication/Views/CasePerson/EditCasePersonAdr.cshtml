@@ -1,6 +1,5 @@
 ﻿@model CasePersonAddress
 @using IOWebApplication.Infrastructure.Data.Models.Cases
-
 @{
     if (Model.Id > 0)
     {
@@ -10,6 +9,7 @@
     {
         ViewData["Title"] = "Добавяне на адрес";
     }
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
 }
 
 @section breadcrumb{
@@ -41,6 +41,13 @@
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
+                        @if (access.CanChangeFull)
+                        {
+
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на адрес на лице", ExpireSubmitUrl = Url.Action("CasePersonAdr_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
+
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }

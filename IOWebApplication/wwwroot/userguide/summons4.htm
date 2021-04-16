@@ -1,0 +1,562 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 3.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: center;
+			text-indent: 35.45pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBullet, li.MsoListBullet, div.MsoListBullet {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpFirst, li.MsoListBulletCxSpFirst, div.MsoListBulletCxSpFirst {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpMiddle, li.MsoListBulletCxSpMiddle, div.MsoListBulletCxSpMiddle {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpLast, li.MsoListBulletCxSpLast, div.MsoListBulletCxSpLast {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBullet, li.EISSBullet, div.EISSBullet {
+			mso-style-name: "EISS Bullet";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 53.4pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpFirst, li.EISSBulletCxSpFirst, div.EISSBulletCxSpFirst {
+			mso-style-name: "EISS BulletCxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 53.4pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpMiddle, li.EISSBulletCxSpMiddle, div.EISSBulletCxSpMiddle {
+			mso-style-name: "EISS BulletCxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 53.4pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpLast, li.EISSBulletCxSpLast, div.EISSBulletCxSpLast {
+			mso-style-name: "EISS BulletCxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 53.4pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
+			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
+			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
+			mso-style-name: "EISS Style5 ЕИССCxSpLast";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h3 style='margin-left:71.45pt;text-indent:-36.0pt'>
+			<a name="_Toc55137075">
+				1.1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Изпращане на призовки/съобщения към друг съд за разнасяне
+			</a>
+		</h3>
+
+		<p class=MsoNormal>
+			Екран Изпращане на призовки/съобщения към друг съд за
+			разнасяне дава възможност за търсене и преглед на призовки, съобщения и
+			уведомления изготвени в текущия съд, но с необходимост да бъдат изпратени към
+			друг съд за обработка и разнасяне. 
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=606 height=53 id="Picture 141526" src="summons4_files/image001.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			При първоначално зареждане на екран Изпращане на
+			призовки/съобщения не се визуализират резултати. При директно натискане на
+			бутон Филтрирай, се извеждат всички данни в системата
+			призовки/съобщения/уведомления, които са изготвени в текущия съд и трябва да
+			бъдат изпратени към друг съд. Наборът от данни може да бъде филтриран, в
+			зависимост от въведените критерии в полетата в горната част на екрана. В меню
+			Изпращане на призовки/съобщения към друг съд може да бъдат използвани следните
+			филтри:
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>От
+			дата изготвяне - До дата изготвяне – избира се дата от и до за определяне на
+			период, в който е изготвен призовката/съобщението;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Статус
+			– статус на изготвените призовки.
+		</p>
+
+		<p class=MsoNormal>
+			След натискане на бутон Филтрирай резултатите се извеждат в
+			долната половина на екрана в табличен вид:
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=605 height=135 id="Picture 141535" src="summons4_files/image002.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В поле Изпращане към се посочва съда към който да бъдат
+			изпратени маркираните призовки/съобщения.
+		</p>
+
+		<p class=MsoNormal>
+			При маркиране на чекбокс Маркиране се отваря допълнително
+			поле за въвеждане/сканиране на баркод на призовката, което дава възможност за бързо
+			селектиране на призовките със съответните номера.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=376 height=199
+				 id="Picture 141604" src="summons4_files/image003.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			За всеки избран/маркиран запис в таблицата е възможно
+			извършване на допълнителни действия. Изпращане на призовки/съобщения към друг
+			съд за разнасяне извършва през функционалностите достъпни посредством следните
+			бутони:
+		</p>
+
+		<p class=EISSBulletCxSpFirst>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Бутон
+			Изпрати;
+		</p>
+
+		<p class=EISSBulletCxSpLast>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Бутон
+			Печат на маркираните.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+		<h4 align=left style='margin-left:0cm;text-align:left;text-indent:0cm;
+line-height:107%'>
+			<a name="_Toc55137076">
+				<i>
+					<span style='font-size:11.0pt;
+line-height:107%;font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+						1.1.1.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>
+					</span>
+				</i><i>
+					<span style='font-size:11.0pt;line-height:107%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>Бутон Изпрати</span>
+				</i>
+			</a><i>
+				<span style='font-size:11.0pt;
+line-height:107%;font-family:"Calibri Light",sans-serif;color:#2E74B5'>  </span>
+			</i>
+		</h4>
+
+		<p class=MsoCaption style='text-indent:0cm'>
+			<img width=605 height=319
+				 id="Picture 141608" src="summons4_files/image004.png">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Изпрати <img width=149 height=24
+												 id="Picture 143562" src="summons4_files/image005.jpg"> всички маркирани
+			призовки се изпращат автоматично към определения съд в поле Изпращане към. За
+			дата на изпращане се попълва текущата дата и час от системата, а статуса на
+			призовките се променя от Изготвен на Изпратен.
+		</p>
+
+		<h4 align=left style='margin-left:0cm;text-align:left;text-indent:0cm;
+line-height:107%'>
+			<a name="_Toc55137077">
+				<i>
+					<span style='font-size:11.0pt;
+line-height:107%;font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+						1.1.1.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>
+					</span>
+				</i><i>
+					<span style='font-size:11.0pt;line-height:107%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>Бутон Печат на маркираните</span>
+				</i>
+			</a><i>
+				<span style='font-size:11.0pt;line-height:107%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'> </span>
+			</i>
+		</h4>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=605 height=319 id="Picture 141613" src="summons4_files/image006.png">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Печат на маркираните <img width=156 height=29 id="Picture 141612" src="summons4_files/image007.jpg">може
+			да се генерира файл за едновременен печат на всички маркирани
+			призовки/съобщение. В зависимост от настройките на браузера, файлът се сваля
+			локално или се отваря в програма визуализираща pdf формат, след което
+			призовките могат да бъдат разпечатани.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=314 height=261
+				 id="Picture 141618" src="summons4_files/image008.jpg">
+		</p>
+
+		<p class=MsoNormal>{summons<span lang=EN-US>4</span>}</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

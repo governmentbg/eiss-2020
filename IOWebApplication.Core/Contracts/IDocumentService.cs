@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Documents;
+﻿using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.Documents;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -11,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -18,8 +16,8 @@ namespace IOWebApplication.Core.Contracts
     {
         DocumentVM Document_Init(int documentDirection, int templateId = 0);
 
-        DocumentVM Document_GetById(long id);
-        bool Document_SaveData(DocumentVM model);
+        Task<DocumentVM> Document_GetById(long id);
+        Task<bool> Document_SaveData(DocumentVM model);
         bool Document_CorrectData(DocumentVM model);
         IQueryable<DocumentListVM> Document_Select(DocumentFilterVM model);
 
@@ -39,12 +37,14 @@ namespace IOWebApplication.Core.Contracts
         DocumentDecision DocumentDecision_SelectForDocument(long documentId);
         IQueryable<DocumentDecisionListVM> DocumentDecision_Select(int courtId, DocumentDecisionFilterVM model);
         IQueryable<DocumentDecisionCaseListVM> DocumentDecisionCase_Select(long documentDecisionId);
+        IQueryable<DocumentDecisionCaseListVM> DocumentDecisionCaseByCase_Select(int CaseId);
         (bool result, string errorMessage) DocumentDecisionCase_SaveData(DocumentDecisionCase model);
         DocumentSelectPersonsVM Document_SelectPersons(long documentId);
         List<DocumentPersonVM> SelectDocumentPersonsFromDocument(DocumentSelectPersonsVM model, int index);
         IQueryable<DocumentCaseInfoSprVM> DocumentCaseInfoSpr_Select(DocumentCaseInfoSprFilterVM model);
         Document GetByIdWithData(long id);
         bool IsCanExpireCompliantDocument(long id);
+        SaveResultVM CheckCanExpireDocument(long id);
         bool DocumentExpire(ExpiredInfoVM model);
 
         bool Reactivate(DocumentReactivateVM model);

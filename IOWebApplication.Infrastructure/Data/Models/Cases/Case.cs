@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
@@ -56,6 +53,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [ForeignKey(nameof(CaseReasonId))]
         public virtual CaseReason CaseReason { get; set; }
 
+        [ForeignKey(nameof(JudicalCompositionId))]
+        public virtual CourtDepartment JudicalComposition { get; set; }
+
+        [ForeignKey(nameof(OtdelenieId))]
+        public virtual CourtDepartment Otdelenie { get; set; }
+
         public virtual ICollection<CasePerson> CasePersons { get; set; }
         public virtual ICollection<CaseCrime> CaseCrimes { get; set; }
         public virtual ICollection<CasePersonCrime> CasePersonCrimes { get; set; }
@@ -73,6 +76,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual ICollection<CaseSessionResult> CaseSessionResults { get; set; }
         public virtual ICollection<CaseSessionActComplain> CaseSessionActComplains { get; set; }
 
+        public virtual ICollection<CasePersonSentencePunishment> CasePersonSentencePunishments { get; set; }
+        public virtual ICollection<CaseSessionDoc> CaseSessionDocs { get; set; }
+
+        public virtual ICollection<CaseDeactivation> CaseDeactivations { get; set; }
+
         public virtual ICollection<CaseH> History { get; set; }
         public Case()
         {
@@ -88,6 +96,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
             CaseSessionActs = new HashSet<CaseSessionAct>();
             CaseSessionResults = new HashSet<CaseSessionResult>();
             CaseSessionActComplains = new HashSet<CaseSessionActComplain>();
+            CasePersonSentencePunishments = new HashSet<CasePersonSentencePunishment>();
+            CaseSessionDocs = new HashSet<CaseSessionDoc>();
+            CaseDeactivations = new HashSet<CaseDeactivation>();
         }
     }
     /// <summary>
@@ -245,5 +256,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         /// </summary>
         [Column("is_new_case_new_number")]
         public bool? IsNewCaseNewNumber { get; set; }
+
+        /// <summary>
+        /// Съдебен състав
+        /// </summary>
+        [Column("judical_composition_id")]
+        public int? JudicalCompositionId { get; set; }
+
+        /// <summary>
+        /// Отделение
+        /// </summary>
+        [Column("otdelenie_id")]
+        public int? OtdelenieId { get; set; }
     }
 }

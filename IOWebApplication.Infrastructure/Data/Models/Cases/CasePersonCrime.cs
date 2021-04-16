@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
@@ -62,6 +59,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [ForeignKey(nameof(RecidiveTypeId))]
         public virtual RecidiveType RecidiveType { get; set; }
 
+        public virtual ICollection<CasePersonCrimePunishment> CasePersonCrimePunishments { get; set; }
+  
         //################################################################################
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]

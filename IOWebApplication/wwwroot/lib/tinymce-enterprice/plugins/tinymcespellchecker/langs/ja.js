@@ -1,0 +1,14 @@
+tinymce.addI18n('ja', {
+  'The spelling service was not found: ({0})': '\u30B9\u30DA\u30EA\u30F3\u30B0\u30B5\u30FC\u30D3\u30B9\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093\u3067\u3057\u305F\uFF1A ({0})',
+  'Spellcheck': '\u30b9\u30da\u30eb\u30c1\u30a7\u30c3\u30af',
+  'Spellcheck...': '\u30b9\u30da\u30eb\u30c1\u30a7\u30c3\u30af...',
+  'Spellcheck Language': '\u8a00\u8a9e\u306e\u30b9\u30da\u30eb\u30c1\u30a7\u30c3\u30af',
+  'No misspellings found.': '\u30b9\u30da\u30eb\u30df\u30b9\u306f\u3042\u308a\u307e\u305b\u3093\u3002',
+  'Ignore': '\u7121\u8996',
+  'Ignore all': '\u3059\u3079\u3066\u7121\u8996',
+  'Misspelled word': '\u30df\u30b9\u30b9\u30da\u30eb\u306e\u5358\u8a9e',
+  'Suggestions': '\u5909\u63db\u5019\u88dc',
+  'Change': '\u5909\u66f4',
+  'Finding word suggestions': '\u5909\u63db\u5019\u88dc\u3092\u691c\u7d22\u4e2d',
+  'Language': '\u8a00\u8a9e'
+});

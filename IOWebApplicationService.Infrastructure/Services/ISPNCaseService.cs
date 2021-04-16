@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Base;
@@ -9,35 +6,53 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Http;
-using IOWebApplication.Infrastructure.Integrations;
+using IOWebApplication.Infrastructure.Models.Integrations.Ispn;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplicationService.Infrastructure.Contracts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using CaseType = IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType;
+using SessionType = IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType;
+using ActType = IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType;
+using System.Transactions;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
     public class ISPNCaseService : BaseMQService, IISPNCaseService
     {
+        private readonly IConfiguration configuration;
+        private readonly IHttpClientFactory clientFactory;
+        public List<MQEpep> caseMq = null;
+        private Uri uploadUrl;
+        private HttpRequester requester;
         public ISPNCaseService(
             IRepository _repo,
             ICdnService _cdnService,
-            ILogger<ISPNCaseService> _logger)
+            ILogger<ISPNCaseService> _logger,
+            IHttpClientFactory _clientFactory,
+            IConfiguration _configuration)
         {
             repo = _repo;
             cdnService = _cdnService;
             this.IntegrationTypeId = NomenclatureConstants.IntegrationTypes.ISPN;
             logger = _logger;
-            this.mqID = null;// 1616;
+            configuration = _configuration;
+            this.mqID = null;
+            clientFactory = _clientFactory;
         }
 
 
@@ -71,6 +86,9 @@ namespace IOWebApplicationService.Infrastructure.Services
                 sidePerson.side_family_2 = person.Family2Name;
                 sidePerson.side_egn = person.Uic;
                 result.Item = sidePerson;
+                //TODO: Да се махне
+                //if (string.IsNullOrEmpty(sidePerson.side_family_1))
+                //    sidePerson.side_family_1 = "ФАМИЛИЯ"; 
             }
             else
             {
@@ -88,13 +106,15 @@ namespace IOWebApplicationService.Infrastructure.Services
               .Where(x => x.DateExpired == null)
               .Where(x => x.CaseSessionId == null)
               .ToList();
-            SideType[] sides = new SideType[casePersons.Count];
+            var sides = new List<SideType>();
             for (int i = 0; i < casePersons.Count; i++)
             {
                 var itemPerson = casePersons[i];
-                sides[i] = FillSide(itemPerson, itemPerson.Id, itemPerson.PersonRoleId, SourceTypeSelectVM.CasePerson);
+                var side = FillSide(itemPerson, itemPerson.Id, itemPerson.PersonRoleId, SourceTypeSelectVM.CasePerson);
+                if (side != null)
+                    sides.Add(side);
             }
-            return sides;
+            return sides.ToArray();
         }
         private CaseType FillCase(Case caseAll, List<Document> compliantDocuments, List<CaseMigration> migrations)
         {
@@ -121,6 +141,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                     indoc_id = newDocumentId,
                     indoc_kind = GetNomValueInt(EpepConstants.Nomenclatures.IncommingDocumentTypes, caseAll.Document.DocumentTypeId),
                     indoc_no = caseAll.Document.DocumentNumberValue ?? 0,
+                    indoc_noSpecified = (caseAll.Document.DocumentNumberValue > 0),
                     indoc_year = caseAll.Document.DocumentDate.Year,
                     indoc_date = caseAll.Document.DocumentDate,
                 },
@@ -154,14 +175,16 @@ namespace IOWebApplicationService.Infrastructure.Services
             var compliantDocuments = repo.AllReadonly<Document>()
                                 .Include(x => x.DocumentPersons)
                                 .Where(x => x.DocumentCaseInfo.Where(a => a.CaseId == caseAll.Id).Any())
-                                .Where(x => x.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument)
+                                .Where(x => x.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument && 
+                                            x.DateExpired == null)
                                 .ToList();
 
             var migrations = repo.AllReadonly<CaseMigration>()
                              .Include(x => x.OutDocument)
                              .Where(x => x.CaseId == caseAll.Id)
                              .Where(x => x.CaseSessionActId != null)
-                             .Where(x => x.OutDocumentId != null)
+                             .Where(x => x.OutDocumentId != null && 
+                                         x.DateExpired == null)
                              .ToList();
 
             return FillCase(caseAll, compliantDocuments, migrations);
@@ -202,10 +225,25 @@ namespace IOWebApplicationService.Infrastructure.Services
                                               .Where(x => x.CaseSessionId == session.Id)
                                               .Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
                                               .ToList();
-            var acts = session.CaseSessionActs.Select(x => FillActType(x, session, migrations)).ToArray();
+            var acts = session.CaseSessionActs
+                              .Where(x => x.DateExpired == null && 
+                                          x.ActDeclaredDate != null &&
+                                          x.ActTypeId != NomenclatureConstants.ActType.ExecListPrivatePerson &&
+                                          x.ActTypeId != NomenclatureConstants.ActType.ObezpechitelnaZapoved 
+                                          )  
+                              .Select(x => FillActType(x, session, migrations)).ToArray();
+            //acts = acts.Where(x => x.act_reason.Length > 0 || x.act_debtor_status > 0 || !string.IsNullOrEmpty(x.act_text)).ToArray();
             (var newId, var action) = AppendUpdateIntegrationKeyAction(SourceTypeSelectVM.CaseSession, session.Id, session.DateExpired != null);
             if (string.IsNullOrEmpty(newId))
                 return null;
+            int sessionResultIspn = 11004;
+            try
+            {
+                sessionResultIspn = GetNomValueInt(EpepConstants.Nomenclatures.SessionResults, sessionResult.Id); /* nom_session_result */
+            } catch
+            {
+
+            }
             return new SessionType()
             {
                 session_action = ServiceMethodToAction(action),
@@ -213,9 +251,9 @@ namespace IOWebApplicationService.Infrastructure.Services
                 session_date = (session.DateTo ?? session.DateFrom).Date,
                 session_id = newId,
                 session_kind = GetNomValueInt(EpepConstants.Nomenclatures.SessionTypes, session.SessionTypeId),
-                session_text = session.Description,
+                session_text = session.Description ?? "",
                 session_time = session.DateTo ?? session.DateFrom,
-                session_result = GetNomValueInt(EpepConstants.Nomenclatures.SessionResults, sessionResult.Id), /* nom_session_result */
+                session_result = sessionResultIspn,
                 Surround = FillSurroundProcessedArray(session.CaseSessionDocs.ToList()),
                 Judge = FillJudgeTypeArray(caseLawUnits),
                 //extensions =
@@ -224,7 +262,7 @@ namespace IOWebApplicationService.Infrastructure.Services
         private SessionType[] FillSessionTypeArr(ICollection<CaseSession> sessions, ICollection<CaseLawUnit> caseLawUnits, List<CaseMigration> migrations)
         {
             var sessionList = new List<SessionType>();
-            foreach (var session in sessions)
+            foreach (var session in sessions.Where(x => x.DateExpired == null))
             {
                 var sessionResult = session.CaseSessionResults.FirstOrDefault(x => x.DateExpired == null && x.IsMain);
                 if (sessionResult != null)
@@ -276,7 +314,11 @@ namespace IOWebApplicationService.Infrastructure.Services
             result.surround_date = compliantDocument.DocumentDate;
             result.surround_text = compliantDocument.Description;
             result.Side = FillDocumentSides(compliantDocument.DocumentPersons.ToList());
-
+            if (string.IsNullOrEmpty(result.surround_text))
+            {
+                var docType = repo.AllReadonly<DocumentType>().FirstOrDefault(x => x.Id == compliantDocument.DocumentTypeId);
+                result.surround_text = docType?.Label ?? "";
+            }
             return result;
         }
         private SurroundType[] FillSurroundArray(List<Document> compliantDocuments)
@@ -293,13 +335,16 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         private SideType[] FillDocumentSides(List<DocumentPerson> documentPersons)
         {
-            SideType[] sides = new SideType[documentPersons.Count];
+            var sides = new List<SideType>();
             for (int i = 0; i < documentPersons.Count; i++)
             {
                 var itemPerson = documentPersons[i];
-                sides[i] = FillSide(itemPerson, itemPerson.Id, itemPerson.PersonRoleId, SourceTypeSelectVM.DocumentPerson);
+                var side = FillSide(itemPerson, itemPerson.Id, itemPerson.PersonRoleId, SourceTypeSelectVM.DocumentPerson);
+                if (side != null)
+                    sides.Add(side);
             }
-            return sides;
+            return sides.ToArray();
+
         }
 
         private SurroundProcessedType FillSurroundProcessed(CaseSessionDoc sessionDoc)
@@ -368,7 +413,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             result.sendto_date = migration.OutDocument.DocumentDate;
             result.sendto_court = GetNomValueInt(EpepConstants.Nomenclatures.Courts, migration.SendToCourtId);
             result.@return = new ReturnType();
-            result.@return.return_result = sessionAct.ActComplainIndex.Code;
+            result.@return.return_result = sessionAct.ActComplainIndex?.Code ?? "";
 
             return result;
         }
@@ -384,70 +429,196 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
             return appeals.ToArray();
         }
-
-        public async Task TestMQ()
-        {
-            var model = new MQEpep();
-            model.ParentSourceId = 561;
-            var resultCase = FillCaseAll(model);
-
-            Transfer result = new Transfer();
-            result.program = "ЕИСС";
-            result.version = 1.8088;
-            result.Case = resultCase;
-
-            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-            ns.Add("", "");
-
-            XmlSerializer x = new XmlSerializer(typeof(Transfer));
-            var stream = new MemoryStream();
-            TextWriter writer = new StreamWriter(stream);
-            x.Serialize(writer, result, ns);
-            stream.Position = 0;
-            StreamReader reader = new StreamReader(stream);
-            string text = reader.ReadToEnd();
-
-            HttpRequester http = new HttpRequester();
-            var uploadUrl = new Uri(""); //още не работи
-            var response = await http.PostAsync(uploadUrl.AbsoluteUri, text);
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-            }
-            else
-            {
-
-            }
-
-        }
-
         protected override async Task<bool> InitChanel()
         {
+            uploadUrl = new Uri(configuration.GetValue<string>("ISPN:URI"));
+            requester = new HttpRequester(clientFactory.CreateClient("ispnHttpClient"));
             return true;
         }
 
         protected override async Task CloseChanel()
         {
         }
+        private string GenerateXml(MQEpep mq)
+        {
+            string text = string.Empty;
 
+            var resultCase = FillCaseAll(mq);
+
+            Transfer result = new Transfer();
+            result.program = "EISS";// "ЕИСС";
+            result.version = 1.8088;
+            result.Case = resultCase;
+            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            ns.Add("", "");
+            XmlSerializer x = new XmlSerializer(typeof(Transfer));
+            using (var stream = new MemoryStream())
+            {
+                using (TextWriter writer = new StreamWriter(stream))
+                {
+                    x.Serialize(writer, result, ns);
+                    stream.Position = 0;
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        text = reader.ReadToEnd();
+                    }
+                }
+            }
+            return text;
+        }
         protected override async Task SendMQ(MQEpep mq)
         {
-            var result = FillCaseAll(mq);
-        }
-        // Да се махне
-        protected override string GetNomValue(string nomenclatureAlias, object value)
-        {
-            string innerCode = value?.ToString();
-            var result = repo.AllReadonly<IOWebApplication.Infrastructure.Data.Models.Nomenclatures.CodeMapping>()
-                            .Where(x => x.Alias == nomenclatureAlias && x.InnerCode == innerCode)
-                            .Select(x => x.OuterCode)
-                            .FirstOrDefault();
-
-            if (result == null)
+            string text = mq.Content == null ? "" : Encoding.UTF8.GetString(mq.Content);
+            if (string.IsNullOrEmpty(text))
             {
-                return "999999";
+                using (var scope = new TransactionScope())
+                {
+                    text = GenerateXml(mq);
+                    mq.Content = Encoding.UTF8.GetBytes(text);
+                    repo.Update(mq);
+                    repo.SaveChanges();
+                    scope.Complete();
+                }
             }
-            return result;
+           
+            var response = await requester.PostAsyncTextXml(uploadUrl.AbsoluteUri, text);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                XElement result = null;
+                if (!string.IsNullOrEmpty(content))
+                {
+                    XDocument message = XDocument.Parse(content);
+                    result = message?.Element("response")?.Element("success");
+                } else
+                {
+                    content = "Получен е празен резултат от ИСПН";
+                }
+                if (result != null)
+                {
+                    mq.IntegrationStateId = IntegrationStates.TransferOK;
+                    mq.DateTransfered = DateTime.Now;
+                    mq.Content = Encoding.UTF8.GetBytes(text);
+                    repo.Update(mq);
+                    repo.SaveChanges();
+                    if (caseMq != null)
+                    {
+                        var mqHash = caseMq.FirstOrDefault(x => x.Id == mq.Id);
+                        mqHash.Content = mq.Content;
+                        mqHash.IntegrationStateId = mq.IntegrationStateId;
+                    }
+                    string fileName = $"Ispn_{mq.Id}_{ DateTime.Today:dd.MM.yyyy}.xml";
+                    CdnUploadRequest request = new CdnUploadRequest()
+                    {
+                        ContentType = System.Net.Mime.MediaTypeNames.Text.Html,
+                        FileContentBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(content)),
+                        FileName = fileName,
+                        SourceId = mq.ParentSourceId.ToString(),
+                        SourceType = SourceTypeSelectVM.Integration_ISPN,
+                        Title = $"Отговор към { DateTime.Today:dd.MM.yyyy}"
+                    };
+
+                    if (!(await cdnService.MongoCdn_AppendUpdate(request)))
+                    {
+                        logger.LogError("Error in SaveContent ISPN mqId {mq.Id}!", mq.Id.ToString());
+                    }
+                }
+                else
+                {
+                    SetErrorToMQ(mq, IntegrationStates.DataContentError, content);
+                }
+            }
+            else
+            {
+                throw new Exception($"Error {response.StatusCode} : {response.ReasonPhrase}  sending message ISPN!");
+            }
+        }
+       
+        
+        protected (string, ServiceMethod) AppendUpdateIntegrationKeyAction(int sourceType, long sourceId, bool isDeleted)
+        {
+            string key = getKey(sourceType, sourceId);
+            if (!string.IsNullOrEmpty(key))
+            {
+                key = key.Replace("-", "").ToUpper();
+                if (caseMq != null)
+                {
+                    bool isExists = caseMq.Any(x => x.Id < mqID && x.Content != null && Encoding.UTF8.GetString(x.Content).Contains(key));
+                    if (!isExists)
+                        return (key, ServiceMethod.Add);
+                }
+                return (key, isDeleted ? ServiceMethod.Delete : ServiceMethod.Update);
+            }
+            if (!isDeleted && string.IsNullOrEmpty(key))
+            {
+                key = Guid.NewGuid().ToString();
+                if (AddIntegrationKey(sourceType, sourceId, key))
+                {
+                    key = key.Replace("-", "").ToUpper();
+                    return (key, ServiceMethod.Add);
+                }
+                return (null, ServiceMethod.Delete);
+            }
+            return ("", ServiceMethod.Delete);
+        }
+
+        public void SetMqIdForTest(int mqId)
+        {
+            this.mqID = mqId;
+        }
+        /// <summary>
+        /// The метода за изпращане на чакащите заявки към ЕПЕП
+        /// </summary>
+        public async Task<bool> PatchISPN(int caseId)
+        {
+             if (!(await InitChanel()))
+            {
+                return false;
+            }
+            caseMq = repo.AllReadonly<MQEpep>()
+                         .Where(x => x.ParentSourceId == caseId && x.IntegrationTypeId == this.IntegrationTypeId)
+                         .OrderBy(x => x.Id)
+                         .ToList();
+            foreach (var mq in caseMq)
+            {
+                if (mq.IntegrationStateId == IntegrationStates.TransferOK)
+                    continue;
+                if (caseMq.Any(x => x.Id > mq.Id && x.IntegrationStateId == IntegrationStates.TransferOK))
+                    continue;
+                try
+                {
+                    await SendMQ(mq);
+                }
+                catch (FaultException fex)
+                {
+                    var _error = fex.Message;
+                    SetErrorToMQ(mq, IntegrationStates.DataContentError, _error);
+                }
+                catch (Exception ex)
+                {
+                    if (logger != null)
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
+                    SetErrorToMQ(mq, IntegrationStates.TransferError, $"Exception: {ex.Message}");
+                }
+            };
+            await CloseChanel();
+
+            return true;
+        }
+        public List<int> GetCaseIdSurroundSideErr()
+        {
+           return repo.AllReadonly<MQEpep>()
+                         .Where(x => x.IntegrationStateId != IntegrationStates.TransferOK &&
+                                     x.IntegrationTypeId == this.IntegrationTypeId &&
+                                     x.ErrorDescription.Contains("encoding="))
+                         //   x.ErrorDescription.Contains("{surround_text}"))
+                         .GroupBy(x => x.ParentSourceId)
+                         .Select(g => (int)g.FirstOrDefault().ParentSourceId)
+                         .OrderBy(x => x)
+                         .ToList();
         }
     }
 

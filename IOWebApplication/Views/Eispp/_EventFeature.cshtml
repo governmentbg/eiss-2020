@@ -12,9 +12,9 @@
     <legend class="legend_1">Характеристики</legend>
     @Html.HiddenFor(x => x.FeatureId)
     <div class="row">
-        <div class="col-lg-2">@Html.EditorFor(x => x.FeatureType, "EisppDropDown", null, new { Ddl = ViewBag.FeatureTypeDDL })</div>
-        <div class="col-lg-2">@Html.EditorFor(x => x.FeatureVal, "EisppDropDown", null, new { Ddl = ViewBag.FeatureValDDL })</div>
-        <div class="col-lg-8">@Html.EditorFor(x => x.FeatureTxt)</div>
+        <div class="col-lg-4">@Html.EditorFor(x => x.FeatureType, "EisppDropDown", null, new { Ddl = ViewBag.FeatureTypeDDL })</div>
+        <div class="col-lg-4">@Html.EditorFor(x => x.FeatureVal, "EisppDropDown", null, new { Ddl = ViewBag.FeatureValDDL })</div>
+        @*<div class="col-lg-8">@Html.EditorFor(x => x.FeatureTxt)</div>*@
     </div>
 </fieldset>
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,6 +30,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
+            SetHelpFile(HelpFileValues.Nom10);
             return View();
         }
 
@@ -52,6 +50,7 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.ParentId_ddl = service.GetDropDownList(userContext.CourtId, id);
             ViewBag.OrganizationLevelId_ddl = nomService.GetDropDownList<OrganizationLevel>();
+            SetHelpFile(HelpFileValues.Nom10);
         }
 
         /// <summary>

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
@@ -76,25 +73,19 @@ namespace IOWebApplication.Controllers
                 return Json(ex);
             }
         }
-        public IActionResult SendPackage(int packageId)
+        public IActionResult SendPackage(int packageId, string mode)
         {
             var model = service.GetPackage(packageId);
+            model.Mode = mode;
             var eisppEvent = model.Data.Events[0];
             if (eisppEvent.EventKind == EventKind.OldEvent || eisppEvent.EventType < 0)
             {
-                return RedirectToAction(nameof(EisppChangePreview), new { eventId = packageId });
+                return RedirectToAction(nameof(EisppChangePreview), new { eventId = packageId, mode });
             }
-            SetViewBag_SendPackage(eisppEvent, true);
+            SetViewBag_SendPackage(eisppEvent, mode);
             return View(model);
         }
 
-        public async Task<IActionResult> DeletePackageJson(EisppPackage model)
-        {
-            await service.DeletePackageJson(model);
-            return RedirectToAction(nameof(SendPackage),
-                    new { packageId = model.Id });
-        }
-        
         private void ValidateEvent(string namePrefix, Event eisppEvent, int eventTypeId)
         {
             var aCase = service.GetById<Case>(eisppEvent.CaseId);
@@ -112,10 +103,12 @@ namespace IOWebApplication.Controllers
                     ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.ConnectedCaseId", "Изберете основание");
                 }
             }
-            if (eisppEvent.EventDate.Date < eisppEvent.CriminalProceeding.Case.Status.StatusDate.Date)
+            if (eisppEvent.EventDate.Date > eisppEvent.CriminalProceeding.Case.Status.StatusDate.Date && eisppEvent.CriminalProceeding.Case.Status.StatusDate.Date > new DateTime(1900, 1, 1))
             {
-                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Status.StatusDateVM", "Датата на статус на дело не може да бъде по-малка от дата на събитие");
+                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Status.StatusDateVM",
+                    "Датата на приключване на дело не може да бъде по-малка от дата на събитие, което се регистрира по това дело.");
             }
+
             if (eisppEvent.CriminalProceeding.Case.Crimes != null)
             {
                 for (int i_crime = 0; i_crime < eisppEvent.CriminalProceeding.Case.Crimes.Length; i_crime++)
@@ -134,22 +127,10 @@ namespace IOWebApplication.Controllers
                     }
                 }
             }
-            // ?????? според ЕИСПП майл
-            //if (eisppEvent.CriminalProceeding.Case.Crimes != null)
-            //{
-            //    for (int i = 0; i < eisppEvent.CriminalProceeding.Case.Crimes.Length; i++)
-            //    {
-            //        var crime = eisppEvent.CriminalProceeding.Case.Crimes[i];
-            //        if (crime.CrimeStatus?.Status > 0 && 
-            //           (crime.CrimeStatus?.StatusDate < new DateTime(2000,1,1) || crime.CrimeStatus?.StatusDate.Date > DateTime.Now.Date))
-            //        {
-            //            ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Crimes[{i}].CrimeStatus.StatusDateVM", "Датата на статус e задължителна при избран статус на престъпление");
-            //        }
-            //    }
-            //}
+
             if (eisppEvent.CriminalProceeding.Case.Persons != null)
             {
-                (var rulesPunishment, var flagsPunishment) = serviceRules.GetEisppRuleIds(eventTypeId, "NPR.DLO.DLOOSN");
+                (var rulesPunishment, var flagsPunishment) = serviceRules.GetEisppRuleIds(eventTypeId, "NPR.DLO.FZL.NKZ");
                 for (int i = 0; i < eisppEvent.CriminalProceeding.Case.Persons.Length; i++)
                 {
                     var person = eisppEvent.CriminalProceeding.Case.Persons[i];
@@ -203,28 +184,18 @@ namespace IOWebApplication.Controllers
                                         continue;
                                     if (personCrime.CrimeSanction?.CrimePunishments == null)
                                         continue;
-                                    for (int i_pcp = 0; i_pcp < personCrime.CrimeSanction.CrimePunishments.Length; i_pcp++)
+                                    if (personCrime.CrimeSubjectStatisticData != null)
                                     {
-                                        var crimePunishment = personCrime.CrimeSanction.CrimePunishments[i_pcp];
-                                        if (!crimePunishment.IsSelected)
-                                            continue;
-                                        (var ddl, var punishmentKindMode, var servingTypeId, var showRegim, var showServingType) = service.GetPunishmentPeriodMode(eisppEvent.EventId, crimePunishment.PunishmentKind, 0);
-                                        if (punishmentKindMode == PunishmentVal.effective_period ||
-                                            punishmentKindMode == PunishmentVal.period ||
-                                            punishmentKindMode == PunishmentVal.probation ||
-                                            punishmentKindMode == PunishmentVal.probation_period)
+                                        if (personCrime.CrimeSubjectStatisticData.LawfulAge == 0)
                                         {
-                                            if (!crimePunishment.HavePeriod())
-                                                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Crimes[{i_crime}].CPPersonCrimes[{i_pc}].CrimeSanction.CrimePunishments[{i_pcp}].PunishmentYears",
-                                                    "Въведете за срок на наказание поне едно от дни, седмици, месеци, години!");
-                                        }
-                                        if (punishmentKindMode == PunishmentVal.fine)
-                                        {
-                                            if (crimePunishment.FineAmount < 0.001)
-                                                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Crimes[{i_crime}].CPPersonCrimes[{i_pc}].CrimeSanction.CrimePunishments[{i_pcp}].FineAmount",
-                                                                         "Въведете глоба!");
+                                            (var rulesLawfulAge, var flagsLawfulAge) = serviceRules.GetEisppRuleIds(eventTypeId, "NPR.DLO.NPRFZLPNE.SBC.sbcple");
+                                            if (flagsLawfulAge > 0)
+                                                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Crimes[{i_crime}].CPPersonCrimes[{i_pc}].CrimeSubjectStatisticData.LawfulAge",
+                                                                           "Въведете Пълнолетие!");
+
                                         }
                                     }
+                                    ValidateCPPersonCrime(namePrefix, eisppEvent, i_crime, i_pc, personCrime);
                                 }
                             }
                         }
@@ -242,10 +213,11 @@ namespace IOWebApplication.Controllers
                         } else
                         {
                             // ????? Дали е така (според САС трябва да има и двете)
-                            if (!person.Punishments.Any(x => x.PunishmentType == PunishmentType.ForExecution))
+                            if (!person.Punishments.Any(x => x.IsSelected && x.PunishmentType == PunishmentType.ForExecution))
                                 ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Egn", "Няма въведенo " + service.GetElementLabel(PunishmentType.ForExecution.ToString()) + "!");
-                            if (!person.Punishments.Any(x => x.PunishmentType == PunishmentType.Union))
-                                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Egn", "Няма въведенo " + service.GetElementLabel(PunishmentType.Union.ToString()) + "!");
+                            if (eisppEvent.EventType != EventType.EarlyRelease)
+                                if (!person.Punishments.Any(x => x.PunishmentType == PunishmentType.Union))
+                                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Egn", "Няма въведенo " + service.GetElementLabel(PunishmentType.Union.ToString()) + "!");
                         }
                     }
                     if (person.Punishments != null)
@@ -253,47 +225,98 @@ namespace IOWebApplication.Controllers
                         for (int p_i = 0; p_i < person.Punishments.Length; p_i++)
                         {
                             var punishment = person.Punishments[p_i];
-                            (var ddl, var punishmentKindMode, var servingTypeId, var showRegim, var showServingType) = service.GetPunishmentPeriodMode(eisppEvent.EventId, punishment.PunishmentKind, punishment.ServingType);
-                            if (punishmentKindMode == PunishmentVal.effective_period ||
-                                punishmentKindMode == PunishmentVal.period ||
-                                punishmentKindMode == PunishmentVal.probation ||
-                                punishmentKindMode == PunishmentVal.probation_period)
-                            {
-                                if (!punishment.HavePeriod())
-                                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentYears",
-                                                             "Въведете за срок на наказание поне едно от дни, седмици, месеци, години!");
-                            }
-                            if (showRegim)
-                            {
-                                if (punishment.PunishmentRegime <= 0)
-                                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentRegime",
-                                                             "Въведете Режим на изтърпяване!");
-                            }
-                            if (punishmentKindMode == PunishmentVal.probation_period)
-                            {
-                                if (!punishment.HaveProbationPeriod())
-                                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentYears",
-                                                             "Въведете за изпитателен срок поне едно от дни, седмици, месеци, години!");
-                                if (punishment.ProbationStartDate < aCase.RegDate.Date || punishment.ProbationStartDate.Date > DateTime.Now)
-                                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].ProbationStartDateVM",
-                                                             $"Въведете начало изпитателен срок от {aCase.RegDate:dd.MM.yyyy} до {DateTime.Now:dd.MM.yyyy}!");
-
-                            }
-                            if (punishment.PunishmentActivityDate < aCase.RegDate.Date || punishment.PunishmentActivityDate.Date > DateTime.Now)
-                                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentActivityDateVM",
-                                                         $"Въведете начало срок от {aCase.RegDate:dd.MM.yyyy} до {DateTime.Now:dd.MM.yyyy}!");
-
-                            if (punishmentKindMode == PunishmentVal.fine)
-                            {
-                                if (punishment.FineAmount < 0.001)
-                                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].FineAmount",
-                                                             "Въведете глоба!");
-                            }
+                            if (!punishment.IsSelected)
+                                continue;
+                            ValidatePunisment(namePrefix, eisppEvent, aCase, i, p_i, punishment);
                         }
                     }
                 }
             }
 
+        }
+
+        private void ValidateCPPersonCrime(string namePrefix, Event eisppEvent, int i_crime, int i_pc, CPPersonCrime personCrime)
+        {
+            for (int i_pcp = 0; i_pcp < personCrime.CrimeSanction.CrimePunishments.Length; i_pcp++)
+            {
+                var crimePunishment = personCrime.CrimeSanction.CrimePunishments[i_pcp];
+                if (!crimePunishment.IsSelected)
+                    continue;
+                (var ddl, var punishmentKindMode, var servingTypeId, var showRegim, var showServingType) = service.GetPunishmentPeriodMode(eisppEvent.EventId, crimePunishment.PunishmentKind, 0);
+                if (punishmentKindMode == PunishmentVal.effective_period ||
+                    punishmentKindMode == PunishmentVal.period ||
+                    punishmentKindMode == PunishmentVal.probation ||
+                    punishmentKindMode == PunishmentVal.probation_period)
+                {
+                    if (!crimePunishment.HavePeriod())
+                        ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Crimes[{i_crime}].CPPersonCrimes[{i_pc}].CrimeSanction.CrimePunishments[{i_pcp}].PunishmentYears",
+                            "Въведете за срок на наказание поне едно от дни, седмици, месеци, години!");
+                }
+                if (punishmentKindMode == PunishmentVal.fine)
+                {
+                    if (crimePunishment.FineAmount < 0.001)
+                        ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Crimes[{i_crime}].CPPersonCrimes[{i_pc}].CrimeSanction.CrimePunishments[{i_pcp}].FineAmount",
+                                                 "Въведете глоба!");
+                }
+            }
+        }
+
+        private void ValidatePunisment(string namePrefix, Event eisppEvent, Case aCase, int i, int p_i, Punishment punishment)
+        {
+            (var ddl, var punishmentKindMode, var servingTypeId, var showRegim, var showServingType) = service.GetPunishmentPeriodMode(eisppEvent.EventId, punishment.PunishmentKind, punishment.ServingType);
+            if (punishmentKindMode == PunishmentVal.effective_period ||
+                punishmentKindMode == PunishmentVal.period ||
+                punishmentKindMode == PunishmentVal.probation ||
+                punishmentKindMode == PunishmentVal.probation_period)
+            {
+                if (!punishment.HavePeriod())
+                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentYears",
+                                             "Въведете за срок на наказание поне едно от дни, седмици, месеци, години!");
+            }
+            if (punishmentKindMode == PunishmentVal.probation)
+            {
+                if (punishment.ProbationMeasures == null || !punishment.ProbationMeasures.Any(x => x.IsSelected))
+                {
+                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentKind",
+                           "Въведете за поне едно пробационно наказание!");
+                } else
+                {
+                    for (int i_pm = 0; i_pm < punishment.ProbationMeasures.Length; i_pm++)
+                    {
+                        var probationMeasure = punishment.ProbationMeasures[i_pm];
+                        if (!probationMeasure.IsSelected)
+                            continue;
+                        if (probationMeasure.MeasureType <= 0)
+                            ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentMeasures[{i_pm}].MeasureType",
+                                                     "Въведете вид пробационнa мярка!");
+                    }
+                }
+            }
+
+            if (showRegim)
+            {
+                if (punishment.PunishmentRegime <= 0)
+                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentRegime",
+                                             "Въведете Режим на изтърпяване!");
+            }
+            if (punishmentKindMode == PunishmentVal.probation_period)
+            {
+                if (!punishment.HaveProbationPeriod())
+                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].ProbationYears",
+                                             "Въведете за изпитателен срок поне едно от дни, седмици, месеци, години!");
+                if (punishment.ProbationStartDate < aCase.RegDate.Date || punishment.ProbationStartDate.Date > DateTime.Now)
+                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].ProbationStartDateVM",
+                                             $"Въведете начало изпитателен срок от {aCase.RegDate:dd.MM.yyyy} до {DateTime.Now:dd.MM.yyyy}!");
+            }
+            if (punishment.PunishmentActivityDate < aCase.RegDate.Date || punishment.PunishmentActivityDate.Date > DateTime.Now)
+                ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].PunishmentActivityDateVM",
+                                         $"Въведете начало срок от {aCase.RegDate:dd.MM.yyyy} до {DateTime.Now:dd.MM.yyyy}!");
+            if (punishmentKindMode == PunishmentVal.fine)
+            {
+                if (punishment.FineAmount < 0.001)
+                    ModelState.AddModelError($"{namePrefix}.CriminalProceeding.Case.Persons[{i}].Punishments[{p_i}].FineAmount",
+                                             "Въведете глоба!");
+            }
         }
 
         [HttpPost]
@@ -313,12 +336,21 @@ namespace IOWebApplication.Controllers
             {
                 var errors = ModelState.Values.Where(x => x.ValidationState != ModelValidationState.Valid).ToList();
                 ViewBag.isPostBack = true;
-                SetViewBag_SendPackage(model.Data.Events[0], true);
+                SetViewBag_SendPackage(model.Data.Events[0], model.Mode);
                 return View(model);
             }
-            service.SaveCasePackageData(model, null);
-            return RedirectToAction(nameof(SendPackage),
-                new { packageId = model.Id });
+            var currentId = model.Id;
+            if (service.SaveCasePackageData(model, null))
+            {
+                this.SaveLogOperation(currentId == 0, model.Id, null, "edit");
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(SendPackage), new { packageId = model.Id });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return View(model);
         }
 
         public IActionResult EisppEvent(string sourceType, string sourceId, int caseId, int? caseSessionActId)
@@ -332,9 +364,11 @@ namespace IOWebApplication.Controllers
             (var ruleIds, var flags) = serviceRules.GetEisppRuleIds(modelVM.EventType, "sbedkpvid");
             if (ruleIds.Any()) { 
                 var sessionActDDL = service.CaseSessionActDDL(modelVM.CaseId, modelVM.EventType, null, null);
-            
-                if (modelVM.CaseSessionActId <= 0 || !sessionActDDL.Any(x => x.Value == modelVM.CaseSessionActId.ToString()))
-                    ModelState.AddModelError(nameof(modelVM.CaseSessionActId), "Изберете Акт/Протокол");
+                if (modelVM.EventType != EventType.ComplaintReceived)
+                {
+                    if (modelVM.CaseSessionActId <= 0 || !sessionActDDL.Any(x => x.Value == modelVM.CaseSessionActId.ToString()))
+                        ModelState.AddModelError(nameof(modelVM.CaseSessionActId), "Изберете Акт/Протокол");
+                }
             }
             int featureType = serviceRules.GetEisppRuleValue(modelVM.EventType, "SBH.sbhvid").ToInt();
             if (featureType == FeatureType.SentenceType)
@@ -358,9 +392,9 @@ namespace IOWebApplication.Controllers
                 SetViewBag_EventType(modelVM);
                 return View(modelVM);
             }
-            if (modelVM.EventType == EventType.GetCase)
+            if (modelVM.EventType == EventType.GetCase || modelVM.EventType == EventType.SendCase)
             {
-                var result = await service.GetCase(modelVM);
+                var result = await service.SaveCaseMigration(modelVM);
                 if (result)
                 {
                     ViewBag.IsGetCaseSaved = true;
@@ -374,7 +408,7 @@ namespace IOWebApplication.Controllers
             else
             {
                 ModelState.Clear();
-                var model = await service.GeneratePackage(modelVM.CaseId, modelVM.EventType, modelVM.CasePersonId, modelVM.ConnectedCaseId, modelVM.CaseSessionActId, modelVM.PersonOldMeasureId, modelVM.PersonMeasureId);
+                var model = await service.GeneratePackage(modelVM);
                 model.SourceType = modelVM.SourceType.ToInt();
                 model.SourceId = modelVM.SourceId.ToInt();
                 model.CaseId = modelVM.CaseId;
@@ -387,7 +421,7 @@ namespace IOWebApplication.Controllers
                 }
                 else
                 {
-                    SetViewBag_SendPackage(model.Data.Events[0], true);
+                    SetViewBag_SendPackage(model.Data.Events[0], model.Mode);
                     return View(nameof(SendPackage), model);
                 }
             }
@@ -405,9 +439,10 @@ namespace IOWebApplication.Controllers
             ModelState.Clear();
             return View(nameof(EisppChange), model);
         }
-        public IActionResult EisppChangePreview(int eventId)
+        public IActionResult EisppChangePreview(int eventId, string mode)
         {
             var model = service.GetPackageChange(eventId);
+            model.Mode = mode;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventChangeEdit(model.OldEvent.CaseId, false).DeleteOrDisableLast();
             return View(nameof(EisppChange), model);
         }
@@ -422,7 +457,7 @@ namespace IOWebApplication.Controllers
             {
                 var errors = ModelState.Values.Where(x => x.ValidationState != ModelValidationState.Valid).ToList();
                 ViewBag.isPostBack = true;
-                SetViewBag_SendPackage(model.EisppPackage.Data.Events[0], true);
+                SetViewBag_SendPackage(model.EisppPackage.Data.Events[0], model.EisppPackage.Mode);
                 return View(model);
             }
             package.IsForSend = model.IsForSend;
@@ -435,7 +470,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult OldEvent(EisppChangeVM model)
         {
-            SetViewBag_SendPackage(model.OldEvent, false);
+            SetViewBag_SendPackage(model.OldEvent, model.EisppPackage?.Mode);
             bool isDelete = (model.NewEvent == null);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventChangeEditOld(model.OldEvent.CaseId, isDelete).DeleteOrDisableLast();
             return View(nameof(OldEvent), model);
@@ -445,7 +480,7 @@ namespace IOWebApplication.Controllers
         public IActionResult NewEvent(EisppChangeVM model)
         {
             model.NewEventObj = model.NewEvent;
-            SetViewBag_SendPackage(model.NewEventObj, false);
+            SetViewBag_SendPackage(model.NewEventObj, model.EisppPackage.Mode);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventChangeEditOld(model.OldEvent.CaseId, false).DeleteOrDisableLast();
    
             return View(nameof(NewEvent), model);
@@ -467,7 +502,7 @@ namespace IOWebApplication.Controllers
             ValidateRules(package.EventTypeId, "DATA.VHD.SBE", "NewEventObj", model.NewEventObj);
             if (!ModelState.IsValid)
             {
-                SetViewBag_SendPackage(model.NewEventObj, false);
+                SetViewBag_SendPackage(model.NewEventObj, model.EisppPackage?.Mode);
                 return View(nameof(NewEvent), model);
             }
             model.NewEvent = model.NewEventObj;
@@ -488,11 +523,11 @@ namespace IOWebApplication.Controllers
             return View(nameof(Index), filter);
         }
 
-        public IActionResult IndexAll(int courtId)
+        public IActionResult IndexAll()
         {
             EisppEventFilterVM filter = new EisppEventFilterVM();
-            filter.CourtId = courtId;
-            SetViewBag_IndexAll(courtId);
+            filter.CourtId = userContext.CourtId;
+            SetViewBag_IndexAll(filter.CourtId);
             return View(nameof(Index), filter);
         }
         public JsonResult GetPunishmentKindMode(int eventType, int punishmentKind, int servingType)
@@ -747,7 +782,7 @@ namespace IOWebApplication.Controllers
                 return File(Convert.FromBase64String(cdnResult.FileContentBase64), System.Net.Mime.MediaTypeNames.Application.Pdf, cdnResult.FileName);
             } else
             {
-                return null;
+                return new NoContentResult();
             }
         }
         public async Task<IActionResult> GetEisppResponse(int id)
@@ -771,14 +806,14 @@ namespace IOWebApplication.Controllers
             }
             else
             {
-                return null;
+                return new NoContentResult();
             }
         }
         [HttpPost]
-        public JsonResult GetPersonMeasure(int casePersonId)
+        public JsonResult GetPersonMeasure(int casePersonId, int eventId)
         {
-            var personOldMeasureDDL = service.GetPersonProceduralCoercionMeasure(casePersonId, true);
-            var personMeasureDDL = service.GetPersonProceduralCoercionMeasure(casePersonId, false);
+            var personOldMeasureDDL = service.GetPersonProceduralCoercionMeasure(casePersonId, true, eventId);
+            var personMeasureDDL = service.GetPersonProceduralCoercionMeasure(casePersonId, false, eventId);
             return Json(new { personOldMeasureDDL, personMeasureDDL });
         }
         [HttpPost]
@@ -791,20 +826,22 @@ namespace IOWebApplication.Controllers
         }
 
 
-        private void SetViewBag_SendPackage(Event model, bool setBreadCrumbs)
+        private void SetViewBag_SendPackage(Event model, string mode)
         {
-            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventEdit(model.CaseId).DeleteOrDisableLast();
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventEdit(model.CaseId, mode).DeleteOrDisableLast();
+
 
             ViewBag.ConnectedCaseId_ddl = service.GetDDL_ConnectedCases(model.CaseId);
 
             int eventType = model.EventType;
             ViewBag.EventTypeId = eventType;
-           // ViewBag.EventType_ddl = service.GetDDL_EISPPEventType(model.CriminalProceeding.Case.CaseCodeId, model.CriminalProceeding.Case.CaseTypeId);
-            ViewBag.EventTypeDDL = EisppDropDownVM(service.GetDDL_EISPPEventType(model.CriminalProceeding.Case.CaseCodeId, model.CriminalProceeding.Case.CaseTypeId), 3);
+            // ViewBag.EventType_ddl = service.GetDDL_EISPPEventType(model.CriminalProceeding.Case.CaseCodeId, model.CriminalProceeding.Case.CaseTypeId);
+            bool isExternal = model.CriminalProceeding.Case.LegalProceedingType == LegalProceedingType.PIS_ExternalND;
+            ViewBag.EventTypeDDL = EisppDropDownVM(service.GetDDL_EISPPEventType(model.CriminalProceeding.Case.CaseCodeId, model.CriminalProceeding.Case.CaseTypeId, isExternal), 3);
             ViewBag.CiminalProceedingCrimeDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.CiminalProceedingCrime)); // nprpnests
 
             ViewBag.ExactCaseTypeDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.ExactCaseType, eventType, "NPR.DLO.dlosig"); // dlosig
-          
+
 
             ViewBag.CaseTypeDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.CaseType, eventType, "NPR.DLO.dlovid"); // dlovid       
             // Тип дело в основание
@@ -822,10 +859,11 @@ namespace IOWebApplication.Controllers
             ViewBag.CrimeSanctionRoleDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.CrimeSanctionRole, eventType, "NPR.DLO.NPRFZLPNE.SCQ.scqrlq"); // scqrlq
             var countriesDDL = service.GetDDL_CountriesForEISPP();
             ViewBag.CountriesOtherDDL = EisppDropDownVM(countriesDDL.Where(x => x.Value != EISPPConstants.CountryBG.ToString()).ToList(), 7);
-            ViewBag.CountriesBgDDL = EisppDropDownVM(countriesDDL.Where(x => x.Value == EISPPConstants.CountryBG.ToString()).ToList(),3);
+            ViewBag.CountriesBgDDL = EisppDropDownVM(countriesDDL.Where(x => x.Value == EISPPConstants.CountryBG.ToString()).ToList(), 3);
             ViewBag.CountriesDDL = EisppDropDownVM(countriesDDL);
 
-            ViewBag.GenderDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.Gender), 3);
+            ViewBag.GenderDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.Gender), 7);
+            ViewBag.GenderBgDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.Gender), 3);
             ViewBag.AddressTypeDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.AddressType)); // NPR.DLO.PNE.ADR.adrtip
             ViewBag.SanctionTypeDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.SanctionType, eventType, "NPR.DLO.NPRFZLPNE.SCQ.scqvid"); // scqvid
             if (model.EventFeature?.FeatureType == FeatureType.SentenceType && model.EventFeature?.FeatureVal == EISPPConstants.SentenceResultType.Innocence)
@@ -865,7 +903,7 @@ namespace IOWebApplication.Controllers
             ViewBag.MeasureUnitDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.MeasureUnit));  //pbcmered
 
             //Харктеристики
-            ViewBag.FeatureTypeDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.FeatureType,eventType, "SBH.sbhvid");  //sbhvid
+            ViewBag.FeatureTypeDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.FeatureType, eventType, "SBH.sbhvid");  //sbhvid
             ViewBag.FeatureValDDL = service.GetDDL_FeatureValTblElementWithRules(eventType, "SBH.sbhstn", ((EisppDropDownVM)ViewBag.CountriesOtherDDL).DDList);  //sbhstn 
             if (model.EventFeature?.FeatureType == FeatureType.SentenceType)
             {
@@ -884,32 +922,44 @@ namespace IOWebApplication.Controllers
             ViewBag.LaborActivityDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.LaborActivity, eventType, "NNPR.DLO.NPRFZLPNE.SBC.sbctrd"); // sbctrd 312
             ViewBag.OccupationDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.Occupation, eventType, "NPR.DLO.NPRFZLPNE.SBC.sbcznq"); // sbcznq  nmk_fzlpne_znt 1504
             ViewBag.FormerRegistrationsDDL = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.FormerRegistrations, eventType, "NPR.DLO.NPRFZLPNE.SBC.sbcrge"); // sbcrge 12478
+
+            ViewBag.LocalizationDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.Localization));  //adrloc
         }
         private void SetViewBag_EventType(EisppEventVM model)
         {
-            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventEdit(model.CaseId).DeleteOrDisableLast();
-
-            ViewBag.EventType_ddl = service.GetDDL_EISPPEventType(model.CaseCodeId, model.CaseTypeId);
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventEdit(model.CaseId, model.Mode).DeleteOrDisableLast();
+            bool isExternal = service.GetCaseIsExternal(model.CaseId);
+            ViewBag.EventType_ddl = service.GetDDL_EISPPEventType(model.CaseCodeId, model.CaseTypeId, isExternal);
             ViewBag.CasePersonId_ddl = casePersonService.GetForEispp(model.CaseId);
             var OnePersonEventDDL = service.GetDDL_EISPPTblElement(EisppTableCode.OnePersonEvent).Where(x => x.Value != "0");
             ViewBag.OnePersonEvent_json = JsonConvert.SerializeObject(OnePersonEventDDL);
             ViewBag.ConnectedCaseId_ddl = service.GetDDL_ConnectedCases(model.CaseId);
             ViewBag.ExactCaseType_ddl = service.GetDDL_EISPPTblElement(EisppTableCode.ExactCaseType);
             ViewBag.CaseSessionActId_ddl = service.CaseSessionActDDL(model.CaseId, null, null, null);
+            ViewBag.CaseMigrationId_ddl = service.GetDDL_CaseMigrations(model.CaseId);
+            ViewBag.ReasonId_ddl = service.GetDDL_EISPPTblElementWithRules(EisppTableCode.MigrationReason, EventType.SendCase, "DVJDLO.dvjprc").DDList; // sbcetn 314
+            ViewBag.CaseComplaintId_ddl = service.DocumentComplaintDDL(model.CaseId);
+            SetHelpFile(HelpFileValues.EISPPevent);
         }
 
         private void SetViewBag_Index(int caseId)
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEvents(caseId).DeleteOrDisableLast();
+            ViewBag.Mode = "case";
             var aCase = service.GetById<Case>(caseId);
-            ViewBag.EventTypeId_ddl = service.GetDDL_EISPPEventType(aCase.CaseCodeId ?? 0, aCase.CaseTypeId);
+            bool isExternal = service.GetCaseIsExternal(caseId);
+            ViewBag.EventTypeId_ddl = service.GetDDL_EISPPEventType(aCase.CaseCodeId ?? 0, aCase.CaseTypeId, isExternal);
             ViewBag.SessionActId_ddl = service.CaseSessionActDDL(caseId, null, null, null);
             ViewBag.LinkType_ddl = service.GetLinkTypeDDL();
+            ViewBag.IntegrationStateId_ddl = service.GetIntegrationStateDDL();
+            SetHelpFile(HelpFileValues.EISPPevent);
         }
         private void SetViewBag_IndexAll(int courtId)
         {
+            ViewBag.Mode = "all";
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForEisppEventsCourt(courtId).DeleteOrDisableLast();
-            ViewBag.EventTypeId_ddl = service.GetDDL_EISPPEventType(0, 0);
+            ViewBag.IntegrationStateId_ddl = service.GetIntegrationStateDDL();
+            ViewBag.EventTypeId_ddl = service.GetDDL_EISPPEventType(0, 0, true);
         }
         [AcceptVerbs("Get", "Post")]
         public IActionResult VerifyEISPPNumber(string EISPPNumber)
@@ -922,6 +972,23 @@ namespace IOWebApplication.Controllers
                     return Json(true);
             }
             return Json(err);
+        }
+        /// <summary>
+        /// Създаване на динамичен панел с пробационни мерки към престъпление
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public IActionResult NewItem_ProbationMeasure(int index, string prefix, int eventTypeId)
+        {
+            var model = new ProbationMeasure()
+            {
+                Index = index
+            };
+            ViewBag.EventTypeId = eventTypeId;
+            ViewBag.ProbationMeasureTypeDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.ProbationMeasureType));  //pbcvid
+            ViewBag.MeasureUnitDDL = EisppDropDownVM(service.GetDDL_EISPPTblElement(EisppTableCode.MeasureUnit));  //pbcmered
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"{prefix}[{index}]";
+            return PartialView("_ProbationMeasure", model);
         }
     }
 }

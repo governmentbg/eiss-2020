@@ -1,11 +1,9 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
@@ -52,6 +50,7 @@ namespace IOWebApplication.Core.Services
                             .Include(x => x.InCaseMigrations)
                             .Include(x => x.CaseSessionAct)
                             .ThenInclude(x => x.ActType)
+                            .Include(x => x.Case.CaseState)
                             .Where(x => initCaseIds.Contains(x.InitialCaseId) && x.Case.CaseStateId != NomenclatureConstants.CaseState.Deleted)
                             .OrderBy(x => x.Id)
                             .Select(x => new CaseMigrationVM
@@ -72,7 +71,55 @@ namespace IOWebApplication.Core.Services
                                 Description = x.Description,
                                 CanEdit = x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing && x.CaseId == caseId && !x.InCaseMigrations.Any(),
                                 CanAccept = x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing && !x.InCaseMigrations.Any() && (x.SendToCourtId == userContext.CourtId || CaseMigrationTypes.SendCaseTypesCanAccept.Contains(x.CaseMigrationTypeId)),
-                                DateWrt = x.DateWrt
+                                DateWrt = x.DateWrt,
+                                CaseStateName = x.Case.CaseState.Label
+                            }).AsQueryable();
+        }
+
+        public IQueryable<CaseMigrationVM> SelectOutMove(int caseId)
+        {
+            int[] initCaseIds = get_InitialCases(caseId);
+
+            return repo.AllReadonly<CaseMigration>()
+                            .Include(x => x.Case)
+                            .ThenInclude(x => x.Court)
+                            .Include(x => x.PriorCase)
+                            .ThenInclude(x => x.Court)
+                            .Include(x => x.CaseMigrationType)
+                            .Include(x => x.SendToCourt)
+                            .Include(x => x.SendToInstitution)
+                            .Include(x => x.InCaseMigrations)
+                            .Include(x => x.CaseSessionAct)
+                            .ThenInclude(x => x.ActType)
+                            .Where(x => x.CaseId == caseId &&
+                                        x.Case.CaseStateId != NomenclatureConstants.CaseState.Deleted &&
+                                        x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing)
+                            .OrderBy(x => x.Id)
+                            .Select(x => new CaseMigrationVM
+                            {
+                                Id = x.Id,
+                                InitialCaseId = x.InitialCaseId,
+                                CaseId = x.CaseId,
+                                CaseRegNumber = x.Case.RegNumber,
+                                CaseRegDate = x.Case.RegDate,
+                                CaseSessionAct = (x.CaseSessionAct != null) ? $"{x.CaseSessionAct.ActType.Label} {x.CaseSessionAct.RegNumber}/{x.CaseSessionAct.RegDate:dd.MM.yyyy}" : "",
+                                CaseCourtName = x.Case.Court.Label,
+                                MigrationDirection = x.CaseMigrationType.MigrationDirection,
+                                MigrationTypeId = x.CaseMigrationTypeId,
+                                MigrationTypeName = x.CaseMigrationType.Label,
+                                SentFromName = (x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing) ? x.Case.Court.Label : x.PriorCase.Court.Label,
+                                SentToName = (x.SendToCourt != null) ? x.SendToCourt.Label : (x.SendToInstitution != null ? x.SendToInstitution.FullName : ""),
+                                SendToCortId = x.SendToCourtId,
+                                Description = x.Description,
+                                CanEdit = x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing && x.CaseId == caseId && !x.InCaseMigrations.Any(),
+                                CanAccept = x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing && !x.InCaseMigrations.Any() && (x.SendToCourtId == userContext.CourtId || CaseMigrationTypes.SendCaseTypesCanAccept.Contains(x.CaseMigrationTypeId)),
+                                DateWrt = x.DateWrt,
+                                OutDocumentLabel = ((x.OutDocumentId != null) ? x.OutDocument.DocumentType.Label + " " + x.OutDocument.DocumentNumber + "/" + x.OutDocument.DocumentDate.ToString("dd.MM.yyyy") : string.Empty),
+                                OutDocumentDate = ((x.OutDocumentId != null) ? x.OutDocument.DocumentDate : (DateTime?)null),
+                                IsReturned = repo.AllReadonly<CaseMigration>().Any(c => c.CaseId == caseId &&
+                                                                                        c.Case.CaseStateId != NomenclatureConstants.CaseState.Deleted &&
+                                                                                        c.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Incoming &&
+                                                                                        c.Id > x.Id)
                             }).AsQueryable();
         }
 
@@ -193,6 +240,17 @@ namespace IOWebApplication.Core.Services
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
                     repo.Add<CaseMigration>(model);
+
+                    // При изпращане за обжалване се сменя статуса на дело на Обжалвано
+                    if (model.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendNextLevel)
+                    {
+                        var caseCase = repo.GetById<Case>(model.CaseId);
+                        caseCase.CaseStateId = NomenclatureConstants.CaseState.Appealed;
+                        caseCase.DateWrt = DateTime.Now;
+                        caseCase.UserId = userContext.UserId;
+                        repo.Update(caseCase);
+                    }
+
                     repo.SaveChanges();
                 }
                 return true;
@@ -228,11 +286,11 @@ namespace IOWebApplication.Core.Services
         public List<SelectListItem> GetDropDownList_Court(int caseId, bool addDefaultElement = true, bool addAllElement = false)
         {
             var result = new List<SelectListItem>();
-            var caseMigrationFind = repo.All<CaseMigration>().Where(x => x.CaseId == caseId).FirstOrDefault();
+            var caseMigrationFind = repo.AllReadonly<CaseMigration>().Where(x => x.CaseId == caseId).FirstOrDefault();
 
             if (caseMigrationFind != null)
             {
-                var caseMigrations = repo.All<CaseMigration>()
+                var caseMigrations = repo.AllReadonly<CaseMigration>()
                                      .Include(x => x.Case)
                                      .ThenInclude(x => x.Court)
                                      .Where(x => x.InitialCaseId == caseMigrationFind.InitialCaseId)
@@ -292,26 +350,29 @@ namespace IOWebApplication.Core.Services
         {
             var result = new List<SelectListItem>();
 
-            var caseMigrationFind = repo.All<CaseMigration>().Where(x => x.CaseId == caseId).FirstOrDefault();
+            var caseMigrationFind = repo.AllReadonly<CaseMigration>().Where(x => x.CaseId == caseId).FirstOrDefault();
 
             if (caseMigrationFind != null)
             {
-                var caseMigrations = repo.All<CaseMigration>()
-                                         .Include(x => x.Case)
+                var caseMigrations = repo.AllReadonly<CaseMigration>()
+                                         .Include(x => x.PriorCase)
                                          .ThenInclude(x => x.Court)
-                                         .Where(x => x.InitialCaseId == caseMigrationFind.InitialCaseId)
+                                         .Where(x => x.InitialCaseId == caseMigrationFind.InitialCaseId &&
+                                                     x.CaseId == caseId &&
+                                                     x.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptCase_AfterComplain &&
+                                                     x.DateExpired == null)
                                          .ToList();
 
 
 
-                foreach (var caseMigration in caseMigrations.Where(x => x.CaseId != caseId))
+                foreach (var caseMigration in caseMigrations.Where(x => x.PriorCaseId != caseId))
                 {
-                    if (!result.Any(x => x.Value == caseMigration.Case.Id.ToString()))
+                    if (!result.Any(x => x.Value == caseMigration.PriorCase.Id.ToString()))
                     {
                         var selectListItem = new SelectListItem()
                         {
-                            Text = caseMigration.Case.Court.Label + " - " + caseMigration.Case.RegNumber + "/" + caseMigration.Case.RegDate.ToString("dd.MM.yyyy"),
-                            Value = caseMigration.Case.Id.ToString()
+                            Text = caseMigration.PriorCase.Court.Label + " - " + caseMigration.PriorCase.RegNumber + "/" + caseMigration.PriorCase.RegDate.ToString("dd.MM.yyyy"),
+                            Value = caseMigration.PriorCase.Id.ToString()
                         };
 
                         result.Add(selectListItem);
@@ -337,6 +398,18 @@ namespace IOWebApplication.Core.Services
             }
 
             return result;
+        }
+
+        public DateTime? GetDateTimeAcceptCaseAfterComplain(int CaseId, int PriorCaseId)
+        {
+            var caseMigrations = repo.AllReadonly<CaseMigration>()
+                                     .Where(x => x.PriorCaseId == PriorCaseId &&
+                                                 x.CaseId == CaseId &&
+                                                 x.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptCase_AfterComplain &&
+                                                 x.DateExpired == null)
+                                     .FirstOrDefault();
+
+            return (caseMigrations != null) ? caseMigrations.DateWrt : (DateTime?)null;
         }
 
         /// <summary>
@@ -546,7 +619,7 @@ namespace IOWebApplication.Core.Services
         public bool IsExistMigrationWithComplainWithDocumentId(long DocumentId)
         {
             return repo.AllReadonly<CaseMigration>()
-                       .Any(x => x.CaseSessionAct.CaseSessionActComplains.Any(a => a.DateExpired == null && 
+                       .Any(x => x.CaseSessionAct.CaseSessionActComplains.Any(a => a.DateExpired == null &&
                                                                                    a.ComplainDocumentId == DocumentId));
         }
 
@@ -554,6 +627,38 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<CaseMigration>()
                        .Any(x => x.CaseSessionActId == ActId && x.DateExpired == null);
+        }
+
+        public CaseMigrationVM Case_GetPriorCase(long documentId)
+        {
+            var priorCaseId = repo.All<DocumentCaseInfo>(x => x.DocumentId == documentId).Select(x => x.CaseId).FirstOrDefault() ?? 0;
+            if (priorCaseId == 0)
+            {
+                return null;
+            }
+
+            var lastCaseMigration = repo.AllReadonly<CaseMigration>()
+                                            .Include(x => x.CaseMigrationType)
+                                            .Include(x => x.Case)
+                                            .ThenInclude(x => x.Court)
+                                            .Where(x => x.SendToCourtId == userContext.CourtId && x.CaseId == priorCaseId)
+                                            .Where(x => x.SendToTypeId == CaseMigrationSendTo.Court)
+                                            .Where(x => x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing)
+                                            .Where(FilterExpireInfo<CaseMigration>(false))
+                                            .OrderByDescending(x => x.Id)
+                                            .Select(x => new CaseMigrationVM
+                                            {
+                                                Id = x.Id,
+                                                CaseId = x.CaseId,
+                                                InitialCaseId = x.InitialCaseId,
+                                                CaseRegNumber = x.Case.RegNumber,
+                                                CaseRegDate = x.Case.RegDate,
+                                                MigrationTypeId = x.CaseMigrationTypeId,
+                                                MigrationTypeName = x.CaseMigrationType.Label,
+                                                Description = x.Description,
+                                                SentToName = x.Case.Court.Label
+                                            }).FirstOrDefault();
+            return lastCaseMigration;
         }
     }
 }

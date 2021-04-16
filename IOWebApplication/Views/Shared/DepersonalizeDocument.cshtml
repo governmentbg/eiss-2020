@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Обезличаване на документ";
     Layout = "~/Views/Shared/_MasterLayout.cshtml";
-    var history = Html.Raw(JsonConvert.SerializeObject(Model.DepersonalizationHistory).Replace("\"", "\\\""));
+   // var history = Html.Raw(JsonConvert.SerializeObject(Model.DepersonalizationHistory).Replace("\"", "\\\"").Replace("\'", "\\\""));
 }
 
 @section menuHeader{
@@ -151,7 +151,7 @@
             let elementsData = [];
             const searchHistory = {};
             let mustSaveHistory = false;
-            const historyData = JSON.parse('@history');
+            let historyData = [];
 
             const resultsTable = $('#searchResultsTable').DataTable({
                 "filter": false,
@@ -183,44 +183,54 @@
                     }
                 ]
             });
+            let historyTable = {};
+            requestGET_Json('@Url.Action("GetDepersonalizationHistory","Case")', { caseId:@Model.CaseId}, function (_data) {
+                historyData = _data;
+                historyTable = $('#historyTable').DataTable({
+                    "filter": false,
+                    "ordering": false,
+                    pageLength: 5,
+                    serverSide: false,
+                    dom: 'rtip',
+                    data: historyData,
+                    columns: [
+                        {
+                            name: 'search',
+                            data: 'searchValue',
+                            title: 'Текст за търсене',
+                            sortable: false,
+                            searchable: false
+                        },
+                        {
+                            name: 'replace',
+                            data: 'replaceValue',
+                            title: 'Текст за замяна',
+                            sortable: false,
+                            searchable: false
+                        },
+                        {
+                            name: 'actions',
+                            data: 'el',
+                            title: '',
+                            sortable: false,
+                            searchable: false,
+                            render: function (data, type, row, meta) {
+                                var result = "";
+                                result = TemplateToHtml('#templateHistory', meta.row);
 
-            const historyTable = $('#historyTable').DataTable({
-                "filter": false,
-                "ordering": false,
-                pageLength: 5,
-                serverSide: false,
-                dom: 'rtip',
-                data: historyData,
-                columns: [
-                    {
-                        name: 'search',
-                        data: 'searchValue',
-                        title: 'Текст за търсене',
-                        sortable: false,
-                        searchable: false
-                    },
-                    {
-                        name: 'replace',
-                        data: 'replaceValue',
-                        title: 'Текст за замяна',
-                        sortable: false,
-                        searchable: false
-                    },
-                    {
-                        name: 'actions',
-                        data: 'el',
-                        title: '',
-                        sortable: false,
-                        searchable: false,
-                        render: function (data, type, row, meta) {
-                            var result = "";
-                            result = TemplateToHtml('#templateHistory', meta.row);
-
-                            return result;
+                                return result;
+                            }
                         }
-                    }
-                ]
+                    ]
+                });
+
+                historyTable.on('draw', function () {
+                    document.querySelectorAll('.btn-table-history').forEach(function (el) {
+                        el.addEventListener('click', highligthHistory);
+                    });
+                });
             });
+
 
             resultsTable.on('draw', function () {
                 document.querySelectorAll('.btn-table-replace').forEach(function (el) {
@@ -232,11 +242,7 @@
                 });
             });
 
-            historyTable.on('draw', function () {
-                document.querySelectorAll('.btn-table-history').forEach(function (el) {
-                    el.addEventListener('click', highligthHistory);
-                });
-            });
+           
 
             function getHashCode(str) {
                 var FNV1_32A_INIT = 0x811c9dc5;

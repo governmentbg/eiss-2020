@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -129,7 +126,7 @@ namespace IOWebApplication.Core.Services
                                                  .Replace("{RoleX}", string.Empty)
                                                  .Replace("{Y}", personY)
                                                  .Replace("{RoleY}", roleY);
-
+            model.LabelWithoutFirstPerson = model.LabelWithoutFirstPerson.Replace("()", "<br>");
             if (model.LinkDirectionSecondId > 0)
                 model.Label += model.SecondLinkTemplate
                                .Replace("{Z}", model.PersonSecondRelName)
@@ -165,6 +162,7 @@ namespace IOWebApplication.Core.Services
             var notificationList = repo.AllReadonly<CaseSessionNotificationList>()
                                        .Where(x => x.CaseId == caseId && 
                                                    x.CaseSessionId == caseSessionId &&
+                                                   x.DateExpired == null &&
                                                    (x.NotificationListTypeId == notificationListTypeId || (notificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList && x.NotificationListTypeId == null)));
             result = repo.AllReadonly<CasePersonLink>()
                 .Where(x => x.CaseId == caseId && 
@@ -383,6 +381,41 @@ namespace IOWebApplication.Core.Services
             casePerson.Insert(0, new SelectListItem() { Text = defaultElementText, Value = "-1" });
             return casePerson;
         }
+        /// <summary>
+        /// Извличане на данни за Ред на представляване
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <param name="linkDirectionId"></param>
+        /// <param name="defaultElementText"></param>
+        /// <returns></returns>
+        public List<SelectListItem> PersonYDDL(int caseId, int linkDirectionId, string defaultElementText = null)
+        {
+            var casePerson = new List<SelectListItem>();
+            var linkDirection = repo.AllReadonly<LinkDirection>()
+                                    .Where(x => x.Id == linkDirectionId)
+                                    .FirstOrDefault();
+            if (linkDirection != null)
+            {
+                var roles = repo.AllReadonly<PersonRoleLinkDirection>()
+                                    .Where(x => x.LinkDirectionId == linkDirectionId)
+                                    .Select(x => x.PersonRole);
+                casePerson = repo.AllReadonly<CasePerson>()
+                     .Where(x => x.CaseId == caseId &&
+                                 x.CaseSessionId == null &&
+                                 x.DateExpired == null &&
+                                 roles.Any(r => r.Id == x.PersonRoleId))
+                            .OrderBy(x => x.RowNumber)
+                            .Select(x => new SelectListItem()
+                            {
+                                Value = x.Id.ToString(),
+                                Text = x.FullName + "(" + (x.Uic ?? "") + ") - " + x.PersonRole.Label
+                            }).ToList();
+            }
+            if (string.IsNullOrEmpty(defaultElementText))
+                defaultElementText = "Избери";
+            casePerson.Insert(0, new SelectListItem() { Text = defaultElementText, Value = "-1" });
+            return casePerson;
+        }
 
         /// <summary>
         /// Извличане на данни за Ред на представляване
@@ -436,6 +469,73 @@ namespace IOWebApplication.Core.Services
                               )
                               .Any();
         }
+        /// <summary>
+        /// Извличане на данни лява и дясна страна
+        /// </summary>
+        /// <returns></returns>
+        public List<SelectListItem> RoleKindDDL()
+        {
+            var result = repo.AllReadonly<RoleKind>()
+                              .Where(x => x.Id == NomenclatureConstants.RoleKind.RightSide ||  
+                                          x.Id == NomenclatureConstants.RoleKind.LeftSide)
+                              .Select(x => new SelectListItem()
+                              {
+                                  Value = x.Id.ToString(),
+                                  Text = x.Label
+                              }).ToList();
 
+            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+            return result;
+        }
+
+        /// <summary>
+        /// Изчитане на лица от дело
+        /// </summary>
+        /// <param name="caseId">дело</param>
+        /// <param name="roleKindId">лява/дясна страна</param>
+        /// <returns></returns>
+        public List<CasePersonLinkSideItemVM> GetPersonXBySide(int caseId, int roleKindId)
+        {
+            return repo.AllReadonly<CasePerson>()
+                .Where(x => x.CaseId == caseId &&
+                            x.CaseSessionId == null &&
+                            x.PersonRole.RoleKindId == roleKindId)
+                .Select(x => new CasePersonLinkSideItemVM()
+                {
+                    Id = x.Id,
+                    IsChecked = true,
+                    PersonName = x.PersonRole.Label+" "+x.FullName
+                })
+                .ToList();
+        }
+
+        public bool Save_AddSide(CasePersonLinkSideVM model, List<int> personIds)
+        {
+            var linkDirection = repo.AllReadonly<LinkDirection>()
+                              .Where(x => x.Id == model.LinkDirectionId)
+                              .FirstOrDefault();
+            foreach (var personId in personIds)
+            {
+                var casePersonLink = new CasePersonLink();
+
+                casePersonLink.LinkDirectionId = model.LinkDirectionId;
+                casePersonLink.DateFrom = model.DateFrom;
+                casePersonLink.DateTo = model.DateTo;
+                casePersonLink.CaseId = model.CaseId;
+                casePersonLink.CourtId = model.CourtId;
+                if (isPersonXFirst(linkDirection.LinkTemplate))
+                {
+                    casePersonLink.CasePersonId = personId;
+                    casePersonLink.CasePersonRelId = model.CasePersonRelId;
+                } else
+                {
+                    casePersonLink.CasePersonId = model.CasePersonRelId;
+                    casePersonLink.CasePersonRelId = personId;
+                }
+                repo.Add(casePersonLink);
+            }
+            repo.SaveChanges();
+            return true;
+        }
     }
 }

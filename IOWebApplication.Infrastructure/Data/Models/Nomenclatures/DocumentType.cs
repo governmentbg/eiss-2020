@@ -1,6 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -34,10 +32,18 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("decision_case_select")]
         public bool? DecisionCaseSelect { get; set; }
 
+        //Бланка по подразбиране
+        [Column("default_html_template_id")]
+        public int? DefaultHtmlTemplateId { get; set; }
+
+
         [ForeignKey(nameof(DocumentGroupId))]
         public virtual DocumentGroup DocumentGroup { get; set; }
 
         [ForeignKey(nameof(HtmlTemplateTypeId))]
         public virtual HtmlTemplateType HtmlTemplateType { get; set; }
+
+        [ForeignKey(nameof(DefaultHtmlTemplateId))]
+        public virtual HtmlTemplate DefaultHtmlTemplate { get; set; }
     }
 }

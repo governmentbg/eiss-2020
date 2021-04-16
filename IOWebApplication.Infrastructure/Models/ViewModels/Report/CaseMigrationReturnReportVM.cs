@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -49,10 +46,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
     public class CaseMigrationReturnFilterReportVM
     {
-        [Display(Name = "От дата")]
+        [Display(Name = "От дата на изпращане")]
         public DateTime DateFrom { get; set; }
 
-        [Display(Name = "До дата")]
+        [Display(Name = "До дата на изпращане")]
         public DateTime DateTo { get; set; }
 
         [Display(Name = "Основен вид дело")]

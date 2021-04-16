@@ -124,6 +124,19 @@
                         searchable: true
                     },
                     {
+                        name: 'documentNumberVal',
+                        data: 'documentNumberVal',
+                        className: 'text-right',
+                        title: 'Документ',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("View", "Document",new { id = 666}))';
+                            url = url.replace('666', row.documentId);
+                            return "<a style='cursor: pointer;' target='_blank' title='Преглед' href=" + url + ">" + row.documentNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'caseNumber',
                         data: 'caseNumber',
                         title: 'Номер на дело',

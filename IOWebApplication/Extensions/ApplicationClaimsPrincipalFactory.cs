@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
@@ -37,8 +34,7 @@ namespace IOWebApplication.Extensions
                 user.LawUnit = repo.GetById<LawUnit>(user.LawUnitId);
                 string[] courtListIds = repo.AllReadonly<CourtLawUnit>()
                                         .Where(x => x.LawUnitId == user.LawUnitId)
-                                        .Where(x => (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint) ||
-                                         (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move))
+                                        .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                         .Where(x => x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
                                         .Select(x => x.CourtId.ToString())
                                         .ToArray();
@@ -83,7 +79,7 @@ namespace IOWebApplication.Extensions
             var orgList = repo.AllReadonly<CourtLawUnit>()
                                                .Where(x => x.CourtId == user.CourtId
                                                && x.LawUnitId == user.LawUnitId
-                                               && (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint || x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move)
+                                               && (NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                                && (x.DateTo ?? DateTime.Now) >= DateTime.Now.AddMinutes(-1))
                                                .Select(x => x.CourtOrganizationId ?? 0)
                                                .Where(x => x > 0)

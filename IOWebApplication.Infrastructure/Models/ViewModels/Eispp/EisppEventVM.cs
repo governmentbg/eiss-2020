@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -58,6 +55,27 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         [Display(Name = "Свързано дело")]
         public string ConnectedCaseId { get; set; }
 
+        /// <summary>
+        /// Свързано дело което се получава
+        /// </summary>
+        [Display(Name = "Движение на дело")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете движение")]
+        public int? CaseMigrationId { get; set; }
+
+        /// <summary>
+        /// Свързано дело което се получава
+        /// </summary>
+        [Display(Name = "Жалба")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Жалба")]
+        public int? CaseComplaintId { get; set; }
+
+        /// <summary>
+        /// Свързано дело което се получава
+        /// </summary>
+        [Display(Name = " Причина за изпращане на НД")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете причина")]
+        public int? ReasonId { get; set; }
+
         public int CaseTypeId { get; set; }
         public int CaseCodeId { get; set; }
         
@@ -94,6 +112,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         [RegularExpression("[А-Я]{3}[0-9]{8}[В-Г]{1}[А-Я]{2}", ErrorMessage = "Невалиден {0}.")]
         [Remote(action: "VerifyEISPPNumber", controller: "Eispp")]
         public string EISPPNumber { get; set; }
-
+        /// <summary>
+        /// Дали редиректа е от делото или от съд
+        /// </summary>
+        public string Mode { get; set; }
     }
 }

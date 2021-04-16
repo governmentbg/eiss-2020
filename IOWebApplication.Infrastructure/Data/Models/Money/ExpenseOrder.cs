@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
@@ -58,11 +55,18 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Column("bank_name")]
         public string BankName { get; set; }
 
+        [Column("lawunit_sign_id")]
+        [Display(Name = "Съдия")]
+        public int? LawUnitSignId { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
         [ForeignKey(nameof(ExpenseOrderStateId))]
         public virtual ExpenseOrderState ExpenseOrderState { get; set; }
+
+        [ForeignKey(nameof(LawUnitSignId))]
+        public virtual LawUnit LawUnitSign { get; set; }
 
         public virtual ICollection<ExpenseOrderObligation> ExpenseOrderObligations { get; set; }
 

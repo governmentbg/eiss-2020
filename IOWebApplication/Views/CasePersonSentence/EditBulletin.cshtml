@@ -31,7 +31,7 @@
 
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+                @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
 
                 @Html.EditorFor(x => x.FamilyMarriage)
                 @Html.EditorFor(x => x.BirthDayPlace)

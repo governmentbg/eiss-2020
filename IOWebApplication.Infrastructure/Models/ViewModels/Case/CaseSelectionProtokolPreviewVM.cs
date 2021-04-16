@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -20,6 +17,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
     [Display(Name = "Дата на разпределението:")]
     public string SelectionDate { get; set; }
+
+    public DateTime ? SelectionDateDateTime { get; set; }
 
     [Display(Name = "Разпределение по дело №:")]
     public string RegNumber { get; set; }
@@ -73,7 +72,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     [Display(Name = "Добавяне на съдебния състав на Съдия-докладчика към делото ")]
     public bool IncludeComparementJudges { get; set; }
     public int? ComparementID { get; set; }
-    [Display(Name = "Име на състав")]
+    [Display(Name = "Състав:")]
     public string ComparentmentName { get; set; }
     public int SelectionProtokolStateId { get; set; }
 
@@ -87,6 +86,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     public string DismisalReason { get; set; }
 
     public int ? DismisalId { get; set; }
+
+    [Display(Name = "Дата на последващо ОСЗ :")]
+    public string NextMeatingDate { get; set; }
 
 
     public IEnumerable<CaseSelectionProtokolLawUnitPreviewVM> LawUnits { get; set; }

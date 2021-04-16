@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -19,5 +16,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.AuditLog
         public string UserName { get; set; }
         public string UserId { get; set; }
         public int? CourtId { get; set; }
+        public string RequestUrl { get; set; }
     }
 }

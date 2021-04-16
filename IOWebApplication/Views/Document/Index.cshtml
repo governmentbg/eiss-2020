@@ -13,78 +13,82 @@
         <li class="active">Съдебна регистратура</li>
     </ol>
 }
-
-<div class="row">
-    <div class="col-lg-2 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.CourtOrganizationId, "GenericDropDown")
-    </div>
-    <div class="col-lg-2 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
-    </div>
-    <div class="col-lg-2 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DateTo, "DateTime")
-    </div>
-
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DocumentNumber, "String")
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DocumentYear, "DateTimeYear")
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DocumentDirectionId, "GenericDropDown")
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DocumentKindId, "GenericDropDown")
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-6 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.PersonName, "String")
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.PersonUIC, "String")
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.PersonRoleId, "GenericDropDown")
-    </div>
-</div>
-
-<fieldset class="is-fieldset">
-    <legend class="casereport-legend">Разширено търсене</legend>
-    <div class="legendbody">
-        <div class="row">
-            <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-2 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.CourtOrganizationId, "GenericDropDown")
+        </div>
+        <div class="col-lg-2 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DateFrom, "DateTime")
+        </div>
+        <div class="col-lg-2 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DateTo, "DateTime")
         </div>
 
-        <div class="row" id="linkCaseInfo">
-            <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
-            <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
-            @if (hasRegNumberOtherSystem)
-            {
-                <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
-            }
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DocumentNumber, "String")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DocumentYear, "DateTimeYear")
         </div>
     </div>
-</fieldset>
+    <div class="row">
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DocumentDirectionId, "GenericDropDown")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DocumentKindId, "GenericDropDown")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.Description, "String")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.PersonName, "String")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.PersonUIC, "String")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.PersonRoleId, "GenericDropDown")
+        </div>
+    </div>
 
-<div class="row">
-    <div class="col-md-6 text-left pb-15">
-        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
-            Филтриране
-            <i class="fa fa-search" title="Търсене"></i>
-        </button>
+    <fieldset class="is-fieldset">
+        <legend class="casereport-legend">Разширено търсене</legend>
+        <div class="legendbody">
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
+            </div>
+
+            <div class="row" id="linkCaseInfo">
+                <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_Description)</div>
+                @if (hasRegNumberOtherSystem)
+                {
+                    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+                }
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
     </div>
 </div>
-
 <div class="row">
     <div class="col-md-12">
         <table id="mainTable" class="table table-hover table-striped"></table>
@@ -113,11 +117,13 @@
                             dateTo: $('#DateTo').val(),
                             documentNumber: $('#DocumentNumber').val(),
                             documentYear: $('#DocumentYear').val(),
+                            description: $('#Description').val(),
                             personName: $('#PersonName').val(),
                             personUIC: $('#PersonUIC').val(),
                             personRoleId: $('#PersonRoleId').val(),
                             LinkDelo_CourtId: $('#LinkDelo_CourtId').val(),
                             LinkDelo_CaseId: $('#LinkDelo_CaseId').val(),
+                            LinkDelo_Description: $('#LinkDelo_Description').val(),
                             RegNumberOtherSystem: $('#RegNumberOtherSystem').val(),
                             CaseRegNumber: $('#CaseRegNumber').val(),
                         };

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -121,6 +118,10 @@ namespace IOWebApplication.Controllers
             if (NomenclatureConstants.CaseMigrationTypes.ReturnCaseTypes.Contains(model.CaseMigrationTypeId) && (model.ReturnCaseId ?? 0) <= 0)
             {
                 ModelState.AddModelError(nameof(CaseMigration.ReturnCaseId), "Изберете дело, подлежащо на връщане");
+            }
+            if (NomenclatureConstants.CaseMigrationTypes.RequireActs.Contains(model.CaseMigrationTypeId) && (model.CaseSessionActId ?? 0) <= 0)
+            {
+                ModelState.AddModelError(nameof(CaseMigration.CaseSessionActId), "Изберете Обжалван акт");
             }
             if (!ModelState.IsValid)
             {

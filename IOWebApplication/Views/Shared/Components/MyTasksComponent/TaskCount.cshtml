@@ -4,6 +4,16 @@
 }
 @if (Model >= 0)
 {
+    <li class="tasks-menu">
+        <a href="#"  title="Неприключени задачи">
+            <i class="fa fa-flag-o"></i>
+            @if (Model > 0)
+            {
+                <span class="label label-danger">@Model</span>
+            }
+        </a>
+    </li>
+    @*
     <!-- Tasks Menu -->
     <li class="dropdown tasks-menu">
         <!-- Menu Toggle Button -->
@@ -15,10 +25,10 @@
             }
         </a>
         <ul class="dropdown-menu">
-            <li class="header">Имате <b>@Model</b> неприключени задачи</li>            
+            <li class="header">Имате <b>@Model</b> неприключени задачи</li>
             <li class="footer">
                 <a asp-action="Index" asp-controller="WorkTask" asp-route-userMode="1">Преглед на моите задачи</a>
             </li>
         </ul>
-    </li>
+    </li>*@
 }

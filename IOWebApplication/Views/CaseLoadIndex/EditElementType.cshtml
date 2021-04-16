@@ -53,6 +53,10 @@
                                 <legend class="legend_1"> Правила</legend>
                                 <partial name="../CaseLoadIndex/_CaseLoadElementTypeRule.cshtml" model="@new CaseMainDataVM { Id = Model.Id } " />
                             </fieldset>
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1"> Забрани</legend>
+                                <partial name="../CaseLoadIndex/_CaseLoadElementTypeStop.cshtml" model="@new CaseMainDataVM { Id = Model.Id } " />
+                            </fieldset>
                         </div>
                     }
                 </div>

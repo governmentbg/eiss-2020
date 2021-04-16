@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Audit.Core;
+﻿using Audit.Core;
 using Audit.PostgreSql.Configuration;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Services;
@@ -68,6 +65,15 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IWorkingDaysService, WorkingDaysService>();
             services.AddScoped<IMobileFileService, MobileFileService>();
+            // Настройки на Одит лога 
+            //Audit.Core.Configuration.Setup()
+            //.UsePostgreSql(config => config
+            //    .ConnectionString(Configuration.GetConnectionString("DefaultConnection"))
+            //    .Schema("audit")
+            //    .TableName("audit_log")
+            //    .IdColumnName("id")
+            //    .DataColumn("data", DataType.JSONB)
+            //    .LastUpdatedColumnName("updated_date"));
         }
     }
 }

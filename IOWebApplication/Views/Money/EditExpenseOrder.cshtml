@@ -1,5 +1,6 @@
 ﻿@model ExpenseOrderEditVM
 @using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@using IOWebApplication.Infrastructure.Constants
 
 @{
     var actionName = "EditExpenseOrder";
@@ -36,6 +37,8 @@
 
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+
                 @Html.EditorFor(x => x.Iban)
                 @Html.EditorFor(x => x.BIC)
                 @Html.EditorFor(x => x.BankName)
@@ -47,6 +50,11 @@
                 {
                     @Html.EditorFor(x => x.ExpenseOrderStateId, "GenericDropDown")
                 }
+
+                @if (@Model.Id > 0)
+                {
+                    <div class="cdn-files" data-label="Документи към РКО" data-sourcetype="@SourceTypeSelectVM.ExpenseOrder" data-sourceid="@Model.Id" data-editmode="none"></div>
+                }
             </div>
 
             <div class="form-group">
@@ -54,10 +62,6 @@
                 @if (Model.ForPopUp == false)
                 {
                     <a asp-action="ExpenseOrderList" class="btn btn-danger">Назад</a>
-                }
-                @if (Model.Id > 0)
-                {
-                    <a href="@Url.Action("PreviewRawExpenseOrder","Money",new { id = Model.Id})" class="btn btn-dropbox" title="Печат"><i class="fa fa-print"></i> Печат<span class="hidden-sm hidden-xs"></span></a>
                 }
                 @if (Model.Id > 0)
                 {
@@ -70,6 +74,8 @@
     </div>
 </div>
 
+<partial name="_CdnScript" />
+
 <div id="modalMessageContainer">
 </div>
 
@@ -78,10 +84,9 @@
         if ('@Model.ForPopUp' == 'True') {
             attachAjaxForm('#cmModalFormExpenseOrder', function (data) {
                 if (data.responseJSON.result == true) {
-                    refreshTable('#obligationForPayMainTable');
+                    ReloadDatatable();
                     HideModal();
                     messageHelper.ShowSuccessMessage('Записът премина успешно.');
-                    window.location.href = '@Url.Action("PreviewRawExpenseOrder", "Money")/' + data.responseJSON.id;
                 } else {
                     messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
                 }
@@ -101,5 +106,10 @@
             }
         }
     });
+</script>
 
+<script>
+    $(function () {
+        initLawUnit();
+    });
 </script>

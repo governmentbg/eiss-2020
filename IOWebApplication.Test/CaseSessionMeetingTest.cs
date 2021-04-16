@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -216,8 +213,8 @@ namespace IOWebApplication.Test
                 };
                 repo.Add<CaseSessionMeeting>(saved);
 
-                Assert.IsTrue(service.IsExistMeetengInSessionAfterDate(DateTime.Now, 1));
-                Assert.IsFalse(service.IsExistMeetengInSessionAfterDate(DateTime.Now.AddHours(2), 1));
+                Assert.IsTrue(service.IsExistMeetengInSessionAfterDate(DateTime.Now, 1, null));
+                Assert.IsFalse(service.IsExistMeetengInSessionAfterDate(DateTime.Now.AddHours(2), 1, null));
             }
         }
     }

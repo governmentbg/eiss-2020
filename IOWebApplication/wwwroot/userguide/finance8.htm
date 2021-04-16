@@ -1,0 +1,594 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
+			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
+			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
+			mso-style-name: "EISS Style5 ЕИССCxSpLast";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h3 style='margin-left:71.45pt;text-indent:-36.0pt'>
+			<a name="_Toc55137099"></a><a name="_Toc39426291">
+				1.1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Изготвени Изпълнителни листове
+			</a>
+		</h3>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			В екрана за Изпълнителни листове
+			се визуализират всички изготвени Изпълнителни листове. При първоначално
+			зареждане на екран Изготвени Изпълнителни листове не се визуализират резултати.
+			При директно натискане на бутон Филтриране <img width=93 height=26
+													  id="Picture 143081" src="finance8_files/image001.jpg">, се извеждат данни за
+			всички изпълнителни листове, със съответната информация за тях. Наборът от
+			данни може да бъде филтриран, в зависимост от въведените критерии в горната
+			част на екрана и по следните полетата:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=192
+				 id="Picture 143030" src="finance8_files/image002.jpg">
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>От
+			дата – избира се начална дата на период за филтриране на резултатите;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>До
+			дата – избира се крайна дата на период за филтриране на резултатите;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Номер
+			– избира се номер на ИЛ, по което е въведена сума чрез въвеждане на минимум три
+			последователни символа, системата автоматично търси от списък с ИЛ;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Тип
+			– избор от падащ списък с номенклатура в полза на държавата и съдебната или в
+			полза на трето лице;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Задължено
+			лице – въвежда се чрез въвеждане на минимум три последователни символа,
+			системата автоматично търси от списък със задължени лица;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Наименование
+			в полза на трето лице – въвежда се чрез въвеждане на минимум три последователни
+			символа, системата автоматично търси от списък с лица;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>ТД
+			на НАП – избира се от падащ списък с номенклатура ТД на НАП, към което се
+			изпраща съответния ИЛ;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Активни
+			ИЛ.
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Редакция <img width=28 height=24
+												  id="Picture 141515" src="finance8_files/image003.jpg">на реда на съответния
+			изпълнителен лист се отваря екран за редакция на данни за връчване на ИЛ и
+			изготвяне на писмо за предоставяне на Изпълнителния лист.
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal>За ИЛ в полза на трети лица:</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=483 height=175 id="Picture 143075" src="finance8_files/image004.jpg">
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Съдия
+			– автоматично се изписва името на съдията, изготвил ИЛ;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Основание
+			– (приложимо само за ИЛ в полза на трети лица) извежда се избраното при
+			изготвяне на ИЛ;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Дата
+			на връчване – (приложимо само за ИЛ в полза на трети лица)избира се дата на
+			връчване на ИЛ;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Връчен
+			на – (приложимо само за ИЛ в полза на трети лица)въвеждат се имена на лице, на
+			което е връчен ИЛ;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Статус
+			– от падащо меню се избират опциите Изготвен или Обезсилен.
+		</p>
+
+		<p class=MsoNormal>
+			Чрез избор на бутон Създаване на писмо, се отваря диалогов
+			прозорец, от където има възможност да се генерира Писмо за изпращане на
+			изпълнителен лист, обезпечителна заповед.
+		</p>
+
+		<p class=MsoNormal>ИЛ в полза на съдебната власт или друг държавен орган:</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=605 height=243 id="Picture 143076" src="finance8_files/image005.jpg">
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Съдия
+			– автоматично се изписва името на съдията, изготвил ИЛ;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Изпълнително
+			дело – (приложимо само за ИЛ в пола на съдебната власт или друг държавен орган)
+			въвежда се след образуване на изпълнителното дела по ИЛ в полза на съдебната
+			власт или на друг държавен орган;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Статус
+			– от падащо меню се избират опциите Изготвен или Обезсилен.
+		</p>
+
+		<p class=EISSStyle5CxSpLast style='margin-left:74.6pt;text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			След
+			въвеждане на всички изискуеми данни и избор на бутон Запис<img width=47
+																		height=25 id="Picture 143316" src="finance8_files/image006.jpg"> успешно се
+			допълват/ редактират данните за ИЛ.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm !msorm'>
+			В секция Документи към
+			Изпълнителен лист се визуализира файл на генерирания Изпълнителен лист.
+			Посредством избор върху хипервръзката към Изпълнителния лист има възможност за
+			преглед на документа.
+		</p>
+
+		<p class=MsoNormal>
+			ИЛ може да бъде записан локално или да бъде отворен за
+			преглед. След отваряне се визуализира генерирания ИЛ.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=428 height=415
+				 id="Picture 143093" src="finance8_files/image007.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Създаване на писмо се създава
+			възлагатено писмо.
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Неактивен  <img width=24
+													height=30 id="Picture 143102" src="finance8_files/image008.jpg">има възможност
+			за отразяване на грешно въведени данни, но не се анулира създадения ИЛ.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=262
+				 height=172 id="Picture 143089" src="finance8_files/image009.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Визуализира се предупредително съобщение с възможност за
+			потвърждаване на действието от потребителя или отказ.
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутона Потвърди се деактивира ИЛ. При избор на
+			бутон Отказ състоянието на ИЛ остава непроменено.
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Създаване на писмо има възможност
+			за изготвяне на писмо за връчване на ИЛ или възлагате но писмо към НАП.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=120
+				 id="Picture 141517" src="finance8_files/image010.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Има възможност изготвяне и регистриране на изходящо писмо
+			чрез попълване на данни:
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Поле
+			Вид документ – избира се от падащ списък вид документ по дела или от обща
+			администрация;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Поле
+			Основен вид документ – избира се от падащ списък;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Поле
+			Точен вид документ – в зависимост от избрания основен вид документ се зарежда
+			номенклатура с възможните стойности за точен вид документ;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Поле
+			Бланка – в зависимост от избрания точен вид документ се зарежда номенклатура с
+			възможните стойности за бланка на документ. Има възможност за създаване на
+			писмо без бланка;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Поле
+			Автор – автоматично се зарежда потребителя, който изготвя писмото в системата.
+			Има възможност при необходимост да се смени автора на писмото;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Поле
+			Статус – избира се статус на писмото;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Поле
+			Описание – въвежда се допълнителна информация при необходимост. Полето не е със
+			задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Запис<img width=47 height=25
+										  id="Picture 143317" src="finance8_files/image011.jpg"> се визуализира бутон
+			Регистриране на документ, след което може да се премине към регистриране на
+			изходящото писмо.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=128
+				 id="Picture 143682" src="finance8_files/image012.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон Регистриране на документ се преминава
+			към генериране на файл и регистриране на изходящото писмо.
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Протокол <img width=93 height=30
+												  id="Picture 143078" src="finance8_files/image013.jpg">има възможност за
+			генериране на протокол за изпращане на изпълнителни листове в полза на
+			Държавата на публичния изпълнител (НАП).
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка:</b> Протокол за изпращане на изпълнителни
+			листове в полза на Държавата на публични изпълнител (НАП) се изготвя за ИЛ, по
+			които има изготвено и регистрирано възлагателно писмо. Един ИЛ може да бъде
+			включен само в един протокол.
+		</p>
+
+		<p class=MsoNormal>
+			След маркиране на чекбоксовете през съответните суми и избор
+			на бутон Протокол <img width=93 height=30 id="Picture 143092"
+						  src="finance8_files/image014.jpg">се визуализира предупредително съобщение с
+			възможност за потвърждаване на действието от потребителя или отказ.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=286
+				 height=189 id="Picture 143090" src="finance8_files/image015.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутона Потвърди се преминава към създаване на
+			протокол за изпращане на ИЛ. При избор на бутон Отказ състоянието на ИЛ остава
+			непроменено.
+		</p>
+
+		<p class=MsoNormal>{finance<span lang=EN-US>8}</span></p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

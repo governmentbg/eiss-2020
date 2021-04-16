@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -117,6 +114,18 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
+                //Годината не трябва да е различна от текущата година или от годината на влизане в сила на акта
+                if (model.BookYear != null)
+                {
+                    var act = repo.AllReadonly<CaseSessionAct>().Where(x => x.Id == model.CaseSessionActId).FirstOrDefault();
+                    int actInforcedYear = act.ActInforcedDate != null ? ((DateTime)act.ActInforcedDate).Year : DateTime.Now.Year;
+                    if (model.BookYear != DateTime.Now.Year && model.BookYear != actInforcedYear)
+                    {
+                        errorMessage = "Година на Том трябва да е годината на влизане в сила на акта или текущата година";
+                        return false;
+                    }
+                }
+
                 if (forDestroy == false)
                 {
                     model.ActDestroyLabel = null;

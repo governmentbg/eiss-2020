@@ -17,110 +17,113 @@
 }
 <form id="formFilter" method="post">
     @Html.HiddenFor(x => x.ActIsFinalDocHidden)
+    
+    <div class="filter-form">
+        <fieldset class="is-fieldset">
+            <legend class="casereport-legend">Дела</legend>
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.CaseYear, "DateTimeYear")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
+                </div>
+            </div>
+        </fieldset>
 
-    <fieldset class="is-fieldset">
-        <legend class="casereport-legend">Дела</legend>
-        <div class="legendbody">
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
-                <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
-                <div class="col-lg-3">@Html.EditorFor(m => m.CaseYear, "DateTimeYear")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+        <fieldset class="is-fieldset">
+            <legend class="casereport-legend">Заседание</legend>
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.Session_DateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.SessionDateTo, "DateTime")</div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SessionTypeId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+                </div>
             </div>
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
-            </div>
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
-            </div>
-        </div>
-    </fieldset>
+        </fieldset>
 
-    <fieldset class="is-fieldset">
-        <legend class="casereport-legend">Заседание</legend>
-        <div class="legendbody">
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(m => m.Session_DateFrom, "DateTime")</div>
-                <div class="col-lg-3">@Html.EditorFor(m => m.SessionDateTo, "DateTime")</div>
+        <fieldset class="is-fieldset">
+            <legend class="casereport-legend">Актове</legend>
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActDate, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.ActNumber)</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActIsFinalDoc, "Boolean")</div>
+                </div>
             </div>
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(x => x.SessionTypeId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
-            </div>
-        </div>
-    </fieldset>
+        </fieldset>
 
-    <fieldset class="is-fieldset">
-        <legend class="casereport-legend">Актове</legend>
-        <div class="legendbody">
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(m => m.ActDate, "DateTime")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.ActNumber)</div>
-                <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
+        <fieldset class="is-fieldset">
+            <legend class="casereport-legend">Свързани дела</legend>
+            <div class="legendbody">
+                <div class="row" id="linkCaseInfo">
+                    <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_RegNumber)</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_Description)</div>
+                    @if (hasRegNumberOtherSystem)
+                    {
+                        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionTypeId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.Institution_CaseYear, "DateTimeYear")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.Institution_RegNumber)</div>
+                </div>
             </div>
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(m => m.ActIsFinalDoc, "Boolean")</div>
-            </div>
-        </div>
-    </fieldset>
+        </fieldset>
 
-    <fieldset class="is-fieldset">
-        <legend class="casereport-legend">Свързани дела</legend>
-        <div class="legendbody">
-            <div class="row" id="linkCaseInfo">
-                <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
-                @if (hasRegNumberOtherSystem)
-                {
-                    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
-                }
+        <fieldset class="is-fieldset">
+            <legend class="casereport-legend">Входящи/изходящи документи</legend>
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.DateDoc, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.NumberDoc)</div>
+                </div>
             </div>
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionTypeId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionId, "GenericDropDown")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_CaseYear, "DateTimeYear")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.Institution_RegNumber)</div>
-            </div>
-        </div>
-    </fieldset>
-
-    <fieldset class="is-fieldset">
-        <legend class="casereport-legend">Входящи/изходящи документи</legend>
-        <div class="legendbody">
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(m => m.DateDoc, "DateTime")</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.NumberDoc)</div>
-            </div>
-        </div>
-    </fieldset>
+        </fieldset>
 
 
-    <fieldset class="is-fieldset">
-        <legend class="casereport-legend">Страни по дело</legend>
-        <div class="legendbody">
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(m => m.IdentifikatorPerson)</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.NamePerson)</div>
+        <fieldset class="is-fieldset">
+            <legend class="casereport-legend">Страни по дело</legend>
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.IdentifikatorPerson)</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.NamePerson)</div>
+                </div>
             </div>
-        </div>
-    </fieldset>
+        </fieldset>
 
-    <fieldset class="is-fieldset">
-        <legend class="casereport-legend">Съдебен състав</legend>
-        <div class="legendbody">
-            <div class="row">
-                <div class="col-lg-3">@Html.EditorFor(m => m.IdentifikatorCaseLawUnit)</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.NameCaseLawUnit)</div>
-                <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+        <fieldset class="is-fieldset">
+            <legend class="casereport-legend">Съдебен състав</legend>
+            <div class="legendbody">
+                <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(m => m.IdentifikatorCaseLawUnit)</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.NameCaseLawUnit)</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+                </div>
             </div>
-        </div>
-    </fieldset>
+        </fieldset>
+    </div>
 </form>
 
 <div class="row">
@@ -142,6 +145,11 @@
 
 <script>
     function LoadTableCase() {
+        if (!checkFilterFormHasData('.filter-form')) {
+            swalOk('Въведете стойност в поне един филтър.', function () { });
+            return false;
+        }
+
         $("#ActIsFinalDocHidden").val($("#ActIsFinalDoc").is(":checked"));
         $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
 
@@ -159,6 +167,7 @@
                     }
                 },
                 filter: false,
+                "aaSorting": [[1, "desc"]],
                 columns: [
                     {
                         name: 'caseTypeLabel',
@@ -168,8 +177,9 @@
                         searchable: false
                     },
                     {
-                        name: 'shortNumber',
-                        data: 'shortNumber',
+                        name: 'shortNumberVal',
+                        data: 'shortNumberVal',
+                        type:'natural',
                         title: 'Кратък ном.',
                         "render": function (item, type, row, meta) {
                             var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';

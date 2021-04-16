@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper;
+﻿using AutoMapper;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Models;
@@ -14,6 +11,7 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Money;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using iText.Kernel.XMP.Impl;
@@ -223,7 +221,7 @@ namespace IOWebApplication.Core.Services
                                  .Where(x => x.CourtId == courtId)
                                  .Where(x => x.LawUnit.LawUnitTypeId == lawUnitTypeId)
                                  .Where(x => x.DateFrom <= dateActualTo && (x.DateTo ?? dateActualToEndDate) >= dateActualTo)
-                                 .Where(x => (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint) || (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move))
+                                 .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                  .Distinct().ToList();
             return result;
 
@@ -242,6 +240,7 @@ namespace IOWebApplication.Core.Services
             model.Info.CourtId = userContext.CourtId;
             model.Info.UserId = userContext.UserId;
             //return model;
+            //TODO
 
             switch (sourceType)
             {
@@ -931,9 +930,17 @@ namespace IOWebApplication.Core.Services
                     break;
                 case SourceTypeSelectVM.CaseSessionDoc:
                     {
-                        //parentId е Id на заседание
-                        var info = caseInfo_GetCaseSessionDoc((int)parentId);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        if (sourceId != null)
+                        {
+                            var info = caseInfo_GetCaseSessionDocById((int)sourceId);
+                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                        }
+                        else
+                        {
+                            //parentId е Id на заседание
+                            var info = caseInfo_GetCaseSessionDoc((int)parentId);
+                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                        }
                     }
                     break;
                 case SourceTypeSelectVM.CaseFastProcess:
@@ -1231,6 +1238,17 @@ namespace IOWebApplication.Core.Services
                        }).FirstOrDefault() ?? new CaseInfoVM();
         }
 
+        private CaseInfoVM caseInfo_GetCaseSessionDocById(int id)
+        {
+            return repo.AllReadonly<CaseSessionDoc>()
+                       .Where(x => x.Id == id)
+                       .Select(x => new CaseInfoVM()
+                       {
+                           CaseId = x.CaseId ?? 0,
+                           Info = "Съпровождащ документ: " + x.Document.DocumentNumber + "/" + x.Document.DocumentDate.ToString("dd.MM.yyyy") + " " + x.SessionDocState.Label
+                       }).FirstOrDefault() ?? new CaseInfoVM();
+        }
+
         private CaseInfoVM caseInfo_GetCaseMigration(int id)
         {
             return repo.AllReadonly<CaseMigration>()
@@ -1278,6 +1296,7 @@ namespace IOWebApplication.Core.Services
                                                    .Include(x => x.CasePerson)
                                                    .ThenInclude(x => x.PersonRole)
                                                    .Where(x => (x.CaseSessionId == CaseSessionId) &&
+                                                               (x.DateExpired == null) &&
                                                                (NotificationPersonType > 0 ? x.NotificationPersonType == NotificationPersonType : true))
                                                    .ToList();
 
@@ -1786,6 +1805,7 @@ namespace IOWebApplication.Core.Services
                         //Забранява се редакцията на делата, които са в определени статуси 
                         if (NomenclatureConstants.CaseState.DisableEditStates.Contains(info.CaseStateId))
                         {
+                            //TODO: GlobalAdmin - може би трябва да може да пипа
                             model.CanChange = false;
                             model.CanChangeFull = false;
                         }
@@ -1823,6 +1843,8 @@ namespace IOWebApplication.Core.Services
                                     .Include(x => x.CaseLawUnits)
                                     .Include(x => x.CaseMigrations)
                                     .Include(x => x.CaseClassifications)
+                                    .Include(x => x.Document)
+                                    .ThenInclude(x => x.DocumentType)
                                     .Where(x => x.Id == id)
                                     .Select(x => new CaseAuditInfoVM
                                     {
@@ -1830,7 +1852,7 @@ namespace IOWebApplication.Core.Services
                                         CourtId = x.CourtId,
                                         CaseId = x.Id,
                                         CaseStateId = x.CaseStateId,
-                                        Info = $"{x.CaseType.Code} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
+                                        Info = (string.IsNullOrEmpty(x.RegNumber)) ? $"{x.CaseType.Code} по {x.Document.DocumentType.Label} {x.Document.DocumentNumber}" : $"{x.CaseType.Code} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
                                         JudgeLawUnits = x.CaseLawUnits
                                                          //Гледат се всички, независимо дали са в делото или в заседанието - заради заместванията
                                                          //.Where(c => c.CaseSessionId == null)
@@ -1921,5 +1943,11 @@ namespace IOWebApplication.Core.Services
                     .Where(x => x.DateFrom <= dtNow && ((x.DateTo ?? DateTime.MaxValue) >= dtNow || !currentlyAppointed))
                     .AsQueryable();
         }
+
+        public SystemParam SystemParam_Select(string paramName)
+        {
+            return repo.GetById<SystemParam>(paramName);
+        }
+
     }
 }

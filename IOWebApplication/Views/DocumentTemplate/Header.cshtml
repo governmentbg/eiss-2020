@@ -5,38 +5,48 @@
     Layout = null;
 }
 
-<div align=center>
-
-<table class=MsoNormalTable border=0 cellspacing=0 cellpadding=0 width=0
- style='width:16.0cm;border-collapse:collapse'>
- <tr>
-  <td width=139 style='width:70.9pt;padding:0cm 0cm 0cm 0cm'>
-  <p align=right style='text-align:right'><div style="margin-bottom: 10px; width: 200px;height: 200px; background: url('@Model.CourtLogo') 100% 100% no-repeat;"></div></p>
-  </td>
-  <td width=384 valign=bottom style='width:11.0cm;padding:0cm 0cm 0cm 0cm'>
-  <p align=center style='text-align:center;margin-top:0pt;margin-bottom:0pt'><b><span
-  style='font-size:14.0pt'>РЕПУБЛИКА БЪЛГАРИЯ</span></b></p>
-  <p align=center style='text-align:center;margin-top:0pt;margin-bottom:0pt'><b><span
-  lang=EN-US style='font-size:14.0pt'>@Model.CourtName</span></b></p>
-  </td>
-  <td width=82 valign=top style='width:70.9pt;padding:0cm 0cm 0cm 0cm'></td>
- </tr>
-</table>
+<div align="center">
+    <table border="0" cellspacing="0" cellpadding="0" width="0" style="width:16.0cm;border-collapse:collapse">
+        <tr>
+            <td style="width:70.9pt;padding:0cm 0cm 0cm 0cm">
+                <p align="right" style="text-align:right">
+                    <div style="margin-bottom: 10px; width: 120px;height: 120px; background: url('@Model.CourtLogo') 100% 100% no-repeat;"></div>
+                </p>
+            </td>
+            <td valign="bottom" style="width:11.0cm;padding:0cm 0cm 0cm 0cm">
+                <p align="center" style="text-align:center;margin-top:0pt;margin-bottom:0pt">
+                    <b>
+                        <span style="font-size:14.0pt">РЕПУБЛИКА БЪЛГАРИЯ</span>
+                    </b>
+                </p>
+                <p align="center" style="text-align:center;margin-top:0pt;margin-bottom:0pt">
+                    <b>
+                        <span style="font-size:14.0pt">@Model.CourtName</span>
+                    </b>
+                </p>
+            </td>
+            <td width="82" valign="top" style="width:70.9pt;padding:0cm 0cm 0cm 0cm"></td>
+        </tr>
+    </table>
 </div>
 
 <hr />
 <hr />
 
-    @if (string.IsNullOrEmpty(Model.DocumentNumber))
-    {
-        <text> Изх.№ .....</text>
-    }
-    else
-    {
-        <p style='text-align:justify;margin-bottom:.0001pt'><span lang=EN-US>Изх. №
-        @Model.DocumentNumber</span></p>
-       <p style='text-align:justify;margin-top:0pt'>Дата: <span lang=EN-US>@($"{Model.DocumentDate:dd.MM.yyyy}")</span></p>
-    }
+@if (string.IsNullOrEmpty(Model.DocumentNumber))
+{
+    <text> Изх.№ .....</text>
+}
+else
+{
+    <p style='text-align:justify;margin-bottom:.0001pt'>
+        <span>
+            Изх. №
+            @Model.DocumentNumber
+        </span>
+    </p>
+    <p style='text-align:justify;margin-top:0pt'>Дата: <span>@($"{Model.DocumentDate:dd.MM.yyyy}")</span></p>
+}
 
 
 @if (Model.HtmlTemplateTypeId != NomenclatureConstants.HtmlTemplateTypes.Certificate)

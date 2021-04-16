@@ -18,6 +18,9 @@
         <table id="mainTable" class="table table-hover table-striped"></table>
     </div>
 </div>
+<div class="form-group">
+    @await Html.PartialAsync("_ButtonClose")
+</div>
 <form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItem")" method="post">
     @Html.HiddenFor(x => filterJson)
 </form>

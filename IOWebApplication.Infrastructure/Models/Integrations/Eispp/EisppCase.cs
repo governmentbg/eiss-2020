@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 {
@@ -56,6 +53,9 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         /// </summary>
         [XmlElement("DLOOSN")]
         public EisppBaseCase[] ConnectedCases { get; set; }
+
+        [XmlIgnore]
+        public bool IsGeneratedEisppNumber { get; set; }
 
         public static string GetRulesPath()
         {

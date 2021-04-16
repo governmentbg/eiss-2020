@@ -166,7 +166,7 @@
                 {
                     <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
                         @{
-                            var row = "- " + caseNotification.NotificationTypeLabel + ": " + caseNotification.RegNumber + "/" + caseNotification.RegDate.ToString("dd.MM.yyyy") + " " + caseNotification.CasePersonName;
+                            var row = "- " + caseNotification.NotificationTypeLabel + ": " + caseNotification.RegNumber + "/" + caseNotification.RegDate.ToString("dd.MM.yyyy") + " " + caseNotification.CasePersonName + (!string.IsNullOrEmpty(caseNotification.NotificationStateLabel) ? " - " + caseNotification.NotificationStateLabel : string.Empty);
                         }
                         <div>
                             @Html.Raw("<i class='fa fa-file-text'></i> " + row)
@@ -266,16 +266,16 @@
         <!-- timeline icon -->
         <i class="fa fa-book bg-yellow"></i>
         <div class="timeline-item">
-            <span class="time"><i class="fa fa-book"></i> @Model.CaseSessionActs.Where(x => x.RegNumber != string.Empty).Count()бр.</span>
+            <span class="time"><i class="fa fa-book"></i> @Model.CaseSessionActs.Count()бр.</span>
 
             <h3 class="timeline-header"><a href="#">Актове и протоколи</a></h3>
 
             <div class="timeline-body hidden">
-                @foreach (var caseSessionAct in Model.CaseSessionActs.Where(x => x.RegNumber != string.Empty))
+                @foreach (var caseSessionAct in Model.CaseSessionActs.OrderBy(x => x.ActDeclaredDate))
                 {
                     <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
                         @{
-                            var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty);
+                            var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + " (Дата на постановяване: " + (caseSessionAct.ActDeclaredDate ?? DateTime.Now).ToString("dd.MM.yyyy") + ")";
                         }
                         <div>
                             @Html.Raw("<i class='fa fa-file-text'></i> " + row)

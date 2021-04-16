@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -96,10 +93,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         {
             get
             {
-                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName[0] + ". " : "");
-                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName[0] + ". " : "");
-                var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName[0] + ". " : "");
-                var family2Name = (!string.IsNullOrEmpty(Family2Name) ? Family2Name[0] + ". " : "");
+                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName[0] + "." + (!string.IsNullOrEmpty(MiddleName + FamilyName + Family2Name) ? " " : string.Empty) : "");
+                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName[0] + "." + (!string.IsNullOrEmpty(FamilyName + Family2Name) ? " " : string.Empty) : "");
+                var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName[0] + "." + (!string.IsNullOrEmpty(Family2Name) ? " " : string.Empty) : "");
+                var family2Name = (!string.IsNullOrEmpty(Family2Name) ? Family2Name[0] + "." : "");
                 return firstName + middleName + familyName + family2Name;
             }
         }
@@ -108,10 +105,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         {
             get
             {
-                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName + " " : "");
-                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName[0] + ". " : "");
-                var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName + " " : "");
-                var family2Name = (!string.IsNullOrEmpty(Family2Name) ? Family2Name + " " : "");
+                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName + (!string.IsNullOrEmpty(MiddleName + FamilyName + Family2Name) ? " " : string.Empty) : "");
+                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName[0] + "." + (!string.IsNullOrEmpty(FamilyName + Family2Name) ? " " : string.Empty) : "");
+                var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName + (!string.IsNullOrEmpty(Family2Name) ? " " : string.Empty) : "");
+                var family2Name = (!string.IsNullOrEmpty(Family2Name) ? Family2Name : "");
                 return firstName + middleName + familyName + family2Name;
             }
         }
@@ -120,8 +117,18 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         {
             get
             {
-                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName[0] + ". " : "");
+                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName[0] + "." + (!string.IsNullOrEmpty(FamilyName) ? " " : string.Empty) : "");
                 var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName : "");
+                return firstName + familyName;
+            }
+        }
+
+        public string FirstNameFamilyInitial
+        {
+            get
+            {
+                var firstName = !string.IsNullOrEmpty(FirstName) ? FirstName[0] + "." + (!string.IsNullOrEmpty(FamilyName) ? " " : string.Empty) : "";
+                var familyName = !string.IsNullOrEmpty(FamilyName) ? FamilyName[0] + "." : "";
                 return firstName + familyName;
             }
         }

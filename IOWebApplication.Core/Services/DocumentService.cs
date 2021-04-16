@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
@@ -11,6 +8,7 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Data.Models.Regix;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.Documents;
@@ -24,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -118,6 +117,13 @@ namespace IOWebApplication.Core.Services
             if (model.LinkDelo_CaseId > 0)
                 linkCaseIdWhere = x => x.DocumentCaseInfo.Where(a => a.CaseId == model.LinkDelo_CaseId).Any();
 
+            Expression<Func<Document, bool>> linkDescriptionWhere = x => true;
+            if (!string.IsNullOrEmpty(model.LinkDelo_Description))
+            {
+                var stringFind = model.LinkDelo_Description.ToUpper();
+                linkDescriptionWhere = x => x.DocumentCaseInfo.Where(a => a.Description.ToUpper().Contains(stringFind)).Any();
+            }
+
             Expression<Func<Document, bool>> regNumOtherSystem = x => true;
             if (!string.IsNullOrEmpty(model.RegNumberOtherSystem))
                 regNumOtherSystem = x => x.DocumentCaseInfo.Where(a => (a.CaseRegNumber.EndsWith(model.RegNumberOtherSystem.ToShortCaseNumber())) && (a.IsLegacyCase ?? false)).Any();
@@ -147,6 +153,11 @@ namespace IOWebApplication.Core.Services
             //                                     a.Case.RegNumber.EndsWith(model.CaseRegNumber.ToShortCaseNumber(),
             //                                     StringComparison.InvariantCultureIgnoreCase)).Any();
 
+            Expression<Func<Document, bool>> descriptionWhere = x => true;
+            if (!string.IsNullOrEmpty(model.Description))
+            {
+                descriptionWhere = x => EF.Functions.ILike(x.Description, model.Description.ToPaternSearch());
+            }
             int _court = userContext.CourtId;
             var result = repo.AllReadonly<Document>()
                              .Include(x => x.DocumentPersons)
@@ -173,8 +184,10 @@ namespace IOWebApplication.Core.Services
                              .Where(x => x.DocumentDate >= (model.DateFrom ?? x.DocumentDate) && x.DocumentDate <= (model.DateTo ?? x.DocumentDate))
                              .Where(linkCaseCourtWhere)
                              .Where(linkCaseIdWhere)
+                             .Where(linkDescriptionWhere)
                              .Where(regNumOtherSystem)
                              .Where(caseRegNumberWhere)
+                             .Where(descriptionWhere)
                              .Select(x => new DocumentListVM
                              {
                                  Id = x.Id,
@@ -215,6 +228,10 @@ namespace IOWebApplication.Core.Services
             {
                 document_InitFromTemplate(model, templateId);
             }
+
+            //Guid за Regix
+            model.RegixRequestReason.RegixReasonGuid = Guid.NewGuid().ToString().ToLower();
+            model.RegixRequestReason.RegixReasonDescription = "Регистрацията на документа не е завършена от потребител";
 
             return model;
         }
@@ -294,14 +311,14 @@ namespace IOWebApplication.Core.Services
             //}
         }
 
-        private Document document_GetById(long id, bool readOnly)
+        private async Task<Document> document_GetById(long id, bool readOnly)
         {
             IQueryable<Document> documents = repo.All<Document>();
             if (readOnly)
             {
                 documents = repo.AllReadonly<Document>();
             }
-            var document = documents
+            return await documents
                             .Include(x => x.DocumentType)
                             .Include(x => x.DocumentGroup)
                             .Include(x => x.DocumentPersons)
@@ -314,12 +331,11 @@ namespace IOWebApplication.Core.Services
                             .Include(x => x.Cases)
                             .Include(x => x.DocumentResolutions)
                             .Where(x => x.Id == id)
-                            .FirstOrDefault();
-            return document;
+                            .FirstOrDefaultAsync().ConfigureAwait(false);
         }
-        public DocumentVM Document_GetById(long id)
+        public async Task<DocumentVM> Document_GetById(long id)
         {
-            var document = document_GetById(id, true);
+            var document = await document_GetById(id, true).ConfigureAwait(false);
             if (document == null)
             {
                 return null;
@@ -341,6 +357,7 @@ namespace IOWebApplication.Core.Services
                 Description = document.Description,
                 DeliveryGroupId = document.DeliveryGroupId,
                 DeliveryTypeId = document.DeliveryTypeId,
+                PostOfficeDate = document.PostOfficeDate,
                 IsRestictedAccess = document.IsRestictedAccess,
                 IsSecret = document.IsSecret ?? false,
                 IsOldNumber = document.IsOldNumber ?? false,
@@ -499,21 +516,21 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public bool Document_SaveData(DocumentVM model)
+        public async Task<bool> Document_SaveData(DocumentVM model)
         {
             document_UpdateNullables(model);
 
             if (model.Id > 0)
             {
-                return document_UpdateData(model);
+                return await document_UpdateData(model).ConfigureAwait(true);
             }
             else
             {
-                return document_InsertDataMulti(model);
+                return await document_InsertDataMulti(model).ConfigureAwait(true);
             }
         }
 
-        private bool document_InsertDataMulti(DocumentVM model)
+        private async Task<bool> document_InsertDataMulti(DocumentVM model)
         {
             model.MultiRegistationId = null;
             // model.MultiDocumentCounter = 5;
@@ -532,7 +549,7 @@ namespace IOWebApplication.Core.Services
                     model.DocumentNumberValue = counterResult.Value;
                     model.DocumentNumber = counterResult.GetStringValue();
                     model.DocumentDate = dtDocDate;
-                    result &= document_InsertData(model);
+                    result &= await document_InsertData(model).ConfigureAwait(true);
                     if (firstDocumentId == 0)
                     {
                         firstDocumentId = model.Id;
@@ -543,12 +560,12 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
-                result = document_InsertData(model);
+                result = await document_InsertData(model).ConfigureAwait(true);
             }
             return result;
         }
 
-        private bool document_InsertData(DocumentVM model)
+        private async Task<bool> document_InsertData(DocumentVM model)
         {
             var document = new Document()
             {
@@ -559,6 +576,7 @@ namespace IOWebApplication.Core.Services
                 DocumentTypeId = model.DocumentTypeId.Value,
                 DeliveryGroupId = model.DeliveryGroupId,
                 DeliveryTypeId = model.DeliveryTypeId,
+                PostOfficeDate = model.PostOfficeDate,
                 IsRestictedAccess = model.IsRestictedAccess,
                 IsSecret = model.IsSecret,
                 IsOldNumber = model.IsOldNumber,
@@ -572,7 +590,7 @@ namespace IOWebApplication.Core.Services
             document_SaveCaseInfo(model, document);
             document_SaveInstitutionCaseInfo(model, document);
             document_SaveDocumentLink(model, document);
-
+            document_UpdateRegix(model, document);
             if (model.CaseTypeId > 0)
             {
                 document_InitNewCase(model, document);
@@ -580,6 +598,7 @@ namespace IOWebApplication.Core.Services
             try
             {
                 bool isOkNumber = false;
+                //TODO: евентуално timestamp....
                 document.ActualDocumentDate = DateTime.Now;
                 if (document.IsOldNumber == true)
                 {
@@ -614,11 +633,12 @@ namespace IOWebApplication.Core.Services
                 if (isOkNumber)
                 {
                     repo.Add<Document>(document);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync().ConfigureAwait(true);
                     model.Id = document.Id;
 
                     epepService.AppendDocument(document, EpepConstants.ServiceMethod.Add);
                     deadlineService.DeadLineCompanyCaseStartOnDocument(document);
+
                     repo.SaveChanges();
 
                     if ((document.DocumentDirectionId == DocumentConstants.DocumentDirection.Incoming) &&
@@ -636,9 +656,9 @@ namespace IOWebApplication.Core.Services
             }
             return false;
         }
-        private bool document_UpdateData(DocumentVM model)
+        private async Task<bool> document_UpdateData(DocumentVM model)
         {
-            var document = document_GetById(model.Id, false); ;
+            var document = await document_GetById(model.Id, false).ConfigureAwait(true);
             document.CourtOrganizationId = model.CourtOrganizationId;
             document.DocumentGroupId = model.DocumentGroupId;
             document.DocumentTypeId = model.DocumentTypeId.Value;
@@ -647,6 +667,7 @@ namespace IOWebApplication.Core.Services
             document.IsSecret = model.IsSecret;
             document.DeliveryGroupId = model.DeliveryGroupId;
             document.DeliveryTypeId = model.DeliveryTypeId;
+            document.PostOfficeDate = model.PostOfficeDate;
 
             document_SavePersons(model, document);
             document_UpdateCase(model);
@@ -658,7 +679,7 @@ namespace IOWebApplication.Core.Services
             deadlineService.DeadLineCompanyCaseStartOnDocument(document);
             try
             {
-                repo.SaveChanges();
+                await repo.SaveChangesAsync().ConfigureAwait(true);
 
                 return true;
             }
@@ -1205,6 +1226,7 @@ namespace IOWebApplication.Core.Services
                                             .ThenInclude(x => x.AddressType)
                                             .Where(x => x.CasePerson.Uic == uic && x.CasePerson.UicTypeId == uicTypeId)
                                             .Where(x => x.Address.CityCode != null)
+                                            .Where(FilterExpireInfo<CasePersonAddress>(false))
                                             .OrderByDescending(x => x.Id)
                                             .Select(x => new DocumentSelectAddressVM
                                             {
@@ -1362,7 +1384,25 @@ namespace IOWebApplication.Core.Services
                                     Id = x.Id,
                                     CaseRegNumber = x.Case.RegNumber,
                                     CaseRegDate = x.Case.RegDate,
-                                    DecisionName = x.DecisionType.Label
+                                    DecisionName = x.DecisionType.Label,
+                                    DecisionRequestTypeName = x.DecisionRequestType.Label,
+                                }).AsQueryable();
+        }
+
+        public IQueryable<DocumentDecisionCaseListVM> DocumentDecisionCaseByCase_Select(int CaseId)
+        {
+            return repo.AllReadonly<DocumentDecisionCase>()
+                                .Where(x => x.CaseId == CaseId)
+                                .Select(x => new DocumentDecisionCaseListVM
+                                {
+                                    Id = x.Id,
+                                    CaseRegNumber = x.Case.RegNumber,
+                                    CaseRegDate = x.Case.RegDate,
+                                    DecisionName = x.DecisionType.Label,
+                                    DecisionRequestTypeName = x.DecisionRequestType.Label,
+                                    DocumentLable = x.DocumentDecision.Document.DocumentType.Label + " " + x.DocumentDecision.Document.DocumentNumber + "/" + x.DocumentDecision.Document.DocumentDate.ToString("dd.MM.yyyy"),
+                                    DocumentShortLable = x.DocumentDecision.Document.DocumentNumber + "/" + x.DocumentDecision.Document.DocumentDate.ToString("dd.MM.yyyy"),
+                                    DocumentId = x.DocumentDecision.DocumentId
                                 }).AsQueryable();
         }
 
@@ -1377,6 +1417,7 @@ namespace IOWebApplication.Core.Services
                     var saved = repo.GetById<DocumentDecisionCase>(model.Id);
                     saved.DecisionTypeId = model.DecisionTypeId;
                     saved.Description = model.Description;
+                    saved.DecisionRequestTypeId = model.DecisionRequestTypeId;
 
                     repo.Update(saved);
                 }
@@ -1863,6 +1904,42 @@ namespace IOWebApplication.Core.Services
             }
 
             return false;
+        }
+
+        private void document_UpdateRegix(DocumentVM model, Document document)
+        {
+            //Ъпдейт на заявките към Regix
+            if (string.IsNullOrEmpty(model.RegixRequestReason.RegixReasonGuid) == false)
+            {
+                document.RegixReports = repo.All<RegixReport>()
+                                .Where(x => x.DocumentId == null &&
+                                       x.RegixGuid == model.RegixRequestReason.RegixReasonGuid).ToHashSet();
+                foreach (var item in document.RegixReports)
+                {
+                    item.Description = null;
+                }
+                repo.UpdateRange(document.RegixReports);
+            }
+        }
+
+        public SaveResultVM CheckCanExpireDocument(long id)
+        {
+            SaveResultVM result = new SaveResultVM(true);
+
+            if (repo.AllReadonly<DocumentResolution>().Where(x => x.DocumentId == id && x.DateExpired != null).Any())
+            {
+                result.Result = false;
+                result.ErrorMessage = "По документа има издадено разпореждане";
+                return result;
+            }
+            if (repo.AllReadonly<DocumentDecision>().Where(x => x.DocumentId == id).Any())
+            {
+                result.Result = false;
+                result.ErrorMessage = "По документа има издадено решение";
+                return result;
+            }
+
+            return result;
         }
     }
 }

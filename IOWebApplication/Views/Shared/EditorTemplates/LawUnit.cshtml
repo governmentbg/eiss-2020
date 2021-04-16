@@ -20,8 +20,8 @@
         addClass = "form-group";
     }
 
-    var selectMode = "current";
-    if(ViewData["selectMode"] != null)
+    var selectMode = IOWebApplication.Infrastructure.Constants.NomenclatureConstants.LawUnitSelectMode.All;
+    if (ViewData["selectMode"] != null)
     {
         selectMode = (string)ViewData["selectMode"];
     }

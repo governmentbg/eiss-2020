@@ -11,6 +11,10 @@
     casePreview: rootDir + 'Case/CasePreview?id=',
     courtSearch: rootDir + 'Ajax/Get_Courts?query=',
     courtGet: rootDir + 'Ajax/Get_Courts?id=',
+    organizationSearch: rootDir + 'Ajax/Get_Organizations?query=',
+    organizationGet: rootDir + 'Ajax/Get_Organizations?id=',
+    caseReasonSearch: rootDir + 'Ajax/Get_CaseReasons?query=',
+    caseReasonGet: rootDir + 'Ajax/Get_CaseReasons?id=',
     balancePaymentSearch: rootDir + 'Money/SearchBalancePayment?query=',
     balancePaymentGet: rootDir + 'Money/GetPayment?id=',
     documentSearch: rootDir + 'Document/SearchDocument?query=',
@@ -23,6 +27,8 @@
     caseloadAddActivityGet: rootDir + 'Ajax/Get_CaseloadAddActivity?id=',
     actLawBaseSearch: rootDir + 'Ajax/Search_ActLawBase?query=',
     actLawBaseGet: rootDir + 'Ajax/Get_ActLawBase?id=',
+    sourceSearch: rootDir + 'Ajax/Get_Source?query=',
+    sourceGet: rootDir + 'Ajax/Get_Source?id=',
 };
 
 
@@ -179,7 +185,12 @@ function initCaseCode() {
                 caseTypeId = $(caseCodeControl).parents('.casecode-container:first').data('casetype');
             } else {
                 let caseTypeContainer = $(caseCodeControl).parents('.casecode-container:first').data('casetypecontainer');
-                caseTypeId = $(caseTypeContainer).val();
+                let _val = $(caseTypeContainer).val();
+                if (Array.isArray(_val)) {
+                    caseTypeId = _val.join();
+                } else {
+                    caseTypeId = _val;
+                }               
             }
             //debugger;
             return '&caseTypeId=' + caseTypeId;
@@ -217,7 +228,12 @@ function searchCaseCode(sender) {
     let caseType = $(sender).parents('.casecode-container:first').data('casetypeid');
     if (!caseType) {
         let caseTypeControl = $(sender).parents('.casecode-container:first').data('casetypecontainer');
-        caseType = $(caseTypeControl).val();
+        let _val = $(caseTypeControl).val();
+        if (Array.isArray(_val)) {
+            caseType = _val.join();
+        } else {
+            caseType = _val;
+        }
     }
     let containerId = $(sender).parents('.casecode-container:first').data('container');
     let url = autocompleteUrls.caseCodeSearchModal;
@@ -323,10 +339,11 @@ function searchEisppNumber(sender) {
 
 function showCasePreview(sender) {
     let caseId = $(sender).parents('.case-container:first').find('.case-val:first').val();
-    if (caseId && caseId.length > 0) {
+    if (caseId && caseId.length > 0 && caseId != '0' && caseId != '-1') {
         let url = autocompleteUrls.casePreview + caseId;
         window.open(url, '_blank');
-        //document.location.href = url;
+    } else {
+        swalOk('Моля, въведете номер на дело.');
     }
 }
 
@@ -348,13 +365,14 @@ function initInstitution() {
         initAutoCompleteControl(institutionControl, autocompleteUrls.institutionSearch, undefined, undefined, function () {
 
             let institutionTypeId = 0;
+            let institutionTypeIds = $(institutionControl).parents('.institution-container:first').data('institutiontypeids');
             if ($(institutionControl).parents('.institution-container:first').data('institutiontype')) {
                 institutionTypeId = $(institutionControl).parents('.institution-container:first').data('institutiontype');
             } else {
                 let institutionTypeContainer = $(institutionControl).parents('.institution-container:first').data('institutiontypecontainer');
                 institutionTypeId = $(institutionTypeContainer).val();
             }
-            return '&institutionTypeId=' + institutionTypeId;
+            return '&institutionTypeId=' + institutionTypeId + "&institutionTypeIds=" + institutionTypeIds;
         });
 
         let institutionVal = $(e).find('.institution-val').val();
@@ -450,6 +468,98 @@ function loadActLawBaseAutoComplete(autoControl, val) {
     $.get(autocompleteUrls.actLawBaseGet + val)
         .done(function (data) {
             $(autoControl).val(data.label);
+        }).fail(function (errors) {
+            console.log(errors);
+        });
+}
+
+function GetSourceType(control) {
+    let sourceTypeId = 0;
+    if (control.parents('.source-container:first').data('sourcetype')) {
+        sourceTypeId = control.parents('.source-container:first').data('sourcetype');
+    } else {
+        let sourceTypeContainer = control.parents('.source-container:first').data('sourcetypecontainer');
+        sourceTypeId = $(sourceTypeContainer).val();
+    }
+    return sourceTypeId;
+}
+
+function initSource() {
+    $('.source-container').each(function (i, e) {
+
+        let sourceControl = $(e).find('.source-control')[0];
+
+        initAutoCompleteControl(sourceControl, autocompleteUrls.sourceSearch, undefined, undefined, function () {
+            let sourceTypeId = GetSourceType($(sourceControl));
+            return '&sourceTypeId=' + sourceTypeId;
+        });
+
+        let sourceVal = $(e).find('.source-val').val();
+        if (sourceVal && sourceVal !== '0') {
+            let sourceTypeId = GetSourceType($(sourceControl));
+            loadSource(sourceControl, sourceVal + '&sourceTypeId=' + sourceTypeId);
+            $(e).trigger('change');
+        }
+    });
+}
+
+function loadSource(sourceControl, source) {
+    $.get(autocompleteUrls.sourceGet + source)
+        .done(function (data) {
+            if (data.length > 0) {
+                $(sourceControl).val(data[0].label);
+                $(sourceControl).parent().find('input[type="hidden"]:first').val(data[0].value);
+                $(sourceControl).parents('.source-container:first').trigger('change');
+            } else {
+                $(sourceControl).parent().find('input').val('');
+            }
+        }).fail(function (errors) {
+            console.log(errors);
+        });
+}
+
+function initOrganizations() {
+    $('.organization-container').each(function (i, e) {
+
+        let _control = $(e).find('.organization-control')[0];
+
+        initAutoCompleteControl(_control, autocompleteUrls.organizationSearch);
+
+        let _val = $(e).find('.organization-val').val();
+        if (_val && _val !== '0') {
+            loadOrganizations(_control, _val);
+        }
+    });
+}
+
+function loadOrganizations(control, val) {
+    $.get(autocompleteUrls.organizationGet + val)
+        .done(function (data) {
+            $(control).val(data[0].label);
+        }).fail(function (errors) {
+            console.log(errors);
+        });
+}
+
+
+function initCaseReasons() {
+    $('.caseReason-container').each(function (i, e) {
+
+        let _control = $(e).find('.caseReason-control')[0];
+
+        initAutoCompleteControl(_control, autocompleteUrls.caseReasonSearch);
+
+        let _val = $(e).find('.caseReason-val').val();
+        if (_val && _val !== '0') {
+            loadCaseReasons(_control, _val);
+        }
+    });
+}
+
+function loadCaseReasons(control, val) {
+    $.get(autocompleteUrls.caseReasonGet + val)
+        .done(function (data) {
+            $(control).val(data[0].label);
         }).fail(function (errors) {
             console.log(errors);
         });

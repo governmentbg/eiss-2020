@@ -64,6 +64,11 @@
                 <div class="row">
                     <div class="col-lg-6">@Html.EditorFor(x => x.EvidenceStateId, "GenericDropDown")</div>
                 </div>
+
+                @if (Model.Id > 0)
+                {
+                    <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.CaseEvidence" data-sourceid="@Model.Id" data-editmode="all"></div>
+                }
             </div>
 
             <div class="form-group">
@@ -87,3 +92,7 @@
         </form>
     </div>
 </div>
+
+@section scripts{
+    <partial name="_CdnScript" />
+}

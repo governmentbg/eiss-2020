@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -16,6 +13,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public int DocumentDirectionId { get; set; }
         [Display(Name = "Номер документ")]
         public string DocumentNumber { get; set; }
+        [Required(ErrorMessage ="Въведете {0}.")]
         [Display(Name = "Дата")]
         public DateTime DocumentDate { get; set; }
         [Display(Name = "Информация за документ")]

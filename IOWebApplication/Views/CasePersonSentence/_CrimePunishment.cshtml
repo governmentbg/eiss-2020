@@ -1,0 +1,23 @@
+﻿@model CasePersonCrimePunishment
+@using IOWebApplication.Infrastructure.Data.Models.Cases
+<div class="crime-punishment-container item-template">
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.CasePersonCrimeId)
+    @Html.HiddenFor(x => x.CasePersonCrimeId)
+    @Html.HiddenFor(x => x.Index)
+    <input type="hidden" name="CasePersonCrimePunishmentsVM.Index" value="@Model.Index" />
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "crime-punishment-kind" })</div>
+        <div class="col-lg-2 crime-fine-amount">@Html.EditorFor(x => x.FineAmount)</div>
+        <div class="crime-punishment-period">
+            <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentYears)</div>
+            <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentMonths)</div>
+            <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentWeeks)</div>
+            <div class="col-lg-1">@Html.EditorFor(x => x.PunishmentDays)</div>
+        </div>
+        <div class="col-lg-1">
+            <a href="#" class="remove-item" title="Премахни  наказанието" data-alert="Потвърди премахването на наказанието!"><i class="fa fa-remove"></i></a>
+        </div>
+    </div>
+</div>
+

@@ -1,13 +1,11 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models;
+﻿using IOWebApplication.Infrastructure.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Data.Common
 {
@@ -23,5 +21,20 @@ namespace IOWebApplication.Infrastructure.Data.Common
         {
             this.Context = context;
         }
+
+        public int TrackerCount => Context.ChangeTracker.Entries().Count();
+
+        public void RefreshDbContext(string connectionString)
+        {
+            if (Context != null)
+            {
+                Context.Dispose();
+            }
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            optionsBuilder.UseNpgsql(connectionString);
+            Context = new ApplicationDbContext(optionsBuilder.Options);
+        }
+
+        
     }
 }

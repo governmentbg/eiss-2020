@@ -1,18 +1,18 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Common;
+﻿using IOWebApplication.Infrastructure.Data.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Test.Mockups
 {
     public class RepositoryMock : IRepository
     {
         private List<object> dbsets = new List<object>();
+
+        public int TrackerCount => 0;
 
         protected List<T> DbSet<T>() where T : class
         {
@@ -178,6 +178,11 @@ namespace IOWebApplication.Test.Mockups
             return 1;
         }
 
+        public Task<int> SaveChangesAsync()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Update<T>(T entity) where T : class
         {
             var properties = typeof(T).GetProperties();
@@ -240,5 +245,12 @@ namespace IOWebApplication.Test.Mockups
                 Update<T>(entity);
             }
         }
+
+        public void RefreshDbContext(string connectionString)
+        {
+            throw new NotImplementedException();
+        }
+
+       
     }
 }

@@ -42,6 +42,14 @@
                     <div class="tab-content">
                         <div class="tab-pane active" id="tabSelectByGroup">
                             <div id="dataJury">
+                                @if (ViewBag.NextOpenMeating != null)
+                                {
+                                    <span class="text-bold">Следващо  ОСЗ на дата: @ViewBag.NextOpenMeating.DateFrom.ToString("dd.MM.yyyy HH:mm часа.")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-bold">Следващо  ОСЗ не е насрочено. </span>
+                                }
                                 @Html.EditorFor(x => x.SpecialityId, "GenericDropDown")
                             </div>
                             <div id="dataJudge">
@@ -100,7 +108,7 @@
             <br />
             <div class="form-group">
                 <input type="submit" value="Разпредели" class="btn btn-success single-click-submit" />
-                <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>                
+                <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
             </div>
         </form>
     </div>
@@ -109,8 +117,33 @@
 @section scripts{
     <script>
         var oldJudgeRoleId = 0;
-        $(document).ready(function () {
-            $('#JudgeRoleId').trigger('change');
+
+         $(function () {
+            $('.nav-tabs li a').click(function (e) {
+                var tabLink = this;
+                if ($('#lawUnitList').html().length > 0) {
+                    swalConfirm('При смяна на режима на разпределяне заредените участници ще се премахнат. Потвърдете смяната!', function () {
+
+                        $('#lawUnitList').html('');
+                        $("#addLawUnitByCaseGroup").hide();
+                        $(tabLink).trigger('click');
+                    });
+                    e.preventDefault();
+                    return false;
+                }
+                if ($(this).data('id') == "@NomenclatureConstants.SelectionMode.ManualSelect") {
+                    loadUnitManual();
+                }
+                ManagelawUnitListFieldset($(this).data('id'));
+                $('#SelectionModeId').val($(this).data('id'));
+            });
+
+            $('#tabSelectByGroup').trigger('click');
+
+            initDynamicForms();
+
+
+
 
             if (@Model.LawUnits.Count() == 0)
             {
@@ -123,7 +156,7 @@
                 }
             }
             ManageButtonLawUnitByCaseGroup();
-        });
+
 
         $('#JudgeRoleId').change(function () {
             var roleId = $(this).val();
@@ -178,8 +211,8 @@
 
                 }}
             oldJudgeRoleId = roleId;
-        });
-
+        }).trigger('change');
+           
         $(document).on('change', '.lawUnitState', function () {
             let span = $(this).parents('div.row:first').find('.list-lawunit-name');
             if ($(this).val() == 2) {
@@ -191,7 +224,7 @@
             }
             ManageButtonLawUnitByCaseGroup();
         });
-
+        });
         function ManagelawUnitListFieldset(tabId) {
                 var roleId = $('#JudgeRoleId').val();
                 var isJury = roleId == @NomenclatureConstants.JudgeRole.Jury || roleId == @NomenclatureConstants.JudgeRole.ReserveJury|| roleId == @NomenclatureConstants.JudgeRole.ExtJury;
@@ -203,15 +236,15 @@
                 else {
                     $("#lawUnitListFieldset").show();
             }
-            
+
             if (tabId == "@NomenclatureConstants.SelectionMode.SelectByGroups")
             { $('#btnloadUnitsByGroup').trigger('click');}
 
              if (tabId == "@NomenclatureConstants.SelectionMode.SelectByDuty")
              {
-                
+
                  $('#btnloadUnitsByDuty').trigger('click');
-                 
+
              }
 
 
@@ -219,31 +252,7 @@
 
         }
 
-        $(function () {
-            $('.nav-tabs li a').click(function (e) {
-                var tabLink = this;
-                if ($('#lawUnitList').html().length > 0) {
-                    swalConfirm('При смяна на режима на разпределяне заредените участници ще се премахнат. Потвърдете смяната!', function () {
 
-                        $('#lawUnitList').html('');
-                        $("#addLawUnitByCaseGroup").hide();
-                        $(tabLink).trigger('click');
-                    });
-                    e.preventDefault();
-                    return false;
-                }
-                if ($(this).data('id') == "@NomenclatureConstants.SelectionMode.ManualSelect") {
-                    loadUnitManual();
-                }
-                ManagelawUnitListFieldset($(this).data('id'));
-                $('#SelectionModeId').val($(this).data('id'));
-            });
-
-            $('#tabSelectByGroup').trigger('click');
-
-            initDynamicForms();
-
-        });
 
         function GetLawUnitsIds()
         {
@@ -326,14 +335,14 @@
             var groups = GetLawUnitsCaseGroup();
 
             requestContent('@Url.Action("LoadByCaseGroup","CaseSelectionProtokol")'
-                , {idStr : ids, groups: groups, caseId:'@Model.CaseId'}
+                , { idStr: ids, groups: groups, caseId: '@Model.CaseId', judgeRoleId:'@Model.JudgeRoleId'}
                 , function (data) {
                     if (data == 'empty') {
                         $('#addLawUnitByCaseGroup').hide();
                         $('#NoAvailableLawUnitsInCaseGroup').show();
                     }
                     else {
-                        ShowModalDialog('Избор на съдии', data);
+                        ShowModalDialog('Избор на съдии от друго отделение', data);
                     }
                 });
         }

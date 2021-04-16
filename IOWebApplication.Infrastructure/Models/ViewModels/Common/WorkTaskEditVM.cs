@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Attributes;
+﻿using IOWebApplication.Infrastructure.Attributes;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using System;
@@ -21,7 +18,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public long? SubSourceId { get; set; }
 
         [Display(Name = "Вид задача")]
-        [Required(ErrorMessage ="Изберете {0}.")]
+        [Required(ErrorMessage = "Изберете {0}.")]
         public int TaskTypeId { get; set; }
 
         [Display(Name = "Вид задача")]
@@ -44,6 +41,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 
         [Display(Name = "Забележка за пренасочването")]
         public string DescriptionRedirect { get; set; }
+
+        public bool DisableSelfAcceptCheck { get; set; }
+
 
         public void ToEntity(WorkTask entity)
         {

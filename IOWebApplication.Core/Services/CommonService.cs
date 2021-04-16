@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper.QueryableExtensions;
+﻿using AutoMapper.QueryableExtensions;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -43,7 +40,6 @@ namespace IOWebApplication.Core.Services
     {
 
         private readonly INomenclatureService nomService;
-        private readonly ICasePersonSentenceService personSentenceService;
         private readonly IUrlHelper urlHelper;
 
         public CommonService(
@@ -52,8 +48,7 @@ namespace IOWebApplication.Core.Services
             AutoMapper.IMapper _mapper,
             IUrlHelper _url,
             INomenclatureService _nomService,
-            IRepository _repo,
-            ICasePersonSentenceService _personSentenceService)
+            IRepository _repo)
         {
             logger = _logger;
             userContext = _userContext;
@@ -61,26 +56,41 @@ namespace IOWebApplication.Core.Services
             nomService = _nomService;
             urlHelper = _url;
             repo = _repo;
-            personSentenceService = _personSentenceService;
         }
 
-        public IQueryable<InstitutionVM> Institution_Select(int institutionType, string name, int? id = null)
+        public IQueryable<InstitutionVM> Institution_Select(int institutionType, string name, int? id = null, string institutionTypeIds = null)
         {
-            Expression<Func<Institution, bool>> whereSelect = x => x.InstitutionTypeId == institutionType;
+            Expression<Func<Institution, bool>> whereInstitutionType = x => true;
+            if (institutionType > 0)
+                whereInstitutionType = x => x.InstitutionTypeId == institutionType;
+
+            Expression<Func<Institution, bool>> whereInstitutionTypeIds = x => true;
+            if (string.IsNullOrEmpty(institutionTypeIds) == false)
+            {
+                int[] intTypes = institutionTypeIds.Split(',').Select(x => int.Parse(x)).ToArray();
+                whereInstitutionTypeIds = x => intTypes.Contains(x.InstitutionTypeId);
+            }
+
+            Expression<Func<Institution, bool>> whereSelect = x => true;
             if (!string.IsNullOrEmpty(name))
             {
-                whereSelect = x => x.InstitutionTypeId == institutionType && EF.Functions.ILike(x.FullName, name.ToPaternSearch());
+                whereSelect = x => EF.Functions.ILike(x.FullName, name.ToPaternSearch());
             }
             Expression<Func<Institution, bool>> whereId = x => true;
-            if (id > 0)
+            //Нарочно е оставено и 0 - така се изчиства контрола
+            if (id >= 0)
             {
                 whereId = x => x.Id == id;
                 whereSelect = x => true;
+                whereInstitutionType = x => true;
+                whereInstitutionTypeIds = x => true;
             }
 
             return repo.All<Institution>()
                         .Where(whereId)
                         .Where(whereSelect)
+                        .Where(whereInstitutionType)
+                        .Where(whereInstitutionTypeIds)
                         .ProjectTo<InstitutionVM>(InstitutionVM.GetMapping())
                         .AsQueryable();
         }
@@ -94,7 +104,10 @@ namespace IOWebApplication.Core.Services
                     var saved = repo.GetById<Institution>(model.Id);
                     saved.CopyFrom(model);
                     saved.Code = model.Code;
+                    saved.DepartmentName = model.DepartmentName;
                     saved.EISPPCode = model.EISPPCode;
+                    saved.DateFrom = model.DateFrom;
+                    saved.DateTo = model.DateTo;
                     PersonNamesBase_SaveData(saved);
                     repo.Update(saved);
                     repo.SaveChanges();
@@ -119,7 +132,7 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<Person>(x => x.Uic == uic && x.UicTypeId == uicType).FirstOrDefault();
         }
 
-        public IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId)
+        public IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId, bool showFree)
         {
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
 
@@ -158,9 +171,17 @@ namespace IOWebApplication.Core.Services
             if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator)
                         && NomenclatureConstants.LawUnitTypes.LocalViewOnly.Contains(lawUnitType))
             {
-                filterByCourtWhere = x => x.Courts.Count == 0
-                        || x.Courts.Where(c => c.CourtId == userContext.CourtId
-                            && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId)).Any();
+                if (showFree)
+                {
+                    filterByCourtWhere = x => x.Courts.Count == 0
+                            || x.Courts.Where(c => c.CourtId == userContext.CourtId
+                                && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId)).Any();
+                }
+                else
+                {
+                    filterByCourtWhere = x => x.Courts.Where(c => c.CourtId == userContext.CourtId
+                                && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId)).Any();
+                }
             }
 
             var result = repo.All<LawUnit>()
@@ -271,7 +292,7 @@ namespace IOWebApplication.Core.Services
             }
             if (courtId > 0)
             {
-                List<int> plus = new List<int>() { NomenclatureConstants.PeriodTypes.Appoint, NomenclatureConstants.PeriodTypes.Move };
+                List<int> plus = NomenclatureConstants.PeriodTypes.CurrentlyAvailable.ToList();
                 DateTime dateSelect = DateTime.Now;
                 DateTime enddatenull = dateSelect.AddDays(1);
                 lawUnitCourtSearch = x => repo.AllReadonly<CourtLawUnit>().Any(d => d.LawUnitId == x.Id) ? repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId == courtId &&
@@ -294,7 +315,7 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        private IEnumerable<LabelValueVM> GetLawUnitName_UicNew(int lawUnitType, string name, string uic, int courtId, string lawUnitTypes = null, string selectmode = "current")
+        private IEnumerable<LabelValueVM> GetLawUnitName_UicNew(int lawUnitType, string name, string uic, int courtId, string lawUnitTypes = null, string selectmode = NomenclatureConstants.LawUnitSelectMode.All)
         {
             name = name?.ToLower();
             uic = uic?.ToLower();
@@ -325,10 +346,10 @@ namespace IOWebApplication.Core.Services
             IQueryable<LawUnit> data = null;
             switch (selectmode)
             {
-                case "current":
+                case NomenclatureConstants.LawUnitSelectMode.Current:
                     data = SelectLawUnit_ByTypes(courtId, intTypes, null, true);
                     break;
-                case "all":
+                case NomenclatureConstants.LawUnitSelectMode.All:
                     data = SelectLawUnit_ByTypes(courtId, intTypes, null, false);
                     break;
                 default:
@@ -348,7 +369,7 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        public IEnumerable<LabelValueVM> GetLawUnitAutoComplete(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = "current")
+        public IEnumerable<LabelValueVM> GetLawUnitAutoComplete(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = NomenclatureConstants.LawUnitSelectMode.All)
         {
             query = query?.ToLower();
             var result = GetLawUnitName_UicNew(lawUnitType, null, query, courtId, lawUnitTypes, selectmode);
@@ -372,30 +393,13 @@ namespace IOWebApplication.Core.Services
                         }).ToList().DefaultIfEmpty(null).FirstOrDefault();
         }
 
-        public IQueryable<LawUnit> LawUnit_ActualJudgeByCourtDate(int court, DateTime? date)
-        {
-            DateTime dateSelect = date ?? DateTime.Now;
-            DateTime enddatenull = dateSelect.AddDays(1);
-
-            List<int> plus = new List<int>() { NomenclatureConstants.PeriodTypes.Appoint, NomenclatureConstants.PeriodTypes.Move, NomenclatureConstants.PeriodTypes.onDuty };
-            List<int> minus = new List<int>() { NomenclatureConstants.PeriodTypes.Ill, NomenclatureConstants.PeriodTypes.Holiday };
-            return repo.AllReadonly<LawUnit>().Where(x => x.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge && ((x.DateTo ?? dateSelect.Date) >= dateSelect.Date)
-                                   && repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId == court &&
-                                          plus.Contains(c.PeriodTypeId) && c.DateFrom <= dateSelect && (c.DateTo ?? enddatenull) >= dateSelect).Any()
-                                   && !repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId != court &&
-                                          c.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move && c.DateFrom <= dateSelect &&
-                                          (c.DateTo ?? enddatenull) >= dateSelect).Any()
-                                   && !repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId == court &&
-                                          minus.Contains(c.PeriodTypeId) && c.DateFrom <= dateSelect && (c.DateTo ?? enddatenull) >= dateSelect).Any()
-                                                          ).AsQueryable();
-        }
 
         public IQueryable<LawUnit> LawUnit_JudgeByCourtDate(int court, DateTime? date)
         {
             DateTime dateSelect = date ?? DateTime.Now;
             DateTime enddatenull = dateSelect.AddDays(1);
 
-            List<int> plus = new List<int>() { NomenclatureConstants.PeriodTypes.Appoint, NomenclatureConstants.PeriodTypes.Move };
+            List<int> plus = NomenclatureConstants.PeriodTypes.CurrentlyAvailable.ToList();
             return repo.AllReadonly<LawUnit>().Where(x => x.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge && ((x.DateTo ?? dateSelect.Date) >= dateSelect.Date)
                                    && repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId == court &&
                                           plus.Contains(c.PeriodTypeId) && c.DateFrom <= dateSelect && (c.DateTo ?? enddatenull) >= dateSelect).Any()
@@ -687,7 +691,8 @@ namespace IOWebApplication.Core.Services
                         .Include(x => x.Court)
                         .ThenInclude(x => x.CourtType)
                         .Where(x => x.CourtId != user.CourtId && x.LawUnitId == user.LawUnitId
-                            && (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint || x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move))
+                            && NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
+                        .Where(x => x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.MaxValue).Date >= DateTime.Now.Date)
                         .Select(x => x.Court)
                         .Distinct()
                         .OrderBy(x => x.Label)
@@ -711,7 +716,7 @@ namespace IOWebApplication.Core.Services
             DateTime dateSelect = date ?? DateTime.Now;
             DateTime enddatenull = dateSelect.AddDays(1);
 
-            List<int> plus = new List<int>() { NomenclatureConstants.PeriodTypes.Appoint, NomenclatureConstants.PeriodTypes.Move };
+            List<int> plus = NomenclatureConstants.PeriodTypes.CurrentlyAvailable.ToList();
             //трябва да се направи константа за съдия и да се замени тук
             return repo.AllReadonly<LawUnit>().Where(x => ((x.DateTo ?? dateSelect.Date) >= dateSelect.Date)
                                    && repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId == court &&
@@ -1210,7 +1215,15 @@ namespace IOWebApplication.Core.Services
             //}); ;
             return result;
         }
-
+        public List<BreadcrumbsVM> Breadcrumbs_ForCaseNotificationListPrint(int caseSessionId, int notificationListTypeId)
+        {
+            var caseSession = repo.AllReadonly<CaseSession>()
+                                   .Where(x => x.Id == caseSessionId)
+                                  .FirstOrDefault();
+            List<BreadcrumbsVM> result = Breadcrumbs_ForCaseNotifications(caseSession?.CaseId ?? 0, caseSessionId, null, notificationListTypeId);
+            result.Add(FillBreadcrumbs("Редакция на списък ", urlHelper.Action("EditTinyMCE", "CaseNotification", new { caseSessionId, NotificationListTypeId = notificationListTypeId })));
+            return result;
+        }
         public List<BreadcrumbsVM> Breadcrumbs_ForCaseNotificationEdit(int notificationId)
         {
             var notification = repo.AllReadonly<CaseNotification>().Where(x => x.Id == notificationId).FirstOrDefault();
@@ -2089,8 +2102,10 @@ namespace IOWebApplication.Core.Services
             DateTime dateSelect = DateTime.Now;
             DateTime enddatenull = dateSelect.AddDays(1);
 
-            List<int> plus = new List<int>() { NomenclatureConstants.PeriodTypes.Appoint, NomenclatureConstants.PeriodTypes.Move };
-            return repo.AllReadonly<LawUnit>().Where(x => ((x.DateTo ?? dateSelect.Date) >= dateSelect.Date)
+            List<int> plus = NomenclatureConstants.PeriodTypes.CurrentlyAvailable.ToList();
+            return repo.AllReadonly<LawUnit>()
+                     .Include(x => x.LawUnitType)
+                     .Where(x => ((x.DateTo ?? dateSelect.Date) >= dateSelect.Date)
                                    && repo.AllReadonly<CourtLawUnit>().Where(c => c.LawUnitId == x.Id && c.CourtId == court &&
                                           plus.Contains(c.PeriodTypeId) && c.DateFrom <= dateSelect && (c.DateTo ?? enddatenull) >= dateSelect).Any()
                                                           ).AsQueryable();
@@ -2098,13 +2113,14 @@ namespace IOWebApplication.Core.Services
 
         public IQueryable<MultiSelectTransferVM> LawUnitMultiSelect_ByCourt(int courtId)
         {
-            IQueryable<LawUnit> lawUnits = LawUnit_ByCourt(courtId);
+            int[] lawunitTypes = new int[] { NomenclatureConstants.LawUnitTypes.Judge, NomenclatureConstants.LawUnitTypes.OtherEmployee };
+            IQueryable<LawUnit> lawUnits = LawUnit_ByCourt(courtId).Where(x => lawunitTypes.Contains(x.LawUnitTypeId));
             return (from item in lawUnits
                     select new MultiSelectTransferVM()
                     {
                         Id = item.Id,
                         Order = 0,
-                        Text = item.FullName
+                        Text = item.FullName + " - " + item.LawUnitType.Label
                     }).AsQueryable();
         }
 
@@ -2331,25 +2347,50 @@ namespace IOWebApplication.Core.Services
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonCrime(int CaseCrimeId)
         {
-            var caseCrime = personSentenceService.CaseCrime_GetById(CaseCrimeId);
+            var caseCrime = repo.GetById<CaseCrime>(CaseCrimeId);
+            var caseCrimeVM = new CaseCrimeVM()
+            {
+                Id = caseCrime.Id,
+                CaseId = caseCrime.CaseId,
+                CrimeCode = caseCrime.CrimeCode,
+                CrimeName = caseCrime.CrimeName,
+                ValueEISSId = caseCrime.EISSId,
+                ValueEISSPNumber = caseCrime.EISSPNumber
+            };
             List<BreadcrumbsVM> result = Breadcrumbs_GetForCaseCrime(caseCrime.CaseId);
-            result.Add(FillBreadcrumbs("Лица към престъпление " + caseCrime.ValueEISSPNumber, urlHelper.Action("IndexCasePersonCrime", "CasePersonSentence", new { caseCrimeId = CaseCrimeId })));
+            result.Add(FillBreadcrumbs("Лица към престъпление " + caseCrimeVM.ValueEISSPNumber, urlHelper.Action("IndexCasePersonCrime", "CasePersonSentence", new { caseCrimeId = CaseCrimeId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonSentencePunishment(int CasePersonSentenceId)
         {
-            var casePersonSentence = personSentenceService.CasePersonSentence_GetById(CasePersonSentenceId);
-            List<BreadcrumbsVM> result = Breadcrumbs_GetForCasePersonSentence(casePersonSentence.CasePersonId);
-            result.Add(FillBreadcrumbs("Наказания на " + casePersonSentence.CasePersonName, urlHelper.Action("IndexCasePersonSentencePunishment", "CasePersonSentence", new { casePersonSentenceId = CasePersonSentenceId })));
+            var personSentence = repo.AllReadonly<CasePersonSentence>()
+                                     .Include(x => x.CasePerson)
+                                     .Where(x => x.Id == CasePersonSentenceId)
+                                     .FirstOrDefault();
+
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForCasePersonSentence(personSentence.CasePersonId);
+            result.Add(FillBreadcrumbs("Наказания на " + personSentence.CasePerson.FullName, urlHelper.Action("IndexCasePersonSentencePunishment", "CasePersonSentence", new { casePersonSentenceId = CasePersonSentenceId })));
             return result;
         }
 
         public List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
         {
-            var casePersonSentencePunishment = personSentenceService.CasePersonSentencePunishment_GetById(CasePersonSentencePunishmentId);
-            var casePersonSentence = personSentenceService.CasePersonSentence_GetById(casePersonSentencePunishment.CasePersonSentenceId);
-            List<BreadcrumbsVM> result = Breadcrumbs_GetForCasePersonSentencePunishment(casePersonSentence.Id);
+            var casePersonSentencePunishment = repo.AllReadonly<CasePersonSentencePunishment>()
+                                                   .Include(x => x.SentenceType)
+                                                   .Where(x => x.Id == CasePersonSentencePunishmentId)
+                                                   .Select(x => new CasePersonSentencePunishmentVM()
+                                                   {
+                                                       Id = x.Id,
+                                                       IsSummaryPunishment = x.IsSummaryPunishment,
+                                                       IsSummaryPunishmentText = (x.IsSummaryPunishment) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No,
+                                                       SentenceText = x.SentenceText,
+                                                       SentenceTypeLabel = x.SentenceType.Label,
+                                                       SentenseMoney = x.SentenseMoney,
+                                                       CasePersonSentenceId = x.CasePersonSentenceId
+                                                   })
+                                                   .FirstOrDefault(); ;
+            List<BreadcrumbsVM> result = Breadcrumbs_GetForCasePersonSentencePunishment(casePersonSentencePunishment.CasePersonSentenceId);
             result.Add(FillBreadcrumbs("Участие в " + casePersonSentencePunishment.SentenceTypeLabel, urlHelper.Action("IndexCasePersonSentencePunishmentCrime", "CasePersonSentence", new { CasePersonSentencePunishmentId })));
             return result;
         }
@@ -2662,9 +2703,9 @@ namespace IOWebApplication.Core.Services
             result.Add(FillBreadcrumbs("Събития ЕИСПП", urlHelper.Action("IndexAll", "Eispp", new { courtId = courtId })));
             return result;
         }
-        public List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventEdit(int caseId)
+        public List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventEdit(int caseId, string mode)
         {
-            var result = Breadcrumbs_GetForEisppEvents(caseId);
+            var result = mode == "all" ? Breadcrumbs_GetForEisppEventsCourt(userContext.CourtId) : Breadcrumbs_GetForEisppEvents(caseId);
             result.Add(FillBreadcrumbs("Събитиe ЕИСПП", urlHelper.Action("SendPackage", "Eispp")));
             return result;
         }
@@ -2712,19 +2753,33 @@ namespace IOWebApplication.Core.Services
 
         public string LawUnit_Validate(LawUnit model)
         {
-            if (model.Id > 0)
-            {
-                return null;
-            }
+            var dtNow = DateTime.Now;
             if (!string.IsNullOrEmpty(model.Uic))
-                if (repo.AllReadonly<LawUnit>()
-                            .Where(x => x.Uic == model.Uic && x.UicTypeId == model.UicTypeId && x.LawUnitTypeId == model.LawUnitTypeId)
-                            .Where(x => (x.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
-                            .Any())
+            {
+                if (NomenclatureConstants.LawUnitTypes.EissUserTypes.Contains(model.LawUnitTypeId))
                 {
-                    return $"Вече съществува лице с идентификатор {model.Code}";
+                    if (repo.AllReadonly<LawUnit>()
+                               .Where(x => x.Uic == model.Uic && x.UicTypeId == model.UicTypeId && NomenclatureConstants.LawUnitTypes.EissUserTypes.Contains(x.LawUnitTypeId))
+                               .Where(x => (x.DateTo ?? DateTime.MaxValue) >= dtNow)
+                               .Where(x => x.Id != model.Id)
+                               .Any())
+                    {
+                        return $"Вече съществува лице с идентификатор {model.Code}";
+                    }
                 }
+                else
+                {
 
+                    if (repo.AllReadonly<LawUnit>()
+                                .Where(x => x.Uic == model.Uic && x.UicTypeId == model.UicTypeId && x.LawUnitTypeId == model.LawUnitTypeId)
+                                .Where(x => (x.DateTo ?? DateTime.MaxValue) >= dtNow)
+                                .Where(x => x.Id != model.Id)
+                                .Any())
+                    {
+                        return $"Вече съществува лице с идентификатор {model.Code}";
+                    }
+                }
+            }
             return null;
         }
 
@@ -2959,6 +3014,123 @@ namespace IOWebApplication.Core.Services
                 }
             }
 
+        }
+
+        public CourtLawUnit GetGeneralJudgeCourtLawUnit(int courtId)
+        {
+            DateTime dateNow = DateTime.Now.Date;
+            DateTime dateEnd = dateNow.AddDays(1);
+
+            return repo.AllReadonly<CourtLawUnit>()
+                                .Include(x => x.LawUnit)
+                                .Where(x => x.CourtId == courtId)
+                                .Where(x => x.LawUnitPositionId == NomenclatureConstants.LawUnitPosition.GeneralJudge)
+                                .Where(x => dateNow >= x.DateFrom && dateNow <= (x.DateTo ?? dateEnd))
+                                .FirstOrDefault();
+        }
+
+        public bool UpdateCaseJudicalCompositionOtdelenie(int CaseId)
+        {
+            var judgeRep = repo.AllReadonly<CaseLawUnit>()
+                               .Include(x => x.CourtDepartment)
+                               .Where(x => x.CaseId == CaseId &&
+                                           x.CaseSessionId == null &&
+                                           (((x.DateTo ?? DateTime.Now.AddYears(100)).Date >= DateTime.Now.Date) && (x.DateFrom.Date <= DateTime.Now.Date)) &&
+                                           x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                               .OrderByDescending(a => a.DateFrom)
+                               .FirstOrDefault();
+
+            if (judgeRep == null)
+                return false;
+
+            if (judgeRep.CourtDepartmentId == null)
+                return false;
+
+            var dateNow = DateTime.Now;
+            var otdelenie = repo.AllReadonly<CourtDepartment>()
+                                .Where(x => x.MasterId == judgeRep.CourtDepartment.MasterId &&
+                                            x.DepartmentTypeId == NomenclatureConstants.DepartmentType.Otdelenie &&
+                                            ((x.DateFrom.Date <= dateNow.Date) && ((x.DateTo ?? dateNow.AddYears(100)) >= dateNow.Date)))
+                                .OrderByDescending(x => x.Id)
+                                .FirstOrDefault();
+
+            try
+            {
+                var saved = repo.GetById<Case>(CaseId);
+                saved.JudicalCompositionId = judgeRep.CourtDepartmentId;
+                saved.OtdelenieId = (otdelenie != null) ? otdelenie.Id : (int?)null;
+                saved.UserId = userContext.UserId;
+                saved.DateWrt = DateTime.Now;
+                repo.Update(saved);
+                repo.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при сетване на състав и отделение на дело с Id={ CaseId }");
+                return false;
+            }
+        }
+
+        public List<BreadcrumbsVM> Breadcrumbs_ForExecList()
+        {
+            List<BreadcrumbsVM> result = new List<BreadcrumbsVM>();
+            result.Add(FillBreadcrumbs("Списък изпълнителни листове", urlHelper.Action("ExecListIndex", "Money")));
+            return result;
+        }
+
+        public List<BreadcrumbsVM> Breadcrumbs_ForExecListEdit(int id)
+        {
+            List<BreadcrumbsVM> result = Breadcrumbs_ForExecList();
+            result.Add(FillBreadcrumbs("Редакция", urlHelper.Action("EditExecList", "Money", new { id = id })));
+            return result;
+        }
+
+        public IEnumerable<LabelValueVM> Get_Organizations(string term, int? id)
+        {
+            DateTime dtNow = DateTime.Now;
+            Expression<Func<CourtOrganization, bool>> filter = x => true;
+            if (id > 0)
+            {
+                filter = x => x.Id == id;
+            }
+            else
+            {
+                filter = x => EF.Functions.ILike(x.Label, term.ToPaternSearch())
+                && x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow;
+            }
+            return repo.AllReadonly<CourtOrganization>()
+                            .Where(filter)
+                            .Where(x => x.CourtId == userContext.CourtId)
+                            .OrderBy(x => x.Label)
+                            .Select(x => new LabelValueVM
+                            {
+                                Value = x.Id.ToString(),
+                                Label = x.Label
+                            }).ToList();
+        }
+
+        public IEnumerable<LabelValueVM> Get_CaseReasons(string term, int? id)
+        {
+            DateTime dtNow = DateTime.Now;
+            Expression<Func<CaseReason, bool>> filter = x => true;
+            if (id > 0)
+            {
+                filter = x => x.Id == id;
+            }
+            else
+            {
+                filter = x => EF.Functions.ILike(x.Label, term.ToPaternSearch());
+            }
+            return repo.AllReadonly<CaseReason>()
+                            .Where(filter)
+                            .Where(x => x.IsActive == true)
+                            .OrderBy(x => x.Label)
+                            .Select(x => new LabelValueVM
+                            {
+                                Value = x.Id.ToString(),
+                                Label = x.Label
+                            }).ToList();
         }
     }
 }

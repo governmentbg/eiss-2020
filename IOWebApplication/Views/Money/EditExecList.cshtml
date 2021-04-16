@@ -1,10 +1,12 @@
 ﻿@model ExecListEditVM
 @using IOWebApplication.Infrastructure.Models.ViewModels.Money
 @using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Core.Helper.GlobalConstants
 
 @{
     var actionName = "EditExecList";
-    var classColMd = "col-md-6";
+    var classColMd = "col-md-8";
     if (Model.ForPopUp == true)
     {
         actionName = "ExecList";
@@ -20,80 +22,108 @@
         ViewData["Title"] = "Добавяне";
     }
 }
+
 @section breadcrumb{
-    <ol class="breadcrumb">
-        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
-        <li><a href="@Url.Action("ExecListIndex","Money")">Списък изпълнителни листове</a></li>
-    </ol>
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
 }
 
-<div class="row">
-    <div class=@classColMd>
-        <form asp-action=@actionName method="post" id="cmModalFormExecList">
-            @Html.HiddenFor(x => x.Id)
-            @Html.HiddenFor(x => x.ExecListTypeId)
-            @Html.HiddenFor(x => x.ForPopUp)
-            @Html.HiddenFor(x => x.ObligationIdStr)
-            @Html.HiddenFor(x => x.CaseGroupId)
-            @if (Model.Id > 0)
-            {
-                @Html.HiddenFor(x => x.RegNumber)
-                @Html.HiddenFor(x => x.RegDate)
-            }
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="actTab">
+        <li class="active"><a href="#tabMainActData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+        @if (Model.Id > 0)
+        {
+            <li class=""><a href="#tabWorkTask" data-toggle="tab"><i class="fa fa-exclamation"></i> Задачи</a></li>
+        }
+    </ul>
 
-            @Html.ValidationSummary()
+    <div class="tab-content">
+        <div class="tab-pane active" id="tabMainActData">
+            <div class="row">
+                <div class=@classColMd>
+                    <form asp-action=@actionName method="post" id="cmModalFormExecList">
+                        @Html.HiddenFor(x => x.Id)
+                        @Html.HiddenFor(x => x.ExecListTypeId)
+                        @Html.HiddenFor(x => x.ForPopUp)
+                        @Html.HiddenFor(x => x.ObligationIdStr)
+                        @Html.HiddenFor(x => x.CaseGroupId)
+                        @if (Model.Id > 0 && Model.RegDate != null)
+                        {
+                            @Html.HiddenFor(x => x.RegNumber)
+                            @Html.HiddenFor(x => x.RegDate)
+                        }
 
-            <div id="saveContainer">
-                <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                @if (@Model.Id > 0)
-                {
-                    <h2>@Model.RegNumber/@Model.RegDate.ToString("dd.MM.yyyy")</h2>
-                }
+                        @Html.ValidationSummary()
 
-                @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+                        <div id="saveContainer">
+                            <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                            @if (@Model.Id > 0 && Model.RegDate != null)
+                            {
+                                <h2>@Model.RegNumber/@Model.RegDate.DateToStr(FormattingConstant.NormalDateFormat)</h2>
+                            }
 
-                @if (Model.ExecListTypeId == NomenclatureConstants.ExecListTypes.Country)
-                {
-                    @if (@Model.Id > 0)
-                    {
-                        @Html.EditorFor(x => x.CaseNumber)
-                    }
-                }
-                else if (Model.ExecListTypeId == NomenclatureConstants.ExecListTypes.ThirdPerson)
-                {
-                    @Html.EditorFor(x => x.ExecListLawBaseId, "GenericDropDown")
-                    @if (@Model.Id > 0)
-                    {
-                        @Html.EditorFor(x => x.DeliveryDate)
-                        @Html.EditorFor(x => x.DeliveryPersonName)
-                    }
-                }
+                            @Html.EditorFor(x => x.LawUnitSignId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
 
-                @Html.EditorFor(x => x.Content, "Textarea", new { @class = "tinymce" })
+                            @if (Model.ExecListTypeId == NomenclatureConstants.ExecListTypes.Country)
+                            {
+                                @if (@Model.Id > 0)
+                                {
+                                    @Html.EditorFor(x => x.CaseNumber)
+                                }
+                            }
+                            else if (Model.ExecListTypeId == NomenclatureConstants.ExecListTypes.ThirdPerson)
+                            {
+                                @Html.EditorFor(x => x.ExecListLawBaseId, "GenericDropDown")
+                                @if (@Model.Id > 0)
+                                {
+                                    @Html.EditorFor(x => x.DeliveryDate)
+                                    @Html.EditorFor(x => x.DeliveryPersonName)
+                                }
+                            }
 
-                @if (@Model.Id > 0)
-                {
-                    <div class="cdn-files" data-label="Документи към изпълнителен лист" data-sourcetype="@SourceTypeSelectVM.ExecList" data-sourceid="@Model.Id" data-editmode="none"></div>
-                }
+                            @if (@Model.Id > 0)
+                            {
+                                @Html.EditorFor(x => x.ExecListStateId, "GenericDropDown")
+                            }
+
+                            @if (@Model.Id > 0)
+                            {
+                                <div class="cdn-files" data-label="Документи към изпълнителен лист" data-sourcetype="@SourceTypeSelectVM.ExecList" data-sourceid="@Model.Id" data-editmode="none"></div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                            @if (Model.ForPopUp == false)
+                            {
+                                <a asp-action="ExecListIndex" class="btn btn-danger">Назад</a>
+                            }
+
+                            @if (Model.Id > 0)
+                            {
+                                <a href="#" onclick="editActBlank(); return false;" class="btn btn-primary">Изготвяне на ИЛ</a>
+                                @if (Model.RegDate == null)
+                                {
+                                    <a href="#" onclick="sendForSignCheck(this); return false;" class="btn btn-primary" title="Създава документа на ИЛ и задача за подпис">Изпращане за подпис</a>
+                                }
+
+                                <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.ExecList" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
+
+                                <div class="pull-right">
+                                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                                </div>
+                            }
+                        </div>
+                    </form>
+                </div>
             </div>
+        </div>
 
-            <div class="form-group">
-                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
-                @if (Model.ForPopUp == false)
-                {
-                    <a asp-action="ExecListIndex" class="btn btn-danger">Назад</a>
-                }
-
-                @if (Model.Id > 0)
-                {
-                    <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.ExecList" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
-
-                    <div class="pull-right">
-                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
-                    </div>
-                }
-            </div>
-        </form>
+        <div class="tab-pane" id="tabWorkTask">
+            <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.ExecList, Model.Id) { TaskRequired=true})" />
+        </div>
     </div>
 </div>
 
@@ -110,11 +140,11 @@
                     ReloadDatatable();
                     HideModal();
                     messageHelper.ShowSuccessMessage('Записът премина успешно.');
+                    window.open('@Url.Action("BlankExecList", "Money")?id=' + data.responseJSON.id, '_blank');
                 } else {
                     messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
                 }
             });
-            initTinyMCE();
         }
     });
 </script>
@@ -122,5 +152,58 @@
 <script>
     $(function () {
         initLawUnit();
+
+        var url = document.location.toString();
+        if (url.match('#')) {
+            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+        }
+
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
+            window.location.hash = e.target.hash;
+        })
     });
+
+    function editActBlank() {
+        let editUrl = "@Url.Action("BlankExecList", new { id=Model.Id})";
+            @if (Model.RegDate != null)
+            {
+                <text>
+        swalConfirm('Има генериран файл на ИЛ, който е в процес на подписване или е подписан! След промяна на съдържанието на ИЛ е необходимо да създадете нова задача за подписване, за да се генерира нов файл на ИЛ със същия номер.', function () {
+            document.location.href = editUrl;
+        });
+                </text>
+            }else {
+                <text>document.location.href = editUrl;</text>
+            }
+    }
+
+    function sendForSignCheck(sender) {
+        if ($(sender).attr('disabled')) {
+            return;
+        }
+        $(sender).attr('disabled', 'disabled');
+
+        let editUrl = "@Url.Action("QuickSentForSignExecList", new { execListid = Model.Id})";
+            @if (Model.RegDate != null)
+            {
+                <text>
+        swalConfirm('Вече има регистриран ИЛ, който е в процес на подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за ИЛ със същия номер и ще се създаде нова задача за подпис.', function () {
+            document.location.href = editUrl;
+        }, function () {
+            $(sender).removeAttr('disabled');
+
+        });
+                </text>
+            }
+            else
+            {
+                <text>
+
+        setTimeout(function () {
+            document.location.href = editUrl;
+        }, 200);
+            </text>
+                }
+            }
 </script>

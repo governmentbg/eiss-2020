@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Integration.Eispp;
+﻿using Integration.Eispp;
 using IOWebApplication.Infrastructure.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

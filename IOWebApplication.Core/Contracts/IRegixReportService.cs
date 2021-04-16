@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.RegixClient;
+﻿using IO.RegixClient;
 using IOWebApplication.Infrastructure.Models.Regix.FetchNomenclatures;
 using IOWebApplication.Infrastructure.Models.Regix.GetActualStateV3;
 using IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts;
@@ -75,7 +72,7 @@ namespace IOWebApplication.Core.Contracts
         bool ActualStateV3_SaveData(RegixActualStateV3VM model);
         (bool result, string errorMessage, RegixActualStateV3VM model) GetActualStateV3ById(int id);
 
-        IEnumerable<PersonSearchVM> PersonSearch(int uicType, string uic);
+        IEnumerable<PersonSearchVM> PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
 
 
         RegixStateOfPlayVM GetStateOfPlayById(int id);
@@ -88,5 +85,8 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<RegixReportListVM> RegixReportList_Select(int courtId, RegixReportListFilterVM model);
 
         IQueryable<RegixListVM> RegixListByCase_Select(int caseId);
+
+        PermanentAddressResponseType GetPermanentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
+        TemporaryAddressResponseType GetCurrentAddressAndSave(string egn, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId);
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -22,6 +19,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
 
         [Column("system_name")]
         public string SystemName { get; set; }
+        
+        [Column("date_wrt")]
+        public DateTime? DateWrt { get; set; }
 
         [Column("standart_no")]
         public int? StandartNo { get; set; }

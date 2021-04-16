@@ -15,16 +15,21 @@
     <div class="col-md-12 col-lg-12">
         <form id="formEdit" asp-action="SendPackage" method="post">
             @Html.ValidationSummary()
-            @await Html.PartialAsync("_Package", Model)
+            <div id="saveContainer">
+             <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @await Html.PartialAsync("_Package", Model)
             <div class="form-group">
                 @Html.HiddenFor(x => x.IsForEdit)
                 @Html.EditorFor(x => x.IsForSend)
                 @Html.HiddenFor(x => x.EventTypeId)
-                @if (!Model.IsForSend || isPostBack || Model.IsForEdit)
+                @Html.HiddenFor(x => x.IsGeneratedEisppNumber)
+                @if(!Model.IsForSend || isPostBack || Model.IsForEdit)
                 {
-                    <input type="submit" value="Запис" class="btn btn-success" />
+                <input type="submit" value="Запис" class="btn btn-success" />
                 }
                 @await Html.PartialAsync("_ButtonClose")
+                @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "edit" })
+            </div>
             </div>
         </form>
     </div>
@@ -32,11 +37,6 @@
 
 @await Html.PartialAsync("_EisppScript")
 <script>
-    function deletePackageJson() {
-        $('form').attr('action', '@Url.Action("DeletePackageJson")');
-        $("form").submit();
-    }
-
     $(document).ready(function () {
         EisppOnReady();
     });

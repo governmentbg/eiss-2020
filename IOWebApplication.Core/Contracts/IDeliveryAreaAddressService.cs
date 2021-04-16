@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
@@ -17,7 +14,8 @@ namespace IOWebApplication.Core.Contracts
     {
         IQueryable<DeliveryAreaAddressVM> DeliveryAreaAddressSelect(DeliveryAreaAddressFilterVM filter);
         bool DeliveryAreaAddressSaveData(DeliveryAreaAddress model);
-        List<SelectListItem> GetEkatte(int deliveryAreaId);
+        List<SelectListItem> GetEkatteByArea(int deliveryAreaId);
+        List<SelectListItem> GetEkatteByCourt(int courtId);
         string VerifyNumberFrom(int? NumberFrom, int? NumberType, int? NumberTo);
         string VerifyNumberTo(int? NumberFrom, int? NumberType, int? NumberTo);
 

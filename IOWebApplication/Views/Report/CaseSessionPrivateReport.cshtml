@@ -1,4 +1,7 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
 @model CaseSessionPrivateFilterReportVM
 
 @{
@@ -17,6 +20,9 @@
         <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTimeWithTime")</div>
         <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTimeWithTime")</div>
         <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitTypes = NomenclatureConstants.LawUnitTypes.Judge.ToString(), courtId = userContext.CourtId })</div>
         <div class="col-lg-3">@Html.EditorFor(m => m.DepartmentId, "GenericDropDown")</div>
     </div>
     <div class="row">
@@ -28,3 +34,9 @@
         </div>
     </div>
 </form>
+
+@section scripts {
+    <script>
+        initLawUnit();
+    </script>
+}

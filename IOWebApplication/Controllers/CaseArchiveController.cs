@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,7 +39,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult CaseForArchive()
         {
-            SetHelpFile(HelpFileValues.Archive);
+            SetHelpFile(HelpFileValues.Archive1);
             return View();
         }
 
@@ -71,7 +68,7 @@ namespace IOWebApplication.Controllers
                 DateFrom = dateFrom ?? new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = dateTo ?? DateTime.Now
             };
-            SetHelpFile(HelpFileValues.Archive);
+            SetHelpFile(HelpFileValues.Archive2);
             return View(filter);
         }
         
@@ -105,7 +102,13 @@ namespace IOWebApplication.Controllers
                 else if ((caseModel.CaseInforcedDate ?? DateTime.Now).AddMonths(month).Date >= DateTime.Now.Date)
                     ViewBag.MessageArchivePeriod = "Не са изминали " + month + " месеца от датата на влизане в законна сила!";
             }
-            SetHelpFile(HelpFileValues.Archive);
+
+            if (comeFrom == "CaseForDestroy")
+                SetHelpFile(HelpFileValues.Destroy);
+            else if (comeFrom == "CaseForArchive")
+                SetHelpFile(HelpFileValues.Archive1);
+            else
+                SetHelpFile(HelpFileValues.Archive2);
         }
 
         bool IsForDestroy(DateTime? dateDestroy, string comeFrom)
@@ -184,15 +187,6 @@ namespace IOWebApplication.Controllers
             {
                 ModelState.AddModelError(nameof(Infrastructure.Data.Models.Cases.CaseArchive.ActDestroyLabel), "Въведете протокол за унищожаване");
             }
-
-            var act = service.GetById<CaseSessionAct>(model.CaseSessionActId);
-            if (act.ActInforcedDate != null)
-            {
-                if ((model.BookYear ?? 0) != ((DateTime)act.ActInforcedDate).Year)
-                {
-                    ModelState.AddModelError(nameof(Infrastructure.Data.Models.Cases.CaseArchive.BookYear), "Година на Том не може да е различна от година на влизане в сила на акта");
-                }
-            }
         }
 
         /// <summary>
@@ -246,7 +240,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult CaseForDestroy()
         {
-            SetHelpFile(HelpFileValues.Archive);
+            SetHelpFile(HelpFileValues.Destroy);
             return View();
         }
 

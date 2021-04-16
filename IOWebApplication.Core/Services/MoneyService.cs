@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
@@ -25,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Transactions;
 
 namespace IOWebApplication.Core.Services
 {
@@ -32,22 +30,19 @@ namespace IOWebApplication.Core.Services
     {
         private readonly ICounterService counterService;
         private readonly ICommonService commonService;
-        private readonly ICaseLawUnitService caseLawUnitService;
 
         public MoneyService(
             ILogger<MoneyService> _logger,
             ICounterService _counterService,
             IRepository _repo,
             IUserContext _userContext,
-            ICommonService _commonService,
-            ICaseLawUnitService _caseLawUnitService)
+            ICommonService _commonService)
         {
             logger = _logger;
             repo = _repo;
             userContext = _userContext;
             counterService = _counterService;
             commonService = _commonService;
-            caseLawUnitService = _caseLawUnitService;
         }
 
         /// <summary>
@@ -84,8 +79,8 @@ namespace IOWebApplication.Core.Services
                AmountPay = x.ObligationPayments.Where(a => a.IsActive == true).Select(a => a.Amount).DefaultIfEmpty(0).Sum(),
                IsActive = x.IsActive ?? true,
                RegNumberExpenseOrder = caseSessionId > 0 ? x.ExpenseOrderObligations.Where(o => o.ExpenseOrder.IsActive == true).Select(o => o.ExpenseOrder.RegNumber).DefaultIfEmpty("").FirstOrDefault() : "",
-               RegNumberExecList = caseSessionActId > 0 ? x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecList.RegNumber).DefaultIfEmpty("").FirstOrDefault() : "",
-               ExecListId = caseSessionActId > 0 ? x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecListId).FirstOrDefault() : 0,
+               RegNumberExecList = (caseSessionActId > 0 || caseSessionId > 0) ? x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecList.RegNumber ?? "В проект").DefaultIfEmpty("").FirstOrDefault() : "",
+               ExecListId = (caseSessionActId > 0 || caseSessionId > 0) ? x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecListId).FirstOrDefault() : 0,
                ExpenseOrderId = caseSessionId > 0 ? x.ExpenseOrderObligations.Where(o => o.ExpenseOrder.IsActive == true).Select(o => o.ExpenseOrderId).FirstOrDefault() : 0,
            }).AsQueryable();
         }
@@ -100,12 +95,11 @@ namespace IOWebApplication.Core.Services
             saved.ExecListTypeId = model.ExecListTypeId;
             if ((model.ExecListTypeId??0) == NomenclatureConstants.ExecListTypes.Country)
             {
-                (int sourceType, long sourceId) = SourceTypeSelectVM.GetSourceTypeSourceId(model.CountryReceiveId);
-                var entityData = commonService.SelectEntity_Select(sourceType, null, null, sourceId).FirstOrDefault();
+                var entityData = commonService.SelectEntity_Select(model.ReceiveSourceTypeId, null, null, model.ReceiveSourceId).FirstOrDefault();
                 if (entityData != null)
                 {
-                    saved.Person_SourceType = sourceType;
-                    saved.Person_SourceId = sourceId;
+                    saved.Person_SourceType = model.ReceiveSourceTypeId;
+                    saved.Person_SourceId = model.ReceiveSourceId;
                     saved.FullName = entityData.Label;
                     saved.UicTypeId = entityData.UicTypeId;
                     saved.Uic = entityData.Uic;
@@ -185,6 +179,7 @@ namespace IOWebApplication.Core.Services
                     model.Amount = 0;
 
                 Obligation saved = null;
+                bool isDeactivate = false;
                 if (model.Id > 0)
                 {
                     //Update
@@ -193,7 +188,9 @@ namespace IOWebApplication.Core.Services
                                .Where(x => x.Id == model.Id)
                                .FirstOrDefault();
 
-                    if ((saved.IsActive ?? true) == false && model.IsActive == false)
+                    isDeactivate = (saved.IsActive ?? true) == true && model.IsActive == false;
+                    
+                    if ((saved.IsActive ?? true) == false)
                     {
                         return (result: false, errorMessage: "Задължението е деактивирано");
                     }
@@ -308,8 +305,35 @@ namespace IOWebApplication.Core.Services
                 if (model.Id > 0)
                 {
                     //Update
-                    repo.Update(saved);
-                    repo.SaveChanges();
+                    using (TransactionScope ts = new TransactionScope())
+                    {
+                        repo.Update(saved);
+                        repo.SaveChanges();
+
+                        //Ако са направили сумата неактивна и тя е за заседател да преизчисли минималната сума на ден
+                        if ((saved.CaseSessionMeetingId ?? 0) > 0 && isDeactivate == true)
+                        {
+                            var courtJuryFee = repo.AllReadonly<CourtJuryFee>().Where(x => x.CourtId == saved.CourtId).ToList();
+
+                            var caseLawUnitJury = repo.AllReadonly<CaseLawUnit>().Include(x => x.LawUnit)
+                                 .Where(x => x.CaseSessionId == saved.CaseSessionId &&
+                                           x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury &&
+                                           x.Id == saved.Person_SourceId)
+                                 .FirstOrDefault();
+                            List<CaseLawUnit> caseLawUnitJuries = new List<CaseLawUnit>();
+                            caseLawUnitJuries.Add(caseLawUnitJury);
+
+                            List<Obligation> moneys = new List<Obligation>();
+                            List<DateTime> dates = new List<DateTime>();
+                            dates.Add(saved.ObligationDate.Date);
+                            ObligationMinAmountForday_SaveData(saved.CaseSessionId ?? 0, dates,
+                                caseLawUnitJuries, courtJuryFee, moneys, saved.CourtId, true);
+
+                            repo.SaveChanges();
+                        }
+
+                        ts.Complete();
+                    }
                 }
                 else
                 {
@@ -369,8 +393,8 @@ namespace IOWebApplication.Core.Services
                 result.BIC = receive.BIC;
                 result.BankName = receive.BankName;
                 if (receive.Person_SourceType != null) {
-                    result.CountryReceiveId = SourceTypeSelectVM.GetSourceTypePrefix(receive.Person_SourceType ?? 0) +
-                                              (receive.Person_SourceId ?? 0);
+                    result.ReceiveSourceTypeId = receive.Person_SourceType ?? 0;
+                    result.ReceiveSourceId = receive.Person_SourceId;
                 }
             }
 
@@ -444,7 +468,7 @@ namespace IOWebApplication.Core.Services
                CaseData = x.Case.CaseGroup.Code + " " + x.Case.RegNumber,
                ObligationInfo = x.ObligationInfo ?? "",
                RegNumberExpenseOrder = model.Sign == NomenclatureConstants.MoneySign.SignPlus ? "" : x.ExpenseOrderObligations.Where(o => o.ExpenseOrder.IsActive == true).Select(o => o.ExpenseOrder.RegNumber).DefaultIfEmpty("").FirstOrDefault(),
-               RegNumberExecList = model.Sign == NomenclatureConstants.MoneySign.SignMinus ? "" : x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecList.RegNumber).DefaultIfEmpty("").FirstOrDefault(),
+               RegNumberExecList = model.Sign == NomenclatureConstants.MoneySign.SignMinus ? "" : x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecList.RegNumber ?? "В проект").DefaultIfEmpty("").FirstOrDefault(),
                ExecListId = model.Sign == NomenclatureConstants.MoneySign.SignMinus ? 0 : x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecListId).FirstOrDefault(),
                ExpenseOrderId = model.Sign == NomenclatureConstants.MoneySign.SignPlus ? 0 : x.ExpenseOrderObligations.Where(o => o.ExpenseOrder.IsActive == true).Select(o => o.ExpenseOrderId).FirstOrDefault(),
            }).Where(statusWhere).Where(expenseOrderNumberWhere).AsQueryable();
@@ -1430,9 +1454,10 @@ namespace IOWebApplication.Core.Services
         /// <param name="courtJuryFee"></param>
         /// <param name="moneys"></param>
         /// <param name="courtId"></param>
+        /// <param name="isRemove"></param>
         /// <returns></returns>
         private (bool result, string errorMessage) ObligationMinAmountForday_SaveData(int caseSessionId, List<DateTime> dates, List<CaseLawUnit> caseLawUnits,
-                                                                 List<CourtJuryFee> courtJuryFee, List<Obligation> moneys, int courtId)
+                                                                 List<CourtJuryFee> courtJuryFee, List<Obligation> moneys, int courtId, bool isRemove)
         {
             try
             {
@@ -1441,9 +1466,9 @@ namespace IOWebApplication.Core.Services
                     foreach (var itemLawUnit in caseLawUnits)
                     {
                         //Ако сме записали пари за този Lawunit за тази дата да провери за минимална сума на ден
-                        decimal sum = moneys.Where(x => x.ObligationDate.Date == item && x.FullName == itemLawUnit.LawUnit.FullName
+                        decimal sum = moneys.Where(x => x.ObligationDate.Date == item && x.FullName.ToLower() == itemLawUnit.LawUnit.FullName.ToLower()
                                && (x.Uic ?? "") == (itemLawUnit.LawUnit.Uic ?? "") && (x.IsForMinAmount ?? false) == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
-                        if (Math.Abs(sum) > 0.001M)
+                        if (Math.Abs(sum) > 0.001M || isRemove == true)
                         {
                             var moneyLawUnit = ObligationForEarnings_Select(item, itemLawUnit.LawUnit.Uic, itemLawUnit.LawUnit.FullName, itemLawUnit.LawUnit.UicTypeId, courtId);
                             var itemAmountForDay = moneyLawUnit.Where(x => x.IsForMinAmount == true).FirstOrDefault();
@@ -1451,12 +1476,12 @@ namespace IOWebApplication.Core.Services
                             var juryFee = GetForDate(item, courtJuryFee);
                             if (itemAmountForDay != null)
                             {
-                                itemAmountForDay.Amount = (sumForDay - juryFee.MinDayFee > 0.001M) ? 0 : (juryFee.MinDayFee - sumForDay);
+                                itemAmountForDay.Amount = sumForDay > 0 ? (sumForDay - juryFee.MinDayFee > 0.001M) ? 0 : (juryFee.MinDayFee - sumForDay) : 0;
                                 repo.Update(itemAmountForDay);
                             }
                             else
                             {
-                                if (juryFee.MinDayFee - sumForDay > 0.001M)
+                                if (juryFee.MinDayFee - sumForDay > 0.001M && isRemove == false)
                                 {
                                     Obligation obligation = new Obligation();
                                     obligation.Amount = juryFee.MinDayFee - sumForDay;
@@ -1530,16 +1555,26 @@ namespace IOWebApplication.Core.Services
                     return (result: true, errorMessage: "");
                 }
 
-                var caseLawUnits = repo.AllReadonly<CaseLawUnit>().Include(x => x.LawUnit)
+                var caseLawUnitJuries = repo.AllReadonly<CaseLawUnit>().Include(x => x.LawUnit)
                      .Where(x => x.CaseSessionId == caseSession.Id &&
-                               x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury &&
-                               (x.DateTo ?? caseSession.DateFrom) >= caseSession.DateFrom).ToList();
-                if (caseLawUnits.Count() == 0)
+                               x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
+                     .ToList();
+                //Ако няма никакъв заседател(независимо дали е изкаран, защото може да има начислени пари) по заседанието да не прави нищо
+                if (caseLawUnitJuries.Count == 0)
                 {
                     return (result: true, errorMessage: "");
                 }
 
+                //Само активните заседатели по заседанието
+                var caseLawUnits = caseLawUnitJuries
+                     .Where(x => (x.DateTo ?? caseSession.DateFrom) >= caseSession.DateFrom)
+                     .ToList();
+
+                //Заседатели, които вече не са в заседанието, но има начислени пари за тях. На тези трябва да се коригира минималната сума за ден
+                List<CaseLawUnit> caseLawUnitsRemove = null;
+
                 var moneysExists = GetMoneyForSessionEarnings(caseSession.Id);
+                var dateObligations = moneysExists.Select(x => x.ObligationDate.Date).Distinct().ToList();
                 //Ако има записани пари за това заседание, по които пари има плащане или разходен ордер, да не се прави нищо
                 if (moneysExists.Count > 0)
                 {
@@ -1550,6 +1585,13 @@ namespace IOWebApplication.Core.Services
                     }
                     else
                     {
+                        //Всички заседатели, за които няма да се изчислява пари, но има записани такива
+                        caseLawUnitsRemove = caseLawUnitJuries.Where(x => caseLawUnits.Where(a => x.LawUnitId == a.LawUnitId).Any() == false &&
+                                       moneysExists.Where(a => a.UicTypeId == x.LawUnit.UicTypeId &&
+                                       (x.LawUnit.Uic == a.Uic || (a.Uic == null && x.LawUnit.FullName.ToLower() == a.FullName.ToLower()))
+                                                         ).Any()
+                                                                    )
+                                             .ToList();
                         repo.DeleteRange(moneysExists);
                         repo.SaveChanges();
                     }
@@ -1558,24 +1600,41 @@ namespace IOWebApplication.Core.Services
                 List<Obligation> moneys = new List<Obligation>();
                 //Запис на парите по дати за заседатели
                 var courtJuryFee = repo.AllReadonly<CourtJuryFee>().Where(x => x.CourtId == courtId).ToList();
-                (bool resultSaveMeeting, string errorMessageSaveMeeting) = ObligationCaseSessionMeeting_SaveData(caseSession, caseLawUnits,
-                                                                         courtJuryFee, moneys, courtId);
-                if (resultSaveMeeting == false)
+
+                if (caseLawUnits.Count > 0)
                 {
-                    return (result: resultSaveMeeting, errorMessage: errorMessageSaveMeeting);
+                    (bool resultSaveMeeting, string errorMessageSaveMeeting) = ObligationCaseSessionMeeting_SaveData(caseSession, caseLawUnits,
+                                                                             courtJuryFee, moneys, courtId);
+                    if (resultSaveMeeting == false)
+                    {
+                        return (result: resultSaveMeeting, errorMessage: errorMessageSaveMeeting);
+                    }
+
+
+                    //Запис на парите до минималната сума по дати за заседатели
+                    var dates = moneys.Select(x => x.ObligationDate.Date).Distinct().ToList();
+                    (bool resultSaveMinAmount, string errorMessageSaveMinAmount) = ObligationMinAmountForday_SaveData(caseSession.Id, dates, caseLawUnits,
+                                                                             courtJuryFee, moneys, courtId, false);
+                    if (resultSaveMinAmount == false)
+                    {
+                        return (result: resultSaveMinAmount, errorMessage: errorMessageSaveMinAmount);
+                    }
+
+                    repo.AddRange(moneys);
                 }
 
+                // Ако има заседатели, за които е било начислено и после са премахнати - да се оправят минималнити суми на ден
+                if (caseLawUnitsRemove != null && caseLawUnitsRemove.Count > 0)
+                {                    
+                    (bool resultSaveMinAmount, string errorMessageSaveMinAmount) = ObligationMinAmountForday_SaveData(caseSession.Id, dateObligations, caseLawUnitsRemove,
+                                                                             courtJuryFee, moneys, courtId, true);
+                    if (resultSaveMinAmount == false)
+                    {
+                        return (result: resultSaveMinAmount, errorMessage: errorMessageSaveMinAmount);
+                    }
 
-                //Запис на парите до минималната сума по дати за заседатели
-                var dates = moneys.Select(x => x.ObligationDate.Date).Distinct().ToList();
-                (bool resultSaveMinAmount, string errorMessageSaveMinAmount) = ObligationMinAmountForday_SaveData(caseSession.Id, dates, caseLawUnits,
-                                                                         courtJuryFee, moneys, courtId);
-                if (resultSaveMinAmount == false)
-                {
-                    return (result: resultSaveMinAmount, errorMessage: errorMessageSaveMinAmount);
+                    repo.AddRange(moneys);
                 }
-
-                repo.AddRange(moneys);
 
                 return (result: true, errorMessage: "");
             }
@@ -1617,6 +1676,8 @@ namespace IOWebApplication.Core.Services
             idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
 
             return repo.AllReadonly<Obligation>()
+           .Include(x => x.CaseSessionAct)
+           .Include(x => x.MoneyType)
            .Where(x => idList.Contains(x.Id.ToString()))
            .AsQueryable();
         }
@@ -1637,6 +1698,7 @@ namespace IOWebApplication.Core.Services
             saved.Iban = model.Iban?.ToUpper();
             saved.BIC = model.BIC?.ToUpper();
             saved.BankName = model.BankName;
+            saved.LawUnitSignId = model.LawUnitSignId;
         }
 
         /// <summary>
@@ -1657,12 +1719,11 @@ namespace IOWebApplication.Core.Services
                     return (result: false, errorMessage: "Изберете задължение");
                 }
 
-                bool checkMoneyType = obligations.Where(x => x.MoneyTypeId != NomenclatureConstants.MoneyType.Earnings
-                                                        && x.MoneyTypeId != NomenclatureConstants.MoneyType.Transport
-                                                        && x.MoneyTypeId != NomenclatureConstants.MoneyType.EarningsDeposit).Any();
+                bool checkMoneyType = obligations.Where(x => (x.MoneyType.IsTransport ?? false) != true &&
+                                                        (x.MoneyType.IsEarning ?? false) != true).Any();
                 if (checkMoneyType == true)
                 {
-                    return (result: false, errorMessage: "Има задължения, които не са Възнаграждение или Транспортни разходи");
+                    return (result: false, errorMessage: "Има задължения, които не влизат в РКО");
                 }
 
                 bool hasNoActive = obligations.Where(x => x.IsActive == false).Any();
@@ -1746,9 +1807,6 @@ namespace IOWebApplication.Core.Services
                 expenseOrderNumberWhere = x => x.RegNumber.Contains(expenseOrderRegNumber);
 
             return repo.AllReadonly<ExpenseOrder>()
-                .Include(x => x.ExpenseOrderState)
-                .Include(x => x.ExpenseOrderObligations)
-                .ThenInclude(x => x.Obligation)
                 .Where(x => x.CourtId == courtId)
                 .Where(dateWhere)
                 .Where(nameWhere)
@@ -1761,7 +1819,8 @@ namespace IOWebApplication.Core.Services
                     IsActive = x.IsActive,
                     FullName = x.ExpenseOrderObligations.Select(o => o.Obligation.FullName).DefaultIfEmpty("").FirstOrDefault(),
                     Amount = x.ExpenseOrderObligations.Select(o => o.Obligation.Amount).DefaultIfEmpty(0).Sum(),
-                    ExpenseOrderStateName = x.ExpenseOrderState.Label
+                    ExpenseOrderStateName = x.ExpenseOrderState.Label,
+                    MoneyGroupName = x.ExpenseOrderObligations.Select(o => o.Obligation.MoneyType.MoneyGroup.Label).DefaultIfEmpty("").FirstOrDefault(),
                 }).AsQueryable();
         }
 
@@ -1849,7 +1908,8 @@ namespace IOWebApplication.Core.Services
                     Iban = x.Iban,
                     BIC = x.BIC,
                     BankName = x.BankName,
-                    ExpenseOrderStateId = x.ExpenseOrderStateId
+                    ExpenseOrderStateId = x.ExpenseOrderStateId,
+                    LawUnitSignId = x.LawUnitSignId ?? 0,
                 })
                 .FirstOrDefault();
         }
@@ -1884,6 +1944,40 @@ namespace IOWebApplication.Core.Services
                .OrderByDescending(x => x.Id)
                .FirstOrDefault();
 
+                if (result == null)
+                    result = new ExpenseOrder();
+
+                //Взима на съдия
+                var sessions = obligations
+                        .Where(x => x.CaseSessionId != null || x.CaseSessionActId != null)
+                        .Select(x => x.CaseSessionId ?? (x.CaseSessionAct.CaseSessionId))
+                        .Distinct().ToList();
+
+                var caseLawUnit = repo.AllReadonly<CaseLawUnit>()
+                                            .Include(x => x.CaseSession)
+                                            .Where(x => sessions.Contains(x.CaseSessionId ?? 0))
+                                            .Where(x => x.DateFrom <= x.CaseSession.DateFrom && (x.DateTo ?? x.CaseSession.DateFrom.AddDays(1)) >= x.CaseSession.DateFrom)
+                                            .Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                            .Select(x => x.LawUnitId)
+                                            .Distinct()
+                                            .ToList();
+
+                if (caseLawUnit.Count == 1)
+                {
+                    result.LawUnitSignId = caseLawUnit[0];
+                }
+                else if (caseLawUnit.Count > 1)
+                {
+                    var generalJudge = commonService.GetGeneralJudgeCourtLawUnit(obligations[0].CourtId);
+                    if (generalJudge != null)
+                    {
+                        result.LawUnitSignId = generalJudge.LawUnitId;
+                    }
+                }
+                else
+                {
+                    result.LawUnitSignId = 0;
+                }
             }
 
             return result;
@@ -2014,7 +2108,8 @@ namespace IOWebApplication.Core.Services
                                    .FirstOrDefault())
                               .Distinct().ToList();
             string personNames = string.Join(", ", persons);
-            string description = "Осъжда " + personNames + ":";
+            string paragraph = "<p style='text-align:justify;text-indent:36.0pt;'><span>";
+            string description = paragraph + "Осъжда " + personNames + ":" + "</span></p>";
             string payText = persons.Count > 1 ? "заплатят" : "заплати";
 
 
@@ -2022,7 +2117,7 @@ namespace IOWebApplication.Core.Services
             {
                 foreach (var item in obligations)
                 {
-                    description += "<p>";
+                    description += paragraph;
                     string receivetext = "";
                     var receiveObligation = item.ObligationReceives.FirstOrDefault();
                     if (receiveObligation != null)
@@ -2037,29 +2132,33 @@ namespace IOWebApplication.Core.Services
                     }
                     if ((item.MoneyType.NoMoney ?? false) == false)
                     {
-                        description += "- да " + payText + " сумата от " + item.Amount.ToString("0.00") + " лв. (словом: " +
-                         MoneyExtensions.MoneyToString(item.Amount) + " ), представляваща " + item.MoneyType.Label + " в полза на " + receivetext;
+                        decimal sumForPay = item.Amount - item.ObligationPayments.Where(x => x.IsActive).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+                        description += "- да " + payText + " сумата от " + sumForPay.ToString("0.00") + " лв. (словом: " +
+                         MoneyExtensions.MoneyToString(sumForPay) + " ), представляваща " + item.MoneyType.Label + " в полза на " + receivetext;
                     }
                     else
                     {
                         description += "- " + (item.Description ?? "");
                     }
+                    description += "</span></p>";
                 }
             }
             else
             {
                 foreach (var item in obligations)
                 {
-                    description += "<p>";
+                    description += paragraph;
                     if ((item.MoneyType.NoMoney ?? false) == false)
                     {
-                        description += "- да " + payText + " сумата от " + item.Amount.ToString("0.00") + " лв. (словом: " +
-                         MoneyExtensions.MoneyToString(item.Amount) + " ), представляваща " + item.MoneyType.Label;
+                        decimal sumForPay = item.Amount - item.ObligationPayments.Where(x => x.IsActive).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+                        description += "- да " + payText + " сумата от " + sumForPay.ToString("0.00") + " лв. (словом: " +
+                         MoneyExtensions.MoneyToString(sumForPay) + " ), представляваща " + item.MoneyType.Label;
                     }
                     else
                     {
                         description += "- " + (item.Description ?? "");
                     }
+                    description += "</span></p>";
                 }
             }
 
@@ -2082,6 +2181,7 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.ObligationReceives)
                 .Include(x => x.MoneyType)
                 .Include(x => x.UicType)
+                .Include(x => x.ObligationPayments)
                 .Where(x => idList.Contains(x.Id.ToString()))
                 .ToList();
 
@@ -2175,9 +2275,16 @@ namespace IOWebApplication.Core.Services
             }
 
             model.ExecListTypeId = execListTypes[0];
-            model.Content = FillExecListDescription(obligations, cases[0], model.ExecListTypeId);
             model.CaseGroupId = repo.AllReadonly<Case>().Where(x => x.Id == cases[0]).Select(x => x.CaseGroupId).FirstOrDefault();
-            var caseLawUnit = caseLawUnitService.GetJudgeReporter(cases[0]);
+
+            DateTime dateEnd = DateTime.Now.AddDays(1);
+            var caseLawUnit = repo.AllReadonly<CaseLawUnit>()
+                         .Where(x => x.CaseId == cases[0])
+                         .Where(x => x.CaseSessionId == null)
+                         .Where(x => (x.DateTo ?? dateEnd) >= DateTime.Now)
+                         .Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                         .FirstOrDefault();
+
             if (caseLawUnit != null)
                 model.LawUnitSignId = caseLawUnit.LawUnitId;
             return (result: true, errorMessage: "");
@@ -2205,22 +2312,22 @@ namespace IOWebApplication.Core.Services
                 saved.CourtId = obligations[0].CourtId;
                 saved.IsActive = true;
                 saved.ExecListTypeId = model.ExecListTypeId;
-                saved.Description = model.Content;
+                //Записвам го тук заради печата на някакви писма. Иначе целия ИЛ минава в tiny
+                saved.Description = FillExecListDescription(obligations, cases[0], model.ExecListTypeId);
                 saved.ExecListLawBaseId = model.ExecListLawBaseId;
                 saved.LawUnitSignId = model.LawUnitSignId;
+                saved.ExecListStateId = NomenclatureConstants.ExecListStates.Ready;
                 saved.UserId = userContext.UserId;
                 saved.DateWrt = DateTime.Now;
-
-                if (counterService.Counter_GetExecListCounter(saved) == false)
-                {
-                    return (result: false, errorMessage: "Проблем при взимане на брояч");
-                }
 
                 foreach (var item in obligations)
                 {
                     ExecListObligation itemAdd = new ExecListObligation();
                     itemAdd.ObligationId = item.Id;
                     itemAdd.ExecListId = saved.Id;
+                    //Сължимата сума към момента
+                    itemAdd.Amount = item.Amount - item.ObligationPayments
+                                 .Where(x => x.IsActive).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
                     saved.ExecListObligations.Add(itemAdd);
                 }
 
@@ -2249,7 +2356,7 @@ namespace IOWebApplication.Core.Services
             DateTime toDateNull = (model.DateTo == null ? DateTime.Now.AddYears(100) : (DateTime)model.DateTo).Date;
             Expression<Func<ExecList, bool>> dateWhere = x => true;
             if (model.DateFrom != null || model.DateTo != null)
-                dateWhere = x => x.RegDate.Date >= fromDateNull && x.RegDate.Date <= toDateNull;
+                dateWhere = x => (x.RegDate == null || (x.RegDate >= fromDateNull.ForceStartDate() && x.RegDate <= toDateNull.ForceEndDate()));
 
             Expression<Func<ExecList, bool>> nameWhere = x => true;
             if (!string.IsNullOrEmpty(model.FullName))
@@ -2292,17 +2399,23 @@ namespace IOWebApplication.Core.Services
                     RegNumber = x.RegNumber,
                     RegDate = x.RegDate,
                     IsActive = x.IsActive,
-                    FullName = string.Join("<br>", x.ExecListObligations.Select(o => o.Obligation.FullName).Distinct()),
+                    FullName = string.Join("<br>", x.ExecListObligations.Select(o => o.Obligation.FullName + " (" + (o.Obligation.Uic ?? "") + ")").Distinct()),
                     FullNameReceive = string.Join("<br>", x.ExecListObligations.Select(o => o.Obligation.ObligationReceives.Select(a => a.FullName).FirstOrDefault()).Distinct()),
-                    Amount = x.ExecListObligations.Select(o => o.Obligation.Amount).DefaultIfEmpty(0).Sum(),
+                    Amount = x.ExecListObligations.Select(o => o.Amount ?? 0).DefaultIfEmpty(0).Sum(),
                     ExecListTypeName = x.ExecListType.Label,
                     InstitutionNames = string.Join("<br>", x.OutDocument.DocumentPersons.Select(o => o.FullName).Distinct()),
                     ExchangeDocNumber = x.ExchangeDocExecLists
                                      .Where(a => a.ExchangeDoc.IsActive)
                                      .Select(a => a.ExchangeDoc.RegDate != null ? a.ExchangeDoc.RegNumber : "В проект")
                                      .FirstOrDefault(),
-                    CaseNumber = x.ExecListObligations.Select(o => o.Obligation.Case.RegNumber).FirstOrDefault(),
+                    ExchangeDocId = x.ExchangeDocExecLists
+                                     .Where(a => a.ExchangeDoc.IsActive)
+                                     .Select(a => a.ExchangeDocId)
+                                     .FirstOrDefault(),
+                    CaseNumber = x.ExecListObligations.Select(o => o.Obligation.Case.CaseGroup.Code + " " + o.Obligation.Case.RegNumber).FirstOrDefault(),
                     CaseId = x.ExecListObligations.Select(o => o.Obligation.CaseId).FirstOrDefault(),
+                    MoneyTypeName = string.Join("<br>", x.ExecListObligations.Select(o => o.Obligation.MoneyType.Label).Distinct()),
+                    StateName = x.ExecListState.Label,
                 }).AsQueryable();
         }
 
@@ -2357,13 +2470,14 @@ namespace IOWebApplication.Core.Services
                 }
 
                 model.ExecListLawBaseId = (model.ExecListLawBaseId ?? 0) <= 0 ? null : model.ExecListLawBaseId;
+                model.ExecListStateId = model.ExecListStateId.EmptyToNull();
 
                 saved.CaseNumber = model.CaseNumber;
                 saved.DeliveryDate = model.DeliveryDate;
                 saved.DeliveryPersonName = model.DeliveryPersonName;
-                saved.Description = model.Content;
                 saved.ExecListLawBaseId = model.ExecListLawBaseId;
                 saved.LawUnitSignId = model.LawUnitSignId;
+                saved.ExecListStateId = model.ExecListStateId;
 
                 saved.UserId = userContext.UserId;
                 saved.DateWrt = DateTime.Now;
@@ -2398,64 +2512,23 @@ namespace IOWebApplication.Core.Services
                     CaseNumber = x.CaseNumber,
                     RegNumber = x.RegNumber,
                     RegDate = x.RegDate,
-                    Content = x.Description,
                     ExecListLawBaseId = x.ExecListLawBaseId,
                     CaseGroupId = x.ExecListObligations.Select(a => a.Obligation.Case.CaseGroupId).FirstOrDefault(),
                     LawUnitSignId = x.LawUnitSignId ?? 0,
+                    ExecListStateId = x.ExecListStateId,
                 })
                 .FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Страни по дело за получател на задължение
-        /// </summary>
-        /// <param name="caseId"></param>
-        /// <returns></returns>
-        public List<SelectListItem> CountryReceive_SelectForDropDownList(int caseId)
-        {
-            List<SelectListItem> result = new List<SelectListItem>();
-
-            result = repo.AllReadonly<CaseMigration>()
-                .Where(x => x.InitialCaseId == caseId)
-                .Where(x=>x.SendToCourtId != userContext.CourtId)
-                .Where(x=>x.SendToCourtId != null)
-                                 .Select(x => new SelectListItem()
-                                 {
-                                     Value = SourceTypeSelectVM.CourtPrefix + x.SendToCourtId,
-                                     Text = x.SendToCourt.Label
-                                 }).ToList();
-
-            result.AddRange(repo.AllReadonly<CasePerson>()
-                .Where(x => x.CaseId == caseId && x.CaseSessionId == null && x.Person_SourceType == SourceTypeSelectVM.Instutution)
-                 .OrderBy(x => x.RowNumber)
-                                 .Select(x => new SelectListItem()
-                                 {
-                                     Value = SourceTypeSelectVM.GetSourceTypePrefix(x.Person_SourceType ?? 0) + x.Person_SourceId,
-                                     Text = x.FullName + "(" + (x.Uic ?? "") + ") - " + x.PersonRole.Label
-                                 }).ToList());
-
-            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "" });
-            result.Insert(1, new SelectListItem() { Text = userContext.CourtName, Value = SourceTypeSelectVM.CourtPrefix + userContext.CourtId });
-            int id = 2;
-            var vss = repo.AllReadonly<Institution>().Where(x => x.InstitutionTypeId == NomenclatureConstants.InstitutionTypes.Vss).ToList();
-            foreach (var item in vss)
-            {
-                result.Insert(id, new SelectListItem() { Text = item.FullName, Value = SourceTypeSelectVM.InstututionPrefix + item.Id });
-                id++;
-            }
-
-            return result;
-        }
+        }        
 
         /// <summary>
         ///  Извличане на данни за получател на сума
         /// </summary>
-        /// <param name="receiveId"></param>
+        /// <param name="sourceType"></param>
+        /// <param name="sourceId"></param>
         /// <returns></returns>
-        public ObligationReceive LastDataForReceive_Select(string receiveId)
+        public ObligationReceive LastDataForReceive_Select(int sourceType, long sourceId)
         {
             ObligationReceive result = null;
-            (int sourceType, long sourceId) = SourceTypeSelectVM.GetSourceTypeSourceId(receiveId);
             if (sourceType > 0 && sourceId > 0)
             {
                 result = repo.AllReadonly<ObligationReceive>()
@@ -2503,7 +2576,8 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<ExecList>()
                 .Where(x => x.IsActive == true)
-                .Where(x => x.ExecListObligations.Where(a => a.Obligation.CaseSessionAct.CaseId == caseId).Any())
+                .Where(x => x.ExecListObligations.Where(a => a.Obligation.CaseId == caseId).Any())
+                .Where(x => x.RegDate != null)
                 .Select(x => new ExecListVM()
                 {
                     Id = x.Id,
@@ -2512,6 +2586,26 @@ namespace IOWebApplication.Core.Services
                     ExecListTypeName = x.ExecListType.Label,
                     FullName = string.Join(",", x.ExecListObligations.Select(o => o.Obligation.FullName).Distinct()),
                     Amount = x.ExecListObligations.Select(o => o.Obligation.Amount).DefaultIfEmpty(0).Sum(),
+                }).AsQueryable();
+        }
+
+        /// <summary>
+        /// РКО за дело
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <returns></returns>
+        public IQueryable<ExpenseOrderVM> ExpenseOrderForCase_Select(int caseId)
+        {
+            return repo.AllReadonly<ExpenseOrder>()
+                .Where(x => x.IsActive == true)
+                .Where(x => x.ExpenseOrderObligations.Where(a => a.Obligation.CaseId == caseId).Any())
+                .Select(x => new ExpenseOrderVM()
+                {
+                    Id = x.Id,
+                    RegNumber = x.RegNumber,
+                    RegDate = x.RegDate,
+                    FullName = string.Join(",", x.ExpenseOrderObligations.Select(o => o.Obligation.FullName).Distinct()),
+                    Amount = x.ExpenseOrderObligations.Select(o => o.Obligation.Amount).DefaultIfEmpty(0).Sum(),
                 }).AsQueryable();
         }
 
@@ -2757,7 +2851,7 @@ namespace IOWebApplication.Core.Services
             DateTime toDateNull = (model.DateTo == null ? DateTime.Now.AddYears(100) : (DateTime)model.DateTo).Date;
             Expression<Func<ExecList, bool>> dateWhere = x => true;
             if (model.DateFrom != null || model.DateTo != null)
-                dateWhere = x => x.RegDate.Date >= fromDateNull && x.RegDate.Date <= toDateNull;
+                dateWhere = x => x.RegDate >= fromDateNull.ForceStartDate() && x.RegDate <= toDateNull.ForceEndDate();
 
             Expression<Func<ExecList, bool>> nameWhere = x => true;
             if (!string.IsNullOrEmpty(model.FullName))
@@ -2783,6 +2877,7 @@ namespace IOWebApplication.Core.Services
 
             return repo.AllReadonly<ExecList>()
                 .Where(x => x.CourtId == courtId && x.IsActive)
+                .Where(x => x.RegDate != null)
                 .Where(dateWhere)
                 .Where(nameWhere)
                 .Where(nameReceiveWhere)
@@ -2805,7 +2900,7 @@ namespace IOWebApplication.Core.Services
                     MoneyTypeName = string.Join(newLine, x.ExecListObligations.Select(a =>
                                     (a.Obligation.MoneyType.Label + " " + (a.Obligation.Description ?? "") + " " + (a.Obligation.MoneyFineType.Label ?? "")).Trim())
                                    .Distinct()),
-                    Amount = x.ExecListObligations.Select(o => o.Obligation.Amount).DefaultIfEmpty(0).Sum(),
+                    Amount = x.ExecListObligations.Select(o => o.Amount ?? 0).DefaultIfEmpty(0).Sum(),
                     FullName = string.Join("<br>", x.ExecListObligations.Select(o => o.Obligation.FullName).Distinct()),
                     FullNameReceive = string.Join("<br>", x.ExecListObligations.Select(o => o.Obligation.ObligationReceives.Select(a => a.FullName).FirstOrDefault()).Distinct()),
                     RegDate = x.RegDate,
@@ -2842,8 +2937,10 @@ namespace IOWebApplication.Core.Services
                     x => x.FullNameReceive,
                     x => x.RegDate,
                 },
-                NPOI.HSSF.Util.HSSFColor.Grey40Percent.Index,
-                NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index,
+                //NPOI.HSSF.Util.HSSFColor.Grey40Percent.Index,
+                //NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index,
+                NPOI.HSSF.Util.HSSFColor.White.Index,
+                NPOI.HSSF.Util.HSSFColor.White.Index,
                 NPOI.HSSF.Util.HSSFColor.White.Index
             );
             excelService.AddRow();
@@ -2905,6 +3002,25 @@ namespace IOWebApplication.Core.Services
                RegNumberExecList = x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecList.RegNumber).DefaultIfEmpty("").FirstOrDefault(),
                ExecListId = x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecListId).FirstOrDefault(),
            }).AsQueryable();
+        }
+
+        public SaveResultVM ExecListRegister(ExecList model)
+        {
+            if (model.RegDate != null)
+            {
+                return new SaveResultVM(true);
+            }
+
+            if (counterService.Counter_GetExecListCounter(model) == true)
+            {
+                repo.Update(model);
+                repo.SaveChanges();
+                return new SaveResultVM(true, null, "register");
+            }
+            else
+            {
+                return new SaveResultVM(false, "Проблем при регистриране на ИЛ.");
+            }
         }
     }
 }

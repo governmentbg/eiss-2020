@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -31,5 +28,21 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
 
         [Display(Name = "До дата анулиране")]
         public DateTime? DateExpiredTo { get; set; }
+
+        [Display(Name = "Населено място")]
+        public string CityCode { get; set; }
+
+        [Display(Name = "Квартал/ж.к.")]
+        public string ResidentionAreaCode { get; set; }
+
+        [Display(Name = "Улица")]
+        public string StreetCode { get; set; }
+        
+        [Display(Name = "Номер")]
+        public int? Number { get; set; }
+
+        [Display(Name = "Блок")]
+        public int? Block { get; set; }
+
     }
 }

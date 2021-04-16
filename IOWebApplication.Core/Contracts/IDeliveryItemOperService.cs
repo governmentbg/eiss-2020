@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Delivery;
+﻿using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -29,5 +26,6 @@ namespace IOWebApplication.Core.Contracts
         bool CanAdd(int deliveryItemId);
         DateTime? LastDateOper(int deliveryItemId);
         DateTime? GetRegDate(int deliveryItemId);
+        bool HaveSameOper(int deliveryItemId, int deliveryOperId);
     }
 }

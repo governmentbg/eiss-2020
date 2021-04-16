@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,18 +22,15 @@ namespace IOWebApplication.Controllers
     public class PdfController : BaseController
     {
         private readonly ILogger logger;
-        private readonly IIOSignToolsService signTools;
         private readonly ICdnService cdn;
         private readonly IConfiguration config;
 
         public PdfController(
             ILogger<PdfController> _logger,
-            IIOSignToolsService _signTools,
             ICdnService _cdn,
             IConfiguration _config)
         {
             logger = _logger;
-            signTools = _signTools;
             cdn = _cdn;
             config = _config;
         }
@@ -74,7 +68,7 @@ namespace IOWebApplication.Controllers
             try
             {
                 bool overrideSignEnabled = config.GetValue<bool>("Environment:GlobalAdmin:OverrideSign", false);
-                (byte[] resultFile, string EGN) = await signTools.EmbedPdfSignature(model.PdfId, model.Signature);
+                (byte[] resultFile, string EGN) = await cdn.SignTools.EmbedPdfSignature(model.PdfId, model.Signature);
 
                 if (!string.IsNullOrEmpty(model.SignerUic))
                 {
@@ -118,7 +112,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult CheckLSMErrorCode(int errorCode)
         {
-            var errorMessage = signTools.GetLSMErrorMessage(errorCode)?.Bg;
+            var errorMessage = cdn.SignTools.GetLSMErrorMessage(errorCode)?.Bg;
 
             return new JsonResult(new { errorCode, errorMessage });
         }

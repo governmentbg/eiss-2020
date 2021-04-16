@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -160,6 +157,7 @@ namespace IOWebApplication.Controllers
 
             ViewBag.CountriesDDL = nomService.GetCountries();
             ViewBag.AddressTypesDDL = nomService.GetDropDownList<AddressType>();
+            SetHelpFile(HelpFileValues.Nom9);
         }
 
         public IActionResult MigrateData(int courtId)
@@ -173,5 +171,21 @@ namespace IOWebApplication.Controllers
             var result = migrationDataService.MigrateForCourt(courtId);
             return Content(result);
         }
+        //public IActionResult md_lg()
+        //{
+        //    if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+        //    {
+        //        return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+        //    }
+
+        //    int[] caseGroups = { 2 };
+        //    var result = migrationDataService.MigrateLoadGroupLinkFromCourtType(8, 2, 6, 2, caseGroups);
+        //    return Content(result);
+        //}
+        //public IActionResult MigrateLawyers()
+        //{
+        //    var result = migrationDataService.MigrateLawyers();
+        //    return Content(result);
+        //}
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -29,6 +26,8 @@ namespace IOWebApplication.Controllers
         public IActionResult Index()
         {
             ViewBag.breadcrumbs = service.Breadcrumbs_ForCourtBankAccount().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom15);
+
             return View();
         }
 
@@ -49,6 +48,7 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.MoneyGroupId_ddl = nomService.GetDropDownList<MoneyGroup>();
             ViewBag.ComPortPos_ddl = service.COMPort();
+            SetHelpFile(HelpFileValues.Nom15);
         }
 
         /// <summary>
@@ -125,6 +125,7 @@ namespace IOWebApplication.Controllers
         public IActionResult PosDevice()
         {
             ViewBag.breadcrumbs = service.Breadcrumbs_ForCourtPosDevice().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom16);
             return View();
         }
 
@@ -152,6 +153,7 @@ namespace IOWebApplication.Controllers
         void SetViewBagPosDevice()
         {
             ViewBag.CourtBankAccountId_ddl = service.BankAccount_SelectDDL(userContext.CourtId, 0, true);
+            SetHelpFile(HelpFileValues.Nom16);
         }
 
         /// <summary>

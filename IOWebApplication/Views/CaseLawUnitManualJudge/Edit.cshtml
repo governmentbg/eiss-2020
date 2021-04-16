@@ -9,7 +9,7 @@
 @section breadcrumb{
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
-        <li><a href="@Url.Action("Index")">Регистър на замествания при обективна невъзможност</a></li>
+        <li><a href="@Url.Action("Index")">Регистър на добавени съдии при масов отвод</a></li>
     </ol>
 }
 
@@ -23,7 +23,7 @@
                 <fieldset class="is-fieldset">
                     <legend class="legend_1"> Основни данни</legend>
                     @Html.EditorFor(x => x.CaseId, "SelectCase", new { courtId = userContext.CourtId })
-                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
+                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
                     @Html.EditorFor(x => x.JudgeRoleId, "GenericDropDown")
                     @Html.EditorFor(x => x.DateFrom, "DateTimeDivided")
                     @Html.EditorFor(x => x.Description, "Textarea")

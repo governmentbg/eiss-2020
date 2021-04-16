@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplicationService.Infrastructure.Data.DW;
+﻿using IOWebApplicationService.Infrastructure.Data.DW;
 using IOWebApplicationService.Infrastructure.Data.DW.Models;
 using IOWebApplicationService.Infrastructure.Data.Models.Base;
 using System;

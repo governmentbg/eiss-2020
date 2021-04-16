@@ -44,6 +44,7 @@
                         @*<li class=""><a href="#tabNotification" data-toggle="tab"><i class="fa fa-bell"></i> Уведомления</a></li>*@
                         @*<li class=""><a href="#tabMoney" data-toggle="tab"><i class="fa fa-money"></i> Суми по дело</a></li>*@
                         <li class=""><a href="#tabEvidence" data-toggle="tab" data-filename="@HelpFileValues.CaseEvidence"><i class="fa fa-archive"></i> Доказателства</a></li>
+                        <li class=""><a href="#tabHronologia" data-toggle="tab"><i class="fa fa-line-chart"></i> Хронология</a></li>
                     </ul>
 
                     <div class="tab-content">
@@ -79,9 +80,10 @@
                                         </div>
 
                                         <div class="row">
-                                            <div class="col-lg-4">@Html.EditorFor(x => x.ShortNumber)</div>
-                                            <div class="col-lg-4">@Html.EditorFor(x => x.RegNumber)</div>
-                                            <div class="col-lg-4">@Html.EditorFor(x => x.RegDate)</div>
+                                            <div class="col-lg-3">@Html.EditorFor(x => x.ShortNumber)</div>
+                                            <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+                                            <div class="col-lg-3">@Html.EditorFor(x => x.RegDate)</div>
+                                            <div class="col-lg-3">@Html.EditorFor(x => x.CaseInforcedDate)</div>
                                         </div>
 
                                         <div class="row">
@@ -107,6 +109,10 @@
                                         </div>
 
                                         <div class="row">
+                                            <div class="col-lg-12">@Html.EditorFor(x => x.LastMigration)</div>
+                                        </div>
+
+                                        <div class="row">
                                             <div class="col-lg-6">@Html.EditorFor(x => x.CaseStateLabel)</div>
                                             <div class="col-lg-6">@Html.EditorFor(x => x.ProcessPriorityLabel)</div>
                                         </div>
@@ -118,7 +124,7 @@
                                         @if ((bool)ViewBag.isFastProcess)
                                         {
                                             <text>&nbsp;</text>
-                                            <a href="@Url.Action("Index", "CaseFastProcess")?caseId=@Model.Id" class="btn btn-def btn-sm" title="410"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Заповедни производства</span></a>
+                                            <a href="@Url.Action("Index", "CaseFastProcess")?caseId=@Model.Id" class="btn btn-def btn-sm" title="410"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Въведи данни в заповедта</span></a>
                                         }
                                         <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.Case, SourceId = Model.Id })" />
                                     </fieldset>
@@ -236,6 +242,9 @@
                             <partial name="../CaseEvidence/_CaseEvidence.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
                         </div>
 
+                        <div class="tab-pane" id="tabHronologia">
+                            <partial name="../Case/_CaseHronologia.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>
                     </div>
                 </div>
 
@@ -279,6 +288,8 @@
         $('#StorageYears').attr("disabled", true);
         $('#BookNumber').attr("disabled", true);
         $('#BookYear').attr("disabled", true);
+        $('#LastMigration').attr("disabled", true);
+        $('#CaseInforcedDate').attr("disabled", true);
 
         localStorage.removeItem('activeTabSession');
         $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {

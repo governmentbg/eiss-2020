@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper;
+﻿using AutoMapper;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Services;
 using IOWebApplication.Infrastructure.Contracts;

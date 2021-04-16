@@ -51,9 +51,9 @@
                     @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "" })
 
                     @*@if (Model.CaseSessionId == null)
-                        {
-                            @Html.EditorFor(x => x.IsInitialPerson)
-                        }*@
+        {
+            @Html.EditorFor(x => x.IsInitialPerson)
+        }*@
                     <div class="row">
                         <div class="col-md-6"> @Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
                         <div class="col-md-6">@Html.EditorFor(x => x.DateTo, "DateTimeDivided")</div>
@@ -88,6 +88,13 @@
                     {
                         @Html.EditorFor(x => x.MilitaryRangId, "GenericDropDown")
                     }
+
+                    <div>
+                        @{ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.RegixRequestReason); }
+
+                        <partial name="../RegixReport/_RegixRequestReason" model="@Model.RegixRequestReason" />
+                        @{ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty; }
+                    </div>
                 </div>
 
                 <div class="form-group">

@@ -12,39 +12,42 @@
         <li class="active">@ViewData["Title"]</li>
     </ol>
 }
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.DateFrom, "DateTime")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.DateTo, "DateTime")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.CaseYear, "DateTimeYear")
+        </div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.DocumentNumber)</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.CourtDepartmentOtdelenieId, "GenericDropDown")</div>
+    </div>
 
-<div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateTo, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.CaseYear, "DateTimeYear")
-    </div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = "all", lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
-</div>
-<div class="row">
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.DocumentNumber)</div>
-</div>
-<div class="row">
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
-</div>
-
-<div class="row">
-    <div class="col-md-6 text-left pb-15">
-        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
-            Филтриране
-            <i class="fa fa-search" title="Търсене"></i>
-        </button>
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
     </div>
 </div>
-
 @*<div class="row">
         <div class="col-md-12 text-right pb-15">
             <a asp-action="Add" class="btn btn-success">
@@ -98,11 +101,14 @@
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseStateId: $("#CaseStateId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
+                            CaseCodeId: $("#CaseCodeId").val(),
                             RegNumber: $("#RegNumber").val(),
                             CaseYear: $("#CaseYear").val(),
                             DocumentNumber: $("#DocumentNumber").val(),
                             JudgeReporterId: $("#JudgeReporterId").val(),
-                            CaseClassificationId: $("#CaseClassificationId").val()
+                            CaseClassificationId: $("#CaseClassificationId").val(),
+                            CourtDepartmentId: $("#CourtDepartmentId").val(),
+                            CourtDepartmentOtdelenieId: $("#CourtDepartmentOtdelenieId").val()
                         };
                     }
                 },
@@ -136,6 +142,13 @@
                         title: 'Точен вид',
                         sortable: true,
                         searchable: false
+                    },
+                    {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
                     },
                     {
                         name: 'caseCodeLabel',
@@ -188,5 +201,6 @@
 <script>
     $(function () {
         initLawUnit();
+        initCaseCode();
     });
 </script>

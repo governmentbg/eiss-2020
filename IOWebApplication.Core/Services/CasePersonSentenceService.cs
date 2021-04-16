@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -334,7 +331,8 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseCrimeVM> CaseCrime_Select(int CaseId)
         {
             var caseCrimes = repo.AllReadonly<CaseCrime>()
-                                 .Where(x => x.CaseId == CaseId)
+                                 .Where(x => x.CaseId == CaseId && 
+                                             x.DateExpired == null)
                                  .Select(x => new CaseCrimeVM()
                                  {
                                      Id = x.Id,
@@ -389,6 +387,18 @@ namespace IOWebApplication.Core.Services
                 }
                 else
                 {
+                    if (string.IsNullOrEmpty(model.EISSPNumber))
+                    {
+                        var caseModel = GetById<Case>(model.CaseId);
+                        if (eisppService.IsForEisppNum(caseModel))
+                        {
+                            if (string.IsNullOrEmpty(caseModel.EISSPNumber))
+                            {
+                                eisppService.MakeEisppNumberNP(caseModel);
+                            }
+                            eisppService.MakeEisppNumberPNE(model, caseModel.CourtId);
+                        }
+                    }
                     model.CrimeName = eisppService.GetByCode(model.CrimeCode).Label;
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
@@ -436,7 +446,7 @@ namespace IOWebApplication.Core.Services
                 .Where(x => x.CaseId == caseId && x.DateExpired == null)
                 .Select(x => new SelectListItem()
                 {
-                    Text = x.CrimeName,
+                    Text = (string.IsNullOrEmpty(x.EISSPNumber) ? string.Empty : x.EISSPNumber) + " " + (string.IsNullOrEmpty(x.CrimeName) ? string.Empty : x.CrimeName),
                     Value = x.Id.ToString()
                 }).ToList() ?? new List<SelectListItem>();
 
@@ -626,7 +636,8 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<CasePersonSentencePunishment>()
                 .Include(x => x.SentenceType)
-                .Where(x => x.CasePersonSentenceId == CasePersonSentenceId)
+                .Where(x => x.CasePersonSentenceId == CasePersonSentenceId && 
+                            x.DateExpired == null)
                 .Select(x => new CasePersonSentencePunishmentVM()
                 {
                     Id = x.Id,
@@ -635,7 +646,9 @@ namespace IOWebApplication.Core.Services
                     SentenceText = x.SentenceText,
                     SentenceTypeLabel = x.SentenceType.Label,
                     SentenseMoney = x.SentenseMoney,
-                    CasePersonSentenceId = x.CasePersonSentenceId
+                    CasePersonSentenceId = x.CasePersonSentenceId,
+                    IsMainPunishment = x.IsMainPunishment,
+                    IsMainPunishmentText = (x.IsMainPunishment) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No
                 })
                 .AsQueryable();
         }
@@ -658,7 +671,9 @@ namespace IOWebApplication.Core.Services
                            SentenceText = x.SentenceText,
                            SentenceTypeLabel = x.SentenceType.Label,
                            SentenseMoney = x.SentenseMoney,
-                           CasePersonSentenceId = x.CasePersonSentenceId
+                           CasePersonSentenceId = x.CasePersonSentenceId,
+                           IsMainPunishment = x.IsMainPunishment,
+                           IsMainPunishmentText = (x.IsMainPunishment) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No,
                        })
                        .FirstOrDefault();
         }
@@ -693,6 +708,7 @@ namespace IOWebApplication.Core.Services
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
                     saved.Description = model.Description;
+                    saved.IsMainPunishment = model.IsMainPunishment;
 
                     if (!(sentenceType.HasProbation ?? false))
                     {
@@ -747,7 +763,7 @@ namespace IOWebApplication.Core.Services
                 .Select(x => new CasePersonSentencePunishmentCrimeVM()
                 {
                     Id = x.Id,
-                    CaseCrimeLabel = x.CaseCrime.CrimeCode,
+                    CaseCrimeLabel = x.CaseCrime.CrimeName,
                     PersonRoleInCrimeLabel = x.PersonRoleInCrime.Label,
                     RecidiveTypeLabel = x.RecidiveType.Label
                 })
@@ -763,14 +779,31 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
+                var casePersonSentence = repo.AllReadonly<CasePersonSentencePunishment>()
+                                             .Where(x => x.Id == model.CasePersonSentencePunishmentId)
+                                             .Select(x => x.CasePersonSentence)
+                                             .FirstOrDefault();
+                var casePersonCrime = repo.AllReadonly<CasePersonCrime>()
+                                          .Where(x => x.CaseCrimeId == model.CaseCrimeId &&
+                                                      x.CaseCrimeId == casePersonSentence.CasePersonId &&
+                                                      x.DateExpired == null)
+                                          .FirstOrDefault();
                 if (model.Id > 0)
                 {
                     //Update
-                    var saved = repo.GetById<CasePersonSentencePunishmentCrime>(model.Id);
+                    var saved = repo.All<CasePersonSentencePunishmentCrime>()
+                                    .Where(x => x.Id ==  model.Id)
+                                    .FirstOrDefault();
                     saved.CasePersonSentencePunishmentId = model.CasePersonSentencePunishmentId;
                     saved.CaseCrimeId = model.CaseCrimeId;
                     saved.PersonRoleInCrimeId = model.PersonRoleInCrimeId;
                     saved.RecidiveTypeId = model.RecidiveTypeId;
+                    saved.SentenceTypeId = model.SentenceTypeId;
+                    saved.SentenseMoney = model.SentenseMoney;
+                    saved.SentenseDays = model.SentenseDays;
+                    saved.SentenseWeeks = model.SentenseWeeks;
+                    saved.SentenseMonths = model.SentenseMonths;
+                    saved.SentenseYears = model.SentenseYears;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     repo.Update(saved);
@@ -955,6 +988,23 @@ namespace IOWebApplication.Core.Services
                        .Where(x => x.IsActive == true)
                        .OrderByDescending(x => x.Id)
                        .FirstOrDefault();
+        }
+        public bool IsEISPPNumberExists(int caseId, string eisppNumber)
+        {
+            return repo.AllReadonly<CaseCrime>()
+                                .Where(x => x.CaseId == caseId && 
+                                            x.DateExpired == null &&
+                                            x.EISSPNumber == eisppNumber)
+                                .Any();
+        }
+
+        public bool IsExistMainPunishment(int CasePersonSentenceId, int? WithoutId)
+        {
+            return repo.AllReadonly<CasePersonSentencePunishment>()
+                       .Any(x => x.CasePersonSentenceId == CasePersonSentenceId &&
+                                 x.IsMainPunishment &&
+                                 x.DateExpired == null &&
+                                 (WithoutId != null ? x.Id != WithoutId : true));
         }
     }
 }

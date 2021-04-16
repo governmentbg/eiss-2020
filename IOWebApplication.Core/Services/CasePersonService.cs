@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -23,6 +20,7 @@ using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Data.Models;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 
 namespace IOWebApplication.Core.Services
 {
@@ -63,55 +61,81 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseSessionId"></param>
         /// <param name="checkSessionDate"></param>
         /// <param name="showExpired"></param>
+        /// <param name="setRowNumberFromCase">Ако е за заседание и е true да вземе rownumber от делото за този идентификатор</param>
         /// <returns></returns>
-        public IQueryable<CasePersonListVM> CasePerson_Select(int caseId, int? caseSessionId, bool checkSessionDate = false, bool showExpired = false)
+        public IQueryable<CasePersonListVM> CasePerson_Select(int caseId, int? caseSessionId, bool checkSessionDate, bool showExpired, bool setRowNumberFromCase)
         {
             DateTime dateEnd = DateTime.Now.AddYears(100);
             Expression<Func<CasePerson, bool>> checkDateWhere = x => true;
             if (checkSessionDate == true && (caseSessionId ?? 0) > 0)
                 checkDateWhere = x => ((x.DateTo ?? dateEnd) >= x.CaseSession.DateFrom);
 
-            return repo.AllReadonly<CasePerson>()
-                       .Include(x => x.Case)
-                       .ThenInclude(x => x.Document)
-                       .Include(x => x.Case)
-                       .ThenInclude(x => x.CaseType)
-                       .Include(x => x.PersonRole)
-                       .Include(x => x.CaseSession)
-                       .ThenInclude(x => x.SessionType)
-                       .Include(x => x.Addresses)
-                       .Include(x => x.UicType)
-                       .Where(x => x.CaseId == caseId &&
-                                   ((caseSessionId == null) ? true : (x.CaseSessionId ?? 0) == (caseSessionId ?? 0)))
-                       .Where(checkDateWhere)
-                       .Where(this.FilterExpireInfo<CasePerson>(showExpired))
-                       .Select(x => new CasePersonListVM()
-                       {
-                           Id = x.Id,
-                           CaseId = x.CaseId,
-                           CaseSessionId = x.CaseSessionId,
-                           Uic = x.Uic,
-                           UicTypeLabel = (x.UicType != null) ? x.UicType.Label : string.Empty,
-                           FullName = x.FullName,
-                           RoleName = x.PersonRole.Label,
-                           PersonRoleId = x.PersonRole.Id,
-                           PersonRoleLabel = x.PersonRole.Label,
-                           RoleKindId = x.PersonRole.RoleKindId,
-                           DateFrom = x.DateFrom,
-                           DateTo = x.DateTo,
-                           RowNumber = x.RowNumber,
-                           ForNotification = x.ForNotification,
-                           NotificationNumber = x.NotificationNumber,
-                           CaseSessionLabel = ((x.CaseSessionId != null) ? (x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy HH:mm")) : (string.Empty)),
-                           CasePersonIdentificator = x.CasePersonIdentificator,
-                           AddressString = (x.Addresses.Count > 0) ? ((x.Addresses.Any(a => ((a.ForNotification ?? false) == true)) ? x.Addresses.Where(c => c.ForNotification == true).FirstOrDefault().Address.FullAddress : x.Addresses.FirstOrDefault().Address.FullAddress)) : string.Empty,
-                           CurrentAddressString = (x.Addresses.Count > 0) ? x.Addresses.Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current).FirstOrDefault().Address.FullAddress : string.Empty,
-                           WorkAddressString = (x.Addresses.Count > 0) ? x.Addresses.Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work).FirstOrDefault().Address.FullAddress : string.Empty,
-                           IsViewPersonSentence = ((x.PersonRole.RoleKindId == NomenclatureConstants.RoleKind.RightSide) && (x.CaseSessionId == null) && (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo) && (x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.FirstInstance)),
-                           IsIndividual = ((x.UicTypeId == NomenclatureConstants.UicTypes.BirthDate || x.UicTypeId == NomenclatureConstants.UicTypes.EGN || x.UicTypeId == NomenclatureConstants.UicTypes.LNCh) && (x.CaseSessionId == null)),
-                           IsViewPersonInheritance = ((x.CaseSessionId == null) && (x.PersonRoleId == NomenclatureConstants.PersonRole.Inheritor) && ((x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.Request51LawInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestAcceptanceInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestRefusalInheritance))),
-                           IsArrested = x.IsArrested ?? false,
-                       }).OrderBy(x => x.RoleKindId).AsQueryable();
+            bool setRowNumber = false;
+            List<CasePerson> casePersons = null;
+            if (setRowNumberFromCase && (caseSessionId ?? 0) > 0)
+            {
+                setRowNumber = true;
+                casePersons = repo.AllReadonly<CasePerson>()
+                                .Where(x => x.CaseId == caseId && x.CaseSessionId == null)
+                                .ToList();
+            }
+
+            var casePersonLists = repo.AllReadonly<CasePerson>()
+                                       .Include(x => x.Case)
+                                       .ThenInclude(x => x.Document)
+                                       .Include(x => x.Case)
+                                       .ThenInclude(x => x.CaseType)
+                                       .Include(x => x.PersonRole)
+                                       .Include(x => x.CaseSession)
+                                       .ThenInclude(x => x.SessionType)
+                                       .Include(x => x.Addresses)
+                                       .Include(x => x.UicType)
+                                       .Where(x => x.CaseId == caseId &&
+                                                   ((caseSessionId == null) ? true : (x.CaseSessionId ?? 0) == (caseSessionId ?? 0)))
+                                       .Where(checkDateWhere)
+                                       .Where(this.FilterExpireInfo<CasePerson>(showExpired))
+                                       .Select(x => new CasePersonListVM()
+                                       {
+                                           Id = x.Id,
+                                           CaseId = x.CaseId,
+                                           CaseSessionId = x.CaseSessionId,
+                                           Uic = x.Uic,
+                                           UicTypeLabel = (x.UicType != null) ? x.UicType.Label : string.Empty,
+                                           FullName = x.FullName,
+                                           RoleName = x.PersonRole.Label,
+                                           PersonRoleId = x.PersonRole.Id,
+                                           PersonRoleLabel = x.PersonRole.Label,
+                                           RoleKindId = x.PersonRole.RoleKindId,
+                                           DateFrom = x.DateFrom,
+                                           DateTo = x.DateTo,
+                                           RowNumber = setRowNumber == false ? x.RowNumber :
+                                                       casePersons.Where(a => x.CasePersonIdentificator == a.CasePersonIdentificator)
+                                                       .Select(a => a.RowNumber)
+                                                       .FirstOrDefault(),
+                                           ForNotification = x.ForNotification,
+                                           NotificationNumber = x.NotificationNumber,
+                                           CaseSessionLabel = ((x.CaseSessionId != null) ? (x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy HH:mm")) : (string.Empty)),
+                                           CasePersonIdentificator = x.CasePersonIdentificator,
+                                           AddressString = (x.Addresses.Count > 0) ? ((x.Addresses.Any(a => ((a.ForNotification ?? false) == true)) ? x.Addresses.Where(c => c.ForNotification == true).FirstOrDefault().Address.FullAddress : x.Addresses.FirstOrDefault().Address.FullAddress)) : string.Empty,
+                                           CurrentAddressString = (x.Addresses.Count > 0) ? x.Addresses.Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Current).FirstOrDefault().Address.FullAddress : string.Empty,
+                                           WorkAddressString = (x.Addresses.Count > 0) ? x.Addresses.Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Work).FirstOrDefault().Address.FullAddress : string.Empty,
+                                           IsViewPersonSentence = ((x.PersonRole.RoleKindId == NomenclatureConstants.RoleKind.RightSide) && (x.CaseSessionId == null) && (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo) && ((x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.FirstInstance) || (x.Case.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.SecondInstance))),
+                                           IsIndividual = ((x.UicTypeId == NomenclatureConstants.UicTypes.BirthDate || x.UicTypeId == NomenclatureConstants.UicTypes.EGN || x.UicTypeId == NomenclatureConstants.UicTypes.LNCh) && (x.CaseSessionId == null)),
+                                           IsViewPersonInheritance = ((x.CaseSessionId == null) && (x.PersonRoleId == NomenclatureConstants.PersonRole.Inheritor) && ((x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.Request51LawInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestAcceptanceInheritance) || (x.Case.Document.DocumentTypeId == NomenclatureConstants.DocumentType.RequestRefusalInheritance))),
+                                           IsArrested = x.IsArrested ?? false,
+                                       }).OrderBy(x => x.RoleKindId).ToList();
+
+            foreach (var casePerson in casePersonLists)
+            {
+                var linkListVM = casePersonLinkService.GetLinkForPerson(casePerson.Id, false, 0, null);
+                casePerson.LinkForPersonString = string.Empty;
+                if (linkListVM != null)
+                {
+                    casePerson.LinkForPersonString = string.Join(", ", linkListVM.Select(x => x.Label));
+                }
+            }
+
+            return casePersonLists.OrderBy(x => x.RoleKindId).AsQueryable();
         }
 
         /// <summary>
@@ -140,7 +164,7 @@ namespace IOWebApplication.Core.Services
                 if (NomenclatureConstants.CaseTypes.CaseTypeArrested.Contains(caseData.CaseTypeId))
                 {
                     var isSideForArrested = repo.AllReadonly<PersonRoleGrouping>()
-                         .Where(x => x.PersonRoleId == model.PersonRoleId && 
+                         .Where(x => x.PersonRoleId == model.PersonRoleId &&
                          x.PersonRoleGroup == NomenclatureConstants.PersonRoleGroupings.RoleArrested).Any();
                     if (isSideForArrested == false)
                         model.IsArrested = false;
@@ -222,7 +246,7 @@ namespace IOWebApplication.Core.Services
                     }
                     else
                     {
-                        if ((model.Person_SourceType == SourceTypeSelectVM.Instutution || model.Person_SourceType == SourceTypeSelectVM.Court) 
+                        if ((model.Person_SourceType == SourceTypeSelectVM.Instutution || model.Person_SourceType == SourceTypeSelectVM.Court)
                             && (model.Person_SourceId ?? 0) > 0)
                         {
                             var instAddress = commonService.SelectEntity_SelectAddress(model.Person_SourceType ?? 0, model.Person_SourceId ?? 0);
@@ -303,6 +327,7 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.Address)
                 .Include(x => x.Address.AddressType)
                 .Where(x => x.CasePersonId == casePersonId)
+                .Where(FilterExpireInfo<CasePersonAddress>(false))
                 .Select(x => new CasePersonAddressListVM()
                 {
                     Id = x.Id,
@@ -413,7 +438,7 @@ namespace IOWebApplication.Core.Services
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePerson = CasePerson_Select(caseId, caseSessionId);
+            var casePerson = CasePerson_Select(caseId, caseSessionId, false, false, false);
 
             foreach (var person in casePerson)
                 checkListVMs.Add(new CheckListVM() { Checked = true, Value = person.Id.ToString(), Label = person.FullName + "(" + (person.Uic ?? "") + ") - " + person.RoleName });
@@ -431,7 +456,7 @@ namespace IOWebApplication.Core.Services
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePerson = CasePerson_Select(caseId, caseSessionId);
+            var casePerson = CasePerson_Select(caseId, caseSessionId, false, false, false);
             var casePersonRealSession = repo.AllReadonly<CasePerson>().Where(x => x.CaseId == caseId && x.CaseSessionId == realCaseSessionId).ToList();
             var caseSession = GetById<CaseSession>(realCaseSessionId);
 
@@ -494,7 +519,7 @@ namespace IOWebApplication.Core.Services
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePerson = CasePerson_Select(caseId, caseSessionId);
+            var casePerson = CasePerson_Select(caseId, caseSessionId, false, false, false);
 
             foreach (var person in casePerson)
                 checkListVMs.Add(new CheckListVM() { Checked = (person.ForNotification == true), Value = person.Id.ToString(), Label = person.FullName + "(" + (person.Uic ?? "") + ") - " + person.RoleName });
@@ -642,7 +667,7 @@ namespace IOWebApplication.Core.Services
             var result = repo.AllReadonly<CasePerson>()
                 .Include(x => x.PersonRole)
                 .Include(x => x.PersonRole.RoleKind)
-                .Where(x => x.CaseId == caseId && 
+                .Where(x => x.CaseId == caseId &&
                             (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) &&
                             x.DateExpired == null)
                 .Where(roleKindWhere)
@@ -660,7 +685,7 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-    
+
         /// <summary>
         /// Извличане на данни за лица по дело/заседание за комбобокс
         /// </summary>
@@ -675,11 +700,12 @@ namespace IOWebApplication.Core.Services
             int notificationListTypeId = NomenclatureConstants.NotificationType.ToListType(notificationTypeId);
             var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>()
                                                    .Where(x => x.CaseSessionId == caseSessionId &&
-                                                               x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson && 
+                                                               x.DateExpired == null &&
+                                                               x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson &&
                                                                (
                                                                     notificationListTypeId <= 0 ||
                                                                     x.NotificationListTypeId == notificationListTypeId ||
-                                                                    (x.NotificationListTypeId == null && notificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList) 
+                                                                    (x.NotificationListTypeId == null && notificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList)
                                                                )
                                                    )
                                                    .ToList();
@@ -688,7 +714,7 @@ namespace IOWebApplication.Core.Services
                                              x.CaseSessionId == null);
 
             var result = repo.AllReadonly<CasePerson>()
-                  .Where(x => x.CaseId == caseId && 
+                  .Where(x => x.CaseId == caseId &&
                            (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) &&
                            (x.CaseSessionId == null || casePersons.Any(p => p.CasePersonIdentificator == x.CasePersonIdentificator && p.DateExpired == null)) &&
                            (!filterPersonOnNotification || caseSessionNotificationLists.Any(l => l.CasePersonId == x.Id) || x.Id == casePersonId)
@@ -696,7 +722,7 @@ namespace IOWebApplication.Core.Services
                 .Select(x => new SelectListItem()
                 {
                     Text = x.FullName + " (" + x.PersonRole.Label + ")" +
-                           (caseSessionNotificationLists.Any(y => y.CasePersonId == x.Id) ? (" (Призован номер " + caseSessionNotificationLists.Where(y => y.CasePersonId == x.Id).FirstOrDefault().RowNumber + ")") : string.Empty) 
+                           (caseSessionNotificationLists.Any(y => y.CasePersonId == x.Id) ? (" (Призован номер " + caseSessionNotificationLists.Where(y => y.CasePersonId == x.Id).FirstOrDefault().RowNumber + ")") : string.Empty)
                           ,
                     Value = x.Id.ToString()
                 }).ToList() ?? new List<SelectListItem>();
@@ -734,7 +760,7 @@ namespace IOWebApplication.Core.Services
         public List<SelectListItem> GetDropDownList_RightSide(int caseId, int? caseSessionId, bool addDefaultElement = true, bool addAllElement = false)
         {
             var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>()
-                                                   .Where(x => x.CaseSessionId == caseSessionId && x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson).ToList();
+                                                   .Where(x => x.CaseSessionId == caseSessionId && x.DateExpired == null && x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson).ToList();
             var result = repo.All<CasePerson>()
                 .Include(x => x.PersonRole)
                 .Where(x => x.CaseId == caseId && (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) && (x.PersonRole.RoleKindId == NomenclatureConstants.PersonKinds.RightSide))
@@ -822,8 +848,19 @@ namespace IOWebApplication.Core.Services
         /// <param name="fullName"></param>
         /// <param name="caseRegnumber"></param>
         /// <returns></returns>
-        public IQueryable<CasePersonReportVM> CasePerson_SelectForReport(int courtId, string uic, string fullName, string caseRegnumber)
+        public IQueryable<CasePersonReportVM> CasePerson_SelectForReport(int courtId, string uic, string fullName, string caseRegnumber, DateTime? DateFrom, DateTime? DateTo, DateTime? FinalDateFrom, DateTime? FinalDateTo, DateTime? WithoutFinalDateTo)
         {
+            var resultFinish = repo.AllReadonly<SessionResultGrouping>()
+                                   .Where(x => x.SessionResultGroup == NomenclatureConstants.SessionResultGroupings.CaseWithoutFinalAct_Result)
+                                   .Select(x => x.SessionResultId)
+                                   .ToList();
+
+            DateFrom = NomenclatureExtensions.ForceStartDate(DateFrom);
+            DateTo = NomenclatureExtensions.ForceEndDate(DateTo);
+            FinalDateFrom = NomenclatureExtensions.ForceStartDate(FinalDateFrom);
+            FinalDateTo = NomenclatureExtensions.ForceEndDate(FinalDateTo);
+            WithoutFinalDateTo = NomenclatureExtensions.ForceEndDate(WithoutFinalDateTo);
+
             uic = uic?.ToLower();
             fullName = fullName?.ToLower();
             caseRegnumber = caseRegnumber?.ToLower();
@@ -840,26 +877,50 @@ namespace IOWebApplication.Core.Services
             if (!string.IsNullOrEmpty(caseRegnumber))
                 caseNumberSearch = x => x.Case.RegNumber.ToLower().EndsWith(caseRegnumber.ToShortCaseNumber());
 
+            Expression<Func<CasePerson, bool>> caseRegDateSearch = x => true;
+            if ((DateFrom != null) && (DateTo != null))
+                caseRegDateSearch = x => x.Case.RegDate >= DateFrom && x.Case.RegDate <= DateTo;
+
+            Expression<Func<CasePerson, bool>> withFinalActSearch = x => true;
+            if ((FinalDateFrom != null) && (FinalDateTo != null))
+                withFinalActSearch = x => ((x.Case.CaseSessions.Any(a => a.DateExpired == null &&
+                                                                         a.CaseSessionActs.Any(b => b.DateExpired == null &&
+                                                                                                    (b.ActDeclaredDate >= FinalDateFrom &&
+                                                                                                    b.ActDeclaredDate <= FinalDateTo) && b.IsFinalDoc &&
+                                                                                                    (b.ActStateId != NomenclatureConstants.SessionActState.Project && b.ActStateId != NomenclatureConstants.SessionActState.Registered) &&
+                                                                                                    b.CaseSession.CaseSessionResults.Any(r => r.DateExpired == null && resultFinish.Contains(r.SessionResultId))))));
+
+            Expression<Func<CasePerson, bool>> withoutFinalActSearch = x => true;
+            if (WithoutFinalDateTo != null)
+                withoutFinalActSearch = x => ((x.Case.RegDate <= WithoutFinalDateTo) && ((!x.Case.CaseSessions.Any(a => a.DateExpired == null &&
+                                                                                                                        a.CaseSessionActs.Any(b => b.DateExpired == null &&
+                                                                                                                                                   (b.ActDeclaredDate != null &&
+                                                                                                                                                   b.ActDeclaredDate <= WithoutFinalDateTo) && b.IsFinalDoc &&
+                                                                                                                                                   (b.ActStateId != NomenclatureConstants.SessionActState.Project && b.ActStateId != NomenclatureConstants.SessionActState.Registered) &&
+                                                                                                                                                   b.CaseSession.CaseSessionResults.Any(r => r.DateExpired == null && resultFinish.Contains(r.SessionResultId)))))));
 
             return repo.AllReadonly<CasePerson>()
-                .Include(x => x.PersonRole)
-                .Include(x => x.Case)
-                .Include(x => x.Case.CaseState)
-                .Where(x => x.Case.CourtId == courtId && x.CaseSessionId == null)
-                .Where(x => x.DateExpired == null)
-                .Where(uicSearch)
-                .Where(nameSearch)
-                .Where(caseNumberSearch)
-                .Select(x => new CasePersonReportVM()
-                {
-                    CaseId = x.CaseId,
-                    CaseNumber = x.Case.RegNumber,
-                    CaseDate = x.Case.RegDate,
-                    Uic = x.Uic,
-                    FullName = x.FullName,
-                    RoleName = x.PersonRole.Label,
-                    CaseStateLabel = x.Case.CaseState.Label
-                }).AsQueryable();
+                       .Include(x => x.PersonRole)
+                       .Include(x => x.Case)
+                       .Include(x => x.Case.CaseState)
+                       .Where(x => x.Case.CourtId == courtId && x.CaseSessionId == null)
+                       .Where(x => x.DateExpired == null)
+                       .Where(uicSearch)
+                       .Where(nameSearch)
+                       .Where(caseNumberSearch)
+                       .Where(caseRegDateSearch)
+                       .Where(withFinalActSearch)
+                       .Where(withoutFinalActSearch)
+                       .Select(x => new CasePersonReportVM()
+                       {
+                           CaseId = x.CaseId,
+                           CaseNumber = x.Case.RegNumber,
+                           CaseDate = x.Case.RegDate,
+                           Uic = x.Uic,
+                           FullName = x.FullName,
+                           RoleName = x.PersonRole.Label,
+                           CaseStateLabel = x.Case.CaseState.Label
+                       }).AsQueryable();
         }
 
         /// <summary>
@@ -867,15 +928,18 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId)
+        public List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId, int notificationDeliveryGroupId)
         {
+            bool addTel = notificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnPhone;
+            bool addMail = notificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.OnEMail;
+
             var result = repo.AllReadonly<CasePersonAddress>()
                 .Include(x => x.Address)
                 .Where(x => x.CasePersonId == casePersonId)
                 .Select(x => new SelectListItem()
                 {
                     Value = x.Id.ToString(),
-                    Text = ((x.ForNotification ?? false) ? " " : "") + x.Address.FullAddressNotification()
+                    Text = ((x.ForNotification ?? false) ? " " : "") + x.Address.FullAddressNotificationMailTel(addTel, addMail)
                 })
                 .ToList();
 
@@ -984,9 +1048,9 @@ namespace IOWebApplication.Core.Services
                 var casePersonCurrent = repo.AllReadonly<CasePerson>().Include(x => x.Addresses).ThenInclude(x => x.Address)
                                                          .Where(x => x.CaseId == caseId && x.CaseSessionId == caseSessionId).ToList();
                 var casePersonCase = repo.AllReadonly<CasePerson>().Include(x => x.Addresses).ThenInclude(x => x.Address)
-                                                         .Where(x => x.CaseId == caseId && x.CaseSessionId == null).ToList();
+                                                         .Where(x => x.CaseId == caseId && x.CaseSessionId == null && x.DateExpired == null).ToList();
 
-                var caseNotification = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == caseSessionId).ToList();
+                var caseNotification = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == caseSessionId && x.DateExpired == null).ToList();
 
                 foreach (var item in casePersonCurrent)
                 {
@@ -1030,7 +1094,7 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseSessionNotificationListVM> PersonListForPrint_Select(CheckListViewVM model)
         {
             List<CaseSessionNotificationListVM> result = new List<CaseSessionNotificationListVM>();
-            var casePersonLists = CasePerson_Select(model.CourtId, 0).ToList();
+            var casePersonLists = CasePerson_Select(model.CourtId, 0, false, false, false).ToList();
             int maxnum = 0;
 
             foreach (var item in casePersonLists.OrderBy(x => x.RoleKindId))
@@ -1041,6 +1105,8 @@ namespace IOWebApplication.Core.Services
                 {
                     if (check.Checked)
                     {
+                        var linkListVM = casePersonLinkService.GetLinkForPerson(item.Id, false, 0, null);
+
                         maxnum++;
                         var casePersonAddressLists = CasePersonAddress_Select(item.Id).ToList();
 
@@ -1053,7 +1119,8 @@ namespace IOWebApplication.Core.Services
                             PersonId = item.Id,
                             RowNumber = maxnum,
                             NotificationPersonType = 0,
-                            AddressString = ((casePersonAddressLists.Count > 0) ? ((casePersonAddressLists.Any(x => x.ForNotification == true)) ? (casePersonAddressLists.Where(x => x.ForNotification == true).FirstOrDefault().FullAddress) : (casePersonAddressLists.FirstOrDefault().FullAddress)) : string.Empty)
+                            AddressString = ((casePersonAddressLists.Count > 0) ? ((casePersonAddressLists.Any(x => x.ForNotification == true)) ? (casePersonAddressLists.Where(x => x.ForNotification == true).FirstOrDefault().FullAddress) : (casePersonAddressLists.FirstOrDefault().FullAddress)) : string.Empty),
+                            LinkForPersonString = (linkListVM != null) ? string.Join(", ", linkListVM.Select(x => x.Label)) : string.Empty
                         };
 
                         result.Add(caseSessionNotificationListVM);
@@ -1336,6 +1403,7 @@ namespace IOWebApplication.Core.Services
                 MeasureStatusDate = model.MeasureStatusDate,
                 BailAmount = model.BailAmount,
                 MeasureStatus = model.MeasureStatus,
+                DateExpired = model.DateExpired
             };
         }
 
@@ -1442,7 +1510,7 @@ namespace IOWebApplication.Core.Services
         public List<SelectListItem> GetForEispp(int caseId)
         {
             var result = repo.AllReadonly<CasePerson>()
-                             .Where(x => x.CaseId == caseId && 
+                             .Where(x => x.CaseId == caseId &&
                                          x.CaseSessionId == null &&
                                          x.PersonRole.RoleKindId == NomenclatureConstants.PersonKinds.RightSide)
                              .Select(x => new SelectListItem()
@@ -1477,10 +1545,10 @@ namespace IOWebApplication.Core.Services
         }
         public bool IsPersonDead(int casePersonId)
         {
-           var casePersonIdentificator = repo.AllReadonly<CasePerson>()
-                                             .Where(x => x.Id == casePersonId)
-                                             .Select(x => x.CasePersonIdentificator)
-                                             .FirstOrDefault();
+            var casePersonIdentificator = repo.AllReadonly<CasePerson>()
+                                              .Where(x => x.Id == casePersonId)
+                                              .Select(x => x.CasePersonIdentificator)
+                                              .FirstOrDefault();
             if (!string.IsNullOrEmpty(casePersonIdentificator))
             {
                 return repo.AllReadonly<CasePerson>()
@@ -1494,6 +1562,89 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
 
+        }
+
+        public bool CasePerson_SaveExpiredPlus(ExpiredInfoVM model)
+        {
+            try
+            {
+                var expireObject = repo.GetById<CasePerson>(model.Id);
+                model.DateExpired = DateTime.Now;
+
+                expireObject.DateExpired = model.DateExpired;
+                expireObject.UserExpiredId = userContext.UserId;
+                expireObject.DescriptionExpired = model.DescriptionExpired;
+                repo.Update(expireObject);
+
+                var casePeople = repo.AllReadonly<CasePerson>()
+                                     .Where(x => x.CasePersonIdentificator == expireObject.CasePersonIdentificator &&
+                                                 x.CaseSession.DateFrom >= model.DateExpired &&
+                                                 x.Id != model.Id)
+                                     .ToList();
+
+                foreach (var casePerson in casePeople)
+                {
+                    casePerson.DateExpired = model.DateExpired;
+                    casePerson.UserExpiredId = userContext.UserId;
+                    casePerson.DescriptionExpired = model.DescriptionExpired;
+                    repo.Update(casePerson);
+                }
+
+                var caseNotifications = repo.AllReadonly<CaseNotification>()
+                                            .Where(x => x.CasePerson.CasePersonIdentificator == expireObject.CasePersonIdentificator &&
+                                                        x.CaseSession.DateFrom >= model.DateExpired)
+                                            .ToList();
+
+                foreach (var caseNotification in caseNotifications)
+                {
+                    caseNotification.DateExpired = model.DateExpired;
+                    caseNotification.UserExpiredId = userContext.UserId;
+                    caseNotification.DescriptionExpired = model.DescriptionExpired;
+                    repo.Update(caseNotification);
+                }
+
+                repo.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при премахване на лице с Id={ model.Id }");
+                return false;
+            }
+        }
+
+        public List<SelectListItem> GetAddressByCasePerson_DropDown(int casePersonId)
+        {
+            var result = repo.AllReadonly<CasePersonAddress>()
+                .Where(x => x.CasePersonId == casePersonId)
+                .Select(x => new SelectListItem()
+                {
+                    Value = x.Id.ToString(),
+                    Text = x.Address.FullAddress
+                })
+                .OrderBy(x => x.Text)
+                .ToList();
+
+            result.Insert(0, new SelectListItem() { Text = "Изберете", Value = "-1" });
+
+            return result;
+        }
+
+        public SaveResultVM CasePersonAddress_IsUsed(CasePersonAddress model)
+        {
+            if (repo.AllReadonly<CaseNotification>()
+                            .Include(x => x.CasePersonAddress)
+                            .Select(x => x.CasePersonAddress)
+                            .Where(x => x != null)
+                            .Where(x => x.CasePersonAddressIdentificator == model.CasePersonAddressIdentificator).Any())
+            {
+                return new SaveResultVM(true, "Има изготвено уведомление. Не можете да деактивирате адреса!");
+            }
+            if (repo.AllReadonly<DocumentTemplate>().Where(x => x.CasePersonAddressId == model.Id).Any())
+            {
+                return new SaveResultVM(true, "За избрания адрес има издадени изходящи писма");
+            }
+            return new SaveResultVM(false);
         }
     }
 }

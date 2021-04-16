@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -36,6 +33,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
 
         [Column("date_end")]
         public DateTime? DateEnd { get; set; }
+        
+        [Column("date_wrt")]
+        public DateTime? DateWrt { get; set; }
 
         [ForeignKey(nameof(EisppTblCode))]
         public virtual EisppTbl EisppTbl { get; set; }

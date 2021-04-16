@@ -5,7 +5,7 @@
 @{
     if (Model.Id > 0)
     {
-        ViewData["Title"] = "Редакция на ооснование за извеждане от състав по дело";
+        ViewData["Title"] = "Преглед на основание за извеждане от състав по дело";
     }
     else
     {
@@ -14,6 +14,10 @@
 
     var caseId = @ViewBag.caseId;
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    if (Model.Id > 0)
+    {
+        access.CanChange = false;
+    }
 }
 
 @section breadcrumb{
@@ -66,12 +70,13 @@
                 @if (access.CanChange)
                 {
                     <input type="submit" value="Запис" class="btn btn-success" />
+                    <input type="submit" value="Преразпределение" class="btn btn-success" name="btnRedirectSelection" />
                 }
                 <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@caseId" class="btn btn-danger">Назад</a>
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
-                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "EditDismisal" })
                     </div>
                 }
             </div>

@@ -9,39 +9,53 @@
         <li class="active">@ViewData["Title"]</li>
     </ol>
 }
-<div class="row">
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.DateTo, "DateTime")
-    </div>
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DateFrom, "DateTime")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.DateTo, "DateTime")
+        </div>
 
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.TaskTypeId, "GenericDropDown")
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.TaskTypeId, "GenericDropDown")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.TaskStateId, "GenericDropDown")
+        </div>
     </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.TaskStateId, "GenericDropDown")
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.CreatedBy)
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12">
-        @Html.EditorFor(m => m.AssignedTo)
-    </div>
-    <div class="col-lg-6 col-md-12">
-        @Html.EditorFor(m => m.SourceDescription)
+    <div class="row">
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.CreatedBy, "SelectUser")
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12">
+            @Html.EditorFor(m => m.AssignedTo, "SelectUser")
+        </div>
+        <div class="col-lg-6 col-md-12">
+            @Html.EditorFor(m => m.SourceDescription)
+        </div>
     </div>
 </div>
 
 <div class="row">
     <div class="col-md-6 text-left pb-15">
-        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="loadData();" value="Филтриране" title="Филтриране">
             Филтриране
             <i class="fa fa-search" title="Търсене"></i>
         </button>
+    </div>
+    <div class="col-md-6">
+        <div class="pull-right">
+            <button type="button" class="btn btn-warning" onclick="manage('@Url.Action("ExpireTasks")','Отменяне на задачи');" title="Отменяне на задачи">
+                Отменяне
+                <i class="fa fa-trash" title="Отменяне"></i>
+            </button>
+            <button type="button" class="btn btn-warning" onclick="manage('@Url.Action("RerouteTasks")','Пренасочване на задачи');" title="Пренасочване на задачи">
+                Пренасочване
+                <i class="glyphicon glyphicon-random" title="Пренасочване"></i>
+            </button>
+        </div>
     </div>
 </div>
 <div class="row">
@@ -50,10 +64,20 @@
     </div>
 </div>
 
-@section scripts {
-    <script>
-        $(function () {
-            var table = $('#mainTable').DataTable({
+
+<script>
+    $(function () {
+        initUserAutoComplete();
+    });
+    function loadData() {
+        if (!checkFilterFormHasData('.filter-form')) {
+            swalOk('Въведете стойност в поне един филтър.', function () { });
+            return false;
+        }
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        } else {
+           var mainTable = $('#mainTable').DataTable({
                 ajax: {
                     "url": "@Url.Action("IndexAll_LoadData")",
                     "type": "POST",
@@ -72,6 +96,17 @@
                 },
                 filter:false,
                 columns: [
+                    {
+                        //name: 'checks',
+                        //data: null,
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-right noExport",
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateCheck', item);
+                        }
+                    },
                     {
                         name: 'taskTypeName',
                         data: 'taskTypeName',
@@ -113,13 +148,30 @@
                             return JsonBGdate(value);
                         }
                     },
-
                     {
                         name: 'taskStateName',
                         data: 'taskStateName',
                         title: 'Статус',
                         sortable: true,
                         searchable: true
+                    },
+
+                    {
+                        name: 'sourceDescription',
+                        data: 'sourceDescription',
+                        title: 'Относно',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+
+                        name: 'parentDescription',
+                        title: "Дело",
+                        sortable: true,
+                        searchable: true,
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateViewParent', item);
+                        }
                     },
                     {
                         name: 'actions',
@@ -135,22 +187,62 @@
                 ]
             });
 
-            table.order([1, 'desc']);
-            initUserAutoComplete();
-        });
-        function ViewTask(st, sid) {
+            mainTable.order([2, 'desc']);
+        }
+    }
+    function ViewTask(st, sid) {
             requestContent('@Url.Action("GetTaskObjectUrl")', { sourceType: st, sourceId: sid }, function (result) {
                 if (result) {
-                    document.location.href = result;
+                    let a = document.createElement('a');
+                    a.target = '_blank';
+                    a.href = result;
+                    a.click();
+                }
+            });
+    }
+    function ViewParent(st, sid) {
+            requestContent('@Url.Action("GetTaskParentObjectUrl")', { sourceType: st, sourceId: sid }, function (result) {
+                if (result) {
+                    let a = document.createElement('a');
+                    a.target = '_blank';
+                    a.href = result;
+                    a.click();
                 }
             });
         }
-    </script>
-    <script id="templateView" type="text/x-handlebars-template">
-        {{#if sourceDescription}}
-        {{sourceDescription}}
-        &nbsp;
-        {{/if}}
-        <a href="#" onclick="ViewTask({{sourceType}}, {{sourceId}}); return false;" class="btn btn-primary btn-sm" title="Преглед"><i class="fa fa-search"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
-    </script>
-}
+        function manage(manageUrl, title) {
+            let _data = {
+                taskIds: getTasksIds()
+            };
+            if (_data) {
+                requestContent(manageUrl, _data, function (html) {
+                    ShowModalDialog(title, html);
+                });
+            }
+        }
+        function getTasksIds() {
+            var result = '';
+            $('.task-check').each(function (i, e) {
+                if ($(e).is(':checked')) {
+                    result += ',' + $(e).data('id');
+                }
+            });
+            if (result.length > 0) {
+                return result.substr(1);
+            } else {
+                return undefined;
+            }
+        }
+</script>
+<script id="templateCheck" type="text/x-handlebars-template">
+    {{#if canCheckForManage}}
+    <input type="checkbox" class="task-check" data-id="{{id}}" />
+    {{/if}}
+</script>
+<script id="templateView" type="text/x-handlebars-template">
+    <a href="#" onclick="ViewTask({{sourceType}}, {{sourceId}}); return false;" class="btn btn-primary btn-sm" title="Преглед"><i class="fa fa-search"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+</script>
+<script id="templateViewParent" type="text/x-handlebars-template">
+    <a href="#" onclick="ViewParent({{sourceType}}, {{sourceId}}); return false;" title="Преглед дело">{{parentDescription}}</a>
+</script>
+

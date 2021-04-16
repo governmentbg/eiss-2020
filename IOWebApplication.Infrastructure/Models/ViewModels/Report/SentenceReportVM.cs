@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -37,7 +34,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Забележка")]
         public string Description { get; set; }
 
-        public DateTime? SentDate { get; set; }
+        public DateTime? ActDate { get; set; }
     }
 
     public class SentenceFilterReportVM
@@ -47,5 +44,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "До дата")]
         public DateTime? DateTo { get; set; }
+
+        [Display(Name = "Номер дело")]
+        public string NumberCase { get; set; }
     }
 }

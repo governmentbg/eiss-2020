@@ -44,10 +44,10 @@
                             <legend class="legend_1"> Основни данни</legend>
                             <div class="row">
                                 @*@if ((Model.IsAutoCreate ?? false) && (!Model.IsSessionProvedeno ?? false))
-                                {
-                                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided", new { disabledParam = "disabled" })</div>
-                                }
-                                else*@
+                                    {
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided", new { disabledParam = "disabled" })</div>
+                                    }
+                                    else*@
                                 <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
                                 <div class="col-lg-3">@Html.EditorFor(x => x.DateTo, "DateTimeOnlyTime")</div>
                             </div>
@@ -59,6 +59,13 @@
                             <div class="row">
                                 <div class="col-lg-6">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
                             </div>
+
+                            @if (Model.IsAutoCreate ?? false)
+                            {
+                                <div class="row">
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
+                                </div>
+                            }
 
                             <div class="row">
                                 <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>

@@ -83,13 +83,17 @@
                 </div>
             </div>
             <div class="form-group">
-                <input type="submit" value="Запис" class="btn btn-success" />
+                <input id="buttonSave" type="button" value="Запис" onclick="submitWithAlert()" class="btn btn-success" />
                 @await Html.PartialAsync("_ButtonClose")
                 @if (Model.Id > 0 && deliveryItemService.NotificationStateEnd().Contains(Model.NotificationStateId))
                 {
                     <a onclick="DeliveryItemEditReturn()" class="btn btn-def">Върнат отрязък</a>
                 }
+                <div class="pull-right">
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = $"{Model.DeliveryItemId}|NEW" })
+                </div>
             </div>
+        </div>
     </form>
 </div>
 <form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index", "DeliveryItemOper")" method="post">
@@ -149,7 +153,38 @@
                 $("label[for='" + $(el).attr("id") + "']").removeClass("io-req");
             }
         }
-
+        function submitWithAlert() {
+            $('#buttonSave').attr('disabled',  true);
+            let model = getFormData($('#formEdit'));
+            console.log(model);
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("CheckDeliveryDate")",
+                dataType: "json",
+                cache: false,
+                data: {
+                    model: model
+                },
+                success: function (response) {
+                    if (response == 'OK' || response == 'NOT_VALID') {
+                        $("#formEdit").submit();
+                        $('#buttonSave').attr('disabled', false);
+                    } else {
+                        swalConfirm(response, function () {
+                            $("#formEdit").submit();
+                        },
+                        function() {
+                            $('#buttonSave').attr('disabled', false);
+                        });
+                    }
+                },
+                error: log_ajax_err,
+                done: function () {
+                    $('#buttonSave').attr('disabled', false);
+                }
+            });
+            
+        };
     </script>
 }
 

@@ -1,6 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
+﻿using IO.SignTools.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using System;
 using System.Collections.Generic;
@@ -10,12 +8,14 @@ using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Contracts
 {
-    public interface ICdnService
+    public interface ICdnService 
     {
+        IIOSignToolsService SignTools { get; }
+        Task<CdnDownloadResult> MongoCdn_Download(long mongoFileId, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None);
+        Task<CdnDownloadResult> MongoCdn_Download(string fileId, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None);
+        Task<CdnDownloadResult> MongoCdn_Download(CdnFileSelect request, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None);
         Task<CdnUploadResult> MongoCdn_UploadFile(CdnUploadRequest request);
-        Task<CdnDownloadResult> MongoCdn_Download(long mongoFileId);
-        Task<CdnDownloadResult> MongoCdn_Download(string fileId);
-        Task<CdnDownloadResult> MongoCdn_Download(CdnFileSelect request);
+
         Task<bool> MongoCdn_DeleteFile(string id);
         Task<bool> MongoCdn_DeleteFiles(CdnFileSelect request);
 

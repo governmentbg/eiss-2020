@@ -1,37 +1,33 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Models;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Audit;
-using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.AuditLog;
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
+using System.Linq.Expressions;
 
 namespace IOWebApplication.Core.Services
 {
-    public class AuditLogService: BaseService, IAuditLogService
+    public class AuditLogService : BaseService, IAuditLogService
     {
+        private readonly IConfiguration config;
         public AuditLogService(IRepository _repo,
-                               IUserContext _userContext)
+                               IUserContext _userContext,
+                               IConfiguration _config)
         {
             repo = _repo;
             userContext = _userContext;
+            config = _config;
         }
 
         public IQueryable<AuditLogSprVM> AuditLog_Select(DateTime DateFrom, DateTime DateTo, string RegNumber, string Operation, string UserId, int courtId)
@@ -64,6 +60,7 @@ namespace IOWebApplication.Core.Services
                         CourtId = auditLogVM.currentContext.CourtId
                     });
                 });
+
 
             return auditLogSprVMs
                 .GroupBy(k => new { k.UserId, k.Date.Date, k.Date.Hour, k.Date.Minute, k.Date.Second, k.Operation, k.BaseObject })
@@ -108,6 +105,65 @@ namespace IOWebApplication.Core.Services
             }
 
             return result;
+        }
+
+        public IQueryable<AuditLogSprVM> AuditLog_SelectNew(DateTime DateFrom, DateTime DateTo, string RegNumber, string Operation, string UserId, int courtId)
+        {
+            if (Operation == "-1")
+            {
+                Operation = null;
+            }
+            Expression<Func<AuditLog, bool>> whereRegNumber = x => true;
+            if (!string.IsNullOrEmpty(RegNumber))
+            {
+                whereRegNumber = x => EF.Functions.ILike(x.BaseObject, RegNumber.ToPaternSearch());
+            }
+            return repo.AllReadonly<AuditLog>()
+                             .Include(x => x.ApplicationUser)
+                             .ThenInclude(x => x.LawUnit)
+                             .Where(x => x.CourtId == courtId)
+                             .Where(x => x.InsertedDate >= DateFrom && x.InsertedDate <= DateTo)
+                             .Where(x => x.UserId == (UserId ?? x.UserId))
+                             .Where(x => x.Operation == (Operation ?? x.Operation))
+                             .Where(x => (x.FullName ?? "") != "JsonResult")
+                             .Where(whereRegNumber)
+                             .Select(x => new AuditLogSprVM
+                             {
+                                 Date = x.InsertedDate,
+                                 Operation = x.Operation,
+                                 ObjectType = x.ObjectType,
+                                 ObjectInfo = x.ObjectInfo,
+                                 BaseObject = x.BaseObject,
+                                 //UserName = x.RequestUrl,
+                                 UserName = (x.ApplicationUser != null) ? x.ApplicationUser.LawUnit.FullName : "",
+                                 RequestUrl = x.RequestUrl,
+                                 UserId = x.UserId,
+                                 CourtId = x.CourtId
+                             }).AsQueryable();
+        }
+
+        public bool SaveLog(AuditLog model)
+        {
+            try
+            {
+                //Гърми ако се използва repo от DI тук, понеже контролера се disposе-ва 
+                var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+                optionsBuilder.UseNpgsql(config.GetConnectionString("DefaultConnection"));
+
+                using (var dbContext = new ApplicationDbContext(optionsBuilder.Options))
+                {
+                    using (var _repo = new Repository(dbContext))
+                    {
+                        model.CourtId = model.CourtId.EmptyToNull(0).EmptyToNull(-1);
+                        model.UserId = model.UserId.EmptyToNull();
+                        _repo.Add(model);
+                        _repo.SaveChanges();
+                        return model.Id > 0;
+                    }
+                }
+
+            }
+            catch { return false; }
         }
     }
 }

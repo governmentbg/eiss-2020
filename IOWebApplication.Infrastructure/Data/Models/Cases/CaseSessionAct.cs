@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
@@ -87,6 +84,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(DepersonalizeUserId))]
         public virtual ApplicationUser DepersonalizeUser { get; set; }
+
+        [ForeignKey(nameof(SignJudgeLawUnitId))]
+        public virtual LawUnit SignJudgeLawUnit { get; set; }
 
         public CaseSessionAct()
         {
@@ -190,7 +190,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         /// <summary>
         /// Дата на обявяване на акта: подписване от последния съдия
         /// </summary>
-        [Display(Name = "Дата на обявяване на акта")]
+        [Display(Name = "Дата на постановяване")]
         [Column("act_declared_date")]
         public DateTime? ActDeclaredDate { get; set; }
 
@@ -291,5 +291,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         /// </summary>
         [Column("depersonalize_end_date")]
         public DateTime? DepersonalizeEndDate { get; set; }
+
+        /// <summary>
+        /// Съдия, подписващ изпълнителен лист
+        /// </summary>
+        [Display(Name = "Съдия")]
+        [Column("sign_judge_lawunit_id")]
+        public int? SignJudgeLawUnitId { get; set; }
     }
 }

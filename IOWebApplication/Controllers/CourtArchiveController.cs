@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,6 +34,7 @@ namespace IOWebApplication.Controllers
         public IActionResult ArchiveCommittee()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveCommittee().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom12);
             return View();
         }
 
@@ -59,6 +57,8 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveCommitteeEdit(id).DeleteOrDisableLast();
             else
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveCommitteeAdd().DeleteOrDisableLast();
+
+            SetHelpFile(HelpFileValues.Nom12);
         }
 
         /// <summary>
@@ -157,6 +157,7 @@ namespace IOWebApplication.Controllers
         public IActionResult ArchiveIndex()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveIndex().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom13);
             return View();
         }
 
@@ -179,6 +180,8 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveIndexEdit(id).DeleteOrDisableLast();
             else
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveIndexAdd().DeleteOrDisableLast();
+
+            SetHelpFile(HelpFileValues.Nom13);
         }
 
         public void SetViewBagArchiveIndex()

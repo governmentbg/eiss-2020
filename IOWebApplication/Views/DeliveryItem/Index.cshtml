@@ -204,6 +204,18 @@
                     searchable: true
                 },
                 {
+                    name: 'deliveryDate',
+                    data: 'deliveryDate',
+                    title: 'На дата',
+                    sortable: true,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
+                    }
+                },
+                {
                     name: 'actions',
                     data: "id",
                     title: "",
@@ -308,7 +320,39 @@
         });
         if ($('#NoAutoLoad').val() != 'Y')
             LoadDeliveryItems();
+        if ("@Model.FilterType" == "@NomenclatureConstants.DeliveryItemFilterType.ToOther") {
+            $.fn.dataTable.ext.buttons.io_excel.title = function () {
+                return makeFilterData()
+            };
+        }
     });
+    function makeFilterData() {
+        var filterMsg = "Призовки/съобщения изпратени за разнасяне в друг съд ";
+        var dateFrom = "";
+        var dateTo = "";
+        var filterData = JSON.parse($('#filterJson').val());
+
+        if (filterData.CourtId != null && filterData.CourtId != -1)
+            filterMsg += ' - ' + $('#CourtId  option:selected').text();
+        if ((filterData.DateAcceptedFrom !== null) && (filterData.DateAcceptedFrom !== "")) {
+            dateFrom = filterData.DateAcceptedFrom.toString();
+        }
+        if (filterData.DateAcceptedTo !== null && filterData.DateAcceptedTo !== "") {
+            dateTo = filterData.DateAcceptedTo.toString();
+        }
+        if (dateTo === dateFrom && dateTo != "") {
+            filterMsg += " за дата на приемане: " + dateTo
+        } else {
+            if (dateFrom != "" || dateTo != "") {
+                filterMsg += " за период на приемане ";
+                if (dateFrom !== "")
+                    filterMsg += " от " + dateFrom;
+                if (dateTo !== "")
+                    filterMsg += " до " + dateTo;
+            }
+        }
+        return filterMsg;
+    }
 </script>
 
 <script id="templateEdit" type="text/x-handlebars-template">

@@ -21,6 +21,12 @@
     }
     <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
     <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    @if (NomenclatureConstants.LawUnitTypes.LocalViewOnly.Contains(lawUnitType.Id))
+    {
+        <div class="col-lg-4" style="text-align:right;">
+            @Html.EditorFor(m => m.ShowFree, "Boolean")
+        </div>
+    }
 </div>
 
 <div class="row">
@@ -68,6 +74,7 @@
                         d.toDate = $("#DateTo").val();
                         d.fullName = $("#FullName").val();
                         d.specialityId = $("#SpecialityId").val();
+                        d.showFree = $("#ShowFree").is(':checked');
                     }
                 },
                 filter:false,

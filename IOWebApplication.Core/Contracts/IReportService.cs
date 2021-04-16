@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Report;
 using System;
 using System.Collections.Generic;
@@ -44,7 +41,7 @@ namespace IOWebApplication.Core.Contracts
         byte[] FineReportToExcelOne(FineFilterReportVM model);
         byte[] StateFeeReportExportExcel(StateFeeFilterReportVM model);
         byte[] PaymentPosReportToExcelOne(PaymentPosFilterReportVM model);
-        byte[] CourtStatsReport();
+        byte[] CourtStatsReport(DateTime? date);
         IQueryable<CaseArchiveListReportVM> CaseArchiveListReport_Select(int courtId, CaseArchiveListFilterReportVM model);
         IQueryable<DocumentOutListReportVM> DocumentOutListReport_Select(int courtId, DocumentOutListFilterReportVM model, string newLine);
         IQueryable<PosDeviceReportVM> PosDeviceReport_Select(int courtId, PosDeviceFilterReportVM model);

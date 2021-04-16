@@ -27,6 +27,16 @@
 			font-family: Calibri;
 			panose-1: 2 15 5 2 2 2 4 3 2 4;
 		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
 		/* Style Definitions */
 		p.MsoNormal, li.MsoNormal, div.MsoNormal {
 			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
@@ -58,24 +68,6 @@
 			font-weight: normal;
 		}
 
-		h4 {
-			mso-style-link: "Heading 4 Char";
-			margin-top: 2.0pt;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 0cm;
-			margin-bottom: .0001pt;
-			text-align: justify;
-			text-indent: 35.45pt;
-			line-height: 115%;
-			page-break-after: avoid;
-			font-size: 12.0pt;
-			font-family: "Calibri Light",sans-serif;
-			color: #2E74B5;
-			font-weight: normal;
-			font-style: italic;
-		}
-
 		p.MsoCaption, li.MsoCaption, div.MsoCaption {
 			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
 			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
@@ -91,13 +83,72 @@
 			font-family: "Times New Roman",serif;
 		}
 
-		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
-			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
-			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+		p.MsoListBullet, li.MsoListBullet, div.MsoListBullet {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpFirst, li.MsoListBulletCxSpFirst, div.MsoListBulletCxSpFirst {
 			margin-top: 0cm;
 			margin-right: 0cm;
 			margin-bottom: 0cm;
-			margin-left: 36.0pt;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpMiddle, li.MsoListBulletCxSpMiddle, div.MsoListBulletCxSpMiddle {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 18.0pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpLast, li.MsoListBulletCxSpLast, div.MsoListBulletCxSpLast {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 18.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
 			text-indent: -18.0pt;
@@ -108,11 +159,10 @@
 
 		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
 			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
-			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
 			margin-top: 0cm;
 			margin-right: 0cm;
 			margin-bottom: 0cm;
-			margin-left: 36.0pt;
+			margin-left: 81.85pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
 			text-indent: -18.0pt;
@@ -123,11 +173,10 @@
 
 		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
 			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
-			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
 			margin-top: 0cm;
 			margin-right: 0cm;
 			margin-bottom: 0cm;
-			margin-left: 36.0pt;
+			margin-left: 81.85pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
 			text-indent: -18.0pt;
@@ -138,11 +187,10 @@
 
 		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
 			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
-			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
 			margin-top: 0cm;
 			margin-right: 0cm;
 			margin-bottom: 0cm;
-			margin-left: 36.0pt;
+			margin-left: 81.85pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
 			text-indent: -18.0pt;
@@ -158,9 +206,57 @@
 			color: #2E74B5;
 		}
 
-		span.ListParagraphChar {
-			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
-			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+		p.EISSBullet, li.EISSBullet, div.EISSBullet {
+			mso-style-name: "EISS Bullet";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 53.4pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpFirst, li.EISSBulletCxSpFirst, div.EISSBulletCxSpFirst {
+			mso-style-name: "EISS BulletCxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 53.4pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpMiddle, li.EISSBulletCxSpMiddle, div.EISSBulletCxSpMiddle {
+			mso-style-name: "EISS BulletCxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 53.4pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpLast, li.EISSBulletCxSpLast, div.EISSBulletCxSpLast {
+			mso-style-name: "EISS BulletCxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 53.4pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
 		}
 
@@ -236,28 +332,61 @@
 			font-family: "Times New Roman",serif;
 		}
 
-		p.Style4, li.Style4, div.Style4 {
-			mso-style-name: Style4;
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 3.0pt;
-			margin-left: 108.0pt;
-			text-align: justify;
-			text-indent: -18.0pt;
-			line-height: 150%;
-			font-size: 12.0pt;
-			font-family: "Times New Roman",serif;
-		}
-
 		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
 			mso-style-name: "EISS Style5 ЕИСС";
 			mso-style-link: "EISS Style5 ЕИСС Char";
 			margin-top: 0cm;
 			margin-right: 0cm;
-			margin-bottom: 3.0pt;
-			margin-left: 74.55pt;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: 0cm;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
+			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
+			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
+			mso-style-name: "EISS Style5 ЕИССCxSpLast";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 88.8pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
 			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
@@ -269,27 +398,10 @@
 			font-family: "Times New Roman",serif;
 		}
 
-		p.Heading4IO, li.Heading4IO, div.Heading4IO {
-			mso-style-name: "Heading 4 IO";
-			margin-top: 2.0pt;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 0cm;
-			margin-bottom: .0001pt;
-			text-align: justify;
-			text-indent: 35.4pt;
-			line-height: 150%;
-			page-break-after: avoid;
-			font-size: 12.0pt;
-			font-family: "Times New Roman",serif;
-		}
-
-		span.Heading4Char {
-			mso-style-name: "Heading 4 Char";
-			mso-style-link: "Heading 4";
-			font-family: "Calibri Light",sans-serif;
-			color: #2E74B5;
-			font-style: italic;
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
 		}
 
 		.MsoChpDefault {
@@ -302,7 +414,7 @@
 		}
 
 		@page WordSection1 {
-			size: 612.0pt 792.0pt;
+			size: 595.3pt 841.9pt;
 			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
 		}
 
@@ -322,129 +434,146 @@
 
 </head>
 
-<body lang=EN-US>
+<body lang=BG>
 
 	<div class=WordSection1>
 
 		<h1 style='margin-left:53.45pt;text-indent:-18.0pt'>
-			<a name="_Toc42527863"></a><a name="_Toc39426241">
-				<span lang=BG>
-					1.<span style='font:7.0pt "Times New Roman"'>
-						&nbsp;&nbsp;&nbsp;
-					</span>
-				</span><span lang=BG>ПЕРСОНАЛИЗИРАН ЕКРАН</span>
+			<a name="_Toc55136931"></a><a name="_Toc39426241">
+				1.<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;
+				</span>ПЕРСОНАЛИЗИРАН ЕКРАН
 			</a>
 		</h1>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				След успешен вход, в системата се визуализира
-				Персонализиран екран на потребителя спрямо ролята и правата му за достъп.
-			</span>
+			След успешен вход, в системата се визуализира Персонализиран
+			екран на потребителя спрямо ролята и правата му за достъп.
 		</p>
 
-		<p class=MsoNormal style='text-indent:0cm'>
-			<img width=604 height=273
-				 id="Picture 4" src="dashboard_files/image001.jpg" alt="начален екран">
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=604 height=291 id="Picture 142254" src="dashboard_files/image001.png">
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				Бърз достъп до този Персонализиран екран се
-				осъществява от всеки друг екран в системата чрез клик върху името на системата
-				„ЕИСС“ в левия край на лентата с меню и инструменти.
-			</span>
+			Бърз достъп до този Персонализиран екран се осъществява от
+			всеки друг екран в системата чрез клик върху името на системата „ЕИСС“ в левия
+			край на лентата с меню и инструменти.
 		</p>
 
-		<p class=MsoNormal><span lang=BG>Панел Календар на моите събития:</span></p>
-
-		<p class=MsoCaption style='text-indent:0cm'>
-			<img width=466 height=411
-				 id="Picture 4480" src="dashboard_files/image002.jpg">
-		</p>
-
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
-21.6pt;line-height:150%'>
-			<span lang=BG style='line-height:150%'>
-				В Календара се
-				визуализират насрочени съдебни заседания за дела, до които има достъп
-				потребителя, задачи с краен срок за изпълнение от конкретен потребител.
-			</span>
-		</p>
-
-		<p class=ListParagraph2CxSpFirst style='margin-left:36.0pt'>
-			<span lang=BG
-				  style='font-family:Symbol'>
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
 				·<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				</span>
-			</span><span lang=BG>Панел Моите задачи:</span>
+			</span>Панел Новини:
 		</p>
 
-		<p class=ListParagraph2CxSpLast align=center style='margin-left:0cm;text-align:
-center;text-indent:0cm'>
-			<img width=605 height=290 id="Picture 141785"
-				 src="dashboard_files/image003.jpg">
+		<p class=MsoNormal align=center style='text-align:center'>
+			<img width=440
+				 height=59 id="Picture 142255" src="dashboard_files/image002.jpg">
 		</p>
 
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
-21.6pt;line-height:150%'>
-			<span lang=BG style='line-height:150%'>
-				Моите задачи
-				съдържат информация за последните насочени задачи за изпълнение от потребител.
-			</span>
+		<p class=MsoNormal>
+			В панел Новини се визуализират непрочетените от потребителя
+			новини. Заглавието на панела <img width=68 height=26 id="Picture 142257"
+											  src="dashboard_files/image003.jpg"> представлява хиперлинк към списъчен екран с
+			всички новини публикувани в ЕИСС. Заглавието на новината представлява хиперлинк
+			към пълното съдържание на новината, което се отваря в нов подпрозорец:
 		</p>
 
-		<p class=MsoListParagraph>
-			<span lang=BG style='font-family:Symbol'>
+		<p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;text-indent:21.6pt;line-height:150%'>
+			<img width=401
+				 height=105 id="Picture 142256" src="dashboard_files/image004.jpg">
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
 				·<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				</span>
-			</span><span lang=BG>Панел Дела към мен:</span>
+			</span>Панел Календар на моите събития:
 		</p>
 
 		<p class=MsoCaption style='text-indent:0cm'>
-			<img width=605 height=98
-				 id="Picture 141786" src="dashboard_files/image004.jpg">
+			<img width=445 height=393
+				 id="Picture 4480" src="dashboard_files/image005.jpg">
 		</p>
 
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
-21.6pt;line-height:150%'>
-			<span lang=BG style='line-height:150%'>
-				Дела към мен са
-				делата, насочени към потребител чрез Местоположение на дело.
-			</span>
+		<p class=MsoNormal>
+			В Календара се визуализират насрочени съдебни заседания за
+			дела, до които има достъп потребителя, задачи с краен срок за изпълнение от
+			конкретен потребител.
 		</p>
 
-		<p class=MsoListParagraph>
-			<span lang=BG style='font-family:Symbol'>
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
 				·<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				</span>
-			</span><span lang=BG>Лента с меню и инструменти </span><img width=99
-																  height=30 id="Picture 141769" src="dashboard_files/image005.jpg"><span lang=BG>
-				-
-				разширено търсене, известия, задачи, неприети дела:
-			</span>
+			</span>Панел Моите задачи:
 		</p>
 
-		<p class=EISSStyle5 style='text-indent:0cm'>
-			<span lang=BG>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<p class=ListParagraph2 align=center style='margin-left:0cm;text-align:center;
+text-indent:0cm'>
+			<img width=498 height=239 id="Picture 141785"
+				 src="dashboard_files/image006.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Моите задачи съдържат информация за последните насочени
+			задачи за изпълнение от потребител.
+		</p>
+
+		<p class=EISSBullet>
+			<span style='font-family:Symbol'>
+				·<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				</span>
-			</span><span lang=BG>Инструмент Разширено търсене.</span>
+			</span>Панел Дела към мен:
+		</p>
+
+		<p class=MsoCaption style='text-indent:0cm'>
+			<img width=563 height=91
+				 id="Picture 141786" src="dashboard_files/image007.jpg">
 		</p>
 
 		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
 21.6pt;line-height:150%'>
-			<span lang=BG style='line-height:150%'>
-				Разширено
-				търсене
-			</span><span lang=BG>дава възможност </span><span lang=BG
-													 style='line-height:150%'>
-				да се търси по конкретни критерии, като резултат се
-				връщат всички дела отговарящи на зададените критерии.
+			<span style='line-height:150%'>
+				Дела към мен са делата,
+				насочени към потребител чрез Местоположение на дело.
+			</span>
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Лента
+			с меню и инструменти <img width=99 height=29 id="Picture 141769"
+									  src="dashboard_files/image008.jpg"> - разширено търсене, известия, задачи,
+			неприети дела:
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Инструмент
+			Разширено търсене.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+21.6pt'><span style='line-height:115%'>&nbsp;</span></p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;text-indent:
+21.6pt'>
+			<span style='line-height:115%'>Разширено търсене </span>дава възможност
+			<span style='line-height:115%'>
+				да се търси по конкретни критерии, като резултат
+				се връщат всички дела отговарящи на зададените критерии.
 			</span>
 		</p>
 
@@ -452,192 +581,160 @@ center;text-indent:0cm'>
 			<b>
 				<span style='line-height:150%'>
 					<img width=604 height=311 id="Picture 4499"
-						 src="dashboard_files/image006.jpg">
+						 src="dashboard_files/image009.jpg">
 				</span>
 			</b>
 		</p>
 
-		<p class=EISSStyle5 style='text-indent:0cm'>
-			<span lang=BG>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span><span lang=BG>Инструмент Известия</span>
+		<p class=EISSStyle5>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Инструмент
+			Известия
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			Иконката на
+			инструмент известия предоставя информация за броя непрочетени известия към
+			потребителя.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			След избор
+			на инструмент Непрочетени известия от лентата с инструменти, в екрана Моите известия,
+			директно да се зарежда списък с известията.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			След избор
+			на бутон „Преглед“, системата препраща в екрана за преглед на обекта, към който
+			е задачата и известието се маркира автоматично като прочетено.
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				Иконката на инструмент известия предоставя
-				информация за броя непрочетени известия към потребителя. След избор на бутон
-				Преглед на моите известия в инструмент Известия се визуализира екран за преглед
-				на всички известия на потребителя.
-			</span>
+			Екранът предоставя информация за всички известия на
+			потребителя с възможност за търсене към дата, вид известие и статус
+			(прочетени/непрочетени).
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				Екранът предоставя информация за всички известия
-				на потребителя с възможност за търсене по дата, вид известие и статус
-				(прочетени/непрочетени) известия за потребител.
-			</span>
+			<img width=605 height=89 id="Picture 143659"
+				 src="dashboard_files/image010.jpg">
 		</p>
 
-		<p class=MsoCaption style='text-indent:0cm'>
-			<img width=604 height=145
-				 id="Picture 3" src="dashboard_files/image007.png" alt="моите известия">
-		</p>
+		<p class=MsoCaption style='text-align:justify;text-indent:0cm'>&nbsp;</p>
 
-		<p class=EISSStyle5 style='text-indent:0cm'>
-			<span lang=BG>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span><span lang=BG>Инструмент Задачи</span>
+		<p class=EISSStyle5>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Инструмент
+			Задачи
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				Иконката на инструмент задачи предоставя
-				информация за броя неприключени задачи от потребителя. След избор на бутон
-				Преглед на моите задачи в инструмент Задачи се визуализира екран за преглед на
-				всички задачи на потребителя.
-			</span>
+			Иконката на инструмент задачи предоставя информация за броя
+			неприключени задачи от потребителя. След избор на инструмент Преглед на моите
+			задачи от лентата с инструменти, в екрана Задачи се визуализира всички задачи
+			на потребителя.
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				Екранът предоставя информация за всички задачи
-				на потребителя с възможност за търсене по дата, вид задача, статус, изпълнител
-				(насочена към мен/създадена от мен), насрещна страна и описание.
-			</span>
+			Екранът предоставя информация за всички задачи на
+			потребителя с възможност за търсене по дата, вид задача, статус, изпълнител
+			(насочена към мен/създадена от мен), насрещна страна и описание.
 		</p>
 
 		<p class=MsoNormal style='text-indent:0cm'>
-			<img width=604 height=157
-				 id="Picture 2" src="dashboard_files/image008.png" alt="моите задачи">
+			<img width=603 height=157
+				 id="Picture 2" src="dashboard_files/image011.png" alt="моите задачи">
 		</p>
 
-		<p class=EISSStyle5 style='text-indent:0cm'>
-			<span lang=BG>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span><span lang=BG>Инструмент Неприети дела</span>
+		<p class=EISSStyle5>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Инструмент
+			Неприети дела
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				Иконката на инструмент Неприети дела
-				предоставя информация за броя насочени дела към потребителя. След избор на
-				бутон Преглед на неприети дела, в инструмент Неприети дела се визуализира екран
-				Дела към мен, за преглед на всички неприети дела от потребителя, насочени от
-				функционалността за местоположение на делото.
-			</span>
+			Иконката на инструмент Неприети дела предоставя информация
+			за броя насочени дела към потребителя. След избор на бутон Преглед на неприети
+			дела, в инструмент Неприети дела се визуализира екран Дела към мен, за преглед
+			на всички неприети дела от потребителя, насочени от функционалността за
+			местоположение на делото.
 		</p>
 
 		<p class=MsoNormal style='text-indent:0cm'>
 			<img width=604 height=111
-				 id="Picture 1" src="dashboard_files/image009.png" alt="дела към мен">
+				 id="Picture 1" src="dashboard_files/image012.png" alt="дела към мен">
 		</p>
 
-		<p class=MsoListParagraph>
-			<span lang=BG style='font-family:Symbol'>
-				·<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span><span lang=BG>Персонализиране на екран</span>
+		<p class=EISSStyle5>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span>Персонализиране
+			на екран
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>
-				С избор на активен бутон на мишката върху
-				имената на потребителя се визуализира панел за персонализиране на достъпа до
-				системата. Потребителят има възможност да персонализира изгледа на началния
-				персонализиран екран, да смени съда, в който се намира (според потребителския
-				достъп до системата), да смени паролата за достъп при аутентикация с потребителско
-				име и парола.
-			</span>
+			С избор на активен бутон на мишката върху имената на
+			потребителя се визуализира панел за персонализиране на достъпа до системата.
+			Потребителят има възможност да персонализира изгледа на началния персонализиран
+			екран, да смени съда, в който се намира (според потребителския достъп до
+			системата).
 		</p>
 
 		<p class=MsoCaption style='text-indent:0cm'>
-			<img width=605 height=271
-				 id="Picture 141788" src="dashboard_files/image010.png">
+			<span style='line-height:150%'>
+				<img width=589 height=271 id="Picture 143181" src="dashboard_files/image013.png">
+			</span>
 		</p>
 
-		<p class=MsoNormal><span lang=BG>&nbsp;</span></p>
+		<p class=MsoNormal>&nbsp;</p>
 
 		<p class=MsoNormal>
-			<span lang=BG style='line-height:115%'>
+			<span style='line-height:115%'>
 				След избор на бутон
 				Персонализиране
-			</span><span lang=BG>
-				се зарежда екран за настройка на
-				персонализиран екран. Има възможност за добавяне/премахване на панели календар
-				на моите събития, Моите задачи и Дела към мен от персонализирания екран на
-				потребителя. След размаркиране на съответния чекбокс и избор на бутон Запис,
-				съответния панел се скрива от началния екран. Смяната на изгледа на
-				персонализирания екран се прилага за потребителя, независимо в кой съд се
-				намира.
-			</span>
-		</p>
-
-		<p class=MsoNormal style='text-indent:0cm'>
-			<img width=605 height=161
-				 id="Picture 141342" src="dashboard_files/image011.jpg">
-		</p>
-
-		<p class=MsoNormal>
-			<span lang=BG style='line-height:115%'>
-				След избор на бутон
-				Смяна на съд
-			</span><span lang=BG>
-				се визуализира модален прозорец за смяна на
-				съд. След избор на бутон Потвърди потребителя се прехвърля в съответния съд.
-			</span>
+			</span> се зарежда екран за настройка на персонализиран екран.
+			Има възможност за добавяне/премахване на панели календар на моите събития,
+			Моите задачи и Дела към мен от персонализирания екран на потребителя. След
+			размаркиране на съответния чекбокс и избор на бутон Запис, съответния панел се
+			скрива от началния екран. Смяната на изгледа на персонализирания екран се
+			прилага за потребителя, независимо в кой съд се намира.
 		</p>
 
 		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
-			<img width=386 height=188 id="Picture 141789" src="dashboard_files/image012.png">
+			<img width=244 height=243 id="Picture 143687" src="dashboard_files/image014.jpg">
 		</p>
 
-		<p class=MsoNormal>
-			<span lang=BG style='line-height:115%'>
-				След избор на бутон
-				Смяна на парола
-			</span><span lang=BG>
-				се визуализира екран с възможност за смяна
-				на текущата парола на потребителя за достъп до системата.
-			</span>
-		</p>
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>&nbsp;</p>
 
 		<p class=MsoNormal>
-			<b><span lang=BG style='color:red'>Важно! </span></b><span lang=BG>
-				При въвеждане на парола трябва да се спазва условието – малка буква,
-				голяма буква, цифри и специфични символи. Дължината на паролата трябва да е
-				най-малко 8 символа.
-			</span>
-		</p>
-
-		<p class=MsoNormal>
-			<span lang=BG>
-				След избор на бутон Потвърди се сменя паролата
-				на потребителя.
-			</span>
+			<span style='line-height:115%'>
+				След избор на бутон Смяна на
+				съд
+			</span> се визуализира модален прозорец за смяна на съд. След избор на бутон
+			Потвърди потребителя се прехвърля в съответния съд.
 		</p>
 
 		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
-			<span lang=BG> </span><img width=459 height=210 id="Picture 141440"
-									src="dashboard_files/image013.jpg">
+			<img width=386 height=187 id="Picture 141789" src="dashboard_files/image015.png">
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal>
+			Менютата достъпни за потребителите от Лента с меню и
+			инструменти, зависят от потребителските права и роли за всеки потребител.
 		</p>
 
 		<p class=MsoNormal>
-			<span lang=BG>Менютата достъпни за потребителите от </span><span lang=BG>
-				Лента с меню и инструменти, зависят от потребителските права и роли за
-				всеки потребител.
-			</span>
+			<span style='font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>{dashboard}</span>
 		</p>
 
-		<p class=MsoNormal><span lang=BG>&nbsp;</span></p>
+		<p class=MsoNormal>&nbsp;</p>
 
 	</div>
 	<script src="md5.js"></script>

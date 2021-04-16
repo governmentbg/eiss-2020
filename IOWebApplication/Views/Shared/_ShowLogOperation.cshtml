@@ -1,5 +1,6 @@
 ﻿@model IOWebApplication.Core.Models.ShowLogModel
 @{
+    Model.IconOnly = true;
     string action = ViewContext.RouteData.Values["action"].ToString();
     string controller = ViewContext.RouteData.Values["controller"].ToString();
     if (!string.IsNullOrEmpty(Model.Action))

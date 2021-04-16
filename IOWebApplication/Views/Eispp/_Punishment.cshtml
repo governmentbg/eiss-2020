@@ -1,52 +1,94 @@
 ﻿@model Punishment
 @using IOWebApplication.Infrastructure.Models.Integrations.Eispp
 @using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Core.Helper.GlobalConstants
+@using IOWebApplication.Infrastructure.Constants
 @inject IEisppRulesService rulesService
 @{
     var eisppRule = ViewData.ModelMetadata.GetEisppRuleElement(ViewData.TemplateInfo.HtmlFieldPrefix);
     (var ruleIds, var flags) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppRule);
     var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+    var prefix = $"{currentHtmlPrefix}.ProbationMeasures";
+    var eventTypeId = (int)ViewBag.EventTypeId;
+    var containerId = Guid.NewGuid().ToString();
+    var checkBoxContainer = "";
+    if (Model.PunishmentType == EISPPConstants.PunishmentType.ForExecution)
+    {
+        checkBoxContainer = "eispp-checkbox-container";
+    }
+    int probationMeasureCount = Model.ProbationMeasures?.Length ?? 0;
 }
 @if (flags > 0)
 {
-<div class="punishment-container">
-    <h5><b>Наказание</b></h5>
-    @Html.HiddenFor(x => x.PunishmentId)
-    @Html.HiddenFor(x => x.StructureId)
-    <div class="row">
-        <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentType, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentTypeDDL, @class = "punishment-type" })</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentActivity, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentActivityDDL })</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "punishment-kind" })</div>
-        <div class="col-lg-3 punisment-serving-type-container">@Html.EditorFor(x => x.ServingType, "EisppDropDown", null, new { Ddl = ViewBag.ServingTypeDDL, @class = "punishment-serving-type" })</div>
-    </div>
-    <div class="row fine-amount">
-        <div class="col-lg-2">@Html.EditorFor(x => x.FineAmount)</div>
-    </div>
-    <div class="row">
-        <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentActivityDateVM, "EisppDateTime")</div>
-        <div class="punishment-period">
-            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentYears)</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentMonths)</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentWeeks)</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentDays)</div>
-        </div>
-        <div class="col-lg-2 punishment-regime">@Html.EditorFor(x => x.PunishmentRegime, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentRegimeDDL })</div>
-    </div>
-    <fieldset class="is-fieldset punishment-probation-period">
-        <legend class="legend_1">Изпитателен срок</legend>
+<div class="punishment-container @checkBoxContainer">
+
+    <fieldset class="is-fieldset">
+        @if (Model.PunishmentType == EISPPConstants.PunishmentType.ForExecution)
+        {
+            <legend class="legend_1">@Html.EditorFor(x => x.IsSelected, "EisppBoolean", null, null)</legend>
+        }
+        else
+        {
+            <legend class="legend_1"><div><h5><b>Наказание</b></h5></div></legend>
+        }
+        @if (Model.PunishmentType != EISPPConstants.PunishmentType.ForExecution)
+        {
+            @Html.HiddenFor(x => x.IsSelected)
+        }
+        @Html.HiddenFor(x => x.PunishmentId)
+        @Html.HiddenFor(x => x.StructureId)
+        @Html.HiddenFor(x => x.CasePersonSentencePunishmentId)
         <div class="row">
-            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationStartDateVM, "EisppDateTime")</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationYears)</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationMonths)</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationWeeks)</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.ProbationDays)</div>
+            <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentType, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentTypeDDL, @class = "punishment-type" })</div>
+            <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentActivity, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentActivityDDL })</div>
+            <div class="col-lg-3">
+                @Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "punishment-kind" })
+                <div class="punishment-kind-error" style="display:none; margin-bottom:15px;">
+                    <label class="control-label">@MessageConstant.Values.EisppPunismentMpsNotSend</label>
+                </div>
+            </div>
+            <div class="col-lg-3 punisment-serving-type-container">@Html.EditorFor(x => x.ServingType, "EisppDropDown", null, new { Ddl = ViewBag.ServingTypeDDL, @class = "punishment-serving-type" })</div>
+        </div>
+        <div class="row fine-amount">
+            <div class="col-lg-2">@Html.EditorFor(x => x.FineAmount)</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentActivityDateVM, "EisppDateTime")</div>
+            <div class="punishment-period">
+                <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentYears)</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentMonths)</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentWeeks)</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.PunishmentDays)</div>
+            </div>
+            <div class="col-lg-2 punishment-regime">@Html.EditorFor(x => x.PunishmentRegime, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentRegimeDDL })</div>
+        </div>
+        <fieldset class="is-fieldset punishment-probation-period">
+            <legend class="legend_1">Изпитателен срок</legend>
+            <div class="row">
+                <div class="col-lg-2">@Html.EditorFor(x => x.ProbationStartDateVM, "EisppDateTime")</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.ProbationYears)</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.ProbationMonths)</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.ProbationWeeks)</div>
+                <div class="col-lg-2">@Html.EditorFor(x => x.ProbationDays)</div>
+            </div>
+        </fieldset>
+        <div class="dynamic-form punishment-probation" data-container="@containerId">
+            <div>
+                @for (int j = 0; j < Model.ProbationMeasures?.Length; j++)
+                {
+                    if (Model.ProbationMeasures[j] != null) 
+                    {
+                        Model.ProbationMeasures[j].Index = j;
+                        ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.ProbationMeasures[{j}]";
+                        @await Html.PartialAsync("_ProbationMeasure", Model.ProbationMeasures[j])
+                    }
+                }
+            </div>
+            <div id="@containerId"></div>
+            <div>
+                <a href="#" class="add-item btn btn-xs btn-success" data-container="@containerId" data-url="@Url.Action("NewItem_ProbationMeasure", new { prefix, eventTypeId })" data-index="@probationMeasureCount"><i class="fa fa-plus"></i> Добави пробационна мярка</a>
+            </div>
         </div>
     </fieldset>
-    <div class="punishment-probation">
-        @{
-            ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.ProbationMeasure";
-            @await Html.PartialAsync("_ProbationMeasure", Model.ProbationMeasure)
-        }
-    </div>
 </div>
 }

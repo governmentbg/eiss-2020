@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 
@@ -19,6 +16,8 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		[XmlElement("PBC")]
 		public ProbationMeasure ProbationMeasure { get; set; }
 
+		[XmlIgnore]
+		public ProbationMeasure[] ProbationMeasures { get; set; }
 		/// <summary>
 		/// iptsrkdta
 		/// Дата, от която започва да тече изпитателния срок
@@ -228,6 +227,24 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		public bool HaveProbationPeriod()
 		{
 			return !(ProbationYears == 0 && ProbationMonths == 0 && ProbationWeeks == 0 && ProbationDays == 0);
+		}
+		[XmlIgnore]
+		public int CasePersonSentencePunishmentId { get; set; }
+
+		/// <summary>
+		/// Дали е е в сила наказанието
+		/// </summary>
+		[XmlIgnore]
+		[Display(Name = "Наказание")]
+		public bool IsSelected { get; set; } = true;
+
+		public void InitProbationMeasure()
+        {
+			ProbationMeasures = new ProbationMeasure[1]
+			{
+				ProbationMeasure
+		    };
+			ProbationMeasure = null;
 		}
 	}
 }

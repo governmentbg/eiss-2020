@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Services;
 using IOWebApplication.Core.Services.Tasks;
 using IOWebApplication.Infrastructure.Contracts;
@@ -46,7 +43,8 @@ namespace IOWebApplicationService.Services
 
 
             services.AddScoped<IDWDocumentService, DWDocumentService>();
-            services.AddScoped<IDWSessionService, DWSessionService>();
+      services.AddScoped<IDWErrorLogService, DWErrorLogService>();
+      services.AddScoped<IDWSessionService, DWSessionService>();
             services.AddScoped<IDWSessionActService, DWSessionActService>();
             services.AddScoped<IEmailSender, EmailSender>();
             services.AddScoped<IEMailMessageService, EMailMessageService>();

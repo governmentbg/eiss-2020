@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -87,7 +84,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult ListData(IDataTablesRequest request, int caseId, int? caseSessionId)
         {
-            var data = service.CasePerson_Select(caseId, caseSessionId, true);
+            var data = service.CasePerson_Select(caseId, caseSessionId, true, false, true);
             return request.GetResponse(data);
         }
 
@@ -101,7 +98,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult ListDataNotification(IDataTablesRequest request, int caseId, int? caseSessionId)
         {
-            var data = service.CasePerson_Select(caseId, caseSessionId).Where(x => x.ForNotification == true);
+            var data = service.CasePerson_Select(caseId, caseSessionId, false, false, false).Where(x => x.ForNotification == true);
 
             return request.GetResponse(data);
         }
@@ -119,7 +116,6 @@ namespace IOWebApplication.Controllers
                 return Redirect_Denied();
             }
             var caseModel = service.GetById<Case>(caseId);
-            SetViewbag(caseId, caseSessionId, caseModel.CaseGroupId);
             var model = new CasePersonVM()
             {
                 CaseId = caseId,
@@ -130,6 +126,8 @@ namespace IOWebApplication.Controllers
                 IsArrested = false,
                 IsDeceased = false
             };
+            SetViewbag(caseId, caseSessionId, caseModel.CaseGroupId, model);
+
             ViewBag.canChange = CurrentContext.CanChange;
             return View(nameof(Edit), model);
         }
@@ -146,14 +144,14 @@ namespace IOWebApplication.Controllers
             {
                 return Redirect_Denied();
             }
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId);
+            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = CurrentContext.CanChange;
             return View(nameof(Edit), model);
         }
         public IActionResult View(int id)
         {
             var model = service.CasePerson_GetById(id);
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId);
+            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = false;
             return View(nameof(Edit), model);
         }
@@ -181,7 +179,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult Edit(CasePersonVM model)
         {
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId);
+            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = CurrentContext.CanChange;
             ValidateModelCasePerson(model);
             if (!ModelState.IsValid)
@@ -206,7 +204,7 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        void SetViewbag(int caseId, int? caseSessionId, int caseGroupId)
+        void SetViewbag(int caseId, int? caseSessionId, int caseGroupId, CasePersonVM model)
         {
             ViewBag.PersonRoleId_ddl = nomService.GetDropDownList<PersonRole>(true, false, false);
             ViewBag.PersonRolesForArrested = nomService.GetPersonRoleIdsByGroup(NomenclatureConstants.PersonRoleGroupings.RoleArrested);
@@ -230,6 +228,9 @@ namespace IOWebApplication.Controllers
                 if (ViewBag.isRegisterCompany)
                     ViewBag.CompanyTypeId_ddl = nomService.GetDropDownList<CompanyType>();
             }
+
+            model.RegixRequestReason.RegixReasonCaseId = caseId;
+            model.RegixRequestReason.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromCase;
 
             SetHelpFile(HelpFileValues.CasePerson);
         }
@@ -347,7 +348,7 @@ namespace IOWebApplication.Controllers
                 SetAuditContext(service, SourceTypeSelectVM.CasePersonAddress, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(EditCasePersonAdr), new { id = model.Id });
+                return RedirectToAction(nameof(Edit), new { id = model.CasePersonId });
             }
             else
             {
@@ -365,6 +366,28 @@ namespace IOWebApplication.Controllers
 
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonAddress(casePersonId);
             SetHelpFile(HelpFileValues.CasePerson);
+        }
+
+        [HttpPost]
+        public IActionResult CasePersonAdr_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var expireModel = service.GetById<CasePersonAddress>(model.Id);
+            var isUsed = service.CasePersonAddress_IsUsed(expireModel);
+            if (isUsed.Result)
+            {
+                //адреса е използван
+                return Json(new { result = false, message = isUsed.ErrorMessage });
+            }
+            if (service.SaveExpireInfo<CasePersonAddress>(model))
+            {
+                SetAuditContextDelete(service, SourceTypeSelectVM.CasePersonAddress, model.Id);
+                SetSuccessMessage(MessageConstant.Values.CasePersonAddressExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("Edit", "CasePerson", new { id = expireModel.CasePersonId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
         }
 
         /// <summary>
@@ -488,10 +511,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult ListDataReport(IDataTablesRequest request, string uic, string fullName, string caseRegnumber)
+        public IActionResult ListDataReport(IDataTablesRequest request, string uic, string fullName, string caseRegnumber, DateTime? DateFrom, DateTime? DateTo, DateTime? FinalDateFrom, DateTime? FinalDateTo, DateTime? WithoutFinalDateTo)
         {
-            var data = service.CasePerson_SelectForReport(userContext.CourtId, uic, fullName, caseRegnumber);
-
+            var data = service.CasePerson_SelectForReport(userContext.CourtId, uic, fullName, caseRegnumber, DateFrom, DateTo, FinalDateFrom, FinalDateTo, WithoutFinalDateTo);
             return request.GetResponse(data);
         }
 
@@ -567,6 +589,20 @@ namespace IOWebApplication.Controllers
 
             string html = await this.RenderPartialViewAsync("~/Views/CasePerson/", "_CasePersonBlank.cshtml", print_CaseSessionNotificationList, true);
 
+            TinyMCEVM htmlModel = new TinyMCEVM();
+            htmlModel.SourceType = SourceTypeSelectVM.CasePerson;
+            htmlModel.SourceId = model.CourtId;
+            htmlModel.Title = print_CaseSessionNotificationList.Title;
+            htmlModel.Text = html;
+            htmlModel.PageOrientation = 1;
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(htmlModel.SourceId);
+            return View("EditTinyMCE", htmlModel);
+        }
+        [HttpPost]
+        public async Task<IActionResult> EditTinyMCE(TinyMCEVM htmlModel)
+        {
+
+            string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
             var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html })
             {
                 CustomSwitches = "--disable-smart-shrinking --margin-top 10mm --margin-right 5mm  --margin-left 5mm"
@@ -574,11 +610,11 @@ namespace IOWebApplication.Controllers
 
             var pdfRequest = new CdnUploadRequest()
             {
-                SourceType = SourceTypeSelectVM.CasePerson,
-                SourceId = model.CourtId.ToString(),
+                SourceType = htmlModel.SourceType,
+                SourceId = htmlModel.SourceId.ToString(),
                 FileName = "casePersonList.pdf",
                 ContentType = "application/pdf",
-                Title = print_CaseSessionNotificationList.Title,
+                Title = htmlModel.Title,
                 FileContentBase64 = Convert.ToBase64String(pdfBytes)
             };
             bool result = await cdnService.MongoCdn_AppendUpdate(pdfRequest);
@@ -588,8 +624,8 @@ namespace IOWebApplication.Controllers
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
 
-            return RedirectToAction("CasePreview", "Case", new { id = model.CourtId });
-        }
+            return RedirectToAction("CasePreview", "Case", new { id = htmlModel.SourceId });
+        } 
 
         public IActionResult AddLikeAnotherPerson(int personId)
         {
@@ -605,7 +641,7 @@ namespace IOWebApplication.Controllers
             model.PersonRoleId = 0;
             model.FromPersonId = personId;
 
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId);
+            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = true;
             return View(nameof(Edit), model);
         }
@@ -677,7 +713,7 @@ namespace IOWebApplication.Controllers
                 }
             }
 
-            SetViewbag(model.CaseId, model.CaseSessionId, 0);
+            SetViewbag(model.CaseId, model.CaseSessionId, 0, model);
             ViewBag.canChange = true;
             return View(nameof(Edit), model);
         }
@@ -702,7 +738,7 @@ namespace IOWebApplication.Controllers
             }
             else
             {
-                if (service.SaveExpireInfo<CasePerson>(model))
+                if (service.CasePerson_SaveExpiredPlus(model))
                 {
                     SetAuditContextDelete(service, SourceTypeSelectVM.CasePerson, model.Id);
                     SetSuccessMessage(MessageConstant.Values.CasePersonExpireOK);
@@ -1040,6 +1076,28 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonMeasure(casePersonId);
             SetHelpFile(HelpFileValues.CasePerson);
         }
+        [HttpPost]
+        public IActionResult CasePersonMeasure_ExpiredInfo(ExpiredInfoVM model)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonMeasure, model.Id, AuditConstants.Operations.Delete))
+            {
+                return Redirect_Denied();
+            }
+            if (eisppService.HaveEventForMeasure(model.Id))
+            {
+                return Json(new { result = false, message = "Има ЕИСПП събитие за тази мярка" });
+            }
+            if (service.SaveExpireInfo<CasePersonMeasure>(model))
+            {
+                SetAuditContextDelete(service, SourceTypeSelectVM.CasePersonMeasure, model.Id);
+                SetSuccessMessage(MessageConstant.Values.CasePersonMeasureExpireOK);
+                return Json(new { result = true, redirectUrl = model.ReturnUrl });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
 
         /// <summary>
         /// Страница с лични документи към лице
@@ -1207,7 +1265,7 @@ namespace IOWebApplication.Controllers
             if (model.Count > 0)
             {
                 ViewBag.dataUrl = Url.Action(nameof(CasePersons_GetData), new { caseId });
-                
+
                 return PartialView("_PersonSelectData");
             }
             else
@@ -1267,5 +1325,13 @@ namespace IOWebApplication.Controllers
 
             return model;
         }
+
+        [HttpGet]
+        public IActionResult GetDDL_CasePersonAddress(int casePersonId)
+        {
+            var model = service.GetAddressByCasePerson_DropDown(casePersonId);
+            return Json(model);
+        }
+
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -198,7 +195,7 @@ namespace IOWebApplication.Core.Services
             {
                 var caseSession = repo.GetById<CaseSession>(model.ObjectId);
                 var caseSessionFasts = CaseSessionFastDocument_SelectForCopy(model.CourtId);
-                var casePersonLists = casePersonService.CasePerson_Select(caseSession.CaseId, caseSession.Id, true);
+                var casePersonLists = casePersonService.CasePerson_Select(caseSession.CaseId, caseSession.Id, true, false, false);
 
                 foreach (var fastDocument in model.checkListVMs.Where(x => x.Checked))
                 {

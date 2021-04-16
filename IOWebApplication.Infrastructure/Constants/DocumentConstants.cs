@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -30,6 +27,8 @@ namespace IOWebApplication.Infrastructure.Constants
             /// Изходящ документ по дело
             /// </summary>
             public const int OutCompliantDocument = 6;
+
+            public static int[] InDocsForEPEP = { InitialDocument, CompliantDocument };
         }
 
         public class DocumentDirection
@@ -63,6 +62,15 @@ namespace IOWebApplication.Infrastructure.Constants
             /// По общия ред
             /// </summary>
             public const int Common = 1;
+
+        }
+
+        public class DeliveryGroups
+        {
+            /// <summary>
+            /// По пощата
+            /// </summary>
+            public const int PostOffice = 1;
 
         }
     }

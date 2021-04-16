@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -162,10 +159,15 @@ namespace IOWebApplication.Core.Services
                     saved.StyleTemplateId = model.StyleTemplateId;
                     saved.HaveSessionAct = model.HaveSessionAct;
                     saved.HaveSessionActComplain = model.HaveSessionActComplain;
+                    saved.RequiredSessionActComplain = model.RequiredSessionActComplain;
+                    saved.HaveActComplainFree = model.HaveActComplainFree;
+                    saved.HaveMultiActComplain = model.HaveMultiActComplain;
                     saved.HaveExpertReport = model.HaveExpertReport;
                     saved.XlsTitleRow = model.XlsTitleRow;
                     saved.XlsDataRow = model.XlsDataRow;
                     saved.XlsRecapRow = model.XlsRecapRow;
+                    saved.HaveCasePerson = model.HaveCasePerson;
+                    saved.HaveDocumentSenderPerson = model.HaveDocumentSenderPerson;
 
                     FillDataFile(saved, files);
                     repo.Update(saved);

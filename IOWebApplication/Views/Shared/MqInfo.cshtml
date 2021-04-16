@@ -13,13 +13,16 @@
                 @switch (Model.SourceType)
                 {
                     case SourceTypeSelectVM.CaseSessionAct:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.LegalActs" data-st="@SourceTypeSelectVM.EpepUser" data-si="@Model.SourceId">ЦУБИПСА</a></li>
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActPdf" data-si="@Model.SourceId">ЕПЕП - Акт</a></li>
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActDepersonalized" data-si="@Model.SourceId">ЕПЕП - Обезличен</a></li>
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.LegalActs" data-st="@Model.SourceType" data-si="@Model.SourceId">ЦУБИПСА</a></li>
                         break;
                     case SourceTypeSelectVM.CaseSelectionProtokol:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.CSRD" data-st="@SourceTypeSelectVM.EpepUser" data-si="@Model.SourceId">ЦСРД</a></li>
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.CSRD" data-st="@Model.SourceType" data-si="@Model.SourceId">ЦСРД</a></li>
                         break;
                     case SourceTypeSelectVM.Case:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EISPP" data-st="@SourceTypeSelectVM.EpepUser" data-si="@Model.SourceId">ЕИСПП</a></li>
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EISPP" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕИСПП</a></li>
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.ISPN" data-st="@Model.SourceType" data-si="@Model.SourceId">ИСПН</a></li>
                         break;
                 }
             </ul>

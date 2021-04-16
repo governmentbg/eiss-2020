@@ -35,8 +35,15 @@
         let personIndex = $(docPersonControl).data('index');
         let addAddressButton = $(docPersonControl).find('.add-doc-address:first');
         let adrIndex = parseInt($(addAddressButton).data('index'));
+        let regix_caseid = $('#RegixRequestReason_RegixReasonCaseId').val();
+        let regix_documentid = $('#RegixRequestReason_RegixReasonDocumentId').val();
+        let regix_description = $('#RegixRequestReason_RegixReasonDescription').val();
+        let regix_guid = $('#RegixRequestReason_RegixReasonGuid').val();
         if (adrIndex == 0) {
-            requestContent('@Url.Action("NewItem_DocumentPersonAddressByEGN")', { uic: uic, adrTypeId:@(NomenclatureConstants.AddressType.Permanent), personIndex: personIndex, index: adrIndex }, function (html) {
+            requestContent('@Url.Action("NewItem_DocumentPersonAddressByEGN")', {
+                uic: uic, adrTypeId:@(NomenclatureConstants.AddressType.Permanent), personIndex: personIndex, index: adrIndex,
+                regixReasonDocumentId: regix_documentid, regixReasonCaseId: regix_caseid,
+                regixReasonDescription: regix_description, regixReasonGuid: regix_guid  }, function (html) {
                 if (html && html != 'null') {
 
                     let container = $(addAddressButton).data('container');
@@ -45,7 +52,10 @@
                     adrIndex++;
                     $(addAddressButton).data('index', adrIndex);
 
-                    requestContent('@Url.Action("NewItem_DocumentPersonAddressByEGN")', { uic: uic, adrTypeId:@(NomenclatureConstants.AddressType.Current), personIndex: personIndex, index: adrIndex }, function (html) {
+                    requestContent('@Url.Action("NewItem_DocumentPersonAddressByEGN")', {
+                        uic: uic, adrTypeId:@(NomenclatureConstants.AddressType.Current), personIndex: personIndex, index: adrIndex,
+                        regixReasonDocumentId: regix_documentid, regixReasonCaseId: regix_caseid,
+                        regixReasonDescription: regix_description, regixReasonGuid: regix_guid }, function (html) {
                         if (html && html != 'null') {
 
                             container = $(addAddressButton).data('container');

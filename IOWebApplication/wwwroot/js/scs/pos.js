@@ -61,6 +61,7 @@ $(function () {
             
             SCS.posSendPaymentPort(comPort, String(ammount))
                 .then(function (json) {
+                    // TODO: Да се запише резултата
                     $.post(PosUrls.resultSave + JSON.stringify(json) + "&bankAccountId=" + bankAccountId + "&amount=" + val + "&senderName=" + senderName).done(function (data) {
                         if (data.result == true) {
                             $(posFrm).find('#PosPaymentResultId').val(data.id);
@@ -74,6 +75,7 @@ $(function () {
                     });
                 })
                 .then(null, function (err) {
+                    // TODO: Да се запише резултата
                     messageHelper.ShowErrorMessage('Възникна грешка при плащане с POS терминал', messageContainer);
 
                     $(posFrm).find('button.submit').removeAttr('disabled');

@@ -46,8 +46,8 @@
                 type: 'POST',
                 data: {
                     courtHallId: '@Model.CourtHallId',
-                    dateFrom: '@Model.DateFrom?.ToString("dd.MM.yyyy")',
-                    dateTo: '@Model.DateTo?.ToString("dd.MM.yyyy")'
+                    dateFrom: '@Model.DateFrom?.ToString("dd.MM.yyyy HH:mm")',
+                    dateTo: '@Model.DateTo?.ToString("dd.MM.yyyy HH:mm")'
                 },
                 error: function () {
                     $('#script-warning').show();

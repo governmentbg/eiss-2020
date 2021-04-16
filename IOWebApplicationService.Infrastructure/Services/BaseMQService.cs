@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.SignTools.Contracts;
+﻿using IO.SignTools.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -30,9 +27,69 @@ namespace IOWebApplicationService.Infrastructure.Services
         protected IRepository repo;
         protected int IntegrationTypeId;
         protected ICdnService cdnService;
-        protected IIOSignToolsService signTools;
         protected ILogger<BaseMQService> logger;
+        protected DateTime? startTime;
 
+
+        /// <summary>
+        /// The метода за изпращане на чакащите заявки към ЕПЕП
+        /// </summary>
+        public async Task<bool> PushMQWithFetch(int fetchCount)
+        {
+            this.fetchCount = fetchCount;
+            ResetMQ_Waiting();
+
+            var model = FetchNotSent(fetchCount, mqID);
+
+            if (!model.Any() && IntegrationTypeId != NomenclatureConstants.IntegrationTypes.EISPP)
+            {
+                return false;
+            }
+            if (!(await InitChanel()))
+            {
+                return false;
+            }
+
+            foreach (var mq in model)
+            {
+                try
+                {
+                    //logger.LogCritical($"mqId = {mq.Id}");
+                    await SendMQ(mq);
+                }
+                catch (FaultException fex)
+                {
+                    var _error = fex.GetMessageFault();
+                    SetErrorToMQ(mq, IntegrationStates.DataContentError, _error);
+                }
+                catch (Exception ex)
+                {
+                    if (logger != null)
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
+                    SetErrorToMQ(mq, IntegrationStates.TransferError, $"Exception: {ex.Message}");
+                }
+            };
+
+            await CloseChanel();
+
+            return true;
+        }
+
+        protected virtual async Task<bool> InitChanel() { return false; }
+        protected virtual async Task CloseChanel() { }
+        protected virtual async Task SendMQ(MQEpep mq) { }
+
+        /// <summary>
+        /// Извлича задачите с висок приоритет и ги изпълнява преди останалите
+        /// </summary>
+        /// <param name="fetchCount"></param>
+        /// <returns></returns>
+        protected virtual IEnumerable<MQEpep> FetchHighPriorityItems(int fetchCount)
+        {
+            return null;
+        }
         #region Общи методи за свързване и управление на заявките 
 
         /// <summary>
@@ -114,6 +171,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                     mq.IntegrationStateId = IntegrationStates.TransferOK;
                     mq.DateTransfered = DateTime.Now;
                     mq.ReturnGuidId = Id.ToString();
+                    AppendTimeElapsed(mq);
                     repo.Update(mq);
 
                     switch (mq.SourceType)
@@ -146,6 +204,17 @@ namespace IOWebApplicationService.Infrastructure.Services
                 return false;
             }
         }
+
+        private void AppendTimeElapsed(MQEpep model)
+        {
+            if (!startTime.HasValue)
+            {
+                return;
+            }
+
+            TimeSpan ts = DateTime.Now - startTime.Value;
+            model.ErrorDescription = $"Elapsed:{ts.TotalSeconds:N3}s; {model.ErrorDescription}";
+        }
         protected bool AddIntegrationKey(int sourceType, long sourceId, string value)
         {
 
@@ -160,6 +229,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             repo.Add(model);
             return repo.SaveChanges() > 0;
         }
+
         protected bool RemoveIntegrationKeys(MQEpep mq)
         {
             var keys = repo.All<IntegrationKey>()
@@ -213,6 +283,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 mq.DateTransfered = DateTime.Now;
                 mq.IntegrationStateId = IntegrationStates.TransferOK;
+                AppendTimeElapsed(mq);
                 repo.Update(mq);
                 repo.SaveChanges();
             }
@@ -257,24 +328,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
             return key;
         }
-        protected (string, ServiceMethod) AppendUpdateIntegrationKeyAction(int sourceType, long sourceId, bool isDeleted)
-        {
-            string key = getKey(sourceType, sourceId);
-            if (!string.IsNullOrEmpty(key))
-            {
-                return (key, isDeleted ? ServiceMethod.Delete : ServiceMethod.Update);
-            }
-            if (!isDeleted && string.IsNullOrEmpty(key))
-            {
-                key = Guid.NewGuid().ToString();
-                if (AddIntegrationKey(sourceType, sourceId, key))
-                {
-                    return (key, ServiceMethod.Add);
-                }
-                return (null, ServiceMethod.Delete);
-            }
-            return ("", ServiceMethod.Delete);
-        }
+
         protected string getKey(int sourceType, long? sourceId)
         {
             return repo.AllReadonly<IntegrationKey>()
@@ -343,7 +397,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
             if (result == null)
             {
-                throw new Exception($"ЕПЕП/Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
+                throw new Exception($"Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
             }
             return result;
         }
@@ -360,133 +414,6 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         #endregion
 
-        protected virtual async Task<bool> InitChanel() { return false; }
-        protected virtual async Task CloseChanel() { }
-        protected virtual async Task SendMQ(MQEpep mq) { }
-
-        /// <summary>
-        /// Извлича задачите с висок приоритет и ги изпълнява преди останалите
-        /// </summary>
-        /// <param name="fetchCount"></param>
-        /// <returns></returns>
-        protected virtual IEnumerable<MQEpep> FetchHighPriorityItems(int fetchCount)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// The метода за изпращане на чакащите заявки към ЕПЕП
-        /// </summary>
-        public async Task PushMQ()
-        {
-            ResetMQ_Waiting();
-
-            var mq = PopOneNotSent(mqID);
-
-            if (mq == null)
-            {
-                return;
-            }
-            if (!(await InitChanel()))
-            {
-                return;
-            }
-
-            do
-            {
-                try
-                {
-                    await SendMQ(mq);
-                }
-                catch (FaultException fex)
-                {
-                    mq.ErrorDescription = $"Exception: {fex.Message}";
-                    try
-                    {
-                        var errorElement = XElement.Parse(fex.CreateMessageFault().GetReaderAtDetailContents().ReadOuterXml());
-                        var errorDictionary = errorElement.Elements().ToDictionary(key => key.Name.LocalName, val => val.Value);
-                        var errorDetails = string.Join(";", errorDictionary);
-                        mq.ErrorDescription = $"FaultException: {errorDetails}";
-                    }
-                    catch { }
-                    SetErrorToMQ(mq, IntegrationStates.TransferError);
-                }
-                catch (Exception ex)
-                {
-                    if (logger != null)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                    mq.ErrorDescription = $"Exception: {ex.Message}";
-                    SetErrorToMQ(mq, IntegrationStates.TransferError);
-                }
-
-                mq = PopOneNotSent(mqID);
-
-            } while (mq != null);
-
-            await CloseChanel();
-        }
-
-
-        /// <summary>
-        /// The метода за изпращане на чакащите заявки към ЕПЕП
-        /// </summary>
-        public async Task PushMQWithFetch(int fetchCount)
-        {
-            this.fetchCount = fetchCount;
-            ResetMQ_Waiting();
-
-            var model = FetchNotSent(fetchCount, mqID);
-
-            if (!model.Any())
-            {
-                return;
-            }
-            if (!(await InitChanel()))
-            {
-                return;
-            }
-
-            foreach (var mq in model)
-            {
-
-                try
-                {
-                    await SendMQ(mq);
-                }
-                catch (FaultException fex)
-                {
-                    var _error = fex.GetMessageFault();
-                    SetErrorToMQ(mq, IntegrationStates.DataContentError, _error);
-                }
-                catch (Exception ex)
-                {
-                    if (logger != null)
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                    SetErrorToMQ(mq, IntegrationStates.TransferError, $"Exception: {ex.Message}");
-                }
-            };
-
-            await CloseChanel();
-        }
-
-        protected byte[] FlattenSignatures(byte[] signedDoc)
-        {
-            using (MemoryStream ms = new MemoryStream(signedDoc))
-            {
-                return signTools.FlattenSignature(ms).flattenPdf;
-            }
-        }
-        protected int GetSignituresCount(byte[] signedDoc)
-        {
-            using (MemoryStream ms = new MemoryStream(signedDoc))
-            {
-                return signTools.FlattenSignature(ms).signersInfo.Count();
-            }
-        }
     }
 }
 

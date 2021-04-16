@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -118,15 +115,26 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
-        public List<SelectListItem> GetEkatte(int deliveryAreaId)
+        public List<SelectListItem> GetEkatteByArea(int deliveryAreaId)
         {
             var deliveryArea = repo.AllReadonly<DeliveryArea>()
                                    .Where(x => x.Id == deliveryAreaId)
                                    .Include(x => x.Court)
                                    .FirstOrDefault();
+            return GetEkatte(deliveryArea.Court.CourtRegionId);
+        }
+        public List<SelectListItem> GetEkatteByCourt(int courtId)
+        {
+            var court = repo.AllReadonly<Court>()
+                                  .Where(x => x.Id == courtId)
+                                  .FirstOrDefault();
+            return GetEkatte(court.CourtRegionId);
+        }
 
+        private List<SelectListItem> GetEkatte(int? courtRegionId)
+        {
             var regions = repo.AllReadonly<CourtRegionArea>()
-                                     .Where(c => c.CourtRegionId == deliveryArea.Court.CourtRegionId);
+                                     .Where(c => c.CourtRegionId == courtRegionId);
             var distrints = repo.AllReadonly<EkDistrict>()
                                      .Where(d => regions.Any(r => r.DistrictCode == d.Ekatte && String.IsNullOrEmpty(r.MunicipalityCode)));
             var municipalities = repo.AllReadonly<EkMunincipality>()
@@ -140,11 +148,12 @@ namespace IOWebApplication.Core.Services
                 .Select(x => new SelectListItem()
                 {
                     Value = x.e.Ekatte.ToString(),
-                    Text = (x.e.TVM ?? "")+" "+(x.e.Name??"")+" общ. "+(x.e.Munincipality.Name ?? "")
+                    Text = (x.e.TVM ?? "") + " " + (x.e.Name ?? "") + " общ. " + (x.e.Munincipality.Name ?? "")
                 }).ToList();
             result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
             return result;
         }
+
         private string VerifyNumberEvenOdd(int? Number, int? NumberType)
         {
             string result = "";
@@ -511,7 +520,10 @@ namespace IOWebApplication.Core.Services
                 NumberType = numberTypes.Where(n => n.Id == x.NumberType).Select(c => c.Label).FirstOrDefault(),
                 NumberFrom = x.NumberFrom,
                 NumberTo = x.NumberTo,
-                BlockName = x.BlockName
+                BlockName = x.BlockName,
+                Remark = (x.NumberType == DeliveryAddressNumberType.EvenNumber || x.NumberType == DeliveryAddressNumberType.OddNumber || x.NumberType == DeliveryAddressNumberType.OddEvenNumber) &&
+                         (x.NumberFrom > 0 || x.NumberTo > 0)   &&
+                         (string.IsNullOrEmpty(x.StreetCode)) ? "За да се районира от номер до номер улица трябва да е въведена улица": ""
             }).AsQueryable(); 
         }
 

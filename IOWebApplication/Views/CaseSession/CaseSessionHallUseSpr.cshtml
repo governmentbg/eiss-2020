@@ -1,4 +1,5 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
 @model CaseSessionHallUseFilterVM
 
 @{
@@ -15,6 +16,7 @@
 <div class="row">
     <div class="col-lg-4">@Html.EditorFor(m => m.DateFrom, "DateTimeWithTime")</div>
     <div class="col-lg-4">@Html.EditorFor(m => m.DateTo, "DateTimeWithTime")</div>
+    <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 <div class="row">
@@ -47,11 +49,12 @@
     function LoadTableCaseSessionHallUse() {
         var isCalendar = $("#IsCalendar").is(":checked");
         if (isCalendar) {
+            debugger;
             var _CourtHallId = $("#CourtHallId").val();
-            var _DateFrom = $("#DateFrom").val(); 
-            var _DateTo = $("#DateTo").val(); 
-            let data = { CourtHallId: _CourtHallId, dateFrom:_DateFrom, dateTo:_DateTo };
-            requestContent('@Url.Action("CaseSessionCalendar")', data, function (html) {
+            var _DateFrom = $("#DateFrom").val();
+            var _DateTo = $("#DateTo").val();
+            var data = { CourtHallId: _CourtHallId, dateFrom: _DateFrom, dateTo: _DateTo };
+            requestContent('@Url.Action("CaseSessionCalendar", "CaseSession")', data, function (html) {
                 $('#divCalendar').html(html);
             });
         }
@@ -69,6 +72,7 @@
                             d.dateFrom = $("#DateFrom").val();
                             d.dateTo = $("#DateTo").val();
                             d.CourtHallId = $("#CourtHallId").val();
+                            d.JudgeReporterId = $('#JudgeReporterId').val();
                         }
                     },
                     columns: [
@@ -88,6 +92,13 @@
                                 url = url.replace('666', row.caseId);
                                 return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseName + "</a>";
                             },
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'judgeReport',
+                            data: 'judgeReport',
+                            title: 'Съдия-докладчик',
                             sortable: true,
                             searchable: true
                         },
@@ -143,6 +154,7 @@
 
 <script>
     $(document).ready(function () {
+        initLawUnit();
         SH_DivElements();
         if (@(Model.CourtHallId ?? 0) > 0)
             LoadTableCaseSessionHallUse();

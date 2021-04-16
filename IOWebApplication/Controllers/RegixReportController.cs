@@ -1,8 +1,6 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -56,6 +54,11 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        private void SetRegixReportMainData(RegixReportVM model)
+        {
+            model.CourtId = userContext.CourtId;
+            model.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
+        }
 
         #region PersonData
         /// <summary>
@@ -73,8 +76,10 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixPersonDataVM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
             }
+
+            SetHelpFile(HelpFileValues.Inquiry1);
             return View(model);
         }
 
@@ -131,9 +136,14 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixPersonAddressVM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
                 model.AddressTypeId = addressTypeId;
             }
+            if (addressTypeId == NomenclatureConstants.RegixType.PersonPermanentAddress)
+                SetHelpFile(HelpFileValues.Inquiry2);
+            else if (addressTypeId == NomenclatureConstants.RegixType.PersonCurrentAddress)
+                SetHelpFile(HelpFileValues.Inquiry3);
+
             return View(model);
         }
 
@@ -191,8 +201,10 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixEmploymentContractsVM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
             }
+            SetHelpFile(HelpFileValues.Inquiry5);
+
             return View(model);
         }
 
@@ -251,12 +263,18 @@ namespace IOWebApplication.Controllers
                 var compensationType = service.GetById<RegixType>(compensationTypeId);
 
                 model = new RegixCompensationByPaymentPeriodVM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
                 model.CompensationTypeId = compensationTypeId;
                 model.CompensationTypeName = compensationType.Label;
                 model.CompensationByPaymentPeriodFilter.DateFromFilter = DateTime.Now;
                 model.CompensationByPaymentPeriodFilter.DateToFilter = DateTime.Now;
             }
+
+            if (compensationTypeId == NomenclatureConstants.RegixType.DisabilityCompensationByPaymentPeriod)
+                SetHelpFile(HelpFileValues.Inquiry6);
+            else if (compensationTypeId == NomenclatureConstants.RegixType.UnemploymentCompensationByPaymentPeriod)
+                SetHelpFile(HelpFileValues.Inquiry7);
+
             return View(model);
         }
 
@@ -312,10 +330,12 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixPensionIncomeAmountVM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
                 model.PensionIncomeAmountFilter.DateFromFilter = DateTime.Now;
                 model.PensionIncomeAmountFilter.DateToFilter = DateTime.Now;
             }
+            SetHelpFile(HelpFileValues.Inquiry8);
+
             return View(model);
         }
 
@@ -365,8 +385,10 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixPersonalIdentityV2VM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
             }
+
+            SetHelpFile(HelpFileValues.Inquiry9);
             return View(model);
         }
 
@@ -418,15 +440,17 @@ namespace IOWebApplication.Controllers
                 else
                 {
                     model = new RegixActualStateV3VM();
-                    model.Report.CourtId = userContext.CourtId;
+                    SetRegixReportMainData(model.Report);
                     ModelState.AddModelError("", errorMessage);
                 }
             }
             else
             {
                 model = new RegixActualStateV3VM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
             }
+
+            SetHelpFile(HelpFileValues.Inquiry10);
             return View(model);
         }
 
@@ -475,8 +499,10 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixStateOfPlayVM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
             }
+
+            SetHelpFile(HelpFileValues.Inquiry11);
             return View(model);
         }
 
@@ -514,10 +540,16 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="uicType"></param>
         /// <param name="uic"></param>
+        /// <param name="regixReasonDocumentId"></param>
+        /// <param name="regixReasonCaseId"></param>
+        /// <param name="regixReasonDescription"></param>
+        /// <param name="regixReasonGuid"></param>
+        /// <param name="regixRequestTypeId"></param>
         /// <returns></returns>
-        public JsonResult PersonSearch(int uicType, string uic)
+        public JsonResult PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
-            return Json(service.PersonSearch(uicType, uic));
+            AddAuditInfo("Преглед", $"Проверка за лице по идентификатор {uic}", "Проверка в НБД за имена на ФЛ и в ТР за наименование на ЮЛ");
+            return Json(service.PersonSearch(uicType, uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId));
         }
 
         #region PersonDataAddress
@@ -537,8 +569,10 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixPersonDataAddressVM();
-                model.Report.CourtId = userContext.CourtId;
+                SetRegixReportMainData(model.Report);
             }
+            SetHelpFile(HelpFileValues.Inquiry4);
+
             return View(model);
         }
 
@@ -591,6 +625,7 @@ namespace IOWebApplication.Controllers
         public IActionResult RegixReportList()
         {
             ViewBag.RegixTypeId_ddl = nomService.GetDropDownList<RegixType>();
+            ViewBag.RegixRequestTypeId_ddl = nomService.GetDropDownList<RegixRequestType>();
 
             var model = new RegixReportListFilterVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -660,7 +695,7 @@ namespace IOWebApplication.Controllers
                 default:
                     break;
             }
-            
+
             var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }).GetByte(this.ControllerContext);
 
             var pdfRequest = new CdnUploadRequest()

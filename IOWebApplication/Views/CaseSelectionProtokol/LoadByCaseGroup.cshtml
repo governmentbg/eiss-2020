@@ -1,8 +1,8 @@
-﻿@model CaseSelectionProtokolVM
-@using IOWebApplication.Infrastructure.Models.ViewModels
+﻿@model CaseSelectionProtocolLoadByGroupVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
 
 @{
-    ViewData["Title"] = "Избор на съдии";
+    ViewData["Title"] = "Избор на съдии от други направления";
 }
 
 <div class="row">
@@ -11,10 +11,12 @@
         {
             @Html.HiddenFor(x => x.IdStr)
             @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.judgeRoleId)
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            @Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")
-
+            @Html.EditorFor(x => x.CaseGroups)
+            <br />
+            <br />
             <div class="form-group">
                 <input type="submit" value="Избор" class="submit btn btn-success" />
             </div>

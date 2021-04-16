@@ -1,11 +1,10 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Резултати по заседание към делото
     /// </summary>
     [Table("case_session_result")]
-    public class CaseSessionResult: IExpiredInfo
+    public class CaseSessionResult : IExpiredInfo
     {
         [Column("id")]
         public int Id { get; set; }

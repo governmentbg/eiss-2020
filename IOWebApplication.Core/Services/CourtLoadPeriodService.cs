@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -154,7 +151,7 @@ namespace IOWebApplication.Core.Services
             currentCourtLoadPeriodLawUnit.CourtLoadPeriodId = courtLoadPeriodId;
             currentCourtLoadPeriodLawUnit.LawUnitId = lawUnitId;
             currentCourtLoadPeriodLawUnit.SelectionDate = DateTime.Now.Date;
-            if (curentLawUnit.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Absent)
+            if (curentLawUnit.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Absent || curentLawUnit.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude)
             { currentCourtLoadPeriodLawUnit.IsAvailable = false; }
             else
             { currentCourtLoadPeriodLawUnit.IsAvailable = true; }
@@ -414,18 +411,34 @@ namespace IOWebApplication.Core.Services
       { caseSelectionProtocol.CourtDutyId = null; }
 
       CourtLoadPeriod courtLoadPeriod = GetLoadPeriod(caseSelectionProtocol.CourtGroupId, caseSelectionProtocol.CourtDutyId);
-      int totalPeriodDays = repo.AllReadonly<CourtLoadPeriodLawUnit>()
-                              .Where(x => x.CourtLoadPeriodId == courtLoadPeriod.Id)
-                              .Where(x => (x.LawUnitId ?? 0) == 0)
-                              .Count();
 
-      
+      //Optimisacia2020.01.09 s
+      //int totalPeriodDays = repo.AllReadonly<CourtLoadPeriodLawUnit>()
+      //                        .Where(x => x.CourtLoadPeriodId == courtLoadPeriod.Id)
+      //                        .Where(x => (x.LawUnitId ?? 0) == 0)
+      //                        .Count();
+      //Optimisacia2020.01.09 e
+
 
       decimal totalKoef = 0;
+      //2020.01.08 Optimisation
+      List<int> LawUnitsArray = caseSelectionProtocol.LawUnits.Select(x => x.LawUnitId).ToList();
+      LawUnitsArray.Add(0);
+      
       // foreach (var lawUnit in caseSelectionProtocol.LawUnits.Where(x => NomenclatureConstants.SelectionProtokolLawUnitState.ActiveState.Contains(x.StateId)))
+      var courtLoadPeriodLawunitsList = repo.AllReadonly<CourtLoadPeriodLawUnit>().Where(x => LawUnitsArray.Contains(x.LawUnitId??0))
+                                                                           .Where(x => x.CourtLoadPeriodId == courtLoadPeriod.Id).ToList();
+      //Optimisacia2020.01.09 s
+      int totalPeriodDays = courtLoadPeriodLawunitsList
+                              .Where(x => (x.LawUnitId ?? 0) == 0)
+                              .Count();
+      //Optimisacia2020.01.09 e
+
       foreach (var lawUnit in caseSelectionProtocol.LawUnits)
       {
-        CalculateLawUnitDataInGroup(lawUnit, courtLoadPeriod.Id);
+       // CalculateLawUnitDataInGroup(lawUnit, courtLoadPeriod.Id);
+        CalculateLawUnitDataInGroup(lawUnit, courtLoadPeriod.Id, courtLoadPeriodLawunitsList);
+        //2020.01.08 Optimisation
         totalKoef = totalKoef + lawUnit.Koef;
 
       }
@@ -437,11 +450,23 @@ namespace IOWebApplication.Core.Services
         ////Когато нормализираният коефициент е прекалено малък го приравняваме на 1 за да има поне 1 участие  като вероятност
         //if ((lawUnit.KoefNormalized > 0) && (lawUnit.KoefNormalized < 1))
         //{ lawUnit.KoefNormalized = 1; }
-
-        int lawUnitPeriodDays = repo.AllReadonly<CourtLoadPeriodLawUnit>()
-                              .Where(x => x.CourtLoadPeriodId == courtLoadPeriod.Id)
-                              .Where(x => x.LawUnitId  == lawUnit.LawUnitId)
+        //2020.01.08 Optimisation 1
+        //int lawUnitPeriodDays = repo.AllReadonly<CourtLoadPeriodLawUnit>()
+        //                      .Where(x => x.CourtLoadPeriodId == courtLoadPeriod.Id)
+        //                      .Where(x => x.LawUnitId == lawUnit.LawUnitId)
+        //                      .Where(x => x.AverageCases == 0)
+        //                      .Count();
+         int lawUnitPeriodDays = courtLoadPeriodLawunitsList
+                              .Where(x => x.LawUnitId == lawUnit.LawUnitId)
+                              .Where(x => x.AverageCases == 0)
                               .Count();
+        //2020.01.08 Optimisation 1
+        if (lawUnitPeriodDays == 0)
+        { lawUnitPeriodDays = 1; }
+        if (lawUnit.LoadIndex==0)
+        {
+          lawUnit.LoadIndex = 100;
+        }
         lawUnit.CasesCountIfWorkAllPeriodInGroup = (decimal)totalPeriodDays/(decimal)lawUnitPeriodDays * 100M /(decimal)lawUnit.LoadIndex * lawUnit.CaseCount;
         lawUnit.ExcludeByBigDeviation = false;
       }
@@ -451,16 +476,22 @@ namespace IOWebApplication.Core.Services
    
 
     //Изчислява коефициентите за всеки един съдия в рамките на група или дежурство
-    public void CalculateLawUnitDataInGroup(CaseSelectionProtokolLawUnitVM caseSelectionProtokolLawUnit, int courtLoadPeriodId)
+    public void CalculateLawUnitDataInGroup(CaseSelectionProtokolLawUnitVM caseSelectionProtokolLawUnit, int courtLoadPeriodId,List<CourtLoadPeriodLawUnit> courtLoadPeriodLawunitsList)
 
     {
-      var courtLoadPeriodLawunits = repo.AllReadonly<CourtLoadPeriodLawUnit>().Where(x => x.LawUnitId == caseSelectionProtokolLawUnit.LawUnitId)
-                                                                           .Where(x => x.CourtLoadPeriodId == courtLoadPeriodId).ToList();
-      foreach (var courtLoadPeriodLawunit in courtLoadPeriodLawunits)
-      {
-        caseSelectionProtokolLawUnit.TotalCaseCount = caseSelectionProtokolLawUnit.TotalCaseCount + courtLoadPeriodLawunit.TotalDayCases;
-        caseSelectionProtokolLawUnit.CaseCount = caseSelectionProtokolLawUnit.CaseCount + (int)courtLoadPeriodLawunit.DayCases;
-      }
+      //var courtLoadPeriodLawunits = repo.AllReadonly<CourtLoadPeriodLawUnit>().Where(x => x.LawUnitId == caseSelectionProtokolLawUnit.LawUnitId)
+      //                                                                     .Where(x => x.CourtLoadPeriodId == courtLoadPeriodId).ToList();
+
+      var courtLoadPeriodLawunits = courtLoadPeriodLawunitsList.Where(x => x.LawUnitId == caseSelectionProtokolLawUnit.LawUnitId);
+      //Optimisacia2020.01.09 s
+      //foreach (var courtLoadPeriodLawunit in courtLoadPeriodLawunits)
+      //{
+      //  caseSelectionProtokolLawUnit.TotalCaseCount = caseSelectionProtokolLawUnit.TotalCaseCount + courtLoadPeriodLawunit.TotalDayCases;
+      //  caseSelectionProtokolLawUnit.CaseCount = caseSelectionProtokolLawUnit.CaseCount + (int)courtLoadPeriodLawunit.DayCases;
+      //}
+      caseSelectionProtokolLawUnit.TotalCaseCount = courtLoadPeriodLawunits.Sum(x => x.TotalDayCases);
+      caseSelectionProtokolLawUnit.CaseCount = courtLoadPeriodLawunits.Sum(x =>(int) x.DayCases);
+      //Optimisacia2020.01.09 e
       if (caseSelectionProtokolLawUnit.TotalCaseCount > 0)
       {
         caseSelectionProtokolLawUnit.Koef = caseSelectionProtokolLawUnit.LoadIndex / caseSelectionProtokolLawUnit.TotalCaseCount;

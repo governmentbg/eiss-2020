@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models;
@@ -28,7 +25,7 @@ namespace IOWebApplication.Core.Contracts
         /// </summary>
         /// <param name="CaseSessionId"></param>
         /// <returns></returns>
-        bool CaseLoadIndexAutomationElementGroupe_SRA_SaveData(int CaseSessionId);
+        bool CaseLoadIndexAutomationElementGroupe_SRA_SaveData(int CaseSessionId, List<CaseLoadElementGroup> loadElementGroups = null);
         /// <summary>
         /// Автоматичен запис на натоварване при образуване на дело
         /// </summary>
@@ -46,6 +43,8 @@ namespace IOWebApplication.Core.Contracts
         bool CaseLoadElementType_SaveData(CaseLoadElementType model);
         IQueryable<CaseLoadElementTypeRuleVM> CaseLoadElementTypeRule_Select(int CaseLoadElementTypeId);
         bool CaseLoadElementTypeRule_SaveData(CaseLoadElementTypeRule model);
+        IQueryable<CaseLoadElementTypeStopVM> CaseLoadElementTypeStop_Select(int CaseLoadElementTypeId);
+        bool CaseLoadElementTypeStop_SaveData(CaseLoadElementTypeStop model);
         IQueryable<CaseLoadAddActivityVM> CaseLoadAddActivity_Select();
         bool CaseLoadAddActivity_SaveData(CaseLoadAddActivity model);
         IQueryable<CaseLoadAddActivityIndexVM> CaseLoadAddActivityIndex_Select(int CaseLoadAddActivityId);
@@ -58,8 +57,15 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CourtLawUnitActivityVM> CourtLawUnitActivity_Select(int CourtId);
         bool CourtLawUnitActivity_SaveData(CourtLawUnitActivity model);
         bool IsExistCourtLawUnitActivity(int LawUnitId, int JudgeLoadActivityId, int ModelId, DateTime ActivityDate);
+        bool IsExistCourtLawUnitActivityNew(int LawUnitId, int JudgeLoadActivityId, int ModelId, DateTime ActivityDate, DateTime DateTo);
         IQueryable<LawUnitLoadSprVM> CourtLawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId);
         IQueryable<LawUnitLoadSprVM> LawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId);
         bool ElementTypeRule_Expired(ExpiredInfoVM model);
+        bool ElementTypeStop_Expired(ExpiredInfoVM model);
+        bool CaseLoadIndexRecalcBaseIndex(int CaseId);
+        string RecalcAllCase();
+        string RecalcCaseLoadIndexByCase(int CaseId);
+        string RecalcAllCourtLawUnitActivity();
+        bool IsCaseExistSessionAct(int CaseId);
     }
 }

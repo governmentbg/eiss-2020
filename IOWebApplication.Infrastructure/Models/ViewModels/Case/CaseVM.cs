@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
@@ -51,7 +48,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         
         [Display(Name = "Кратък номер")]
         public string ShortNumber { get; set; }
-        
+
+        [Display(Name = "Кратък номер")]
+        public int ShortNumberVal { get; set; }
+
         [Display(Name = "Номер на дело")]
         public string RegNumber { get; set; }
         
@@ -60,6 +60,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Местоположение на дело")]
         public string LastMovment { get; set; }
+
+        [Display(Name = "Последно движение")]
+        public string LastMigration { get; set; }
 
         [Display(Name = "Архивен номер на дело")]
         public string ArchRegNumber { get; set; }
@@ -87,5 +90,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Основание")]
         public string CaseStateDescription { get; set; }
+
+        [Display(Name = "Влизане в законна сила")]
+        public DateTime? CaseInforcedDate { get; set; }
+
+        [Display(Name = "Съдия-докладчик")]
+        public string JudgeReport { get; set; }
     }
 }

@@ -1,11 +1,9 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Audit.Mvc;
+﻿using Audit.Mvc;
 using IO.LogOperation.Models;
 using IO.LogOperation.Service;
 using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
@@ -14,23 +12,24 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Infrastructure.Providers;
+using IOWebApplication.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Linq;
-using System.Net.Http;
 
 namespace IOWebApplication.Controllers
 {
     [Authorize]
-    [Audit(EventTypeName = "{controller}/{action} ({verb})",
-        IncludeHeaders = false,
-        IncludeModel = true,
-        IncludeRequestBody = false,
-        IncludeResponseBody = false)]
+    //[Audit(EventTypeName = "{controller}/{action} ({verb})",
+    //    IncludeHeaders = false,
+    //    IncludeModel = true,
+    //    IncludeRequestBody = false,
+    //    IncludeResponseBody = false)]
     public class BaseController : Controller
     {
         private IUserContext _userContext;
@@ -85,9 +84,7 @@ namespace IOWebApplication.Controllers
         {
             base.OnActionExecuting(filterContext);
 
-            Audit.Core.Configuration.DataProvider = (IOAuditLogDataProvider)HttpContext
-                .RequestServices.GetService(typeof(IOAuditLogDataProvider));
-            Audit.Core.Configuration.CreationPolicy = Audit.Core.EventCreationPolicy.Manual;
+
 
             /*
              *      Управление на активния елемент на менюто
@@ -179,7 +176,6 @@ namespace IOWebApplication.Controllers
                 {
                     //_currentContext = TempData.Get<CurrentContextModel>(TempData_CurrentContext);
                     _currentContext = TempData.Peek<CurrentContextModel>(TempData_CurrentContext);
-
                 }
                 return _currentContext ?? new CurrentContextModel();
             }
@@ -214,60 +210,91 @@ namespace IOWebApplication.Controllers
 
         #endregion
 
-        public override void OnActionExecuted(ActionExecutedContext context)
+        protected void AddAuditInfo(string operation, string baseInfo, string addInfo = null)
         {
-            base.OnActionExecuted(context);
-
-            ControllerActionDescriptor controllerActionDescriptor = context.ActionDescriptor as ControllerActionDescriptor;
-            if (controllerActionDescriptor != null)
+            var auditService = (IAuditLogService)HttpContext.RequestServices.GetService(typeof(IAuditLogService));
+            var auditLog = new Infrastructure.Data.Models.Audit.AuditLog()
             {
+                CourtId = userContext.CourtId,
+                Operation = operation,
+                BaseObject = baseInfo,
+                ObjectInfo = addInfo,
+                UserId = userContext.UserId
+            };
+            auditService.SaveLog(auditLog);
+        }
 
-                var auditScope = this.GetCurrentAuditScope();
+        ActionExecutedContext lastContext;
+        string lastClientIP;
+        protected override void Dispose(bool disposing)
+        {
 
-                if (HttpContext.Request.Method != HttpMethod.Get.Method)
+            if (lastContext != null && !lastContext.IsJsonResult())
+            {
+                ControllerActionDescriptor controllerActionDescriptor = lastContext.ActionDescriptor as ControllerActionDescriptor;
+                if (controllerActionDescriptor != null)
                 {
+                    var disableAuditOnController = controllerActionDescriptor
+                                                        .ControllerTypeInfo
+                                                       .CustomAttributes
+                                                       .Where(a => a.AttributeType == typeof(DisableAuditAttribute))
+                                                       .Any();
 
-                    var hasDisableAuditAttribute = controllerActionDescriptor
+                    var disableAuditOnAction = controllerActionDescriptor
                                                         .MethodInfo
                                                         .CustomAttributes
                                                         .Where(a => a.AttributeType == typeof(DisableAuditAttribute))
                                                         .Any();
 
-                    if (!hasDisableAuditAttribute)
+                    if (!disableAuditOnController && !disableAuditOnAction)
                     {
-                        var _context = CurrentContext;
-                        if (_context.IsRead)
+                        var auditLog = new Infrastructure.Data.Models.Audit.AuditLog()
                         {
-
-                            auditScope.SetCustomField("currentContext", _context.Info, true);
+                            CourtId = userContext.CourtId,
+                            UserId = userContext.UserId,
+                            Method = Request?.Method,
+                            ClientIP = lastClientIP
+                        };
+                        var _context = CurrentContext;
+                        if (_context.IsRead && _context.LastController == this.ControllerName)
+                        {
+                            auditLog.Operation = _context.Info.Operation;
+                            auditLog.ObjectType = _context.Info.ObjectType;
+                            auditLog.BaseObject = _context.Info.BaseObject;
+                            auditLog.ObjectInfo = _context.Info.ObjectInfo;
                         }
+                        else
+                        {
+                            //ако няма контекст - се взема само title на страницата - зададен е в layout.cshtml
+                            var pageTitle = TempData["PageTitle"];
+                            auditLog.Operation = AuditConstants.Operations.View;
+                            auditLog.BaseObject = (string)pageTitle;
+                        }
+                        //if (Request.Headers.TryGetValue("X-Forwarded-For", out var currentIp))
+                        //{
+                        //    string ip = currentIp;
+                        //    auditLog.ClientIP = ip;
+                        //}
+                        auditLog.RequestUrl = lastContext.HttpContext.Request.Path;
+                        var auditService = (IAuditLogService)HttpContext.RequestServices.GetService(typeof(IAuditLogService));
+                        auditService.SaveLog(auditLog);
                     }
                 }
-
-                if (Request.Headers.TryGetValue("X-Forwarded-For", out var currentIp))
-                {
-                    string ip = currentIp;
-
-                    auditScope.SetCustomField("currentIp", ip, true);
-                }
-
-                var auditAction = auditScope?.Event?.GetMvcAuditAction();
-
-                if (auditAction?.ActionParameters != null)
-                {
-                    CdnUploadRequest fileRequest = (CdnUploadRequest)auditAction.ActionParameters
-                        .Select(x => x.Value)
-                        .FirstOrDefault(x => x?.GetType() == typeof(CdnUploadRequest));
-
-                    if (fileRequest != null)
-                    {
-                        fileRequest.FileContentBase64 = string.Empty;
-                        fileRequest.FileContent = null;
-                    }
-                }
-
-                auditScope.SaveAsync();
             }
+
+            base.Dispose(disposing);
+        }
+        public override void OnActionExecuted(ActionExecutedContext context)
+        {
+            base.OnActionExecuted(context);
+
+            lastContext = context;
+            lastClientIP = null;
+            if (Request.Headers.TryGetValue("X-Forwarded-For", out var currentIp))
+            {
+                lastClientIP = currentIp;
+            }
+
         }
 
         public void SetSuccessMessage(string message)
@@ -320,10 +347,25 @@ namespace IOWebApplication.Controllers
 
         public string GetFooterInfoUrl(int courtId)
         {
-            return null;
-            //return Url.Action("GetBlankFooter", "Ajax", new { id = courtId }, this.ControllerContext.HttpContext.Request.Scheme);
+
+            var config = (IConfiguration)HttpContext
+                                     .RequestServices
+                                     .GetService(typeof(IConfiguration));
+
+            var basePath = config.GetValue<string>("EissUrl");
+            if (!string.IsNullOrEmpty(basePath))
+            {
+                return new Uri(new Uri(basePath), Url.Action("GetBlankFooter", "Ajax", new { id = courtId })).AbsoluteUri;
+            }
+            else
+            {
+                return Url.Action("GetBlankFooter", "Ajax", new { id = courtId }, this.ControllerContext.HttpContext.Request.Scheme);
+
+            }
+
+            //return null;
         }
-        
+
     }
 
     public class AdminBaseController : BaseController

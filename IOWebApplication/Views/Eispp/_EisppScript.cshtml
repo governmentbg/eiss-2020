@@ -155,7 +155,6 @@
     }
 
     function EisppSetVisibleCrimePunishmentVals($punismentContainer, mode) {
-        console.log(mode);
         // Глоба
         if (mode == 'fine') {
             $punismentContainer.find('.crime-fine-amount').show();
@@ -266,6 +265,7 @@
                     $pbcMeasureUnit.val(response.pbcMeasureUnit);
                     $pbcMeasureContainer.find('.pbc-measure-unit-container').show();
                     $pbcMeasureUnit.attr('readonly', true);
+                    $pbcMeasureUnit.attr("style", "pointer-events: none;");
                 }
             },
             complete: function () { },
@@ -292,10 +292,22 @@
         });
     }
 
+    function setCrimePunishmentKind() {
+        $('.pbc-measure-type').each(function () {
+            if (typeof $(this).data('issetchange') == 'undefined') {
+                $(this).data('issetchange', true);
+                $(this).change(function () {
+                    EisppPbcMeasureUnit($(this))
+                });
+                $(this).change();
+            }
+        });
+    }
     function EisppOnReady() {
         $(function () {
             initEisppEkatte();
             initEISPPTblElement();
+            initEisppEkatteCrime();
         });
 
         $('.eispp_range').each(function () {
@@ -305,6 +317,11 @@
         $('.punishment-kind').change(function () {
             let $punismentContainer = $(this).parents('.punishment-container:first');
             EisppGetPunishmentKindMode($punismentContainer, true);
+            if ($(this).val() == "99001") {
+                $punismentContainer.find('.punishment-kind-error').show();
+            } else {
+                $punismentContainer.find('.punishment-kind-error').hide();
+            }
         });
         $('.punishment-serving-type').change(function () {
             let $punismentContainer = $(this).parents('.punishment-container:first');
@@ -315,6 +332,11 @@
         $('.crime-punishment-kind').change(function () {
             let $punismentContainer = $(this).parents('.crime-punishment-container:first');
             EisppGetCrimePunishmentKindMode($punismentContainer, true);
+            if ($(this).val() == "99001") {
+                $punismentContainer.find('.punishment-kind-error').show();
+            } else {
+                $punismentContainer.find('.punishment-kind-error').hide();
+            }
         });
         $('.crime-punishment-kind').change();
 
@@ -334,9 +356,9 @@
             EisppCheckBoxEisppRules(this);
         });
 
-        $('.pbc-measure-type').change(function () {
-            EisppPbcMeasureUnit($(this))
-        });
+        //$('.pbc-measure-type').change(function () {
+        //    EisppPbcMeasureUnit($(this))
+        //});
 
         $('.crime-status').change(function () {
             EisppCrimeStatusRules(this);
@@ -362,6 +384,10 @@
             if ($(this).attr('readonly'))
                 $(this).attr("style", "pointer-events: none;");
         });
+
+  
+        initDynamicForms(setCrimePunishmentKind);
+
 
         localStorage.removeItem('activeTabSession');
         $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {

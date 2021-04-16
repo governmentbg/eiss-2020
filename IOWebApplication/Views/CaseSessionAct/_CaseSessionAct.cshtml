@@ -2,6 +2,7 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    var canAcc = access.CanAccess;
 }
 @if (access.CanChange)
 {
@@ -21,6 +22,7 @@
     </div>
 </div>
 
+<partial name="_CdnScript" />
 
 <script>
         $(function () {
@@ -36,6 +38,21 @@
                 },
                 deferLoading: deferLoadingOnTab('#caseSessionActMainTable'),
                 columns: [
+                    {
+                        name: 'isFinalDoc',
+                        data: 'isFinalDoc',
+                        title: '',
+                        "render": function (item, type, row, meta) {
+                            if (row.isFinalDoc) {
+                                return "<span class='text-black'><i class='fa fa-gavel fa-lg' title='Финализиращ акт'></i></span>";
+                            }
+                            else {
+                                return "<span class='text-green'><i class='' title=''></i></span>";
+                            }
+                        },
+                        sortable: false,
+                        searchable: false
+                    },
                     {
                         name: 'actTypeLabel',
                         data: 'actTypeLabel',
@@ -58,6 +75,20 @@
                         searchable: true
                     },
                     {
+                        name: 'regNumberNew',
+                        data: 'regNumberNew',
+                        title: 'Рег. номер',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            if (row.regNumberNew) {
+                                return "<div class='cdn-listview' style='margin-left:5px;'><a href='#' class='cdn-loader' data-sourceType='" + @SourceTypeSelectVM.CaseSessionActAllFiles + "' data-sourceId='" + row.id + "'> " + row.regNumberNew + "</a></div>";
+                            } else {
+                                return "";
+                            }
+                        }
+                    },
+                    {
                         name: 'regNumber',
                         data: 'regNumber',
                         title: 'Рег. номер',
@@ -75,6 +106,26 @@
                                 }
                     },
                     {
+                        name: 'actDeclaredDate',
+                        data: 'actDeclaredDate',
+                        title: 'Дата на постановяване',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return (data != null) ? moment(data).format("DD.MM.YYYY") : data;
+                        }
+                    },
+                    {
+                        name: 'actInforcedDate',
+                        data: 'actInforcedDate',
+                        title: 'Дата на влизане в сила',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return (data != null) ? moment(data).format("DD.MM.YYYY") : data;
+                        }
+                    },
+                    {
                         name: 'actions',
                         data: "id",
                         title: "",
@@ -89,6 +140,22 @@
             });
             table.order([4, 'desc']);
         });
+
+     $(function () {
+         $(document).on('click', 'div.cdn-listview a.cdn-loader', function () {
+                    let url = '@Url.Action("FileListView","Files")';
+                    if ($(this).data('url')) {
+                        url = $(this).data('url');
+                    }
+                    let lnk = $(this);
+                    requestContent(url,
+                        { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                        function (html) {
+                            $(lnk).parent().html(html);
+                        });
+                    return false;
+                });
+         });
 </script>
 
 <script id="caseSessionActTemplateEdit" type="text/x-handlebars-template">
@@ -101,5 +168,23 @@
     <a href="@Url.Action("Index", "CaseSessionActLawBase")?caseSessionActId={{this}}" class="btn btn-def btn-sm m-b-5" title="Норм. текстове"><i class="fa fa-list"></i><span class="hidden-sm hidden-xs"></span></a>
     <a href="@Url.Action("Index", "CaseSessionActComplain")?caseSessionActId={{this}}" class="btn btn-def btn-sm m-b-5" title="Обжалване"><i class="fa fa-gavel"></i><span class="hidden-sm hidden-xs"></span></a>
 </script>
+
+    <script>
+        $(document).ready(function () {
+            SH_Columns();
+        });
+
+        function SH_Columns() {
+            var table = $('#caseSessionActMainTable').DataTable();
+            if ('@access.CanChange' == 'True') {
+                table.column(3).visible(true);
+                table.column(4).visible(false);
+            }
+            else {
+                table.column(3).visible(false);
+                table.column(4).visible(true);
+            }
+        }
+    </script>
 
 

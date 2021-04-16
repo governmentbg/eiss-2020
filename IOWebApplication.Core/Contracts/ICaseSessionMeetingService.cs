@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -28,7 +25,7 @@ namespace IOWebApplication.Core.Contracts
         bool CourtHallBusy(int CourtHallId, DateTime DateFrom, DateTime DateTo, int CaseSessionId);
         bool CourtHallBusyFromSession(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int CaseSessionId);
         string IsCaseLawUnitFromCaseBusy(int caseId, int caseSessionId, DateTime dateTimeFrom, DateTime dateTimeTo);
-        bool IsExistMeetengInSessionAfterDate(DateTime DateTo, int CaseSessionId);
+        bool IsExistMeetengInSessionAfterDate(DateTime DateTo, int CaseSessionId, int? CaseSessionMeetingId);
         bool CheckExistSecretaryOfAllMeeting(int caseSessionId);
     }
 }

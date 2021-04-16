@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IdentityServer4.AccessTokenValidation;
+﻿using IdentityServer4.AccessTokenValidation;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplicationApi.Helper;
@@ -70,6 +67,19 @@ namespace IOWebApplicationApi
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JwtKey"])),
                         ClockSkew = TimeSpan.Zero // remove delay of token when expire, 
                     };
+                    //cfg.Events = new JwtBearerEvents()
+                    //{
+                    //    OnAuthenticationFailed = c =>
+                    //    {
+                    //        c.NoResult();
+
+                    //        c.Response.StatusCode = 401;
+                    //        c.Response.ContentType = "text/plain";
+
+                    //        return null;
+                    //    }
+
+                    //};
                 });
 
             string privateKey = Configuration["JwtMobileKey"];
@@ -101,6 +111,15 @@ namespace IOWebApplicationApi
             services.AddApplicationServices();
 
             services.AddMvc();
+            #region IdentityServer
+            //services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+            //    .AddIdentityServerAuthentication(options =>
+            //    {
+            //        options.Authority = Configuration.GetValue<string>("OpenIdConnect:Authority");
+            //        options.RequireHttpsMetadata = false;
+            //        options.ApiName = Configuration.GetValue<string>("OpenIdConnect:ApiName");
+            //    });
+            #endregion IdentityServer
             services.AddLogging(logging =>
             {
                 logging.AddConsole();
@@ -151,6 +170,7 @@ namespace IOWebApplicationApi
             app.UseSwagger();
             app.UseSwaggerUi3();
 
+            // global cors policy
             app.UseCors(x => x
                 .AllowAnyOrigin()
                 .AllowAnyMethod()

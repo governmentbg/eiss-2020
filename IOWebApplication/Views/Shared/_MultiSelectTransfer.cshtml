@@ -32,7 +32,7 @@
         <div class="ms-transfer-right-item-text ms-transfer-width-percent">
             {{this.text}}
         </div>
-        <div class="ms-transfer-right-item-buttons">
+        <div class="ms-transfer-right-item-buttons {{this.changed_css}}">
             <div class="ms-transfer-right-item-percent">
                 <input id="percent{{this.id}}" type="text" class="ms-transfer-right-item-percent-input form-control" value="{{this.percent}}">
                 <span class="text-danger field-validation-valid ms-transfer-right-item-percent-valid" id="percent{{this.id}}_val"></span>
@@ -46,7 +46,7 @@
 </script>
 <script id="templateRight" type="text/x-handlebars-template">
     {{#each this.data}}
-    <div class="ms-transfer-right-item">
+    <div class="ms-transfer-right-item {{this.changed_css}}">
         <div class="ms-transfer-right-item-text ms-transfer-width-nopercent">
             {{this.text}}
         </div>
@@ -58,7 +58,7 @@
 </script>
 <script id="templatePercentRightEdit" type="text/x-handlebars-template">
     {{#each this.data}}
-    <div class="ms-transfer-right-item">
+    <div class="ms-transfer-right-item {{this.changed_css}}">
         <div class="ms-transfer-right-item-text ms-transfer-width-percent">
             <div style="display:block">
                 {{this.text}}

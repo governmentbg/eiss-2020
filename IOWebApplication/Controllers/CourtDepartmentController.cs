@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,6 +27,7 @@ namespace IOWebApplication.Controllers
 
         public IActionResult Index()
         {
+            SetHelpFile(HelpFileValues.Nom11);
             return View();
         }
 
@@ -189,6 +187,7 @@ namespace IOWebApplication.Controllers
             var selectListItems = nomService.GetDDL_ByCourtTypeInstanceList(userContext.CourtInstances, false, false);
             ViewBag.HasInstance = selectListItems.Count > 1;
             ViewBag.CaseInstanceId_ddl = selectListItems;
+            SetHelpFile(HelpFileValues.Nom11);
         }
 
         public IActionResult AddLawUnits(int id)
@@ -225,6 +224,8 @@ namespace IOWebApplication.Controllers
         public IActionResult LawUnits(int id)
         {
             ViewBag.backUrl = Url.Action("Index", "CourtDepartment");
+            SetHelpFile(HelpFileValues.Nom11);
+
             return View("CheckListViewVM", service.CheckListViewVM_Fill(userContext.CourtId, id));
         }
 
@@ -253,6 +254,7 @@ namespace IOWebApplication.Controllers
             ViewBag.depName = department.Label;
 
             ViewBag.JudgeDepartmentRoleId_ddl = nomService.GetDropDownList<JudgeDepartmentRole>();
+            SetHelpFile(HelpFileValues.Nom11);
         }
 
         public IActionResult AddLawUnit(int CourtDepartmentId)

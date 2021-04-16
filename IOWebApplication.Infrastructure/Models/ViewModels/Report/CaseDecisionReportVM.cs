@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -49,5 +46,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Основен вид дело")]
         public int CaseGroupId { get; set; }
+
+        [Display(Name = "С диспозитив")]
+        public bool WithActDescription { get; set; }
+
+        [Display(Name = "Без диспозитив за дела с ограничен достъп")]
+        public bool WithoutActDescriptionCaseRestriction { get; set; }
     }
 }

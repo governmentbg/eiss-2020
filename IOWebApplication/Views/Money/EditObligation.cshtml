@@ -50,7 +50,8 @@
                 {
                     @Html.EditorFor(x => x.ExecListTypeId, "GenericDropDown")
                     <div id="countryreceive">
-                        @Html.EditorFor(x => x.CountryReceiveId, "GenericDropDownString")
+                        @Html.EditorFor(x => x.ReceiveSourceTypeId, "GenericDropDown")
+                        @Html.EditorFor(x => x.ReceiveSourceId, "SelectSource", null, new { sourceTypeContainer = "#ReceiveSourceTypeId", onChange = "ChangeReceiveSourceId();" })
                         @Html.EditorFor(x => x.Iban)
                         @Html.EditorFor(x => x.BIC)
                         @Html.EditorFor(x => x.BankName)
@@ -117,7 +118,7 @@
     });
 
     function ChangeExecListType() {
-        $("#divSign").show();        
+        $("#divSign").show();
         var execListTypeId = $("#ExecListTypeId").val();
         if (execListTypeId == @NomenclatureConstants.ExecListTypes.Country) {
             $("#countryreceive").show();
@@ -126,7 +127,7 @@
         else if (execListTypeId == @NomenclatureConstants.ExecListTypes.ThirdPerson) {
             $("#countryreceive").hide();
             $("#countryperson").show();
-            $("#divSign").hide(); 
+            $("#divSign").hide();
         }
         else {
             $("#countryreceive").hide();
@@ -149,17 +150,6 @@
 
     $('#ExecListTypeId').change(function () {
         ChangeExecListType();
-    });
-
-    $('#CountryReceiveId').change(function () {
-        var id = $(this).val();
-        if (id != "") {
-            requestGET_Json('@Url.Action("LastDataForReceive", "Money")', { receiveId: id }, function (data) {
-                    $("#Iban").val(data.iban);
-                    $("#BIC").val(data.bic);
-                    $("#BankName").val(data.bankName);
-                });
-        }
     });
 
     $('#Iban').blur(function () {
@@ -206,4 +196,28 @@
             }
         }
     }
+
+    $('#ReceiveSourceTypeId').change(function () {
+        $('#ReceiveSourceId').parent().find('input').val('');
+    });
+
+    function ChangeReceiveSourceId()
+    {
+        var sourceType = $('#ReceiveSourceTypeId').val();
+        var sourceId = $('#ReceiveSourceId').val();
+        if (sourceId != "" && sourceId != "-1") {
+            requestGET_Json('@Url.Action("LastDataForReceive", "Money")', { sourceType: sourceType, sourceId: sourceId}, function (data) {
+                    $("#Iban").val(data.iban);
+                    $("#BIC").val(data.bic);
+                    $("#BankName").val(data.bankName);
+                });
+        }
+    };
+
+</script>
+
+<script>
+    $(function () {
+        initSource();
+    });
 </script>

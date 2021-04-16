@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -18,6 +15,7 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
 using Nest;
@@ -92,6 +90,7 @@ namespace IOWebApplication.Controllers
       //ViewBag.SpecialityId_ddl = nomService.GetDropDownList<Speciality>(false, true);
       ViewBag.SpecialityId_ddl = nomService.GetDDL_Specyality_ByLowUnit_Type(NomenclatureConstants.LawUnitTypes.Jury, false, true);
       ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSelectionProtokol(caseId);
+      ViewBag.NextOpenMeating = service.NextCaseOpenSessionMeeting(caseId,DateTime.Now);
       SetHelpFile(HelpFileValues.CaseLawunit);
     }
 
@@ -299,9 +298,49 @@ namespace IOWebApplication.Controllers
       }
       else
       {
-        
+        ///////////////////////////////////////////////////////////////////////////////
+        ///Взема се номер и се коригира
+        ///
+        /////////////////////////////////////////////////////////////////////////////////
+        ///////////////Denislav Angelov 2020.08.27
+        //int currentLockNumber = service.TakeCaseSelectionProtocolLockNumber(model.CourtGroupId, model.CourtDutyId);
+        //Random rnd = new Random();
+        //int ms = rnd.Next(100);
+        //Thread.Sleep(ms);
+        //int minLockNumber = service.TakeCaseSelectionProtocolMinLockNumber(model.CourtGroupId, model.CourtDutyId);
+        //DateTime timeStart = DateTime.Now;
+
+        //while (currentLockNumber != minLockNumber)
+        //{
+        //  Thread.Sleep(100);
+        //  minLockNumber = service.TakeCaseSelectionProtocolMinLockNumber(model.CourtGroupId, model.CourtDutyId);
+        //  if (timeStart.AddSeconds(60)<DateTime.Now)
+        //  {
+        //    ExitByTime = true;
+        //    break;
+        //  }
+        //}
+        //if (ExitByTime==false)
+        //{
+        //  if (service.HsaUnsignedProtocol(model.CaseId))
+        //  {
+        //    SetErrorMessage("Не може да бъде създаден нов протокол, докато има неподписан такъв.");
+        //    return RedirectToAction("Index", new { id = model.CaseId });
+        //  }
+        ///////////////Denislav Angelov 2020.08.27
         if (!service.CaseSelectionProtokol_SaveData(model, ref errorMessage))
           save = false;
+        ///////////////Denislav Angelov 2020.08.27
+        //}
+        //else
+        //{
+        //  save = false;
+        //}
+
+        //service.FinishLockNumber(currentLockNumber);
+        ///////////////Denislav Angelov 2020.08.27
+        ///////////////////////////////////////////////////////////////////////////////
+
       }
 
       if (save == true)
@@ -434,6 +473,33 @@ namespace IOWebApplication.Controllers
       return RedirectToAction("SignDoc", new { id = model.Id });
     }
 
+    //[HttpPost]
+    //public async Task<IActionResult> SignDoc(CaseSelectionProtokolPreviewVM model)
+    //{
+    //    var protokolModel = service.CaseSelectionProtokol_Preview(model.Id);
+
+    //    string html = await this.RenderPartialViewAsync("~/Views/CaseSelectionProtokol/", "Preview.cshtml", protokolModel, true);
+    //    var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true).GetByte(this.ControllerContext);
+    //    var pdfRequest = new CdnUploadRequest()
+    //    {
+    //        SourceType = SourceTypeSelectVM.CaseSelectionProtokol,
+    //        SourceId = model.Id.ToString(),
+    //        FileName = "selectionProtokol.pdf",
+    //        ContentType = "application/pdf",
+    //        Title = $"Протокол за разпределение {protokolModel.SelectedLawUnitName} ({protokolModel.JudgeRoleName})",
+    //        FileContentBase64 = Convert.ToBase64String(pdfBytes)
+    //    };
+    //    if (await cdnService.MongoCdn_AppendUpdate(pdfRequest))
+    //    {
+    //        return RedirectToAction(nameof(SendForSign), new { id = model.Id });
+    //    }
+    //    else
+    //    {
+    //        SetErrorMessage("Проблем при създаване на протокол!");
+    //        return RedirectToAction(nameof(PreviewDoc), new { id = model.Id });
+    //    }
+    //}
+
     public async Task<IActionResult> SignDoc(int id)
     {
       var protokolModel = service.CaseSelectionProtokol_Preview(id);
@@ -487,9 +553,16 @@ namespace IOWebApplication.Controllers
 
     public IActionResult SignedDoc(int id)
     {
+      //TODO
+      //Update status i horata v delata!!!
       service.CaseSelectionProtokol_UpdateBeforeAfterSign(id);
       SetSuccessMessage("Протоколът беше подписан успешно!");
-      return RedirectToAction(nameof(PreviewDoc), new { id = id });
+      var case_id= service.IfJuryReturnCaseIdToRedirect(id);
+      if (case_id > 0)
+      { return RedirectToAction("Index", new { id = case_id }); }
+      else 
+      { return RedirectToAction(nameof(PreviewDoc), new { id = id }); }
+      
     }
 
     public IActionResult CaseSelectionProtokolList()
@@ -513,14 +586,34 @@ namespace IOWebApplication.Controllers
       return request.GetResponse(data);
     }
 
-    public IActionResult LoadByCaseGroup(string idStr, string groups, int caseId)
+    public IActionResult LoadByCaseGroup(string idStr, string groups, int caseId,int judgeRoleId)
     {
+      //string[] groupsExcludeArr = (groups ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+      //int[] groupsWithLawUnits = service.CaseGroup_WithLawUnits(userContext.CourtId, idStr);
+      //string[] groupsIncludeArr= new String[groupsWithLawUnits.Count()];
+      //for (int i = 0; i < groupsWithLawUnits.Count(); i++)
+      //{
+      //  groupsIncludeArr[i] = groupsWithLawUnits[i].ToString();
+      //}
+      //var caseGroupList = nomService.GetDropDownListDescription<CaseGroup>(false, false);
+
+      //ViewBag.CaseGroupId_ddl = caseGroupList.Where(x => groupsExcludeArr.Contains(x.Value) == false)
+      //                                       .Where(x => groupsIncludeArr.Contains(x.Value)==true)
+      //                                      .ToList();
+
       var ddl_list = service.Return_Available_CaseGroup_forAdditionalSelect(idStr, groups, caseId);
 
-      ViewBag.CaseGroupId_ddl = ddl_list;
-      CaseSelectionProtokolVM model = new CaseSelectionProtokolVM();
+      
+      CaseSelectionProtocolLoadByGroupVM model = new CaseSelectionProtocolLoadByGroupVM();
       model.IdStr = idStr;
       model.CaseId = caseId;
+      model.judgeRoleId = judgeRoleId;
+
+      model.CaseGroups = ddl_list.Select(x => new CheckListVM
+      {
+        Label = x.Text,
+        Value = x.Value
+      }).ToArray();
 
       if (ddl_list.Count > 0)
       {
@@ -530,11 +623,11 @@ namespace IOWebApplication.Controllers
     }
 
     [HttpPost]
-    public IActionResult LoadByCaseGroup(CaseSelectionProtokolVM model)
+    public IActionResult LoadByCaseGroup(CaseSelectionProtocolLoadByGroupVM model)
     {
       IEnumerable<CaseSelectionProtokolLawUnitVM> modelView = null;
       ViewBag.RoleId = NomenclatureConstants.JudgeRole.Judge;
-      modelView = service.LawUnit_LoadJudgeByCaseGroup(userContext.CourtId, model.CaseGroupId, model.IdStr ?? "", model.CaseId,model.JudgeRoleId);
+      modelView = service.LawUnit_LoadJudgeByCaseGroup(userContext.CourtId, model.CaseGroups, model.IdStr ?? "", model.CaseId,model.judgeRoleId);
       SetViewBagLawUnits(NomenclatureConstants.SelectionMode.SelectByGroups);
       return PartialView("_LoadedLawUnits", modelView);
     }
@@ -545,7 +638,9 @@ namespace IOWebApplication.Controllers
         DateFrom = NomenclatureExtensions.GetStartYear(),
         DateTo = NomenclatureExtensions.GetEndYear(),
       };
-      return View(model);
+            SetHelpFile(HelpFileValues.Report27);
+
+            return View(model);
     }
 
     [HttpPost]

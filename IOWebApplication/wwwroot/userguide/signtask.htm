@@ -1,0 +1,664 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
+			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
+			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
+			mso-style-name: "EISS Style5 ЕИССCxSpLast";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h2 style='margin-left:54.95pt;text-indent:-19.5pt'>
+			<a name="_Toc58420174"></a><a name="_Toc39426260">
+				1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>ЗАДАЧА
+				ЗА ПОДПИС
+			</a>
+		</h2>
+
+		<p class=MsoNormal>
+			Задача за Подпис на съдебен акт/протокол се изпраща към
+			конкретен потребител – съдия по делото. Задачата се използва за подписване на
+			съдебен акт/протокол за всички актове/протоколи, независимо от числеността на
+			съдебния състав.
+		</p>
+
+		<p class=MsoNormal>
+			Процесът по подписване на съдебен акт/протокол става на 2
+			стъпки посредством две свързани задачи – създаване и изпълнение на задача за
+			Изпращане за подпис и изпълнение на задача за Подписване на документ.
+		</p>
+
+		<p class=MsoNormal>
+			Създаване на задача за Изпращане за подпис става от екран за
+			Редакция на акт/протокол. След създаване на проект на съдебен акт (и или след
+			съгласуване на съдебен акт/протокол)  от таб Актове и протоколи в съдебното
+			дело в екран Редакция на акт/протокол  се визуализира таб Задачи и таб Свързани
+			документи.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=78
+				 id="Picture 142155" src="signtask_files/image001.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Създаването на нова задача за Изпращане за подпис
+			посредством избор на бутон <img width=85 height=33 id="Picture 142156"
+											src="signtask_files/image002.jpg">. Отваря се модален прозорец за попълване на
+			следните данни:
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:17.85pt'>
+			<span style='line-height:115%'>
+				<img width=291 height=128 id="Picture 52"
+					 src="signtask_files/image003.jpg">
+			</span>
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Поле Вид задача – избор на вид задача;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Поле Описание – въвежда се допълнителна информация при
+			необходимост. Полето не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			Избира се бутон <img width=43 height=27 id="Picture 142158"
+						src="signtask_files/image004.jpg">, с което задачата е успешно създадена и
+			автоматично се насочва към автора на задачата за изпълнение.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=131
+				 id="Picture 143852" src="signtask_files/image005.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			За да се
+			генерират съответния брой задачи за Подписване на документ до всички съдии по
+			делото – съдия-докладчик и членове на съдебен състав, изпълнителят на задача
+			(който винаги съвпада с автора при задачата за изпращане за подпис) избира
+			бутон Изпълни.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			<b>
+				<span style='color:red'>Забележка:</span>
+			</b><span style='color:red'>
+				След избор на
+				бутон Изпълни на задачата за Подписване на съдебен акт, същият получава
+				регистрационен номер и дата
+			</span><span lang=EN-US style='color:red'> (</span><span style='color:red'>в случай, че не е вече регистриран</span><span lang=EN-US
+																																style='color:red'>)</span><span style='color:red'>
+				, и се генерира окончателния
+				файл, който ще бъде електронно подписан.
+			</span>
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center'>&nbsp;</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=543 height=193 id="Picture 143853" src="signtask_files/image006.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Задачата за Изпращане за подпис се приключва автоматично с генериране
+			на съответните задачи за Подписване на документ.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=175
+				 id="Picture 142162" src="signtask_files/image007.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			При насочване на задачата за изпълнение, създадената задача
+			може да бъде редактирана от автора &#1117;, до момента на приемане на задачата
+			за изпълнение, посредством бутон Редакция. При избор на бутон Редакция се
+			отваря модален прозорец със същите полета каквито при създаване на нова задача.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка:</b> При насочване на задача за изпълнение от
+			същия потребител, който създава задача, задачата се приема автоматично и
+			потребителят може да премине директно към нейното изпълнени, посредством избор
+			на бутон изпълни.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Важно! </b>При първоинстанционни състави в състав от един
+			съдия, се генерира само една задача за изпращане за подпис, след изпълнението
+			на която може да се пристъпи директно към подписване на съдебния акт/протокол.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=131
+				 id="Picture 142163" src="signtask_files/image008.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Потребителят, към когото е насочена задачата, получава
+			нотификация за нова задача в инструмент Задачи в лентата с менюта и
+			инструменти. Задачата се визуализира и в панел Моите задачи в Персонализирания
+			екран на потребителя, а ако в задачата е посочен краен срок за изпълнение,
+			съответно се визуализира и в панел Календар:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=199
+				 id="Picture 143854" src="signtask_files/image009.jpg">
+		</p>
+
+		<p class=MsoNormal align=left style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:left;text-indent:0cm;text-autospace:none'>
+			<span style='font-size:
+10.0pt;line-height:115%;font-family:"Calibri",sans-serif;color:black'>&nbsp;</span>
+		</p>
+
+		<p class=MsoNormal>
+			През бутон Преглед <img width=41 height=35
+						   id="Picture 141433" src="signtask_files/image010.jpg"> от панел Моите задачи на
+			началния екран на системата или бутон Преглед <img width=81 height=31
+													  id="Picture 141434" src="signtask_files/image011.jpg">в екрана с пълния списък
+			на задачи към потребител, се отваря документа, по който е необходимо да се
+			извърши действието. В таб Задачи, посредством Бутон Приеми, потребителя може да
+			приеме задачата за подпис на съдебния акт.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=139
+				 id="Picture 143152" src="signtask_files/image012.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			След приемане на задачата се визуализира
+			бутон Изпълни.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=142
+				 id="Picture 143189" src="signtask_files/image013.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Визуализира се екран за преглед и подписване на съдебен
+			акт/протокол:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=234
+				 id="Picture 143192" src="signtask_files/image014.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В горния десен ъгъл на екран се извеждат имена на
+			потребителя, от който се очаква подпис в системата. Избира се бутон Подпиши,
+			след което на екрана се извежда допълнителен прозорец за избор на сертификат за
+			подписване (КЕП) и въвеждане на ПИН на КЕП.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на ПИН на КЕП и успешно подписване на
+			акта/протокола системата връща на екран Редакция на акт/протокол с подписания
+			файл, който е достъпен за последващ преглед.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=223
+				 id="Picture 143194" src="signtask_files/image015.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			Важно: При изготвяне на Протокол или
+			протоколно определение задачата за подпис се изпраща до съдия-докладчик и до
+			съдебен секретар.
+		</p>
+
+		<h2 style='margin-left:54.95pt;text-indent:-19.5pt'>
+			<a name="_Toc58420175"></a><a name="_Toc39426261">
+				1.2<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>ЗАДАЧА
+				ЗА ПОДПИС НА МОТИВИ
+			</a>
+		</h2>
+
+		<p class=MsoNormal>
+			Задача за Подпис на мотиви се изпраща към конкретен
+			потребител – съдия по делото. Задачата се използва за подписване на мотиви към
+			присъда по наказателни дела, независимо от числеността на съдебния състав.
+		</p>
+
+		<p class=MsoNormal>
+			Процесът по подписване на мотиви става на 2 стъпки
+			посредством две свързани задачи – създаване и изпълнение на задача за Изпращане
+			за подпис на мотиви и изпълнение на задача за Подпис на мотиви.
+		</p>
+
+		<p class=MsoNormal>
+			Създаване на задача за Изпращане за подпис на мотиви става
+			от екран за Редакция на акт/протокол след постановяване на съдебен акт –
+			присъда.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span style='line-height:115%'>
+				<img width=604 height=116 id="Picture 143213" src="signtask_files/image016.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			Създаването на нова задача за подпис посредством избор на
+			бутон <img width=85 height=33 id="Picture 142174"
+					src="signtask_files/image017.jpg">. Отваря се модален прозорец за попълване на
+			следните данни:
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:17.85pt'>
+			<img width=317 height=210 id="Picture 142175" src="signtask_files/image018.jpg">
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Поле Вид задача – избор на вид задача;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Поле Описание – въвежда се допълнителна информация при необходимост.
+			Полето не е със задължителен характер.
+		</p>
+
+		<p class=MsoNormal>
+			Избира се бутон <img width=43 height=27 id="Picture 142176"
+						src="signtask_files/image019.jpg">, с което задачата е успешно създадена и
+			автоматично се насочва към автора на задачата за изпълнение.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=155
+				 id="Picture 143412" src="signtask_files/image020.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			За да се генерират съответния брой задачи за подпис на
+			мотиви до всички съдии по делото – съдия-докладчик и членове на съдебен състав,
+			изпълнителят на задача (който винаги съвпада с автора при задачата за изпращане
+			за подпис) избира бутон Изпълни.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=172 id="Picture 143510"
+				 src="signtask_files/image021.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			С натискането на бутон Изпълни от потребител, се генерира
+			окончателния файл и се генерират задачите за подпис
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=205
+				 id="Picture 143581" src="signtask_files/image022.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Задачата за Изпращане за подпис на мотиви се приключва
+			автоматично с генериране на съответните задачи за Подпис на мотиви.
+		</p>
+
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+			<img width=604 height=115 id="Picture 143857" src="signtask_files/image023.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			При насочване на задачата за изпълнение, създадената задача
+			може да бъде редактирана от автора &#1117;, до момента на приемане на задачата
+			за изпълнение, посредством бутон Редакция. При избор на бутон Редакция се
+			отваря модален прозорец със същите полета каквито при създаване на нова задача.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка:</b> При насочване на задача за изпълнение от
+			същия потребител, който създава задача, задачата се приема автоматично и
+			потребителят може да премине директно към нейното изпълнени, посредством избор
+			на бутон изпълни.
+		</p>
+
+		<p class=MsoNormal>
+			<b>Важно! </b>При първоинстанционни състави в състав от един
+			съдия, се генерира само една задача за изпращане за подпис на мотиви, след
+			изпълнението на която може да се пристъпи директно към подпис на мотивите.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=169
+				 id="Picture 143858" src="signtask_files/image024.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Потребителят, към когото е насочена задачата, получава
+			нотификация за нова задача в инструмент Задачи в лентата с менюта и
+			инструменти. Задачата се визуализира и в панел Моите задачи в Персонализирания
+			екран на потребителя, а ако в задачата е посочен краен срок за изпълнение,
+			съответно се визуализира и в панел Календар:
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=140
+				 id="Picture 143859" src="signtask_files/image025.jpg">
+		</p>
+
+		<p class=MsoNormal align=left style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:left;text-indent:0cm;text-autospace:none'>
+			<span style='font-size:
+10.0pt;line-height:115%;font-family:"Calibri",sans-serif;color:black'>&nbsp;</span>
+		</p>
+
+		<p class=MsoNormal>
+			През бутон Преглед <img width=41 height=35
+						   id="Picture 141449" src="signtask_files/image010.jpg"> от панел Моите задачи на
+			началния екран на системата или бутон Преглед <img width=81 height=31
+													  id="Picture 141454" src="signtask_files/image026.jpg">в екрана с пълния списък
+			на задачи към потребител, се отваря документа, за който е необходимо да се
+			извърши действието. В таб Задачи, посредством Бутон Приеми, потребителя може да
+			приеме задачата за изпълнение.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=603 height=200
+				 id="Picture 142186" src="signtask_files/image027.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal>
+			Подписването на съдебния акт/протокол става посредством
+			избор на бутон Изпълни на реда на съответния съдия.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=603 height=197
+				 id="Picture 142188" src="signtask_files/image028.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В горния десен ъгъл на екран се извеждат имена на
+			потребителя, от който се очаква подпис в системата. Избира се бутон Подпиши,
+			след което на екрана се извежда допълнителен прозорец за избор на сертификат за
+			подписване (КЕП) и въвеждане на ПИН на КЕП.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на ПИН на КЕП и успешно подписване на
+			акта/протокола системата връща на екран Редакция на акт/протокол с подписания
+			файл на мотиви, който е достъпен за последващ преглед.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=205
+				 id="Picture 143861" src="signtask_files/image029.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span style='font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>{signtask}</span>
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

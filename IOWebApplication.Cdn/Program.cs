@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System.IO;
+﻿using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +16,9 @@ namespace IOWebApplication.Cdn
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
+                //.AddJsonFile("hosting.json", optional: true)
+                //.AddJsonFile("appsettings.json", optional: false)
+                //.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", true)
                 .AddCommandLine(args)
                 .Build();
 

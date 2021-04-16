@@ -6,12 +6,17 @@
     var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
     var eisppCauseRule = "NPR.DLO.DLOOSN";
     (var ruleIds, var flagsCause) = rulesService.GetEisppRuleIds((int)ViewBag.EventTypeId, eisppCauseRule);
+    //if (Model.IsGeneratedEisppNumber)
+    //{
+    //    flagsCause = 0;
+    //}
 }
 @Html.HiddenFor(x => x.CaseTypeId)
 @Html.HiddenFor(x => x.EisppCaseId)
 @Html.HiddenFor(x => x.StructureId)
 @Html.HiddenFor(x => x.Status.StatusId)
 @Html.HiddenFor(x => x.IsSelected)
+@Html.HiddenFor(x => x.IsGeneratedEisppNumber)
 <div class="row">
     <div class="col-lg-2">
         @Html.EditorFor(x => x.ExactCaseType, "EisppDropDown", null, new { Ddl = ViewBag.ExactCaseTypeDDL })
@@ -50,16 +55,20 @@
 </div>
 @if (flagsCause > 0)
 {
-    <div class="case-cause">
+<div class="case-cause">
+    @if (!Model.IsGeneratedEisppNumber)
+    {
         <div class="row case-cause-dd-container">
             <div class="col-lg-4">
                 @Html.EditorFor(x => x.ConnectedCaseId, "EisppDropDownString", null, new { Ddl = ViewBag.ConnectedCaseId_ddl, @class = "case-cause-dd" })
             </div>
         </div>
+
         @for (int i = 0; i < Model.ConnectedCases?.Length; i++)
         {
             ViewData.TemplateInfo.HtmlFieldPrefix = $"{currentHtmlPrefix}.ConnectedCases[{i}]";
             @await Html.PartialAsync("_EisppCaseCause", Model.ConnectedCases[i])
         }
-    </div>
+    }
+</div>
 }

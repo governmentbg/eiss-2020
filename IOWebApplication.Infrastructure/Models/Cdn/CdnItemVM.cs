@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -10,7 +7,16 @@ namespace IOWebApplication.Infrastructure.Models.Cdn
 {
     public class CdnItemVM : CdnUploadRequest
     {
+        public int MongoFileId { get; set; }
         public DateTime DateUploaded { get; set; }
+        public DateTime? DateExpired { get; set; }
+        public string SafeFileName
+        {
+            get
+            {
+                return this.FileName.Replace("\'", "");
+            }
+        }
         public int FileSize { get; set; }
         public string FileIcon
         {

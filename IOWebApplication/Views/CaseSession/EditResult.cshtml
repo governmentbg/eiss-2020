@@ -1,5 +1,6 @@
-﻿@model CaseSessionResult
-@using IOWebApplication.Infrastructure.Data.Models.Cases
+﻿@model CaseSessionResultEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
 
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
@@ -28,29 +29,48 @@
 }
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-12">
         <form asp-action="EditResult" method="post">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.CaseId)
             @Html.HiddenFor(x => x.CaseSessionId)
             @Html.HiddenFor(x => x.IsActive)
+            @Html.HiddenFor(x => x.CallFromActId)
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
-
                 <div class="row">
-                    <div class="col-lg-6">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
-                    <div class="col-lg-6">@Html.EditorFor(x => x.SessionResultBaseId, "GenericDropDown")</div>
-                </div>
+                    <div class="col-lg-6">
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1"> Основни данни</legend>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.SessionResultId, "GenericDropDown")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.SessionResultBaseId, "GenericDropDown")</div>
+                            </div>
 
-                <div class="row">
-                    <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
-                </div>
+                            <div class="row">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                            </div>
 
-                <div class="row">
-                    <div class="col-lg-6">@Html.EditorFor(x => x.IsMain, "Boolean")</div>
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.IsMain, "Boolean")</div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div id="divLawUnit" class="col-lg-6">
+                        @if (Model.Id < 1)
+                        {
+                            @if (Model.CaseLawUnitByCase?.Count() > 0)
+                            {
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"> Избор на съдия за отвод</legend>
+                                    <div class="col-lg-12">@Html.EditorFor(x => x.CaseLawUnitByCase)</div>
+                                </fieldset>
+                            }
+                        }
+                    </div>
                 </div>
             </div>
 
@@ -60,7 +80,16 @@
                     {
                         <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
                     }
-                    <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@caseSessionId" class="btn btn-danger">Назад</a>
+
+                    @if (Model.CallFromActId > 0)
+                    {
+                        <a asp-controller="CaseSessionAct" asp-action="Edit" asp-route-id="@Model.CallFromActId" class="btn btn-danger">Назад</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@caseSessionId" class="btn btn-danger">Назад</a>
+                    }
+
                     @if (Model.Id > 0)
                     {
                         @if (access.CanChangeFull)
@@ -87,6 +116,21 @@
 
         $('#SessionResultId').change(function () {
             requestCombo('@Url.Action("GetDDL_SessionResultBase","Ajax")', { sessionResultId: $(this).val() }, '#SessionResultBaseId', @(Model.SessionResultBaseId??0), function () { $('#SessionResultBaseId').trigger('change') });
+        });
+
+        function SessionResultIdChange() {
+            var selected = $("#SessionResultId").val()
+            if ((selected == @NomenclatureConstants.CaseSessionResult.S_opredelenie_za_otvod) ||
+                (selected == @NomenclatureConstants.CaseSessionResult.S_razporejdane_za_otvod)) {
+                $('#divLawUnit').show();
+            }
+            else {
+                $('#divLawUnit').hide();
+            }
+        }
+
+        $('#SessionResultId').change(function () {
+            SessionResultIdChange();
         });
     </script>
 }

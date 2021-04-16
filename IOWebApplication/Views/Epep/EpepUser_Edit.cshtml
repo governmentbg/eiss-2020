@@ -1,7 +1,8 @@
 ﻿@model EpepUser
 @using  IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep
 @using IOWebApplication.Infrastructure.Data.Models.Common
-
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @{
     if (Model.Id > 0)
     {
@@ -11,7 +12,7 @@
     {
         ViewData["Title"] = "Добавяне на потребител в ЕПЕП";
     }
-
+    var docInfo = (EpepDocumentInfoVM)ViewBag.documentInfo;
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
@@ -24,9 +25,34 @@
     <div class="col-md-6">
         <form asp-action="EpepUser_Edit" method="post">
             @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DocumentId)
+            @Html.HiddenFor(x => x.DocumentDecisionId)
             <fieldset class="is-fieldset">
                 <legend class="legend_1">Основни данни</legend>
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                @if (docInfo != null)
+                {
+                    <div class="row">
+                        <div class="col-lg-6">@Html.DisplayFor(x => docInfo.CourtName, "obj")</div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                @Html.LabelFor(x => docInfo.DocumentInfo)
+                                <div>
+                                    @if (userContext.CourtId == docInfo.CourtId)
+                                    {
+                                        <a href="@Url.Action("View","Document",new { id=docInfo.DocumentId})" target="_blank">
+                                            @docInfo.DocumentInfo
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span>@docInfo.DocumentInfo</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
                 <div id="saveContainer">
                     <partial name="_SaveFormContent" model="@("#saveContainer")" />
                     <div class="row">
@@ -55,11 +81,13 @@
             <div class="form-group">
                 <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
                 <a asp-action="EpepUser" class="btn btn-danger">Назад</a>
-                <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.EpepUser, SourceId = Model.Id })" />
+
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
-                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), IconOnly = true })
+                        <span>&nbsp;</span>
+                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.EpepUser, SourceId = Model.Id })" />
                     </div>
                 }
             </div>

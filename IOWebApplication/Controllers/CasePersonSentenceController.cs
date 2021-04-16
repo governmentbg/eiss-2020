@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,12 +12,14 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Eispp;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Rotativa.Extensions;
 
 namespace IOWebApplication.Controllers
@@ -160,7 +159,7 @@ namespace IOWebApplication.Controllers
             if (model.InforcedDate != null)
             {
                 var caseSessionAct = service.GetById<CaseSessionAct>(model.CaseSessionActId);
-                if (model.InforcedDate < caseSessionAct.ActInforcedDate)
+                if ((model.InforcedDate ?? DateTime.Now).Date < (caseSessionAct.ActInforcedDate ?? DateTime.Now).Date)
                     return "Дата на влизане в сила на присъдатае по-малка от тази на акта";
             }
 
@@ -212,7 +211,6 @@ namespace IOWebApplication.Controllers
             ViewBag.PunishmentActivityId_ddl = nomService.GetDropDownList<PunishmentActivity>();
             ViewBag.SentenceExecPeriodId_ddl = nomService.GetDropDownList<SentenceExecPeriod>();
             ViewBag.InforcerInstitutionId_ddl = commonService.GetDDL_Institution(NomenclatureConstants.InstitutionTypes.Attourney);
-            ViewBag.ExecInstitutionId_ddl = commonService.GetDDL_Institution(NomenclatureConstants.InstitutionTypes.Prison);
             ViewBag.ChangedCasePersonSentenceId_ddl = service.GetDropDownList_CasePersonSentence(casePersonId, ModelId);
             //ViewBag.ChangeCaseSessionActId_ddl = caseSessionActComplainService.GetDropDownList_CaseSessionActFromCaseSessionActComplainResult(caseId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonSentence(casePersonId);
@@ -274,6 +272,8 @@ namespace IOWebApplication.Controllers
             {
                 return Redirect_Denied();
             }
+            var caseModel = service.GetById<Case>(caseId);
+            ViewBag.GenerateNumber = eisppService.IsForEisppNum(caseModel);
             SetViewbagCaseCrime(caseId);
             var model = new CaseCrime()
             {
@@ -307,11 +307,18 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         private void ValidateCaseCrime(CaseCrime model)
         {
-            if (string.IsNullOrEmpty(model.EISSPNumber))
-                ModelState.AddModelError("EISSPNumber", "Въведете код по ЕИСПП");
-
-            if (model.CrimeCode == "0" || model.CrimeCode == "-1")
+            if (string.IsNullOrEmpty(model.EISSPNumber)) {
+                var caseModel = service.GetById<Case>(model.CaseId);
+                if (!eisppService.IsForEisppNum(caseModel))
+                    ModelState.AddModelError("EISSPNumber", "Въведете код по ЕИСПП");
+            }
+            if (string.IsNullOrEmpty(model.CrimeCode) || model.CrimeCode == "0" || model.CrimeCode == "-1")
                 ModelState.AddModelError("CrimeCode", "Изберете престъпление");
+            if (model.Id <= 0)
+            {
+                if (service.IsEISPPNumberExists(model.CaseId, model.EISSPNumber))
+                    ModelState.AddModelError("EISSPNumber", $"{model.EISSPNumber} на престъпление вече е добавен към делото");
+            }
         }
 
         /// <summary>
@@ -323,6 +330,8 @@ namespace IOWebApplication.Controllers
         public IActionResult EditCaseCrime(CaseCrime model)
         {
             SetViewbagCaseCrime(model.CaseId);
+            var caseModel = service.GetById<Case>(model.CaseId);
+            ViewBag.GenerateNumber = eisppService.IsForEisppNum(caseModel);
             ValidateCaseCrime(model);
             if (!ModelState.IsValid)
             {
@@ -342,6 +351,33 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
             return View(nameof(EditCaseCrime), model);
+        }
+
+        [HttpPost]
+        public IActionResult CaseCrime_ExpiredInfo(ExpiredInfoVM model)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CaseCrime, model.Id, AuditConstants.Operations.Delete))
+            {
+                return Redirect_Denied();
+            }
+
+            var expireObject = service.GetById<CaseCrime>(model.Id);
+
+            if (eisppService.HaveEventForCrime(model.Id))
+            { 
+                return Json(new { result = false, message = "Може да премахнете престъпление, само ако не е изпратено към ЕИСПП." });
+            }
+
+            if (service.SaveExpireInfo<CaseCrime>(model))
+            {
+                SetAuditContextDelete(service, SourceTypeSelectVM.CaseCrime, model.Id);
+                SetSuccessMessage(MessageConstant.Values.CaseCrimeExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("IndexCaseCrime", "CasePersonSentence", new { caseId = expireObject.CaseId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
         }
 
         void SetViewbagCaseCrime(int caseId)
@@ -483,7 +519,7 @@ namespace IOWebApplication.Controllers
             }
             return View(nameof(EditCasePersonCrime), model);
         }
-
+       
         void SetViewbagCasePersonCrime(int caseId, int caseCrimeId)
         {
             ViewBag.CasePersonId_ddl = casePerson.GetDropDownList(caseId, null, false, 0, 0, false);
@@ -566,7 +602,8 @@ namespace IOWebApplication.Controllers
                 CaseId = casePersonSentence.CaseId,
                 CourtId = userContext.CourtId,
                 IsSummaryPunishment = false,
-                DateFrom = DateTime.Now
+                DateFrom = DateTime.Now,
+                IsMainPunishment = !service.IsExistMainPunishment(casePersonSentenceId, null)
             };
             return View(nameof(EditCasePersonSentencePunishment), model);
         }
@@ -596,6 +633,14 @@ namespace IOWebApplication.Controllers
         {
             if (model.SentenceTypeId < 1)
                 return "Изберете наказание.";
+
+            if (model.IsMainPunishment)
+            {
+                if (service.IsExistMainPunishment(model.CasePersonSentenceId, (model.Id == 0 ? (int?)null : model.Id)))
+                {
+                    return "Има наказание маркирано като основно.";
+                }
+            }
 
             //if (model.SentenseDays < 0)
             //    return "Не може да въведете отрицателен брой дни";
@@ -647,6 +692,28 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonSentencePunishment(casePersonSentenceId);
             SetHelpFile(HelpFileValues.CasePerson);
         }
+        [HttpPost]
+        public IActionResult CasePersonPunishment_ExpiredInfo(ExpiredInfoVM model)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishment, model.Id, AuditConstants.Operations.Delete))
+            {
+                return Json(new { result = false, message = "Нямате права да изтриете наказанието" });
+            }
+            if (eisppService.HaveEventForPunishment(model.Id))
+            {
+                return Json(new { result = false, message = "Има ЕИСПП събитие за наказанието" });
+            }
+            if (service.SaveExpireInfo<CasePersonSentencePunishment>(model))
+            {
+                SetAuditContextDelete(service, SourceTypeSelectVM.CasePersonSentencePunishment, model.Id);
+                SetSuccessMessage(MessageConstant.Values.CasePersonSentencePunishmentExpireOK);
+                return Json(new { result = true, redirectUrl = model.ReturnUrl });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
 
         private int Get_SentenceType_Select(int sentenceTypeId)
         {
@@ -671,9 +738,9 @@ namespace IOWebApplication.Controllers
                     }
                 }
             }
-
             return valResult;
         }
+        
 
         [HttpPost]
         public JsonResult Is_Period(int sentenceTypeId)
@@ -720,6 +787,12 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        public JsonResult GetDataCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
+        {
+            var model = service.CasePersonSentencePunishmentCrime_Select(CasePersonSentencePunishmentId);
+            return Json(model);
+        }
+
         /// <summary>
         /// Добавяне на Наложени наказания към присъда
         /// </summary>
@@ -737,7 +810,7 @@ namespace IOWebApplication.Controllers
             {
                 CaseId = casePersonSentencePunishment.CaseId,
                 CourtId = userContext.CourtId,
-                CasePersonSentencePunishmentId = CasePersonSentencePunishmentId
+                CasePersonSentencePunishmentId = CasePersonSentencePunishmentId,
             };
             return View(nameof(EditCasePersonSentencePunishmentCrime), model);
         }
@@ -754,24 +827,6 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditCasePersonSentencePunishmentCrime), model);
         }
 
-        /// <summary>
-        /// Валидация преди запис на Наложени наказания към присъда
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        private string IsValidCasePersonSentencePunishmentCrime(CasePersonSentencePunishmentCrime model)
-        {
-            if (model.CaseCrimeId < 1)
-                return "Изберете престъпление";
-
-            if (model.PersonRoleInCrimeId < 1)
-                return "Изберете роля";
-
-            if (model.RecidiveTypeId < 1)
-                return "Изберете рецидив";
-
-            return string.Empty;
-        }
 
         /// <summary>
         /// запис на Наложени наказания към присъда
@@ -785,13 +840,6 @@ namespace IOWebApplication.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View(nameof(EditCasePersonSentencePunishmentCrime), model);
-            }
-
-            string _isvalid = IsValidCasePersonSentencePunishmentCrime(model);
-            if (_isvalid != string.Empty)
-            {
-                SetErrorMessage(_isvalid);
                 return View(nameof(EditCasePersonSentencePunishmentCrime), model);
             }
 
@@ -810,6 +858,106 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditCasePersonSentencePunishmentCrime), model);
         }
 
+        public IActionResult CasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId, int? id)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, null, AuditConstants.Operations.Append, CasePersonSentencePunishmentId))
+            {
+                return Redirect_Denied();
+            }
+
+            CasePersonSentencePunishmentCrime model;
+            if (id > 0)
+            {
+                model = nomService.GetById<CasePersonSentencePunishmentCrime>(id);
+            }
+            else
+            {
+                var casePersonSentencePunishment = service.GetById<CasePersonSentencePunishment>(CasePersonSentencePunishmentId);
+                model = new CasePersonSentencePunishmentCrime()
+                {
+                    CaseId = casePersonSentencePunishment.CaseId,
+                    CourtId = userContext.CourtId,
+                    CasePersonSentencePunishmentId = CasePersonSentencePunishmentId,
+                    SentenceTypeId = casePersonSentencePunishment.SentenceTypeId
+                };
+            }
+            SetViewbagCasePersonSentencePunishmentCrime(CasePersonSentencePunishmentId);
+            return PartialView("EditCasePersonSentencePunishmentCrimeNew", model);
+        }
+
+        /// <summary>
+        /// Запис на Обстоятелства по заповедни производства
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResult CasePersonSentencePunishmentCrime(CasePersonSentencePunishmentCrime model)
+        {
+            string validationError = string.Empty;
+            if (!string.IsNullOrEmpty(validationError))
+            {
+                return Json(new { result = false, message = validationError });
+            }
+
+            validationError = ValidateCasePersonSentencePunishmentCrime(model);
+            if (!string.IsNullOrEmpty(validationError))
+            {
+                return Json(new { result = false, message = validationError });
+            }
+
+            var currentId = model.Id;
+            var res = service.CasePersonSentencePunishmentCrime_SaveData(model);
+            if (res)
+                SetAuditContext(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, model.Id, currentId == 0);
+
+            return Json(new { result = res });
+            //return RedirectToAction(nameof(EditCasePersonSentencePunishment), new { id = model.CasePersonSentencePunishmentId });
+        }
+
+        private string ValidateCasePersonSentencePunishmentCrime(CasePersonSentencePunishmentCrime model)
+        {
+            if (model.CaseCrimeId < 1)
+            {
+                return "Изберете престъпление.";
+            }
+
+            if (model.PersonRoleInCrimeId < 1)
+            {
+                return "Изберете роля на лицето в престъплението.";
+            }
+
+            if (model.RecidiveTypeId < 1)
+            {
+                return "Изберете рецидив.";
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Създаване на динамичен панел Наказание към престъпление
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public IActionResult NewItem_CasePersonCrimePunishment(int index)
+        {
+            var model = new CasePersonCrimePunishment()
+            {
+                Index = index
+            };
+            ViewBag.PunishmentKindDDL = EisppDropDownVM(eisppService.GetDDL_EISPPTblElement(EISPPConstants.EisppTableCode.PunishmentKind)); // nkzvid 209 Видове наказания
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"CasePersonCrimePunishmentsVM[{index}]";
+            return PartialView("_CrimePunishment", model);
+        }
+        private EisppDropDownVM EisppDropDownVM(List<SelectListItem> ddList, int defaultFlags = 77)
+        {
+            return new EisppDropDownVM()
+            {
+                DDList = ddList,
+                Label = "",
+                Flags = defaultFlags
+            };
+        }
         void SetViewbagCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
         {
             var casePersonSentencePunishment = service.GetById<CasePersonSentencePunishment>(CasePersonSentencePunishmentId);
@@ -818,6 +966,7 @@ namespace IOWebApplication.Controllers
             ViewBag.RecidiveTypeId_ddl = nomService.GetDropDownList<RecidiveType>();
             ViewBag.CaseCrimeId_ddl = service.GetDropDownList_CasePersonCrime(casePersonSentence.CaseId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonSentencePunishmentCrime(CasePersonSentencePunishmentId);
+            ViewBag.PunishmentKindDDL = EisppDropDownVM(eisppService.GetDDL_EISPPTblElement(EISPPConstants.EisppTableCode.PunishmentKind)); // nkzvid 209 Видове наказания
             SetHelpFile(HelpFileValues.CasePerson);
         }
 
@@ -942,7 +1091,7 @@ namespace IOWebApplication.Controllers
 
 
         /// <summary>
-        /// Добаяне импортирано престъпление от ЕИСПП
+        /// Добавяне импортирано престъпление от ЕИСПП
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
@@ -984,7 +1133,7 @@ namespace IOWebApplication.Controllers
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
-            return View(nameof(Edit), model);
+            return View(nameof(AddCaseCrimeEispp), model);
         }
         async Task SetViewbagEispp(int caseId, string eisppNumber)
         {

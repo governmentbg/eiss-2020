@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,7 +14,7 @@ namespace IntegrationService.Csrd
         public EisppTimedHostedService(
             IConfiguration configuration,
             IHostingEnvironment environment,
-            ILogger<EpepTimedHostedService> logger,
+            ILogger<EisppTimedHostedService> logger,
             IApplicationLifetime appLifetime,
             IServiceProvider serviceProvider)
         {
@@ -26,6 +23,8 @@ namespace IntegrationService.Csrd
             this.appLifetime = appLifetime;
             this.environment = environment;
             this.interval = configuration.GetValue<double>("TimerInterval");
+            this.fetchCount = configuration.GetValue<int>("FetchCount");
+            this.stopHours = configuration.GetValue<string>("StopHours");
             this.stopServiceTimeout = configuration.GetValue<int>("StopServiceTimeout");
             this.serviceProvider = serviceProvider;
         }
@@ -35,8 +34,8 @@ namespace IntegrationService.Csrd
             using (var scope = serviceProvider.CreateScope())
             {
                 this.logger.LogDebug("EisppService started");
-                var service = serviceProvider.GetService<IEisppCommunicationService>();
-                service.SendReceiveMessages();
+                var eisppService = serviceProvider.GetService<IEisppCommunicationService>();
+                var eisppResult = eisppService.PushMQWithFetch(fetchCount).GetAwaiter().GetResult();
                 this.logger.LogDebug("EisppService ended");
             }
         }

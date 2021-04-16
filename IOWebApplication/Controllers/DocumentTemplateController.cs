@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -33,6 +30,7 @@ namespace IOWebApplication.Controllers
         private readonly IWorkTaskService taskService;
         private readonly ICommonService commonService;
         private readonly IPrintDocumentService printService;
+        private readonly ICasePersonService casePersonService;
 
         public DocumentTemplateController(
             IDocumentTemplateService _service,
@@ -41,7 +39,8 @@ namespace IOWebApplication.Controllers
             ICdnService _cdnService,
             IWorkTaskService _taskService,
             ICommonService _commonService,
-            IPrintDocumentService _printService
+            IPrintDocumentService _printService,
+            ICasePersonService _casePersonService
         )
         {
             service = _service;
@@ -51,6 +50,7 @@ namespace IOWebApplication.Controllers
             taskService = _taskService;
             commonService = _commonService;
             printService = _printService;
+            casePersonService = _casePersonService;
         }
 
         /// <summary>
@@ -156,8 +156,10 @@ namespace IOWebApplication.Controllers
                 SetViewBag(model);
                 return View(nameof(Edit), model);
             }
+            int currentId = model.Id;
             if (service.DocumentTemplate_SaveData(model))
             {
+                this.SaveLogOperation(currentId == 0, model.Id, null, "edit");
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
@@ -176,7 +178,13 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForDocumentTemplate(model.SourceType, model.SourceId);
             if (model.DocumentId > 0)
             {
-                ViewBag.docNumber = docService.Document_GetById(model.DocumentId.Value).RegNumber;
+                ViewBag.docNumber = docService.Document_GetById(model.DocumentId.Value).Result.RegNumber;
+            }
+
+            if ((model.CaseId ?? 0) > 0)
+            {
+                ViewBag.haveCasePersonIds = nomService.GetHtmlTemplateForCasePerson();
+                ViewBag.CasePersonId_ddl = casePersonService.CasePerson_SelectForDropDownList(model.CaseId ?? 0, null, "", "Изберете");
             }
 
             SetHelpFileBySourceType(model.SourceType);
@@ -290,11 +298,12 @@ namespace IOWebApplication.Controllers
                 FooterIsEditable = false,
                 ReturnUrl = Url.Action(nameof(Edit), new { id }),
                 HasPreviewButton = true,
+                HasResetButton = true,
             };
             if (docTemplate.HtmlTemplateId > 0)
             {
                 var htmlTemplate = service.GetById<HtmlTemplate>(docTemplate.HtmlTemplateId);
-                var htmlModel = printService.ConvertToTinyMCVM(htmlTemplate);
+                var htmlModel = printService.ConvertToTinyMCVM(htmlTemplate, false);
                 model.TemplateStyle = htmlModel.Style;
             }
             return model;
@@ -323,8 +332,12 @@ namespace IOWebApplication.Controllers
 
                 pdfBytes = await GetFileBytes(headerModel, model.SourceType, model.SourceId);
             }
-
-            return File(pdfBytes, NomenclatureConstants.ContentTypes.Pdf, "documentTemplatePreview.pdf");
+            var contentDispositionHeader = new System.Net.Mime.ContentDisposition
+            {
+                Inline = true,
+                FileName = "documentTemplatePreview.pdf"
+            };
+            return File(pdfBytes, NomenclatureConstants.ContentTypes.Pdf);
         }
 
         /// <summary>
@@ -332,10 +345,20 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <param name="btnPreview"></param>
+        /// <param name="reset_mode"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> Blank(BlankEditVM model, string btnPreview = null)
+        public async Task<IActionResult> Blank(BlankEditVM model, string btnPreview = null, string reset_mode = null)
         {
+            int id = int.Parse(model.SourceId);
+            if (!string.IsNullOrEmpty(reset_mode))
+            {
+                await cdnService.MongoCdn_DeleteFiles(new CdnFileSelect() { SourceType = model.SourceType, SourceId = model.SourceId });
+                SetSuccessMessage("Информацията е обновена с данните от бланката.");
+                this.SaveLogOperation(this.ControllerName, nameof(Edit), "Обновяване на данните от бланката", IO.LogOperation.Models.OperationTypes.Patch, id);
+                return RedirectToAction(nameof(Blank), new { id = model.SourceId });
+            }
+
             //return new ViewAsPdf("CreatePdf", model);
             var htmlRequest = new CdnUploadRequest()
             {
@@ -348,16 +371,19 @@ namespace IOWebApplication.Controllers
             if (await cdnService.MongoCdn_AppendUpdate(htmlRequest))
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                this.SaveLogOperation(this.ControllerName, nameof(Edit), "Изготвяне на документ", IO.LogOperation.Models.OperationTypes.Update, id);
+                if (!string.IsNullOrEmpty(btnPreview))
+                {
+                    return await blankPreview(model);
+                }
+                return RedirectToAction(nameof(Edit), new { id = model.SourceId });
             }
             else
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
 
-            if (!string.IsNullOrEmpty(btnPreview))
-            {
-                return await blankPreview(model);
-            }
+
 
             return RedirectToAction(nameof(Blank), new { id = model.SourceId });
         }

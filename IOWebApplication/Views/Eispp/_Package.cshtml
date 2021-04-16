@@ -4,12 +4,15 @@
 @Html.HiddenFor(x => x.SourceType)
 @Html.HiddenFor(x => x.SourceId)
 @Html.HiddenFor(x => x.CaseId)
+@Html.HiddenFor(x => x.Mode)
 @Html.HiddenFor(x => x.SenderNode)
 @Html.HiddenFor(x => x.SenderStructure)
 @Html.HiddenFor(x => x.ReceiverNode)
 @Html.HiddenFor(x => x.ReceiverStructure)
 @Html.HiddenFor(x => x.MessageType)
 @Html.HiddenFor(x => x.CorrelationId)
+@Html.HiddenFor(x => x.PersonMeasureId)
+@Html.HiddenFor(x => x.PersonOldMeasureId)
 @{
     if (Model.Data.Events.Length > 0)
     {

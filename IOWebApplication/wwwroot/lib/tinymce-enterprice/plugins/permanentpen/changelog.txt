@@ -1,0 +1,8 @@
+Version 1.1.0 (2020-02-13)
+  Added a 'PermanentPenProperties' event #PEPE-19
+  Added some initial support for use with IMEs #PEPE-33
+  Fixed an issue where permanent pen wouldn't clear the current format after toggling off #PEPE-30
+  Updated error message for incorrect configuration #PEPE-28
+  Updated permanent pen to apply the format after content is inserted instead of overriding inserting content #PEPE-33
+Version 1.0.0 (2019-01-10)
+  Initial release.

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IntegrationService.Csrd.Contracts;
+﻿using IntegrationService.Csrd.Contracts;
 using Microsoft.Extensions.Hosting;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,16 +10,19 @@ namespace IntegrationService.Csrd
         private readonly ICsrdTHS csrd;
         private readonly ICubipsaTHS cubipsa;
         private readonly IEisppTHS eispp;
+        private readonly IIspnTHS ispn;
 
         public HostedServiceStarter(
             ICsrdTHS _csrd,
             ICubipsaTHS _cubipsa,
-            IEisppTHS _eispp
+            IEisppTHS _eispp,
+            IIspnTHS _ispn
         )
         {
             csrd = _csrd;
             cubipsa = _cubipsa;
             eispp = _eispp;
+            ispn = _ispn;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -34,6 +34,8 @@ namespace IntegrationService.Csrd
                 Task.Run(() => cubipsa.StartAsync(cancellationToken));
 
                 Task.Run(() => eispp.StartAsync(cancellationToken));
+
+                Task.Run(() =>ispn.StartAsync(cancellationToken));
 
             }, cancellationToken);
         }
@@ -47,6 +49,8 @@ namespace IntegrationService.Csrd
                 Task.Run(() => cubipsa.StopAsync(cancellationToken));
 
                 Task.Run(() => eispp.StopAsync(cancellationToken));
+
+                Task.Run(() => ispn.StopAsync(cancellationToken));
 
             }, cancellationToken);
         }

@@ -1291,6 +1291,12 @@
             Деловоден номер
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.CaseMigration.Reason">
+            <summary>
+            dvjprc
+            Причина за изпращане на НД
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Models.Integrations.Eispp.CaseMigration.defaultDate">
             <summary>
             Дата, която трябва да се игнорира
@@ -2332,6 +2338,204 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.Row">
+            <summary>
+            Номер на ред от ексела
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.GroupName4">
+            <summary>
+            Име на група
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.GroupName3">
+            <summary>
+            Име на група
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.GroupName2">
+            <summary>
+            Име на група
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.Name">
+            <summary>
+            Име
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.SystemCode">
+            <summary>
+            Системен идентификатор
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.SystemName">
+            <summary>  ЕКАТЕ Вид От дата До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.Active">
+            <summary>
+            Вид акт/з..
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.DateFrom">
+            <summary>
+            От дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportCrimeQualification.DateTo">
+            <summary>
+            До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.Row">
+            <summary>
+            Номер на ред от ексела
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.Oblast">
+            <summary>
+            Област
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.Obstina">
+            <summary>
+            Община
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.TypeNM">
+            <summary>
+            тип н.м.
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.Name">
+            <summary>
+            Населено място
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.Rajon">
+            <summary>
+            Населено място
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.SystemCode">
+            <summary>
+            Системен идентификатор
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.SystemName">
+            <summary>
+            Системно име    ЕКАТЕ Вид От дата До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.EktteCode">
+            <summary>
+            ЕКАТЕ Вид От дата До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.Active">
+            <summary>
+            Вид акт/з.. От дата До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.DateFrom">
+            <summary>
+            От дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportEktte.DateTo">
+            <summary>
+            До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.Row">
+            <summary>
+            Номер на ред от ексела
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.GroupName">
+            <summary>
+            Име на група
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.Name">
+            <summary>
+            Име
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.SystemCode">
+            <summary>
+            Системен идентификатор
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.SystemName">
+            <summary>  ЕКАТЕ Вид От дата До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.Active">
+            <summary>
+            Вид акт/з..
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.DateFrom">
+            <summary>
+            От дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.DateTo">
+            <summary>
+            До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportNomenclature.GroupCode">
+            <summary>
+            Код на група
+            първата група над текущия ред в ексела
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.Row">
+            <summary>
+            Номер на ред от ексела
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.SystemCode">
+            <summary>
+            Системен идентификатор
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.SystemName">
+            <summary>  ЕКАТЕ Вид От дата До дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.Name">
+            <summary>
+            Име
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.TypeName">
+            <summary>
+            Тип
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.EisppCodePrefix">
+            <summary>
+            Системен идентификатор
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.Active">
+            <summary>
+            Вид акт/з..
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.DateFrom">
+            <summary>
+            От дата
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppImportStructure.DateTo">
+            <summary>
+            До дата
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppMessage">
             <summary>
             Съобщение изпратено от ЕИСПП
@@ -3333,6 +3537,11 @@
             Пробационна мярка
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.ProbationMeasure.IsSelected">
+            <summary>
+            Далие е в сила наказанието
+            </summary>
+        </member>
         <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.ProbationMeasure.Address">
             <summary>
             ADR
@@ -3653,6 +3862,11 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Eispp.Punishment.IsSelected">
+            <summary>
+            Дали е е в сила наказанието
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Eispp.PunishmentExecution">
             <summary>
             IZPNKZ
@@ -3698,6 +3912,351 @@
             <summary>
             GUID, Debtor identificator
             </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.Transfer">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.Transfer.program">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.Transfer.version">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.Transfer.Case">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.case_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.case_action">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.case_court">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.case_kind">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.case_no">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.case_year">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.case_date">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.Surround">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.Session">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.InDoc">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.Side">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.CaseType.Judge">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ExtensionsType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ExtensionsType.Any">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType.indoc_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType.indoc_kind">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType.indoc_no">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType.indoc_noSpecified">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType.indoc_year">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.InDocType.indoc_date">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ReturnType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ReturnType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ReturnType.return_result">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ReturnType.return_result2">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.sendto_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.sendto_action">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.sendto_kind">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.sendto_no">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.sendto_year">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.sendto_date">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.sendto_court">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SendToType.return">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.appeal_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.appeal_action">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.appeal_kind">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.appeal_no">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.appeal_year">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.appeal_date">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.Side">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.AppealType.SendTo">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideType.side_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideType.side_involvement">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideType.Item">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_citizen">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_citizen.side_name_1">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_citizen.side_rename">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_citizen.side_family_1">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_citizen.side_family_2">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_citizen.side_egn">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_firm">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_firm.side_name">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SideTypeSide_firm.side_bulstat">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_action">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_kind">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_no">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_noSpecified">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_date">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_reason">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_debtor_status">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_debtor_statusSpecified">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_text">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.act_image">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.ActType.Appeal">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundProcessedType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundProcessedType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundProcessedType.surround_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundProcessedType.surround_no">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundProcessedType.surround_year">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType.judge_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType.judge_name_1">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType.judge_rename">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType.judge_family_1">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType.judge_family_2">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.JudgeType.judge_egn">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_action">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_kind">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_date">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_time">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_timeSpecified">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_result">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.session_text">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.Judge">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.Surround">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SessionType.Act">
+            <remarks/>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.extensions">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.surround_id">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.surround_action">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.surround_no">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.surround_year">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.surround_date">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.surround_text">
+            <remarks/>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.Integrations.Ispn.SurroundType.Side">
+            <remarks/>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Models.Regix.FetchNomenclatures.FetchNomenclatures">
             <remarks/>
@@ -5693,6 +6252,16 @@
             Председател на състава
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseSessionResultEditVM.SessionResultId">
+            <summary>
+            Резултат на заседание, отложено, обявен за решаване, спряно ит.н.
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseSessionResultEditVM.SessionResultBaseId">
+            <summary>
+             Основание за резултат от заседание
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Models.ViewModels.CaseFolderItemVM">
             <summary>
             Елемент от електронна папка на дело
@@ -5895,6 +6464,21 @@
             Свързано дело което се получава
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.CaseMigrationId">
+            <summary>
+            Свързано дело което се получава
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.CaseComplaintId">
+            <summary>
+            Свързано дело което се получава
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.ReasonId">
+            <summary>
+            Свързано дело което се получава
+            </summary>
+        </member>
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.ExactCaseType">
             <summary>
             точен вид дело
@@ -5914,6 +6498,11 @@
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.PersonMeasureId">
             <summary>
             Наложена мяркa
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.Mode">
+            <summary>
+            Дали редиректа е от делото или от съд
             </summary>
         </member>
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Money.ObligationEditVM.Person_SourceId">
@@ -6167,6 +6756,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.DocumentConstants.ProcessPriority.Common">
             <summary>
             По общия ред
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.DocumentConstants.DeliveryGroups.PostOffice">
+            <summary>
+            По пощата
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EisppTableCode.EISS_PNE">
@@ -6452,6 +7046,18 @@
             Номенклатура nmk_sbcrge 12478
             </summary> 
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EisppTableCode.Localization">
+            <summary>
+            adrloc
+            Видове локализация на място
+            Номенклатура nmk_adrloc 1724
+            </summary> 
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EisppTableCode.MigrationReason">
+            <summary>
+            Причини за изпращане на дело
+            </summary> 
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.DeleteEvent">
             <summary>
             Редактиране на събитие
@@ -6492,6 +7098,11 @@
             Получаване на дело
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.SendCase">
+            <summary>
+            Получаване на дело
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.CoercionMeasureCreate">
             <summary>
             Вземане на мярка за процесуална принуда
@@ -6506,6 +7117,56 @@
             <summary>
             Изменяне на мярка за процесуална принуда
             </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.CoercionMeasureRefused">
+            <summary>
+            Изменяне на мярка за процесуална принуда
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.AskForMove">
+            <summary>
+            Искане за преместване на НД
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.ReturnToProsecutor">
+            <summary>
+            Връщане на НД за доразследване на прокурор
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.ReturnToFirst">
+            <summary>
+            Връщане на НД за доразследване на прокурор
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.ComplaintReceived">
+             <summary>
+            Приемане на жалба
+             </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.EarlyRelease">
+             <summary>
+            Предсрочно освобождаване
+             </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.ChangeExternalSentence">
+             <summary>
+            Изменение на присъда по решение на чужд съд	14127
+             </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.CreateOnExternal">
+             <summary>
+            Образуване на съдебно производство при трансфер от друга държава	14130
+             </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.RefuseOnExternal">
+             <summary>
+            Отказ за признаване и изпълнение на присъда на чуждестранен съд	14128
+             </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.ReciveSentence">
+             <summary>
+            Приемане на чужда присъда за изпълнение
+             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.SidType.Event">
             <summary>
@@ -6582,6 +7243,11 @@
             Статистически данни за субект на престъпление
              </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.SidType.SubjectStatisticDataXML">
+             <summary>
+            Статистически данни за субект на престъпление
+             </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.SidType.CaseCauseInstitution">
             <summary>
             Свързани дела от институции
@@ -6590,6 +7256,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.SidType.CaseCause">
             <summary>
             Свързани дела
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.SidType.Address">
+            <summary>
+            Адреси
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Constants.EISPPConstants.SanctionType">
@@ -6783,6 +7454,11 @@
             Неопределено
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.VKScourtId">
+            <summary>
+            id На Common_Court ВКС
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.InstitutionTypes.Attourney">
             <summary>
             Прокуратура
@@ -6898,9 +7574,19 @@
             Изпълнява длъжността на
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PeriodTypes.MixedLawUnit">
+            <summary>
+            Смесен състав
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PeriodTypes.CurrentlyAvailable">
             <summary>
             Статуси за проверка за наличност
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PeriodTypes.CurrentlyCourtActions">
+            <summary>
+            Статуси за проверка за наличност - фактическо наличие в съда
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtended">
@@ -6928,9 +7614,19 @@
             Прекратено
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.AnnouncedForResolution">
+            <summary>
+            Обявено за решаване
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.Resolution">
             <summary>
             Решено
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.Appealed">
+            <summary>
+            Обжалвано
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.Archive">
@@ -7016,6 +7712,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.NotificationState.Visited">
             <summary>
             Посетен
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.NotificationState.UnDeliveredMail">
+            <summary>
+            UnDeliveredMail
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DeliveryOper.Send">
@@ -7338,6 +8039,11 @@
             задачи, които немогат да бъдат редактирани и пренасочвани
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.TaskCantReroute">
+            <summary>
+            Задачи, които не могат да бъдат пренасочвани през Преглед на всички задачи
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.States.New">
             <summary>
             Нова задача
@@ -7360,7 +8066,7 @@
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.States.Deleted">
             <summary>
-            Изтрита
+            Отменена
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.TaskExecution.ByUser">
@@ -7503,6 +8209,16 @@
         <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.BaseInfo_Case.IsNewCaseNewNumber">
             <summary>
             Върнато за ново разглеждане под нов номер
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.BaseInfo_Case.JudicalCompositionId">
+            <summary>
+            Съдебен състав
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.BaseInfo_Case.OtdelenieId">
+            <summary>
+            Отделение
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseArchive">
@@ -7825,6 +8541,44 @@
             Престъпления към лица по НД по дело
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonCrimePunishment">
+            <summary>
+            Наказания за престъпления към лица по НД по дело
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonCrimePunishment.PunishmentYears">
+            <summary>
+            nkzpnegdn
+            Размер на наказание - 
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonCrimePunishment.PunishmentMonths">
+            <summary>
+            nkzpnemsc
+            Размер на наказание - Месеци
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonCrimePunishment.PunishmentWeeks">
+            <summary>
+            nkzpnesdc
+            Размер на наказание - Седмици
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonCrimePunishment.PunishmentDays" -->
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonCrimePunishment.FineAmount">
+            <summary>
+            nkzpnerzm
+            Размер на глоба в лева
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonCrimePunishment.PunishmentKind">
+            <summary>
+            nkzpnevid
+            Вид наказние
+            Номенклатура nmk_nkzvid
+            задължително
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonDocument">
             <summary>
             Лични документи на лица по дело
@@ -8128,6 +8882,11 @@
         <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.BaseInfo_CaseSessionAct.DepersonalizeEndDate">
             <summary>
             Дата на финализиране на обезличаването
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.BaseInfo_CaseSessionAct.SignJudgeLawUnitId">
+            <summary>
+            Съдия, подписващ изпълнителен лист
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionActCompany">
@@ -8468,6 +9227,11 @@
         <member name="P:IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplate.HtmlTemplateTypeId">
             <summary>
             Вид бланка
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplate.HaveCasePerson">
+            <summary>
+            Да се избира ли лице от делото в DocumentTemplate
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplateLink">
@@ -8939,6 +9703,11 @@
             Правила за елементи към група за натовареност по дела - основни дейности
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.CaseLoadElementTypeStop">
+            <summary>
+            Забрана за начисляване ако съществуват добавените елементи
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.CaseMigrationType">
             <summary>
             Вид движение на дело между инстанции: По подсъдност, за обжалване,връщане, по компетентност
@@ -9104,6 +9873,11 @@
             Точен вид срокове
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.DecisionRequestType">
+            <summary>
+            1 - Искане за достъп до дело, 2 - Искане за получаване на електронни призовки и съобщение
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.DecisionType">
             <summary>
             Номенклатура Решения
@@ -9157,6 +9931,11 @@
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.DeliveryType">
             <summary>
             Вид пратка: писмо,пакет,колет
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.DeliveryTypeGroup">
+            <summary>
+            Възможен статус на призоваване към операция по доставка
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.DepartmentType">
@@ -9274,6 +10053,16 @@
             Тип на веществено доказателство
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.ExcelReportCaseTypeCol">
+            <summary>
+            Статистика Данни по CaseType по колони - Справките за съдиите
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.ExcelReportCaseTypeRow">
+            <summary>
+            Статистика Данни по CaseType
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.ExcelReportComplainResult">
             <summary>
             ActComplainResult за статистиката по тип съд, sheetindex
@@ -9298,6 +10087,11 @@
             <summary>
             Видове суми по изпълнителен лист
             </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.ExecListState">
+            <summary>
+            Статус на ИЛ
+            </summary>    
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.ExecListType">
             <summary>
@@ -9397,6 +10191,7 @@
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LifecycleType">
             <summary>
             Вид интервал по дело:1-В процес,2-Временно преустановено,3-Възобновено
+            TODO: да се уточнят точните елементи!
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LinkDirection">
@@ -9569,6 +10364,11 @@
             Осъждан за първи/втори път и т.н.
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.RegixRequestType">
+            <summary>
+            инициатор на извикването - дело, регистратура, справка външни системи
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.RegixType">
             <summary>
             Видове интеграции
@@ -9692,6 +10492,11 @@
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.SessionState">
             <summary>
             Статус на заседание
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.SessionStateRoute">
+            <summary>
+            Кой статус след кой следва
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.SessionType">
@@ -9856,6 +10661,60 @@
             Флаг така както е дошъл от еиспп
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal">
+            <summary>
+            Сигнални Събития от ЕИСПП 
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.DateCreate">
+            <summary>
+            Дата получаване
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.StructureId">
+            <summary>
+             adrstr
+            структура, създала събитието
+            елемент от номенклатурата в Стандарт 7
+            съответстващ на текущия съд
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.EISSPNumber">
+            <summary>
+             adrnprnmr
+            ЕИСПП номер
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.CaseType">
+            <summary>
+            adrdlovid
+            вид дело
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.ExactCaseType">
+            <summary>
+            adrdlosig
+            точен вид дело
+            системен код на елемент от nmk_dlosig
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.CaseYear">
+            <summary>
+            adrdlogdn
+            година на делото
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.ShortNumber">
+            <summary>
+            adrdlonmr
+            кратък номер, а не 14-цифрен  номер
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.EISPP.EisppSignal.Message">
+            <summary>
+            съдържание на съобщението
+            </summary>
+        </member>
         <member name="P:IOWebApplication.Infrastructure.Data.Models.EkStreet.StreetType">
             <summary>
             1-Улица,булевард; 2-квартал,местност,район-други
@@ -9894,6 +10753,11 @@
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Money.ExecListObligation">
             <summary>
             Ид-та на задълженията, влезнали към Изпълнителен лист
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Money.ExecListObligation.Amount">
+            <summary>
+            Дължима сума в момента на изготвяне - това е заради частично платените
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Money.ExpenseOrder">
@@ -10169,16 +11033,6 @@
             Authorization Key if needed
             </summary>
         </member>
-        <member name="P:IOWebApplication.Infrastructure.Http.IHttpRequester.CertificatePath">
-            <summary>
-            If needed
-            </summary>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Http.IHttpRequester.CertificatePassword">
-            <summary>
-            If needed
-            </summary>
-        </member>
         <member name="M:IOWebApplication.Infrastructure.Http.IHttpRequester.GetAsync``1(System.String)">
             <summary>
             Get data from Rest service
@@ -10216,351 +11070,6 @@
             </summary>
             <param name="url">Service endpoint</param>
             <returns>Service response</returns>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.Transfer">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.Transfer.program">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.Transfer.version">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.Transfer.Case">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.CaseType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.case_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.case_action">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.case_court">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.case_kind">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.case_no">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.case_year">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.case_date">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.Surround">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.Session">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.InDoc">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.Side">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.CaseType.Judge">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.ExtensionsType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ExtensionsType.Any">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.InDocType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.InDocType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.InDocType.indoc_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.InDocType.indoc_kind">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.InDocType.indoc_no">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.InDocType.indoc_noSpecified">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.InDocType.indoc_year">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.InDocType.indoc_date">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.ReturnType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ReturnType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ReturnType.return_result">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ReturnType.return_result2">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.SendToType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.sendto_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.sendto_action">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.sendto_kind">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.sendto_no">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.sendto_year">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.sendto_date">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.sendto_court">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SendToType.return">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.AppealType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.appeal_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.appeal_action">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.appeal_kind">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.appeal_no">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.appeal_year">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.appeal_date">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.Side">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.AppealType.SendTo">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.SideType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideType.side_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideType.side_involvement">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideType.Item">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.SideTypeSide_citizen">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideTypeSide_citizen.side_name_1">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideTypeSide_citizen.side_rename">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideTypeSide_citizen.side_family_1">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideTypeSide_citizen.side_family_2">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideTypeSide_citizen.side_egn">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.SideTypeSide_firm">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideTypeSide_firm.side_name">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SideTypeSide_firm.side_bulstat">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.ActType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_action">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_kind">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_no">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_noSpecified">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_date">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_reason">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_debtor_status">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_debtor_statusSpecified">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_text">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.act_image">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.ActType.Appeal">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.SurroundProcessedType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundProcessedType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundProcessedType.surround_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundProcessedType.surround_no">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundProcessedType.surround_year">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.JudgeType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.JudgeType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.JudgeType.judge_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.JudgeType.judge_name_1">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.JudgeType.judge_rename">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.JudgeType.judge_family_1">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.JudgeType.judge_family_2">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.JudgeType.judge_egn">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.SessionType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_action">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_kind">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_date">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_time">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_timeSpecified">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_result">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.session_text">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.Judge">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.Surround">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SessionType.Act">
-            <remarks/>
-        </member>
-        <member name="T:IOWebApplication.Infrastructure.Integrations.SurroundType">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.extensions">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.surround_id">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.surround_action">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.surround_no">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.surround_year">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.surround_date">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.surround_text">
-            <remarks/>
-        </member>
-        <member name="P:IOWebApplication.Infrastructure.Integrations.SurroundType.Side">
-            <remarks/>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Resources.Resource">
             <summary>
@@ -10636,6 +11145,11 @@
         <member name="P:IOWebApplication.Infrastructure.Resources.Resource.ValidTill">
             <summary>
               Looks up a localized string similar to Дата до.
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Services.BaseCdnService">
+            <summary>
+            Base cdn service - eliminates circural refference over IOSignToolService
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Services.ExpertsSearchService">

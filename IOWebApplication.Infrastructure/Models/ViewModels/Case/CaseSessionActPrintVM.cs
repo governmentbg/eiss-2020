@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,6 +7,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
     public class CaseSessionActPrintVM
     {
         public int Id { get; set; }
+        public int ActTypeId { get; set; }
         public string ActTypeCode { get; set; }
         public string ActFormatType { get; set; }
         public string ActTypeName { get; set; }
@@ -49,6 +47,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         public string SessionActLabel { get; set; }
         public DateTime SessionDate { get; set; }
+        public bool SessionIdOpen { get; set; }
         public int CaseId { get; set; }
         public string CaseTypeName { get; set; }
         public string CaseRegShortNumber { get; set; }

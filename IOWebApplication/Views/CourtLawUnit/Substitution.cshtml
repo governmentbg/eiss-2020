@@ -45,75 +45,84 @@
 @section scripts {
     <script>
         $(function () {
-            var table = $('#mainTable').DataTable({
-                ajax: {
-                    "url": "@Url.Action("ListData_Substitution")",
-                    "type": "POST",
-                    "datatype": "json",
-                    data: function (d) {
-                        d.filter = {
-                            dateFrom: $('#DateFrom').val(),
-                            dateTo: $('#DateTo').val()
-                        };
-                    }
-                },
-                columns: [
-                    {
-                        name: 'lawUnitName',
-                        data: 'lawUnitName',
-                        title: 'Съдия',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'substituteLawUnitName',
-                        data: 'substituteLawUnitName',
-                        title: 'Заместник',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        className: 'col-md-1',
-                        name: 'dateFrom',
-                        data: 'dateFrom',
-                        title: 'От дата',
-                        sortable: true,
-                        searchable: false,
-                        "render": function (value) {
-                            if (value)
-                                return moment(value).format("DD.MM.YYYY");
-                            else
-                                return "";
-                        }
-                    },
-                    {
-                        className: 'col-md-1',
-                        name: 'dateTo',
-                        data: 'dateTo',
-                        title: 'До дата',
-                        sortable: true,
-                        searchable: false,
-                        "render": function (value) {
-                            if (value)
-                                return moment(value).format("DD.MM.YYYY");
-                            else
-                                return "";
-                        }
-                    },
-                    {
-                        name: 'actions',
-                        data: "id",
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#templateEdit', value);
-                        }
-                    }
-                ]
-            });
+            LoadTable();
         });
+
+        function LoadTable() {
+                if ($.fn.dataTable.isDataTable('#mainTable')) {
+                    refreshTable('#mainTable');
+                }
+                else {
+                    var table = $('#mainTable').DataTable({
+                        ajax: {
+                            "url": "@Url.Action("ListData_Substitution")",
+                            "type": "POST",
+                            "datatype": "json",
+                            data: function (d) {
+                                d.filter = {
+                                    dateFrom: $('#DateFrom').val(),
+                                    dateTo: $('#DateTo').val()
+                                };
+                            }
+                        },
+                        columns: [
+                            {
+                                name: 'lawUnitName',
+                                data: 'lawUnitName',
+                                title: 'Съдия',
+                                sortable: true,
+                                searchable: true
+                            },
+                            {
+                                name: 'substituteLawUnitName',
+                                data: 'substituteLawUnitName',
+                                title: 'Заместник',
+                                sortable: true,
+                                searchable: true
+                            },
+                            {
+                                className: 'col-md-1',
+                                name: 'dateFrom',
+                                data: 'dateFrom',
+                                title: 'От дата',
+                                sortable: true,
+                                searchable: false,
+                                "render": function (value) {
+                                    if (value)
+                                        return moment(value).format("DD.MM.YYYY");
+                                    else
+                                        return "";
+                                }
+                            },
+                            {
+                                className: 'col-md-1',
+                                name: 'dateTo',
+                                data: 'dateTo',
+                                title: 'До дата',
+                                sortable: true,
+                                searchable: false,
+                                "render": function (value) {
+                                    if (value)
+                                        return moment(value).format("DD.MM.YYYY");
+                                    else
+                                        return "";
+                                }
+                            },
+                            {
+                                name: 'actions',
+                                data: "id",
+                                title: "",
+                                sortable: false,
+                                searchable: false,
+                                className: "text-center noExport",
+                                "render": function (value) {
+                                    return TemplateToHtml('#templateEdit', value);
+                                }
+                            }
+                        ]
+                    });
+                }
+            }
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">

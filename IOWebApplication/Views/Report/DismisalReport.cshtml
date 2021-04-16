@@ -12,6 +12,9 @@
     </ol>
 }
 <form id="formFilter" method="post">
+    @Html.HiddenFor(m => m.CaseGroupIds)
+    @Html.HiddenFor(m => m.DepartmentIds)
+
     <div class="row">
         <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
         <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
@@ -23,8 +26,12 @@
         </div>
     </div>
     <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDownMultiple")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.DepartmentId, "GenericDropDownMultiple")</div>
+    </div>
+    <div class="row">
         <div class="col-md-6 text-left pb-15">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" id="exportExcel" class="btn btn-primary">
                 Експорт в Excel
                 <i class="fa fa-file-excel-o" title="Търсене"></i>
             </button>
@@ -35,5 +42,20 @@
 <script>
     $(function () {
         initLawUnit();
+    });
+
+    $(document).ready(function () {
+        $('#CaseGroupId').select2({
+        });
+        $('#DepartmentId').select2({
+        });
+    });
+
+    $('#exportExcel').click(function () {
+        var str = $('#CaseGroupId').val();
+        $('#CaseGroupIds').val(str);
+
+        var str = $('#DepartmentId').val();
+        $('#DepartmentIds').val(str);
     });
 </script>

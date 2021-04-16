@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -81,6 +78,33 @@ namespace IOWebApplication.Controllers
             ViewBag.SessionDocStateId_ddl = nomService.GetDropDownList<SessionDocState>();
             ViewBag.breadcrumbsEdit = commonService.Breadcrumbs_GetForCaseSession(CaseSessionId);
             SetHelpFile(HelpFileValues.SessionDoc);
+        }
+
+        [HttpPost]
+        public IActionResult CaseSessionDoc_ExpiredInfo(ExpiredInfoVM model)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionDoc, model.Id, AuditConstants.Operations.Delete))
+            {
+                return Redirect_Denied();
+            }
+
+            var expireObject = service.GetById<CaseSessionDoc>(model.Id);
+
+            if (expireObject.SessionDocStateId != NomenclatureConstants.SessionDocState.Presented)
+            {
+                return Json(new { result = false, message = "Може да премахнете документ, само със статус: представен." });
+            }
+
+            if (service.SaveExpireInfo<CaseSessionDoc>(model))
+            {
+                SetAuditContextDelete(service, SourceTypeSelectVM.CaseSessionDoc, model.Id);
+                SetSuccessMessage(MessageConstant.Values.CaseSessionExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("Preview", "CaseSession", new { id = expireObject.CaseSessionId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
         }
 
         [HttpGet]

@@ -26,6 +26,12 @@
     <b>Статус:</b> @Model.CaseStateLabel
     <br />
 
+    @if (Model.CaseInforcedDate != null)
+    {
+        <b>Дата на влизане в законна сила:</b> @((Model.CaseInforcedDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
+        <br />
+    }
+
     @if (!string.IsNullOrEmpty(Model.CaseReasonLabel))
     {
         <b>Основание за образуване:</b> @Model.CaseReasonLabel
@@ -50,14 +56,77 @@
         <br />
     }
 
+    @if (Model.CaseMigrations.Count() > 0)
+    {
+        <br />
+        <b>Свързани дела от ЕИСС</b>
+        <br />
+        @foreach (var caseMigration in Model.CaseMigrations)
+        {
+            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                @{
+                    var _row = "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
+                }
+                <div class='just'>
+                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                </div>
+            </div>
+        }
+    }
+
+    @if (Model.DocumentCaseInfos.Count() > 0)
+    {
+        <br />
+        <b>Свързани дела от външни системи</b>
+        <br />
+        @foreach (var documentCaseInfo in Model.DocumentCaseInfos)
+        {
+            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                @{
+                    var _row = "Дело: " + documentCaseInfo.CaseRegNumber + "/" + documentCaseInfo.CaseYear + " - " + documentCaseInfo.Description;
+                }
+                <div class='just'>
+                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                </div>
+            </div>
+        }
+    }
+
+    @if (Model.DocumentInstitutionCaseInfos.Count() > 0)
+    {
+        <br />
+        <b>Свързани дела на външни институции:</b>
+        <br />
+        @foreach (var documentInstitutionCaseInfo in Model.DocumentInstitutionCaseInfos)
+        {
+            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                @{
+                    var _row = documentInstitutionCaseInfo.Institution.FullName + " - " + ((documentInstitutionCaseInfo.InstitutionCaseType != null) ? documentInstitutionCaseInfo.InstitutionCaseType.Label + " - " : string.Empty) + documentInstitutionCaseInfo.CaseNumber + "/" + documentInstitutionCaseInfo.CaseYear;
+                }
+                <div>
+                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                </div>
+            </div>
+        }
+    }
+
     @if (!string.IsNullOrEmpty(Model.ArchRegNumber))
     {
+        <br />
         <b>Архивиране:</b> @(Model.ArchRegNumber + "/" + (Model.ArchRegDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
+        <br />
+    }
+
+    @if (Model.LastMigration != string.Empty)
+    {
+        <br />
+        <b>Изпратено до:</b> @Model.LastMigration
         <br />
     }
 
     @if (Model.CaseClassifications.Count() > 0)
     {
+        <br />
         <b>Индикатори:</b>
         <br />
         @foreach (var caseClassification in Model.CaseClassifications)

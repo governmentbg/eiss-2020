@@ -6,9 +6,16 @@
         @Html.HiddenFor(x => x.SourceId)
         @Html.HiddenFor(x => x.SourceType)
         @Html.HiddenFor(x => x.FileContainer)
-        <input type="file" name="files" id="files" />
+        @Html.HiddenFor(x => x.MaxFileSize)
+        <input type="file" name="files" id="files" multiple="multiple" />
+        @if (Model.MaxFileSize > 0)
+        {
+            <span class="text-muted">Максимално допустимия размер е @Model.MaxFileSize MB</span>
+        }
         @Html.EditorFor(x => x.Title)
         <input type="submit" value="Прикачи" id="cdnUploadButton" />
+        &nbsp;
+        <span id="uploadProgress"></span>
         <button type="button" id="scanButton" class="pull-right" data-url="@Url.Action("Scan", "Scan", new { sourceId = Model.SourceId, sourceType = Model.SourceType })">Сканирай</button>
     </form>
 }
@@ -26,21 +33,26 @@ else
             beforeSend: function () {
                 $('#cdnUploadButton').hide();
                 $('#scanButton').hide();
+                $('#uploadProgress').text('');
             },
 
+            uploadProgress: function (event, position, total, percentComplete) {
+                var percentVal = 'Моля, изчакайте... ' + percentComplete + '%';
+                $('#uploadProgress').text(percentVal);
+            },
             complete: function (xhr) {
                 $('#cdnUploadButton').show();
                 $('#scanButton').show();
-                if (xhr.responseText == "ok") {
-                    //alert('stana!');
-                    LoadFiles('@Model.FileContainer');
-                    $('#cdnUploadButton').parents('div.modal:first').modal("hide");
-                } else {
-                    if (xhr.responseText.length > 100) {
-                        // percent.html("Проблем при зареждане на файл.");
-                    } else {
-                        // percent.html(xhr.responseText);
-                    }
+                $('#uploadProgress').text('');
+                switch (xhr.responseText) {
+                    case "ok":
+                        LoadFiles('@Model.FileContainer');
+                        $('#cdnUploadButton').parents('div.modal:first').modal("hide");
+                        break;
+                    case "max_size":
+                        swalOk("Надвишен максимален размер на файл!");
+                        break;
+                    default:
                 }
             }
         });

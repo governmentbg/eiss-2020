@@ -1,0 +1,60 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="CaseLoadIndex" asp-action="AddElementTypeStop" asp-route-caseLoadElementTypeId="@Model.Id" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави забрана
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseLoadElementTypeStopMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseLoadElementTypeStopMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseLoadElementTypeStop", "CaseLoadIndex")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.CaseLoadElementTypeId = @Model.Id;
+                    }
+
+                },
+                columns: [
+                    {
+                        name: 'caseLoadElementTypeStopLabel',
+                        data: 'caseLoadElementTypeStopLabel',
+                        title: 'Елемент',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseLoadElementTypeStopTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="caseLoadElementTypeStopTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditElementTypeStop", "CaseLoadIndex")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

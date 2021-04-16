@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.Collections.Generic;
@@ -36,6 +33,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Display(Name = "Забележка")]
         public string Description { get; set; }
 
+        [Column("decision_request_type_id")]
+        [Display(Name = "Искане за")]
+        [Range(1, long.MaxValue, ErrorMessage = "Изберете")]
+        public int? DecisionRequestTypeId { get; set; }
+
         [ForeignKey(nameof(DocumentDecisionId))]
         public virtual DocumentDecision DocumentDecision { get; set; }
 
@@ -44,5 +46,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
 
         [ForeignKey(nameof(CaseId))]
         public virtual Case Case { get; set; }
+
+        [ForeignKey(nameof(DecisionRequestTypeId))]
+        public virtual DecisionRequestType DecisionRequestType { get; set; }
     }
 }

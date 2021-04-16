@@ -40,7 +40,7 @@
             <param name="caseSessionId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Contracts.ICaseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(System.Int32)">
+        <member name="M:IOWebApplication.Core.Contracts.ICaseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(System.Int32,System.Collections.Generic.List{IOWebApplication.Infrastructure.Data.Models.Nomenclatures.CaseLoadElementGroup})">
             <summary>
             Автоматичен запис на натоварване свързано със заседание/резултат от заседание/акт
             </summary>
@@ -70,7 +70,7 @@
             <param name="caseSessionId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Contracts.ICasePersonService.CasePerson_SelectForReport(System.Int32,System.String,System.String,System.String)">
+        <member name="M:IOWebApplication.Core.Contracts.ICasePersonService.CasePerson_SelectForReport(System.Int32,System.String,System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
             Четене за Справка лица
             </summary>
@@ -121,14 +121,6 @@
             Информация за autocomplete контрола за lawUnit
             </summary>
             <param name="id">Id на lawunit</param>
-            <returns></returns>
-        </member>
-        <member name="M:IOWebApplication.Core.Contracts.ICommonService.LawUnit_ActualJudgeByCourtDate(System.Int32,System.Nullable{System.DateTime})">
-            <summary>
-            Всички налични съдии към даден момент в избран съд
-            </summary>
-            <param name="court"></param>
-            <param name="date"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Contracts.ICommonService.LawUnit_JudgeByCourtDate(System.Int32,System.Nullable{System.DateTime})">
@@ -399,7 +391,7 @@
             <param name="caseGroupId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Contracts.INomenclatureService.GetDDL_CaseCode(System.Int32,System.String,System.Nullable{System.Int32},System.Boolean)">
+        <member name="M:IOWebApplication.Core.Contracts.INomenclatureService.GetDDL_CaseCode(System.Int32[],System.String,System.Nullable{System.Int32},System.Boolean)">
             <summary>
             Зарежда шифри на дела по точен вид
             </summary>
@@ -928,7 +920,7 @@
             <param name="caseSessionId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseEvidenceService.CaseEvidence_Select(System.Int32,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
+        <member name="M:IOWebApplication.Core.Services.CaseEvidenceService.CaseEvidence_Select(System.Int32,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.String,System.Int32)">
             <summary>
             Извличане на данни за доказателства
             </summary>
@@ -2018,6 +2010,15 @@
             <param name="defaultElementText"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Core.Services.CasePersonLinkService.PersonYDDL(System.Int32,System.Int32,System.String)">
+            <summary>
+            Извличане на данни за Ред на представляване
+            </summary>
+            <param name="caseId"></param>
+            <param name="linkDirectionId"></param>
+            <param name="defaultElementText"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Core.Services.CasePersonLinkService.SeccondRelationalPersonDDL(System.Int32,System.String)">
             <summary>
             Извличане на данни за Ред на представляване
@@ -2034,6 +2035,20 @@
             идентификатор на дело
             <param name="casePersonLinkId"></param>
             идентификатор на връзка
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.CasePersonLinkService.RoleKindDDL">
+            <summary>
+            Извличане на данни лява и дясна страна
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.CasePersonLinkService.GetPersonXBySide(System.Int32,System.Int32)">
+            <summary>
+            Изчитане на лица от дело
+            </summary>
+            <param name="caseId">дело</param>
+            <param name="roleKindId">лява/дясна страна</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.CasePersonSentenceService.CasePersonSentence_Select(System.Int32)">
@@ -2218,7 +2233,7 @@
             <param name="personId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CasePersonService.CasePerson_Select(System.Int32,System.Nullable{System.Int32},System.Boolean,System.Boolean)">
+        <member name="M:IOWebApplication.Core.Services.CasePersonService.CasePerson_Select(System.Int32,System.Nullable{System.Int32},System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Извличане на данни за лица по дело/заседание
             </summary>
@@ -2226,6 +2241,7 @@
             <param name="caseSessionId"></param>
             <param name="checkSessionDate"></param>
             <param name="showExpired"></param>
+            <param name="setRowNumberFromCase">Ако е за заседание и е true да вземе rownumber от делото за този идентификатор</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.CasePersonService.CasePerson_SaveData(IOWebApplication.Infrastructure.Models.ViewModels.CasePersonVM)">
@@ -2376,7 +2392,7 @@
             <param name="checkListViewVM"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CasePersonService.CasePerson_SelectForReport(System.Int32,System.String,System.String,System.String)">
+        <member name="M:IOWebApplication.Core.Services.CasePersonService.CasePerson_SelectForReport(System.Int32,System.String,System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
             Извличане на данни за лица по дело/заседание за справка
             </summary>
@@ -2386,7 +2402,7 @@
             <param name="caseRegnumber"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CasePersonService.GetDDL_CasePersonAddress(System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CasePersonService.GetDDL_CasePersonAddress(System.Int32,System.Int32)">
             <summary>
             Извличане на данни за адреси за лица по дело/заседание за комбо бокс
             </summary>
@@ -2627,12 +2643,12 @@
             <param name="model">Модел за филтър</param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSelectionProtokolService.LawUnit_LoadJudgeByCaseGroup(System.Int32,System.Int32,System.String,System.Int32,System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CaseSelectionProtokolService.LawUnit_LoadJudgeByCaseGroup(System.Int32,IOWebApplication.Infrastructure.Models.ViewModels.CheckListVM[],System.String,System.Int32,System.Int32)">
             <summary>
             Зарежда съдии по група дела
             </summary>
             <param name="courtId">ID на съд</param>
-            <param name="caseGroupId">ID група за разпределение</param>
+            <param name="CaseGroups">ID група за разпределение</param>
             <param name="lawUnitsIds">списък на използвани групи</param>
             <param name="caseId">Id na </param>
             <returns></returns>
@@ -2690,7 +2706,7 @@
             <param name="id">ID на дело</param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSelectionProtokolService.SetTotalCourtCaseCount_LawUnit(System.Collections.Generic.ICollection{IOWebApplication.Infrastructure.Data.Models.Cases.CaseSelectionProtokolLawUnit},System.Int32,System.Nullable{System.Int32})">
+        <member name="M:IOWebApplication.Core.Services.CaseSelectionProtokolService.SetTotalCourtCaseCount_LawUnit(System.Collections.Generic.ICollection{IOWebApplication.Infrastructure.Data.Models.Cases.CaseSelectionProtokolLawUnit},System.Int32,System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
             Изчислява броя дела на всеки съдия от протокола
             </summary>
@@ -3084,7 +3100,7 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseService.FillFilesInArchive(System.IO.Compression.ZipArchive,System.Int32,System.Int32,System.String,System.String)">
+        <member name="M:IOWebApplication.Core.Services.CaseService.FillFilesInArchive(System.IO.Compression.ZipArchive,System.Nullable{System.Int32},System.Nullable{System.Int64},System.Int32,System.String,System.String,IOWebApplication.Infrastructure.Models.Cdn.CdnFileSelect.PostProcess)">
             <summary>
             Добавяне на файлове от дело в архив на ел. папка
             </summary>
@@ -3249,11 +3265,13 @@
             <param name="addAllElement"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionActComplainService.GetDropDownListForAct(System.Int32,System.Boolean,System.Boolean)">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionActComplainService.GetDropDownListForAct(System.Int32,System.Int32,System.Int32,System.Boolean,System.Boolean)">
             <summary>
             Извличане на данни за акт за комбобокс
             </summary>
+            <param name="caseId"></param>
             <param name="caseSessionActId"></param>
+            <param name="htmlTemplateId"></param>
             <param name="addDefaultElement"></param>
             <param name="addAllElement"></param>
             <returns></returns>
@@ -3418,7 +3436,7 @@
             <param name="dispositiv"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.CheckActBlankAccess(System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.CheckActBlankAccess(System.Int32,IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionAct)">
             <summary>
             Проверява правата на достъп до бланката на неизготвен акт
             </summary>
@@ -3447,11 +3465,12 @@
             <param name="taskId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.getCaseLawUnitByAct(System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.GetCaseLawUnitsByAct(System.Int32,System.Int32)">
             <summary>
             Извличане на състав от акт
             </summary>
             <param name="caseSessionActId"></param>
+            <param name="caseSessionId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.CaseSessionActService.SendForSign_Init(System.Int32,System.Int64)">
@@ -3489,6 +3508,10 @@
             <param name="addDefaultElement"></param>
             <param name="addAllElement"></param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.GetDropDownListForDismisal(System.Int32)">
+            Зареждане в комбо на актовете от заседания по постановени с 
+            С определение за отвод/С разпореждане за отвод
         </member>
         <member name="M:IOWebApplication.Core.Services.CaseSessionActService.GetDropDownListBySessionId(System.Int32,System.Boolean,System.Boolean)">
             <summary>
@@ -3661,6 +3684,7 @@
             <summary>
             извличане на данни за Справка съдебни актове и протоколи
             </summary>
+            <param name="courtId"></param>
             <param name="model"></param>
             <returns></returns>
         </member>
@@ -3932,12 +3956,13 @@
             <param name="dateTimeTo"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionMeetingService.IsExistMeetengInSessionAfterDate(System.DateTime,System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionMeetingService.IsExistMeetengInSessionAfterDate(System.DateTime,System.Int32,System.Nullable{System.Int32})">
             <summary>
             Проверка за Тайни съвещания/сесии към заседание след дата
             </summary>
             <param name="DateTo"></param>
             <param name="CaseSessionId"></param>
+            <param name="CaseSessionMeetingId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.CaseSessionMeetingService.CheckExistSecretaryOfAllMeeting(System.Int32)">
@@ -3989,7 +4014,7 @@
             <param name="IsViewExpired"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionService.CaseSessionResult_SaveData(IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionResult)">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionService.CaseSessionResult_SaveData(IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseSessionResultEditVM)">
             <summary>
             Запис на резултат по заседание
             </summary>
@@ -4010,7 +4035,7 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionService.CaseSessionHallUse_Select(System.Int32,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionService.CaseSessionHallUse_Select(System.Int32,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.Int32})">
             <summary>
             Справка за заетост на зали
             </summary>
@@ -4318,7 +4343,7 @@
             <param name="courtDutyLawUnits"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CourtDutyService.FillCheckListVMs(System.Int32,System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CourtDutyService.FillCheckListVMs(System.Int32,System.Nullable{System.Int32})">
             <summary>
             Избор на съдии за чекбокс
             </summary>
@@ -4389,6 +4414,12 @@
             <param name="message">XML</param>
             <param name="rules">Правила от nom_eispp_rules</param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.EisppRulesService.CreatePunismentFromProbationMeasuares(IOWebApplication.Infrastructure.Models.Integrations.Eispp.EisppPackage)">
+            <summary>
+            От пробационни мерки прави наказания
+            </summary>
+            <param name="eisppEvent">Събитие</param>
         </member>
         <member name="M:IOWebApplication.Core.Services.HtmlTemplateService.HtmlTemplate_Select(IOWebApplication.Infrastructure.Models.ViewModels.Common.HtmlTemplateFilterVM)">
             <summary>
@@ -4706,7 +4737,7 @@
             <param name="courtId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.MoneyService.ObligationMinAmountForday_SaveData(System.Int32,System.Collections.Generic.List{System.DateTime},System.Collections.Generic.List{IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnit},System.Collections.Generic.List{IOWebApplication.Infrastructure.Data.Models.Common.CourtJuryFee},System.Collections.Generic.List{IOWebApplication.Infrastructure.Data.Models.Money.Obligation},System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.MoneyService.ObligationMinAmountForday_SaveData(System.Int32,System.Collections.Generic.List{System.DateTime},System.Collections.Generic.List{IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnit},System.Collections.Generic.List{IOWebApplication.Infrastructure.Data.Models.Common.CourtJuryFee},System.Collections.Generic.List{IOWebApplication.Infrastructure.Data.Models.Money.Obligation},System.Int32,System.Boolean)">
             <summary>
             Минимална сума за ден за заседател
             </summary>
@@ -4716,6 +4747,7 @@
             <param name="courtJuryFee"></param>
             <param name="moneys"></param>
             <param name="courtId"></param>
+            <param name="isRemove"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.MoneyService.CalcEarningsJury(IOWebApplication.Infrastructure.Data.Models.Cases.CaseSession,System.Int32)">
@@ -4876,18 +4908,12 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.MoneyService.CountryReceive_SelectForDropDownList(System.Int32)">
-            <summary>
-            Страни по дело за получател на задължение
-            </summary>
-            <param name="caseId"></param>
-            <returns></returns>
-        </member>
-        <member name="M:IOWebApplication.Core.Services.MoneyService.LastDataForReceive_Select(System.String)">
+        <member name="M:IOWebApplication.Core.Services.MoneyService.LastDataForReceive_Select(System.Int32,System.Int64)">
             <summary>
              Извличане на данни за получател на сума
             </summary>
-            <param name="receiveId"></param>
+            <param name="sourceType"></param>
+            <param name="sourceId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.MoneyService.PaymentForCase_Select(System.Int32)">
@@ -4900,6 +4926,13 @@
         <member name="M:IOWebApplication.Core.Services.MoneyService.ExecListForCase_Select(System.Int32)">
             <summary>
             Извличане на изпълнителни листове за дело
+            </summary>
+            <param name="caseId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.MoneyService.ExpenseOrderForCase_Select(System.Int32)">
+            <summary>
+            РКО за дело
             </summary>
             <param name="caseId"></param>
             <returns></returns>
@@ -5011,7 +5044,7 @@
             <param name="addDefaultElement"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.PrintDocumentService.ConvertToTinyMCVM(IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplate,System.String)">
+        <member name="M:IOWebApplication.Core.Services.PrintDocumentService.ConvertToTinyMCVM(IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplate,System.Boolean,System.String)">
             <summary>
             Създава обект за преглед и редакция на съдържание в пълнотекстов редактор
             </summary>
@@ -5139,6 +5172,290 @@
             Справка Свършени дела за период – въззивни дела
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseComplain(System.DateTime,System.DateTime)">
+            <summary>
+            Обжалвани
+            </summary>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.FinishedLifecycleByType(System.DateTime,System.DateTime,System.Boolean)">
+            <summary>
+            Свършили по същество или прекратени
+            </summary>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="onlyStop">true - само прекратени, false - без прекратените</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseLawUnitCaseType_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseTypeColVM})">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="reportType"></param>
+            <param name="courtTypeCaseTypesCols"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseCaseCode_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseCodeRowVM},System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="excelReportCaseCodeRows"></param>
+            <param name="colIndex"></param>
+            <param name="reportType">1 - Несвършели към началото на периода, 2 - новообразувани без получените по подсъдност, 3 - получени по подсъдност,
+            4 - образувани под нов номер, 5 - обжалвани, 6 - Общо постъпили, 7 - новообразувани, 8 - постъпили бързи произвоства,
+            9 - Възобновени дела</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseLifecycleCaseCode_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseCodeRowVM},System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="excelReportCaseCodeRows"></param>
+            <param name="colIndex"></param>
+            <param name="reportType">1 - продължаващи под същия номер, 2 - свършени до 3 месеца вкл., 3 - свършени от 3 до 6 месеца,
+            4 - прекратено по спогодба, 5 - прекратено по други причини, 6 - решени по същество с присъда,
+            7 - прекр. и спор. – Общо, 8 - в т.ч. свърш.споразум.- чл.381-384, 9 - От св.дела б.п.по чл. 356 НПК – решени,
+            10 - От св.дела б.п.по чл. 356 НПК – прекратени и споразумения, 11 - Свършени ВЧНД</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseSession_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32[],System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="rowIndex"></param>
+            <param name="reportType"> RSSheet2 - 1 - Брой насрочвания на дела в открито заседание, 2 - Отлагания на дела в открити заседания,
+            3 - В т.ч. в I-во по делото заседание и помирително, 4 - 1.6.	Изготвяне на Справка III - Общ ред 1 месец, 
+            5 - Общ ред 2 месеца, 6 - Общ ред 3 месеца, 7 - Общ ред над 3 месеца,
+            8 - 1.6.	Изготвяне на Справка III - Бързи 1 месец, 
+            9 - Бързи 2 месеца, 10 - Бързи 3 месеца, 11 - Бързи над 3 месеца, 12 - Изпратени за доразследване от съдия-докладчик,
+            13 - Изпратени за доразследване в открито заседание, 14 - От влезли в сила решени,брой  дела, изпратени за доразследване,
+            15 - 1.6.	Изготвяне на Справка III - Без значение реда 1 месец, 
+            16 - Без значение реда 2 месеца, 17 - Без значение реда 3 месеца, 18 - Без значение реда над 3 месеца, 
+            19 - поради отмяна на решението и даване ход по същество</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseLifecycleComplain_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportComplainIndexVM})">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="rowIndex"></param>
+            <param name="reportType">RSSheet2 1 - Несвършени дела  от 1 до 3г., 2 - Несвършени дела  от 3 до 5г.,
+            3 - Несвършени дела  над  5г.“, 4 - 3 Несвършили до 3 месеца от датата на делото,
+            5 - 3 Несвършили от 3 до 6 месеца от датата на делото, 6 - 3 Несвършили от 6 до 12 месеца от датата на делото,
+            7 Несвършили над 12 месеца от датата на делото, 
+            8 - От решените дела /кол. 10/ с ненаписани мотиви към присъдата с изтекъл  30-дневен срок,
+            9 - Свършили бързо производство, 10 - Свършили по искане на обвиняемия, 11 - Свършили съкратено производство,
+            12 - От решените дела /кол. 10/ с ненаписани мотиви към присъдата с изтекъл  60-дневен срок,
+            13 - Дела относно основания за прекратяване на НП, 14 - Несвършили за възобновяване,
+            15 - Свършени по възобновяване, 16 - Решени възобновяване, 17 - Решени уважени възобновяване</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseLifecycle_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="rowIndex"></param>
+            <param name="reportType">RSSheet2 1 - Несвършени дела  от 1 до 3г., 2 - Несвършени дела  от 3 до 5г.,
+            3 - Несвършени дела  над  5г.“, 4 - 3 Несвършили до 3 месеца от датата на делото,
+            5 - 3 Несвършили от 3 до 6 месеца от датата на делото, 6 - 3 Несвършили от 6 до 12 месеца от датата на делото,
+            7 Несвършили над 12 месеца от датата на делото, 
+            8 - От решените дела /кол. 10/ с ненаписани мотиви към присъдата с изтекъл  30-дневен срок,
+            9 - Свършили бързо производство, 10 - Свършили по искане на обвиняемия, 11 - Свършили съкратено производство,
+            12 - От решените дела /кол. 10/ с ненаписани мотиви към присъдата с изтекъл  60-дневен срок,
+            13 - Дела относно основания за прекратяване на НП, 14 - Несвършили за възобновяване,
+            15 - Свършени по възобновяване, 16 - Решени възобновяване,
+            17 - Решени уважени възобновяване</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseSessionAct_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="rowIndex"></param>
+            <param name="instanceId"></param>
+            <param name="reportType">RSSheet2 - 1 -От решените дела /кол.9+10+11/“ с необявени решения с изтекъл срок над 3м.,
+            2 - Постановени решения по чл. 235, ал. 5 от ГПК, след проведено открито съдебно заседание,
+            3 - Постановени присъди, 4 - Постановени решения по НАХД, 
+            5 - Финализиращи решения постановени в открити заседания, 6 - Постановени присъди,
+            7 - Постановени Решения за АНД</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CasePersonCaseCode_Select(System.Int32,System.Int32,System.DateTime,System.DateTime,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseCodeRowVM},System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="excelReportCaseCodeRows"></param>
+            <param name="colIndex"></param>
+            <param name="reportType">1 - Съдени лица общо, 2 - Оправдани от Съдени лица, 3 - Осъдени лица непълнолетни,
+            4 - Лишаване от свобода – до 3г. – Общо, 5 - Лишаване от свобода – до 3г. – условно,
+            6 - Лишаване от свобода над 3 до 15 г, 7 - Осъден глоба, 8 - Осъден Пробация, 9 - Осъдени лица – Други наказания,
+            10 - брой наказани лица по споразум. - чл.381-384 НПК,
+            11 - Лишаване от свобода над 3 до 10 г, 12 - Лишаване от свобода над 10 до 30 г,
+            13 - Доживотен затвор, 14 - Доживотен затвор без право на замяна, 15 - Осъдени лица други наказания ОС и Военен</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CasePerson_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="rowIndex"></param>
+            <param name="reportType">1 - Кумулации, 2 - Рецидивисти, 3 - Пробация</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseByFromCourt_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32[],System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="rowIndex"></param>
+            <param name="reportType">1 - Спрени дела, 2 - Възовновени дела, 3 - по дата на делото, 4 - новообразувани по възобновяване</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.Case_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="rowIndex"></param>
+            <param name="reportType">1 - Спрени дела, 2 - Възовновени дела, 3 - по дата на делото, 4 - новообразувани по възобновяване</param>
+            <param name="instanceId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CasePersonSentenceCaseCode_Select(System.Int32,System.Int32,System.DateTime,System.DateTime,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseCodeRowVM},System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="excelReportCaseCodeRows"></param>
+            <param name="colIndex"></param>
+            <param name="reportType"></param>
+            <param name="instanceId">1 - Влезли в сила присъди, 2 - Влезли в сила оправдателни присъди</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseLifecycleByFromCourt_Select(System.Int32,System.Int32,System.Int32[],System.DateTime,System.DateTime,System.Int32,System.Int32,System.Int32[],System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportComplainIndexVM})">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="colIndex"></param>
+            <param name="reportType"> 1 - несвършени дела в началото на отчетния период,
+            2 - Постъпили дела, 3 - прекратяване на делото,
+            4 - Свършени дела в периода</param>
+            <param name="documentTypeIds"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseTypeLifecycle_Select(System.Int32,System.Int32,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseTypeRowVM})">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="caseGroupIds"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="reportType">1 - несвършени дела в началото на отчетния период, 2 - Свършени до 3 месеца вкл.,
+            3 - Свършели през прекратени, 4 - Свършили само прекратени, 5 - Продължаващи под същия номер, 
+            6 - Споразу- мения по чл.382 НПК, 7 - Споразум. по чл.384 НПК , спог. по чл.24 ал. 3 НПК или чл.234 ГПК,
+            8 - Върнати за доразследване, 9 - Прекратени по други причини без 6,7,8</param>
+            <param name="colIndex"></param>
+            <param name="caseTypesRows"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseTypeCase_Select(System.Int32,System.Int32,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseTypeRowVM})">
+             <summary>
+             
+             </summary>
+             <param name="courtTypeId"></param>
+             <param name="courtId"></param>
+             <param name="fromDate"></param>
+             <param name="toDate"></param>
+             <param name="reportType">1 - всички новообразувани, 2 - образувани под нов номер,
+             3 - Обжалвани, 4 - Под нов номер след прекратяване, 5 - Обр. под нов No дела при повторно пост. въззивни жалби - ПАС,
+            </param>
+             <param name="colIndex"></param>
+             <param name="caseTypesRows"></param>
+             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CaseTypeCaseSession_Select(System.Int32,System.Int32,System.DateTime,System.DateTime,System.Int32,System.Int32,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseTypeRowVM})">
+            <summary>
+            
+            </summary>
+            <param name="courtTypeId"></param>
+            <param name="courtId"></param>
+            <param name="fromDate"></param>
+            <param name="toDate"></param>
+            <param name="reportType">1 - всички Проведени заседания</param>
+            <param name="colIndex"></param>
+            <param name="caseTypesRows"></param>
             <returns></returns>
         </member>
     </members>

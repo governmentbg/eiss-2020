@@ -33,6 +33,7 @@
                 <fieldset class="is-fieldset">
                     <legend class="legend_1" data-position="BankAccount"> Основни данни</legend>
                     <div class="col-lg-12">@Html.EditorFor(x => x.Label)</div>
+                    <div class="col-lg-12">@Html.EditorFor(x => x.IsCalcOneTimeForPeriod, "Boolean")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.GroupNo, "Int32Nullable")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.DateStart, "DateTime")</div>

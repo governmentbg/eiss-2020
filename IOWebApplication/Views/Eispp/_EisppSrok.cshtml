@@ -14,9 +14,9 @@
         <div class="row">
             <div class="col-lg-2">@Html.EditorFor(x => x.SrokType, "EisppDropDown", null, new { Ddl = ViewBag.SrokTypeDDL })</div>
             <div class="col-lg-2">@Html.EditorFor(x => x.Days, "Int32")</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.Weeks, "Int32")</div>
+            @*<div class="col-lg-2">@Html.EditorFor(x => x.Weeks, "Int32")</div>
             <div class="col-lg-2">@Html.EditorFor(x => x.Months, "Int32")</div>
-            <div class="col-lg-2">@Html.EditorFor(x => x.Years, "Int32")</div>
+            <div class="col-lg-2">@Html.EditorFor(x => x.Years, "Int32")</div>*@
             <div class="col-lg-2">@Html.EditorFor(x => x.SrokDateVM, "EisppDateTime")</div>
         </div>
     </fieldset>

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -43,7 +40,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int? LinkDelo_CourtId { get; set; }
 
         [Display(Name = "Свързано дело номер")]
-        public int? LinkDelo_CaseId { get; set; }
+        public string LinkDelo_RegNumber { get; set; }
+
+        [Display(Name = "Свързано дело забележка")]
+        public string LinkDelo_Description { get; set; }
+
+        //[Display(Name = "Свързано дело номер")]
+        //public int? LinkDelo_CaseId { get; set; }
 
         [Display(Name = "Дело от друга система")]
         public string RegNumberOtherSystem { get; set; }

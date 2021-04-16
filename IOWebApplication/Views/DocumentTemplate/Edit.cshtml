@@ -46,6 +46,13 @@
                 <div class="row">
                     <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
                 </div>
+                @if ((Model.CaseId ?? 0) > 0)
+                {
+                    <div id="casePersonDiv" class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CasePersonId, "GenericDropDown")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.CasePersonAddressId, "GenericDropDown")</div>
+                    </div>
+                }
             </div>
 
             <div class="row">
@@ -68,7 +75,7 @@
                         }
                         else
                         {
-                            <a asp-action="AddFromTemplate" asp-controller="Document" asp-route-templateId="@Model.Id" class="btn btn-warning">Регистриране на документ</a>
+                            <a asp-action="AddFromTemplate" asp-controller="Document" asp-route-templateId="@Model.Id" target="_blank" class="btn btn-warning">Регистриране на документ</a>
                         }
                         <div class="pull-right">
                             @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
@@ -82,20 +89,52 @@
 
 @section scripts{
     <script>
+        var arrayHavePersonIds;
+        $(document).ready(function () {
+            if ('@(Model.CaseId??0)' > 0) {
+                arrayHavePersonIds = @Html.Raw(Json.Serialize(@ViewBag.haveCasePersonIds));
+            }
+        });
+
         $(function () {
             $('#DocumentKindId').change(function () {
                     requestCombo('@Url.Action("GetDDL_DocumentGroup", "Ajax")', { documentKindId: $(this).val() }, '#DocumentGroupId', @(Model.DocumentGroupId), function () {
                         $('#DocumentGroupId').trigger('change');
                     });
             }).trigger('change');
+
             $('#DocumentGroupId').change(function () {
                 requestCombo('@Url.Action("GetDDL_DocumentType", "Ajax")', { documentGroupId: $(this).val() }, '#DocumentTypeId', @(Model.DocumentTypeId), function () {
                     $('#DocumentTypeId').trigger('change');
                 });
             });
+
             $('#DocumentTypeId').change(function () {
-                requestCombo('@Url.Action("GetDDL_HtmlTemplateByDocType", "Ajax")', { documentTypeId: $(this).val(),caseId : '@Model.CaseId', sourceType: '@Model.SourceType' }, '#HtmlTemplateId', @(Model.HtmlTemplateId ?? 0));
+                requestCombo('@Url.Action("GetDDL_HtmlTemplateByDocType", "Ajax")', { documentTypeId: $(this).val(), caseId: '@Model.CaseId', sourceType: '@Model.SourceType', setDefault: '@Model.Id' <= 0 }, '#HtmlTemplateId', @(Model.HtmlTemplateId ?? 0), function () {
+                    $('#HtmlTemplateId').trigger('change');
+                });
             });
+
+            $('#HtmlTemplateId').change(function () {
+                if (@(Model.CaseId ?? 0) > 0) {
+                    var htmlTemplateId = $(this).val();
+                    var hasPerson = arrayHavePersonIds.find(x => x == htmlTemplateId);
+                    if (hasPerson != undefined) {
+                        $('#CasePersonId').prop("disabled", false);
+                        $('#casePersonDiv').show();
+                    }
+                    else {
+                        $('#CasePersonId').prop("disabled", true);
+                        $('#casePersonDiv').hide();
+                    }
+                }
+            });
+
+            $('#CasePersonId').change(function () {
+                requestCombo('@Url.Action("GetDDL_CasePersonAddress", "CasePerson")', { casePersonId: $(this).val() }, '#CasePersonAddressId', @(Model.CasePersonAddressId ?? 0));
+            }).trigger('change');
+
+
             initUserAutoComplete();
         });
     </script>

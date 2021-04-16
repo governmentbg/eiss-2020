@@ -1,0 +1,7 @@
+1.1.0 (2020-02-18)
+  * Added menu item #CHEC-32 #CHEC-36
+1.0.1 (2019-11-07)
+  * Fixed checklist toggle button not active when list items contain formatting #CHEC-29
+  * Fixed checklist toggling not working on iPadOS #CHEC-31
+1.0.0
+  * Initial release.

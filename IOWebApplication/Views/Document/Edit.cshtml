@@ -119,7 +119,12 @@
                                         {
                                             <div class="row">
                                                 <div class="col-lg-6 col-md-12">@Html.EditorFor(x => x.DeliveryGroupId, "GenericDropDown", new { label = DeliveryGroupLabel })</div>
-                                                <div class="col-lg-6 col-md-12">@Html.EditorFor(x => x.DeliveryTypeId, "GenericDropDown")</div>
+                                                <div class="col-lg-6 col-md-12">
+                                                    @Html.EditorFor(x => x.DeliveryTypeId, "GenericDropDown")
+                                                    <div id="postOfficeDateContainer">
+                                                        @Html.EditorFor(x => x.PostOfficeDate, "DateTime")
+                                                    </div>
+                                                </div>
                                             </div>
                                         }
                                     </div>
@@ -243,13 +248,21 @@
                             @if (Model.Id > 0)
 
                             {
-                                var cndEditMode = "append";
-                                if (access.CanChangeFull)
-                                {
-                                    cndEditMode = "all";
-                                }
+                                //var cndEditMode = "append";
+                                //if (access.CanChangeFull)
+                                //{
+                                //    cndEditMode = "all";
+                                //}
+                                //Файлове може да се изтривати след образуване на дело
+                                var cndEditMode = "all";
                                 <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.Document" data-sourceid="@Model.Id" data-editmode="@cndEditMode"></div>
                             }
+                            <div>
+                                @{ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.RegixRequestReason); }
+
+                                <partial name="../RegixReport/_RegixRequestReason" model="@Model.RegixRequestReason" />
+                                @{ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty; }
+                            </div>
                         </div>
                         <div class="tab-pane" id="tabPerson">
                             <partial name="_DocumentPerson" model="@Model" />
@@ -324,12 +337,22 @@
                 $('#litabInstitutionCaseInfo').hide();
                         } else {
                 $('#litabInstitutionCaseInfo').show()
-                        }
-                        if (docKindId == '@DocumentConstants.DocumentKind.InitialDocument') {
-                            if ('@Model.HasCaseInfo.ToString().ToLower()' == 'false') {
+            }
+            switch (docKindId) {
+                case '@DocumentConstants.DocumentKind.InitialDocument':
+                    {
+                        if ('@Model.HasCaseInfo.ToString().ToLower()' == 'false') {
                     $('#HasCaseInfo').removeAttr('checked').trigger('change');
                             }
-                        }
+                        break;
+                    }
+                case '@DocumentConstants.DocumentKind.CompliantDocument': {
+                    $('#HasCaseInfo').attr('checked', 'checked').trigger('change');
+                }
+                    break;
+
+            }
+
                     }
         $(function () {
             $('#CourtOrganizationId').change(function () {
@@ -365,22 +388,13 @@
                 $('input[name="DocumentKindId"]:first').attr('checked', 'checked');
             }
             $('input[name="DocumentKindId"]:checked').trigger('click');
-
-            $('#DeliveryGroupId').change(function () {
-                requestCombo('@Url.Action("GetDDL_DeliveryType", "Ajax")', { deliveryGroupId: $(this).val() }, '#DeliveryTypeId', @(Model.DeliveryTypeId ?? 0), function () {
-                    $('#DeliveryTypeId').trigger('change');
-                    if ($('#DeliveryTypeId').find('option').length == 1) {
-                        $('#DeliveryTypeId').parent().hide();
-                    } else {
-                        $('#DeliveryTypeId').parent().show();
-                    }
-                });
-            }).trigger('change');
             $('#DocumentGroupId').change(function () {
+
                 requestCombo('@Url.Action("GetDDL_DocumentTypeByCourt", "Ajax")', {
                     documentGroupId: $(this).val(),
                     courtOrganizationId: $('#CourtOrganizationId').val()
                 }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function () { $('#DocumentTypeId').trigger('change') });
+
             });
             $('#DocumentTypeId').change(function () {
                 requestCombo('@Url.Action("GetDDL_CaseTypeByDocType", "Ajax")',
@@ -390,6 +404,22 @@
                     }
                     , '#CaseTypeId', '@(Model.CaseTypeId)', function () { $('#CaseTypeId').trigger('change') });
             });
+            $('#DeliveryGroupId').change(function () {
+                requestCombo('@Url.Action("GetDDL_DeliveryType", "Ajax")', { deliveryGroupId: $(this).val() }, '#DeliveryTypeId', @(Model.DeliveryTypeId ?? 0), function () {
+                    $('#DeliveryTypeId').trigger('change');
+                    if ($('#DeliveryTypeId').find('option').length == 1) {
+                        $('#DeliveryTypeId').parent().hide();
+                    } else {
+                        $('#DeliveryTypeId').parent().show();
+                    }
+                });
+                if ($(this).val() == '@DocumentConstants.DeliveryGroups.PostOffice' && $('#DocumentDirectionId').val() == '@DocumentConstants.DocumentDirection.Incoming') {
+                    $('#postOfficeDateContainer').show();
+                } else {
+                    $('#postOfficeDateContainer').hide();
+                }
+            }).trigger('change');
+
             $('#divEISPP').hide();
             $('#btnSelectFromEispp').hide();
             $('#CaseTypeId').change(function () {
@@ -406,7 +436,7 @@
                 //divEISPP
                 requestGET_Json("@Url.Action("Get_CaseType", "Ajax")", { caseTypeId: $(this).val() }, function (cType) {
                     if (cType != undefined && cType != null) {
-                        legacyCaseNumberInit(cType.caseInstanceId);
+                        //legacyCaseNumberInit(cType.caseInstanceId);
                         if (cType && cType.caseGroupId == '@NomenclatureConstants.CaseGroups.NakazatelnoDelo') {
                             $('#divEISPP').show();
                             $('#btnSelectFromEispp').show();

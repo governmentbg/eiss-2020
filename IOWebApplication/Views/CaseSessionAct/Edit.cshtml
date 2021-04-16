@@ -3,6 +3,7 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels.Common
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
 
 @{
     if (Model.Id > 0)
@@ -30,7 +31,20 @@
     bool hasEditFinishDoc = (bool)ViewBag.hasEditFinishDoc;
     bool canAccessFile = (bool)ViewBag.canAccessFile;
     bool canRegisterAct = (Model.RegDate == null) && !hasActPdf;
+    bool autoSave = (bool)(ViewBag.autoSave ?? false);
+    bool showNoResultButton = (bool)(ViewBag.sessionNoResults ?? false);
+    bool manualSecretaryUser = (bool)(ViewBag.ManualSecretaryUser ?? false);
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    string regNumberDate = "";
+    if (Model.RegDate != null)
+    {
+        regNumberDate = $"{Model.RegNumber} / {Model.RegDate:dd.MM.yyyy}";
+    }
+    bool showNoSecretaryInfo = false;
+    if (NomenclatureConstants.ActType.SecretarySign.Contains(Model.ActTypeId) && string.IsNullOrEmpty(Model.SecretaryUserId))
+    {
+        showNoSecretaryInfo = true;
+    }
 }
 
 @section breadcrumb{
@@ -62,27 +76,33 @@
 
             <div class="row">
                 <div class="col-md-6">
-                    <form asp-action="Edit" method="post">
+                    @if (showNoSecretaryInfo)
+                    {
+                        <div class="callout callout-warning">
+                            <p>В протокола няма избран секретар.</p>
+                        </div>
+                    }
+
+
+                    <form asp-action="Edit" method="post" id="mainForm">
                         @Html.HiddenFor(x => x.Id)
                         @Html.HiddenFor(x => x.CaseId)
                         @Html.HiddenFor(x => x.CourtId)
                         @Html.HiddenFor(x => x.CaseSessionId)
                         @Html.HiddenFor(x => x.RegDate)
                         @Html.HiddenFor(x => x.RegNumber)
+                        @Html.HiddenFor(x => x.ActDeclaredDate)
 
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div id="saveContainer">
                             <partial name="_SaveFormContent" model="@("#saveContainer")" />
                             <fieldset class="is-fieldset">
                                 <legend class="legend_1">Информация</legend>
-
-
-
                                 @if (Model.Id > 0)
                                 {
                                     <div class="row">
-                                        <div class="col-lg-3">@Html.DisplayFor(x => x.RegNumber, "obj")</div>
-                                        <div class="col-lg-3">@Html.DisplayFor(x => x.RegDate, "date")</div>
+                                        <div class="col-lg-3">@Html.DisplayFor(x => regNumberDate, "obj", new { label = "Номер / Дата на регистрация" })</div>
+                                        <div class="col-lg-3">@Html.DisplayFor(x => x.ActDeclaredDate, "date")</div>
                                         <div class="col-lg-6">
                                             @if (!string.IsNullOrEmpty(Model.EcliCode))
                                             {
@@ -96,7 +116,6 @@
                                     @Html.HiddenFor(x => x.ActTypeId)
                                     @Html.HiddenFor(x => x.ActKindId)
                                     @Html.HiddenFor(x => x.RelatedActId)
-                                    @Html.HiddenFor(x => x.SecretaryUserId)
 
                                     <div class="row disable-controls">
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
@@ -114,11 +133,11 @@
                                         <div class="col-lg-6"></div>
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActTerm)</div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-lg-6 disable-controls">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
-                                        <div class="col-lg-6">@Html.EditorFor(x => x.ActStateId, "GenericDropDown")</div>
-                                    </div>
-                                }
+                                    <div class="row" id="divSignJudge">
+                                        <div class="col-lg-12 disable-controls">@Html.EditorFor(x => x.SignJudgeLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+                                    </div> }
+
+
                                 else
                                 {
                                     <div class="row">
@@ -136,8 +155,29 @@
                                         <div class="col-lg-6"></div>
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActTerm)</div>
                                     </div>
+                                    <div class="row" id="divSignJudge">
+                                        <div class="col-lg-12">@Html.EditorFor(x => x.SignJudgeLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+                                    </div>
+                                }
+                                @if (Model.ActDeclaredDate != null)
+                                {
+                                    @Html.HiddenFor(x => x.SecretaryUserId)
                                     <div class="row">
-                                        <div class="col-lg-6">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
+                                        <div class="col-lg-6 disable-controls">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.ActStateId, "GenericDropDown")</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="row">
+                                        @if (manualSecretaryUser)
+                                        {
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.SecretaryUserId, "SelectUser")</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="col-lg-6">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
+                                        }
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActStateId, "GenericDropDown")</div>
                                     </div>
                                 }
@@ -148,13 +188,21 @@
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActISPNDebtorStateId, "GenericDropDown")</div>
                                     </div>
                                 }
-
                                 <div class="row">
                                     <div class="col-lg-6">
                                         @Html.EditorFor(x => x.IsFinalDoc, "Boolean")
                                     </div>
                                     <div class="col-lg-6">
-                                        <div class="row" id="divComplainResult"><div class="col-lg-12">@Html.EditorFor(x => x.ActComplainResultId, "GenericDropDown")</div></div>
+                                        <div class="row" id="divComplainResult">
+                                            @if (canAccessFile)
+                                            {
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.ActComplainResultId, "GenericDropDown")</div>
+                                            }
+                                            else
+                                            {
+                                                @Html.HiddenFor(x => x.ActComplainResultId)
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -162,14 +210,9 @@
                                             @Html.EditorFor(x => x.IsReadyForPublish, "Boolean")
                                         </div>*@
                                     <div class="col-lg-6">
-                                        @if (Model.ActStateId == NomenclatureConstants.SessionActState.ComingIntoForce)
-                                        {
+                                        <div id="divInforcedDate">
                                             @Html.EditorFor(x => x.ActInforcedDate, "DateTime")
-                                        }
-                                        else
-                                        {
-                                            @Html.HiddenFor(x => x.ActInforcedDate)
-                                        }
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -185,7 +228,14 @@
                                 @if (!string.IsNullOrEmpty(Model.Description))
                                 {
                                     <div class="row">
-                                        <div class="col-lg-12">@Html.DisplayFor(x => x.Description, "obj")</div>
+                                        @if (canAccessFile)
+                                        {
+                                            <div class="col-lg-12">@Html.DisplayFor(x => x.Description, "obj")</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="col-lg-12 text-muted">Актът е в процес на изготване.</div>
+                                        }
                                     </div>
                                 }
 
@@ -196,7 +246,10 @@
                                     <legend class="legend_1">Мотиви</legend>
                                     <div class="row">
                                         <div class="col-lg-6">
-                                            @Html.EditorFor(x => x.ActMotivesDeclaredDate, "DateTime")
+                                            @if (Model.ActMotivesDeclaredDate.HasValue)
+                                            {
+                                                @Html.DisplayFor(x => x.ActMotivesDeclaredDate, "date")
+                                            }
                                         </div>
                                         <div class="col-lg-6" style="margin-top:23px;">
                                             <a asp-action="BlankMotives" asp-route-id="@Model.Id" class="btn btn-sm btn-def">Изготвяне</a>
@@ -224,7 +277,7 @@
                         <div class="form-group">
                             @if (access.CanChange)
                             {
-                                <input type="submit" value="Запис" class="btn btn-success single-click-submit m-b-5" />
+                                <input id="btnMainSubmit" type="submit" value="Запис" class="btn btn-success single-click-submit m-b-5" />
                             }
                             &nbsp;
                             <a href="@Url.Action("Preview","CaseSession",new { id=Model.CaseSessionId})#tabSessionAct" class="btn btn-danger m-b-5">Назад</a>
@@ -239,22 +292,22 @@
 
                                         <a href="#" id="btnBlank" style="display:none;" onclick="editActBlank(); return false;" class="btn btn-primary m-b-5">Изготвяне на акт</a>
                                         <a href="#" id="btnBlankComplete" style="display:none;" onclick="editActBlankComplete(); return false;" class="btn btn-warning m-b-5">Корекция на акт</a>
-
-                                        if (hasDefacedBlank && !hasDefacedAct && canAccessFile)
-                                        {
-                                            <span>&nbsp;</span>
-                                            <a asp-action="DepersonalizeAct" asp-route-id="@Model.Id" class="btn btn-primary m-b-5">Обезличаване на акт</a>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (hasDefacedBlank && access.CanChangeFull)
-                                        {
-                                            <span>&nbsp;</span>
-                                            <a onclick="confirmDelete(this,'act'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile",new { actId=Model.Id,sourceType=SourceTypeSelectVM.CaseSessionActDepersonalized})" class="btn btn-danger m-b-5" title="Премахване на обезличения акт"><i class="fa fa-remove"></i></a>
-                                        }
                                     }
                                 }
+                                @if (hasDefacedBlank && !hasDefacedAct && canAccessFile)
+                                {
+                                    <span>&nbsp;</span>
+                                    <a asp-action="DepersonalizeAct" asp-route-id="@Model.Id" class="btn btn-primary m-b-5">Обезличаване на акт</a>
+                                }
+                                else
+                                {
+                                    if (hasDefacedBlank && access.CanChangeFull)
+                                    {
+                                        <span>&nbsp;</span>
+                                        <a onclick="confirmDelete(this,'act'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile",new { actId=Model.Id,sourceType=SourceTypeSelectVM.CaseSessionActDepersonalized})" class="btn btn-danger m-b-5" title="Премахване на обезличения акт"><i class="fa fa-remove"></i></a>
+                                    }
+                                }
+
 
                                 if (ViewBag.isDivorce)
                                 {
@@ -265,9 +318,8 @@
                                     <a asp-action="AddCompany" asp-route-actId="@Model.Id" class="btn btn-primary">Вписване в ТРРЮЛНЦ</a>
                                 }
 
-                                if (string.IsNullOrEmpty(Model.RegNumber) && Model.DateExpired == null)
+                                if (Model.ActDeclaredDate == null && Model.DateExpired == null)
                                 {
-
                                     @if (access.CanChangeFull)
                                     {
                                         <span>&nbsp;</span>
@@ -299,13 +351,21 @@
                             <legend class="legend_1">
                                 Действия
                             </legend>
+                            @if (showNoResultButton)
+                            {
+                                <a href="@Url.Action("AddResult","CaseSession",new { caseSessionId = Model.CaseSessionId, CallFromActId = Model.Id })" class="btn btn-sm btn-default" title="Отваря форма за въвеждане на резултат от проведено заседание.">Добави резултат</a>
+                            }
                             @if (canRegisterAct)
                             {
                                 <a href="@Url.Action("RegisterAct",new { id=Model.Id})" class="btn btn-sm btn-primary" title="Регистрира акта с номер и дата.">Регистриране</a>
                             }
                             @if (Model.ActDeclaredDate == null)
                             {
-                                <a href="#" onclick="sendForSignCheck(); return false;" class="btn btn-sm btn-success" title="Създава документа на акта и задачите за подпис на състава по заседанието">Изпращане за подпис</a>
+                                <a href="#" onclick="sendForSignCheck(this); return false;" class="btn btn-sm btn-success" title="Създава документа на акта и задачите за подпис на състава по заседанието">Изпращане за подпис</a>
+                            }
+                            @if (ViewBag.nextActLabel != null && ViewBag.nextActUrl != null)
+                            {
+                                <a href="@Html.Raw(ViewBag.nextActUrl)" class="btn btn-sm btn-warning">@ViewBag.nextActLabel</a>
                             }
                             <partial name="WorkTaskMyNew" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.CaseSessionAct,Model.Id) { TaskRequired=true})" />
                         </fieldset>
@@ -348,6 +408,9 @@
                 <text>$('#btnBlankComplete').show();</text>
                 }
             }
+            initLawUnit();
+            initUserAutoComplete();
+
             });
 
         $('#IsFinalDoc').change(function () {
@@ -389,17 +452,29 @@
 
         }
 
-        function sendForSignCheck() {
+        function sendForSignCheck(sender) {
+            if ($(sender).attr('disabled')) {
+                return;
+            }
+            $(sender).attr('disabled', 'disabled');
              let editUrl = "@Url.Action("SentForSign",new { actId=Model.Id})";
             @if (Model.RegDate != null)
             {
                 <text>
                     swalConfirm('Вече има регистриран съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за съдебния акт/протокол със същия номер и ще се създадат нови задачи за подпис.', function () {
-                            document.location.href = editUrl;
-                        });
+                        //$(sender).
+                        document.location.href = editUrl;
+                    }, function () {
+                            $(sender).removeAttr('disabled');
+                    });
                 </text>
             }else {
-                <text>document.location.href = editUrl;</text>
+                <text>
+
+            setTimeout(function () {
+                document.location.href = editUrl;
+            },200);
+            </text>
             }
 
         }
@@ -464,11 +539,43 @@
                     SH_ActTerm();
                     $('select#ActKindId').trigger('change');
                 });
+                debugger;
+                let showSignJudge = '@NomenclatureConstants.ActType.HasSignJudge.ToJSstring()';
+                if (showSignJudge.indexOf('|' + $(this).val() + '|') >= 0) {
+                    $('#divSignJudge').show();
+                } else {
+                    $('#divSignJudge').hide();
+                }
+                @if(Model.Id == 0)
+                {
+                    <text>
+                //debugger;
+                let defFinalActs = JSON.parse('@NomenclatureConstants.ActType.FinalByDefaultStr');
+                let isFinal = false;
+                for (var i = 0; i < defFinalActs.length; i++) {
+                    if (defFinalActs[i] == $(this).val()) {
+                        isFinal = true;
+                    }
+                }
+                if (isFinal) {
+                    $('#IsFinalDoc').prop("checked", true);
+                } else {
+                    $('#IsFinalDoc').prop("checked", false);
+                }
+                </text>
+                }
+            }).trigger('change');
+            $('select#ActStateId').change(function () {
+                if ($(this).val() == '@NomenclatureConstants.SessionActState.ComingIntoForce') {
+                    $('#divInforcedDate').show();
+                } else {
+                    $('#divInforcedDate').hide();
+                }
             }).trigger('change');
             $('select#ActKindId').change(function () {
                 requestGET_Json('@Url.Action("Get_ActKindInfo")', { actKindId: $(this).val() }, function (data) {
                     if (data) {
-                        debugger;
+                        //debugger;
                         if (data.mustSelectRelatedAct == true) {
                             $('#divRelatedAct').show();
                         } else {
@@ -482,7 +589,13 @@
                     } else {
                         $('#divRelatedAct').hide();
                     }
+                    @if (autoSave)
+            {
+                <text>
+            setTimeout(function () { $('#mainForm').trigger('submit'); }, 500);
 
+        </text>
+            }
                 });
             });
 

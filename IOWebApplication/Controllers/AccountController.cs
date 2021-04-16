@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
@@ -68,6 +65,7 @@ namespace IOWebApplication.Controllers
         public IActionResult Index()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_Account().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Nom4);
 
             return View();
         }
@@ -246,6 +244,8 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_AccountEdit(id).DeleteOrDisableLast();
             else
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_AccountAdd().DeleteOrDisableLast();
+
+            SetHelpFile(HelpFileValues.Nom4);
         }
 
         [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]

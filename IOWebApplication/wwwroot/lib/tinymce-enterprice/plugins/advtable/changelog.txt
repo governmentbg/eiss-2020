@@ -1,0 +1,4 @@
+Version 1.0.1 (2020-10-09)
+  * Fixed compatibility issue with TinyMCE 5.5 or higher #TINY-6492
+Version 1.0.0
+  * Initial release.

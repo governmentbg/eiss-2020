@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 
@@ -12,6 +9,13 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
     /// </summary>
     public class ProbationMeasure
     {
+		/// <summary>
+		/// Далие е в сила наказанието
+		/// </summary>
+		[XmlIgnore]
+		[Display(Name = "Пробационно мярка")]
+		public bool IsSelected { get; set; } = true;
+
 		/// <summary>
 		/// ADR
 		/// Адрес/Място
@@ -140,6 +144,9 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		{
 			return ValidFrom != defaultDate;
 		}
+
+		[XmlIgnore]
+		public int Index { get; set; }
 
 		/// <summary>
 		/// Игнорира празна дата

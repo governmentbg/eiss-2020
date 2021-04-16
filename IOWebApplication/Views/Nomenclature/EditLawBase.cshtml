@@ -1,0 +1,60 @@
+﻿@model LawBaseEditVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на нормативен текст";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на нормативен текст";
+    }
+
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("IndexLawBase","Nomenclature", new { CaseId = Model.CaseId })">@ViewData["Title"]</a></li>
+    </ol>
+}
+<form asp-action="EditLawBase" method="post">
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.CourtTypeId)
+    @Html.HiddenFor(x => x.CaseInstanceId)
+    @Html.HiddenFor(x => x.CaseGroupId)
+    <div class="row">
+        <div class="col-md-6">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <div class="row">
+                    @*<div class="col-lg-6">@Html.EditorFor(x => x.Code)</div>*@
+                    <div class="col-lg-6">@Html.EditorFor(x => x.Label)</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateStart, "DateTime")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateEnd, "DateTime")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-action="IndexLawBase" asp-route-CaseId="@Model.CaseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</form>

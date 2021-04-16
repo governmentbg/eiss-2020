@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Common;
+﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplicationService.Infrastructure.Contracts;
 using IOWebApplicationService.Infrastructure.Data.Common;
@@ -16,6 +13,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Transactions;
 using IOWebApplicationService.Infrastructure.Data.Models.Base;
+using IOWebApplication.Infrastructure.Models.Integrations.DW;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
@@ -24,33 +22,38 @@ namespace IOWebApplicationService.Infrastructure.Services
     private readonly IRepository repo;
     private readonly IDWRepository dwRepo;
     private readonly IDWCaseService caseService;
-    public DWSessionActService(IRepository _repo, IDWRepository _dwRepo, IDWCaseService _caseService)
+    private readonly IDWErrorLogService serviceErrorLog;
+    public DWSessionActService(IRepository _repo, IDWRepository _dwRepo, IDWCaseService _caseService, IDWErrorLogService _serviceErrorLog)
     {
       this.repo = _repo;
       this.dwRepo = _dwRepo;
       caseService = _caseService;
+      this.serviceErrorLog = _serviceErrorLog;
     }
 
     #region SessionAct
     public void SessionActTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "SessionActTransfer", 0, "Стартирал");
+
       IEnumerable<DWCaseSessionAct> dwcasesSessionsAct = SelectCasesSessionActForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
-
-
-      while (dwcasesSessionsAct.Any())
+      bool insertRow = true;
+      while (dwcasesSessionsAct.Any() && insertRow)
       {
 
 
         foreach (var current_session_act in dwcasesSessionsAct)
         {
-          bool insertRow = SessionActInsertUpdate(current_session_act);
+           insertRow = SessionActInsertUpdate(current_session_act);
           if (insertRow)
           {
-            var main_session_act = repo.GetById<CaseSessionAct>(current_session_act.Id);
-            main_session_act.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSessionAct>(main_session_act);
-            repo.SaveChanges();
-            repo.Detach(main_session_act);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current_session_act.Id},'{UpdateDateTransferedVM.Tables.CaseSessionAct}')");
+
+            //var main_session_act = repo.GetById<CaseSessionAct>(current_session_act.Id);
+            //main_session_act.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSessionAct>(main_session_act);
+            //repo.SaveChanges();
+            //repo.Detach(main_session_act);
           }
 
         }
@@ -158,7 +161,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_act", current.Id, ex.Message);
+
+
       }
 
       return result;
@@ -257,23 +262,26 @@ namespace IOWebApplicationService.Infrastructure.Services
 
     public void SessionActComplainTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "SessionActComplainTransfer", 0, "Стартирал");
+
       IEnumerable<DWCaseSessionActComplain> dwcasesSessionsActComplain = SelectCasesSessionActComplainForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
-
-
-      while (dwcasesSessionsActComplain.Any())
+      bool insertRow = true;
+      while (dwcasesSessionsActComplain.Any() &&insertRow)
       {
 
 
         foreach (var current in dwcasesSessionsActComplain)
         {
-          bool insertRow = SessionActComplainInsertUpdate(current);
+           insertRow = SessionActComplainInsertUpdate(current);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSessionActComplain>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSessionActComplain>(main);
-            repo.SaveChanges();
-            repo.Detach(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSessionActComplain}')");
+
+            //var main = repo.GetById<CaseSessionActComplain>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSessionActComplain>(main);
+            //repo.SaveChanges();
+            //repo.Detach(main);
           }
 
         }
@@ -380,7 +388,8 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_act_complain", current.Id, ex.Message);
+
       }
 
       return result;
@@ -501,23 +510,26 @@ namespace IOWebApplicationService.Infrastructure.Services
 
     public void SessionActComplainResultTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "SessionActComplainResultTransfer", 0, "Стартирал");
+
       IEnumerable<DWCaseSessionActComplainResult> dwcasesSessionsActComplainResult = SelectCasesSessionActComplainResultForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
-
-
-      while (dwcasesSessionsActComplainResult.Any())
+     bool insertRow = true;
+      while (dwcasesSessionsActComplainResult.Any() && insertRow)
       {
 
 
         foreach (var current in dwcasesSessionsActComplainResult)
         {
-          bool insertRow = SessionActComplainResultInsertUpdate(current);
+         insertRow = SessionActComplainResultInsertUpdate(current);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSessionActComplainResult>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSessionActComplainResult>(main);
-            repo.SaveChanges();
-            repo.Detach(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSessionActComplainResult}')");
+
+            //var main = repo.GetById<CaseSessionActComplainResult>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSessionActComplainResult>(main);
+            //repo.SaveChanges();
+            //repo.Detach(main);
           }
 
         }
@@ -601,7 +613,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_act_complain_result", current.Id, ex.Message);
+
+
       }
 
       return result;
@@ -732,8 +746,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       }
       catch (Exception ex)
       {
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_act_complain_person", current.Id, ex.Message);
 
-        throw;
+
       }
 
       return result;
@@ -799,23 +814,26 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void SessionActComplainPersonTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "SessionActComplainPersonTransfer", 0, "Стартирал");
       IEnumerable<DWCaseSessionActComplainPerson> dwcasesSessionsActComplainPerson = SelectCasesSessionActComplainPersonForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
+      bool insertRow = true;
 
-
-      while (dwcasesSessionsActComplainPerson.Any())
+      while (dwcasesSessionsActComplainPerson.Any() && insertRow)
       {
 
 
         foreach (var current in dwcasesSessionsActComplainPerson)
         {
-          bool insertRow = SessionActComplainPersonInsertUpdate(current);
+           insertRow = SessionActComplainPersonInsertUpdate(current);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSessionActComplainPerson>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSessionActComplainPerson>(main);
-            repo.SaveChanges();
-            repo.Detach(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSessionActComplainPerson}')");
+
+            //var main = repo.GetById<CaseSessionActComplainPerson>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSessionActComplainPerson>(main);
+            //repo.SaveChanges();
+            //repo.Detach(main);
           }
 
         }
@@ -896,7 +914,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_act_coordination", current.Id, ex.Message);
+
+
       }
 
       return result;
@@ -961,23 +981,26 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void SessionActCoordinationTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "SessionActCoordinationTransfer", 0, "Стартирал");
       IEnumerable<DWCaseSessionActCoordination> dwcasesSessionsActCoordination = SelectCasesSessionActCoordinationTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
 
-
-      while (dwcasesSessionsActCoordination.Any())
+      bool insertRow = true;
+      while (dwcasesSessionsActCoordination.Any() && insertRow)
       {
 
 
         foreach (var current in dwcasesSessionsActCoordination)
         {
-          bool insertRow = SessionActCoordinationInsertUpdate(current);
+          insertRow = SessionActCoordinationInsertUpdate(current);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSessionActCoordination>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSessionActCoordination>(main);
-            repo.SaveChanges();
-            repo.Detach(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSessionActCoordination}')");
+
+            //var main = repo.GetById<CaseSessionActCoordination>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSessionActCoordination>(main);
+            //repo.SaveChanges();
+            //repo.Detach(main);
           }
 
         }
@@ -1001,23 +1024,26 @@ namespace IOWebApplicationService.Infrastructure.Services
     #region SessionActDivorce
     public void SessionActDivorceTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "SessionActDivorceTransfer", 0, "Стартирал");
+
       IEnumerable<DWCaseSessionActDivorce> dw = SelectCasesSessionActDivorceForTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
-
-
-      while (dw.Any())
+     bool insertRow = true;
+      while (dw.Any() && insertRow)
       {
 
 
         foreach (var current in dw)
         {
-          bool insertRow = SessionActDivorceInsertUpdate(current);
+          insertRow = SessionActDivorceInsertUpdate(current);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSessionActDivorce>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSessionActDivorce>(main);
-            repo.SaveChanges();
-            repo.Detach(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSessionActDivorce}')");
+
+            //var main = repo.GetById<CaseSessionActDivorce>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSessionActDivorce>(main);
+            //repo.SaveChanges();
+            //repo.Detach(main);
           }
 
         }
@@ -1118,7 +1144,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_session_act_divorce", current.Id, ex.Message);
+
+
       }
 
       return result;

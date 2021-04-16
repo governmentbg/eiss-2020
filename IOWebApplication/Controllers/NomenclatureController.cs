@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.AspNetCore;
+﻿using DataTables.AspNet.AspNetCore;
 using DataTables.AspNet.Core;
 using IO.LogOperation.Models;
 using IOWebApplication.Core.Contracts;
@@ -345,6 +342,97 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
             return View(nameof(EditEkStreet), model);
+        }
+
+        public IActionResult IndexLawBase(int CaseId)
+        {
+            ViewBag.caseId = CaseId;
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ListDataLawBase(IDataTablesRequest request, int caseId)
+        {
+            var data = nomenclatureService.LawBase_Select(caseId);
+            return request.GetResponse(data);
+        }
+
+        public IActionResult AddLawBase(int deloid)
+        {
+            var caseCase = nomenclatureService.GetCaseWithIncluded(deloid);
+            var model = new LawBaseEditVM()
+            {
+                DateStart = DateTime.Now,
+                CourtTypeId = caseCase.Court.CourtTypeId,
+                CaseGroupId = caseCase.CaseGroupId,
+                CaseInstanceId = caseCase.CaseType.CaseInstanceId,
+                CaseId = deloid,
+                IsActive = true
+            };
+            return View(nameof(EditLawBase), model);
+        }
+
+        [HttpGet]
+        public IActionResult EditLawBase(int id, int caseId)
+        {
+            var model = nomenclatureService.LawBase_GetById(id);
+            model.CaseId = caseId;
+            return View(nameof(EditLawBase), model);
+        }
+
+        private string IsValidLawBase(LawBaseEditVM model)
+        {
+            //if (string.IsNullOrEmpty(model.Code))
+            //{
+            //    return "Въведете код";
+            //}
+
+            if (string.IsNullOrEmpty(model.Label))
+            {
+                return "Въведете етикет";
+            }
+
+            if (model.DateStart == null)
+            {
+                return "Изберете начална дата";
+            }
+
+            if (nomenclatureService.IsExistsNameLawBase(model.Label))
+            {
+                return "Вече има такава стойност";
+            }
+
+            return string.Empty;
+        }
+
+        [HttpPost]
+        public IActionResult EditLawBase(LawBaseEditVM model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditLawBase), model);
+            }
+
+            string _isvalid = IsValidLawBase(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
+                return View(nameof(EditLawBase), model);
+            }
+
+            var currentId = model.Id;
+            var currCaseId = model.CaseId;
+            if (nomenclatureService.LawBase_SaveData(model))
+            {
+                this.SaveLogOperation(currentId == 0, model.Id);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(IndexLawBase), new { CaseId = currCaseId });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return View(nameof(EditLawBase), model);
         }
     }
 }

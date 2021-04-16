@@ -89,13 +89,28 @@
         });
     }
     function DeleteFile(fileID, fileName, container) {
-        swalConfirm('Потвърди изтриването на файл ' + fileName + '!', function () {
+        let sourceType = $(container).data('sourcetype');
+
+        if (sourceType == @(SourceTypeSelectVM.Document)) {
+
+            requestContent('@Url.Action("ExpiredInfo", "Manage")',
+                {
+                    stringId: fileID,
+                    fileContainer: container,
+                    submitUrl: '@Url.Action("ExpireFile", "Files")'
+                }, function (html) {
+                    ShowModalDialog('Премахване на файл ' + fileName, html);
+                })
+        } else {
+            swalConfirm('Потвърди изтриването на файл ' + fileName + '!', function () {
             let url = '@Url.Action("DeleteFile", "Files")';
             let data = { cdnFileId: fileID };
             requestContentOk(url, data, function () {
                 LoadFiles(container);
             });
         });
+        }
+
     }
 </script>
 
@@ -108,7 +123,7 @@
         {{/if}}
         {{#each this.data}}
         <div class="row">
-            <div class="col-lg-8">
+            <div class="col-lg-11">
                 {{#if canPreview}}
                 <a class="btn btn-xs btn-default" href="@(Url.Action("Preview","Files"))/{{this.fileId}}" title="Преглед на файла" target="_blank"><i class="fa fa-eye"></i></a>
                 <a class="btn btn-xs btn-default" href="#" onclick="printPdfFile('@(Url.Action("Preview","Files"))/{{this.fileId}}'); return false;" title="Печат на файла" target="_blank"><i class="fa fa-print"></i></a>
@@ -120,7 +135,7 @@
             </div>
             <div class="col-lg-1">
                 {{#if ../canDelete}}
-                <a class="btn btn-xs btn-danger m-b-5" href="#" title="Премахни файла" onclick="DeleteFile('{{this.fileId}}', '{{this.fileName}}', '{{../../container}}');">
+                <a class="btn btn-xs btn-danger m-b-5" href="#" title="Премахни файла" onclick="DeleteFile('{{this.fileId}}', '{{this.safeFileName}}', '{{../../container}}');">
                     <i class="glyphicon glyphicon-remove"></i>
                 </a>
                 {{/if}}

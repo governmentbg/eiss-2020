@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -129,7 +126,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
         /// Данни за доставка при доставка от куриер/кметство 
         /// </summary>
         [NotMapped]
-        [Display(Name = "Дата на последно посещение")]
+        [Display(Name = "Данни за уведомяване")]
         public DateTime? DeliveryDateCC { get; set; }
 
         [ForeignKey(nameof(CourtId))]

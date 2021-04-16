@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
@@ -19,6 +16,8 @@ namespace IOWebApplication.Core.Contracts
 
         #region ЕПЕП
 
+
+        void ResendDataToEPEP(int sourceType, long sourceId, bool appendChild);
         string RecoverData(object client);
 
         bool AppendDocument(Document model, ServiceMethod method);
@@ -35,10 +34,16 @@ namespace IOWebApplication.Core.Contracts
         bool AppendCaseSessionAct_PublicMotive(int actId, ServiceMethod method);
         bool AppendCaseSessionLawUnit(CaseLawUnit model, ServiceMethod method);
         bool AppendCaseNotification(CaseNotification model, ServiceMethod method);
+        bool AppendCaseNotificationFile(int caseNotificationId);
+        bool AppendEpepUserAssignment(EpepUserAssignment model, ServiceMethod method);
 
         IQueryable<EpepUserVM> EpepUser_Select(int? userType, string search);
         bool EpepUser_SaveData(EpepUser model);
         string EpepUser_Validate(EpepUser model);
+
+        EpepUser EpepUser_GetByDocument(long documentId);
+        EpepUser EpepUser_InitFromDocument(long? documentId);
+        EpepDocumentInfoVM EpepUser_DocumentInfo(long? documentId);
 
         IQueryable<EpepUserAssignmentVM> EpepUserAssignment_Select(int epepUserId);
         bool EpepUserAssignment_SaveData(EpepUserAssignment model);
@@ -48,6 +53,7 @@ namespace IOWebApplication.Core.Contracts
         List<IntegrationKey> IntegrationKey_SelectToCorrect(int sourceType);
         bool IntegrationKey_Correct(IntegrationKey model, bool withError);
 
+        void MQEpep_ResetError(int integrationType, int sourceType, long sourceId);
         IEnumerable<MQEpepVM> MQEpep_Select(int integrationType, int sourceType, long sourceId);
 
         #endregion

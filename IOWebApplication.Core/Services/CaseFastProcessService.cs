@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -68,8 +65,8 @@ namespace IOWebApplication.Core.Services
                            RespectedAmount = x.RespectedAmount,
                            RespectedAmountString = Extensions.MoneyExtensions.MoneyToString(x.RespectedAmount, x.CurrencyId),
                            DateFrom = x.DateFrom,
-                           DateToLabel = (x.MoneyCollectionEndDateTypeId == null) ? "до " + (x.DateTo ?? DateTime.Now).ToString("dd.MM.yyyy") : 
-                                                                                    ((x.MoneyCollectionEndDateTypeId == NomenclatureConstants.MoneyCollectionEndDateType.WithDate) ? "до " + (x.DateTo ?? DateTime.Now).ToString("dd.MM.yyyy") : 
+                           DateToLabel = (x.MoneyCollectionEndDateTypeId == null) ? "до " + (x.DateTo ?? DateTime.Now).ToString("dd.MM.yyyy") + " г." : 
+                                                                                    ((x.MoneyCollectionEndDateTypeId == NomenclatureConstants.MoneyCollectionEndDateType.WithDate) ? "до " + (x.DateTo ?? DateTime.Now).ToString("dd.MM.yyyy") + " г." : 
                                                                                                                                                                                      ((x.MoneyCollectionEndDateTypeId == NomenclatureConstants.MoneyCollectionEndDateType.Nothing) ? string.Empty : "до " + x.MoneyCollectionEndDateType.Label)),
                            Description = x.Description,
                            JointDistributionBool = x.JointDistribution,
@@ -78,6 +75,7 @@ namespace IOWebApplication.Core.Services
                            IsMovables = (NomenclatureConstants.CaseMoneyCollectionGroup.Movables == x.CaseMoneyCollectionGroupId),
                            IsItem = (NomenclatureConstants.CaseMoneyCollectionGroup.Property == x.CaseMoneyCollectionGroupId)
                        })
+                       .OrderBy(x => x.Id)
                        .ToList();
         }
 
@@ -125,14 +123,39 @@ namespace IOWebApplication.Core.Services
 
             foreach (var caseMoneyClaim in caseMoneyClaims)
             {
-                caseMoneyClaim.CaseMoneyCollections = caseMoneyCollections.Where(x => x.CaseMoneyClaimId == caseMoneyClaim.Id && x.MainCaseMoneyCollectionId == null).ToList();
-                caseMoneyClaim.FullSum = caseMoneyClaim.CaseMoneyCollections.Sum(x => x.RespectedAmount);
+                caseMoneyClaim.CaseMoneyCollectionTotalSums = new List<CaseMoneyCollectionTotalSumVM>();
+                caseMoneyClaim.CaseMoneyCollections = caseMoneyCollections.Where(x => x.CaseMoneyClaimId == caseMoneyClaim.Id && x.MainCaseMoneyCollectionId == null).OrderBy(x => x.Id).ToList();
+                FillTotalSum(caseMoneyClaim.CaseMoneyCollections, caseMoneyClaim.CaseMoneyCollectionTotalSums);
                 foreach (var caseMoneyCollection in caseMoneyClaim.CaseMoneyCollections)
                 {
-                    caseMoneyCollection.CaseMoneyCollectionExtras = caseMoneyCollections.Where(x => x.CaseMoneyClaimId == caseMoneyClaim.Id && x.MainCaseMoneyCollectionId == caseMoneyCollection.Id).ToList();
-                    caseMoneyClaim.FullSum += caseMoneyCollection.CaseMoneyCollectionExtras.Sum(x => x.RespectedAmount);
+                    caseMoneyCollection.CaseMoneyCollectionExtras = caseMoneyCollections.Where(x => x.CaseMoneyClaimId == caseMoneyClaim.Id && x.MainCaseMoneyCollectionId == caseMoneyCollection.Id).OrderBy(x => x.Id).ToList();
+                    FillTotalSum(caseMoneyCollection.CaseMoneyCollectionExtras, caseMoneyClaim.CaseMoneyCollectionTotalSums);
                 }
-                caseMoneyClaim.FullSumText = Extensions.MoneyExtensions.MoneyToString(caseMoneyClaim.FullSum, caseMoneyClaim.CaseMoneyCollections.Select(x => x.CurrencyId).FirstOrDefault());
+            }
+        }
+
+        private void FillTotalSum(ICollection<CaseMoneyCollectionVM> caseMoneyCollections, ICollection<CaseMoneyCollectionTotalSumVM> caseMoneyCollectionTotalSums)
+        {
+            foreach (var caseMoney in caseMoneyCollections)
+            {
+                var totalCurr = caseMoneyCollectionTotalSums.Where(x => x.CurrencyId == caseMoney.CurrencyId).FirstOrDefault();
+                if (totalCurr == null)
+                {
+                    var collectionTotalSumVM = new CaseMoneyCollectionTotalSumVM()
+                    {
+                        CurrencyId = caseMoney.CurrencyId,
+                        CurrencyCode = caseMoney.CurrencyCode,
+                        TotalSum = caseMoney.RespectedAmount,
+                        TotalSumText = Extensions.MoneyExtensions.MoneyToString(caseMoney.RespectedAmount, caseMoney.CurrencyId)
+                    };
+                    
+                    caseMoneyCollectionTotalSums.Add(collectionTotalSumVM);
+                }
+                else
+                {
+                    totalCurr.TotalSum += caseMoney.RespectedAmount;
+                    totalCurr.TotalSumText = Extensions.MoneyExtensions.MoneyToString(totalCurr.TotalSum, totalCurr.CurrencyId);
+                }
             }
         }
 
@@ -151,11 +174,12 @@ namespace IOWebApplication.Core.Services
                                       {
                                           Id = x.Id,
                                           CaseMoneyClaimGroupLabel = x.CaseMoneyClaimGroup.Label,
-                                          CaseMoneyClaimTypeLabel = x.CaseMoneyClaimType.Label,
+                                          CaseMoneyClaimTypeLabel = (string.IsNullOrEmpty(x.CaseMoneyClaimType.Description) ? x.CaseMoneyClaimType.Label : x.CaseMoneyClaimType.Description),
                                           ClaimNumber = x.ClaimNumber,
                                           ClaimDate = x.ClaimDate,
                                           Description = x.Description,
-                                          Motive = x.Motive
+                                          Motive = x.Motive,
+                                          PartyNames = x.PartyNames
                                       })
                                       .OrderBy(x => x.Id)
                                       .ToList();
@@ -213,6 +237,7 @@ namespace IOWebApplication.Core.Services
                                           JointDistributionBool = (x.JointDistribution ?? true),
                                           JointDistribution = (x.JointDistribution ?? true) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No,
                                       })
+                                      .OrderBy(x => x.Id)
                                       .ToList();
 
             var caseMoneyExpensePeople = CaseMoneyExpensePerson_Select(CaseId);
@@ -266,6 +291,7 @@ namespace IOWebApplication.Core.Services
                                           Description = x.Description,
                                           IsBankAccount = (x.CaseBankAccountTypeId == NomenclatureConstants.CaseBankAccountType.BankAccount)
                                       })
+                                      .OrderBy(x => x.Id)
                                       .ToList();
 
             return caseMoneyExpenses;

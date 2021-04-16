@@ -1,10 +1,8 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Models;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Money;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -76,8 +74,7 @@ namespace IOWebApplication.Core.Contracts
         (bool result, string errorMessage) ExecList_Storno(int id);
         (bool result, string errorMessage) ExecList_Update(ExecListEditVM model);
         ExecListEditVM ExecList_GetById(int id);
-        List<SelectListItem> CountryReceive_SelectForDropDownList(int caseId);
-        ObligationReceive LastDataForReceive_Select(string receiveId);
+        ObligationReceive LastDataForReceive_Select(int sourceType, long sourceId);
         (bool result, string errorMessage) ExecList_PrepareSave(ExecListEditVM model);
         IQueryable<PaymentCaseVM> PaymentForCase_Select(int caseId);
         IQueryable<ExecListVM> ExecListForCase_Select(int caseId);
@@ -88,5 +85,7 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<ExecListVM> ExecListReport_Select(int courtId, ExecListFilterVM model, string newLine);
         byte[] ExecListReportToExcelOne(ExecListFilterVM model);
         IQueryable<ObligationThirdPersonVM> ObligationThirdPerson_Select(int courtId, ObligationThirdPersonFilterVM model);
+        IQueryable<ExpenseOrderVM> ExpenseOrderForCase_Select(int caseId);
+        SaveResultVM ExecListRegister(ExecList model);
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 
 namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
@@ -154,6 +151,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		/// Номенклатура nmk_adrloc
 		/// </summary>
 		[XmlAttribute("adrloc")]
+		[Display(Name = "Локализация на място")]
 		public int Localization { get; set; }
 	}
 }

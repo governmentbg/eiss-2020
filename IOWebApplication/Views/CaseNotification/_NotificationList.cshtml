@@ -23,14 +23,18 @@
                     <i class="fa fa-user"></i>
                     Добави/Премахни от лица
                 </a>
-                <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-isList="true"  asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-success btn-sm m-b-5">
+                <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-isList="true" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-success btn-sm m-b-5">
                     <i class="fa fa-user"></i>
                     Печат на всичко
                 </a>
-                <div class="cdn-files" data-genurl="@Url.Action("GenerateList", "CaseNotification", new { caseSessionId = Model.CaseSessionId, NotificationListTypeId = @SourceTypeSelectVM.CaseSessionNotificationList })"
+                <a asp-controller="CaseNotification" asp-action="GenerateList" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-warning btn-sm m-b-5">
+                    <i class="fa fa-check"></i>
+                    Генериране
+                </a>
+                 <div class="cdn-files" data-genurl="@Url.Action("GetFileList", "CaseNotification")" data-url="@Url.Action("GetFileList", "CaseNotification")" 
                      data-label="Списък за призоваване"
                      data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationList" data-sourceid="@Model.CaseSessionId"
-                     data-editmode="all">
+                     data-editmode="none">
                 </div>
             </div>
             <div id="divBtnCaseSessionNotificationListMessage">
@@ -42,14 +46,18 @@
                     <i class="fa fa-user"></i>
                     Добави/Премахни от лица
                 </a>
-                <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListMessage"  asp-route-isList="true" class="btn btn-success btn-sm m-b-5">
+                <a asp-controller="CaseNotification" asp-action="PrintNotificationInList" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListMessage" asp-route-isList="true" class="btn btn-success btn-sm m-b-5">
                     <i class="fa fa-user"></i>
                     Печат на всичко
                 </a>
-                <div class="cdn-files" data-genurl="@Url.Action("GenerateList", "CaseNotification", new { caseSessionId = Model.CaseSessionId, NotificationListTypeId = SourceTypeSelectVM.CaseSessionNotificationListMessage })"
+                <a asp-controller="CaseNotification" asp-action="GenerateList" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListMessage" class="btn btn-warning btn-sm m-b-5">
+                    <i class="fa fa-check"></i>
+                    Генериране
+                </a>
+                <div class="cdn-files"  data-genurl="@Url.Action("GetFileList", "CaseNotification")" 
                      data-label="Списък за съобщаване"
                      data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListMessage" data-sourceid="@Model.CaseSessionId"
-                     data-editmode="all">
+                     data-editmode="none">
                 </div>
             </div>
             <div id="divBtnCaseSessionNotificationListNotification">
@@ -65,10 +73,14 @@
                     <i class="fa fa-user"></i>
                     Печат на всичко
                 </a>
-                <div class="cdn-files" data-genurl="@Url.Action("GenerateList", "CaseNotification", new { caseSessionId = Model.CaseSessionId, NotificationListTypeId = SourceTypeSelectVM.CaseSessionNotificationListNotification })"
-                     data-label="Списък за уведомяване"
-                     data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListNotification" data-sourceid="@Model.CaseSessionId"
-                     data-editmode="all">
+                <a asp-controller="CaseNotification" asp-action="GenerateList" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListNotification" class="btn btn-warning btn-sm m-b-5">
+                    <i class="fa fa-check"></i>
+                    Генериране
+                </a>
+                 <div class="cdn-files" data-genurl="@Url.Action("GetFileList", "CaseNotification")" 
+                         data-label="Списък за уведомяване"
+                         data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListNotification" data-sourceid="@Model.CaseSessionId"
+                         data-editmode="none">
                 </div>
             </div>
         </div>
@@ -152,8 +164,12 @@
                         searchable: false,
                         className: "text-center noExport",
                         width:145,
-                        "render": function (value) {
-                            return TemplateToHtml('#caseNotificationListTemplateEdit', value);
+                        "render": function (value, type, row) {
+                            if (row.isDeleted) {
+                                return "";
+                            } else {
+                                return TemplateToHtml('#caseNotificationListTemplateEdit', value);
+                            }
                         }
                     }
                 ]

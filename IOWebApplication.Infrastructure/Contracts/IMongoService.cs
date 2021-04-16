@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Models.Cdn;
+﻿using IOWebApplication.Infrastructure.Models.Cdn;
 using MongoDB.Bson;
 using MongoDB.Driver.GridFS;
 using System;

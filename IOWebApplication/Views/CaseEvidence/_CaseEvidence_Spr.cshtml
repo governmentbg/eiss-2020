@@ -2,15 +2,23 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels
 
 <div class="row">
-    <div class="col-md-6 col-lg-4">
+    <div class="col-lg-3">
         @Html.EditorFor(m => m.DateFrom, "DateTime")
     </div>
-    <div class="col-md-6 col-lg-4">
+    <div class="col-lg-3">
         @Html.EditorFor(m => m.DateTo, "DateTime")
     </div>
-
-    <div class="col-md-6 col-lg-4">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.EvidenceTypeId, "GenericDropDown")
+    </div>
+    <div class="col-lg-3">
         @Html.EditorFor(m => m.RegNumber)
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        @Html.EditorFor(m => m.CaseRegNumber)
     </div>
 </div>
 
@@ -44,6 +52,8 @@
                         d.DateFrom = $('#DateFrom').val();
                         d.DateTo = $('#DateTo').val();
                         d.RegNumber = $('#RegNumber').val();
+                        d.EvidenceTypeId = $('#EvidenceTypeId').val();
+                        d.CaseRegNumber = $('#CaseRegNumber').val();
                     }
                 },
                 columns: [
@@ -87,6 +97,13 @@
                         name: 'description',
                         data: 'description',
                         title: 'Описание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'evidenceTypeLabel',
+                        data: 'evidenceTypeLabel',
+                        title: 'Тип',
                         sortable: true,
                         searchable: true
                     },

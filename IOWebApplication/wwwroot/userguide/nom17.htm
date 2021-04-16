@@ -1,0 +1,420 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 81.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h3 style='margin-left:71.45pt;text-indent:-36.0pt'>
+			<a name="_Toc58420447">
+				1.1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>Групи шифри
+			</a>
+		</h3>
+
+		<p class=MsoNormal>
+			Меню Групи шифри към съд предоставя възможност за създаване,
+			преглед и промяна на съдебни групи с шифри за случайно разпределение на дела в
+			конкретен съд.
+		</p>
+
+		<p class=MsoNormal>
+			Групите шифри (Съдебни групи за разпределение) се използват
+			при необходимост от случайно разпределение на съдия-докладчик или член на
+			съдебен състав по дела.    Посредством избор на основен вид дело от списъчното
+			поле в екрана, има възможност за филтриране за преглед на групи по един основен
+			вид дело.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=604 height=191 id="Picture 141525"
+				 src="nom17_files/image001.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>&nbsp;</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Създаването на група шифри в съда
+			става посредством избор на бутон Добави <img width=63 height=27
+												   id="Picture 4493" src="nom17_files/image002.jpg"> и въвеждане на необходимите
+			данни:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=606 height=267 id="Picture 4504"
+				 src="nom17_files/image003.jpg">
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Основен вид дело – избира се основен вид дело за група шифри;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Наименование – въвежда се наименование на група шифри (съдебна
+			група за разпределение) на съда;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата от – избира се начална дата на валидност на група шифри;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Дата до – избира се крайна дата на валидност на група шифри.
+			Полето не е със задължителен характер;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Описание – въвежда се допълнителна информация при необходимост.
+			Полето не е със задължителен характер;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Филтър – при въвеждане на минимум три последователни символа,
+			системата автоматично търси и предлага за избор списък от шифри, отговарящи за
+			въведени критерии;
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='line-height:115%'>
+			<span style='font-family:"Arial Narrow",sans-serif'>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span>Филтър по тип дело – избира се точен вид дело за група шифри.
+		</p>
+
+		<p class=MsoNormal>
+			Добавяне на група шифри става посредством маркиране на един
+			или повече шифри – маркиране на няколко шифъра става посредством маркиране на
+			един шифър, задържане на бутон ctrl на клавиатурата и маркиране на останалите
+			необходими шифри. Маркиране на няколко последователни или всички шифри става
+			посредством избор на първия шифър, задържане на бутон shift на клавиатурата и
+			маркиране на последния от списък с необходими шифри.
+		</p>
+
+		<p class=MsoNormal>
+			Избира се бутон Прехвърляне <img width=149 height=21
+											 id="Picture 4505" src="nom17_files/image004.jpg">, с което избраните шифри се
+			прехвърлят в групата шифри (група за разпределени на съда). След избор на
+			всички приложими шифри за групата се избира бутон Запис <img width=52
+																	  height=30 id="Picture 4506" src="nom17_files/image005.jpg">, с което успешно се
+			създава група за разпределение на съда.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			Премахване
+			на шифри от група става посредством избор на бутон Премахване <img width=27
+																		 height=26 id="Picture 4507" src="nom17_files/image006.jpg">, след което се
+			избира бутон Запис. При премахване на шифри от групата, той не участва в
+			следващи разпределения в тази група, но разпределени в тази група дела по този
+			шифър остават.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			След
+			въвеждане на всички изискуеми данни и избор на бутон Запис<img width=47
+																		height=25 id="Picture 141784" src="nom17_files/image007.jpg"> успешно се добавя
+			нова група шифри (група за разпределение на съда).
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+			Посредством
+			бутони Нагоре <img width=22 height=23 id="Picture 4511"
+						 src="nom17_files/image008.jpg">и Надолу <img width=21 height=21
+													id="Picture 4512" src="nom17_files/image009.jpg"> има възможност за
+			преподреждане на списъка с групи шифри за удобство на потребителя.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=605 height=187
+				 id="Picture 141579" src="nom17_files/image010.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Посредством бутон <img width=27 height=25 id="Picture 4525"
+							 src="nom17_files/image011.jpg"> има възможност за корекция на данните за групи
+			шифри на съда. Екранът за редакция съдържа аналогични полета като тези при
+			въвеждане.
+		</p>
+
+		<p class=MsoNormal>
+			Посредством избор на бутон Съдии <img width=56 height=26
+											   id="Picture 4527" src="nom17_files/image012.jpg">има възможност за добавяне на
+			съдии към съответното дежурство.
+		</p>
+
+		<p class=MsoNormal>
+			Към създадената група шифри се асоциират съдии със
+			съответния процент натовареност.<img width=604 height=228 id="Picture 141622"
+										   src="nom17_files/image013.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Асоцииране на съдия става посредством маркиране на един или
+			повече съдии – маркиране на няколко съдии става посредством маркиране на един
+			съдия, задържане на бутон ctrl на клавиатурата и маркиране на останалите
+			необходими съдии. Маркиране на няколко последователни или всички съдии става
+			посредством избор на първия съдия, задържане на бутон shift на клавиатурата и
+			маркиране на последния от списък с необходими съдии.
+		</p>
+
+		<p class=MsoNormal>
+			За избраната/избраните съдии се въвежда приложим процент на
+			натовареност в поле Процент натовареност. Избраният процент ще е приложим при
+			участие на съдията в случайно разпределение в създадената група.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на процент на натовареност се избира бутон
+			Прехвърляне <img width=149 height=21 id="Picture 4533"
+						  src="nom17_files/image004.jpg">, с което избраните съдии се прехвърлят с
+			въведения процент натовареност в групата шифри (групата за разпределение) на
+			съда. След избор на всички съдии за групата със съответния процент на
+			натовареност се избира бутон Запис <img width=52 height=30 id="Picture 4534"
+												 src="nom17_files/image014.jpg">, с което успешно се добавят съдии към групата
+			за разпределение на съда.
+		</p>
+
+		<p class=MsoNormal>
+			Премахване на съдия от група за разпределение става
+			посредством избор на бутон Премахване <img width=27 height=26 id="Picture 4535"
+													src="nom17_files/image015.jpg">, след което се избира бутон Запис. При
+			премахване на съдия от група, той не участва в следващи разпределения в тази
+			група, но разпределените му в тази група дела остават.
+		</p>
+
+		<p class=MsoNormal>
+			След въвеждане на всички изискуеми данни и избор на бутон
+			Запис<img width=47 height=25 id="Picture 143360" src="nom17_files/image016.jpg">
+			успешно се добавят съдии към група шифри.<b> </b>
+		</p>
+
+		<p class=MsoNormal>
+			<b>Забележка:</b> Функционалността за управление на
+			създадените групи за разпределение на съда предоставя възможност за добавяне на
+			съдебни групи за разпределение към профила на даден съдия или асоцииране на
+			съдия към съдебна група за разпределение.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<img width=604 height=228
+				 id="Picture 141630" src="nom17_files/image017.jpg"> 
+		</p>
+
+		<p class=MsoNormal>
+			При промяна в списъка с асоциираните съдии (добавяне или
+			премахване на съдия) или в процента на натовареност на всеки от тях,
+			информацията се записва и история на промените в група, която може да бъде
+			прегледан посредством избор на бутон История <img width=173 height=21
+														id="Picture 141640" src="nom17_files/image018.jpg">.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

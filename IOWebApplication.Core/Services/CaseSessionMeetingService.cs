@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -129,6 +126,18 @@ namespace IOWebApplication.Core.Services
                         }
                     }
 
+                    if (model.IsAutoCreate ?? false)
+                    {
+                        if (model.SessionStateId != null)
+                        {
+                            var caseSessionUpdate = repo.GetById<CaseSession>(model.CaseSessionId);
+                            caseSessionUpdate.SessionStateId = model.SessionStateId ?? 0;
+                            caseSessionUpdate.DateWrt = DateTime.Now;
+                            caseSessionUpdate.UserId = userContext.UserId;
+                            repo.Update(caseSessionUpdate);
+                        }
+                    }
+
                     repo.SaveChanges();
 
                     //Запис на пари за заседатели
@@ -194,7 +203,6 @@ namespace IOWebApplication.Core.Services
                     saved.UserId = userContext.UserId;
                     caseDeadlineService.DeadLineOpenSessionResult(saved);
                     repo.Update(saved);
-                    repo.SaveChanges();
                 }
                 else
                 {
@@ -203,9 +211,9 @@ namespace IOWebApplication.Core.Services
                     model.UserId = userContext.UserId;
                     caseDeadlineService.DeadLineOpenSessionResult(model);
                     repo.Add<CaseSessionMeetingUser>(model);
-                    repo.SaveChanges();
                 }
 
+                repo.SaveChanges();
                 return true;
             }
             catch (Exception ex)
@@ -313,7 +321,8 @@ namespace IOWebApplication.Core.Services
                 IsActive = model.IsActive,
                 IsAutoCreate = model.IsAutoCreate,
                 CourtHallId = model.CourtHallId,
-                IsSessionProvedeno = (model.CaseSession == null) ? false : (model.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
+                IsSessionProvedeno = (model.CaseSession == null) ? false : (model.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno),
+                SessionStateId = (model.CaseSession == null) ? (int?)null : model.CaseSession.SessionStateId
             };
         }
 
@@ -497,11 +506,13 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="DateTo"></param>
         /// <param name="CaseSessionId"></param>
+        /// <param name="CaseSessionMeetingId"></param>
         /// <returns></returns>
-        public bool IsExistMeetengInSessionAfterDate(DateTime DateTo, int CaseSessionId)
+        public bool IsExistMeetengInSessionAfterDate(DateTime DateTo, int CaseSessionId, int? CaseSessionMeetingId)
         {
             return repo.AllReadonly<CaseSessionMeeting>()
                        .Any(x => x.CaseSessionId == CaseSessionId &&
+                                 (CaseSessionMeetingId != null ? x.Id != CaseSessionMeetingId : true) &&
                                  x.DateTo >= DateTo &&
                                  x.DateExpired == null);
         }

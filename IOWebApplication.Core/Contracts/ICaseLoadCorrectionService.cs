@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
@@ -25,5 +22,6 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CaseLoadCorrectionVM> CaseLoadCorrection_Select(int CaseId);
         bool CaseLoadCorrection_SaveData(CaseLoadCorrection model);
         decimal GetCaseLoadCorrection(int CaseId);
+        decimal GetCaseLoadCorrectionToDate(int CaseId, DateTime dateTime);
     }
 }

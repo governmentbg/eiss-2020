@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -66,11 +63,10 @@ namespace IOWebApplication.Core.Contracts
         List<Select2ItemVM> LawUnitForCourt_Select2Data(int lawUnitType, int forCourtId, bool noIllHoliday = false);
         string GetLawUnitPosition(int courtId, int lawUnitId);
         CourtLawUnit GetCourtLawUnitAllDatabyLawUnitId(int courtId, int lawUnitId);
-        CourtLawUnit GetGeneralJudgeCourtLawUnit(int courtId);
 
         IQueryable<CourtLawUnitVM> CourtLawUnitOrder_Select(int courtId);
         bool CourtLawUnitOrder_Actualize(int courtId);
-        bool CourtLawUnitOrder_ActualizeForCase(int caseId);
+        SaveResultVM CourtLawUnitOrder_ActualizeForCase(int caseId);
 
         /// <summary>
         /// Информация за заместване на съдии

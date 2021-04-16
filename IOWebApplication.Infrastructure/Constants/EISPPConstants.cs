@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -310,6 +307,17 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary> 
             public const string FormerRegistrations = "12478";
 
+            /// <summary>
+            /// adrloc
+            /// Видове локализация на място
+            /// Номенклатура nmk_adrloc 1724
+            /// </summary> 
+            public const string Localization = "1724";
+
+            /// <summary>
+            /// Причини за изпращане на дело
+            /// </summary> 
+            public const string MigrationReason = "218";
         }
         public class EventType
         {
@@ -354,6 +362,10 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int GetCase = 913;
 
             /// <summary>
+            /// Получаване на дело
+            /// </summary>
+            public const int SendCase = 859;
+            /// <summary>
             /// Вземане на мярка за процесуална принуда
             /// </summary>
             public const int CoercionMeasureCreate = 947;
@@ -367,6 +379,63 @@ namespace IOWebApplication.Infrastructure.Constants
             /// Изменяне на мярка за процесуална принуда
             /// </summary>
             public const int CoercionMeasureChange = 863;
+
+
+            /// <summary>
+            /// Изменяне на мярка за процесуална принуда
+            /// </summary>
+            public const int CoercionMeasureRefused = 877;
+
+            /// <summary>
+            /// Искане за преместване на НД
+            /// </summary>
+            public const int AskForMove = 861;
+
+            /// <summary>
+            /// Връщане на НД за доразследване на прокурор
+            /// </summary>
+            public const int ReturnToProsecutor = 943;
+
+            /// <summary>
+            /// Връщане на НД за доразследване на прокурор
+            /// </summary>
+            public const int ReturnToFirst = 945;
+
+            /// <summary>
+            ///Приемане на жалба
+            /// </summary>
+            public const int ComplaintReceived = 915;
+
+
+            /// <summary>
+            ///Предсрочно освобождаване
+            /// </summary>
+            public const int EarlyRelease = 925;
+
+            /// <summary>
+            ///Изменение на присъда по решение на чужд съд	14127
+            /// </summary>
+            public const int ChangeExternalSentence = 14127;
+
+            /// <summary>
+            ///Образуване на съдебно производство при трансфер от друга държава	14130
+            /// </summary>
+            public const int CreateOnExternal = 14130;
+
+
+            /// <summary>
+            ///Отказ за признаване и изпълнение на присъда на чуждестранен съд	14128
+            /// </summary>
+            public const int RefuseOnExternal = 14128;
+
+            /// <summary>
+            ///Приемане на чужда присъда за изпълнение
+            /// </summary>
+            public const int ReciveSentence = 914;
+
+
+
+
         }
 
 
@@ -447,6 +516,10 @@ namespace IOWebApplication.Infrastructure.Constants
             ///Статистически данни за субект на престъпление
             /// </summary>
             public const string SubjectStatisticData = "SubjectStatisticData";
+            /// <summary>
+            ///Статистически данни за субект на престъпление
+            /// </summary>
+            public const string SubjectStatisticDataXML = "SubjectStatisticDataXML";
 
             /// <summary>
             /// Свързани дела от институции
@@ -457,6 +530,11 @@ namespace IOWebApplication.Infrastructure.Constants
             /// Свързани дела
             /// </summary>
             public const string CaseCause = "CaseCause";
+
+            /// <summary>
+            /// Адреси
+            /// </summary>
+            public const string Address = "Address";
         }
         /// <summary>
         /// Тип Санкция на Лице в Престъпление
@@ -617,6 +695,8 @@ namespace IOWebApplication.Infrastructure.Constants
             public const string CaseTypeCauseExactType = "eispp_dlovid_dlosig";
 
             public const string Relaps = "eispp_relaps";
+
+            public const string ComplaintType = "eispp_complaint_type";
         }
         public class EventKind 
         {
@@ -633,6 +713,7 @@ namespace IOWebApplication.Infrastructure.Constants
         {
             public const int Efective = 763;
             public const int Probation = 764;
+            public const int EarlyRelease = 789;
         }
 
         public class PunismentKind
@@ -640,11 +721,27 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int nkz_dojiv_zatvor = 654;
             public const int nkz_dojiv_zatvor_bez_zamiana = 655;
             public const int nkz_lishavane_ot_svoboda = 704;
+            public const int probation = 14344;
         }
         public class StartDateType
         {
             // pneotdper
             public const int pneotdper = 1630;
+        }
+        public class InitDocumentType
+        {
+            public const int IskaneExternal = 54;
+        }
+        public class LegalProceedingType
+        {
+            //ПИС - Производство на ПИС по наказателни дела
+            public const int PIS_ND = 1018;
+            //ПИС - Производство по изпълнение на ЕЗА
+            public const int PIS_EZA = 1900001825;
+
+            //ПИС - Производство във връзка с международното сътрудничество по наказателни дела	14119
+            public const int PIS_ExternalND = 14119;
+
         }
     } 
 }

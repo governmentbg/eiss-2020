@@ -1,8 +1,6 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
@@ -69,11 +67,13 @@ namespace IOWebApplication.Controllers
         public IActionResult DocumentOutGoingReport()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            ViewBag.DepartmentId_ddl = departmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
 
             var model = new DocumentOutFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
 
+            SetHelpFile(HelpFileValues.Register2);
             return View(model);
         }
 
@@ -96,11 +96,14 @@ namespace IOWebApplication.Controllers
         public IActionResult DocumentInComingReport()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            ViewBag.DepartmentId_ddl = departmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
 
             var model = new DocumentInFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
             ViewBag.DocumentKindId_ddl = nomService.GetDDL_DocumentKind(DocumentConstants.DocumentDirection.Incoming, false, true);
+
+            SetHelpFile(HelpFileValues.Register1);
 
             return View(model);
         }
@@ -128,6 +131,8 @@ namespace IOWebApplication.Controllers
             model.DateTo = DateTime.Now;
             model.ReplaceEgn = true;
             ViewBag.CaseGroupId_ddl = ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>(false);
+            ViewBag.DepartmentId_ddl = departmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+            SetHelpFile(HelpFileValues.Register3);
 
             return View(model);
         }
@@ -150,9 +155,14 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult DismisalReport()
         {
+            ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>(false);
+            ViewBag.DepartmentId_ddl = departmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+
             var model = new DismisalReportFilterVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = new DateTime(DateTime.Now.Year, 12, 31);
+            SetHelpFile(HelpFileValues.Register4);
+
             return View(model);
         }
 
@@ -179,6 +189,7 @@ namespace IOWebApplication.Controllers
             var model = new PaymentPosFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report32);
 
             return View(model);
         }
@@ -220,6 +231,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseObligationFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register6);
 
             return View(model);
         }
@@ -247,6 +259,7 @@ namespace IOWebApplication.Controllers
             var model = new FineFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report33);
 
             return View(model);
         }
@@ -289,6 +302,7 @@ namespace IOWebApplication.Controllers
             var model = new StateFeeFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report34);
 
             return View(model);
         }
@@ -328,10 +342,12 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.SessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
             ViewBag.MoneyGroupId_ddl = nomService.GetDropDownList<MoneyGroup>();
+            ViewBag.PersonType_ddl = nomService.GetDDL_ObligationJuryReportPersonType();
 
             var model = new ObligationJuryFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report35);
 
             return View(model);
         }
@@ -373,6 +389,7 @@ namespace IOWebApplication.Controllers
             var model = new DeliveryBookFilterVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register7);
 
             return View(model);
         }
@@ -400,6 +417,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseSessionPrivateFilterReportVM();
             model.DateFrom = NomenclatureExtensions.ForceStartDate(new DateTime(DateTime.Now.Year, 1, 1));
             model.DateTo = NomenclatureExtensions.ForceEndDate(DateTime.Now);
+            SetHelpFile(HelpFileValues.Register8);
 
             return View(model);
         }
@@ -428,6 +446,7 @@ namespace IOWebApplication.Controllers
             var model = new InsolvencyFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register19);
 
             return View(model);
         }
@@ -454,6 +473,7 @@ namespace IOWebApplication.Controllers
             var model = new ZzdnFilterReportVM();
             model.FromDateDocument = new DateTime(DateTime.Now.Year, 1, 1);
             model.ToDateDocument = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register15);
 
             return View(model);
         }
@@ -480,6 +500,7 @@ namespace IOWebApplication.Controllers
             var model = new EuropeanHeritageFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register17);
 
             return View(model);
         }
@@ -497,7 +518,7 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
-        /// Регистър на издадените европейски удостоверения за наследство
+        /// Регистър на заявленията за достъп до обществена информация 
         /// </summary>
         /// <returns></returns>
         public IActionResult PublicInformationReport()
@@ -506,12 +527,13 @@ namespace IOWebApplication.Controllers
             var model = new PublicInformationFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register21);
 
             return View(model);
         }
 
         /// <summary>
-        /// Експорт на Регистър на издадените европейски удостоверения за наследство
+        /// Регистър на заявленията за достъп до обществена информация 
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
@@ -532,6 +554,9 @@ namespace IOWebApplication.Controllers
             var model = new CaseDecisionFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            model.WithActDescription = true;
+            model.WithoutActDescriptionCaseRestriction = true;
+            SetHelpFile(HelpFileValues.Register13);
 
             return View(model);
         }
@@ -573,6 +598,7 @@ namespace IOWebApplication.Controllers
             var model = new HeritageFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register14);
 
             return View(model);
         }
@@ -596,9 +622,12 @@ namespace IOWebApplication.Controllers
         public IActionResult CaseFirstInstanceReport()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>(false);
+            ViewBag.DepartmentId_ddl = departmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+
             var model = new CaseFirstInstanceFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register11);
 
             return View(model);
         }
@@ -627,6 +656,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseMigrationReturnFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register20);
 
             return View(model);
         }
@@ -655,6 +685,7 @@ namespace IOWebApplication.Controllers
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
             model.WithPerson = false;
+            SetHelpFile(HelpFileValues.Register18);
 
             return View(model);
         }
@@ -680,6 +711,7 @@ namespace IOWebApplication.Controllers
             var model = new DivorceFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register16);
 
             return View(model);
         }
@@ -703,9 +735,12 @@ namespace IOWebApplication.Controllers
         public IActionResult CaseSecondInstanceReport()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>(false);
+            ViewBag.DepartmentId_ddl = departmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+
             var model = new CaseSecondInstanceFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register12);
 
             return View(model);
         }
@@ -731,6 +766,7 @@ namespace IOWebApplication.Controllers
             var model = new SentenceFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register10);
 
             return View(model);
         }
@@ -758,6 +794,7 @@ namespace IOWebApplication.Controllers
             var model = new ExecListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Register22);
 
             return View(model);
         }
@@ -785,6 +822,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseArchiveListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report12);
 
             return View(model);
         }
@@ -827,6 +865,7 @@ namespace IOWebApplication.Controllers
             var model = new DocumentOutListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report28);
 
             return View(model);
         }
@@ -868,6 +907,7 @@ namespace IOWebApplication.Controllers
             var model = new PosDeviceFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report31);
 
             return View(model);
         }
@@ -910,7 +950,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseSessionPublicFilterReportVM();
             model.DateFrom = NomenclatureExtensions.ForceStartDate(new DateTime(DateTime.Now.Year, 1, 1));
             model.DateTo = NomenclatureExtensions.ForceEndDate(DateTime.Now);
-
+            SetHelpFile(HelpFileValues.Register9);
 
             return View(model);
         }
@@ -942,6 +982,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseLinkFilterReportVM();
             model.DateFromCase = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateToCase = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report8);
 
             return View(model);
         }
@@ -1001,6 +1042,7 @@ namespace IOWebApplication.Controllers
             var model = new SentenceListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report13);
 
             return View(model);
         }
@@ -1041,6 +1083,7 @@ namespace IOWebApplication.Controllers
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
             ViewBag.IsFinalAct_ddl = nomService.GetDDL_IsFinalAct();
+            SetHelpFile(HelpFileValues.ActsFordePersonalization);
             return View(model);
         }
 
@@ -1071,11 +1114,13 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseCodeId_ddl = nomService.GetDropDownList<CaseCode>();
             ViewBag.PersonMaturityId_ddl = nomService.GetDropDownList<PersonMaturity>();
             ViewBag.SentenceTypeId_ddl = nomService.GetDropDownList<SentenceType>();
+            ViewBag.SentenceLawbaseId_ddl = nomService.GetDropDownList<SentenceLawbase>();
             ViewBag.SessionResultId_ddl = nomService.GetDDL_SessionResultGrouping(NomenclatureConstants.SessionResultGroupings.SentenceListReport_Result);
 
             var model = new CasePersonDefendantListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report14);
 
             return View(model);
         }
@@ -1119,6 +1164,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseFirstInstanceListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report15);
 
             return View(model);
         }
@@ -1162,6 +1208,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseSecondInstanceListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report16);
 
             return View(model);
         }
@@ -1205,6 +1252,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseFinishListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report17);
 
             return View(model);
         }
@@ -1248,6 +1296,7 @@ namespace IOWebApplication.Controllers
             var model = new CaseFinishListFilterReportVM();
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
+            SetHelpFile(HelpFileValues.Report18);
 
             return View(model);
         }
@@ -1278,10 +1327,66 @@ namespace IOWebApplication.Controllers
             return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
         }
 
-        public IActionResult CourtStatsReport()
+        public IActionResult CourtStatsReport(DateTime? date = null)
         {
-            var xlsBytes = service.CourtStatsReport();
-            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "CourtStatsReport.xlsx");
+            if (date.HasValue)
+            {
+                date = date.MakeEndDate();
+            }
+            else
+            {
+                date = DateTime.Now;
+            }
+            var xlsBytes = service.CourtStatsReport(date);
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, $"CourtStatsReport {date:dd.MM.yyyy}.xlsx");
         }
+
+        /// <summary>
+        /// Статистика за период
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult ExcelReportPeriod()
+        {
+            var model = new ExcelReportDataFilterVM();
+            model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
+            model.DateTo = DateTime.Now;
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Статистика експорт
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> ExcelReportPeriod(ExcelReportDataFilterVM model)
+        {
+            return File(await excelReportService.GetReport_Test(userContext.CourtId, model.DateFrom, model.DateTo), "application/octet-stream", $"Отчет{userContext.CourtName}.xlsx");
+        }
+
+        /// <summary>
+        /// Статистика към месец/година от вече готови данни
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult ExcelReport()
+        {
+            var model = new ExcelReportDataFilterVM();
+            model.DateTo = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddDays(-1);
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Експорт в ексел Статистика към месец/година от вече готови данни
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> ExcelReport(ExcelReportDataFilterVM model)
+        {
+            return File(await excelReportService.GetReport(userContext.CourtId, model.DateTo.Year, model.DateTo.Month), "application/octet-stream", $"Отчет{userContext.CourtName}.xlsx");
+        }
+
     }
 }

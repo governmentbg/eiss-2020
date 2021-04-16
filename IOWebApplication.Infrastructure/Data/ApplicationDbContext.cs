@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.LogOperation.Models;
+﻿using IO.LogOperation.Models;
 using IOWebApplication.Infrastructure.Data.Models.Audit;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
@@ -13,6 +10,7 @@ using IOWebApplication.Infrastructure.Data.Models.Messages;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Data.Models.Regix;
+using IOWebApplication.Infrastructure.Models.Integrations.DW;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -62,6 +60,10 @@ namespace IOWebApplication.Infrastructure.Data.Models
             builder.Entity<AuditLog>()
                 .Property(p => p.UpdatedDate)
                 .HasDefaultValueSql("now()");
+
+            builder.Entity<Institution>()
+               .Property(p => p.DateFrom)
+               .HasDefaultValueSql("make_date(2000,1,1)");
 
             base.OnModelCreating(builder);
 
@@ -146,6 +148,9 @@ namespace IOWebApplication.Infrastructure.Data.Models
             builder.Entity<SessionTypeState>()
             .HasKey(x => new { x.SessionTypeId, x.SessionStateId });
 
+            builder.Entity<SessionStateRoute>()
+            .HasKey(x => new { x.SessionStateFromId, x.SessionStateToId });
+
             builder.Entity<EisppTblElement>()
             .HasKey(x => new { x.EisppTblCode, x.Code });
 
@@ -195,6 +200,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
         public DbQuery<GetCounterValueVM> GetCounterValueVM { get; set; }
         public DbQuery<ReportCourtStatsVM> ReportCourtStatsVM { get; set; }
+        public DbQuery<UpdateDateTransferedVM> UpdateDateTransferedVM { get; set; }
 
         #region Cases
 
@@ -233,7 +239,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<CaseMovement> CaseMovement { get; set; }
 
         public DbSet<CaseNotification> CaseNotifications { get; set; }
-
+        public DbSet<CaseNotificationComplain> CaseNotificationComplains { get; set; }
         public DbSet<CaseNotificationMLink> CaseNotificationMlinks { get; set; }
 
         public DbSet<CasePerson> CasePersons { get; set; }
@@ -242,6 +248,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<CasePersonAddress> CasePersonAddresses { get; set; }
         public DbSet<CasePersonAddressH> CasePersonAddressesH { get; set; }
         public DbSet<CasePersonCrime> CasePersonCrimes { get; set; }
+        public DbSet<CasePersonCrimePunishment> CasePersonCrimePunishments { get; set; }
         public DbSet<CasePersonDocument> CasePersonDocuments { get; set; }
         public DbSet<CasePersonInheritance> CasePersonInheritances { get; set; }
         public DbSet<CasePersonMeasure> CasePersonMeasures { get; set; }
@@ -286,7 +293,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<ID_List> ID_List { get; set; }
         public DbSet<AuditLog> AuditLog { get; set; }
 
-        public DbSet<Address> Addresses { get; set; }        
+        public DbSet<Address> Addresses { get; set; }
         public DbSet<Counter> Counters { get; set; }
         public DbSet<CounterDocument> CounterDocuments { get; set; }
         public DbSet<CounterCase> CounterCases { get; set; }
@@ -452,6 +459,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<CaseLoadElementGroup> CaseLoadElementGroup { get; set; }
         public DbSet<CaseLoadElementType> CaseLoadElementType { get; set; }
         public DbSet<CaseLoadElementTypeRule> CaseLoadElementTypeRule { get; set; }
+        public DbSet<CaseLoadElementTypeStop> caseLoadElementTypeStops { get; set; }
         public DbSet<CaseLoadCorrectionActivity> CaseLoadCorrectionActivity { get; set; }
         public DbSet<CaseLoadCorrectionActivityIndex> CaseLoadCorrectionActivityIndex { get; set; }
         public DbSet<CaseMoneyClaimGroup> CaseMoneyClaimGroups { get; set; }
@@ -602,6 +610,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
         public DbSet<SessionState> SessionState { get; set; }
         public DbSet<SessionType> SessionTypes { get; set; }
+        public DbSet<SessionStateRoute> SessionStateRoutes { get; set; }
         public DbSet<SessionTypeState> SessionTypeStates { get; set; }
 
         public DbSet<Speciality> Specialities { get; set; }
@@ -615,9 +624,11 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
         public DbSet<UicType> UicTypes { get; set; }
         public DbSet<RegixType> RegixTypes { get; set; }
+        public DbSet<RegixRequestType> RegixRequestTypes { get; set; }
 
         public DbSet<WorkNotificationType> WorkNotificationTypes { get; set; }
         public DbSet<DecisionType> DecisionTypes { get; set; }
+        public DbSet<DecisionRequestType> DecisionRequestTypes { get; set; }
         public DbSet<DocumentTypeDecisionType> DocumentTypeDecisionTypes { get; set; }
         public DbSet<DocumentDecisionState> DocumentDecisionStates { get; set; }
         public DbSet<SessionResultGrouping> SessionResultGroupings { get; set; }
@@ -630,6 +641,11 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<ExcelReportIndex> ExcelReportIndexs { get; set; }
         public DbSet<ExcelReportCaseCodeRow> ExcelReportCaseCodeRows { get; set; }
         public DbSet<ExcelReportComplainResult> ExcelReportComplainResults { get; set; }
+        public DbSet<DeliveryTypeGroup> DeliveryTypeGroup { get; set; }
+        public DbSet<ExecListState> ExecListStates { get; set; }
+        public DbSet<ExcelReportCaseTypeRow> ExcelReportCaseTypeRows { get; set; }
+        public DbSet<SystemParam> SystemParams { get; set; }
+        public DbSet<ExcelReportCaseTypeCol> ExcelReportCaseTypeCols { get; set; }
         #endregion Nomenclatures
 
         #region Regix
@@ -641,6 +657,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<EisppCaseCode> EisppCaseCode { get; set; }
         public DbSet<EisppRules> EisppRules { get; set; }
         public DbSet<EisppEventItem> EisppEventItem { get; set; }
+        public DbSet<EisppSignal> EisppSignal { get; set; }
         #endregion
 
         public DbSet<News> News { get; set; }

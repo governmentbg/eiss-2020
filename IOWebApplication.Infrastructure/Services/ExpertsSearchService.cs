@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Http;
@@ -155,11 +152,13 @@ namespace IOWebApplication.Infrastructure.Services
 
         private void SaveToDb(ExpertsInegrationResult result)
         {
+            // ToDo Когато решим къде да се записват, да се имплементира метода
             throw new NotImplementedException();
         }
 
         private Dictionary<string, string> GetRegionMapper()
         {
+            // ToDo  Когато решим къде са да се замени с четене от базата
             return new Dictionary<string, string>()
             {
                 { "1", "Съдебен район София град"},

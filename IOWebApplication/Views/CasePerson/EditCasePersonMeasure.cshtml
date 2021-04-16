@@ -69,6 +69,11 @@
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
+                        @if (Model.DateExpired == null && access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, ReturnUrl = $"IndexCasePersonMeasure?casePersonId={Model.CasePersonId}", DialogTitle = "Премахване на мярка за процесуална принуда", ExpireSubmitUrl = Url.Action("CasePersonMeasure_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }

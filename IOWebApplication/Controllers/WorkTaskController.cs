@@ -1,20 +1,14 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
-using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
-using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
-using Rotativa.Extensions;
 using System;
 using System.Linq;
 using static IOWebApplication.Infrastructure.Constants.AccountConstants;
@@ -90,12 +84,54 @@ namespace IOWebApplication.Controllers
             model.TaskTypeId = model.TaskTypeId.EmptyToNull();
             model.TaskStateId = model.TaskStateId.EmptyToNull();
             model.SourceDescription = model.SourceDescription.EmptyToNull();
-            model.CreatedBy = model.CreatedBy.EmptyToNull();
-            model.AssignedTo = model.AssignedTo.EmptyToNull();
+            model.CreatedBy = model.CreatedBy.EmptyToNull().EmptyToNull("0");
+            model.AssignedTo = model.AssignedTo.EmptyToNull().EmptyToNull("0");
             var data = workTaskService.SelectAll(model);
 
-            return request.GetResponse(data);
+            return request.GetResponse(data.AsQueryable());
         }
+
+        public IActionResult ExpireTasks(string taskIds)
+        {
+            var model = new WorkTaskManageVM()
+            {
+                TaskIds = taskIds,
+                ShowUser = false
+            };
+            return PartialView("ManageTasks", model);
+        }
+
+        [HttpPost]
+        public IActionResult ExpireTasks(WorkTaskManageVM model)
+        {
+            long[] taskIds = model.TaskIds.Split(',').Select(x => long.Parse(x)).ToArray();
+            if (workTaskService.ExpireTasks(taskIds, model.Description))
+            {
+                SetSuccessMessage("Задачите са успешно отменени.");
+            }
+            return RedirectToAction(nameof(IndexAll));
+        }
+        public IActionResult RerouteTasks(string taskIds)
+        {
+            var model = new WorkTaskManageVM()
+            {
+                TaskIds = taskIds,
+                ShowUser = true
+            };
+            return PartialView("ManageTasks", model);
+        }
+
+        [HttpPost]
+        public IActionResult RerouteTasks(WorkTaskManageVM model)
+        {
+            long[] taskIds = model.TaskIds.Split(',').Select(x => long.Parse(x)).ToArray();
+            if (workTaskService.RerouteTasks(taskIds, model.NewUserId, model.Description))
+            {
+                SetSuccessMessage("Задачите са успешно пренасочени.");
+            }
+            return RedirectToAction(nameof(IndexAll));
+        }
+
         public IActionResult MyTasksComponent(string view = "MyTasks")
         {
             return ViewComponent("MyTasksComponent", new { view });
@@ -122,11 +158,15 @@ namespace IOWebApplication.Controllers
         {
             return Content(workTaskService.GetTaskObjectUrl(sourceType, sourceId));
         }
+        public ContentResult GetTaskParentObjectUrl(int sourceType, long sourceId)
+        {
+            return Content(workTaskService.GetTaskParentObjectUrl(sourceType, sourceId));
+        }
         public IActionResult CreateTask(int sourceType, long sourceId)
         {
             var model = workTaskService.InitTask(sourceType, sourceId);
             ViewBag.TaskTypeId_ddl = workTaskService.GetDDL_TaskTypes(sourceType, sourceId);
-            ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
+            //ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
             ViewBag.SelfTasks = JsonConvert.SerializeObject(workTaskService.GetSelfTask());
             ViewBag.TaskInfo = JsonConvert.SerializeObject(nomenclatureService.GetList<TaskType>());
             return PartialView("EditTask", model);
@@ -145,7 +185,7 @@ namespace IOWebApplication.Controllers
         {
             var model = workTaskService.Get_ById(id);
             ViewBag.TaskTypeId_ddl = workTaskService.GetDDL_TaskTypes(model.SourceType, model.SourceId);
-            ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
+            //ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
             ViewBag.SelfTasks = JsonConvert.SerializeObject(workTaskService.GetSelfTask());
             ViewBag.TaskInfo = JsonConvert.SerializeObject(nomenclatureService.GetList<TaskType>());
             return PartialView("EditTask", model);
@@ -192,7 +232,7 @@ namespace IOWebApplication.Controllers
             model.UserId = null;
             model.CourtOrganizationId = null;
             model.TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser;
-            ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
+            //ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
             return PartialView(model);
         }
         [HttpPost]

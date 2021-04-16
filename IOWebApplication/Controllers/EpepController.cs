@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using Integration.Epep;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
@@ -12,6 +9,7 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -53,6 +51,7 @@ namespace IOWebApplication.Controllers
 
         public IActionResult EpepUser()
         {
+            SetHelpFile(HelpFileValues.Nom7);
             return View();
         }
         [HttpPost]
@@ -62,19 +61,17 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public IActionResult EpepUser_Add()
+        public IActionResult EpepUser_Add(long? documentId = null)
         {
-            var model = new EpepUser()
-            {
-                EpepUserTypeId = EpepConstants.UserTypes.Person
-            };
-            SetViewBag_EpepUser();
+            var model = service.EpepUser_InitFromDocument(documentId);
+
+            SetViewBag_EpepUser(model);
             return View(nameof(EpepUser_Edit), model);
         }
         public IActionResult EpepUser_Edit(int id)
         {
             var model = service.GetById<EpepUser>(id);
-            SetViewBag_EpepUser();
+            SetViewBag_EpepUser(model);
             return View(nameof(EpepUser_Edit), model);
         }
         [HttpPost]
@@ -87,7 +84,7 @@ namespace IOWebApplication.Controllers
             }
             if (!ModelState.IsValid)
             {
-                SetViewBag_EpepUser();
+                SetViewBag_EpepUser(model);
                 return View(nameof(EpepUser_Edit), model);
             }
             int currentId = model.Id;
@@ -100,13 +97,13 @@ namespace IOWebApplication.Controllers
             else
             {
                 SetSuccessMessage(MessageConstant.Values.SaveFailed);
-                SetViewBag_EpepUser();
+                SetViewBag_EpepUser(model);
                 return View(nameof(EpepUser_Edit), model);
             }
 
         }
 
-        private void SetViewBag_EpepUser()
+        private void SetViewBag_EpepUser(EpepUser model)
         {
             ViewBag.EpepUserTypeId_ddl = nomService.GetDropDownList<EpepUserType>();
             ViewBag.breadcrumbs = new List<BreadcrumbsVM>()
@@ -116,19 +113,121 @@ namespace IOWebApplication.Controllers
                 Href = Url.Action("EpepUser", "Epep")}
                 }
             };
+            ViewBag.documentInfo = service.EpepUser_DocumentInfo(model.DocumentId);
+            SetHelpFile(HelpFileValues.Nom7);
         }
 
-        public IActionResult ReturnAllErrors()
+        [HttpPost]
+        public IActionResult EpepUserAssignment_ListData(IDataTablesRequest request, int epepUserId)
         {
-            if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
-            {
-                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
-            }
-            var updatedCount = service.ReturnAllErrorsInMQ();
-            return Content($"Върнати заявки в опашката {updatedCount} бр.");
+            var data = service.EpepUserAssignment_Select(epepUserId);
+            return request.GetResponse(data);
         }
 
-        public async  Task<IActionResult> GetRegInfo(string id, string infoType)
+        public IActionResult EpepUserAssignment_Add(int epepUserId)
+        {
+            var model = new EpepUserAssignment()
+            {
+                EpepUserId = epepUserId,
+                CourtId = userContext.CourtId,
+                DateFrom = DateTime.Now
+            };
+            SetViewBag_EpepUserAssignment(model);
+            return View(nameof(EpepUserAssignment_Edit), model);
+        }
+        public IActionResult EpepUserAssignment_Edit(int id)
+        {
+            var model = service.GetById<EpepUserAssignment>(id);
+            SetViewBag_EpepUserAssignment(model);
+            return View(nameof(EpepUserAssignment_Edit), model);
+        }
+        [HttpPost]
+        public IActionResult EpepUserAssignment_Edit(EpepUserAssignment model)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                SetViewBag_EpepUserAssignment(model);
+                return View(nameof(EpepUserAssignment_Edit), model);
+            }
+            int currentId = model.Id;
+            if (service.EpepUserAssignment_SaveData(model))
+            {
+                SaveLogOperation(currentId == 0, model.Id);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(EpepUser_Edit), new { id = model.EpepUserId });
+            }
+            else
+            {
+                SetSuccessMessage(MessageConstant.Values.SaveFailed);
+                SetViewBag_EpepUserAssignment(model);
+                return View(nameof(EpepUserAssignment_Edit), model);
+            }
+        }
+        void SetViewBag_EpepUserAssignment(EpepUserAssignment model)
+        {
+            var user = service.GetById<EpepUser>(model.EpepUserId);
+            ViewBag.breadcrumbs = new List<BreadcrumbsVM>()
+            {
+                { new BreadcrumbsVM(){
+                Title = "ЕПЕП - Потребители",
+                Href = Url.Action("EpepUser", "Epep")}
+                }
+                ,
+                {
+                new BreadcrumbsVM(){
+                Title = user.FullName,
+                Href = Url.Action("EpepUser_Edit", "Epep", new { id = model.EpepUserId })
+                }
+             }
+            };
+            SetHelpFile(HelpFileValues.Nom7);
+        }
+        public IActionResult Get_CasePerson(int caseId)
+        {
+            var model = casePersonService.CasePerson_Select(caseId, 0, false, false, false)
+                                .Select(x => new SelectListItem
+                                {
+                                    Value = x.Id.ToString(),
+                                    Text = $"{x.FullName} ({x.RoleName})"
+                                }).ToList();
+            return Json(model);
+        }
+
+        [HttpPost]
+        public IActionResult Assigment_ExpiredInfo(ExpiredInfoVM model)
+        {
+
+            var expiredModel = service.GetById<EpepUserAssignment>(model.Id);
+            var caseModel = service.GetById<IOWebApplication.Infrastructure.Data.Models.Cases.Case>(expiredModel.CaseId);
+            if (service.SaveExpireInfo<EpepUserAssignment>(model))
+            {
+                service.AppendEpepUserAssignment(expiredModel, EpepConstants.ServiceMethod.Delete);
+                SetAuditContextDelete(service, SourceTypeSelectVM.EpepUserAssignment, model.Id);
+                SetSuccessMessage("Достъпът до делото е премахнат успешно.");
+
+                string html = $"Премахнат достъп до дело {caseModel.RegNumber}";
+                SaveLogOperation("epep", "epepuser_edit", html, IO.LogOperation.Models.OperationTypes.Delete, expiredModel.EpepUserId);
+
+                return Json(new { result = true, redirectUrl = Url.Action(nameof(EpepUser_Edit), new { id = expiredModel.EpepUserId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
+
+        //public IActionResult ReturnAllErrors()
+        //{
+        //    if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+        //    {
+        //        return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+        //    }
+        //    var updatedCount = service.ReturnAllErrorsInMQ();
+        //    return Content($"Върнати заявки в опашката {updatedCount} бр.");
+        //}
+
+        public async Task<IActionResult> GetRegInfo(string id, string infoType)
         {
             if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
             {
@@ -222,10 +321,16 @@ namespace IOWebApplication.Controllers
             return Content("Invalid operation");
         }
 
-        public IActionResult MqInfo(int integrationType, int sourceType, long sourceId)
+        public IActionResult MqInfo(int integrationType, int sourceType, long sourceId, bool returnToMQ = false)
         {
+            if (returnToMQ)
+            {
+                service.MQEpep_ResetError(integrationType, sourceType, sourceId);
+            }
             var model = service.MQEpep_Select(integrationType, sourceType, sourceId);
             ViewBag.isGlobalAdmin = userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator);
+            ViewBag.isSupervisor = userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
+            ViewBag.resetUrl = Url.Action(nameof(MqInfo), new { integrationType, sourceType, sourceId, returnToMQ = true });
             return PartialView("_MqInfo", model);
         }
 
@@ -498,81 +603,7 @@ namespace IOWebApplication.Controllers
         //}
 
 
-        [HttpPost]
-        public IActionResult EpepUserAssignment_ListData(IDataTablesRequest request, int epepUserId)
-        {
-            var data = service.EpepUserAssignment_Select(epepUserId);
-            return request.GetResponse(data);
-        }
 
-        public IActionResult EpepUserAssignment_Add(int epepUserId)
-        {
-            var model = new EpepUserAssignment()
-            {
-                EpepUserId = epepUserId,
-                CourtId = userContext.CourtId,
-                DateFrom = DateTime.Now
-            };
-            SetViewBag_EpepUserAssignment(model);
-            return View(nameof(EpepUserAssignment_Edit), model);
-        }
-        public IActionResult EpepUserAssignment_Edit(int id)
-        {
-            var model = service.GetById<EpepUserAssignment>(id);
-            SetViewBag_EpepUserAssignment(model);
-            return View(nameof(EpepUserAssignment_Edit), model);
-        }
-        [HttpPost]
-        public IActionResult EpepUserAssignment_Edit(EpepUserAssignment model)
-        {
-
-            if (!ModelState.IsValid)
-            {
-                SetViewBag_EpepUserAssignment(model);
-                return View(nameof(EpepUserAssignment_Edit), model);
-            }
-            int currentId = model.Id;
-            if (service.EpepUserAssignment_SaveData(model))
-            {
-                SaveLogOperation(currentId == 0, model.Id);
-                SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(EpepUserAssignment_Edit), new { id = model.Id });
-            }
-            else
-            {
-                SetSuccessMessage(MessageConstant.Values.SaveFailed);
-                SetViewBag_EpepUserAssignment(model);
-                return View(nameof(EpepUserAssignment_Edit), model);
-            }
-        }
-        void SetViewBag_EpepUserAssignment(EpepUserAssignment model)
-        {
-            var user = service.GetById<EpepUser>(model.EpepUserId);
-            ViewBag.breadcrumbs = new List<BreadcrumbsVM>()
-            {
-                { new BreadcrumbsVM(){
-                Title = "ЕПЕП - Потребители",
-                Href = Url.Action("EpepUser", "Epep")}
-                }
-                ,
-                {
-                new BreadcrumbsVM(){
-                Title = user.FullName,
-                Href = Url.Action("EpepUser_Edit", "Epep", new { id = model.EpepUserId })
-                }
-             }
-            };
-        }
-        public IActionResult Get_CasePerson(int caseId)
-        {
-            var model = casePersonService.CasePerson_Select(caseId, 0)
-                                .Select(x => new SelectListItem
-                                {
-                                    Value = x.Id.ToString(),
-                                    Text = $"{x.FullName} ({x.RoleName})"
-                                }).ToList();
-            return Json(model);
-        }
 
     }
 }

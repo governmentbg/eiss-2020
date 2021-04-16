@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +6,7 @@ using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
@@ -42,8 +40,7 @@ namespace IOWebApplication.Controllers
             configuration = _configuration;
             workingDaysService = _workingDaysService;
         }
-        [HttpPost]
-        public IActionResult Index(int DeliveryItemId, string filterJson)
+        public IActionResult LoadIndex(int DeliveryItemId, string filterJson)
         {
             ViewBag.filterJson = filterJson;
             int filterType = getFilterTypeFromJson(filterJson);
@@ -51,7 +48,12 @@ namespace IOWebApplication.Controllers
             ViewBag.canAdd = service.CanAdd(DeliveryItemId);
             ViewBag.NotificationInfo = itemService.GetNotificationInfoByDeliveryItemId(DeliveryItemId);
             SetHelpFile(HelpFileValues.Summons);
-            return View(DeliveryItemId);
+            return View(nameof(Index),DeliveryItemId);
+        }
+        [HttpPost]
+        public IActionResult Index(int DeliveryItemId, string filterJson)
+        {
+            return LoadIndex(DeliveryItemId, filterJson);
         }
         [HttpGet]
         public IActionResult Index(int notificationId)
@@ -76,11 +78,11 @@ namespace IOWebApplication.Controllers
         public IActionResult Edit(int id, string filterJson)
         {
             var model = service.getDeliveryItemOper(id);
+            var deliveryItem = itemService.getDeliveryItem(model.DeliveryItemId);
+            ViewBag.notificationId = deliveryItem.CaseNotificationId;
             if (filterJson == null)
             {
-                var deliveryItem = itemService.getDeliveryItem(model.DeliveryItemId);
-                ViewBag.notificationId = deliveryItem.CaseNotificationId;
-                ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                  ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
             }
             else
             {
@@ -95,11 +97,11 @@ namespace IOWebApplication.Controllers
         public IActionResult Add(int deliveryItemId, string filterJson)
         {
             ViewBag.filterJson = filterJson;
+            var deliveryItem = itemService.getDeliveryItem(deliveryItemId);
+            ViewBag.notificationId = deliveryItem.CaseNotificationId;
             if (filterJson == null)
             {
-                var deliveryItem = itemService.getDeliveryItem(deliveryItemId);
-                ViewBag.notificationId = deliveryItem.CaseNotificationId;
-                ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
             }
             else
             {
@@ -114,11 +116,11 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult EditPost(DeliveryItemOperVM model, string filterJson)
         {
+            var deliveryItem = itemService.getDeliveryItem(model.DeliveryItemId);
+            ViewBag.notificationId = deliveryItem.CaseNotificationId;
             if (filterJson == null)
             {
-                var deliveryItem = itemService.getDeliveryItem(model.DeliveryItemId);
-                ViewBag.notificationId = deliveryItem.CaseNotificationId;
-                ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
             }
             else
             {
@@ -132,13 +134,24 @@ namespace IOWebApplication.Controllers
             {
                 return View(nameof(Edit), model);
             }
-            var currentId = model.Id;
-            if (itemService.DeliveryItemSaveOper(model))
+
+            bool isInsert = !service.HaveSameOper(model.DeliveryItemId, model.DeliveryOperId); 
+             if (itemService.DeliveryItemSaveOper(model))
             {
-                this.SaveLogOperation(currentId == 0, model.Id);
+                SaveLogOperation(isInsert, $"{model.DeliveryItemId}|NEW");
                 ModelState.Clear();
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return View(nameof(Edit), model);
+                if (filterJson != null)
+                {
+                    // return LoadIndex(model.DeliveryItemId, filterJson);
+                    // TempData["filterJson"] = filterJson;
+                    // return RedirectToAction("EditReturn", "DeliveryItem", new { deliveryItemId = model.DeliveryItemId });
+                    return View(nameof(Edit), model);
+                }
+                else
+                {
+                    return RedirectToAction(nameof(Index), new { notificationId =  deliveryItem.CaseNotificationId });
+                }
             }
             else
             {
@@ -209,13 +222,13 @@ namespace IOWebApplication.Controllers
         private void ValidateModel(DeliveryItemOperVM model)
         {
             var regDate = service.GetRegDate(model.DeliveryItemId);
-            if (model.DateOper < regDate)
+            if (model.DateOper < regDate?.Date)
             {
-                ModelState.AddModelError(nameof(model.DateOper), $"Посещение преди дата на изготвяне {regDate?.ToString(FormattingConstant.NormalDateFormat)}");
+                ModelState.AddModelError(nameof(model.DateOper), $"{MessageConstant.ValidationErrors.DeliveryDateBeforeRegDate} {regDate?.ToString(FormattingConstant.NormalDateFormat)}");
             }
-            if (model.DateOper > DateTime.Now)
+            if (model.DateOper > DateTime.Now.AddMinutes(10))
             {
-                ModelState.AddModelError(nameof(model.DateOper), $"Не може да въвеждате посещение с бъдеща дата");
+                ModelState.AddModelError(nameof(model.DateOper), MessageConstant.ValidationErrors.DeliveryDateBeforeRegDate);
             }
 
             var opers = service.DeliveryItemOperSelect(model.DeliveryItemId, true)
@@ -223,22 +236,44 @@ namespace IOWebApplication.Controllers
                                .OrderBy(x => x.DeliveryOperId)
                                .ToList();
             var prevOper = opers.LastOrDefault();
-            if (prevOper != null)
+            if (prevOper != null && model.DateOper != null)
             {
-                var dR = model.DateOper - prevOper.DateOper;
-                if (dR.Value.TotalDays < 7)
-                    ModelState.AddModelError(nameof(model.DateOper), $"Няма 7 дни от преднато посещение {prevOper.DateOper.ToString(FormattingConstant.NormalDateFormat)}");
+                if (model.DateOper?.Date < prevOper.DateOper.Date)
+                    ModelState.AddModelError(nameof(model.DateOper), $"Не може да въвеждате посещение преди предното посещение {prevOper.DateOper.ToString(FormattingConstant.NormalDateFormat)}");
             }
-            if (opers.Count >= 2)
+   
+        }
+        public JsonResult CheckDeliveryDate(DeliveryItemOperVM model)
+        {
+            ValidateModel(model);
+            var result = "OK";
+            if (ModelState.IsValid)
             {
-                bool haveHoliday = !workingDaysService.IsWorkingDay(userContext.CourtId, model.DateOper?.Date ?? DateTime.Now);
-                haveHoliday = haveHoliday || opers.Max(x => !workingDaysService.IsWorkingDay(userContext.CourtId, (DateTime)(x.DateOper).Date));
-                if (!haveHoliday)
+                var opers = service.DeliveryItemOperSelect(model.DeliveryItemId, true)
+                                           .Where(x => x.DeliveryOperId < model.DeliveryOperId)
+                                           .OrderBy(x => x.DeliveryOperId)
+                                           .ToList();
+                var prevOper = opers.LastOrDefault();
+                if (prevOper != null)
                 {
-                    ModelState.AddModelError(nameof(model.DateOper), $"Няма посещение в почивен ден");
+                    var dR = model.DateOper - prevOper.DateOper;
+                    if (dR.Value.TotalDays < 7)
+                        result = $"Няма 7 дни от предното посещение {prevOper.DateOper.ToString(FormattingConstant.NormalDateFormat)}. ";
                 }
+                if (opers.Count >= 2 && model.DeliveryOperId != NomenclatureConstants.NotificationState.Delivered)
+                {
+                    bool haveHoliday = !workingDaysService.IsWorkingDay(userContext.CourtId, model.DateOper?.Date ?? DateTime.Now);
+                    haveHoliday = haveHoliday || opers.Max(x => !workingDaysService.IsWorkingDay(userContext.CourtId, (DateTime)(x.DateOper).Date));
+                    if (!haveHoliday)
+                    {
+                        result += $"Няма посещение в почивен ден";
+                    }
+                }
+            } else
+            {
+                result = "NOT_VALID";
             }
-
+            return Json(result);
         }
     }
 }

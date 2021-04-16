@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -153,7 +150,7 @@ namespace IOWebApplication.Core.Services
                             .Include(x => x.DocumentTemplateState)
                             .Include(x => x.Document)
                             .ThenInclude(x => x.DocumentType)
-                            .Where(x => x.SourceType == sourceType && 
+                            .Where(x => x.SourceType == sourceType &&
                                         x.SourceId == sourceId &&
                                         x.Document.DateExpired == null)
                             .OrderByDescending(x => x.DateWrt)
@@ -165,7 +162,8 @@ namespace IOWebApplication.Core.Services
                                 DateWrt = x.DateWrt,
                                 StateName = x.DocumentTemplateState.Label,
                                 DocumentId = x.DocumentId,
-                                DocumentNumber = (x.Document != null) ? $"{x.Document.DocumentNumber}/{x.Document.DocumentDate:dd.MM.yyyy}" : ""
+                                DocumentNumber = (x.Document != null) ? $"{x.Document.DocumentNumber}/{x.Document.DocumentDate:dd.MM.yyyy}" : "",
+                                HtmlTemplateName = x.HtmlTemplateId == null ? "Общ формуляр" : x.HtmlTemplate.Label,
                             }).AsQueryable();
         }
 
@@ -174,6 +172,9 @@ namespace IOWebApplication.Core.Services
             try
             {
                 model.HtmlTemplateId = model.HtmlTemplateId.EmptyToNull();
+                model.CasePersonId = model.CasePersonId.EmptyToNull();
+                model.CasePersonAddressId = model.CasePersonAddressId.EmptyToNull();
+
                 if (model.Id > 0)
                 {
                     var saved = repo.GetById<DocumentTemplate>(model.Id);
@@ -184,6 +185,8 @@ namespace IOWebApplication.Core.Services
                     saved.AuthorId = model.AuthorId;
                     saved.Description = model.Description;
                     saved.DocumentTemplateStateId = model.DocumentTemplateStateId;
+                    saved.CasePersonId = model.CasePersonId;
+                    saved.CasePersonAddressId = model.CasePersonAddressId;
                     repo.Update(saved);
                     repo.SaveChanges();
                 }
@@ -289,7 +292,7 @@ namespace IOWebApplication.Core.Services
             }
             if (model.DocumentId > 0)
             {
-                var docModel = documentService.Document_GetById(model.DocumentId.Value);
+                var docModel = documentService.Document_GetById(model.DocumentId.Value).Result;
                 var firstPerson = docModel.DocumentPersons.FirstOrDefault();
                 model.DocumentReccipientName = firstPerson.FullName;
                 model.DocumentReccipientAddress = firstPerson.Addresses.FirstOrDefault()?.Address.FullAddress;

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
@@ -29,6 +26,7 @@ using Microsoft.Extensions.Logging;
 using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -65,6 +63,7 @@ namespace IOWebApplication.Core.Services
         private readonly IMoneyService moneyService;
         private readonly ICaseSessionFastDocumentService caseSessionFastDocumentService;
         private readonly IRegixReportService regixReportService;
+        private readonly IDocumentService documentService;
 
         public CaseService(
         ILogger<CaseService> _logger,
@@ -93,6 +92,7 @@ namespace IOWebApplication.Core.Services
         IMQEpepService _mqEpepService,
         IMoneyService _moneyService,
         IRegixReportService _regixReportService,
+        IDocumentService _documentService,
         IUrlHelper _url,
         ICaseSessionFastDocumentService _caseSessionFastDocumentService,
         AutoMapper.IMapper _mapper)
@@ -126,6 +126,7 @@ namespace IOWebApplication.Core.Services
             moneyService = _moneyService;
             regixReportService = _regixReportService;
             caseSessionFastDocumentService = _caseSessionFastDocumentService;
+            documentService = _documentService;
         }
 
         /// <summary>
@@ -151,7 +152,7 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<Case, bool>> documentSearch = x => true;
             if (!string.IsNullOrEmpty(model.DocumentNumber))
-                documentSearch = x => x.Document.DocumentNumber.ToLower().Contains(model.DocumentNumber.ToLower());
+                documentSearch = x => EF.Functions.ILike(x.Document.DocumentNumber, model.DocumentNumber.ToEndingPaternSearch());
 
             Expression<Func<Case, bool>> judgeReporterSearch = x => true;
             if (model.JudgeReporterId > 0)
@@ -165,6 +166,16 @@ namespace IOWebApplication.Core.Services
                              .Where(a => a.ClassificationId == model.CaseClassificationId &&
                                          a.DateTo == null &&
                                          a.CaseSessionId == null).Any();
+            Expression<Func<Case, bool>> caseDepartmentWhere = x => true;
+            if (model.CourtDepartmentId > 0)
+            {
+                caseDepartmentWhere = x => x.JudicalCompositionId == model.CourtDepartmentId;
+            }
+            Expression<Func<Case, bool>> caseDepartmentOtdelenieWhere = x => true;
+            if (model.CourtDepartmentOtdelenieId > 0)
+            {
+                caseDepartmentOtdelenieWhere = x => x.OtdelenieId == model.CourtDepartmentOtdelenieId;
+            }
 
             return repo.AllReadonly<Case>()
                 .Include(x => x.Court)
@@ -175,16 +186,21 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.CaseState)
                 .Include(x => x.CaseReason)
                 .Where(x => x.CourtId == courtId &&
+                            !x.CaseDeactivations.Any(d => d.CaseId == x.Id && d.DateExpired == null) &&
                             ((model.CaseGroupId > 0) ? (x.CaseGroupId == model.CaseGroupId) : true) &&
                             ((model.CaseTypeId > 0) ? (x.CaseTypeId == model.CaseTypeId) : true) &&
                             ((model.CaseStateId > 0) ? (x.CaseStateId == model.CaseStateId) : true) &&
-                            (x.RegNumber.EndsWith((model.RegNumber.ToShortCaseNumber() ?? x.RegNumber), StringComparison.InvariantCultureIgnoreCase)))
+                            ((model.CaseCodeId > 0) ? (x.CaseCodeId == model.CaseCodeId) : true) &&
+                            EF.Functions.ILike(x.RegNumber, model.RegNumber.ToCasePaternSearch())
+                            )
                 .Where(x => x.CaseStateId != NomenclatureConstants.CaseState.Draft)
                 .Where(dateSearch)
                 .Where(yearSearch)
                 .Where(documentSearch)
                 .Where(judgeReporterSearch)
                 .Where(caseClassificationWhere)
+                .Where(caseDepartmentWhere)
+                .Where(caseDepartmentOtdelenieWhere)
                 .Select(x => new CaseVM()
                 {
                     Id = x.Id,
@@ -205,7 +221,11 @@ namespace IOWebApplication.Core.Services
                     RegNumber = x.RegNumber,
                     RegDate = x.RegDate,
                     CaseReasonLabel = (x.CaseReason != null) ? x.CaseReason.Label : string.Empty,
-                    CaseStateDescription = x.CaseStateDescription
+                    CaseStateDescription = x.CaseStateDescription,
+                    JudgeReport = x.CaseLawUnits.Where(l => l.CaseSessionId == null && l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter &&
+                                                            (l.DateTo ?? DateTime.Now.AddYears(100)) >= dateNow)
+                                                .Select(l => l.LawUnit.FullName + ((l.CourtDepartment != null) ? " състав: " + l.CourtDepartment.Label : string.Empty))
+                                                .FirstOrDefault(),
                 })
                 .AsQueryable();
         }
@@ -256,6 +276,7 @@ namespace IOWebApplication.Core.Services
                        .Include(x => x.CaseState)
                        .Include(x => x.CaseReason)
                        .Where(x => x.CourtId == courtId)
+                       .Where(x => !x.CaseDeactivations.Any(d => d.CaseId == x.Id && d.DateExpired == null))
                        .Where(x => x.CaseStateId != NomenclatureConstants.CaseState.Draft)
                        .Where(dateSearch)
                        .Where(caseGroupWhere)
@@ -462,11 +483,13 @@ namespace IOWebApplication.Core.Services
                 CreateHistory<Case, CaseH>(caseCurrent);
                 Case_GenerateCaseCount(model);
                 repo.Update(caseCurrent);
-                caseDeadlineService.DeadLineDeclaredForResolveComplete(caseCurrent);
-                caseDeadlineService.DeadLineCompanyCase(caseCurrent);
+
+                caseDeadlineService.DeadLineOnCase(caseCurrent);
                 repo.SaveChanges();
-                if (model.CaseStateId == NomenclatureConstants.CaseState.Rejected)
+
+                if (NomenclatureConstants.CaseState.UnregisteredManageble.Contains(model.CaseStateId))
                 {
+                    Case_AddInPriorMigration(caseCurrent);
                     Case_SaveData_FinishTask(caseCurrent.DocumentId);
                 }
 
@@ -663,6 +686,9 @@ namespace IOWebApplication.Core.Services
                 return null;
             }
 
+            var caseOutMigrations = caseMigrationService.SelectOutMove(Convert.ToInt32(id));
+            var lastCaseMigration = caseOutMigrations.OrderByDescending(x => x.Id).FirstOrDefault();
+
             var model = new CaseVM()
             {
                 Id = caseSelect.Id,
@@ -691,7 +717,9 @@ namespace IOWebApplication.Core.Services
                 DocumentTypeName = caseSelect.Document.DocumentType.Label,
                 CaseInstanceId = (caseSelect.CaseType != null) ? caseSelect.CaseType.CaseInstanceId : 0,
                 CaseReasonLabel = (caseSelect.CaseReason != null) ? caseSelect.CaseReason.Label : string.Empty,
-                CaseStateDescription = caseSelect.CaseStateDescription
+                CaseStateDescription = caseSelect.CaseStateDescription,
+                CaseInforcedDate = caseSelect.CaseInforcedDate,
+                LastMigration = (lastCaseMigration != null) ? ((!lastCaseMigration.IsReturned ?? true) ? (lastCaseMigration.SentToName + " с Изх.№: " + lastCaseMigration.OutDocumentLabel) : string.Empty) : string.Empty
             };
 
             if (caseSelect.CaseArchives.Count() > 0)
@@ -795,6 +823,25 @@ namespace IOWebApplication.Core.Services
                 TypeName = SourceTypeSelectVM.GetSourceTypeName(SourceTypeSelectVM.Case),
                 ElementUrl = urlHelper.Action("CasePreview", "Case", new { id }) + "#tabMainData"
             };
+        }
+
+        private CaseFolderItemVM GetCaseInforceDate_FolderItem(int id)
+        {
+            var _case = Case_GetById(id);
+            if (_case.CaseInforcedDate != null)
+            {
+                return new CaseFolderItemVM()
+                {
+                    SourceType = SourceTypeSelectVM.CaseInforcedDate,
+                    SourceId = _case.Id.ToString(),
+                    Title = $"Дата на влизане в законна сила {_case.CaseInforcedDate:dd.MM.yyyy}",
+                    Date = _case.CaseInforcedDate,
+                    TypeName = SourceTypeSelectVM.GetSourceTypeName(SourceTypeSelectVM.Case),
+                    ElementUrl = urlHelper.Action("CasePreview", "Case", new { id }) + "#tabMainData"
+                };
+            }
+            else
+                return null;
         }
 
         /// <summary>
@@ -1039,9 +1086,10 @@ namespace IOWebApplication.Core.Services
                        {
                            SourceType = SourceTypeSelectVM.ExecList,
                            SourceId = x.Id.ToString(),
-                           Title = x.RegNumber + "/" + x.RegDate.ToString("dd.MM.yyyy") + " " + x.ExecListType.Label + " " +
+                           Title = (x.RegDate != null ? (x.RegNumber + "/" + x.RegDate.DateToStr(FormattingConstant.NormalDateFormat) + " ") : "") +
+                                   x.ExecListType.Label + " " +
                                    string.Join(",", x.ExecListObligations.Select(o => o.Obligation.FullName).Distinct()) + " " +
-                                   x.ExecListObligations.Select(o => o.Obligation.Amount).DefaultIfEmpty(0).Sum(),
+                                   x.ExecListObligations.Select(o => o.Amount).DefaultIfEmpty(0).Sum(),
                            Date = x.RegDate,
                            TypeName = SourceTypeSelectVM.GetSourceTypeName(SourceTypeSelectVM.ExecList),
                            ElementUrl = string.Empty
@@ -1165,7 +1213,7 @@ namespace IOWebApplication.Core.Services
                     Title = "Тип: " + item.ExecListTypeName +
                             " / Лице: " + item.FullName +
                             " / Сума: " + item.Amount.ToString("0.00") +
-                            " / Номер: " + item.RegNumber + "/" + item.RegDate.ToString("dd.MM.yyyy"),
+                            " / Номер: " + (item.RegDate != null ? (item.RegNumber + "/" + item.RegDate.DateToStr(FormattingConstant.NormalDateFormat)) : "В проект"),
                     Date = item.RegDate,
                     TypeName = SourceTypeSelectVM.GetSourceTypeName(SourceTypeSelectVM.ExecList),
                     ElementUrl = string.Empty
@@ -1343,7 +1391,7 @@ namespace IOWebApplication.Core.Services
         private List<CaseFolderItemVM> GetPerson_FolderItem(int caseId, int? caseSessionId)
         {
             List<CaseFolderItemVM> result = new List<CaseFolderItemVM>();
-            var casePersonLists = casePersonService.CasePerson_Select(caseId, caseSessionId).ToList();
+            var casePersonLists = casePersonService.CasePerson_Select(caseId, caseSessionId, false, false, false).ToList();
 
             foreach (var item in casePersonLists)
             {
@@ -1403,7 +1451,7 @@ namespace IOWebApplication.Core.Services
         private List<CaseFolderItemVM> GetEvidence_FolderItem(int caseId)
         {
             List<CaseFolderItemVM> result = new List<CaseFolderItemVM>();
-            var caseEvidences = caseEvidenceService.CaseEvidence_Select(caseId, null, null, string.Empty);
+            var caseEvidences = caseEvidenceService.CaseEvidence_Select(caseId, null, null, string.Empty, string.Empty, 0);
 
             foreach (var item in caseEvidences)
             {
@@ -1692,7 +1740,7 @@ namespace IOWebApplication.Core.Services
             List<CaseFolderItemVM> result = new List<CaseFolderItemVM>();
             var caseSessionActs = caseSessionActService.CaseSessionAct_Select(caseSessionId, null, null, null, null, null).ToList();
 
-            foreach (var item in caseSessionActs)
+            foreach (var item in caseSessionActs.Where(x => x.ActDeclaredDate != null))
             {
                 var documentFolder = new CaseFolderItemVM()
                 {
@@ -1721,6 +1769,10 @@ namespace IOWebApplication.Core.Services
             {
                 GetCase_FolderItem(id)
             };
+
+            var caseFolder = GetCaseInforceDate_FolderItem(id);
+            if (caseFolder != null)
+                result.Add(caseFolder);
 
             result.AddRange(GetCaseSession_FolderItem(id));
             result.AddRange(GetCaseInDocs_FolderItem(id));
@@ -1813,9 +1865,16 @@ namespace IOWebApplication.Core.Services
         {
             CaseElectronicFolderVM caseElectronicFolderVM = CaseElectronicFolder_Select(CaseId);
 
+            var caseOutMigrations = caseMigrationService.SelectOutMove(CaseId);
+            var lastCaseMigration = caseOutMigrations.OrderByDescending(x => x.Id).FirstOrDefault();
+
             List<CaseProceedingsObjectsVM> objectsVMs = new List<CaseProceedingsObjectsVM>();
             objectsVMs.AddRange(FillCaseProceedingsObjectsFromSessions(caseElectronicFolderVM));
             objectsVMs.AddRange(FillCaseProceedingsObjectsFromCaseInDocuments(caseElectronicFolderVM));
+            objectsVMs.AddRange(FillCaseProceedingsObjectsFromOutMigration(caseOutMigrations.ToList()));
+            objectsVMs.AddRange(FillCaseProceedingsObjectsFromCaseSessionDocs(caseElectronicFolderVM));
+            objectsVMs.AddRange(FillCaseProceedingsObjectsFromSessionFastDocuments(caseElectronicFolderVM));
+            objectsVMs.AddRange(FillCaseProceedingsObjectsFromCaseOutDocuments(caseElectronicFolderVM));
 
             CaseProceedingsVM result = new CaseProceedingsVM()
             {
@@ -1832,7 +1891,12 @@ namespace IOWebApplication.Core.Services
                 ArchRegDate = caseElectronicFolderVM.ArchRegDate,
                 JudgeRapporteur = caseElectronicFolderVM.JudgeRapporteur,
                 DocumentLabel = caseElectronicFolderVM.DocumentLabel,
+                LastMigration = (lastCaseMigration != null) ? ((!lastCaseMigration.IsReturned ?? true) ? (lastCaseMigration.SentToName + " с Изх.№: " + lastCaseMigration.OutDocumentLabel) : string.Empty) : string.Empty,
+                CaseInforcedDate = caseElectronicFolderVM.CaseInforcedDate,
                 CaseClassifications = caseElectronicFolderVM.CaseClassifications,
+                CaseMigrations = caseElectronicFolderVM.CaseMigrations,
+                DocumentCaseInfos = caseElectronicFolderVM.DocumentCaseInfos,
+                DocumentInstitutionCaseInfos = caseElectronicFolderVM.DocumentInstitutionCaseInfos,
                 CasePersons = caseElectronicFolderVM.CasePersons,
                 CaseLawUnits = caseElectronicFolderVM.CaseLawUnits,
                 CaseProceedingsObjects = objectsVMs
@@ -1851,7 +1915,7 @@ namespace IOWebApplication.Core.Services
                     Id = caseSession.Id,
                     ParentId = null,
                     Date = caseSession.DateFrom,
-                    Label = caseSession.SessionTypeLabel + " " + caseSession.DateFrom.ToString("dd.MM.yyyy HH:mm")
+                    Label = caseSession.SessionTypeLabel + " " + caseSession.DateFrom.ToString("dd.MM.yyyy HH:mm") + (!string.IsNullOrEmpty(caseSession.SessionResultText) ? " Резултат/и: " + caseSession.SessionResultText : string.Empty)
                 };
                 result.Add(element);
 
@@ -1891,6 +1955,92 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        private List<CaseProceedingsObjectsVM> FillCaseProceedingsObjectsFromCaseOutDocuments(CaseElectronicFolderVM caseElectronicFolderVM)
+        {
+            List<CaseProceedingsObjectsVM> result = new List<CaseProceedingsObjectsVM>();
+
+            foreach (var documentInfo in caseElectronicFolderVM.CaseOutDocuments.OrderBy(x => x.DocumentDate))
+            {
+                CaseProceedingsObjectsVM element = new CaseProceedingsObjectsVM()
+                {
+                    LongId = documentInfo.Id,
+                    ParentId = null,
+                    Date = documentInfo.DocumentDate ?? caseElectronicFolderVM.RegDate,
+                    Label = documentInfo.Title
+                };
+                result.Add(element);
+            }
+
+            return result;
+        }
+
+        private List<CaseProceedingsObjectsVM> FillCaseProceedingsObjectsFromCaseSessionDocs(CaseElectronicFolderVM caseElectronicFolderVM)
+        {
+            List<CaseProceedingsObjectsVM> result = new List<CaseProceedingsObjectsVM>();
+
+            foreach (var caseSession in caseElectronicFolderVM.CaseSessions)
+            {
+                foreach (var caseSessionDoc in caseSession.CaseSessionDocs)
+                {
+                    CaseProceedingsObjectsVM element = new CaseProceedingsObjectsVM()
+                    {
+                        LongId = caseSessionDoc.Id,
+                        ParentId = null,
+                        Date = caseSessionDoc.DateFrom,
+                        Label = "Съпровождащ документ: " + caseSessionDoc.DocumentLabel + " - " + caseSessionDoc.SessionDocStateLabel + " (" + caseSession.SessionTypeLabel + " " + caseSession.DateFrom.ToString("dd.MM.yyyy") + ")"
+                    };
+                    result.Add(element);
+                }
+            }
+
+            return result;
+        }
+
+        private List<CaseProceedingsObjectsVM> FillCaseProceedingsObjectsFromSessionFastDocuments(CaseElectronicFolderVM caseElectronicFolderVM)
+        {
+            List<CaseProceedingsObjectsVM> result = new List<CaseProceedingsObjectsVM>();
+
+            foreach (var caseSession in caseElectronicFolderVM.CaseSessions)
+            {
+                foreach (var caseSessionFastDocument in caseSession.SessionFastDocuments)
+                {
+                    CaseProceedingsObjectsVM element = new CaseProceedingsObjectsVM()
+                    {
+                        LongId = caseSessionFastDocument.Id,
+                        ParentId = null,
+                        Date = (caseSessionFastDocument.CaseSessionFastDocumentInitDateSession ?? caseSessionFastDocument.DateSession),
+                        Label = "Съпровождащ документ представени в заседание: " + ((caseSessionFastDocument.CaseSessionFastDocumentInitDateSession ?? caseSessionFastDocument.DateSession).ToString("dd.MM.yyyy")) + " " +
+                                                            " " + caseSessionFastDocument.SessionDocTypeLabel +
+                                                            " " + caseSessionFastDocument.CasePersonName +
+                                                            " - " + caseSessionFastDocument.SessionDocStateLabel +
+                                                            " (" + caseSession.SessionTypeLabel + " " + caseSession.DateFrom.ToString("dd.MM.yyyy") + ")"
+                    };
+                    result.Add(element);
+                }
+            }
+
+            return result;
+        }
+
+        private List<CaseProceedingsObjectsVM> FillCaseProceedingsObjectsFromOutMigration(List<CaseMigrationVM> caseMigrations)
+        {
+            List<CaseProceedingsObjectsVM> result = new List<CaseProceedingsObjectsVM>();
+
+            foreach (var caseMigration in caseMigrations.Where(x => x.OutDocumentDate != null))
+            {
+                CaseProceedingsObjectsVM element = new CaseProceedingsObjectsVM()
+                {
+                    LongId = caseMigration.Id,
+                    ParentId = null,
+                    Date = caseMigration.OutDocumentDate ?? DateTime.Now,
+                    Label = "Движение с изходящ документ: " + caseMigration.OutDocumentLabel + " изпращане до: " + caseMigration.SentToName
+                };
+                result.Add(element);
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Извлича данни за дело за ел. папка
         /// </summary>
@@ -1900,7 +2050,7 @@ namespace IOWebApplication.Core.Services
         {
             var caseSelectionProtokolListVMs = caseSelectionProtokolService.CaseSelectionProtokol_Select(CaseId).ToList();
             var caseSessionDocVMs = caseSessionDocService.CaseSessionDocByCaseId_Select(CaseId).ToList();
-            var casePersonLists = casePersonService.CasePerson_Select(CaseId, null).ToList();
+            var casePersonLists = casePersonService.CasePerson_Select(CaseId, null, false, false, false).ToList();
             var caseSessionNotificationLists = caseNotificationService.CaseSessionNotificationList_SelectByCaseId(CaseId).ToList();
             var caseSessionActs = caseSessionActService.CaseSessionAct_Select(0, CaseId, null, null, null, null).ToList();
             var caseLawUnitsAll = caseLawUnitService.CaseLawUnit_Select(CaseId, null, true).ToList();
@@ -1909,7 +2059,7 @@ namespace IOWebApplication.Core.Services
             var caseSessionResults = caseSessionService.CaseSessionResultStringList_SelectByCaseId(CaseId).ToList();
             var caseSessionMeetings = caseSessionMeetingService.CaseSessionMeeting_SelectByCaseId(CaseId).ToList();
             var caseMigrations = caseMigrationService.Select(CaseId).ToList();
-            var regixListVMs = regixReportService.RegixListByCase_Select(CaseId).ToList();
+            var regixListVMs = regixReportService.RegixListByCase_Select(CaseId).Where(x => x.RegixRequestTypeId == NomenclatureConstants.RegixRequestTypes.FromReport).ToList();
 
             List<CaseMigrationVM> caseMigrationResult = new List<CaseMigrationVM>();
             foreach (var migration in caseMigrations.Where(x => x.CaseId != CaseId))
@@ -1923,7 +2073,7 @@ namespace IOWebApplication.Core.Services
             var caseOutDocs = repo.AllReadonly<DocumentCaseInfo>()
                                                 .Include(x => x.Document)
                                                 .ThenInclude(x => x.DocumentType)
-                                                .Where(x => x.CaseId == CaseId && 
+                                                .Where(x => x.CaseId == CaseId &&
                                                             x.Document.DocumentDirectionId == DocumentConstants.DocumentDirection.OutGoing &&
                                                             x.Document.DateExpired == null)
                                                 .Select(x => new DocumentInfoVM
@@ -1941,8 +2091,8 @@ namespace IOWebApplication.Core.Services
                                                 .Include(x => x.Document)
                                                 .ThenInclude(x => x.DocumentResolutions)
                                                 .ThenInclude(x => x.ResolutionType)
-                                                .Where(x => x.CaseId == CaseId && 
-                                                            x.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument && 
+                                                .Where(x => x.CaseId == CaseId &&
+                                                            x.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument &&
                                                             x.Document.DateExpired == null)
                                                 .Select(x => new DocumentInfoVM
                                                 {
@@ -1957,8 +2107,8 @@ namespace IOWebApplication.Core.Services
             var caseOutDocsFromTemplate = repo.AllReadonly<DocumentTemplate>()
                                                 .Include(x => x.Document)
                                                 .ThenInclude(x => x.DocumentType)
-                                                .Where(x => x.CaseId == CaseId && 
-                                                            x.DocumentId > 0 && 
+                                                .Where(x => x.CaseId == CaseId &&
+                                                            x.DocumentId > 0 &&
                                                             x.Document.DateExpired == null)
                                                 .Select(x => new DocumentInfoVM
                                                 {
@@ -2001,6 +2151,8 @@ namespace IOWebApplication.Core.Services
                                              .Include(x => x.Document)
                                              .ThenInclude(x => x.DocumentResolutions)
                                              .ThenInclude(x => x.ResolutionType)
+                                             .Include(x => x.Document)
+                                             .ThenInclude(x => x.DocumentCaseInfo)
                                              .Where(x => x.Id == CaseId)
                                              .Select(x => new CaseElectronicFolderVM()
                                              {
@@ -2025,9 +2177,11 @@ namespace IOWebApplication.Core.Services
                                                  CaseReasonLabel = (x.CaseReason != null) ? x.CaseReason.Label : string.Empty,
                                                  CaseStateDescription = x.CaseStateDescription,
                                                  CasePersons = casePersonLists.Where(person => person.CaseSessionId == null).ToList(),
-                                                 CaseSessionFinalActs = caseSessionActs.Where(act => act.IsFinalDoc).ToList(),
+                                                 CaseSessionFinalActs = caseSessionActs.Where(a => a.ActDeclaredDate != null).ToList(),
+                                                 DocumentCaseInfos = x.Document.DocumentCaseInfo.Where(f => (f.IsLegacyCase ?? false)).ToList(),
                                                  ArchRegNumber = (x.CaseArchives != null) ? x.CaseArchives.FirstOrDefault().RegNumber : string.Empty,
                                                  ArchRegDate = (x.CaseArchives != null) ? x.CaseArchives.FirstOrDefault().RegDate : DateTime.Now,
+                                                 CaseInforcedDate = x.CaseInforcedDate,
                                                  CaseSessions = x.CaseSessions.Where(p => p.DateExpired == null).Select(p => new CaseSessionElectronicFolderVM()
                                                  {
                                                      Id = p.Id,
@@ -2039,9 +2193,10 @@ namespace IOWebApplication.Core.Services
                                                      Description = x.Description,
                                                      DateTo_Minutes = Convert.ToInt32(((TimeSpan)(p.DateTo ?? p.DateFrom).Subtract(p.DateFrom)).TotalMinutes),
                                                      CaseSessionNotificationLists = caseSessionNotificationLists.Where(nl => nl.CaseSessionId == p.Id).ToList(),
-                                                     CaseSessionActs = caseSessionActs.Where(s => s.CaseSessionId == p.Id).ToList(),
+                                                     CaseSessionActs = caseSessionActs.Where(s => s.CaseSessionId == p.Id && s.ActDeclaredDate != null).ToList(),
                                                      SessionMeetings = caseSessionMeetings.Where(meet => meet.CaseSessionId == p.Id).ToList(),
-                                                     CaseSessionDocs = caseSessionDocVMs.Where(sessdoc => sessdoc.CaseSessionId == p.Id).ToList()
+                                                     CaseSessionDocs = caseSessionDocVMs.Where(sessdoc => sessdoc.CaseSessionId == p.Id).ToList(),
+                                                     SessionResultText = string.Join(", ", p.CaseSessionResults.Where(r => r.DateExpired == null).Select(r => r.SessionResult.Label))
                                                  }).ToList()
                                              })
                                              .FirstOrDefault();
@@ -2085,47 +2240,22 @@ namespace IOWebApplication.Core.Services
             caseElectronicFolderVM.CaseLawUnits = caseLawUnitsAll.Where(x => x.CaseSessionId == null).ToList();
             caseElectronicFolderVM.CaseClassifications = caseClassificationService.CaseClassification_SelectObject(CaseId, null).ToList();
             caseElectronicFolderVM.CaseMigrations = caseMigrationResult.ToList();
-            caseElectronicFolderVM.DocumentCaseInfos = repo.AllReadonly<DocumentInstitutionCaseInfo>()
-                                                           .Include(x => x.Institution)
-                                                           .Include(x => x.InstitutionCaseType)
-                                                           .Where(x => x.DocumentId == caseElectronicFolderVM.DocumentId)
-                                                           .ToList();
+            caseElectronicFolderVM.DocumentInstitutionCaseInfos = repo.AllReadonly<DocumentInstitutionCaseInfo>()
+                                                                      .Include(x => x.Institution)
+                                                                      .Include(x => x.InstitutionCaseType)
+                                                                      .Where(x => x.DocumentId == caseElectronicFolderVM.DocumentId)
+                                                                      .ToList();
             caseElectronicFolderVM.PaymentCases = moneyService.PaymentForCase_Select(caseElectronicFolderVM.Id).ToList();
             caseElectronicFolderVM.ExecLists = moneyService.ExecListForCase_Select(caseElectronicFolderVM.Id).ToList();
+            caseElectronicFolderVM.ExpenseOrders = moneyService.ExpenseOrderForCase_Select(caseElectronicFolderVM.Id).ToList();
+            caseElectronicFolderVM.DocumentDecisionCaseLists = documentService.DocumentDecisionCaseByCase_Select(caseElectronicFolderVM.Id).ToList();
 
             return caseElectronicFolderVM;
         }
 
         public CaseMigrationVM Case_GetPriorCase(long documentId)
         {
-            var priorCaseId = repo.All<DocumentCaseInfo>(x => x.DocumentId == documentId).Select(x => x.CaseId).FirstOrDefault() ?? 0;
-            if (priorCaseId == 0)
-            {
-                return null;
-            }
-
-            var lastCaseMigration = repo.AllReadonly<CaseMigration>()
-                                            .Include(x => x.CaseMigrationType)
-                                            .Include(x => x.Case)
-                                            .ThenInclude(x => x.Court)
-                                            .Where(x => x.SendToCourtId == userContext.CourtId && x.CaseId == priorCaseId)
-                                            .Where(x => x.SendToTypeId == CaseMigrationSendTo.Court)
-                                            .Where(x => x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing)
-                                            .Where(FilterExpireInfo<CaseMigration>(false))
-                                            .OrderByDescending(x => x.Id)
-                                            .Select(x => new CaseMigrationVM
-                                            {
-                                                Id = x.Id,
-                                                CaseId = x.CaseId,
-                                                InitialCaseId = x.InitialCaseId,
-                                                CaseRegNumber = x.Case.RegNumber,
-                                                CaseRegDate = x.Case.RegDate,
-                                                MigrationTypeId = x.CaseMigrationTypeId,
-                                                MigrationTypeName = x.CaseMigrationType.Label,
-                                                Description = x.Description,
-                                                SentToName = x.Case.Court.Label
-                                            }).FirstOrDefault();
-            return lastCaseMigration;
+            return caseMigrationService.Case_GetPriorCase(documentId);
         }
 
         public CaseMigrationVM Case_GetPriorCaseEISPP(long documentId, string eisppNumber)
@@ -2193,8 +2323,19 @@ namespace IOWebApplication.Core.Services
                                     }).ToList();
         }
 
-        public bool SaveDataDepersonalizationHistory(int CaseId, IEnumerable<DepersonalizationHistoryItem> model, int actId)
+        public bool SaveDataDepersonalizationHistory(int CaseId, IEnumerable<DepersonalizationHistoryItem> model, int actId,
+                     bool saveDepersonalizeUser)
         {
+            bool save = false;
+            if (saveDepersonalizeUser)
+            {
+                //Винаги при натискане на бутон финализиране при обезличаването да се записва потребителя
+                var act = GetById<CaseSessionAct>(actId);
+                act.DepersonalizeUserId = userContext.UserId;
+                repo.Update(act);
+                save = true;
+            }
+
             if (model != null && model.Where(x => !string.IsNullOrEmpty(x.SearchValue)).Any())
             {
                 var saved = GetDepersonalizationHistory(CaseId);
@@ -2212,12 +2353,14 @@ namespace IOWebApplication.Core.Services
 
                 repo.AddRange<CaseDepersonalizationValue>(newValues);
 
-                var act = GetById<CaseSessionAct>(actId);
-                act.DepersonalizeUserId = userContext.UserId;
-                repo.Update(act);
-
                 repo.SaveChanges();
                 return true;
+            }
+            else
+            {
+                //Заради ъпдейта на акта
+                if (save)
+                    repo.SaveChanges();
             }
 
             return false;
@@ -2316,28 +2459,43 @@ namespace IOWebApplication.Core.Services
 
 
             //АКТОВЕ
-            Expression<Func<Case, bool>> sessionActTypeWhere = x => true;
-            if (model.ActTypeId > 0)
-                sessionActTypeWhere = x => x.CaseSessions.Where(a => a.CaseSessionActs.Where(b => b.ActTypeId == model.ActTypeId).Any()).Any();
+            Expression<Func<Case, bool>> sessionActWhere = x => true;
+            if ((model.ActTypeId > 0) ||
+                (model.ActDate != null) ||
+                !string.IsNullOrEmpty(model.ActNumber) ||
+                model.ActIsFinalDocHidden ||
+                (model.ActLawBaseId > 0))
+            {
+                sessionActWhere = x => x.CaseSessionActs.Any(a => (a.DateExpired == null) &&
+                                                                  ((model.ActTypeId > 0) ? a.ActTypeId == model.ActTypeId : true) &&
+                                                                  ((model.ActDate != null) ? (a.ActDate != null && ((DateTime)a.ActDate).Date == (model.ActDate ?? DateTime.Now).Date) : true) &&
+                                                                  (!string.IsNullOrEmpty(model.ActNumber) ? (a.RegNumber == model.ActNumber) : true) &&
+                                                                  (model.ActIsFinalDocHidden ? (a.IsFinalDoc == true && a.ActStateId == NomenclatureConstants.SessionActState.ComingIntoForce && a.ActDeclaredDate != null) : true) &&
+                                                                  ((model.ActLawBaseId > 0) ? a.CaseSessionActLawBases.Where(b => b.LawBaseId == model.ActLawBaseId).Any() : true));
+            }
 
-            Expression<Func<Case, bool>> sessionActDateWhere = x => true;
-            if (model.ActDate != null)
-                sessionActDateWhere = x => x.CaseSessions.Where(a => a.CaseSessionActs.Where(b => b.ActDate != null &&
-                                ((DateTime)b.ActDate).Date == ((DateTime)model.ActDate).Date).Any()).Any();
+            //Expression<Func<Case, bool>> sessionActTypeWhere = x => true;
+            //if (model.ActTypeId > 0)
+            //    sessionActTypeWhere = x => x.CaseSessions.Where(a => a.CaseSessionActs.Where(b => b.ActTypeId == model.ActTypeId).Any()).Any();
 
-            Expression<Func<Case, bool>> sessionActNumberWhere = x => true;
-            if (string.IsNullOrEmpty(model.ActNumber) == false)
-                sessionActNumberWhere = x => x.CaseSessions.Where(a => a.CaseSessionActs.Where(b => b.RegNumber == model.ActNumber).Any()).Any();
+            //Expression<Func<Case, bool>> sessionActDateWhere = x => true;
+            //if (model.ActDate != null)
+            //    sessionActDateWhere = x => x.CaseSessions.Where(a => a.CaseSessionActs.Where(b => b.ActDate != null &&
+            //                    ((DateTime)b.ActDate).Date == ((DateTime)model.ActDate).Date).Any()).Any();
 
-            Expression<Func<Case, bool>> finalActSearch = x => true;
-            if (model.ActIsFinalDocHidden == true)
-                finalActSearch = x => x.CaseSessionActs.Where(a => a.IsFinalDoc == true && a.DateExpired == null &&
-                                                 NomenclatureConstants.SessionActState.EnforcedStates.Contains(a.ActStateId)).Any();
+            //Expression<Func<Case, bool>> sessionActNumberWhere = x => true;
+            //if (string.IsNullOrEmpty(model.ActNumber) == false)
+            //    sessionActNumberWhere = x => x.CaseSessions.Where(a => a.CaseSessionActs.Where(b => b.RegNumber == model.ActNumber).Any()).Any();
 
-            Expression<Func<Case, bool>> actLawBaseSearch = x => true;
-            if (model.ActLawBaseId > 0)
-                actLawBaseSearch = x => x.CaseSessionActs.Where(a => a.DateExpired == null &&
-                                    a.CaseSessionActLawBases.Where(b => b.LawBaseId == model.ActLawBaseId).Any()).Any();
+            //Expression<Func<Case, bool>> finalActSearch = x => true;
+            //if (model.ActIsFinalDocHidden == true)
+            //    finalActSearch = x => x.CaseSessionActs.Where(a => a.IsFinalDoc == true && a.DateExpired == null &&
+            //                                     NomenclatureConstants.SessionActState.EnforcedStates.Contains(a.ActStateId)).Any();
+
+            //Expression<Func<Case, bool>> actLawBaseSearch = x => true;
+            //if (model.ActLawBaseId > 0)
+            //    actLawBaseSearch = x => x.CaseSessionActs.Where(a => a.DateExpired == null &&
+            //                        a.CaseSessionActLawBases.Where(b => b.LawBaseId == model.ActLawBaseId).Any()).Any();
 
             //СВЪРЗАНИ ДЕЛА
             Expression<Func<Case, bool>> linkCaseCourtWhere = x => true;
@@ -2345,8 +2503,15 @@ namespace IOWebApplication.Core.Services
                 linkCaseCourtWhere = x => x.Document.DocumentCaseInfo.Where(a => a.Case.CourtId == model.LinkDelo_CourtId).Any();
 
             Expression<Func<Case, bool>> linkCaseIdWhere = x => true;
-            if (model.LinkDelo_CaseId > 0)
-                linkCaseIdWhere = x => x.Document.DocumentCaseInfo.Where(a => a.CaseId == model.LinkDelo_CaseId).Any();
+            if (!string.IsNullOrEmpty(model.LinkDelo_RegNumber))
+                linkCaseIdWhere = x => x.Document.DocumentCaseInfo.Where(a => a.Case != null && EF.Functions.ILike(a.Case.RegNumber, model.LinkDelo_RegNumber.ToCasePaternSearch())).Any();
+
+            Expression<Func<Case, bool>> linkDescriptionWhere = x => true;
+            if (!string.IsNullOrEmpty(model.LinkDelo_Description))
+            {
+                var stringFind = model.LinkDelo_Description.ToUpper();
+                linkDescriptionWhere = x => x.Document.DocumentCaseInfo.Where(a => a.Case != null && a.Description.ToUpper().Contains(stringFind)).Any();
+            }
 
             Expression<Func<Case, bool>> linkInstitutionTypeWhere = x => true;
             if (model.Institution_InstitutionTypeId > 0)
@@ -2402,7 +2567,67 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<Case, bool>> courtDepartment = x => true;
             if (model.CourtDepartmentId > 0)
-                courtDepartment = x => x.CaseLawUnits.Where(a => a.CaseSessionId == null && a.CourtDepartmentId == model.CourtDepartmentId).Any();            
+                courtDepartment = x => x.CaseLawUnits.Where(a => a.CaseSessionId == null && a.CourtDepartmentId == model.CourtDepartmentId).Any();
+            
+            //Коментирано от К.Борисов - не се ползваше
+            //var c = repo.AllReadonly<Case>()
+            //           .Include(x => x.CaseType)
+            //           .Include(x => x.CaseCode)
+            //           .Include(x => x.ProcessPriority)
+            //           .Include(x => x.CaseState)
+            //           .Include(x => x.CaseReason)
+            //           .Where(x => x.CourtId == courtId)
+            //           .Where(x => x.CaseStateId != NomenclatureConstants.CaseState.Draft)
+            //           .Where(dateSearch)
+            //           .Where(caseRegnumberSearch)
+            //           .Where(yearSearch)
+            //           .Where(caseGroupWhere)
+            //           .Where(caseTypeWhere)
+            //           .Where(caseStateWhere)
+            //           .Where(judgeReporterSearch)
+            //           .Where(dateSessionSearch)
+            //           .Where(sessionTypeWhere)
+            //           .Where(hallWhere)
+            //           .Where(sessionStateWhere)
+            //           .Where(sessionResultWhere)
+            //           .Where(linkCaseCourtWhere)
+            //           .Where(linkCaseIdWhere)
+            //           .Where(linkDescriptionWhere)
+            //           .Where(linkInstitutionTypeWhere)
+            //           .Where(linkInstitutionIdWhere)
+            //           .Where(linkInstitutionYearWhere)
+            //           .Where(linkInstitutionCaseNumberWhere)
+            //           .Where(regNumOtherSystem)
+            //           .Where(documentDateWhere)
+            //           .Where(documentNumberWhere)
+            //           .Where(identifikatorPersonWhere)
+            //           .Where(namePersonWhere)
+            //           .Where(identifikatorCaseLawUnitWhere)
+            //           .Where(nameCaseLawUnitWhere)
+            //           .Where(caseClassificationWhere)
+            //           .Where(courtDepartment)
+            //           .Where(sessionActWhere)
+            //           //.Where(finalActSearch)
+            //           //.Where(actLawBaseSearch)
+            //           //.Where(sessionActTypeWhere)
+            //           //.Where(sessionActDateWhere)
+            //           //.Where(sessionActNumberWhere)
+            //           .Select(x => new CaseVM()
+            //           {
+            //               Id = x.Id,
+            //               CourtId = x.CourtId,
+            //               CaseTypeLabel = (x.CaseType != null) ? x.CaseType.Code : string.Empty,
+            //               CaseCodeLabel = (x.CaseCode != null) ? x.CaseCode.Code + " " + x.CaseCode.Label : string.Empty,
+            //               ProcessPriorityLabel = (x.ProcessPriority != null) ? x.ProcessPriority.Label : string.Empty,
+            //               CaseStateLabel = (x.CaseState != null) ? x.CaseState.Label : string.Empty,
+            //               ShortNumberVal = x.ShortNumberValue ?? 0,
+            //               ShortNumber = Convert.ToString(int.Parse(x.ShortNumber)),
+            //               RegNumber = x.RegNumber,
+            //               RegDate = x.RegDate,
+            //               CaseReasonLabel = (x.CaseReason != null) ? x.CaseReason.Label : string.Empty,
+            //               CaseStateDescription = x.CaseStateDescription
+            //           }).ToSql();
+
 
             return repo.AllReadonly<Case>()
                        .Include(x => x.CaseType)
@@ -2423,12 +2648,10 @@ namespace IOWebApplication.Core.Services
                        .Where(sessionTypeWhere)
                        .Where(hallWhere)
                        .Where(sessionStateWhere)
-                       .Where(sessionActTypeWhere)
-                       .Where(sessionActDateWhere)
-                       .Where(sessionActNumberWhere)
                        .Where(sessionResultWhere)
                        .Where(linkCaseCourtWhere)
                        .Where(linkCaseIdWhere)
+                       .Where(linkDescriptionWhere)
                        .Where(linkInstitutionTypeWhere)
                        .Where(linkInstitutionIdWhere)
                        .Where(linkInstitutionYearWhere)
@@ -2442,8 +2665,12 @@ namespace IOWebApplication.Core.Services
                        .Where(nameCaseLawUnitWhere)
                        .Where(caseClassificationWhere)
                        .Where(courtDepartment)
-                       .Where(finalActSearch)
-                       .Where(actLawBaseSearch)
+                       .Where(sessionActWhere)
+                       //.Where(finalActSearch)
+                       //.Where(actLawBaseSearch)
+                       //.Where(sessionActTypeWhere)
+                       //.Where(sessionActDateWhere)
+                       //.Where(sessionActNumberWhere)
                        .Select(x => new CaseVM()
                        {
                            Id = x.Id,
@@ -2452,6 +2679,7 @@ namespace IOWebApplication.Core.Services
                            CaseCodeLabel = (x.CaseCode != null) ? x.CaseCode.Code + " " + x.CaseCode.Label : string.Empty,
                            ProcessPriorityLabel = (x.ProcessPriority != null) ? x.ProcessPriority.Label : string.Empty,
                            CaseStateLabel = (x.CaseState != null) ? x.CaseState.Label : string.Empty,
+                           ShortNumberVal = x.ShortNumberValue ?? 0,
                            ShortNumber = Convert.ToString(int.Parse(x.ShortNumber)),
                            RegNumber = x.RegNumber,
                            RegDate = x.RegDate,
@@ -2461,15 +2689,16 @@ namespace IOWebApplication.Core.Services
                        .AsQueryable();
         }
 
-        private async Task<List<CdnDownloadResult>> ReadFile(int SourceTypeSelectId, int Id)
+        private async Task<List<CdnDownloadResult>> ReadFile(int SourceTypeSelectId, int Id, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None)
         {
             var cdnItems = cdnService.Select(SourceTypeSelectId, Id.ToString()).ToList();
+
             List<CdnDownloadResult> results = new List<CdnDownloadResult>();
             if (cdnItems != null)
             {
                 foreach (var cdnItem in cdnItems)
                 {
-                    var cdnDownload = await cdnService.MongoCdn_Download(cdnItem.FileId).ConfigureAwait(false);
+                    var cdnDownload = await cdnService.MongoCdn_Download(cdnItem.FileId, postProcess).ConfigureAwait(false);
                     results.Add(cdnDownload);
                 }
 
@@ -2488,17 +2717,17 @@ namespace IOWebApplication.Core.Services
         /// <param name="NameDir"></param>
         /// <param name="NameElement"></param>
         /// <returns></returns>
-        private async Task<List<string>> FillFilesInArchive(ZipArchive zip, int ObjectId, int SourceTypeSelectId, string NameDir, string NameElement)
+        private async Task<List<string>> FillFilesInArchive(ZipArchive zip, int? ObjectId, long? ObjectLongId, int SourceTypeSelectId, string NameDir, string NameElement, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None)
         {
             List<string> result = new List<string>();
 
-            var cdnDownloadResults = await ReadFile(SourceTypeSelectId, ObjectId).ConfigureAwait(false);
+            var cdnDownloadResults = await ReadFile(SourceTypeSelectId, (ObjectId != null ? (ObjectId ?? 0) : Convert.ToInt32(ObjectLongId ?? 0)), postProcess).ConfigureAwait(false);
 
             foreach (CdnDownloadResult f in cdnDownloadResults)
             {
                 // add the item name to the zip
-                ZipArchiveEntry zipItem = zip.CreateEntry(NameDir + f.FileName);
-                result.Add("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=" + NameDir + f.FileName + ">" + NameElement + "</a></br>");
+                ZipArchiveEntry zipItem = zip.CreateEntry(NameDir + f.FileName.Replace(" ", "_"));
+                result.Add("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=" + NameDir + f.FileName.Replace(" ", "_") + ">" + NameElement + "</a></br>");
                 // add the item bytes to the zip entry by opening the original file and copying the bytes
                 using (System.IO.MemoryStream originalFileMemoryStream = new System.IO.MemoryStream(f.GetBytes()))
                 {
@@ -2574,32 +2803,42 @@ namespace IOWebApplication.Core.Services
                 using (ZipArchive zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
                     fileHtml.Add("1. Иницииращ документи: </br>");
-                    fileHtml.AddRange(await FillFilesInArchive(zip, Convert.ToInt32(caseCase.DocumentId), SourceTypeSelectVM.Document, nameDelo + "/01_Иницииращи_документи/", "Иницииращ документи").ConfigureAwait(false));
-                    
+                    fileHtml.AddRange(await FillFilesInArchive(zip, null, caseCase.DocumentId, SourceTypeSelectVM.Document, nameDelo + "/01_Иницииращи_документи/", "Иницииращ документи").ConfigureAwait(false));
+
                     fileHtml.Add("1.1. Резолюции: </br>");
                     foreach (var documentResolution in caseCase.DocumentResolutions)
                     {
                         var docres = documentResolution.ResolutionTypeLabel.Replace(" ", "_") + "_" + documentResolution.RegNumber + "_" + (documentResolution.RegDate ?? DateTime.Now).Day.ToString("00") + "_" + (documentResolution.RegDate ?? DateTime.Now).Month.ToString("00") + "_" + (documentResolution.RegDate ?? DateTime.Now).Year.ToString("0000");
                         var docresElement = documentResolution.Label;
-                        fileHtml.AddRange(await FillFilesInArchive(zip, (int)documentResolution.Id, SourceTypeSelectVM.DocumentResolutionPdf, nameDelo + "/01_01_Резолюции/" + docres + "/", docresElement).ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, null, documentResolution.Id, SourceTypeSelectVM.DocumentResolutionPdf, nameDelo + "/01_01_Резолюции/" + docres + "/", docresElement).ConfigureAwait(false));
                     }
 
                     fileHtml.Add("2. Списък на лицата: </br>");
-                    fileHtml.AddRange(await FillFilesInArchive(zip, caseCase.Id, SourceTypeSelectVM.CasePerson, nameDelo + "/02_Списък_на_лицата/", "Списък на лицата").ConfigureAwait(false));
+                    fileHtml.AddRange(await FillFilesInArchive(zip, caseCase.Id, null, SourceTypeSelectVM.CasePerson, nameDelo + "/02_Списък_на_лицата/", "Списък на лицата").ConfigureAwait(false));
 
                     fileHtml.Add("3. Протоколи от разпределение: </br>");
                     foreach (var caseSelectionProtokol in caseCase.CaseSelectionProtokols)
                     {
                         var nameProtokol = caseSelectionProtokol.SelectedLawUnitName.Replace(" ", "_") + "_" + caseSelectionProtokol.SelectionDate.Day.ToString("00") + "_" + caseSelectionProtokol.SelectionDate.Month.ToString("00") + "_" + caseSelectionProtokol.SelectionDate.Year.ToString("0000") + "_" + caseSelectionProtokol.SelectionDate.Hour.ToString("00") + "_" + caseSelectionProtokol.SelectionDate.Minute.ToString("00");
                         var nameProtokolElement = caseSelectionProtokol.SelectedLawUnitName + " " + caseSelectionProtokol.SelectionDate.ToString("dd.MM.yyyy");
-                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSelectionProtokol.Id, SourceTypeSelectVM.CaseSelectionProtokol, nameDelo + "/03_Протоколи_от_разпределение/" + nameProtokol + "/", nameProtokolElement).ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSelectionProtokol.Id, null, SourceTypeSelectVM.CaseSelectionProtokol, nameDelo + "/03_Протоколи_от_разпределение/" + nameProtokol + "/", nameProtokolElement).ConfigureAwait(false));
                     }
 
                     fileHtml.Add("4. Съпровождащи документи: </br>");
                     foreach (var documentInfo in caseCase.CaseInDocuments)
                     {
                         var nameDoc = documentInfo.Title.Replace(" ", "_");
-                        fileHtml.AddRange(await FillFilesInArchive(zip, Convert.ToInt32(documentInfo.Id), SourceTypeSelectVM.Document, nameDelo + "/04_Съпровождащи_документи/" + nameDoc + "/", documentInfo.Title).ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, null, documentInfo.Id, SourceTypeSelectVM.Document, nameDelo + "/04_Съпровождащи_документи/" + nameDoc + "/", documentInfo.Title).ConfigureAwait(false));
+                    }
+
+                    foreach (var documentDecisionCase in caseCase.DocumentDecisionCaseLists)
+                    {
+                        var nameDoc = documentDecisionCase.DocumentShortLable.Replace(" ", "_").Replace("/", "_").Replace(".", "_");
+                        var textDocument = documentDecisionCase.DocumentLable +
+                                           (!string.IsNullOrEmpty(documentDecisionCase.DecisionRequestTypeName) ? " - " + documentDecisionCase.DecisionRequestTypeName : string.Empty) +
+                                           (!string.IsNullOrEmpty(documentDecisionCase.DecisionName) ? ": " + documentDecisionCase.DecisionName : string.Empty);
+                        fileHtml.AddRange(await FillFilesInArchive(zip, null, documentDecisionCase.DocumentId, SourceTypeSelectVM.Document, nameDelo + "/04_Съпровождащи_документи/" + nameDoc + "/", textDocument).ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, null, documentDecisionCase.DocumentId, SourceTypeSelectVM.DocumentDecision, nameDelo + "/04_Съпровождащи_документи/" + nameDoc + "/", textDocument).ConfigureAwait(false));
                     }
 
                     fileHtml.Add("5. Суми по дело: </br>");
@@ -2613,25 +2852,34 @@ namespace IOWebApplication.Core.Services
                                           " Сума плащане: " + paymentCase.AmountForPayment +
                                           " Вид плащане: " + paymentCase.PaymentTypeName +
                                           " Дата: " + paymentCase.PaidDate.ToString("dd.MM.yyyy");
-                        fileHtml.AddRange(await FillFilesInArchive(zip, Convert.ToInt32(paymentCase.Id), SourceTypeSelectVM.Payment, nameDelo + "/05_Суми_по_дело/" + "Плащане_" + namePaymentDir.Replace(" ", "_").Replace(".", "_").Replace(",", "_").Replace(":", "_") + "/", namePayment).ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, paymentCase.Id, null, SourceTypeSelectVM.Payment, nameDelo + "/05_Суми_по_дело/" + "Плащане_" + namePaymentDir.Replace(" ", "_").Replace(".", "_").Replace(",", "_").Replace(":", "_") + "/", namePayment).ConfigureAwait(false));
                     }
 
-                    foreach (var execList in caseCase.ExecLists)
+                    foreach (var execList in caseCase.ExecLists.Where(x => x.RegDate != null))
                     {
-                        var nameExecListsDir = execList.RegNumber + "_" + execList.RegDate.ToString("dd_MM_yyyy HH mm");
+                        var nameExecListsDir = execList.RegNumber + "_" + execList.RegDate?.ToString("dd_MM_yyyy HH mm");
                         var nameExecLists = "Тип: " + execList.ExecListTypeName +
                                             " Лице: " + execList.FullName +
                                             " Сума: " + execList.Amount.ToString("0.00") +
-                                            " Номер: " + execList.RegNumber + "_" + execList.RegDate.ToString("dd.MM.yyyy");
-                        fileHtml.AddRange(await FillFilesInArchive(zip, Convert.ToInt32(execList.Id), SourceTypeSelectVM.ExecList, nameDelo + "/05_Суми_по_дело/" + "ИЛ_" + nameExecListsDir.Replace(" ", "_").Replace(".", "_").Replace(",", "_").Replace(":", "_") + "/", nameExecLists).ConfigureAwait(false));
+                                            " Номер: " + execList.RegDate != null ? (execList.RegNumber + "/" + execList.RegDate.DateToStr(FormattingConstant.NormalDateFormat)) : "В проект";
+                        fileHtml.AddRange(await FillFilesInArchive(zip, execList.Id, null, SourceTypeSelectVM.ExecList, nameDelo + "/05_Суми_по_дело/" + "ИЛ_" + nameExecListsDir.Replace(" ", "_").Replace(".", "_").Replace(",", "_").Replace(":", "_") + "/", nameExecLists).ConfigureAwait(false));
+                    }
+
+                    foreach (var expenseOrder in caseCase.ExpenseOrders)
+                    {
+                        var nameЕxpenseOrderDir = expenseOrder.RegNumber + "_" + expenseOrder.RegDate.ToString("dd_MM_yyyy HH mm");
+                        var nameЕxpenseOrder = expenseOrder.FullName +
+                                               " Номер: " + expenseOrder.RegNumber + "/" + expenseOrder.RegDate.ToString("dd.MM.yyyy") +
+                                               " сума: " + expenseOrder.Amount.ToString("0.00"); ;
+                        fileHtml.AddRange(await FillFilesInArchive(zip, expenseOrder.Id, null, SourceTypeSelectVM.ExpenseOrder, nameDelo + "/05_Суми_по_дело/" + "РКО_" + nameЕxpenseOrderDir.Replace(" ", "_").Replace(".", "_").Replace(",", "_").Replace(":", "_") + "/", nameЕxpenseOrder).ConfigureAwait(false));
                     }
 
                     fileHtml.Add("6. Изходящи документи: </br>");
                     foreach (var documentInfo in caseCase.CaseOutDocuments)
                     {
                         var nameDoc = documentInfo.Title.Replace(" ", "_");
-                        fileHtml.AddRange(await FillFilesInArchive(zip, Convert.ToInt32(documentInfo.Id), SourceTypeSelectVM.Document, nameDelo + "/06_Изходящи_документи/" + nameDoc + "/", documentInfo.Title).ConfigureAwait(false));
-                        fileHtml.AddRange(await FillFilesInArchive(zip, Convert.ToInt32(documentInfo.Id), SourceTypeSelectVM.DocumentPdf, nameDelo + "/06_Изходящи_документи/" + nameDoc + "/", documentInfo.Title).ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, null, documentInfo.Id, SourceTypeSelectVM.Document, nameDelo + "/06_Изходящи_документи/" + nameDoc + "/", documentInfo.Title).ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, null, documentInfo.Id, SourceTypeSelectVM.DocumentPdf, nameDelo + "/06_Изходящи_документи/" + nameDoc + "/", documentInfo.Title).ConfigureAwait(false));
                     }
 
                     fileHtml.Add("7. Заседания: </br>");
@@ -2646,20 +2894,20 @@ namespace IOWebApplication.Core.Services
                         fileHtml.Add("&nbsp;&nbsp;&nbsp;- Заседание: " + caseSession.SessionTypeLabel + " " + caseSession.DateFrom.ToString("dd.MM.yyyy") + "</br>");
 
                         fileHtml.Add("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Списък на призованите/уведомените/съобщените лица: </br>");
-                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSession.Id, SourceTypeSelectVM.CaseSessionNotificationList, nameDelo + "/" + nameSession + "/01(а)_Списък_на_призованите_лица/", "Списък на призованите лица").ConfigureAwait(false));
-                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSession.Id, SourceTypeSelectVM.CaseSessionNotificationListNotification, nameDelo + "/" + nameSession + "/01(б)_Списък_на_уведомените_лица/", "Списък на уведомените лица").ConfigureAwait(false));
-                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSession.Id, SourceTypeSelectVM.CaseSessionNotificationListMessage, nameDelo + "/" + nameSession + "/01(в)_Списък_на_съобщените_лица/", "Списък на съобщените лица").ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSession.Id, null, SourceTypeSelectVM.CaseSessionNotificationList, nameDelo + "/" + nameSession + "/01(а)_Списък_на_призованите_лица/", "Списък на призованите лица").ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSession.Id, null, SourceTypeSelectVM.CaseSessionNotificationListNotification, nameDelo + "/" + nameSession + "/01(б)_Списък_на_уведомените_лица/", "Списък на уведомените лица").ConfigureAwait(false));
+                        fileHtml.AddRange(await FillFilesInArchive(zip, caseSession.Id, null, SourceTypeSelectVM.CaseSessionNotificationListMessage, nameDelo + "/" + nameSession + "/01(в)_Списък_на_съобщените_лица/", "Списък на съобщените лица").ConfigureAwait(false));
 
                         fileHtml.Add("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Актове и протоколи: </br>");
-                        foreach (var caseSessionAct in caseSession.CaseSessionActs.Where(x => x.RegNumber != string.Empty))
+                        foreach (var caseSessionAct in caseSession.CaseSessionActs.OrderBy(x => x.ActDeclaredDate))
                         {
                             var nameAct = caseSessionAct.ActTypeLabel.Replace(" ", "_") + "_" + caseSessionAct.RegNumber + "_" + caseSessionAct.RegDate?.Day.ToString("00") + "_" + caseSessionAct.RegDate?.Month.ToString("00") + "_" + caseSessionAct.RegDate?.Year.ToString("0000");
-                            var nameActElement = caseSessionAct.ActTypeLabel + " " + caseSessionAct.RegNumber + "/" + caseSessionAct.RegDate?.ToString("dd.MM.yyyy");
-                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, SourceTypeSelectVM.CaseSessionActPdf, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", nameActElement).ConfigureAwait(false));
-                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, SourceTypeSelectVM.CaseSessionActDepersonalized, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Обезличен_" + nameActElement).ConfigureAwait(false));
-                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, SourceTypeSelectVM.CaseSessionActMotivePdf, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Мотив_" + nameActElement).ConfigureAwait(false));
-                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, SourceTypeSelectVM.CaseSessionActMotiveDepersonalized, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Мотив_Обезличен_" + nameActElement).ConfigureAwait(false));
-                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, SourceTypeSelectVM.CaseSessionActManualUpload, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Прикачен_" + nameActElement).ConfigureAwait(false));
+                            var nameActElement = caseSessionAct.ActTypeLabel + " " + caseSessionAct.RegNumber + "/" + caseSessionAct.RegDate?.ToString("dd.MM.yyyy") + " (Дата на постановяване: " + (caseSessionAct.ActDeclaredDate ?? DateTime.Now).ToString("dd.MM.yyyy") + ")";
+                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, null, SourceTypeSelectVM.CaseSessionActPdf, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", nameActElement, CdnFileSelect.PostProcess.Flatten).ConfigureAwait(false));
+                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, null, SourceTypeSelectVM.CaseSessionActDepersonalized, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Обезличен_" + nameActElement, CdnFileSelect.PostProcess.Flatten).ConfigureAwait(false));
+                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, null, SourceTypeSelectVM.CaseSessionActMotivePdf, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Мотив_" + nameActElement, CdnFileSelect.PostProcess.Flatten).ConfigureAwait(false));
+                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, null, SourceTypeSelectVM.CaseSessionActMotiveDepersonalized, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Мотив_Обезличен_" + nameActElement, CdnFileSelect.PostProcess.Flatten).ConfigureAwait(false));
+                            fileHtml.AddRange(await FillFilesInArchive(zip, caseSessionAct.Id, null, SourceTypeSelectVM.CaseSessionActManualUpload, nameDelo + "/" + nameSession + "/07_Актове_и_протоколи/" + nameAct + "/", "Прикачен_" + nameActElement, CdnFileSelect.PostProcess.Flatten).ConfigureAwait(false));
 
                         }
 
@@ -2668,8 +2916,8 @@ namespace IOWebApplication.Core.Services
                         {
                             var nameNotification = caseNotification.NotificationTypeLabel.Replace(" ", "_") + "_" + caseNotification.RegNumber + "_" + caseNotification.RegDate.Day.ToString("00") + "_" + caseNotification.RegDate.Month.ToString("00") + "_" + caseNotification.RegDate.Year.ToString("0000");
                             var nameNotificationElement = caseNotification.NotificationTypeLabel + " " + caseNotification.RegNumber + "/" + caseNotification.RegDate.ToString("dd.MM.yyyy");
-                            fileHtml.AddRange(await FillFilesInArchive(zip, caseNotification.Id, SourceTypeSelectVM.CaseNotificationPrint, nameDelo + "/" + nameSession + "/07_Уведомления/" + nameNotification + "/", nameNotificationElement).ConfigureAwait(false));
-                            fileHtml.AddRange(await FillFilesInArchive(zip, caseNotification.Id, SourceTypeSelectVM.CaseNotificationReturn, nameDelo + "/" + nameSession + "/07_Уведомления/" + nameNotification + "/", "Сканиран_отрязък" + nameNotificationElement).ConfigureAwait(false));
+                            fileHtml.AddRange(await FillFilesInArchive(zip, caseNotification.Id, null, SourceTypeSelectVM.CaseNotificationPrint, nameDelo + "/" + nameSession + "/07_Уведомления/" + nameNotification + "/", nameNotificationElement).ConfigureAwait(false));
+                            fileHtml.AddRange(await FillFilesInArchive(zip, caseNotification.Id, null, SourceTypeSelectVM.CaseNotificationReturn, nameDelo + "/" + nameSession + "/07_Уведомления/" + nameNotification + "/", "Сканиран_отрязък" + nameNotificationElement).ConfigureAwait(false));
                         }
                     }
 
@@ -2682,6 +2930,19 @@ namespace IOWebApplication.Core.Services
                             num++;
                             var _row = "8." + num + ". " + "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName + "</br>";
                             fileHtml.Add(_row);
+                        }
+                    }
+
+                    if (caseCase.RegixReports.Count() > 0)
+                    {
+                        fileHtml.Add("9. Справки външни системи: </br>");
+                        foreach (var regix in caseCase.RegixReports.OrderBy(x => x.DateWrt))
+                        {
+                            var nameRegix = (regix.RegixTypeName + " " + regix.DateWrt.ToString("dd_MM_yyyy_HH_mm")).Replace(" ", "_").Replace("/", "_");
+                            var titleRegix = regix.RegixTypeName +
+                                             (!string.IsNullOrEmpty(regix.ActRegNumber) ? " Акт: " + regix.ActRegNumber : string.Empty) +
+                                             (!string.IsNullOrEmpty(regix.DocumentNumber) ? " Документ: " + regix.DocumentNumber : string.Empty);
+                            fileHtml.AddRange(await FillFilesInArchive(zip, null, regix.Id, SourceTypeSelectVM.RegixReport, nameDelo + "/09_Справки_външни_системи/" + nameRegix + "/", titleRegix).ConfigureAwait(false));
                         }
                     }
 
@@ -2752,6 +3013,7 @@ namespace IOWebApplication.Core.Services
                                         ((model.JudgeReporterId > 0) ? (x.CaseLawUnits.Where(a => a.CaseSessionId == null &&
                                                                                                   (a.DateTo ?? nowDateTime.AddYears(100)) >= nowDateTime && a.LawUnitId == model.JudgeReporterId &&
                                                                                                   a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true))
+                            .Where(x => !x.CaseDeactivations.Any(d => d.CaseId == x.Id && d.DateExpired == null))
                             .ToList();
 
             var resultFinish = repo.AllReadonly<SessionResultGrouping>()
@@ -2830,8 +3092,9 @@ namespace IOWebApplication.Core.Services
                                             (x.Case.CaseStateId != NomenclatureConstants.CaseState.Draft) &&
                                             ((model.CaseGroupId > 0) ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
                                             ((model.CaseTypeId > 0) ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
-                                            (x.CaseSessionResults.Where(a => a.DateExpired == null && resultFinish.Contains(a.SessionResultId)).Any()) &&
-                                            (!x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && (b.ActStateId != NomenclatureConstants.SessionActState.Project && b.ActStateId != NomenclatureConstants.SessionActState.Registered))))
+                                            ((!x.CaseSessionResults.Where(a => a.DateExpired == null && resultFinish.Contains(a.SessionResultId)).Any()) ||
+                                            (!x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && (b.ActStateId != NomenclatureConstants.SessionActState.Project && b.ActStateId != NomenclatureConstants.SessionActState.Registered)))))
+                                   .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
                                    .ToList();
 
             foreach (var caseSession in caseSessions)
@@ -2870,12 +3133,12 @@ namespace IOWebApplication.Core.Services
             var dataRows = CaseWithoutFinal_Select(userContext.CourtId, model).ToList();
 
             var styleTitle = excelService.CreateTitleStyle();
-            excelService.AddRange("Справка Несвършени дела към дата " + model.DateToSpr?.ToString(FormattingConstant.NormalDateFormat), 7,
+            excelService.AddRange("Справка Несвършени дела към дата " + model.DateToSpr?.ToString(FormattingConstant.NormalDateFormat), 8,
                       styleTitle); excelService.AddRow();
 
             excelService.AddList(
                 dataRows,
-                new int[] { 5000, 5000, 5000, 5000, 5000, 5000, 5000 },
+                new int[] { 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 },
                 new List<Expression<Func<CaseSprVM, object>>>()
                 {
                     x => x.CaseTypeLabel,
@@ -2885,6 +3148,7 @@ namespace IOWebApplication.Core.Services
                     x => x.CaseRegDate,
                     x => x.CaseEndDate,
                     x => x.CaseLifeCycle,
+                    x => x.CaseStateName,
                 },
                 NPOI.HSSF.Util.HSSFColor.White.Index,
                 NPOI.HSSF.Util.HSSFColor.White.Index,
@@ -2963,6 +3227,12 @@ namespace IOWebApplication.Core.Services
 
             model.DateFrom = NomenclatureExtensions.ForceStartDate(model.DateFrom);
             model.DateTo = NomenclatureExtensions.ForceEndDate(model.DateTo);
+            var dateAddYear = DateTime.Now.AddYears(100);
+
+            Expression<Func<Case, bool>> judgeReporterSearch = x => true;
+            if (model.JudgeReporterId > 0)
+                judgeReporterSearch = x => x.CaseLawUnits.Where(a => a.CaseSessionId == null && (a.DateTo ?? dateAddYear).Date >= x.RegDate && a.LawUnitId == model.JudgeReporterId &&
+                      a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any();
 
             var caseCases = repo.AllReadonly<Case>()
                                 .Include(x => x.CasePersons)
@@ -2972,10 +3242,16 @@ namespace IOWebApplication.Core.Services
                                 .Include(x => x.Court)
                                 .Include(x => x.CaseCode)
                                 .Include(x => x.CaseClassifications)
+                                .Include(x => x.CaseLawUnits)
+                                .ThenInclude(x => x.LawUnit)
+                                .Include(x => x.CaseLawUnits)
+                                .ThenInclude(x => x.CourtDepartment)
                                 .Where(x => (x.CourtId == courtId) &&
                                             ((x.RegDate >= model.DateFrom) && (x.RegDate <= (model.DateTo ?? DateTime.Now.AddYears(100)))) &&
-                                            (x.CaseClassifications.Any(c => c.ClassificationId == NomenclatureConstants.CaseClassifications.CorruptCase)) &&
-                                            (repo.AllReadonly<CaseSessionAct>().Where(a => a.CaseId == x.Id).Any(a => a.IsFinalDoc)))
+                                            (x.CaseClassifications.Any(c => c.ClassificationId == NomenclatureConstants.CaseClassifications.CorruptCase))
+                                            /*(repo.AllReadonly<CaseSessionAct>().Where(a => a.CaseId == x.Id).Any(a => a.IsFinalDoc))*/)
+                                .Where(judgeReporterSearch)
+                                .Where(x => !x.CaseDeactivations.Any(d => d.CaseId == x.Id && d.DateExpired == null))
                                 .ToList();
 
             foreach (var @case in caseCases)
@@ -3004,7 +3280,12 @@ namespace IOWebApplication.Core.Services
                     CasePersons = GetStringPersonNameNewLine(@case.CasePersons.Where(p => p.CaseSessionId == null && p.PersonRole.RoleKindId == NomenclatureConstants.PersonKinds.RightSide).ToList()),
                     CasePersonRoles = GetStringPersonRoleNameNewLine(@case.CasePersons.Where(p => p.CaseSessionId == null && p.PersonRole.RoleKindId == NomenclatureConstants.PersonKinds.RightSide).ToList()),
                     CaseCodeLabel = @case.CaseCode.Label,
-                    CasePersonSentenceInfo = GetSentenseInfo(casePersonSentences)
+                    CasePersonSentenceInfo = GetSentenseInfo(casePersonSentences),
+                    JudgeReport = @case.CaseLawUnits.Where(l => l.CaseSessionId == null && l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter &&
+                                                          (l.DateTo ?? DateTime.Now.AddYears(100)) >= @case.RegDate)
+                                                .Select(l => l.LawUnit.FullName + ((l.CourtDepartment != null) ? " състав: " + l.CourtDepartment.Label : string.Empty))
+                                                .FirstOrDefault(),
+                    IsExistFinalAct = repo.AllReadonly<CaseSessionAct>().Where(a => a.CaseId == @case.Id).Any(a => a.IsFinalDoc) ? "Да" : "Не"
                 };
 
                 result.Add(item);
@@ -3070,6 +3351,7 @@ namespace IOWebApplication.Core.Services
                                             ((model.JudgeReporterId > 0) ? (x.Case.CaseLawUnits.Where(a => a.CaseSessionId == null &&
                                                                                                       (a.DateTo ?? nowDateTime.AddYears(100)) >= nowDateTime && a.LawUnitId == model.JudgeReporterId &&
                                                                                                       a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true))
+                                   .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
                                    .ToList();
 
             foreach (var caseSession in caseSessions)
@@ -3137,6 +3419,10 @@ namespace IOWebApplication.Core.Services
                                    .Select(x => x.SessionResultId)
                                    .ToList();
 
+            Expression<Func<Case, bool>> caseStateWhere = x => true;
+            if ((model.CaseStateId ?? 0) > 0)
+                caseStateWhere = x => x.CaseStateId == model.CaseStateId;
+
             var caseCases = repo.AllReadonly<Case>()
                                 .Include(x => x.CaseGroup)
                                 .Include(x => x.CaseType)
@@ -3149,6 +3435,7 @@ namespace IOWebApplication.Core.Services
                                 .ThenInclude(x => x.CourtDepartment)
                                 .Include(x => x.CaseSessions)
                                 .ThenInclude(x => x.CaseSessionResults)
+                                .Include(x => x.CaseState)
                                 .Where(x => (x.CourtId == courtId) &&
                                             ((x.RegDate >= model.DateFrom) && (x.RegDate <= (model.DateTo ?? nowDateTime.AddYears(100)))) &&
                                             (x.CaseStateId != NomenclatureConstants.CaseState.Draft) &&
@@ -3161,6 +3448,8 @@ namespace IOWebApplication.Core.Services
                                             ((model.JudgeReporterId > 0) ? (x.CaseLawUnits.Where(a => a.CaseSessionId == null &&
                                                                                                       (a.DateTo ?? nowDateTime.AddYears(100)) >= (model.DateToSpr ?? nowDateTime) && a.LawUnitId == model.JudgeReporterId &&
                                                                                                       a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true))
+                                .Where(caseStateWhere)
+                                .Where(x => !x.CaseDeactivations.Any(d => d.CaseId == x.Id && d.DateExpired == null))
                                 .ToList();
 
             foreach (var caseCase in caseCases)
@@ -3203,7 +3492,8 @@ namespace IOWebApplication.Core.Services
                         CaseCodeLabel = caseCase.CaseCode.Label + " - " + caseCase.CaseCode.Code,
                         CaseRegDate = caseCase.RegDate,
                         CaseEndDate = ((act != null) && (caseCase.CaseSessions.Any(s => s.CaseSessionResults.Where(a => a.DateExpired == null && resultFinish.Contains(a.SessionResultId)).Any()))) ? (act.ActDeclaredDate > model.DateToSpr ? act.ActDeclaredDate : null) : null,
-                        CaseLifeCycle = caseLifecyclesText
+                        CaseLifeCycle = caseLifecyclesText,
+                        CaseStateName = caseCase.CaseState.Label,
                     };
 
                     result.Add(item);
@@ -3315,10 +3605,11 @@ namespace IOWebApplication.Core.Services
                                    ((model.CaseGroupId > 0) ? x.CaseGroupId == model.CaseGroupId : true) &&
                                    ((model.CaseTypeId > 0) ? x.CaseTypeId == model.CaseTypeId : true) &&
                                    ((model.CaseCodeId > 0) ? x.CaseCodeId == model.CaseCodeId : true) &&
-                                   ((model.SessionTypeId > 0) ? (x.CaseSessions.Where(s => s.DateExpired == null).OrderBy(s => s.DateFrom).FirstOrDefault().SessionTypeId == model.SessionTypeId) : true) &&
+                                   ((model.SessionTypeId > 0) ? (x.CaseSessions.Any(s => s.DateExpired == (DateTime?)null && s.SessionTypeId != NomenclatureConstants.SessionType.ClosedSession) ? (x.CaseSessions.Where(s => s.DateExpired == null && s.SessionTypeId != NomenclatureConstants.SessionType.ClosedSession).OrderBy(s => s.DateFrom).FirstOrDefault()).SessionTypeId == model.SessionTypeId : false) : true) &&
                                    ((model.JudgeReporterId > 0) ? (x.CaseLawUnits.Where(a => a.CaseSessionId == null &&
                                                                                              (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.RegDate.Date && a.LawUnitId == model.JudgeReporterId &&
                                                                                              a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true))
+                       .Where(x => !x.CaseDeactivations.Any(d => d.CaseId == x.Id && d.DateExpired == null))
                        .Select(x => new CaseSprVM()
                        {
                            Id = x.Id,
@@ -3354,6 +3645,10 @@ namespace IOWebApplication.Core.Services
             model.ActDateFrom = NomenclatureExtensions.ForceStartDate(model.ActDateFrom);
             model.ActDateTo = NomenclatureExtensions.ForceEndDate(model.ActDateTo);
 
+            Expression<Func<CaseSessionAct, bool>> finalActSearch = x => true;
+            if (model.ActIsFinalDoc == true)
+                finalActSearch = x => x.IsFinalDoc == true && NomenclatureConstants.SessionActState.EnforcedStates.Contains(x.ActStateId);
+
             return repo.AllReadonly<CaseSessionAct>()
                        .Where(x => (x.CourtId == courtId) &&
                                    (x.DateExpired == null) &&
@@ -3369,10 +3664,13 @@ namespace IOWebApplication.Core.Services
                                    ((model.CaseGroupId > 0) ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
                                    ((model.CaseTypeId > 0) ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
                                    ((model.CaseCodeId > 0) ? x.Case.CaseCodeId == model.CaseCodeId : true) &&
-                                   ((model.SessionTypeId > 0) ? x.Case.CaseSessions.Where(s => s.DateExpired == null).OrderBy(s => s.DateFrom).FirstOrDefault().SessionTypeId == model.SessionTypeId : true))
+                                   ((model.SessionTypeId > 0) ? x.Case.CaseSessions.Where(s => s.DateExpired == null).OrderBy(s => s.DateFrom).FirstOrDefault().SessionTypeId == model.SessionTypeId : true) &&
+                                   (model.SessionResultId > 0 ? x.CaseSession.CaseSessionResults.Any(r => r.SessionResultId == model.SessionResultId && r.DateExpired == null) : true))
+                       .Where(finalActSearch)
+                       .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
                        .Select(x => new CaseSprVM()
                        {
-                           Id = x.Id,
+                           Id = x.CaseId ?? 0,
                            CaseTypeLabel = x.Case.CaseType.Label,
                            CaseRegNum = x.Case.RegNumber + "/" + x.Case.RegDate.Year.ToString() + "г.",
                            CaseCodeLabel = x.Case.CaseCode.Code + " " + x.Case.CaseCode.Label,

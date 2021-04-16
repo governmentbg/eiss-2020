@@ -1,7 +1,5 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -42,11 +40,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         // Архивиране
         public string ArchRegNumber { get; set; }
 
+        // Последно движение
+        public string LastMigration { get; set; }
+
         // Дата на архивиране
         public DateTime? ArchRegDate { get; set; }
 
         // Иницииращ документ
         public string DocumentLabel { get; set; }
+
+        // Дата на влизане в законна сила
+        public DateTime? CaseInforcedDate { get; set; }
 
         // Индикатори
         public virtual ICollection<CaseClassification> CaseClassifications { get; set; }
@@ -59,5 +63,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         // Заседания, актове и документи
         public virtual ICollection<CaseProceedingsObjectsVM> CaseProceedingsObjects { get; set; }
+
+        // Свързани дела
+        public virtual ICollection<CaseMigrationVM> CaseMigrations { get; set; }
+
+        // Свързани дела други системи
+        public virtual ICollection<DocumentCaseInfo> DocumentCaseInfos { get; set; }
+
+        // Свързани дела на външни институции
+        public virtual ICollection<DocumentInstitutionCaseInfo> DocumentInstitutionCaseInfos { get; set; }
     }
 }

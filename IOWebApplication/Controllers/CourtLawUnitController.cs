@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -40,6 +37,30 @@ namespace IOWebApplication.Controllers
             courtOrganizationService = _courtOrganizationService;
         }
 
+        private void SetHelpByLawUnitType(int lawUnitTypeId)
+        {
+            switch (lawUnitTypeId)
+            {
+                case NomenclatureConstants.LawUnitTypes.Judge:
+                    SetHelpFile(HelpFileValues.Nom1);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.OtherEmployee:
+                    SetHelpFile(HelpFileValues.Nom2);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.MessageDeliverer:
+                    SetHelpFile(HelpFileValues.Nom3);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.Jury:
+                    SetHelpFile(HelpFileValues.Nom5);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.Expert:
+                    SetHelpFile(HelpFileValues.Nom6);
+                    return;
+                default:
+                    return;
+            }
+        }
+
         /// <summary>
         /// Страница със служители към съд
         /// </summary>
@@ -55,6 +76,7 @@ namespace IOWebApplication.Controllers
             ViewBag.lawUnitTypeId = lawUnitType;
             ViewBag.lawUnitTypeName = service.GetById<LawUnitType>(lawUnitType).Description;
             ViewBag.periodName = period.Label;
+            SetHelpByLawUnitType(lawUnitType);
 
             return View();
         }
@@ -80,6 +102,8 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnitEdit(periodTypeId, lawUnitTypeId, id).DeleteOrDisableLast();
             else
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnitAdd(periodTypeId, lawUnitTypeId).DeleteOrDisableLast();
+
+            SetHelpByLawUnitType(lawUnitTypeId);
         }
 
         /// <summary>
@@ -121,7 +145,7 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.lawUnitTypeName = service.GetById<LawUnitType>(model.MasterLawUnitTypeId).Label;
             ViewBag.periodTypeName = service.GetById<PeriodType>(model.PeriodTypeId).Label;
-            if (model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint || model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move)
+            if (NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(model.PeriodTypeId))
             {
                 ViewBag.CourtOrganizationId_ddl = courtOrganizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
                 ViewBag.LawUnitPositionId_ddl = nomService.GetDDL_LawUnitPosition(model.MasterLawUnitTypeId);
@@ -226,6 +250,7 @@ namespace IOWebApplication.Controllers
         void SetViewbagEditCourtLawUnitGroup()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            SetHelpFile(HelpFileValues.Nom1);
         }
 
         /// <summary>
@@ -262,6 +287,8 @@ namespace IOWebApplication.Controllers
                 DateFrom = NomenclatureExtensions.GetStartYear(),
                 DateTo = NomenclatureExtensions.GetEndYear(),
             };
+            SetHelpFile(HelpFileValues.Report38);
+
             return View(model);
         }
 
@@ -292,6 +319,7 @@ namespace IOWebApplication.Controllers
                 }
             }
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtLawUnit(NomenclatureConstants.PeriodTypes.Appoint, NomenclatureConstants.LawUnitTypes.Judge);
+            SetHelpFile(HelpFileValues.Nom1);
 
             return View();
         }
@@ -321,6 +349,7 @@ namespace IOWebApplication.Controllers
         public IActionResult Substitution()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForLawUnit(NomenclatureConstants.LawUnitTypes.Judge);
+            SetHelpFile(HelpFileValues.Nom1);
             return View();
         }
 
@@ -331,8 +360,14 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        private void SubstitutionSetViewBag()
+        {
+            SetHelpFile(HelpFileValues.Nom1);
+        }
+
         public IActionResult Substitution_Add()
         {
+            SubstitutionSetViewBag();
             var model = new CourtLawUnitSubstitution();
             return View(nameof(Substitution_Edit), model);
         }
@@ -343,6 +378,8 @@ namespace IOWebApplication.Controllers
             {
                 return Redirect_Denied();
             }
+            SubstitutionSetViewBag();
+
             return View(nameof(Substitution_Edit), model);
         }
 
@@ -356,6 +393,7 @@ namespace IOWebApplication.Controllers
             }
             if (!ModelState.IsValid)
             {
+                SubstitutionSetViewBag();
                 return View(nameof(Substitution_Edit), model);
             }
 
@@ -367,6 +405,8 @@ namespace IOWebApplication.Controllers
                 return RedirectToAction(nameof(Substitution_Edit), new { id = model.Id });
             }
             SetErrorMessage(MessageConstant.Values.SaveFailed);
+            SubstitutionSetViewBag();
+
             return View(nameof(Substitution_Edit), model);
         }
     }

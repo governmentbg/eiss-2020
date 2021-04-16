@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -23,6 +20,11 @@ namespace IOWebApplication.Infrastructure.Constants
         public const string EkattCitySofiq = "68134";
 
         public const bool IsAutomationLoadIndex = false;
+
+        /// <summary>
+        /// id На Common_Court ВКС
+        /// </summary>
+        public const int VKScourtId = 39;
 
         public const int VSScourtId = 182;
 
@@ -158,6 +160,12 @@ namespace IOWebApplication.Infrastructure.Constants
             public static int[] CanActAsPersons = { Judge, Jury, OtherEmployee, MessageDeliverer, Expert };
 
         }
+        public class LawUnitSelectMode
+        {
+            public const string All = "all";
+            public const string Current = "current";
+        }
+
         public class UicTypes
         {
             public const int EGN = 1;
@@ -207,14 +215,24 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int ActAs = 6;
 
             /// <summary>
+            /// Смесен състав
+            /// </summary>
+            public const int MixedLawUnit = 7;
+
+            /// <summary>
             /// Статуси за проверка за наличност
             /// </summary>
-            public static int[] CurrentlyAvailable = { Appoint, Move };
+            public static int[] CurrentlyAvailable = { Appoint, Move, MixedLawUnit };
+
+            /// <summary>
+            /// Статуси за проверка за наличност - фактическо наличие в съда
+            /// </summary>
+            public static int[] CurrentlyCourtActions = { Appoint, Move };
 
             /// <summary>
             /// Статуси за проверка за наличност - разширени
             /// </summary>
-            public static int[] CurrentlyAvailableExtended = { Appoint, Move, ActAs };
+            public static int[] CurrentlyAvailableExtended = { Appoint, Move, ActAs, MixedLawUnit };
         }
 
         public class CaseState
@@ -240,9 +258,19 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int Suspend = 5;
 
             /// <summary>
+            /// Обявено за решаване
+            /// </summary>
+            public const int AnnouncedForResolution = 6;
+
+            /// <summary>
             /// Решено
             /// </summary>
             public const int Resolution = 7;
+
+            /// <summary>
+            /// Обжалвано
+            /// </summary>
+            public const int Appealed = 8;
 
             /// <summary>
             /// Архивирано
@@ -279,6 +307,9 @@ namespace IOWebApplication.Infrastructure.Constants
             public static int[] DisableEditStates = { Deleted, Destroy };
             public static int[] CanDeleteStates = { New };
             public static int[] AutomatedStates = { Deleted, Destroy, Archive };
+
+            //Необразувани дела, които се администрират 
+            public static int[] UnregisteredManageble = { Rejected };
         }
 
         public class CaseGroups
@@ -352,6 +383,11 @@ namespace IOWebApplication.Infrastructure.Constants
             /// Посетен
             /// </summary>
             public const int Visited = 12;
+
+            /// <summary>
+            /// UnDeliveredMail
+            /// </summary>
+            public const int UnDeliveredMail = 13;
         }
         public class DeliveryOper
         {
@@ -500,20 +536,69 @@ namespace IOWebApplication.Infrastructure.Constants
             //отложено
             public const int Cancel = 2;
             public const int Provedeno = 4;
+
+            public static int[] CanceledSessions = { Prenasrocheno, Cancel };
         }
 
         public class CaseSessionResult
         {
+            // Без движение - с определение
+            public const int WithoutMovementByDefinition = 1;
+
+            // Без движение - с разпореждане
+            public const int WithoutMovementByOrder = 2;
+
             public const int Investigation = 5;
-            public const int S_opredelenie_za_otvod = 26;
-            public const int S_razporejdane_za_otvod = 37;
+
+            //Прекратява поради изпращане по подсъдност
+            public const int SendJurisdiction = 6;
+
             public const int AnnouncedForResolution = 8;
+
+            //отложено в първо заседание
+            public const int ProcrastinationFirstSession = 11;
+
+            //Прекратено производство за доразследване
+            public const int SuspendedInvestigation = 19;
+
+            //по спогодба
+            public const int Agreement = 21;
+
+            //С определение
+            public const int WithDefinition = 24;
+
+            public const int S_opredelenie_za_otvod = 26;
+
+            //С определение по привременни мерки
+            public const int TemporarilyAction = 28;
+
             public const int OpredeleniePrikluchvane = 30;
             public const int StopedMoveWithSubstantialReason = 31;
+
+            //С присъда
+            public const int WithSentence = 33;
+
+            //С разпореждане
+            public const int WithWrit = 36;
+
+            public const int S_razporejdane_za_otvod = 37;
+
             public const int RazporejdanePrikluchvane = 39;
+
+            //С решение
+            public const int WithDecision = 42;
+
+            // Спряно производство
+            public const int DiscontinuedProduction = 44;
+
+            //Със споразумение
+            public const int WithAgreement = 47;
+            public const int ScheduledFirstSession = 48;
             public const int RefuseHeritage = 49;
             public const int AcceptHeritage = 50;
-            public const int ScheduledFirstSession = 48;
+
+            //С решение за допускане на делба
+            public const int Partition = 70;
         }
 
         public class SessionActState
@@ -665,7 +750,8 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int ExecListThirdPerson = 13;
             public const int ExchangeDoc = 14;
             public const int DocumentResolution = 15;
-
+            public const int EisppNP = 16;
+            public const int EisppCrime = 17;
             public static int[] OtherCounters = { Document, Case, SessionAct };
         }
 
@@ -757,6 +843,7 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int AcceptProsecutors = 22;
 
             public static int[] SendCaseTypesCanAccept = { SendCase_ForUse };
+            public static int[] RequireActs = { SendNextLevel };
             public static int[] ReturnCaseTypes = { ReturnCase_AfterComplain, ReturnCase_ForAdmin, ReturnCase_ForUse };
         }
         public class DeliveryAddressNumberType
@@ -783,6 +870,7 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int ByEPEP = 8;
             public const int OnMember56 = 9;
             public const int OnMember50 = 10;
+            public const int WillBeen = 11;
 
             public static bool OnMoment(int? notificationDeliveryGroupId)
             {
@@ -790,8 +878,13 @@ namespace IOWebApplication.Infrastructure.Constants
                 notificationDeliveryGroupId == OnSession ||
                 notificationDeliveryGroupId == OnPhone ||
                 notificationDeliveryGroupId == OnEMail ||
-                notificationDeliveryGroupId == OnMember50||
-                notificationDeliveryGroupId == OnMember56);
+                notificationDeliveryGroupId == OnMember50 ||
+                notificationDeliveryGroupId == OnMember56 ||
+                notificationDeliveryGroupId == WillBeen);
+            }
+            public static bool OnMomentWithOutMail(int? notificationDeliveryGroupId)
+            {
+                return OnMoment(notificationDeliveryGroupId) && (notificationDeliveryGroupId != OnEMail);
             }
             /// <summary>
             /// Видове за които да се генерира DeliveryItem
@@ -901,14 +994,8 @@ namespace IOWebApplication.Infrastructure.Constants
             //Глоби
             public const int Fine = 2;
 
-            //Транспортни разходи
-            public const int Transport = 3;
-
             //Възнагражденията Бюджетна
             public const int Earnings = 4;
-
-            //Възнагражденията Депозитна
-            public const int EarningsDeposit = 20;
 
             //Гаранция
             public const int Warranty = 6;
@@ -924,15 +1011,15 @@ namespace IOWebApplication.Infrastructure.Constants
 
             //Видове суми, които да се зареждат при съпровождащ документ
             public static int[] MoneyCompliantDocumentList = { StateFee, Fine, Warranty, ExpertDeposit, LegalDeposit, OtherDeposit };
-
-            //Възнаградения
-            public static int[] EarningList = { Earnings, EarningsDeposit };
         }
 
         public class PersonRole
         {
             //Административно наказващ орган
             public const int AdministrativeMember = 2;
+
+            //Вещо лице
+            public const int Expert = 4;
 
             //Заявител
             public const int Notifier = 14;
@@ -959,10 +1046,13 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int Defendant = 27;
 
             //Ответник
-            public const int libellee = 30;
+            public const int Libellee = 30;
 
             //Подсъдим
             public const int Prisoner = 35;
+
+            //Преводач
+            public const int Translator = 40;
 
             //Прокурор
             public const int Prokuror = 43;
@@ -981,6 +1071,9 @@ namespace IOWebApplication.Infrastructure.Constants
 
             //Фирма
             public const int Company = 70;
+
+            //Експерт
+            public const int Consultant = 94;
         }
         public class RoleKind
         {
@@ -1188,6 +1281,7 @@ namespace IOWebApplication.Infrastructure.Constants
         {
             public const int Represent = 1;
             public const int RepresentBy = 2;
+            public const int RepresentSecond = 7;
         }
 
         public class CaseSessionTypeGroup
@@ -1320,6 +1414,9 @@ namespace IOWebApplication.Infrastructure.Constants
 
             //Регистрация на пенсионен фонд /фондове за допълнително  - справка дела
             public const int RegisterPensioner = 8;
+
+            //За писмата F_PRESENSE_REQUIRED
+            public const int PrintLetterRequired = 9;
         }
 
         public class DocumentDecisionStates
@@ -1398,12 +1495,24 @@ namespace IOWebApplication.Infrastructure.Constants
 
             //Статистика Отлагания на дела в открити заседания Наказателни
             public const int StatisticsCaseDelayND = 15;
+
+            //Срочна книга - обявено за решаване
+            public const int CaseSessionPublicReportDecision = 16;
+
+            //Без движение
+            public const int NoMove = 17;
+
+            //Статистика - дела за доразследване
+            public const int StatisticsInvestigateND = 18;
         }
 
         public class SessionResultBaseGroupings
         {
             //РЕГИСТЪР ПО ЧЛ.39 Т.13 ОТ ПАС - прекратено производство
             public const int CaseMigrationReturnReport_FinishCaseBase = 1;
+
+            //Статистика - дела за доразследване
+            public const int StatisticsInvestigateND = 2;
         }
 
         public class IntegrationTypes
@@ -1469,12 +1578,24 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int Answer = 2;
             public const int Definition = 3;
             public const int Injunction = 4;
+            public const int ProtokolOpredelenie = 5;
+            // Заповед за изпълнение
+            public const int CommandmentForExec = 6;
             // Заповед за защита
             public const int CommandmentProtection = 8;
             // Заповед за незабавна защита
             public const int CommandmentimmediatelyProtection = 7;
 
+            public const int ExecListForPerson = 12;
+            public const int ExecListForState = 13;
+            public const int ObezpechitelnaZapoved = 14;
+
+            public static int[] SecretarySign = { Protokol, ProtokolOpredelenie };
+            public static int[] JurySign = { ProtokolOpredelenie, Sentence, Answer };
             public static int[] WithMotives = { Answer, Sentence, Definition };
+            public static int[] HasInTheNameOfPeople = { Answer, Sentence };
+            public static int[] HasSignJudge = { ExecListForPerson, ExecListForState };
+            public static string FinalByDefaultStr = $"[{Answer},{Sentence},{CommandmentProtection},{CommandmentimmediatelyProtection},{CommandmentForExec}]";
         }
         public class ActFormatType
         {
@@ -1552,6 +1673,15 @@ namespace IOWebApplication.Infrastructure.Constants
 
             //Статистика Прекратява делото - граждански дела
             public const int StatisticsCaseStopGD = 19;
+
+            //Уважени за статистиката
+            public const int StatisticsCaseSuccessful = 20;
+
+            //Споразу- мения по чл.382 НПК
+            public const int StatisticsCaseStop382 = 21;
+
+            //Споразум. по чл.384 НПК , спог. по чл.24 ал. 3 НПК или чл.234 ГПК
+            public const int StatisticsCaseStop384 = 22;
         }
 
         public class ActResultGroups
@@ -1632,11 +1762,29 @@ namespace IOWebApplication.Infrastructure.Constants
 
         public class SessionType
         {
+            // първо заседание
+            public const int FirstSession = 1;
+
+            // второ заседание
+            public const int SecondSession = 2;
+
             // Закрито заседание
             public const int ClosedSession = 3;
 
             // Разпоредително заседание
             public const int DispositionalSession = 4;
+
+            // Предварително изслушване
+            public const int PreHearing = 5;
+
+            // Събрание на кредиторите
+            public const int KreditorSession = 6;
+
+            // Заседание по привременни мерки
+            public const int TemporarilyAction = 10;
+
+            // Помирително заседание
+            public const int Conciliatory = 12;
         }
 
         public class ComplainState
@@ -1706,6 +1854,15 @@ namespace IOWebApplication.Infrastructure.Constants
 
             //За Справка съдени и осъдени лица
             public const int RoleCasePersonDedendantList = 2;
+
+            //Книга за приемане и отказ от наследство - лицата които да се зареждат в заявителя
+            public const int HeritageReportPersonNotifier = 3;
+
+            //Описна книга - роли в полето Страни
+            public const int CaseFirstInstanceReportPersonRole = 4;
+
+            //Азбучник - за наказателно дело страни различни от десни, които влизат в справка
+            public const int CaseAlphabeticalNakazatelnoDelo = 5;
         }
 
         public class HtmlTemplateTypes
@@ -1714,6 +1871,10 @@ namespace IOWebApplication.Infrastructure.Constants
 
             //удостоверение
             public const int Certificate = 24;
+
+
+            //Съобщение+Призовка уведомление
+            public const int All3Notification = 29;
         }
 
         /// <summary>
@@ -1830,6 +1991,89 @@ namespace IOWebApplication.Infrastructure.Constants
         {
             //чл.25 НК
             public const int LawBase25 = 3;
+        }
+
+        public class DecisionRequestTypes
+        {
+            public const int RequestCase = 1;
+            public const int RequestNotification = 2;
+        }
+        public class DecisionTypes
+        {
+            //Дава достъп
+            public const int FullAccess = 1;
+        }
+
+        public class ExecListStates
+        {
+            //Изготвен
+            public const int Ready = 1;
+
+            //Обезсилен
+            public const int Cancel = 2;
+        }
+
+        public class ActComplainResults
+        {
+            public const int AcceptAll = 1;
+            public const int AcceptNotAll = 2;
+            public const int Cancel = 3;
+        }
+
+        //За статистиката
+        public class StatisticReportTypes
+        {
+            //Несвършени
+            public const int Unfinished = 1;
+
+            //Постъпили за периода
+            public const int Incoming = 2;
+
+            //свършени по същество
+            public const int FinishedNoStop = 3;
+
+            //свършени прекратени
+            public const int FinishedStop = 4;
+
+            //свършени в 3 месечен срок
+            public const int Finished3months = 5;
+        }
+
+        public class ExcelReportCellValueTypes
+        {
+            public const int StringValue = 1;
+
+            public const int IntValue = 2;
+        }
+
+        public class RegixRequestTypes
+        {
+            //Регистратура
+            public const int FromDocument = 1;
+
+            //Дело
+            public const int FromCase = 2;
+
+            //Справка външни системи
+            public const int FromReport = 3;
+
+        }
+        public class VKS_const
+        {
+
+            public static int[,] MonthlyMatrix2 = { { 1, 4 }, { 2, 4 }, { 3, 6 }, { 3, 5 }, { 1, 4 }, { 4, 6 }, { 1, 5 }, { 2, 6 }, { 2, 4 }, { 3, 5 }, { 1, 6 }, { 2, 4 }, { 3, 6 }, { 1, 4 }, { 2, 5 }, { 3, 6 }, { 2, 5 }, { 1, 4 }, { 2, 3 }, { 1, 6 }, { 4, 5 } };
+        }
+
+        public class SessionWornings
+        {
+            // Не е минал час на провеждане или си има и резултат и акт
+            public const int AllOk = 0;
+            
+            // Няма резултат
+            public const int NotExistResult = 1;
+
+            // Няма акт
+            public const int NotExistAct = 2;
         }
     }
 }

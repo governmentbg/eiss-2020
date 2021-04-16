@@ -1,9 +1,7 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Common;
+﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplicationService.Infrastructure.Data.DW;
-
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace IOWebApplicationService.Infrastructure.Data.Common
 {
@@ -12,6 +10,19 @@ namespace IOWebApplicationService.Infrastructure.Data.Common
         public DWRepository(DWDbContext dwcontext)
         {
             this.Context = dwcontext;
+        }
+
+        public int TrackerCount => Context.ChangeTracker.Entries().Count();
+
+        public void RefreshDbContext(string connectionString)
+        {
+            if (Context != null)
+            {
+                Context.Dispose();
+            }
+            var optionsBuilder = new DbContextOptionsBuilder<DWDbContext>();
+            optionsBuilder.UseSqlServer(connectionString);
+            Context = new DWDbContext(optionsBuilder.Options);
         }
     }
 }

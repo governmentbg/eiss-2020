@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -81,6 +78,7 @@ namespace IOWebApplication.Controllers
                 DateFrom = NomenclatureExtensions.GetStartYear(),
                 DateTo = NomenclatureExtensions.GetEndYear(),
             };
+            SetHelpFile(HelpFileValues.Report2);
 
             return View(filter);
         }

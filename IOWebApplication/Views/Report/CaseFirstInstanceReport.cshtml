@@ -1,5 +1,7 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
 @using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
 @model CaseFirstInstanceFilterReportVM
 
 @{
@@ -24,6 +26,13 @@
         <div class="col-lg-4">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
     </div>
     <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitTypes = NomenclatureConstants.LawUnitTypes.Judge.ToString(), courtId = userContext.CourtId })</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.DepartmentId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(m => m.ActDescription)</div>
+    </div>
+    <div class="row">
         <div class="col-md-6 text-left pb-15">
             <button type="submit" class="btn btn-primary">
                 Експорт в Excel
@@ -42,3 +51,9 @@
         requestCombo('@Url.Action("GetDDL_CaseTypeGroupInstance","Ajax")', { CaseGroupId: $(this).val(), caseInstanceId: @NomenclatureConstants.CaseInstanceType.FirstInstance }, '#CaseTypeId', @Model.CaseTypeId);
     });
 </script>
+
+@section scripts {
+    <script>
+        initLawUnit();
+    </script>
+}

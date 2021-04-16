@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -114,9 +111,11 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int DataContentError = 18;
             public const int TransferError = 19;
             public const int TransferErrorLimitExceeded = 20;
+            public const int MissingObjectEISS = 22;
             public const int DisabledByDelete = 30;
 
             public static int[] ReturnToMQStates = { WaitForParentIdError, TransferError };
+            public static int[] ResetMQErrorStates = { MissingLawyerError, DataContentError, TransferError, TransferErrorLimitExceeded };
             public static int[] UnfinishedMQStates = { New, WaitForParentIdError, TransferError, TransferErrorLimitExceeded };
         }
 

@@ -1,8 +1,12 @@
 ﻿@model CaseMainDataVM
 @using IOWebApplication.Infrastructure.Models.ViewModels
-
+@using Microsoft.Extensions.Configuration
+@using IOWebApplication.Infrastructure.Constants
+@inject IConfiguration configuration;
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    var boolRecalcVisible = ((configuration.GetValue<string>("Environment:Name") != NomenclatureConstants.Environments.Test) &&
+                             (configuration.GetValue<string>("Environment:Name") != NomenclatureConstants.Environments.Production));
 }
 
 @if (access.CanChange)
@@ -10,13 +14,23 @@
     <div class="row">
         <div class="col-md-12 text-right pb-15">
             @*<a asp-controller="CaseLoadIndex" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-isMainActivity="@true" asp-route-isFromCase="@Model.IsND" class="btn btn-success btn-sm">
-                <i class="fa fa-plus"></i>
-                Добави основна дейност
-            </a>*@
+                    <i class="fa fa-plus"></i>
+                    Добави основна дейност
+                </a>*@
             <a asp-controller="CaseLoadIndex" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-isMainActivity="@false" asp-route-isFromCase="@Model.IsND" class="btn btn-success btn-sm">
                 <i class="fa fa-plus"></i>
                 Добави допълнителна дейност
             </a>
+            @if (Model.IsND)
+            {
+                @if (boolRecalcVisible)
+                {
+                    <a asp-controller="CaseLoadIndex" asp-action="RecalcCaseLoadIndexByCase" asp-route-caseId="@Model.Id" class="btn btn-danger btn-sm">
+                        <i class="fa fa-refresh"></i>
+                        Преизчисляване
+                    </a>
+                }
+            }
         </div>
     </div>
 }
@@ -106,6 +120,16 @@
         <a href="@Url.Action("Edit", "CaseLoadIndex")?id={{id}}&&isFromCase=@Model.IsND" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
     }
     {{/if}}
+</script>
+
+<script>
+    function RecalcCaseLoadIndex() {
+        var caseId = @Model.Id;
+        postContent('@Url.Action("RecalcCaseLoadIndexByCase", "CaseLoadIndex")'
+            , { CaseId: caseId }
+            , function (data) {
+            });
+    }
 </script>
 
 

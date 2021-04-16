@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Integration.Epep;
+﻿using Integration.Epep;
 using IOWebApplication.Infrastructure.Contracts;
 using System;
 using System.Security.Cryptography.X509Certificates;

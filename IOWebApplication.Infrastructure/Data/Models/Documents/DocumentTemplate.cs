@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
@@ -68,6 +65,16 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Display(Name = "Бланка")]
         public int? HtmlTemplateId { get; set; }
 
+        [Column("case_person_id")]
+        [Display(Name = "Лице")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Лице")]
+        public int? CasePersonId { get; set; }
+
+        [Column("case_person_address_id")]
+        [Display(Name = "Адрес")]
+        public int? CasePersonAddressId { get; set; }
+
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
@@ -94,5 +101,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
 
         [ForeignKey(nameof(HtmlTemplateId))]
         public virtual HtmlTemplate HtmlTemplate { get; set; }
+
+        [ForeignKey(nameof(CasePersonId))]
+        public virtual CasePerson CasePerson { get; set; }
+
+        [ForeignKey(nameof(CasePersonAddressId))]
+        public virtual CasePersonAddress CasePersonAddress { get; set; }
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
@@ -48,6 +45,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Regix
         [Column("description")]
         public string Description { get; set; }
 
+        [Column("regix_guid")]
+        public string RegixGuid { get; set; }
+
+        [Column("regix_request_type_id")]
+        public int? RegixRequestTypeId { get; set; }
+
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -63,5 +66,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Regix
 
         [ForeignKey(nameof(DocumentId))]
         public virtual Document Document { get; set; }
+
+        [ForeignKey(nameof(RegixRequestTypeId))]
+        public virtual RegixRequestType RegixRequestType { get; set; }
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -19,7 +16,7 @@ namespace IOWebApplication.Core.Contracts
         IEnumerable<WorkTaskVM> Select(int sourceType, long sourceId);
         IEnumerable<WorkTaskVM> Select_ToDo(int pageSize = 0);
         IEnumerable<WorkTaskVM> Select(WorkTaskFilterVM filter);
-        IQueryable<WorkTaskVM> SelectAll(WorkTaskFilterVM filter);
+        IEnumerable<WorkTaskVM> SelectAll(WorkTaskFilterVM filter);
         int Select_ToDoCount();
 
         WorkTaskEditVM InitTask(int sourceType, long sourceId);
@@ -46,8 +43,11 @@ namespace IOWebApplication.Core.Contracts
         int[] GetSelfTask();
 
         string GetTaskObjectUrl(int sourceType, long sourceId);
+        string GetTaskParentObjectUrl(int sourceType, long sourceId);
 
         LawUnit GetLawUnitByTaskId(long id);
         bool ExpireAllUnfinishedTasks(int sourceType, long sourceId);
+        bool ExpireTasks(long[] taskIds, string description);
+        bool RerouteTasks(long[] taskIds, string newUserId, string description);
     }
 }

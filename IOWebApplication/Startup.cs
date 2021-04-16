@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Audit.Core;
+﻿using Audit.Core;
 using AutoMapper;
 using DataTables.AspNet.AspNetCore;
 using Elasticsearch.Net;
@@ -14,6 +11,7 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.ModelBinders;
+using IOWebApplication.Providers;
 using IOWebApplication.Services;
 using IOWebApplicationApi.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -242,6 +240,14 @@ namespace IOWebApplication
                 return next();
             });
 
+            //if (env.IsProduction())
+            //{
+            //    app.Use((authContext, next) =>
+            //    {
+            //        authContext.Request.Scheme = "https";
+            //        return next();
+            //    });
+            //}
 
             app.UseRequestLocalization();
             app.UseStaticFiles();

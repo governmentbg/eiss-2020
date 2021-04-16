@@ -19,6 +19,24 @@
 </div>
 
 <div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-2">
+        @Html.EditorFor(m => m.FinalDateFrom, "DateTime")
+    </div>
+    <div class="col-lg-2">
+        @Html.EditorFor(m => m.FinalDateTo, "DateTime")
+    </div>
+    <div class="col-lg-2">
+        @Html.EditorFor(m => m.WithoutFinalDateTo, "DateTime")
+    </div>
+</div>
+
+<div class="row">
     <div class="col-md-6 text-left pb-15">
         <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
             Филтриране
@@ -35,6 +53,26 @@
 
 <script>
     function LoadTable() {
+        if ($("#DateFrom").val() != '') {
+            if ($("#DateTo").val() == '')
+                return messageHelper.ShowErrorMessage('Полпълнете дата до', messageContainer);
+        }
+
+        if ($("#DateTo").val() != '') {
+            if ($("#DateFrom").val() == '')
+                return messageHelper.ShowErrorMessage('Полпълнете от дата', messageContainer);
+        }
+
+        if ($("#FinalDateFrom").val() != '') {
+            if ($("#FinalDateTo").val() == '')
+                return messageHelper.ShowErrorMessage('Полпълнете до дата на свършване', messageContainer);
+        }
+
+        if ($("#FinalDateTo").val() != '') {
+            if ($("#FinalDateFrom").val() == '')
+                return messageHelper.ShowErrorMessage('Полпълнете от дата на свършване', messageContainer);
+        }
+
         if ($.fn.dataTable.isDataTable('#casePersonMainTable')) {
             refreshTable('#casePersonMainTable');
         }
@@ -48,6 +86,11 @@
                         d.uic = $('#Uic').val();
                         d.fullName = $('#FullName').val();
                         d.caseRegnumber = $("#CaseRegNumber").val();
+                        d.DateFrom = $("#DateFrom").val();
+                        d.DateTo = $("#DateTo").val();
+                        d.FinalDateFrom = $("#FinalDateFrom").val();
+                        d.FinalDateTo = $("#FinalDateTo").val();
+                        d.WithoutFinalDateTo = $("#WithoutFinalDateTo").val();
                     }
                 },
                 filter: false,

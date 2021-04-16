@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 
@@ -27,6 +24,11 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 
         [XmlIgnore]
         public int EventTypeId { get; set; }
+        [XmlIgnore]
+        public string Mode { get; set; }
+        [XmlIgnore]
+        public bool IsGeneratedEisppNumber { get; set; }
+
 
 
         [XmlIgnore]
@@ -35,8 +37,11 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 
         [XmlIgnore]
         public bool IsForEdit { get; set; }
+        [XmlIgnore]
+        public int? PersonOldMeasureId { get; set; }
+        [XmlIgnore]
+        public int? PersonMeasureId { get; set; }
 
-        
         /// <summary>
         /// Създава празен обект за десериализация на пакет
         /// </summary>

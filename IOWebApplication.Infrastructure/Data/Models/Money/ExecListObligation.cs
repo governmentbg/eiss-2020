@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -24,6 +21,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
 
         [Column("exec_list_id")]
         public int ExecListId { get; set; }
+
+        /// <summary>
+        /// Дължима сума в момента на изготвяне - това е заради частично платените
+        /// </summary>
+        [Column("amount")]
+        public decimal? Amount { get; set; }
 
         [ForeignKey(nameof(ObligationId))]
         public virtual Obligation Obligation { get; set; }

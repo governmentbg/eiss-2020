@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,10 +15,13 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace IOWebApplication.Controllers
 {
@@ -91,11 +91,56 @@ namespace IOWebApplication.Controllers
             {
                 CaseId = caseId,
                 CourtId = userContext.CourtId,
-                CaseSessionId = null
+                CaseSessionId = null,
+                DateFrom = DateTime.Now
             };
             return View(nameof(Edit), model);
         }
 
+        /// <summary>
+        /// Добавяне лява/дясна страна във Връзки между страни
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <returns></returns>
+        public IActionResult AddSide(int caseId)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, caseId))
+            {
+                return Redirect_Denied();
+            }
+            ViewBag.personIdsJson = null;
+            SetViewbagSide(caseId, 0);
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonLinkEdit(caseId, 0).DeleteOrDisableLast();
+            var model = new CasePersonLinkSideVM()
+            {
+                CaseId = caseId,
+                CourtId = userContext.CourtId,
+                DateFrom = DateTime.Now
+            };
+            return View(nameof(AddSide), model);
+        }
+        [HttpPost]
+        public IActionResult AddSide(CasePersonLinkSideVM model, string personIdsJson)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, model.CaseId))
+            {
+                return Redirect_Denied();
+            }
+            var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
+            List<int> personIds = JsonConvert.DeserializeObject<List<int>>(personIdsJson, dateTimeConverter);
+
+            SetViewbagSide(model.CaseId, model.LinkDirectionId);
+            ViewBag.personIdsJson = personIdsJson;
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonLinkEdit(model.CaseId, 0).DeleteOrDisableLast();
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(AddSide), model);
+            }
+            service.Save_AddSide(model, personIds);
+            SetSuccessMessage(MessageConstant.Values.SaveOK);
+            return RedirectToAction(nameof(Index), new { id = model.CaseId});
+        }
+        
         /// <summary>
         /// Редакция на Връзки между страни
         /// </summary>
@@ -164,12 +209,23 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.CaseName = service.GetById<Case>(caseId).RegNumber;
 
-            ViewBag.CasePersonId_ddl = casePersonService.CasePerson_SelectForDropDownList(caseId, null); 
-            ViewBag.CasePersonRelId_ddl = service.RelationalPersonDDL(caseId, linkDirectionId); 
+            ViewBag.CasePersonId_ddl = casePersonService.CasePerson_SelectForDropDownList(caseId, null);
+            ViewBag.CasePersonRelId_ddl = service.RelationalPersonDDL(caseId, linkDirectionId);
             ViewBag.CasePersonSecondRelId_ddl = service.SeccondRelationalPersonDDL(caseId);
 
             ViewBag.LinkDirectionId_ddl = service.LinkDirectionForPersonDDL(casePersonId);
             ViewBag.LinkDirectionSecondId_ddl = service.SecondLinkDirectionDDL();
+            SetHelpFile(HelpFileValues.CasePerson);
+        }
+
+        void SetViewbagSide(int caseId, int linkDirectionId)
+        {
+            ViewBag.CaseName = service.GetById<Case>(caseId).RegNumber;
+            ViewBag.LinkDirectionId_ddl = nomService.GetDropDownList<LinkDirection>()
+                                                    .Where(x => x.Value != NomenclatureConstants.LinkDirectionType.RepresentSecond.ToString())
+                                                    .ToList();
+            ViewBag.RoleKindId_ddl = service.RoleKindDDL();
+            ViewBag.CasePersonRelId_ddl = service.PersonYDDL(caseId, linkDirectionId);
             SetHelpFile(HelpFileValues.CasePerson);
         }
 
@@ -186,6 +242,17 @@ namespace IOWebApplication.Controllers
             return Json(new { ddlPersonRel });
         }
 
+        [HttpGet]
+        public IActionResult FilterPersonY(int caseId, int linkDirectionId)
+        {
+            List<SelectListItem> ddlPersonRel = service.PersonYDDL(caseId, linkDirectionId);
+            return Json(new { ddlPersonRel });
+        }
+        public JsonResult GetPersonXBySide(int caseId, int roleKindId)
+        {
+            return Json(service.GetPersonXBySide(caseId, roleKindId));
+        }
+
         [HttpPost]
         public IActionResult CasPersonLink_ExpiredInfo(ExpiredInfoVM model)
         {
@@ -195,12 +262,12 @@ namespace IOWebApplication.Controllers
             }
             if (service.HaveCaseNotification(model.Id))
             {
-                return Json(new { result = false, message = "Има активни уведомления с тази връзка"});
+                return Json(new { result = false, message = "Има активни уведомления с тази връзка" });
             }
             if (service.SaveExpireInfo<CasePersonLink>(model))
             {
                 SetAuditContextDelete(service, SourceTypeSelectVM.CasePersonLink, model.Id);
-                SetSuccessMessage(MessageConstant.Values.CaseNotificationExpireOK);
+                SetSuccessMessage(MessageConstant.Values.CasePersonLinkExpireOK);
                 return Json(new { result = true, redirectUrl = model.ReturnUrl });
             }
             else

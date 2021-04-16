@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -14,10 +11,10 @@ namespace IOWebApplication.Core.Contracts
     public interface IPrintDocumentService : IBaseService
     {
         TinyMCEVM FillHtmlTemplateNotification(int caseNotificationId);
-        TinyMCEVM ConvertToTinyMCVM(HtmlTemplate htmlTemplate, string preparedBlank = null);
+        TinyMCEVM ConvertToTinyMCVM(HtmlTemplate htmlTemplate, bool insertDispositiv, string preparedBlank = null);
         TinyMCEVM FillHtmlTemplatePayment(int paymentId);
         TinyMCEVM FillHtmlTemplateNotificationTest(int caseNotificationId);
-        TinyMCEVM FillHtmlTemplateExpenseOrder(int orderId);
+        (TinyMCEVM result, string errorMessage) FillHtmlTemplateExpenseOrder(int orderId);
         TinyMCEVM FillHtmlTemplateDocumentTemplate(int id, string preparedBlank = null);
         TinyMCEVM FillHtmlTemplateCaseSessionActDivorce(int divorceId);
         TinyMCEVM FillHtmlTemplateExecList(int execListId);
@@ -25,5 +22,7 @@ namespace IOWebApplication.Core.Contracts
         void FillHtmlTemplateNotificationHaveSaveTest(int caseNotificationId);
         TinyMCEVM FillHtmlTemplateExchangeDoc(int id);
         TinyMCEVM FillHtmlTemplateNotificationTestOne(int caseNotificationId, int htmlTemplateId);
+        TinyMCEVM GetHtmlTemplateNull(int caseNotificationId);
+        void HtmlTemplateNotificationHave_F_FIRST_SET_NO_YEAR();
     }
 }

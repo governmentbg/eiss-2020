@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,6 +11,7 @@ namespace IntegrationService.Csrd
 {
     public class CsrdTimedHostedService : BaseTimedHostedService, ICsrdTHS
     {
+
         public CsrdTimedHostedService(
             IConfiguration configuration,
             IHostingEnvironment environment,
@@ -27,6 +25,7 @@ namespace IntegrationService.Csrd
             this.environment = environment;
             this.interval = configuration.GetValue<double>("TimerInterval");
             this.fetchCount = configuration.GetValue<int>("FetchCount");
+            this.stopHours = configuration.GetValue<string>("StopHours");
             this.stopServiceTimeout = configuration.GetValue<int>("StopServiceTimeout");
             this.serviceProvider = serviceProvider;
         }
@@ -36,7 +35,7 @@ namespace IntegrationService.Csrd
             using (var scope = serviceProvider.CreateScope())
             {
                 var csrdCaseService = scope.ServiceProvider.GetService<ICsrdService>();
-                csrdCaseService.PushMQWithFetch(fetchCount);
+                var result = csrdCaseService.PushMQWithFetch(fetchCount).GetAwaiter().GetResult();
             }
         }
     }

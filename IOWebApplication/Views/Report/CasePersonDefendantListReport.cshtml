@@ -30,6 +30,9 @@
         <div class="col-lg-3">@Html.EditorFor(x => x.PersonMaturityId, "GenericDropDown")</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.SentenceTypeId, "GenericDropDown")</div>
     </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.SentenceLawbaseId, "GenericDropDown")</div>
+    </div>
 </form>
 
 <div class="row">
@@ -71,6 +74,7 @@
                             PersonNameSearch: $("#PersonNameSearch").val(),
                             PersonMaturityId: $("#PersonMaturityId").val(),
                             SentenceTypeId: $("#SentenceTypeId").val(),
+                            SentenceLawbaseId: $("#SentenceLawbaseId").val(),
                         };
                     }
                 },

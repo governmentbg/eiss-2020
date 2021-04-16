@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,6 +27,9 @@ namespace IOWebApplication.Controllers
             List<SelectListItem> sources = new List<SelectListItem>()
             {
                 new SelectListItem("Документи",SourceTypeSelectVM.Document.ToString()),
+                new SelectListItem("Прикачени документи",(SourceTypeSelectVM.Files - SourceTypeSelectVM.Document).ToString()),
+                new SelectListItem("Уведомления и призовки",SourceTypeSelectVM.CaseNotification.ToString()),
+                //new SelectListItem("Документи към призовки",(SourceTypeSelectVM.Files - SourceTypeSelectVM.CaseNotification).ToString()),
                 new SelectListItem("Съдебни актове",SourceTypeSelectVM.CaseSessionAct.ToString())
             };
             ViewBag.SourceType_ddl = sources;

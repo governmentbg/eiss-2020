@@ -12,6 +12,7 @@
     </ol>
 }
 <form name="formFilter" id="formFilter" action="@Url.Action("ObligationJuryReportExportExcel")" method="post">
+    @Html.HiddenFor(m => m.PersonTypeLabel)
     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
         <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
@@ -23,7 +24,8 @@
         <div class="col-lg-3">@Html.EditorFor(m => m.MoneyGroupId, "GenericDropDown")</div>
     </div>
     <div class="row">
-        <div class="col-lg-4">@Html.EditorFor(m => m.OnlyJury)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.PersonName)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.PersonType, "GenericDropDownString")</div>
     </div>
 </form>
 
@@ -61,10 +63,12 @@
                             CaseTypeId: $("#CaseTypeId").val(),
                             SessionTypeId: $("#SessionTypeId").val(),
                             MoneyGroupId: $("#MoneyGroupId").val(),
-                            OnlyJury: $("#OnlyJury").is(":checked"),
+                            PersonName: $("#PersonName").val(),
+                            PersonType: $("#PersonType").val(),
                         };
                     }
                 },
+                filter: false,
                 columns: [
                     {
                         name: 'caseTypeName',
@@ -100,6 +104,20 @@
                             else
                                 return "";
                         }
+                    },
+                    {
+                        name: 'sessionTime',
+                        data: 'sessionTime',
+                        title: 'Продължителност на СЗ',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionResult',
+                        data: 'sessionResult',
+                        title: 'Резултат от СЗ',
+                        sortable: true,
+                        searchable: true
                     },
                     {
                         name: 'personName',
@@ -179,6 +197,20 @@
                         searchable: true
                     },
                     {
+                        name: 'expenseOrderUsers',
+                        data: 'expenseOrderUsers',
+                        title: 'Съдебен секретар РКО',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'expenseOrderJudge',
+                        data: 'expenseOrderJudge',
+                        title: 'Съдия РКО',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'actions',
                         data: "id",
                         title: "",
@@ -208,6 +240,7 @@
         $('#CaseGroupId').trigger('change');
 
         $.fn.dataTable.ext.buttons.io_excel.action = function () {
+            $("#PersonTypeLabel").val($("#PersonType option:selected").text());
             $("#formFilter").submit();
         };
     });

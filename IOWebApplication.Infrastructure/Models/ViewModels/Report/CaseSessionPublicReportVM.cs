@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -94,6 +91,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public string RecidiveGeneral { get; set; }
         public string RecidiveDanger { get; set; }
         public string RecidiveSpecial { get; set; }
+
+        public bool isQuick { get; set; }
+        public int SessionTypeId { get; set; }
+        public int[] SessionResultGroupIds { get; set; }
+        public int[] SessionResultIds { get; set; }
+        public bool HasAct { get; set; }
+        public bool IsFinishSession { get; set; }
+        public int FinishActComplainResultId { get; set; }
+        public int DurationMonths { get; set; }
+
+        public int JudgeReporterId { get; set; }
     }
 
     public class CaseSessionPublicFilterReportVM

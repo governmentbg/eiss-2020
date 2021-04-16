@@ -271,6 +271,7 @@
                 if (response.result) {
                     messageHelper.ShowSuccessMessage("@Html.Raw(@MessageConstant.Values.SaveOK)");
                     $("#btnFilter").trigger("click");
+                    window.location.href = "/";
                 }
                 else
                 {

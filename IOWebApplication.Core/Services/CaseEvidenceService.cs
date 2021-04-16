@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -44,8 +41,12 @@ namespace IOWebApplication.Core.Services
         /// <param name="DateTo"></param>
         /// <param name="RegNumber"></param>
         /// <returns></returns>
-        public IQueryable<CaseEvidenceVM> CaseEvidence_Select(int CaseId, DateTime? DateFrom, DateTime? DateTo, string RegNumber)
+        public IQueryable<CaseEvidenceVM> CaseEvidence_Select(int CaseId, DateTime? DateFrom, DateTime? DateTo, string RegNumber, string CaseRegNumber, int EvidenceTypeId)
         {
+            Expression<Func<CaseEvidence, bool>> caseRegnumberSearch = x => true;
+            if (!string.IsNullOrEmpty(CaseRegNumber))
+                caseRegnumberSearch = x => x.Case.RegNumber.ToLower().EndsWith(CaseRegNumber.ToShortCaseNumber().ToLower());
+
             return repo.AllReadonly<CaseEvidence>()
                        .Include(x => x.Case)
                        .Include(x => x.EvidenceType)
@@ -54,7 +55,10 @@ namespace IOWebApplication.Core.Services
                                    (x.DateExpired == null) &&
                                    ((DateFrom != null) ? ((x.DateAccept.Date >= (DateFrom ?? DateTime.Now).Date) && (x.DateAccept.Date <= (DateTo ?? DateTime.Now).Date)) : true) &&
                                    (!string.IsNullOrEmpty(RegNumber) ? x.RegNumber.ToUpper().Contains(RegNumber.ToUpper()) : true) &&
-                                   x.Case.CourtId == userContext.CourtId)
+                                   x.Case.CourtId == userContext.CourtId &&
+                                   (EvidenceTypeId > 0 ? x.EvidenceTypeId == EvidenceTypeId : true))
+                       .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
+                       .Where(caseRegnumberSearch)
                        .Select(x => new CaseEvidenceVM()
                        {
                            Id = x.Id,

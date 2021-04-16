@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -38,21 +35,18 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         {
             get
             {
-                if (migration == null)
+                if (LifeCycleCount > 1)
+                    return "Продължено под същия номер";
+                else if (migration == null)
                     return "Новообразувано";
-                else
-                {
-                    if (migration.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptJurisdiction)
-                        return "Получено по подсъдност";
-                    else if (migration.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptProsecutors)
-                        return "Връщане след доразследване";
-                    else if (migration.ReturnCaseId != this.CaseId)
-                        return "Върнато за ново разглеждане";
-                    else if (migration.ReturnCaseId == this.CaseId)
-                        return "Продължено под същия номер";
+                else if (migration.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptJurisdiction)
+                    return "Получено по подсъдност";
+                else if (migration.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptProsecutors)
+                    return "Връщане след доразследване";
+                else if (migration.ReturnCaseId > 0 && migration.ReturnCaseId != this.CaseId)
+                    return "Върнато за ново разглеждане";
 
-                }
-                return "";
+                return "Новообразувано";
             }
         }
 
@@ -74,6 +68,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
 
         public CaseMigrationDataReportVM migration { get; set; }
+
+        public int LifeCycleCount { get; set; }
     }
 
     /// <summary>

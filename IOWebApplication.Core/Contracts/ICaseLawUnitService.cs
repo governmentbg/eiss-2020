@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -66,6 +63,8 @@ namespace IOWebApplication.Core.Contracts
         SaveResultVM LawUnitManualJudge_SaveData(CaseLawUnitManualJudge model);
         CaseLawUnit GetJudgeReporter(int caseId);
         List<SelectListItem> GetDDL_LeftSide(int CaseId, bool addDefaultElement = true);
-
+        List<CheckListVM> GetCheckListCaseLawUnitByCase(int caseId);
+        List<CheckListVM> GetCheckListCaseLawUnitByCaseAll(int caseId);
+        bool IsExistJudgeLawUnitInCase(int CaseId);
     }
 }

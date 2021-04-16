@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Models.Regix.GetStateOfPlay;
+﻿using IOWebApplication.Infrastructure.Models.Regix.GetStateOfPlay;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -37,6 +34,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
         [Display(Name = "Дата и час")]
         public DateTime DateWrt { get; set; }
 
+        public string RequestRemark { get; set; }
+
+        public string RegixRequestTypeName { get; set; }
+
         public RegixReportListRequestVM Request { get; set; }
     }
 
@@ -53,6 +54,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
 
         [Display(Name = "Вид справка")]
         public int RegixTypeId { get; set; }
+
+        [Display(Name = "Търсене от")]
+        public int RegixRequestTypeId { get; set; }
     }
 
     public class RegixReportListRequestVM

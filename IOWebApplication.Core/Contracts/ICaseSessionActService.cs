@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -20,7 +17,7 @@ namespace IOWebApplication.Core.Contracts
         bool CaseSessionAct_SaveData(CaseSessionAct model);
         bool CaseSessionAct_SaveDispositiv(int id, string dispositiv);
         bool CaseSessionAct_SaveMotiveCreator(int id);
-        (bool canAccess, string lawunitName) CheckActBlankAccess(int id);
+        (bool canAccess, string lawunitName) CheckActBlankAccess(int id, CaseSessionAct model = null);
         (bool canAccess, string lawunitName) CheckMotiveBlankAccess(int id);
         SaveResultVM CaseSessionAct_RegisterAct(int id);
         SaveResultVM CaseSessionAct_RegisterAct(CaseSessionAct model);
@@ -29,6 +26,7 @@ namespace IOWebApplication.Core.Contracts
         bool SendForCoordination_Init(int caseSessionActId, long taskId);
         SaveResultVM SendForSign_Init(int caseSessionActId, long taskId);
         bool SendForSignMotives_Init(int caseSessionActId, long taskId);
+        ICollection<CaseLawUnit> GetCaseLawUnitsByAct(int caseSessionActId, int caseSessionId = 0);
         /// <summary>
         /// Зареждане в комбо на актовете от заседания по ID на дело
         /// </summary>
@@ -41,6 +39,7 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="addAllElement"></param>
         /// <returns></returns>
         List<SelectListItem> GetDropDownList(int caseId, bool? IsFinal = null, bool? IsDecreed = null, bool? IsReadyForPublish = null, bool? IsActInforced = null, bool addDefaultElement = true, bool addAllElement = false);
+        List<SelectListItem> GetDropDownListForDismisal(int caseId);
         List<SelectListItem> GetDDL_CaseSessionActFromMigration(int CaseId, int CourtId, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetActTypesByCase(int caseSessionId, bool addDefaultElement = true);
         List<SelectListItem> GetActTypesFromCaseByCase(int caseId, int SessionTypeId, bool addDefaultElement = true);
@@ -64,5 +63,8 @@ namespace IOWebApplication.Core.Contracts
         CaseSessionAct GetByIdWithOtherData(int actId);
         List<CaseSessionActVM> GetSessionActsFinal(int CaseId);
         IQueryable<CaseSessionActVM> CaseSessionActSpr_Select(int courtId, CaseSessionActFilterVM model);
+        CaseSessionAct GetByRelatedActId(int actId);
+        bool IsExistCaseSessionActByCase(int CaseId);
+        List<SelectListItem> GetDropDownList_CaseSessionActByCaseBySession(int? CaseId, int? CaseSessionId, bool addDefaultElement = true, bool addAllElement = false);
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.SignTools.Contracts;
+﻿using IO.SignTools.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -29,46 +26,43 @@ namespace IOWebApplicationService.Infrastructure.Services
     {
 
 
-        //private readonly IConfiguration config;
-        //private Uri serviceUri;
+        private readonly IConfiguration config;
+        private Uri serviceUri;
         //private string CertificatePath;
         //private string CertificatePassword;
-        private readonly IHttpClientFactory httpClientFactory;
-        private HttpClient httpClient;
+       // private readonly ICsrdHttpRequester csrdRequester;
+        private HttpRequester requester;
+        private readonly IHttpClientFactory clientFactory;
 
         public CsrdService(IRepository _repo,
             ICdnService _cdnService,
-           // IConfiguration _config,
+            IConfiguration _config,
             ILogger<CsrdService> _logger,
-            IIOSignToolsService _signTools,
-            IHttpClientFactory _httpClientFactory)
+            IHttpClientFactory _clientFactory)
         {
             repo = _repo;
             cdnService = _cdnService;
-            //config = _config;
-            signTools = _signTools;
+            config = _config;
             logger = _logger;
-            httpClientFactory = _httpClientFactory;
+            clientFactory = _clientFactory;
             this.IntegrationTypeId = NomenclatureConstants.IntegrationTypes.CSRD;
         }
         protected override async Task<bool> InitChanel()
         {
-            //var endPoint = config.GetValue<string>("CSRD:Endpoint");
-            //var method = config.GetValue<string>("CSRD:Method");
+            var endPoint = config.GetValue<string>("CSRD:Endpoint");
+            var method = config.GetValue<string>("CSRD:Method");
 
-            //CertificatePath = config.GetValue<string>("CSRD:CertificatePath");
-            //CertificatePassword = config.GetValue<string>("CSRD:CertificatePassword");
-            //serviceUri = new Uri(new Uri(endPoint), method);
+            serviceUri = new Uri(new Uri(endPoint), method);
 
-            httpClient = httpClientFactory.CreateClient("csrdHttpClient");
+            requester = new HttpRequester(clientFactory.CreateClient("csrdHttpClient"));
 
             return true;
         }
 
-        protected override async Task CloseChanel()
+        protected override Task CloseChanel()
         {
-            httpClient.Dispose();
-            return;
+            //httpClient.Dispose();
+            return Task.CompletedTask;
         }
 
         protected override async Task SendMQ(MQEpep mq)
@@ -94,7 +88,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                 //http.CertificatePassword = this.CertificatePassword;
 
                 //var response = http.PostAsync(serviceUri.AbsoluteUri, model).Result;
-                var response = await httpClient.SendMessage(HttpMethod.Post, model);
+                var response = await requester.PostAsync(serviceUri.AbsoluteUri, model);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -201,8 +195,8 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
 
             request.CaseNumber = current_case.ShortNumber;
-            var fileBytes = (await cdnService.MongoCdn_Download(new CdnFileSelect() { SourceType = SourceTypeSelectVM.CaseSelectionProtokol, SourceId = protocolId.ToString() })).GetBytes();
-            request.Protocol = FlattenSignatures(fileBytes);
+            var fileBytes = (await cdnService.MongoCdn_Download(new CdnFileSelect() { SourceType = SourceTypeSelectVM.CaseSelectionProtokol, SourceId = protocolId.ToString() }, CdnFileSelect.PostProcess.Flatten)).GetBytes();
+            request.Protocol = fileBytes;
 
 
             return request;

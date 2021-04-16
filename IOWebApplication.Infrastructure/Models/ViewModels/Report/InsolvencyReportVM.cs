@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -72,7 +69,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public int CaseGroupId { get; set; }
 
         [Display(Name = "Номер на дело")]
-        [Required(ErrorMessage = "Полето {0} е задължително")]
         public string CaseNumber { get; set; }
 
         [Display(Name = "Година")]

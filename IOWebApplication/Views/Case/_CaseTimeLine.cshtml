@@ -2,6 +2,8 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels.Case
 @using IOWebApplication.Infrastructure.Models.ViewModels.Common
 @using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Core.Helper.GlobalConstants
 <ul class="timeline">
 
     <!-- timeline time label -->
@@ -47,6 +49,11 @@
                 <br />
                 <b>Статус:</b> @Model.CaseStateLabel
                 <br />
+                @if (Model.CaseInforcedDate != null)
+                {
+                    <b>Дата на влизане в законна сила:</b> @((Model.CaseInforcedDate ?? DateTime.Now).ToString("dd.MM.yyyy"))
+                    <br />
+                }
                 @if (!string.IsNullOrEmpty(Model.CaseReasonLabel))
                 {
                     <b>Основание за образуване:</b> @Model.CaseReasonLabel
@@ -84,11 +91,11 @@
                     }
                 }
 
-                @if (Model.CaseClassifications.Count() > 0)
+                @if (Model.DocumentInstitutionCaseInfos.Count() > 0)
                 {
                     <b>Свързани дела на външни институции:</b>
                     <br />
-                    @foreach (var documentInstitutionCaseInfo in Model.DocumentCaseInfos)
+                    @foreach (var documentInstitutionCaseInfo in Model.DocumentInstitutionCaseInfos)
                     {
                         <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
                             @{
@@ -290,7 +297,7 @@
         <!-- timeline icon -->
         <i class="fa fa-book bg-blue"></i>
         <div class="timeline-item">
-            <span class="time"><i class="fa fa-book"></i> @Model.CaseInDocuments.Count()бр.</span>
+            <span class="time"><i class="fa fa-book"></i> @(Model.CaseInDocuments.Count() + Model.DocumentDecisionCaseLists.Count())бр.</span>
 
             <h3 class="timeline-header"><a href="#">Съпровождащи документи</a></h3>
 
@@ -345,6 +352,32 @@
                         }
                     }
                 }
+                @if (Model.DocumentDecisionCaseLists.Count() > 0)
+                {
+                    <br />
+                    <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Заявленията за достъп до дело в ЕПЕП:</b>
+                    <br />
+                    @foreach (var documentDecisionCase in Model.DocumentDecisionCaseLists)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = documentDecisionCase.DocumentLable +
+                                           (!string.IsNullOrEmpty(documentDecisionCase.DecisionRequestTypeName) ? " - " + documentDecisionCase.DecisionRequestTypeName : string.Empty) +
+                                           (!string.IsNullOrEmpty(documentDecisionCase.DecisionName) ? ": " + documentDecisionCase.DecisionName : string.Empty);
+
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-file-text'></i> " + _row)
+                            </div>
+
+                            <div style="margin-left:5px;">
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.DocumentDecision" data-sourceId="@documentDecisionCase.DocumentId">Файлове</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
             </div>
 
             <div class="timeline-footer hidden">
@@ -356,7 +389,7 @@
         <!-- timeline icon -->
         <i class="fa fa-money bg-green-active"></i>
         <div class="timeline-item">
-            <span class="time"><i class="fa fa-money"></i> @(Model.PaymentCases.Count() + Model.ExecLists.Count())бр.</span>
+            <span class="time"><i class="fa fa-money"></i> @(Model.PaymentCases.Count() + Model.ExecLists.Count() + Model.ExpenseOrders.Count())бр.</span>
 
             <h3 class="timeline-header"><a href="#">Суми по дело</a></h3>
 
@@ -402,7 +435,7 @@
                                 var _row = "Тип: " + execList.ExecListTypeName +
                                            " / Лице: " + execList.FullName +
                                            " / Сума: " + execList.Amount.ToString("0.00") +
-                                           " / Номер: " + execList.RegNumber + "/" + execList.RegDate.ToString("dd.MM.yyyy");
+                                           " / Номер: " + (execList.RegDate != null ? (execList.RegNumber + "/" + execList.RegDate.DateToStr(FormattingConstant.NormalDateFormat) + " ") : "");
                             }
                             <div>
                                 @Html.Raw("<i class='fa fa-money'></i> " + _row)
@@ -411,6 +444,31 @@
                             <div style="margin-left:5px;">
                                 <div class="cdn-listview" style="margin-left:5px;">
                                     <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.ExecList" data-sourceId="@execList.Id">Файлове</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (Model.ExpenseOrders.Count() > 0)
+                {
+                    <b> - Разходен касов ордер:</b>
+                    <br />
+                    @foreach (var expenseOrder in Model.ExpenseOrders)
+                    {
+                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                            @{
+                                var _row = expenseOrder.FullName +
+                                           " Номер: " + expenseOrder.RegNumber + "/" + expenseOrder.RegDate.ToString("dd.MM.yyyy") +
+                                           " сума: " + expenseOrder.Amount.ToString("0.00");
+                            }
+                            <div>
+                                @Html.Raw("<i class='fa fa-money'></i> " + _row)
+                            </div>
+
+                            <div style="margin-left:5px;">
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.ExpenseOrder" data-sourceId="@expenseOrder.Id">Файлове</a>
                                 </div>
                             </div>
                         </div>
@@ -468,36 +526,62 @@
         </div>
     </li>
 
-    @if (Model.CaseMigrations.Count() > 0)
+    @if ((Model.CaseMigrations.Count() + Model.DocumentCaseInfos.Count()) > 0)
     {
         <li data-for="@Model.RegNumber">
             <!-- timeline icon -->
             <i class="fa fa-link bg-orange"></i>
             <div class="timeline-item">
-                <span class="time"><i class="fa fa-link"></i> @Model.CaseMigrations.Count()бр.</span>
+                <span class="time"><i class="fa fa-link"></i> @(Model.CaseMigrations.Count() + Model.DocumentCaseInfos.Count())бр.</span>
 
                 <h3 class="timeline-header"><a href="#">Свързани дела</a></h3>
 
                 <div class="timeline-body hidden">
 
-                    @foreach (var caseMigration in Model.CaseMigrations)
+                    @if (Model.CaseMigrations.Count() > 0)
                     {
-                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                            @{
-                                var _row = "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
-                            }
-                            <div>
-                                @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
-                            </div>
-
-                            <div style="margin-left:5px;">
-                                @if (caseMigration.CaseId != Model.Id)
-                                {
-                                    <a href="@Url.Action("CaseTimeLinePreview", "Case", new { id = caseMigration.CaseId })" class="btn btn-def btn-xs" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"></span></a>
-                                    <a href="@Url.Action("CaseArchive", "Case")?CaseId=@caseMigration.CaseId" class="btn btn-dropbox btn-xs" title="Архив"><i class="fa fa-file-archive-o"></i><span class="hidden-sm hidden-xs"></span></a>
+                        <b> - От ЕИСС:</b>
+                        <br />
+                        @foreach (var caseMigration in Model.CaseMigrations)
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var _row = "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
                                 }
+                                <div>
+                                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                                </div>
+
+                                <div style="margin-left:5px;">
+                                    @if (caseMigration.CaseId != Model.Id)
+                                    {
+                                        <a href="@Url.Action("CaseTimeLinePreview", "Case", new { id = caseMigration.CaseId })" class="btn btn-def btn-xs" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"></span></a>
+                                        <a href="@Url.Action("CaseArchive", "Case")?CaseId=@caseMigration.CaseId" class="btn btn-dropbox btn-xs" title="Архив"><i class="fa fa-file-archive-o"></i><span class="hidden-sm hidden-xs"></span></a>
+                                    }
+                                </div>
                             </div>
-                        </div>
+                        }
+                    }
+
+                    @if (Model.DocumentCaseInfos.Count() > 0)
+                    {
+                        <b> - От външни системи:</b>
+                        <br />
+                        @foreach (var documentCaseInfo in Model.DocumentCaseInfos)
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var _row = "Дело: " + documentCaseInfo.CaseRegNumber + "/" + documentCaseInfo.CaseYear + " - " + documentCaseInfo.Description;
+                                }
+                                <div>
+                                    @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
+                                </div>
+
+                                <div style="margin-left:5px;">
+                                    
+                                </div>
+                            </div>
+                        }
                     }
                 </div>
 
@@ -515,26 +599,51 @@
         <!-- timeline icon -->
         <i class="fa fa-file-archive-o bg-orange"></i>
         <div class="timeline-item">
-            <span class="time"><i class="fa fa-file-archive-o"></i> @Model.CaseSessionFinalActs.Where(x => x.RegNumber != string.Empty).Count()бр.</span>
+            <span class="time"><i class="fa fa-file-archive-o"></i> @Model.CaseSessionFinalActs.Where(x => !string.IsNullOrEmpty(x.RegNumber)).Count()бр.</span>
 
-            <h3 class="timeline-header"><a href="#">Финализиращи актове по дело</a></h3>
+            <h3 class="timeline-header"><a href="#">Актове по дело</a></h3>
 
             <div class="timeline-body hidden">
                 <div class="timeline-body hidden">
-                    @foreach (var caseSessionAct in Model.CaseSessionFinalActs.Where(x => x.RegNumber != string.Empty))
+                    @if (Model.CaseSessionFinalActs.Where(x => x.IsFinalDoc && !string.IsNullOrEmpty(x.RegNumber)).Count() > 0)
                     {
-                        <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
-                            @{
-                                var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + ((!string.IsNullOrEmpty(caseSessionAct.EcliCode)) ? " " + caseSessionAct.EcliCode : string.Empty);
-                            }
-                            <div>
-                                @Html.Raw("<i class='fa fa-file-text'></i> " + row)
-                            </div>
+                        <b> - Финализиращи актове:</b>
+                        <br />
+                        @foreach (var caseSessionAct in Model.CaseSessionFinalActs.Where(x => x.IsFinalDoc).OrderBy(x => x.ActDeclaredDate))
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + ((!string.IsNullOrEmpty(caseSessionAct.EcliCode)) ? " " + caseSessionAct.EcliCode : string.Empty) + " (Дата на постановяване: " + (caseSessionAct.ActDeclaredDate ?? DateTime.Now).ToString("dd.MM.yyyy") + ")";
+                                }
+                                <div>
+                                    @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                                </div>
 
-                            <div class="cdn-listview" style="margin-left:5px;">
-                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                                </div>
                             </div>
-                        </div>
+                        }
+                    }
+                    @if (Model.CaseSessionFinalActs.Where(x => !x.IsFinalDoc).Count() > 0)
+                    {
+                        <b> - Актове по дело:</b>
+                        <br />
+                        @foreach (var caseSessionAct in Model.CaseSessionFinalActs.Where(x => !x.IsFinalDoc).OrderBy(x => x.ActDeclaredDate))
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var row = caseSessionAct.ActTypeLabel + (((caseSessionAct.RegNumber ?? string.Empty) != string.Empty) ? (": " + caseSessionAct.RegNumber + "/" + (caseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy")) : string.Empty) + " (Дата на постановяване: " + (caseSessionAct.ActDeclaredDate ?? DateTime.Now).ToString("dd.MM.yyyy") + ")";
+                                }
+                                <div>
+                                    @Html.Raw("<i class='fa fa-file-text'></i> " + row)
+                                </div>
+
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                                </div>
+                            </div>
+                        }
                     }
                 </div>
             </div>

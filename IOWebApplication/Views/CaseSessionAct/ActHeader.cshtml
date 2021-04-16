@@ -3,7 +3,7 @@
 @{
     Layout = null;
 }
-<partial name="ActHeaderChairman" model="@Model" />
+<partial name="ActHeaderLegacy" model="@Model" />
 <div style="text-align:center;width:100%;">
     <h2>@Model.ActTypeName.ToUpper()</h2>
     @if (!string.IsNullOrEmpty(Model.ActRegNumber))

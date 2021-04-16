@@ -5,8 +5,8 @@
 @{
     var settings = await userContext.Settings();
 
-    var signToolsPath = configuration.GetValue<string>("SignToolsPath");
-    var certCheckPath = configuration.GetValue<string>("StampIT:CertCheckPath");
+    var signToolsPath = configuration.GetValue<string>("SignToolsPath") ?? "https://sign.uslugi.io/java/stampitls-eiss.jnlp";
+    var certCheckPath = configuration.GetValue<string>("StampIT:CertCheckPath") ?? "https://id.stampit.org/certno/";
     if (userContext.ClaimValue("PasswordLogin") == "true")
     {
         certCheckPath = "";
@@ -81,7 +81,7 @@
     <!-- /.content-wrapper -->
     @await Html.PartialAsync("_ModalDialog")
     @RenderSection("footer", required: false)
-    <script src="~/lib/tinymce/tinymce.min.js"></script>
+    <script src="~/lib/tinymce-enterprice/tinymce.min.js"></script>
     <script src="~/js/prod/site.min.js" asp-append-version="true"></script>
     @RenderSection("scripts", required: false)
 

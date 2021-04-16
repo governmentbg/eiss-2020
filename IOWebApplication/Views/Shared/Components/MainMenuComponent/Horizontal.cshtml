@@ -145,6 +145,11 @@ userContext.IsUserInFeature(AccountConstants.Features.DocumentReactivate)) && !i
                                         }
                                         <li class="divider"></li>
                                         <li><a href='@Url.Action("Index", "DeactivateItem")'><i class="fa fa-trash"></i> @IOWebApplication.Infrastructure.Models.ViewModels.Report.DeactivateItemVM.RegisterName</a></li>
+                                        @if (userContext.IsUserInRole(AccountConstants.Roles.Administrator))
+                                        {
+                                            <li class="divider"></li>
+                                            <li><a href='@Url.Action("IndexAll", "EISPP")'><i class="fa fa-send"></i> ЕИСПП Събития</a></li>
+                                        }
                                     </ul>
                                 </li>
                             }
@@ -244,19 +249,19 @@ userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
                                     <li><a href="@Url.Action("CasePersonDefendantListReport", "Report")"><i class="fa fa-line-chart"></i> Справка съдени и осъдени лица</a></li>
                                     <li><a href="@Url.Action("CaseFirstInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка постъпили дела за период – първоинстанционни дела</a></li>
                                     @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
-                        NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId))
+                       NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId))
                                     {
                                         <li><a href="@Url.Action("CaseSecondInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка постъпили дела за период – въззивни дела</a></li>
                                     }
                                     <li><a href="@Url.Action("CaseFinishFirstInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка свършени дела за период – първоинстанционни дела</a></li>
                                     @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.DistrictCourt ||
-                      NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId))
+                     NomenclatureConstants.CourtType.ApealCourts.Contains(userContext.CourtTypeId))
                                     {
                                         <li><a href="@Url.Action("CaseFinishSecondInstanceListReport", "Report")"><i class="fa fa-line-chart"></i> Справка свършени дела за период – въззивни дела</a></li>
                                     }
 
                                     <li class="divider"></li>
-                                    <li><a href="@Url.Action("IndexCaseSessionWithActProject", "CaseSession")"><i class="fa fa-pencil"></i> Заседания с не написани съдебни актове от всички съдии</a></li>
+                                    <li><a href="@Url.Action("IndexCaseSessionWithActProject", "CaseSession")"><i class="fa fa-pencil"></i> Заседания с ненаписани съдебни актове от всички съдии</a></li>
                                     <li><a href="@Url.Action("IndexReportMaturity", "CaseSession")"><i class="fa fa-child"></i> Заседания за период с участието на малолетни/непълнолетни лица</a></li>
                                     <li class="divider"></li>
                                     <li><a href="@Url.Action("IndexActReport", "CaseSessionAct")"><i class="fa fa-book"></i> Съдебни актове</a></li>
@@ -296,7 +301,7 @@ userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
                             <li class="dropdown-submenu">
                                 <a><i class="fa fa-file-excel-o"></i> Статистически справки</a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="@Url.Action("Excel", "Report")"><i class="fa fa-file-excel-o"></i> Статистическа отчетна форма към ВСС</a></li>
+                                    <li><a href="@Url.Action("ExcelReport", "Report")"><i class="fa fa-file-excel-o"></i> Статистическа отчетна форма към ВСС</a></li>
                                 </ul>
                             </li>
                             @*<li class="dropdown-submenu">
@@ -343,6 +348,11 @@ userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
                                             <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.Ill })'><i class="fa fa fa-medkit"></i> Болнични дни</a></li>
                                             <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.Move })'><i class="fa fa-car"></i> Командироване</a></li>
                                             <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.Holiday })'><i class="fa fa-ship"></i> Отпуски</a></li>
+                                            @if (userContext.CourtId == NomenclatureConstants.VKScourtId)
+                                            {
+                                                <li class="divider"></li>
+                                                <li><a href='@Url.Action("Index", "CourtLawUnit", new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, periodType = NomenclatureConstants.PeriodTypes.MixedLawUnit })'><i class="fa fa-briefcase"></i> Участие в смесен състав</a></li>
+                                            }
                                         </ul>
                                     </li>
                                     <li class="dropdown-submenu">
@@ -391,13 +401,13 @@ userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
                                             <li><a href='@Url.Action("EpepUser", "Epep")'><i class="fa fa-cubes"></i> ЕПЕП - Потребители</a></li>
                                         </ul>
                                     </li>
+                                    <li class="divider"></li>
+                                    <li><a href='@Url.Action("Index", "CourtDuty")'><i class="fa fa-calendar"></i> Дежурства към съд</a></li>
                                     @if (userContext.IsUserInRole(AccountConstants.Roles.Administrator))
                                     {
-                                        <li class="divider"></li>
                                         <li><a href='@Url.Action("Edit", "Court", new { returnUrl = @Url.Action("Index", "Home") })'><i class="fa fa-cubes"></i> Данни за текущия съд</a></li>
                                         <li><a href='@Url.Action("Index", "CourtOrganization")'><i class="fa fa-sitemap"></i> Организационна структура на съд</a></li>
                                         <li><a href='@Url.Action("Index", "CourtDepartment")'><i class="fa fa-home"></i> Съдебна структура</a></li>
-                                        <li><a href='@Url.Action("Index", "CourtDuty")'><i class="fa fa-calendar"></i> Дежурства към съд</a></li>
                                         <li><a href='@Url.Action("ArchiveCommittee", "CourtArchive")'><i class="fa fa-graduation-cap"></i> Експертни комисии</a></li>
                                         <li><a href='@Url.Action("ArchiveIndex", "CourtArchive")'><i class="fa fa-list-ol"></i> Номенклатурни индекси</a></li>
                                         <li><a href='@Url.Action("Index", "CourtHall")'><i class="fa fa-building-o"></i> Зали към съд</a></li>
@@ -486,6 +496,7 @@ userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
                                         <li><a href='@Url.Action("Index", "Court")'><i class="fa fa-cubes"></i> Съдилища</a></li>
                                         @*<li><a href='@Url.Action("IndexAddress", "Common")'><i class="fa fa-address-card-o"></i> Адреси</a></li>*@
                                         <li><a href='@Url.Action("IndexEkStreet", "Nomenclature")'><i class="fa fa-address-card-o"></i> Квартали/булеварди/улици</a></li>
+                                        <li><a href='@Url.Action("ExcelReportPeriod", "Report")'><i class="fa fa-address-card-o"></i> Статистика</a></li>
                                     </ul>
                                 </li>
 

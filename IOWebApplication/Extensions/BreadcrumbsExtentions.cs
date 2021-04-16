@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +24,8 @@ namespace IOWebApplication.Extensions
             string result = "#";
             if (list != null && list.Count > 0)
             {
+                if (list.Count == 1 && list.Last().Active)
+                    return @"/";
                 result = list.Last().Href;
                 if (result.Contains("()"))
                     result = "#";
@@ -38,6 +37,8 @@ namespace IOWebApplication.Extensions
             string result = "#";
             if (list != null && list.Count > 0)
             {
+                if (list.Count == 1 && list.Last().Active)
+                    return "";
                 result = list.Last().Href;
                 if (!result.Contains("()"))
                     result = "";

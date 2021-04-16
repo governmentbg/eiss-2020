@@ -1,13 +1,11 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplicationService.Infrastructure.Contracts;
+﻿using IOWebApplicationService.Infrastructure.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -24,7 +22,8 @@ namespace IOWebApplicationService.Infrastructure.Services
         public ILogger<BaseTimedHostedService> logger;
         public IHostingEnvironment environment;
         public IConfiguration configuration;
-        private System.Timers.Timer _timer = null;
+        public string stopHours;
+        protected System.Timers.Timer _timer = null;
         public double interval;
         public int stopServiceTimeout;
         public int fetchCount;
@@ -118,7 +117,20 @@ namespace IOWebApplicationService.Infrastructure.Services
 
                 processCompleted = false;
 
-                TimerElapsedAction();
+                bool actionEnabled = true;
+                if (!string.IsNullOrEmpty(this.stopHours))
+                {
+                    string[] stopHours = this.stopHours.Split(',');
+                    if (stopHours.Contains(DateTime.Now.Hour.ToString()))
+                    {
+                        actionEnabled = false;
+                    }
+                }
+
+                if (actionEnabled)
+                {
+                    TimerElapsedAction();
+                }
 
                 processCompleted = true;
 

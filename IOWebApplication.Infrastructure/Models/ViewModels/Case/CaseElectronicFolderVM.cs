@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using IOWebApplication.Infrastructure.Models.ViewModels.Money;
@@ -32,6 +29,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string CaseStateDescription { get; set; }
         public string ArchRegNumber { get; set; }
         public DateTime? ArchRegDate { get; set; }
+        public DateTime? CaseInforcedDate { get; set; }
         public virtual ICollection<CaseSessionElectronicFolderVM> CaseSessions { get; set; }
         public virtual ICollection<CaseSelectionProtokolListVM> CaseSelectionProtokols { get; set; }
         public virtual ICollection<DocumentInfoVM> CaseInDocuments { get; set; }
@@ -39,12 +37,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public virtual ICollection<CasePersonListVM> CasePersons { get; set; }
         public virtual ICollection<CaseLawUnitVM> CaseLawUnits { get; set; }
         public virtual ICollection<CaseSessionActVM> CaseSessionFinalActs { get; set; }
+        public virtual ICollection<DocumentCaseInfo> DocumentCaseInfos { get; set; }
         public virtual ICollection<CaseClassification> CaseClassifications { get; set; }
         public virtual ICollection<CaseMigrationVM> CaseMigrations { get; set; }
-        public virtual ICollection<DocumentInstitutionCaseInfo> DocumentCaseInfos { get; set; }
+        public virtual ICollection<DocumentInstitutionCaseInfo> DocumentInstitutionCaseInfos { get; set; }
         public virtual ICollection<PaymentCaseVM> PaymentCases { get; set; }
         public virtual ICollection<ExecListVM> ExecLists { get; set; }
         public virtual ICollection<DocumentResolutionListVM> DocumentResolutions { get; set; }
         public virtual ICollection<RegixListVM> RegixReports { get; set; }
+        public virtual ICollection<ExpenseOrderVM> ExpenseOrders { get; set; }
+        public virtual ICollection<DocumentDecisionCaseListVM> DocumentDecisionCaseLists { get; set; }
     }
 }

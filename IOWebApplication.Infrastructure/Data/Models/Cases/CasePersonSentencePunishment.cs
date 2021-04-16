@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
@@ -110,6 +107,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("probation_days")]
         [Display(Name = "Изпитателeн срок дни")]
         public int? ProbationDays { get; set; }
+
+        [Column("is_main_punishment")]
+        [Display(Name = "Основно наказание")]
+        public bool IsMainPunishment { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

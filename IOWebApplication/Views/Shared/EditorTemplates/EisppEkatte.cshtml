@@ -1,0 +1,19 @@
+﻿@model int
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_SettlementBg";
+    var label = (string)ViewData["label"];
+}
+
+<div class="crime-ekatte-container">
+    @if (string.IsNullOrEmpty(label))
+    {
+        <label asp-for="@Model" class="control-label io-req"></label>
+        <input id="@fieldName" class="form-control crime-ekatte-control" />
+    }
+    else
+    {
+        <input id="@fieldName" class="form-control crime-ekatte-control" placeholder="@label" />
+    }
+    <input asp-for="@Model" type="hidden" class="ekatte-val" />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

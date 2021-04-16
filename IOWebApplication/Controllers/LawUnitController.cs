@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
@@ -17,7 +14,6 @@ using System.Linq;
 
 namespace IOWebApplication.Controllers
 {
-    //[Authorize]
     public class LawUnitController : BaseController
     {
         private readonly ICommonService commonService;
@@ -27,6 +23,30 @@ namespace IOWebApplication.Controllers
         {
             commonService = _commonService;
             nomService = _nomService;
+        }
+
+        private void SetHelpByLawUnitType(int lawUnitTypeId)
+        {
+            switch (lawUnitTypeId)
+            {
+                case NomenclatureConstants.LawUnitTypes.Judge:
+                    SetHelpFile(HelpFileValues.Nom1);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.OtherEmployee:
+                    SetHelpFile(HelpFileValues.Nom2);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.MessageDeliverer:
+                    SetHelpFile(HelpFileValues.Nom3);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.Jury:
+                    SetHelpFile(HelpFileValues.Nom5);
+                    return;
+                case NomenclatureConstants.LawUnitTypes.Expert:
+                    SetHelpFile(HelpFileValues.Nom6);
+                    return;
+                default:
+                    return;
+            }
         }
 
         /// <summary>
@@ -42,6 +62,7 @@ namespace IOWebApplication.Controllers
             ViewBag.SpecialityId_ddl = nomService.GetDDL_SpecialityForFilter(lawUnitType);
             LawUnitFilterVM model = new LawUnitFilterVM();
             model.SpecialityId = -1;
+            SetHelpByLawUnitType(lawUnitType);
             return View(model);
         }
 
@@ -54,12 +75,13 @@ namespace IOWebApplication.Controllers
         /// <param name="toDate"></param>
         /// <param name="fullName"></param>
         /// <param name="specialityId"></param>
+        /// <param name="showFree"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request, int lawUnitType, DateTime? fromDate, DateTime? toDate, string fullName, int specialityId)
+        public IActionResult ListData(IDataTablesRequest request, int lawUnitType, DateTime? fromDate, DateTime? toDate, string fullName, int specialityId, bool showFree)
         {
 
-            var data = commonService.LawUnit_Select(lawUnitType, fullName, fromDate, toDate, specialityId);
+            var data = commonService.LawUnit_Select(lawUnitType, fullName, fromDate, toDate, specialityId, showFree);
 
             return request.GetResponse(data);
         }
@@ -70,6 +92,8 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForLawUnitEdit(lawUnitTypeId, id).DeleteOrDisableLast();
             else
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForLawUnitAdd(lawUnitTypeId).DeleteOrDisableLast();
+
+            SetHelpByLawUnitType(lawUnitTypeId);
         }
 
         /// <summary>
@@ -138,20 +162,36 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         void ValidateModel(LawUnit model)
         {
-            if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(model.LawUnitTypeId))
+            switch (model.LawUnitTypeId)
             {
-                if (string.IsNullOrEmpty(model.Uic))
-                {
-                    ModelState.AddModelError(nameof(model.Uic), "Въведете ЕГН");
-                }
+                case NomenclatureConstants.LawUnitTypes.Lawyer:
+                    if (string.IsNullOrEmpty(model.Code))
+                    {
+                        ModelState.AddModelError(nameof(model.Code), "Въведете 'Номер на адвокат'");
+                    }
+                    if (string.IsNullOrEmpty(model.Department))
+                    {
+                        ModelState.AddModelError(nameof(model.Department), "Въведете 'Колегия'");
+                    }
+                    break;
+                default:
+                    if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(model.LawUnitTypeId))
+                    {
+                        if (string.IsNullOrEmpty(model.Uic))
+                        {
+                            ModelState.AddModelError(nameof(model.Uic), "Въведете ЕГН");
+                        }
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(model.Uic) && string.IsNullOrEmpty(model.Code))
+                        {
+                            ModelState.AddModelError(nameof(model.Code), "Въведете 'Код' или 'ЕГН'");
+                        }
+                    }
+                    break;
             }
-            else
-            {
-                if (string.IsNullOrEmpty(model.Uic) && string.IsNullOrEmpty(model.Code))
-                {
-                    ModelState.AddModelError(nameof(model.Code), "Въведете 'Код' или 'ЕГН'");
-                }
-            }
+           
 
             if (string.IsNullOrEmpty(model.FirstName))
             {
@@ -185,7 +225,7 @@ namespace IOWebApplication.Controllers
         /// <param name="courtId"></param>
         /// <returns></returns>
         [HttpGet]
-        public IActionResult SearchLawUnit(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = "current")
+        public IActionResult SearchLawUnit(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = NomenclatureConstants.LawUnitSelectMode.All)
         {
             return Json(commonService.GetLawUnitAutoComplete(lawUnitType, lawUnitTypes, query, courtId, selectmode));
         }
@@ -384,6 +424,8 @@ namespace IOWebApplication.Controllers
 
             ViewBag.CountriesDDL = nomService.GetCountries();
             ViewBag.AddressTypesDDL = nomService.GetDropDownList<AddressType>();
+
+            SetHelpByLawUnitType(lawUnit.LawUnitTypeId);
         }
     }
 }

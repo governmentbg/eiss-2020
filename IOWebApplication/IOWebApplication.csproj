@@ -29,10 +29,10 @@
     <Content Remove="InitialData\Nomenclatures\institutionType.json" />
     <Content Remove="InitialData\Nomenclatures\lawUnitType.json" />
     <Content Remove="InitialData\Nomenclatures\uicType.json" />
-    <Content Remove="wwwroot\Fonts\times.ttf" />
-    <Content Remove="wwwroot\Fonts\timesbd.ttf" />
-    <Content Remove="wwwroot\Fonts\timesbi.ttf" />
-    <Content Remove="wwwroot\Fonts\timesi.ttf" />
+    <Content Remove="Fonts\times.ttf" />
+    <Content Remove="Fonts\timesbd.ttf" />
+    <Content Remove="Fonts\timesbi.ttf" />
+    <Content Remove="Fonts\timesi.ttf" />
   </ItemGroup>
 
 
@@ -46,7 +46,7 @@
     <PackageReference Include="DataTables.AspNet.AspNetCore" Version="2.0.2" />
     <PackageReference Include="IO.LogOperation" Version="1.0.5" />
     <PackageReference Include="IO.RegixClient" Version="1.0.3" />
-    <PackageReference Include="IO.SignTools" Version="1.0.16" />
+    <PackageReference Include="IO.SignTools" Version="1.0.22" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />
@@ -84,6 +84,7 @@
     <Folder Include="Views\Pdf\" />
     <Folder Include="Views\Shared\Components\SignPdfComponent\" />
     <Folder Include="wwwroot\css\prod\" />
+    <Folder Include="wwwroot\data\" />
     <Folder Include="wwwroot\js\prod\" />
     <Folder Include="wwwroot\lib\adminlte\plugins\chartJs\" />
   </ItemGroup>
@@ -106,24 +107,157 @@
     <None Include="InitialData\Nomenclatures\courtType.json" />
     <None Include="InitialData\Nomenclatures\uicType.json" />
     <None Include="InitialData\Nomenclatures\institutionType.json" />
-    <None Include="wwwroot\Fonts\times.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Fonts\timesbd.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Fonts\timesbi.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\Fonts\timesi.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="wwwroot\lib\fullcalendar\bg.js" />
     <None Include="wwwroot\lib\fullcalendar\fullcalendar.min.js" />
     <None Include="wwwroot\lib\fullcalendar\lib\jquery-ui.min.js" />
     <None Include="wwwroot\lib\fullcalendar\lib\jquery.min.js" />
     <None Include="wwwroot\lib\fullcalendar\lib\moment.min.js" />
-    <None Include="wwwroot\Rotativa\wkhtmltopdf.exe" />
+    <None Include="wwwroot\lib\tinymce-enterprice\icons\default\icons.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\jquery.tinymce.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\a11ychecker\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\advcode\codemirror.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\advcode\customeditor.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\advcode\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\advlist\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\advtable\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\anchor\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\autolink\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\autoresize\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\autosave\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\bbcode\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\casechange\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\charmap\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\checklist\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\codesample\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\code\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\colorpicker\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\contextmenu\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\directionality\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\emoticons\js\emojiimages.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\emoticons\js\emojis.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\emoticons\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\export\exporters\clientpdf.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\export\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\formatpainter\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\fullpage\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\fullscreen\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\help\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\hr\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\imagetools\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\image\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\importcss\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\insertdatetime\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\legacyoutput\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\linkchecker\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\link\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\lists\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\mediaembed\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\media\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\nonbreaking\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\noneditable\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\pagebreak\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\pageembed\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\paste\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\permanentpen\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\powerpaste\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\preview\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\print\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\quickbars\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\save\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\searchreplace\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\spellchecker\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\tabfocus\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\table\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\template\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\textcolor\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\textpattern\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\tinymcespellchecker\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\toc\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\visualblocks\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\visualchars\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\plugins\wordcount\plugin.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\content\dark\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\content\default\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\content\document\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\content\fabric\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\content\material-classic\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\content\material-outline\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\content\writer\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\bootstrap\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\bootstrap\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\bootstrap\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\bootstrap\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\bootstrap\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\bootstrap\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\borderless\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\borderless\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\borderless\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\borderless\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\borderless\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\borderless\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\fabric\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\fabric\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\fabric\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\fabric\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\fabric\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\fabric\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\jam\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\jam\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\jam\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\jam\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\jam\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\jam\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-classic\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-classic\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-classic\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-classic\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-classic\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-classic\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-outline\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-outline\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-outline\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-outline\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-outline\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\material-outline\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\naked\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\naked\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\naked\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\naked\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\naked\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\naked\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\outside\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\outside\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\outside\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\outside\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\outside\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\outside\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide-dark\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide-dark\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide-dark\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide-dark\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide-dark\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide-dark\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\oxide\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\small\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\small\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\small\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\small\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\small\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\small\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\snow\content.inline.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\snow\content.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\snow\content.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\snow\skin.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\snow\skin.mobile.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\skins\ui\snow\skin.shadowdom.min.css.map" />
+    <None Include="wwwroot\lib\tinymce-enterprice\themes\mobile\theme.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\themes\silver\theme.min.js" />
+    <None Include="wwwroot\lib\tinymce-enterprice\tinymce.min.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -147,57 +281,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Index.resx</DependentUpon>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Update="wwwroot\Rotativa\wkhtmltoimage">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltoimage.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltopdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltopdf.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\bin\wkhtmltoimage">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\bin\wkhtmltopdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\dllbegin.inc">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\dllend.inc">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\image.h">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\pdf.h">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0.12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0.12.4">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\share\man\man1\wkhtmltoimage.1.gz">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\Rotativa\wkhtmltox\share\man\man1\wkhtmltopdf.1.gz">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -229,19 +312,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Certificates\Eispp\EISSTEST.pfx">
+    <None Update="Fonts\times.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Certificates\eiss.local.pfx">
+    <None Update="Fonts\timesbd.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Certificates\Epep\rs-varna.p12">
+    <None Update="Fonts\timesbi.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Certificates\vss-regix-test.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Certificates\vss-regix.p12">
+    <None Update="Fonts\timesi.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

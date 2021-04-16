@@ -20,18 +20,31 @@
     <div class="col-lg-3">
         @Html.EditorFor(m => m.DateTo, "DateTime")
     </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.ActInforcedDateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.ActInforcedDateTo, "DateTime")
+    </div>
+</div>
+
+<div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.ActTypeId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.ActComplainResultId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActStateId, "GenericDropDown")</div>
 </div>
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
 </div>
 
 <div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ProcessPriorityId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SessionResultId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")</div>
 </div>
 
@@ -65,12 +78,18 @@
                         d.model = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
+                            ActInforcedDateFrom: $("#ActInforcedDateFrom").val(),
+                            ActInforcedDateTo: $("#ActInforcedDateTo").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
                             ActTypeId: $("#ActTypeId").val(),
+                            ActStateId: $("#ActStateId").val(),
+                            SessionResultId: $("#SessionResultId").val(),
+                            ProcessPriorityId: $("#ProcessPriorityId").val(),
                             DocumentGroupId: $("#DocumentGroupId").val(),
                             DocumentTypeId: $("#DocumentTypeId").val(),
                             ActComplainResultId: $("#ActComplainResultId").val(),
+                            CaseCodeId: $("#CaseCodeId").val(),
                             JudgeReporterId: $("#JudgeReporterId").val()
                         };
                     }
@@ -148,6 +167,13 @@
                         searchable: true
                     },
                     {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'documentInfo',
                         data: 'documentInfo',
                         title: 'Документ',
@@ -187,6 +213,7 @@
 <script>
     $(document).ready(function () {
         initLawUnit();
+        initCaseCode();
         $('#CaseGroupId').trigger('change');
         $('#DocumentGroupId').trigger('change');
     });

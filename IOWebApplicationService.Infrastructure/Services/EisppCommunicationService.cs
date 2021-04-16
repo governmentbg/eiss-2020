@@ -1,7 +1,5 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -90,14 +88,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             connector = _connector;
         }
 
-        /// <summary>
-        /// Изпраща подготвените съобщения 
-        /// и обработва отговорите
-        /// </summary>
-        public void SendReceiveMessages()
-        {
-            PushMQ().Wait();
-        }
+   
         public new void SetErrorToMQ(MQEpep mq, int integrationState, string errorDescription)
         {
             mq.ErrorCount = (mq.ErrorCount ?? 0) + 1;
@@ -106,46 +97,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             repo.Update(mq);
             repo.SaveChanges();
         }
-        /// <summary>
-        /// The метода за изпращане на чакащите заявки към ЕИСПП
-        /// </summary>
-        public async Task PushMQ()
-        {
-            ResetMQ_Waiting();
-            //mqID = 946369;
-            var mq = PopOneNotSent(mqID);
-
-            if (!(await InitChanel()))
-            {
-                return;
-            }
-            if (mq == null)
-            {
-                await CloseChanel();
-                return;
-            }
-
-            do
-            {
-                try
-                {
-                    await SendMQ(mq);
-                }
-                catch (ArgumentException ex)
-                {
-                    SetErrorToMQ(mq, IntegrationStates.DataContentError, ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    SetErrorToMQ(mq, IntegrationStates.TransferError, ex.Message);
-                }
-
-                mq = PopOneNotSent(mqID);
-
-            } while (mq != null);
-
-            await CloseChanel();
-        }
+       
         /// <summary>
         /// Инициализира канала за връзка ЕИСПП
         /// </summary>
@@ -173,6 +125,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             return result;
         }
 
+        
         /// <summary>
         /// Изпраща съобщение до ЕИСПП
         /// </summary>
@@ -183,6 +136,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 string message = null;
                 bool isReadyMessage = false;
+                
                 if (mq.Content != null)
                 {
                     message = Encoding.UTF8.GetString(mq.Content);
@@ -203,6 +157,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                     {
                         var model = JsonConvert.DeserializeObject<EisppPackage>(eisppEventItem.RequestData);
                         eisppRulesService.SetIsSelectedAndClear(model);
+                        eisppRulesService.CreatePunismentFromProbationMeasuares(model);
                         message = XmlUtils.SerializeEisppPackage(model);
                     }
                 }
@@ -275,7 +230,6 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 }
                             }
                         }
-
                         if (eventType == EventType.GetCase)
                         {
                             eisppEvent.CriminalProceeding.Case.CaseSetupType = -1;
@@ -307,9 +261,13 @@ namespace IOWebApplicationService.Infrastructure.Services
                     throw new ArgumentException("At least one Event is required");
                 }
             }
+            catch (ArgumentException ex)
+            {
+                SetErrorToMQ(mq, IntegrationStates.DataContentError, ex.Message);
+            }
             catch (InvalidOperationException iop)
             {
-                throw new ArgumentException("The content is not a valid EISPP package", iop);
+                SetErrorToMQ(mq, IntegrationStates.DataContentError, $"The content is not a valid EISPP package {iop.Message}");
             }
         }
 
@@ -387,6 +345,26 @@ namespace IOWebApplicationService.Infrastructure.Services
                         else
                         {
                             SetError(correlationId, "Липсва отговор от ЕИСПП!");
+                        }
+                    } else
+                    {
+                        var eisppSignal = new EisppSignal();
+                        eisppSignal.ResponseData = item;
+                        eisppSignal.DateCreate = DateTime.Now;
+                        repo.Add(eisppSignal);
+                        repo.SaveChanges();
+                        XElement signal = message?.Element("EISPPPAKET")?.Element("DATA")?.Element("SNOSAO");
+                        if (signal != null)
+                        {
+                            eisppSignal.Message = signal.Value;
+                            eisppSignal.StructureId = signal.Attribute("adrstr").Value.ToInt();
+                            eisppSignal.EISSPNumber = signal.Attribute("adrnprnmr").Value;
+                            eisppSignal.CaseType = signal.Attribute("adrdlovid").Value.ToInt();
+                            eisppSignal.ExactCaseType = signal.Attribute("adrdlosig").Value.ToInt();
+                            eisppSignal.CaseYear = signal.Attribute("adrdlogdn").Value.ToInt();
+                            eisppSignal.ShortNumber = signal.Attribute("adrdlonmr").Value.ToInt();
+                            repo.Update(eisppSignal);
+                            repo.SaveChanges();
                         }
                     }
                 }

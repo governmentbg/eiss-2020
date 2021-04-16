@@ -1,9 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Audit.Core;
-using Audit.PostgreSql.Configuration;
-using IO.LogOperation.Service;
+﻿using IO.LogOperation.Service;
 using IO.SignTools.Contracts;
 using IO.SignTools.Services;
 using IOWebApplication.Core.Contracts;
@@ -15,8 +10,8 @@ using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.UserContext;
 using IOWebApplication.Infrastructure.Http;
-using IOWebApplication.Infrastructure.Providers;
 using IOWebApplication.Infrastructure.Services;
+using IOWebApplication.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -44,8 +39,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
-
-
             services.AddScoped<IUrlHelper>(x =>
             {
                 var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;
@@ -53,11 +46,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 return factory.GetUrlHelper(actionContext);
             });
 
+            services.AddScoped<IIOSignToolsService, IOSignToolsService>();
             services.AddScoped<ICommonService, CommonService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<IUserContext, UserContext>();
             services.AddScoped<ILogOperationService<ApplicationDbContext>, LogOperationService<ApplicationDbContext>>();
             services.AddScoped<ICdnService, CdnService>();
+            services.AddScoped<IBaseCdnService, BaseCdnService>();
             services.AddScoped<IHttpRequester, HttpRequester>();
             services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<IDocumentTemplateService, DocumentTemplateService>();
@@ -125,14 +120,13 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IEpepConnectionService, EpepConnectionService>();
             services.AddScoped<IExcelReportService, ExcelReportService>();
             services.AddScoped<IMigrationDataService, MigrationDataService>();
-            services.AddScoped<IOAuditLogDataProvider, IOAuditLogDataProvider>();
             services.AddScoped<ITempFileHandler, TempFileHandler>();
             services.AddScoped<ICaseLawUnitTaskChangeService, CaseLawUnitTaskChangeService>();
             services.AddScoped<IDocumentResolutionService, DocumentResolutionService>();
             services.AddScoped<INewsService, NewsService>();
             services.AddScoped<ICaseDeactivationService, CaseDeactivationService>();
-            services.AddScoped<IIOSignToolsService, IOSignToolsService>();
             services.AddScoped<IDeactivateItemService, DeactivateItemService>();
+            services.AddScoped<IStatisticsReportService, StatisticsReportService>();
 
             services.AddScoped<IAuditLogService, AuditLogService>();
         }
@@ -153,6 +147,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IMongoClient>(s =>
                 new MongoClient(Configuration.GetConnectionString("MongoDbConnection"))
             );
+
         }
     }
 }

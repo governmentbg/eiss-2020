@@ -1,8 +1,6 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Models;
+﻿using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
 using System.Linq.Expressions;
@@ -28,5 +26,7 @@ namespace IOWebApplication.Core.Contracts
         bool SaveExpireInfo<T>(ExpiredInfoVM model) where T : class, IExpiredInfo;
 
         CurrentContextModel GetCurrentContext(int sourceType, long? sourceId, string operation = "", object parentId = null);
+
+        SystemParam SystemParam_Select(string paramName);
     }
 }

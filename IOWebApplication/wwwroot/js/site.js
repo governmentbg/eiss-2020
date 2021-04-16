@@ -1,5 +1,9 @@
 ﻿$(function () {
-    $('#messageContainer').delay(8000).fadeOut(2000);
+    if ($('#messageContainer').find('.alert-success').length > 0) {
+        $('#messageContainer').delay(2500).fadeOut(1000);
+    } else {
+        $('#messageContainer').delay(8000).fadeOut(2000);
+    }
     setInterval(CheckCertificate, 60000);
 });
 
@@ -174,6 +178,27 @@ function requestCombo(url, data, combo, selected, callback) {
     });
 }
 
+function requestComboMulti(url, data, combo, selectedIds, callback) {
+    requestGET_Json(url, data, function (items) {
+        if (selectedIds != "" && selectedIds != null) {
+            let selectedArr = selectedIds.split(",");
+            if (selectedArr.length > 0) {
+                items = items.map(x => {
+                    x.selected = !!selectedArr.find(x.value);
+                    return x;
+                });
+            }
+        }
+        fillComboMulti(items, combo);
+        if (callback) {
+            callback(combo);
+        }
+    });
+}
+function fillComboMulti(items, combo) {
+    var tmlp = '{{#each this}}<option value="{{value}}" {{#if selected}}selected="selected"{{/if}}>{{text}}</option>{{/each}}';
+    $(combo).html(HandlebarsToHtml(tmlp, () => items));
+}
 function setSetSelected(items, selected) {
     if (items && (selected !== undefined)) {
         for (var i = 0; i < items.length; i++) {
@@ -188,7 +213,13 @@ function setSetSelected(items, selected) {
 
 // Показва съобщения от JS
 var messageHelper = (function () {
-    function ShowMessage(message, kind, container) {
+    function ShowMessage(message, kind, container, fast) {
+        let _delay = 8000;
+        let _hide = 1000;
+        if (fast) {
+            _delay = 4000;
+            _hide = 500;
+        }
         if (!container) {
             container = '#messageContainer';
         }
@@ -197,11 +228,11 @@ var messageHelper = (function () {
             '<button data-dismiss="alert" class="close">×</button>' + message + '</div></div></div>';
         $(container).html(messageElement);
         $(container).show();
-        $(container).delay(10000).slideUp(1000);
+        $(container).delay(_delay).slideUp(_hide);
     }
 
     function ShowErrorMessage(message, container) {
-        ShowMessage(message, 'danger', container);
+        ShowMessage(message, 'danger', container, false);
         setTimeout(function () {
             singleClickSubmitEnable();
         }, 500);
@@ -209,11 +240,11 @@ var messageHelper = (function () {
     }
 
     function ShowSuccessMessage(message, container) {
-        ShowMessage(message, 'success', container);
+        ShowMessage(message, 'success', container, true);
     }
 
     function ShowWarning(message, container) {
-        ShowMessage(message, 'warning', container);
+        ShowMessage(message, 'warning', container, false);
         setTimeout(function () {
             singleClickSubmitEnable();
         }, 500);
@@ -318,6 +349,29 @@ function refreshTable(dataTableID) {
     return true;
 }
 
+function checkFilterFormHasData(filterContainer, minFilledCount) {
+    if (!minFilledCount) {
+        minFilledCount = 1;
+    }
+    let filledCount = 0;
+    $(filterContainer).find('input[type="text"],input[type="number"]').each(function (i, e) {
+        if ($(e).val().length > 0 && $(e).val() != '0') {
+            filledCount++;
+        }
+    });
+    $(filterContainer).find('input.ui-autocomplete-input').parent().find('input[type="hidden"]').each(function (i, e) {
+        if ($(e).val().length > 0 && $(e).val() != '0') {
+            filledCount++;
+        }
+    });
+    $(filterContainer).find('select').each(function (i, e) {
+        if ($(e).val().length > 0 && $(e).val() > 0) {
+            filledCount++;
+        }
+    });
+    return filledCount >= minFilledCount;
+}
+
 
 
 // зарежда dropdown-и по зададени параметри и 'ActionUrl'
@@ -364,6 +418,19 @@ function GetCheckBoxValue(checkBoxID) {
     var sel = 'input[name="' + checkBoxID + '"]';
     sel = sel.replace('#', '');
     return $(sel).prop('checked');
+}
+function swalOk(text, callback) {
+    swal({
+        text: text,
+        icon: "warning"
+    })
+        .then((result) => {
+            if (result) {
+                callback();
+            } else {
+                return false;
+            }
+        });
 }
 function swalSubmit(sender, text) {
     swal({
@@ -698,10 +765,25 @@ function mqInfoLoad() {
     });
 }
 
-function printPdfFile(url){
+function printPdfFile(url) {
     var opts = 'width=700,height=500,toolbar=0,menubar=0,location=1,status=1,scrollbars=1,resizable=1,left=0,top=0';
     var newWindow = window.open(url, 'name', opts);
     newWindow.print();
     return false;
 
+}
+
+function getDataTablesVisibleColumns(tbl) {
+    //$('#mainTable').DataTable().columns().column(0).visible()
+    //$('#mainTable').DataTable().settings().init().columns
+
+    let _tbl = $(tbl).DataTable();
+    let colVis = '';
+    let colDefs = _tbl.settings().init().columns;
+    for (var i = 0; i < colDefs.length; i++) {
+        if (_tbl.columns().column(i).visible()) {
+            colVis += ',data:' + colDefs[i].data.toLowerCase() + '|name:' + colDefs[i].name.toLowerCase()+'|';
+        }
+    }
+    return colVis;
 }

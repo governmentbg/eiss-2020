@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -41,6 +38,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int DocumentResolutionBlank = 1041;
         public const int DocumentResolutionPdf = 1042;
         public const int Case = 2;
+        public const int CaseInforcedDate = 20021;
         public const int CaseSelectionProtokol = 20;
         public const int CaseSelectionProtokolFile = 20020;
         public const int CaseInDoc = 21;
@@ -91,6 +89,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CaseSessionActCompany = 40;
         public const int RegixReport = 41;
         public const int CaseDeactivate = 42;
+        public const int ExpenseOrder = 43;
+        public const int ExecListBlank = 44;
         public const int CasePersonAddress = 401;
         public const int CaseSessionPerson = 402;
         public const int CasePersonLink = 403;
@@ -139,6 +139,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const string InstututionPrefix = "inst";
         public const string LawUnitPrefix = "lawu";
         public const string CourtPrefix = "court";
+        public const string CasePersonPrefix = "caseperson";
 
         public const int Integration_EISPP = 10001;
         public const int Integration_EISPP_CardNP = 10002;
@@ -150,6 +151,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int EpepUserAssignment = 11002;
         public const int Files = 20000;
         public const int MobileApp = 19000;
+        public const int Integration_ISPN = 10050;
 
         public static string GetSourceTypeName(int sourceType)
         {
@@ -199,6 +201,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
                 case DocumentDecision: return "Решение";
                 case CaseSessionActDivorce: return "Прекратяване на граждански брак";
                 case ExecList: return "Изпълнителен лист";
+                case ExecListBlank: return "Изпълнителен лист";
                 case CaseLoadIndex: return "Натовареност по дело";
                 case CaseLoadCorrection: return "Коригиращи коефициенти по дело";
                 case Payment: return "Плащане";
@@ -251,6 +254,16 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
             {
                 sourceType = Instutution;
                 sourceId = long.Parse(id.Replace(InstututionPrefix, ""));
+            }
+            else if (id.Contains(LawUnitPrefix))
+            {
+                sourceType = LawUnit;
+                sourceId = long.Parse(id.Replace(LawUnitPrefix, ""));
+            }
+            else if (id.Contains(CasePersonPrefix))
+            {
+                sourceType = CasePerson;
+                sourceId = long.Parse(id.Replace(CasePersonPrefix, ""));
             }
             return (sourceType: sourceType, sourceId: sourceId);
         }

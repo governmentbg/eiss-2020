@@ -1,7 +1,5 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -52,5 +50,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         public virtual Court Court { get; set; }
 
         public virtual ICollection<CourtDutyLawUnit> CourtDutyLawUnits { get; set; }
+
+        [NotMapped]
+        public virtual List<CheckListVM> CheckCourtDutyLawUnits { get; set; }
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplicationService.Infrastructure.Data.Models.Base;
+﻿using IOWebApplicationService.Infrastructure.Data.Models.Base;
 
 namespace IOWebApplicationService.Infrastructure.Contracts
 {

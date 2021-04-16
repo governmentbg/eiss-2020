@@ -1,5 +1,6 @@
 ﻿@model UserProfileVM
 @using IOWebApplication.Infrastructure.Models.ViewModels.Account
+@using IOWebApplication.Infrastructure.Constants
 @{
     ViewData["Title"] = "Редактиране на потребител";
     bool canChange = (bool)ViewBag.canChange;
@@ -28,7 +29,7 @@
                             @Html.DisplayFor(x => x.Email, "obj")
                         </div>
                     </div>
-                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1,5" })
+                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitTypes = "1,5" })
                     @Html.EditorFor(x => x.WorkNotificationToMail)
                     @Html.EditorFor(x => x.IsActive)
                 </fieldset>

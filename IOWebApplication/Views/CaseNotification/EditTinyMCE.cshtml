@@ -21,8 +21,10 @@
     @Html.HiddenFor(x => x.Style)
     @Html.HiddenFor(x => x.Id)
     @Html.HiddenFor(x => x.SourceId)
+    @Html.HiddenFor(x => x.SourceType)
     @Html.HiddenFor(x => x.SmartShrinkingPDF)
     @Html.HiddenFor(x => x.PageOrientation)
+    @Html.HiddenFor(x => x.Title)
     <div>
         @Html.TextAreaFor(model => model.Text)
     </div>

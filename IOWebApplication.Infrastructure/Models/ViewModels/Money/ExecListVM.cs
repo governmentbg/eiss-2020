@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -17,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
 
         [Display(Name = "Дата на издаване")]
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}", ApplyFormatInEditMode = true)]
-        public DateTime RegDate { get; set; }
+        public DateTime? RegDate { get; set; }
 
         [Display(Name = "Активен")]
         public bool IsActive { get; set; }
@@ -52,7 +49,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         [Display(Name = "Номер на дело")]
         public string CaseNumber { get;set; }
 
+        [Display(Name = "Статус")]
+        public string StateName { get;set; }
+
         public int? CaseId { get; set; }
+
+        public string CaseGroupName { get; set; }
+
+        public int ExchangeDocId { get; set; }
     }
 
     public class ExecListFilterVM

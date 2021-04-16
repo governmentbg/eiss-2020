@@ -1,11 +1,9 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -135,11 +133,21 @@ namespace IOWebApplication.Controllers
             {
                 ModelState.AddModelError(nameof(model.FirstName), "Въведете поне едно име");
             }
+            switch (model.InstitutionTypeId)
+            {
+                case NomenclatureConstants.InstitutionTypes.Attourney:
+                    if (string.IsNullOrEmpty(model.EISPPCode))
+                    {
+                        ModelState.AddModelError(nameof(model.EISPPCode), "Въведете 'ЕИСПП код'.");
+                    }
+                    break;
+            }
             var valMessage = commonService.Institution_Validate(model);
             if (!string.IsNullOrEmpty(valMessage))
-            {
-                ModelState.AddModelError(nameof(model.Code), valMessage);
-            }
+                    {
+                        ModelState.AddModelError(nameof(model.Code), valMessage);
+                    }
+            
         }
 
         /// <summary>

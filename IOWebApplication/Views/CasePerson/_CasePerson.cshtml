@@ -103,7 +103,7 @@ else
                     //    searchable: true
                     //},
                     {
-                        className: 'col-md-5',
+                        className: 'col-md-4',
                         name: 'fullName',
                         data: 'fullName',
                         title: 'Наименование',
@@ -111,10 +111,18 @@ else
                         searchable: true
                     },
                     {
-                        className: 'col-md-3',
+                        className: 'col-md-2',
                         name: 'roleName',
                         data: 'roleName',
                         title: 'Вид лице',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'linkForPersonString',
+                        data: 'linkForPersonString',
+                        title: 'Връзки лица',
                         sortable: true,
                         searchable: true
                     },
@@ -176,6 +184,8 @@ else
                 ]
             });
 
+            table.order([0, 'asc']);
+
             $(document).on('click', '.orderButton', savePosition);
 
             function savePosition(e) {
@@ -210,6 +220,8 @@ else
     {
         @if (access.CanChange)
         {
+            <a href="#" data-id="{{id}}" data-direction="up" class="orderButton btn btn-info btn-sm m-b-5" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
+            <a href="#" data-id="{{id}}" data-direction="down" class="orderButton btn btn-primary btn-sm m-b-5" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
             <a href="@Url.Action("Edit", "CasePerson")?id={{id}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
             <a href="@Url.Action("AddLikeAnotherPerson", "CasePerson")?personId={{id}}" class="btn btn-primary btn-sm m-b-5" title="Създай като"><i class="fa fa-copy"></i><span class="hidden-sm hidden-xs"></span></a>
         }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
@@ -86,6 +83,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual ICollection<DeliveryItem> DeliveryItems { get; set; }
 
         public virtual ICollection<CaseNotificationMLink> CaseNotificationMLinks { get; set; }
+        
+        public virtual ICollection<CaseNotificationComplain> CaseNotificationComplains { get; set; }
 
         [ForeignKey(nameof(LawUnitId))]
         public virtual LawUnit LawUnit { get; set; }
@@ -107,14 +106,28 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [NotMapped]
         [Display(Name = "Приложени документи")]
         public bool HaveAppendixVM { get { return HaveАppendix == true; } set { HaveАppendix = value; } }
+        
+        [NotMapped]
+        [Display(Name = "Печат на диспозитив")]
+        public bool HaveDispositivVM { get { return HaveDispositiv == true; } set { HaveDispositiv = value; } }
+
+        [NotMapped]
+        [Display(Name = "Жалби към Акт/протокол")]
+        public string MultiComplainIdVM { get; set; }
+
+        [NotMapped]
+         public string MultiComplainIdResultVM { get; set; }
 
         /// <summary>
         /// Данни за доставка при доставка от куриер/кметство 
         /// </summary>
         [NotMapped]
         [Display(Name = "Дата на последно посещение")]
-        public DateTime? DeliveryDateCC { get ; set; }
+        public DateTime? DeliveryDateCC { get; set; }
 
+        [NotMapped]
+        [Display(Name = "Данни за известяване")]
+        public string DeliveryInfoCC { get; set; }
     }
     /// <summary>
     /// Съобщение/призовки/уведомяване - история
@@ -391,6 +404,18 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("expert_dead_date")]
         [Display(Name = "Крайна дата за изговяне на експертиза")]
         public DateTime? ExpertDeadDate { get; set; }
+
+        [Column("have_dispositiv")]
+        [Display(Name = "Печат на диспозитив")]
+        public bool? HaveDispositiv { get; set; }
+
+        [Column("is_from_email")]
+        public bool? IsFromEmail { get; set; }
+
+        [Column("document_sender_person_id")]
+        [Display(Name = "Подател нa съпровождащ документ")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Подател нa съпровождащ документ")]
+        public int? DocumentSenderPersonId { get; set; }
 
     }       
 }

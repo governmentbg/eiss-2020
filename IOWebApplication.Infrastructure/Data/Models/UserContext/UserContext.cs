@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
@@ -178,6 +175,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
 
             get
             {
+                //TODO
                 int lawUnitId = 0;
                 if (User != null && User.Claims != null && User.Claims.Count() > 0)
                 {

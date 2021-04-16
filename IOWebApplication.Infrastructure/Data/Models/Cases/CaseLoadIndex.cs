@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
@@ -34,6 +31,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("session_type_id")]
         public int? SessionTypeId { get; set; }
 
+        [Display(Name = "Акт")]
         [Column("case_session_act_id")]
         public int? CaseSessionActId { get; set; }
 

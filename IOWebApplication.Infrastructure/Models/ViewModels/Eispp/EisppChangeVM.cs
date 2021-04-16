@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
+﻿using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
@@ -69,6 +66,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         public int? EventFromId { get; set; }
 
         public long? MQEpepId { get; set; }
-
+        public string Mode { get; set; }
     }
 }

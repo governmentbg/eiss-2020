@@ -1,33 +1,27 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using System.Linq;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Account;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
-using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using System.Threading.Tasks;
+using IOWebApplication.Infrastructure.Constants;
 
 namespace IOWebApplication.Core.Contracts
 {
     public interface ICommonService : IBaseService
     {
-        IQueryable<InstitutionVM> Institution_Select(int institutionType, string name, int? id = null);
+        IQueryable<InstitutionVM> Institution_Select(int institutionType, string name, int? id = null, string institutionTypeIds = null);
         bool Institution_SaveData(Institution model);
         string Institution_Validate(Institution model);
         string LawUnit_Validate(LawUnit model);
-
-        IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId);
+        IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId,bool showFree);
         IQueryable<LawUnitVM> LawUnitForDate_Select(int lawUnitType, DateTime? date);
         List<SelectListItem> LawUnitForDate_SelectDDL(int lawUnitType, DateTime? date);
         bool LawUnit_SaveData(LawUnit model);
@@ -49,7 +43,7 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="query">Част от име на обект</param>
         /// Ако има подаден съд, то се взимат всички хора в този съд към текущата дата
         /// <returns></returns>
-        IEnumerable<LabelValueVM> GetLawUnitAutoComplete(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = "current");
+        IEnumerable<LabelValueVM> GetLawUnitAutoComplete(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = NomenclatureConstants.LawUnitSelectMode.All);
 
         /// <summary>
         /// Информация за autocomplete контрола за lawUnit
@@ -57,15 +51,7 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="id">Id на lawunit</param>
         /// <returns></returns>
         LabelValueVM GetLawUnitById(int id);
-
-        /// <summary>
-        /// Всички налични съдии към даден момент в избран съд
-        /// </summary>
-        /// <param name="court"></param>
-        /// <param name="date"></param>
-        /// <returns></returns>
-        IQueryable<LawUnit> LawUnit_ActualJudgeByCourtDate(int court, DateTime? date);
-
+       
         /// <summary>
         /// Всички назначени/командировани съдии в съд
         /// </summary>
@@ -139,6 +125,8 @@ namespace IOWebApplication.Core.Contracts
 
         IEnumerable<LabelValueVM> CourtSelect_ByUser(string userId);
         IEnumerable<LabelValueVM> Get_Courts(string term, int? id);
+        IEnumerable<LabelValueVM> Get_Organizations(string term, int? id);
+        IEnumerable<LabelValueVM> Get_CaseReasons(string term, int? id);
 
         IQueryable<LawUnit> LawUnit_ByCourtDate(int court, DateTime? date, int organizationId);
 
@@ -345,7 +333,7 @@ namespace IOWebApplication.Core.Contracts
         void Address_LocationCorrection(Address model);
         List<BreadcrumbsVM> Breadcrumbs_GetForEisppEvents(int caseId);
         List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventsCourt(int courtId);
-        List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventEdit(int caseId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventEdit(int caseId, string mode);
         List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventChangeEdit(int caseId, bool isDelete);
         List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventChangeEditNew(int caseId, bool isDelete);
         List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventChangeEditOld(int caseId, bool isDelete);
@@ -356,5 +344,10 @@ namespace IOWebApplication.Core.Contracts
         List<BreadcrumbsVM> BankAccount_LoadBreadCrumbsAddEdit(int sourceType, long sourceId);
         List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonSentenceBulletin(int id);
         List<BreadcrumbsVM> Breadcrumbs_GetForCaseSessionActDivorce(int id);
+        CourtLawUnit GetGeneralJudgeCourtLawUnit(int courtId);
+        bool UpdateCaseJudicalCompositionOtdelenie(int CaseId);
+        List<BreadcrumbsVM> Breadcrumbs_ForExecList();
+        List<BreadcrumbsVM> Breadcrumbs_ForExecListEdit(int id);
+        List<BreadcrumbsVM> Breadcrumbs_ForCaseNotificationListPrint(int caseSessionId, int notificationListTypeId);
     }
 }

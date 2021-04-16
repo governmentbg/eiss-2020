@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
@@ -23,13 +20,15 @@ namespace IOWebApplication.Core.Services
     {
         private readonly ICaseDeadlineService caseDeadlineService;
         private readonly ICourtLoadPeriodService courtLoadPeriodService;
+        private readonly IMQEpepService mqEpepService;
         public CaseDeactivationService(
             ILogger<CaseDeactivationService> _logger,
             INomenclatureService _nomService,
             IRepository _repo,
             IUserContext _userContext,
             ICaseDeadlineService _caseDeadlineService,
-            ICourtLoadPeriodService _courtLoadPeriodService
+            ICourtLoadPeriodService _courtLoadPeriodService,
+            IMQEpepService _mqEpepService
         )
         {
             logger = _logger;
@@ -37,6 +36,7 @@ namespace IOWebApplication.Core.Services
             userContext = _userContext;
             caseDeadlineService = _caseDeadlineService;
             courtLoadPeriodService = _courtLoadPeriodService;
+            mqEpepService = _mqEpepService;
         }
 
         public IQueryable<CaseDeactivationVM> Select(CaseDeactivationFilterVM filter)
@@ -129,9 +129,8 @@ namespace IOWebApplication.Core.Services
                 caseModel.CaseStateDescription = model.Description;
                 repo.Update(caseModel);
 
-                caseDeadlineService.DeadLineDeclaredForResolveComplete(caseModel);
-                caseDeadlineService.DeadLineCompanyCase(caseModel);
-
+                mqEpepService.AppendCase(caseModel, EpepConstants.ServiceMethod.Delete);
+                caseDeadlineService.DeadLineOnCase(caseModel);
                 repo.SaveChanges();
 
                 var judgeReportedId = repo.AllReadonly<CaseLawUnit>()

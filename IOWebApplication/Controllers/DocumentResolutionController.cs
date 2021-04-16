@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
@@ -46,6 +43,7 @@ namespace IOWebApplication.Controllers
         public IActionResult Index()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_DocumentResolution(0);
+            SetHelpFile(HelpFileValues.RegisteredDocumentsDisposition);
             return View();
         }
 
@@ -68,7 +66,6 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult ResolutionsByDocument_ListData(IDataTablesRequest request, long documentId)
         {
-
             var data = drService.Select(documentId);
             return request.GetResponse(data);
         }
@@ -156,7 +153,7 @@ namespace IOWebApplication.Controllers
                 ViewBag.docInfo = bc.LastOrDefault()?.Title;
             }
 
-
+            SetHelpFile(HelpFileValues.DispositionTask);
         }
 
         public async Task<IActionResult> Blank(long id)
@@ -180,7 +177,7 @@ namespace IOWebApplication.Controllers
             };
 
             ViewBag.breadcrumbs = commonService.Breadcrumbs_DocumentResolution(id);
-            SetHelpFile(HelpFileValues.SessionAct);
+            SetHelpFile(HelpFileValues.DispositionTask);
 
             return View("BlankEdit", model);
         }
@@ -199,16 +196,18 @@ namespace IOWebApplication.Controllers
             if (await cdnService.MongoCdn_AppendUpdate(htmlRequest))
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                if (!string.IsNullOrEmpty(btnPreview))
+                {
+                    return await blankPreview(model);
+                }
             }
             else
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
+                return RedirectToAction(nameof(Blank), new { id = model.SourceId });
             }
-            if (!string.IsNullOrEmpty(btnPreview))
-            {
-                return await blankPreview(model);
-            }
-            return RedirectToAction(nameof(Blank), new { id = model.SourceId });
+
+            return RedirectToAction(nameof(Edit), new { id = model.SourceId });
         }
 
         private async Task<IActionResult> blankPreview(BlankEditVM model)

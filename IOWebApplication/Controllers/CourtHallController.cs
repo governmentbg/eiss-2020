@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,6 +26,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
+            SetHelpFile(HelpFileValues.Nom14);
             return View();
         }
 
@@ -44,6 +42,11 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        private void SetViewBag()
+        {
+            SetHelpFile(HelpFileValues.Nom14);
+        }
+
         /// <summary>
         /// Добавяне на зала
         /// </summary>
@@ -55,6 +58,7 @@ namespace IOWebApplication.Controllers
                 CourtId = userContext.CourtId,
                 DateFrom = DateTime.Now
             };
+            SetViewBag();
             return View(nameof(Edit), model);
         }
 
@@ -66,6 +70,8 @@ namespace IOWebApplication.Controllers
         public IActionResult Edit(int id)
         {
             var model = service.GetById<CourtHall>(id);
+            SetViewBag();
+
             return View(nameof(Edit), model);
         }
 
@@ -95,6 +101,7 @@ namespace IOWebApplication.Controllers
         {
             if (!ModelState.IsValid)
             {
+                SetViewBag();
                 return View(nameof(Edit), model);
             }
 
@@ -102,6 +109,7 @@ namespace IOWebApplication.Controllers
             if (_isvalid != string.Empty)
             {
                 SetErrorMessage(_isvalid);
+                SetViewBag();
                 return View(nameof(Edit), model);
             }
 
@@ -116,6 +124,8 @@ namespace IOWebApplication.Controllers
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
+
+            SetViewBag();
             return View(nameof(Edit), model);
         }
     }

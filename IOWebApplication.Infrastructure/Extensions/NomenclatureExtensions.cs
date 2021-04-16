@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
@@ -306,7 +303,8 @@ namespace IOWebApplication.Infrastructure.Extensions
         }
         public static void SetPropertyValue<T, Tobj>(this T target, Expression<Func<T, Tobj>> memberLamda, Tobj value)
         {
-            var memberSelectorExpression = memberLamda.Body as MemberExpression;  
+            var memberSelectorExpression = memberLamda.Body as MemberExpression;
+            // TODO: Дали да остане така     
             if (memberSelectorExpression == null)
             {
                 var expressionBody = memberLamda.Body;
@@ -512,6 +510,38 @@ namespace IOWebApplication.Infrastructure.Extensions
                 return value.MakeEndDate().Value;
             }
             return value ?? DateTime.MaxValue;
+        }
+
+        public static string DateToStr(this DateTime? value, string format)
+        {
+            if (value.HasValue)
+            {
+                return value?.ToString(format);
+            }
+            return "";
+        }
+
+        public static string ToJSstring(this int[] model, bool addValueSeparator = true)
+        {
+            string result = "";
+            foreach (var item in model)
+            {
+                if (addValueSeparator)
+                {
+                    result += "|";
+                }
+                result += item.ToString();
+                if (addValueSeparator)
+                {
+                    result += "|";
+                }
+                result += ",";
+            }
+            if (result.Length > 0)
+            {
+                result = result.Substring(0, result.Length - 1);
+            }
+            return result;
         }
     }
 }

@@ -25,7 +25,7 @@
     var lastMigration = (CaseMigrationVM)ViewBag.lastMigration;
     var eisppMigration = (CaseMigrationVM)ViewBag.eisppMigration;
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
-
+    var hasDocResolution = (bool)(ViewBag.hasDocResolution ?? false);
 }
 
 @section breadcrumb{
@@ -122,7 +122,7 @@
                 </div>
                 @if (Model.CourtTypeId == NomenclatureConstants.CourtType.VKS)
                 {
-                    @Html.EditorFor(x => x.CaseReasonId, "GenericDropDown")
+                    @Html.EditorFor(x => x.CaseReasonId, "SelectCaseReason")
                 }
                 @Html.EditorFor(x => x.ProcessPriorityId, "GenericDropDown")
 
@@ -187,6 +187,17 @@
                         <a asp-controller="CaseSelectionProtokol" asp-action="Add" asp-route-caseId="@Model.Id" class="btn btn-info">Разпределение</a>
                     }
                 }
+                @if (ViewBag.savedCaseStateId == NomenclatureConstants.CaseState.Rejected)
+                {
+                    if (hasDocResolution)
+                    {
+                        <a asp-controller="DocumentResolution" asp-action="Edit" asp-route-id="@(ViewBag.docResolutionId)" class="btn btn-info">Разпореждане</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="DocumentResolution" asp-action="Add" asp-route-documentId="@Model.DocumentId" class="btn btn-info">Разпореждане</a>
+                    }
+                }
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
@@ -196,6 +207,15 @@
             </div>
         </form>
     </div>
+    @if (ViewBag.unregisteredManagebleCase == true && lastMigration != null)
+    {
+        <div class="col-md-6">
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Действия</legend>
+                <a href="@Url.Action("Index", "CaseMigration",new { caseId = Model.Id})" class="btn btn-def btn-sm m-b-5" title="Движение на делото"><i class="fa fa-exchange"></i><span class="hidden-sm hidden-xs"> Движение</span></a>
+            </fieldset>
+        </div>
+    }
 </div>
 
 @section scripts {
@@ -209,6 +229,7 @@
                 </text>
             }
             initCaseCode();
+            initCaseReasons();
             $('#CaseTypeId').change(function () {
                 var caseCode = '@Model.CaseCodeId';
                 if ($(this).val() != '@Model.CaseTypeId') {
@@ -241,10 +262,9 @@
         });
 
         function getLoadGroup() {
-            if (@Model.CourtTypeId != @NomenclatureConstants.CourtType.VKS)
-            {
-                requestCombo('@Url.Action("GetDDL_LoadGroupLink","Ajax")', { courtTypeId:@Model.CourtTypeId, caseTypeId: $('#CaseTypeId').val(),caseCodeId:$('#CaseCodeId').val() }, '#LoadGroupLinkId', '@Model.LoadGroupLinkId');
-            }
+            if (@Model.CourtTypeId != @NomenclatureConstants.CourtType.VKS) {
+                requestCombo('@Url.Action("GetDDL_LoadGroupLink","Ajax")', { courtTypeId:@Model.CourtTypeId, caseTypeId: $('#CaseTypeId').val(), caseCodeId: $('#CaseCodeId').val() }, '#LoadGroupLinkId', '@Model.LoadGroupLinkId');
+            } 
         }
 
         function caseCodeChange() {

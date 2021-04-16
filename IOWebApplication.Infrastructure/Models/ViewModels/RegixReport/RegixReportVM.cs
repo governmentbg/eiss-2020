@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -24,6 +21,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
 
         [Display(Name = "Описание")]
         public string Description { get; set; }
+
+        public string RegixGuid { get; set; }
+
+        public int? RegixRequestTypeId { get; set; }
 
         public RegixHeaderFooterVM HeaderFooter { get; set; }
 

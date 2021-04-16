@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
@@ -20,7 +17,7 @@ namespace IOWebApplication.Core.Contracts
     public interface ICaseNotificationService: IBaseService
     {
         IQueryable<CaseNotificationVM> CaseNotification_Select(int CaseId, int? caseSessionId, int? caseSessionActId);
-        bool CaseNotification_SaveData(CaseNotification model, List<CaseNotificationMLink> casePersonLinks);
+        bool CaseNotification_SaveData(CaseNotification model, List<CaseNotificationMLink> casePersonLinks, int[] complainIds);
         IQueryable<CaseSessionNotificationListVM> CaseSessionNotificationList_Select(int caseSessionId, int NotificationListTypeId);
         IQueryable<CaseSessionNotificationListVM> CaseSessionNotificationList_SelectByCaseId(int caseId);
         CheckListViewVM Person_SelectForCheck(int caseId, int caseSessionId, int NotificationListTypeId, bool isCasePerson);
@@ -42,5 +39,9 @@ namespace IOWebApplication.Core.Contracts
         int InsertDeliveryItem(int? courtId);
         Task<List<byte[]>> GetLinkDocument(int notificationId);
         List<SelectListItem> NotificationDeliveryGroupDDL(int notificationTypeId, int caseId);
+        bool IsNotificationDeliveryGroupByEpep(int caseId, int casePersonId, string casePersonLinkIds);
+        void InitCaseNotificationComplains(CaseNotification caseNotification);
+        List<SelectListItem> DocumentSenderPersonDDL(int caseId);
+        List<CaseNotification> GetNotPrintedEpep();
     }
 }

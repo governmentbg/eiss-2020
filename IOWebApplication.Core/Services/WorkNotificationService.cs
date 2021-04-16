@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -59,28 +56,19 @@ namespace IOWebApplication.Core.Services
                 filterData.DateTo = filterData.DateTo?.AddMilliseconds(999);
             }
 
-            var result = repo.AllReadonly<WorkNotification>()
-                            .Include(x => x.WorkNotificationType)
-                            .Include(x => x.User)
-                            .ThenInclude(x => x.LawUnit)
-                            .Include(x => x.FromUser)
-                            .ThenInclude(x => x.LawUnit)
-                            .Include(x => x.Court)
-                            .Include(x => x.FromCourt)
-                            .Where(x => x.CourtId == filterData.CourtId)
-                            .Where(x => x.UserId == filterData.UserId)
-                            .Where(x => x.DateCreated.Date <= filterData.DateCreate)
-                            .Where(x => filterData.WorkNotificationTypeId <= 0 || filterData.WorkNotificationTypeId == x.WorkNotificationTypeId)
-                            .Where(x => filterData.SourceType <= 0 || x.SourceType == filterData.SourceType)
-                            .Where(x => filterData.SourceId <= 0 || x.SourceId == filterData.SourceId)
-                            .Where(x => (filterData.ReadTypeId != WorkNotificationFilterVM.ReadTypeRead && x.DateRead == null) ||
-                                      (filterData.ReadTypeId != WorkNotificationFilterVM.ReadTypeUnRead && x.DateRead >= filterData.DateFrom && x.DateRead <= filterData.DateTo))
-                            .ToList();
-            foreach (var item in result)
-            {
-                item.SourceUrl = GetTaskObjectUrl(item.SourceType, item.SourceId, item.WorkNotificationTypeId);
-            }
-            return result.AsQueryable();
+           return repo.AllReadonly<WorkNotification>()
+                      .Where(x => x.DateExpired == null &&
+                                  x.CourtId == filterData.CourtId &&
+                                  x.UserId == filterData.UserId &&
+                                  x.DateCreated.Date <= filterData.DateCreate &&
+                                  (filterData.WorkNotificationTypeId <= 0 || filterData.WorkNotificationTypeId == x.WorkNotificationTypeId) &&
+                                  (filterData.SourceType <= 0 || x.SourceType == filterData.SourceType) &&
+                                  (filterData.SourceId <= 0 || x.SourceId == filterData.SourceId) &&
+                                  (
+                                    (filterData.ReadTypeId != WorkNotificationFilterVM.ReadTypeRead && x.DateRead == null) ||
+                                    (filterData.ReadTypeId != WorkNotificationFilterVM.ReadTypeUnRead && x.DateRead >= filterData.DateFrom && x.DateRead <= filterData.DateTo)
+                                  )
+                             );
         }
         public bool SaveWorkNotification(WorkNotification workNotification)
         {
@@ -96,19 +84,22 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
-        public bool SaveWorkNotificationRead(long id)
+        public WorkNotification SaveWorkNotificationRead(long id)
         {
             try
             {
                 var notification = repo.GetById<WorkNotification>(id);
-                notification.DateRead = DateTime.Now;
-                repo.SaveChanges();
-                return true;
+                if (notification.DateRead == null)
+                {
+                    notification.DateRead = DateTime.Now;
+                    repo.SaveChanges();
+                }
+                return notification;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
-                return false;
+                return null;
             }
         }
 
@@ -169,7 +160,7 @@ namespace IOWebApplication.Core.Services
                            .FirstOrDefault();
 
             var personList = repo.AllReadonly<CaseSessionNotificationList>()
-                                 .Where(x => x.CaseSessionId == caseNotification.CaseSessionId)
+                                 .Where(x => x.CaseSessionId == caseNotification.CaseSessionId && x.DateExpired == null)
                                  .ToList();
             var delivered = NotificationDelivered();
             var notifications = repo.AllReadonly<CaseNotification>()
@@ -256,25 +247,6 @@ namespace IOWebApplication.Core.Services
                 return NewWorkNotificationDeliveredList(caseNotification);
 
             return null;
-        }
-        public string GetTaskObjectUrl(int sourceType, long sourceId, int workNotificationTypeId)
-        {
-            switch (sourceType)
-            {
-                case SourceTypeSelectVM.Case:
-                    return urlHelper.Action("CasePreview", "Case", new { id = sourceId });
-                case SourceTypeSelectVM.CaseNotification:
-                    return urlHelper.Action("Edit", "CaseNotification", new { id = sourceId });
-                case SourceTypeSelectVM.CaseSession:
-                    {
-                        if (workNotificationTypeId == NomenclatureConstants.WorkNotificationType.DeadLine)
-                            return urlHelper.Action("Preview", "CaseSession", new { id = sourceId, tab = "tabname" }).Replace("tabname", "#tabSessionMainData", StringComparison.InvariantCultureIgnoreCase);
-                        else
-                            return urlHelper.Action("Preview", "CaseSession", new { id = sourceId, tab = "tabname" }).Replace("tabname", "#tabPersonNotification", StringComparison.InvariantCultureIgnoreCase);
-                    }
-                default:
-                    return string.Empty;
-            }
         }
         public WorkNotification NewWorkNotification(CaseDeadline caseDeadline)
         {

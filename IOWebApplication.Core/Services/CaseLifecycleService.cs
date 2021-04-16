@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -64,7 +61,8 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<CaseLifecycle>()
                        .Include(x => x.Case)
                        .Include(x => x.LifecycleType)
-                       .Where(x => x.CaseId == CaseId)
+                       .Where(x => x.CaseId == CaseId &&
+                                   x.DateExpired == null)
                        .Select(x => new CaseLifecycleVM()
                        {
                            Id = x.Id,
@@ -94,10 +92,11 @@ namespace IOWebApplication.Core.Services
 
             var monthCount = ((DateTo.Year - DateFrom.Year) * 12) + DateTo.Month - DateFrom.Month;
 
-            if (DateTo.Month == DateFrom.Month)
-                monthCount += 1;
-
-            if (DateTo.Month != DateFrom.Month)
+            if (monthCount <= 0)
+            {
+                monthCount = 1;
+            }
+            else
             {
                 if (DateTo.Day > DateFrom.Day)
                 {
@@ -120,7 +119,7 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         private int ClacMonth(int CaseId, int Iteration, DateTime DateFrom, DateTime DateTo, List<CaseLifecycle> CaseLifecycleIterations = null)
         {
-            var caseLifecycles = CaseLifecycleIterations == null ? repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == CaseId && x.Iteration == Iteration).ToList() : CaseLifecycleIterations;
+            var caseLifecycles = CaseLifecycleIterations == null ? repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == CaseId && x.DateExpired == null && x.Iteration == Iteration).ToList() : CaseLifecycleIterations;
             var daysProgres = (DateTo.Date - DateFrom.Date).TotalDays;
             double daysStop = 0;
 
@@ -141,7 +140,7 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
-                var caseLifecycles = repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == model.CaseId);
+                var caseLifecycles = repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == model.CaseId && x.DateExpired == null);
 
                 if (model.Id > 0)
                 {
@@ -191,7 +190,7 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
-                var caseLifecycle = repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == CaseId && x.Iteration == 1 && x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress).FirstOrDefault();
+                var caseLifecycle = repo.AllReadonly<CaseLifecycle>().Where(x => x.CaseId == CaseId && x.DateExpired == null && x.Iteration == 1 && x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress).FirstOrDefault();
                 if (caseLifecycle != null)
                 {
                     caseLifecycle.DateFrom = dateTime;
@@ -271,7 +270,7 @@ namespace IOWebApplication.Core.Services
             {
                 // Изчита всички интервали за делото
                 var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId)
+                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
                                          .ToList();
 
                 // Търси главен интервал, които не е затворен и ако са повече от един взема първият (не би трянвало да са повече от един)
@@ -326,7 +325,7 @@ namespace IOWebApplication.Core.Services
             {
                 // Изчита всички интервали за делото
                 var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId)
+                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
                                          .ToList();
 
                 // Търси главен интервал, които не е затворен и ако са повече от един взема първият (не би трянвало да са повече от един)
@@ -367,7 +366,7 @@ namespace IOWebApplication.Core.Services
         public bool CaseLifecycle_IsExistLifcycleAfter(int CaseId, int CaseSessionActId)
         {
             var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId)
+                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
                                          .ToList();
 
             var caseLifecycle = caseLifecycles.Where(x => x.CaseSessionActId == CaseSessionActId)
@@ -390,7 +389,7 @@ namespace IOWebApplication.Core.Services
             {
                 // Изчита всички интервали за делото
                 var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
-                                         .Where(x => x.CaseId == CaseId)
+                                         .Where(x => x.CaseId == CaseId && x.DateExpired == null)
                                          .ToList();
 
                 if (!caseLifecycles.Any(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress &&
@@ -428,9 +427,10 @@ namespace IOWebApplication.Core.Services
         {
             var caseLifecycles = repo.AllReadonly<CaseLifecycle>()
                                      .Where(x => x.CaseId == CaseId &&
+                                                 x.DateExpired == null &&
                                                  x.DateFrom < DateTo)
                                      .ToList() ?? new List<CaseLifecycle>();
-            
+
             var result = caseLifecycles.Where(x => (x.DateTo ?? DateTime.Now.AddYears(100)) <= DateTo && x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress).Sum(x => x.DurationMonths);
             var caseLifecycle = caseLifecycles.Where(x => (x.DateTo ?? DateTime.Now.AddYears(100)) > DateTo && x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress).FirstOrDefault();
             if (caseLifecycle != null)
@@ -444,7 +444,7 @@ namespace IOWebApplication.Core.Services
                     {
                         if (lifecycle.DateTo > DateTo)
                             lifecycle.DateTo = DateTo;
-                    }    
+                    }
                 }
 
                 result += ClacMonth(CaseId, caseLifecycle.Iteration, caseLifecycle.DateFrom, DateTo, lifecycles);
@@ -462,6 +462,7 @@ namespace IOWebApplication.Core.Services
         {
             return !repo.AllReadonly<CaseLifecycle>()
                         .Any(x => x.CaseId == CaseId &&
+                                  x.DateExpired == null &&
                                   x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress &&
                                   x.DateTo == null);
         }

@@ -152,6 +152,7 @@
                         })
                         .then(null, function () {
                             if (cntr === 0) {
+                                // TODO: add is java installed check here
                                 location.href = url;
                             }
                             if (++ cntr >= retries) {

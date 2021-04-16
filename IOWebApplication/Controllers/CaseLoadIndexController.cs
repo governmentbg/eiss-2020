@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,16 +24,19 @@ namespace IOWebApplication.Controllers
         private readonly INomenclatureService nomService;
         private readonly ICaseLawUnitService caseLawUnitService;
         private readonly ICommonService commonService;
+        private readonly ICaseSessionActService caseSessionActService;
 
         public CaseLoadIndexController(ICaseLoadIndexService _service, 
                                        INomenclatureService _nomService, 
                                        ICaseLawUnitService _caseLawUnitService,
-                                       ICommonService _commonService)
+                                       ICommonService _commonService,
+                                       ICaseSessionActService _caseSessionActService)
         {
             service = _service;
             nomService = _nomService;
             caseLawUnitService = _caseLawUnitService;
             commonService = _commonService;
+            caseSessionActService = _caseSessionActService;
         }
 
         #region Case Load Index
@@ -92,7 +92,7 @@ namespace IOWebApplication.Controllers
                 IsMainActivity = isMainActivity,
                 DateActivity = DateTime.Now,
                 LawUnitId = judgeReporterId,
-                DescriptionExpired = isFromCase ? "Case" : null
+                ActTypeId = isFromCase ? 1 : (int?)null
             };
             SetViewbag(caseId, CaseSessionId, isMainActivity, isFromCase);
             return View(nameof(Edit), model);
@@ -115,7 +115,7 @@ namespace IOWebApplication.Controllers
                 return Redirect_Denied();
             }
             SetViewbag(model.CaseId, model.CaseSessionId, model.IsMainActivity, isFromCase);
-            model.DescriptionExpired = isFromCase ? "Case" : null;
+            model.ActTypeId = isFromCase ? 1 : (int?)null;
             return View(nameof(Edit), model);
         }
 
@@ -124,6 +124,7 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseLoadAddActivityId_ddl = service.GetDDL_CaseLoadAddActivity(caseId);
             ViewBag.CaseLoadElementGroupId_ddl = service.GetDDL_CaseLoadElementGroup(caseId);
             ViewBag.LawUnitId_ddl = caseLawUnitService.CaseLawUnit_OnlyJudge_SelectForDropDownList_ValueLawUnitId(caseId, null);
+            ViewBag.CaseSessionActId_ddl = caseSessionActService.GetDropDownList_CaseSessionActByCaseBySession(caseId, caseSessionId);
 
             if (isFromCase)
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseLoadIndex(caseId);
@@ -153,6 +154,9 @@ namespace IOWebApplication.Controllers
             if (model.DateActivity == null)
                 return "Въведете дата";
 
+            if (model.CaseSessionActId < 1)
+                return "Изберете акт";
+
             if (model.IsMainActivity)
             {
                 if (model.CaseLoadElementGroupId < 1)
@@ -163,12 +167,18 @@ namespace IOWebApplication.Controllers
             }
             else
             {
-                if (model.CaseLoadAddActivityId < 1)
+                if ((model.CaseLoadAddActivityId < 1) || (model.CaseLoadAddActivityId == null))
                     return "Изберете група";
+
+                if (!service.IsCaseExistSessionAct(model.CaseId))
+                    return "По това дело няма заседание или постановен акт.";
             }
 
-            if (service.IsExistCaseLoadActivity(model.Id, model.CaseId, model.IsMainActivity, model.LawUnitId, model.CaseLoadElementTypeId, model.CaseLoadAddActivityId))
-                return "Има въведена такава дейност.";
+            if (model.IsMainActivity)
+            {
+                if (service.IsExistCaseLoadActivity(model.Id, model.CaseId, model.IsMainActivity, model.LawUnitId, model.CaseLoadElementTypeId, model.CaseLoadAddActivityId))
+                    return "Има въведена такава дейност.";
+            }
 
             return string.Empty;
         }
@@ -181,7 +191,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult Edit(CaseLoadIndex model)
         {
-            SetViewbag(model.CaseId, model.CaseSessionId, model.IsMainActivity, model.DescriptionExpired != null);
+            SetViewbag(model.CaseId, model.CaseSessionId, model.IsMainActivity, model.ActTypeId != null);
             if (!ModelState.IsValid)
             {
                 return View(nameof(Edit), model);
@@ -195,19 +205,55 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            var isCase = model.DescriptionExpired != null;
+            var isCase = model.ActTypeId != null;
+            model.ActTypeId = null;
             if (service.CaseLoadIndex_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseLoadIndex, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                return RedirectToAction(nameof(Edit), new { id = model.Id, isFromCase = isCase });
+
+                if (isCase)
+                    return RedirectToAction("Index", "CaseLoadIndex", new { id = model.CaseId });
+                else
+                    return RedirectToAction("Preview", "CaseSession", new { id = model.CaseSessionId });
+
+                //return RedirectToAction(nameof(Edit), new { id = model.Id, isFromCase = isCase });
             }
             else
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
             return View(nameof(Edit), model);
+        }
+
+        public IActionResult RecalcCaseLoadIndexByCase(int CaseId)
+        {
+            service.RecalcCaseLoadIndexByCase(CaseId);
+            SetSuccessMessage(MessageConstant.Values.SaveOK);
+            return RedirectToAction("Index", "CaseLoadIndex",  new { id = CaseId });
+        }
+
+        public IActionResult RecalcCaseLoadIndexAllCase()
+        {
+            service.RecalcAllCase();
+            SetSuccessMessage(MessageConstant.Values.SaveOK);
+            return RedirectToAction("IndexElementGroupe", "CaseLoadIndex");
+        }
+
+        [HttpPost]
+        public IActionResult CaseLoadIndex_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var expireObject = service.GetById<CaseLoadIndex>(model.Id);
+            if (service.SaveExpireInfo<CaseLoadIndex>(model))
+            {
+                SetSuccessMessage(MessageConstant.Values.CaseLoadIndexExpireOK);
+                return model.OtherBool ? Json(new { result = true, redirectUrl = Url.Action("Index", "CaseLoadIndex", new { id = expireObject.CaseId }) }) : Json(new { result = true, redirectUrl = Url.Action("Preview", "CaseSession", new { id = expireObject.CaseSessionId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
         }
 
         #endregion
@@ -537,6 +583,99 @@ namespace IOWebApplication.Controllers
         {
             var expireObject = service.GetById<CaseLoadElementTypeRule>(model.Id);
             if (service.ElementTypeRule_Expired(model))
+            {
+                SetSuccessMessage(MessageConstant.Values.CaseSessionExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("EditElementType", "CaseLoadIndex", new { id = expireObject.CaseLoadElementTypeId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ListDataCaseLoadElementTypeStop(IDataTablesRequest request, int CaseLoadElementTypeId)
+        {
+            var data = service.CaseLoadElementTypeStop_Select(CaseLoadElementTypeId);
+            return request.GetResponse(data);
+        }
+
+        public IActionResult AddElementTypeStop(int CaseLoadElementTypeId)
+        {
+            var model = new CaseLoadElementTypeStop()
+            {
+                CaseLoadElementTypeId = CaseLoadElementTypeId,
+            };
+            
+            SetViewbagElementTypeStop(model.CaseLoadElementTypeId);
+            return View(nameof(EditElementTypeStop), model);
+        }
+
+        public IActionResult EditElementTypeStop(int id)
+        {
+            var model = service.GetById<CaseLoadElementTypeStop>(id);
+            SetViewbagElementTypeStop(model.CaseLoadElementTypeId);
+            return View(nameof(EditElementTypeStop), model);
+        }
+
+        private string IsValidElementTypeStop(CaseLoadElementTypeStop model)
+        {
+            if (model.CaseLoadElementTypeStopId < 1)
+                return "Изберете стопиращ елемент";
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Запис на Елементи към група за натовареност по дела - основни дейности
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult EditElementTypeStop(CaseLoadElementTypeStop model)
+        {
+            SetViewbagElementTypeStop(model.CaseLoadElementTypeId);
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditElementTypeStop), model);
+            }
+
+            string _isvalid = IsValidElementTypeStop(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
+                return View(nameof(EditElementTypeStop), model);
+            }
+
+            var currentId = model.Id;
+            if (service.CaseLoadElementTypeStop_SaveData(model))
+            {
+                this.SaveLogOperation(currentId == 0, model.Id);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(EditElementTypeStop), new { id = model.Id });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return View(nameof(EditElementTypeStop), model);
+        }
+
+        void SetViewbagElementTypeStop(int CaseLoadElementTypeId)
+        {
+            var caseLoadElementType = service.GetById<CaseLoadElementType>(CaseLoadElementTypeId);
+            ViewBag.caseLoadElementTypeName = caseLoadElementType.Label;
+            ViewBag.caseLoadElementTypeId = caseLoadElementType.Id;
+            var caseLoadElementGroup = service.GetById<CaseLoadElementGroup>(caseLoadElementType.CaseLoadElementGroupId);
+            ViewBag.caseLoadElementGroupName = caseLoadElementGroup.Label;
+            ViewBag.caseLoadElementGroupId = caseLoadElementGroup.Id;
+            ViewBag.CaseLoadElementTypeStopId_ddl = service.GetDDL_CaseLoadElementType_Replace(CaseLoadElementTypeId);
+        }
+
+        public IActionResult ElementTypeStop_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var expireObject = service.GetById<CaseLoadElementTypeStop>(model.Id);
+            if (service.ElementTypeStop_Expired(model))
             {
                 SetSuccessMessage(MessageConstant.Values.CaseSessionExpireOK);
                 return Json(new { result = true, redirectUrl = Url.Action("EditElementType", "CaseLoadIndex", new { id = expireObject.CaseLoadElementTypeId }) });
@@ -987,6 +1126,14 @@ namespace IOWebApplication.Controllers
             ViewBag.CourtTypeId_ddl = nomService.GetDropDownList<CourtType>();
         }
 
+
+        public IActionResult RecalcAllCourtLawUnitActivity()
+        {
+            service.RecalcAllCourtLawUnitActivity();
+            SetSuccessMessage(MessageConstant.Values.SaveOK);
+            return RedirectToAction("IndexJudgeLoadActivity", "CaseLoadIndex");
+        }
+
         #endregion
 
         #region Court Law Unit Activity
@@ -1021,7 +1168,8 @@ namespace IOWebApplication.Controllers
             var model = new CourtLawUnitActivity()
             {
                 CourtId = userContext.CourtId,
-                ActivityDate = DateTime.Now
+                ActivityDate = DateTime.Now,
+                DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
             SetViewbagCourtLawUnitActivity();
             return View(nameof(EditCourtLawUnitActivity), model);
@@ -1055,17 +1203,26 @@ namespace IOWebApplication.Controllers
             if (model.ActivityDate == null)
                 return "Няма въведена дата";
 
+            if (model.DateTo == null)
+                return "Няма въведена до дата";
+
             if (model.DateTo != null)
             {
                 if (model.DateTo < model.ActivityDate)
                     return "Дата до не може да бъде по малка от датата";
 
-                if ((model.DateTo ?? DateTime.Now).Date < DateTime.Now.Date)
-                    return "Дата до не може да е по-малка от текущата дата";
+                //if ((model.DateTo ?? DateTime.Now).Date < DateTime.Now.Date)
+                //    return "Дата до не може да е по-малка от текущата дата";
+
+                if (model.ActivityDate.Year != (model.DateTo ?? DateTime.Now).Year)
+                    return "Датите не може да са в различни години";
             }
 
-            if (service.IsExistCourtLawUnitActivity(model.LawUnitId, model.JudgeLoadActivityId, model.Id, model.ActivityDate))
-                return "За тази година има избрана тази дейност или от нейната група";
+            //if (service.IsExistCourtLawUnitActivity(model.LawUnitId, model.JudgeLoadActivityId, model.Id, model.ActivityDate))
+            //    return "За тази година има избрана тази дейност или от нейната група";
+
+            if (service.IsExistCourtLawUnitActivityNew(model.LawUnitId, model.JudgeLoadActivityId, model.Id, model.ActivityDate, model.DateTo ?? DateTime.Now))
+                return "За тази година/период има избрана тази дейност";
 
             return string.Empty;
         }
@@ -1110,6 +1267,21 @@ namespace IOWebApplication.Controllers
             ViewBag.JudgeLoadActivityId_ddl = nomService.GetDropDownList<JudgeLoadActivity>(); 
         }
 
+        [HttpPost]
+        public IActionResult CourtLawUnitActivity_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var expireObject = service.GetById<CourtLawUnitActivity>(model.Id);
+            if (service.SaveExpireInfo<CourtLawUnitActivity>(model))
+            {
+                SetSuccessMessage(MessageConstant.Values.CourtLawUnitActivityExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("IndexCourtLawUnitActivity", "CaseLoadIndex") });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
+
         #endregion
 
         #region Report
@@ -1125,6 +1297,7 @@ namespace IOWebApplication.Controllers
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
+            SetHelpFile(HelpFileValues.Report24);
 
             return View(model);
         }
@@ -1155,6 +1328,7 @@ namespace IOWebApplication.Controllers
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
+            SetHelpFile(HelpFileValues.Report25);
 
             return View(model);
         }
@@ -1185,6 +1359,7 @@ namespace IOWebApplication.Controllers
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
+            SetHelpFile(HelpFileValues.Report26);
 
             return View(model);
         }

@@ -407,7 +407,7 @@
             <param name="caseId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseEvidenceController.ListDataSpr(DataTables.AspNet.Core.IDataTablesRequest,System.DateTime,System.DateTime,System.String)">
+        <member name="M:IOWebApplication.Controllers.CaseEvidenceController.ListDataSpr(DataTables.AspNet.Core.IDataTablesRequest,System.DateTime,System.DateTime,System.String,System.String,System.Int32)">
             <summary>
             Метод за изчитане на доказателства по справка за доказателства
             </summary>
@@ -849,7 +849,7 @@
             <param name="lawUnitId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseLawUnitController.EditDismisal(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CaseLawUnitController.ViewDismisal(System.Int32)">
             <summary>
             Редакция на отвод
             </summary>
@@ -863,7 +863,7 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseLawUnitController.EditDismisal(IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnitDismisal)">
+        <member name="M:IOWebApplication.Controllers.CaseLawUnitController.EditDismisal(IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnitDismisal,System.String)">
             <summary>
             Запис на отвод
             </summary>
@@ -1183,6 +1183,13 @@
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.EditElementTypeRule(IOWebApplication.Infrastructure.Data.Models.Nomenclatures.CaseLoadElementTypeRule)">
+            <summary>
+            Запис на Елементи към група за натовареност по дела - основни дейности
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CaseLoadIndexController.EditElementTypeStop(IOWebApplication.Infrastructure.Data.Models.Nomenclatures.CaseLoadElementTypeStop)">
             <summary>
             Запис на Елементи към група за натовареност по дела - основни дейности
             </summary>
@@ -1968,6 +1975,13 @@
             <param name="caseId"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Controllers.CasePersonLinkController.AddSide(System.Int32)">
+            <summary>
+            Добавяне лява/дясна страна във Връзки между страни
+            </summary>
+            <param name="caseId"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Controllers.CasePersonLinkController.Edit(System.Int32)">
             <summary>
             Редакция на Връзки между страни
@@ -2189,18 +2203,25 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.IsValidCasePersonSentencePunishmentCrime(IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonSentencePunishmentCrime)">
-            <summary>
-            Валидация преди запис на Наложени наказания към присъда
-            </summary>
-            <param name="model"></param>
-            <returns></returns>
-        </member>
         <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.EditCasePersonSentencePunishmentCrime(IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonSentencePunishmentCrime)">
             <summary>
             запис на Наложени наказания към присъда
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.CasePersonSentencePunishmentCrime(IOWebApplication.Infrastructure.Data.Models.Cases.CasePersonSentencePunishmentCrime)">
+            <summary>
+            Запис на Обстоятелства по заповедни производства
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.NewItem_CasePersonCrimePunishment(System.Int32)">
+            <summary>
+            Създаване на динамичен панел Наказание към престъпление
+            </summary>
+            <param name="index"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.AddBulletin(System.Int32)">
@@ -2233,7 +2254,7 @@
         </member>
         <member name="M:IOWebApplication.Controllers.CasePersonSentenceController.AddCaseCrimeEispp(System.Int32)">
             <summary>
-            Добаяне импортирано престъпление от ЕИСПП
+            Добавяне импортирано престъпление от ЕИСПП
             </summary>
             <param name="caseId"></param>
             <returns></returns>
@@ -2324,28 +2345,28 @@
             <param name="caseSessionId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseSessionController.AddResult(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CaseSessionController.AddResult(System.Int32,System.Int32)">
             <summary>
             Добавяне на резултат
             </summary>
             <param name="caseSessionId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseSessionController.EditResult(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.CaseSessionController.EditResult(System.Int32,System.Int32)">
             <summary>
             Редакция на резултат
             </summary>
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseSessionController.IsValidResult(IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionResult)">
+        <member name="M:IOWebApplication.Controllers.CaseSessionController.IsValidResult(IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseSessionResultEditVM)">
             <summary>
             Валидация преди запис на резултат
             </summary>
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseSessionController.EditResult(IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionResult)">
+        <member name="M:IOWebApplication.Controllers.CaseSessionController.EditResult(IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseSessionResultEditVM)">
             <summary>
             Запис на резултат
             </summary>
@@ -2373,7 +2394,7 @@
             <param name="HallId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.CaseSessionController.ListDataCaseSessionHallUseSpr(DataTables.AspNet.Core.IDataTablesRequest,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+        <member name="M:IOWebApplication.Controllers.CaseSessionController.ListDataCaseSessionHallUseSpr(DataTables.AspNet.Core.IDataTablesRequest,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.Int32})">
             <summary>
             Извличане на данни за заетост на зали
             </summary>
@@ -3520,7 +3541,7 @@
             <param name="addressId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.DocumentController.NewItem_DocumentPersonAddressByEGN(System.Int32,System.Int32,System.String,System.Int32)">
+        <member name="M:IOWebApplication.Controllers.DocumentController.NewItem_DocumentPersonAddressByEGN(System.Int32,System.Int32,System.String,System.Int32,System.Nullable{System.Int64},System.Nullable{System.Int32},System.String,System.String)">
             <summary>
             Създаване на нов панел за адрес към лице
             </summary>
@@ -3528,6 +3549,10 @@
             <param name="index"></param>
             <param name="uic"></param>
             <param name="adrTypeId"></param>
+            <param name="regixReasonDocumentId"></param>
+            <param name="regixReasonCaseId"></param>
+            <param name="regixReasonDescription"></param>
+            <param name="regixReasonGuid"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.DocumentController.DocumentPersonAddress_Search(System.String)">
@@ -3694,12 +3719,13 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.DocumentTemplateController.Blank(IOWebApplication.Infrastructure.Models.ViewModels.Common.BlankEditVM,System.String)">
+        <member name="M:IOWebApplication.Controllers.DocumentTemplateController.Blank(IOWebApplication.Infrastructure.Models.ViewModels.Common.BlankEditVM,System.String,System.String)">
             <summary>
             Запис на файл
             </summary>
             <param name="model"></param>
             <param name="btnPreview"></param>
+            <param name="reset_mode"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.DocumentTemplateController.GenerateDocumentFile(System.Int32,System.Int64)">
@@ -3730,6 +3756,13 @@
             Запис на файл за Протокол на изпращане на ИЛ в НАП
             </summary>
             <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.EisppController.NewItem_ProbationMeasure(System.Int32,System.String,System.Int32)">
+            <summary>
+            Създаване на динамичен панел с пробационни мерки към престъпление
+            </summary>
+            <param name="index"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.HtmlTemplateController.Index">
@@ -3976,7 +4009,7 @@
             <param name="lawUnitType"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.LawUnitController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.Int32)">
+        <member name="M:IOWebApplication.Controllers.LawUnitController.ListData(DataTables.AspNet.Core.IDataTablesRequest,System.Int32,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.Int32,System.Boolean)">
             <summary>
             Извличане на данни за лица
             </summary>
@@ -3986,6 +4019,7 @@
             <param name="toDate"></param>
             <param name="fullName"></param>
             <param name="specialityId"></param>
+            <param name="showFree"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.LawUnitController.Add(System.Int32)">
@@ -4461,9 +4495,9 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.PreviewRawExpenseOrder(System.Int32)">
+        <member name="M:IOWebApplication.Controllers.MoneyController.SaveFileExpenseOrder(System.Int32)">
             <summary>
-            Запис на разходен ордер в pdf
+            Запис на файл за РКО
             </summary>
             <param name="id"></param>
             <returns></returns>
@@ -4597,18 +4631,12 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.LastDataForReceive(System.String)">
+        <member name="M:IOWebApplication.Controllers.MoneyController.LastDataForReceive(System.Int32,System.Int64)">
             <summary>
             Извличане на данни за получател на сума
             </summary>
-            <param name="receiveId"></param>
-            <returns></returns>
-        </member>
-        <member name="M:IOWebApplication.Controllers.MoneyController.SaveFileExecList(System.Int32)">
-            <summary>
-            Запис на изпълнителен лист в pdf
-            </summary>
-            <param name="id"></param>
+            <param name="sourceType"></param>
+            <param name="sourceId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.MoneyController.GetFileList(System.Int32,System.Int32)">
@@ -4681,6 +4709,22 @@
             </summary>
             <param name="request"></param>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.InitBlankFromTemplateExecList(System.Int32,System.Boolean)">
+            <summary>
+            Зареждане на бланка за ИЛ
+            </summary>
+            <param name="id"></param>
+            <param name="del"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.MoneyController.BlankExecList(System.Int32,System.Boolean)">
+            <summary>
+            Бланка за ИЛ
+            </summary>
+            <param name="id"></param>
+            <param name="del"></param>
             <returns></returns>
         </member>
         <member name="F:IOWebApplication.Controllers.NomenclatureController.nomenclatureService">
@@ -4893,12 +4937,17 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Controllers.RegixReportController.PersonSearch(System.Int32,System.String)">
+        <member name="M:IOWebApplication.Controllers.RegixReportController.PersonSearch(System.Int32,System.String,System.Nullable{System.Int64},System.Nullable{System.Int32},System.String,System.String,System.Nullable{System.Int32})">
             <summary>
             Извличане на данни за лице
             </summary>
             <param name="uicType"></param>
             <param name="uic"></param>
+            <param name="regixReasonDocumentId"></param>
+            <param name="regixReasonCaseId"></param>
+            <param name="regixReasonDescription"></param>
+            <param name="regixReasonGuid"></param>
+            <param name="regixRequestTypeId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.RegixReportController.PersonDataAddress(System.Nullable{System.Int32})">
@@ -5170,13 +5219,13 @@
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.PublicInformationReport">
             <summary>
-            Регистър на издадените европейски удостоверения за наследство
+            Регистър на заявленията за достъп до обществена информация 
             </summary>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Controllers.ReportController.PublicInformationReport(IOWebApplication.Infrastructure.Models.ViewModels.Report.PublicInformationFilterReportVM)">
             <summary>
-            Експорт на Регистър на издадените европейски удостоверения за наследство
+            Регистър на заявленията за достъп до обществена информация 
             </summary>
             <param name="model"></param>
             <returns></returns>
@@ -5545,6 +5594,32 @@
         <member name="M:IOWebApplication.Controllers.ReportController.CaseFinishSecondInstanceListReportExportExcel(IOWebApplication.Infrastructure.Models.ViewModels.Report.CaseFinishListFilterReportVM)">
             <summary>
             Excel Справка Свършени дела за период – въззивни  дела
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportPeriod">
+            <summary>
+            Статистика за период
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReportPeriod(IOWebApplication.Infrastructure.Models.ViewModels.Report.ExcelReportDataFilterVM)">
+            <summary>
+            Статистика експорт
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReport">
+            <summary>
+            Статистика към месец/година от вече готови данни
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Controllers.ReportController.ExcelReport(IOWebApplication.Infrastructure.Models.ViewModels.Report.ExcelReportDataFilterVM)">
+            <summary>
+            Експорт в ексел Статистика към месец/година от вече готови данни
             </summary>
             <param name="model"></param>
             <returns></returns>

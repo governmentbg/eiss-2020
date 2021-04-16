@@ -32,7 +32,7 @@
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs" id="caseTab">
                         <li class="active"><a href="#tabMainData" data-toggle="tab"><i class="fa fa-database"></i> Електронна папка</a></li>
-                        <li class=""><a href="#tabLawUnit" data-toggle="tab"><i class="fa fa-line-chart"></i> Хронология</a></li>
+                        @*<li class=""><a href="#tabLawUnit" data-toggle="tab"><i class="fa fa-line-chart"></i> Хронология</a></li>*@
                         @*<li class=""><a href="#tabSession" data-toggle="tab"><i class="fa fa-users"></i> Заседания</a></li>*@
                     </ul>
 
@@ -50,9 +50,9 @@
                             </div>
                         </div>
 
-                        <div class="tab-pane" id="tabLawUnit">
+                        @*<div class="tab-pane" id="tabLawUnit">
                             <partial name="../Case/_CaseHronologia.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
-                        </div>
+                        </div>*@
                     </div>
                 </div>
 

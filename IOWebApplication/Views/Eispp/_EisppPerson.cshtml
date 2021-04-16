@@ -34,7 +34,14 @@
             <div class="col-lg-2">@Html.EditorFor(x => x.LastName, "hd")</div>
         </div>
         <div class="row">
-            <div class="col-lg-2">@Html.EditorFor(x => x.Gender, "EisppDropDown", null, new { Ddl = ViewBag.GenderDDL })</div>
+            @if (Model.IsBgCitizen)
+            {
+                <div class="col-lg-2">@Html.EditorFor(x => x.Gender, "EisppDropDown", null, new { Ddl = ViewBag.GenderBgDDL })</div>
+            } 
+            else 
+            {
+                <div class="col-lg-2">@Html.EditorFor(x => x.Gender, "EisppDropDown", null, new { Ddl = ViewBag.GenderDDL })</div>
+            }
             <div class="col-lg-2">@Html.EditorFor(x => x.BirthPlace.Country, "EisppDropDown", null, new { Ddl = ViewBag.CountriesDDL })</div>
             <div class="col-lg-3">@Html.EditorFor(x => x.BirthPlace.SettelmentAbroad)</div>
             <div class="col-lg-5">@Html.EditorFor(x => x.FullNameLat)</div>

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 {

@@ -55,15 +55,15 @@
                         name: 'caseGroupLabel',
                         data: 'caseGroupLabel',
                         title: 'Основен вид делo',
-                        sortable: false,
-                        searchable: false
+                        sortable: true,
+                        searchable: true
                      },
                      {
                         className: 'col-md-3 labelGroup',
                         name: 'label',
                         data: 'label',
                          title: 'Наименование',
-                         sortable: false,
+                         sortable: true,
                         searchable: true
                     },
                     {
@@ -71,8 +71,8 @@
                         name: 'dateFrom',
                         data: 'dateFrom',
                         title: 'От дата',
-                        sortable: false,
-                        searchable: false,
+                        sortable: true,
+                        searchable: true,
                         "render": function (value) {
                             if (value)
                                 return moment(value).format("DD.MM.YYYY");
@@ -85,8 +85,8 @@
                         name: 'dateTo',
                         data: 'dateTo',
                         title: 'До дата',
-                        sortable: false,
-                        searchable: false,
+                        sortable: true,
+                        searchable: true,
                         "render": function (value) {
                             if (value)
                                 return moment(value).format("DD.MM.YYYY");
@@ -99,19 +99,19 @@
                         name: 'countCode',
                         data: 'countCode',
                         title: 'Брой шифри',
-                        sortable: false,
-                        searchable: false
+                        sortable: true,
+                        searchable: true
                     },                    
                     {
                         className: 'text-right',
                         name: 'countLawUnit',
                         data: 'countLawUnit',
                         title: 'Брой съдии',
-                        sortable: false,
-                        searchable: false
+                        sortable: true,
+                        searchable: true
                     },                    
                     {
-                        width: 250,
+                        width: 200,
                         name: 'actions',
                         data: "id",
                         title: "",
@@ -167,7 +167,7 @@
     <script id="templateEdit" type="text/x-handlebars-template">
         <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-def btn-sm" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
         <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-def btn-sm" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
-        <a onclick=addFilterCourtGroup("@Url.Action("Edit")/{{this}}") class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
-        <a onclick=addFilterCourtGroup("@Url.Action("EditCourtGroupLawUnit")/{{this}}") class="btn btn-def btn-sm" title="Съдии"><i class="fa fa-user"></i><span class="hidden-sm hidden-xs"> Съдии</span></a>
+        <a onclick=addFilterCourtGroup("@Url.Action("Edit")/{{this}}") class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i></a>
+        <a onclick=addFilterCourtGroup("@Url.Action("EditCourtGroupLawUnit")/{{this}}") class="btn btn-def btn-sm" title="Съдии"><i class="fa fa-user"></i><span class="hidden-md hidden-sm hidden-xs"> Съдии</span></a>
     </script>
 }

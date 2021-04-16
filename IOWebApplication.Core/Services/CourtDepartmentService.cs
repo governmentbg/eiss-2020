@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
@@ -119,7 +116,7 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<SelectListItem> GetDropDownList(int courtId)
         {
-            var courtDepartments = repo.All<CourtDepartment>()
+            var courtDepartments = repo.AllReadonly<CourtDepartment>()
                                        .Where(x => x.CourtId == courtId &&
                                                    x.DepartmentTypeId != NomenclatureConstants.DepartmentType.Systav)
                                        .ToList();

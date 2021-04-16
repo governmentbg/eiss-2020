@@ -1,4 +1,7 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
 @model CaseAlphabeticalFilterVM
 
 @{
@@ -19,6 +22,11 @@
         <div class="col-lg-4">@Html.EditorFor(m => m.Alphabet)</div>
     </div>
     <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitTypes = NomenclatureConstants.LawUnitTypes.Judge.ToString(), courtId = userContext.CourtId })</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.DepartmentId, "GenericDropDown")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.NumberFrom, "Int32Nullable")</div>
+    </div>
+    <div class="row">
         <div class="col-lg-4">@Html.EditorFor(m => m.ReplaceEgn)</div>
     </div>
     <div class="row">
@@ -30,3 +38,9 @@
         </div>
     </div>
 </form>
+
+@section scripts {
+    <script>
+        initLawUnit();
+    </script>
+}

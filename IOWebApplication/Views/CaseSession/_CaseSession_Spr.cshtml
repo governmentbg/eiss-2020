@@ -2,45 +2,50 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @using IOWebApplication.Infrastructure.Constants
 
-<div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
+<form name="formFilter" id="formFilter" action="@Url.Action("ListDataSprExportExcel")" method="post">
+    @Html.HiddenFor(m => m.ColumnVisibility)
+    @Html.HiddenFor(m => m.CaseGroupIds_text)
+    @Html.HiddenFor(m => m.CaseTypeIds_text)
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.DateFrom, "DateTimeWithTime")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.DateTo, "DateTimeWithTime")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.Year, "DateTimeYear")
+        </div>
     </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateTo, "DateTime")
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.CaseSessionTypeId, "GenericDropDown")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(m => m.HallId, "GenericDropDown")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(x => x.SessionResultId, "GenericDropDown")
+        </div>
+        <div class="col-lg-3">
+            @Html.EditorFor(x => x.SessionStateId, "GenericDropDown")
+        </div>
     </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.Year, "DateTimeYear")
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.EditorFor(x => x.SecretaryUserId, "SelectUser")
+        </div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupIds, "GenericDropDownMultiple")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeIds, "GenericDropDownMultiple")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
     </div>
-</div>
-<div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.CaseSessionTypeId, "GenericDropDown")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.HallId, "GenericDropDown")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(x => x.SessionResultId, "GenericDropDown")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(x => x.SessionStateId, "GenericDropDown")
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(x => x.SecretaryUserId, "SelectUser")
-    </div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
-</div>
 
-<div class="row">
-    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
-</div>
-
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentOtdelenieId, "GenericDropDown")</div>
+    </div>
+</form>
 
 
 <div class="row">
@@ -81,13 +86,14 @@
                             CaseSessionTypeId: $('#CaseSessionTypeId').val(),
                             HallId: $('#HallId').val(),
                             SecretaryUserId: $('#SecretaryUserId').val(),
-                            CaseGroupId: $('#CaseGroupId').val(),
-                            CaseTypeId: $('#CaseTypeId').val(),
+                            CaseGroupIds_text: $('#CaseGroupIds_text').val(),
+                            CaseTypeIds_text: $('#CaseTypeIds_text').val(),
                             RegNumber: $('#RegNumber').val(),
                             SessionResultId: $('#SessionResultId').val(),
                             SessionStateId: $('#SessionStateId').val(),
                             JudgeReporterId: $('#JudgeReporterId').val(),
-                            CourtDepartmentId: $('#CourtDepartmentId').val()
+                            CourtDepartmentId: $('#CourtDepartmentId').val(),
+                            CourtDepartmentOtdelenieId: $('#CourtDepartmentOtdelenieId').val()
                         };
                     }
 
@@ -95,61 +101,10 @@
                 filter: false,
                 columns: [
                     {
-                        className: 'col-md-2',
-                        name: 'dateFrom',
-                        data: 'dateFrom',
-                        title: 'Дата и час',
-                        sortable: true,
-                        searchable: true,
-                        render: function(data){
-                            return JsonBGdateTime(data);
-                        }
-                    },
-                    {
-                        className: 'col-md-2',
-                        name: 'sessionTypeLabel',
-                        data: 'sessionTypeLabel',
-                        title: 'Вид заседание',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        className: 'col-md-1',
-                        name: 'courtHallName',
-                        data: 'courtHallName',
-                        title: 'Зала',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        className: 'col-md-1',
-                        name: 'sessionStateLabel',
-                        data: 'sessionStateLabel',
-                        title: 'Статус',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        className: 'col-md-2',
-                        name: 'sessionResultLabel',
-                        data: 'sessionResultLabel',
-                        title: 'Резултат',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
                         className: 'col-md-1',
                         name: 'caseTypeLabel',
                         data: 'caseTypeLabel',
                         title: 'Вид дело',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        className: 'col-md-1',
-                        name: 'judgeReporterLabel',
-                        data: 'judgeReporterLabel',
-                        title: 'Съдия докладчик',
                         sortable: true,
                         searchable: true
                     },
@@ -168,6 +123,83 @@
                     },
                     {
                         className: 'col-md-1',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function(data){
+                            if (data)
+                                return moment(data).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'dateFromTime',
+                        data: 'dateFromTime',
+                        title: 'Час',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            if (data)
+                                return moment(data).format("HH:mm");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'courtHallName',
+                        data: 'courtHallName',
+                        title: 'Зала',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'judgeReporterLabel',
+                        data: 'judgeReporterLabel',
+                        title: 'Съдия докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'judgeCompositionLabel',
+                        data: 'judgeCompositionLabel',
+                        title: 'Членове на състав',
+                        sortable: true,
+                        searchable: true,
+                        visible: false
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'sessionTypeLabel',
+                        data: 'sessionTypeLabel',
+                        title: 'Вид заседание',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'sessionStateLabel',
+                        data: 'sessionStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'sessionResultLabel',
+                        data: 'sessionResultLabel',
+                        title: 'Резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
                         name: 'actions',
                         data: "id",
                         title: "",
@@ -180,6 +212,10 @@
                     }
                 ]
             });
+            $.fn.dataTable.ext.buttons.io_excel.action = function () {
+                $('#ColumnVisibility').val(getDataTablesVisibleColumns('#caseSessionMainTable'));
+                $("#formFilter").submit();
+            };
         }
     }
 </script>
@@ -189,13 +225,32 @@
 </script>
 
 <script>
-        $(document).ready(function () {
-            $('#CaseGroupId').trigger('change');
+    $(document).ready(function () {
+        $('#CaseGroupIds').select2({
         });
+        $('#CaseTypeIds').select2({
+        });
+        $('#CaseGroupIds').trigger('change');
 
-        $('#CaseGroupId').change(function () {
-            requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
-        });
+       
+    });
+
+    $('#CaseGroupIds').change(function () {
+        var str = '';
+        if ($('#CaseGroupIds').val() !== null && $('#CaseGroupIds').val().length > 0) {
+            str = $('#CaseGroupIds').val().join(',');
+        }
+        $('#CaseGroupIds_text').val(str);
+        requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: str }, '#CaseTypeIds', @(Model.CaseTypeIds ?? "0"), function () { $('#CaseTypeIds').trigger('change') });
+    });
+
+    $('#CaseTypeIds').change(function () {
+        var str = '';
+        if ($('#CaseTypeIds').val() !== null && $('#CaseTypeIds').val().length > 0) {
+            str = $('#CaseTypeIds').val().join(',');
+        }
+        $('#CaseTypeIds_text').val(str);
+    });
 
     $(function () {
         initUserAutoComplete();

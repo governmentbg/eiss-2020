@@ -1,4 +1,7 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
 @model DocumentInFilterReportVM
 
 @{
@@ -21,8 +24,12 @@
         <div class="col-lg-1">@Html.EditorFor(m => m.ToNumber, "Int32Nullable")</div>
     </div>
     <div class="row">
-        <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
-        <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDownMultiple")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDownMultiple")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitTypes = NomenclatureConstants.LawUnitTypes.Judge.ToString(), courtId = userContext.CourtId })</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.DepartmentId, "GenericDropDown")</div>
     </div>
     <div class="row">
         <div class="col-md-6 text-left pb-15">
@@ -50,3 +57,9 @@
         $('#CaseTypeIds').val(str);
     });
 </script>
+
+@section scripts {
+    <script>
+        initLawUnit();
+    </script>
+}

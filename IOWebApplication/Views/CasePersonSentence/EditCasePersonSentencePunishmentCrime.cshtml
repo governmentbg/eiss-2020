@@ -21,14 +21,14 @@
     }
 }
 
-<div class="row">
+<div>
     <div class="col-md-12">
         <form asp-action="EditCasePersonSentencePunishmentCrime" method="post">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CaseId)
             @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.CasePersonSentencePunishmentId)
-
+            @Html.ValidationSummary()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
@@ -44,7 +44,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="form-group">
                 @if (access.CanChange)
                 {
@@ -61,3 +60,65 @@
         </form>
     </div>
 </div>
+
+@section scripts {
+    <script>
+        function setCrimePunishmentKind() {
+            $('.crime-punishment-kind').each(function () {
+                if (typeof $(this).data('issetchange') == 'undefined') {
+                    $(this).data('issetchange', true);
+                    $(this).change(function () {
+                        let $punismentContainer = $(this).parents('.crime-punishment-container:first');
+                        EisppGetCrimePunishmentKindMode($punismentContainer, true);
+                    });
+                    $(this).change();
+                }
+            });
+        }
+        initDynamicForms(setCrimePunishmentKind);
+
+        function EisppSetVisibleCrimePunishmentVals($punismentContainer, mode) {
+            console.log(mode);
+            // Глоба
+            if (mode == 'fine') {
+                $punismentContainer.find('.crime-fine-amount').show();
+            } else {
+                $punismentContainer.find('.crime-fine-amount').hide();
+            }
+
+            // Наказание
+            if (mode == 'effective_period' || mode == 'probation' || mode == 'probation_period' || mode == 'period') {
+                $punismentContainer.find('.crime-punishment-period').show();
+            } else {
+                $punismentContainer.find('.crime-punishment-period').hide();
+            }
+        }
+
+        function EisppGetCrimePunishmentKindMode($punismentContainer) {
+            let eventType = 901;
+            let punishmentKind = $punismentContainer.find('.crime-punishment-kind').val();
+            let servingTypeId = '0';
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GetPunishmentKindMode", "EISPP")',
+                dataType: "json",
+                cache: false,
+                data: {
+                    eventType: eventType,
+                    punishmentKind: punishmentKind,
+                    servingType: servingTypeId
+                },
+                success: function (response) {
+                    console.log(response);
+                    EisppSetVisibleCrimePunishmentVals($punismentContainer, response.punishmentKindMode);
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+        $(document).ready(function () {
+            setCrimePunishmentKind();
+        });
+
+    </script>
+}

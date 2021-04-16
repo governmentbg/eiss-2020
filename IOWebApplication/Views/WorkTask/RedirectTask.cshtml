@@ -21,7 +21,7 @@
         @Html.EditorFor(x => x.UserId, "SelectUser")
     </div>
     <div id="selectOrganization">
-        @Html.EditorFor(x => x.CourtOrganizationId, "GenericDropDown")
+        @Html.EditorFor(x => x.CourtOrganizationId, "SelectOrganization")
     </div>
     @if (!string.IsNullOrEmpty(Model.DescriptionCreated))
     {
@@ -48,6 +48,7 @@
 
         });
         initUserAutoComplete();
+        initOrganizations();
         initDatePicker();
         $('input[name="TaskExecutionId"]').click(function () {
             if ($(this).is(':checked')) {

@@ -135,6 +135,14 @@
         return event.key != "Enter" || document.activeElement.tagName == 'TEXTAREA';
     });
 
+    $(document).on("keydown", "div.filter-form", function (event) {
+        if (event.key == "Enter") {
+            if (!$(document.activeElement).hasClass('ui-autocomplete-input')) {
+                $(document.activeElement).parents('div.filter-form:first').find('.filter-button').trigger('click');
+            }
+        }
+    });
+
     disableSchrollOnTabsClick();
 
     $(document).on('click', '.single-click-submit', function (e) {
@@ -191,13 +199,15 @@ function initTinyMCE() {
         plugins: [
             'advlist autolink lists link image charmap print preview anchor',
             'searchreplace visualblocks code fullscreen',
-            'insertdatetime media table paste code help wordcount'
+            'insertdatetime media table powerpaste code help wordcount'
         ],
         browser_spellcheck: true,
         contextmenu: false,
         //Така запазва всички стилове при копиране от Word
         paste_retain_style_properties: "all",
-        valid_styles: { '*': 'color,font-size,font-weight,font-style,text-indent,text-decoration,text-align,border,margin,padding,line-height,page-break-before,margin-left,margin-right,margin-top,margin-bottom,text-transform' },
+        //valid_styles: { '*': 'color,font-size,font-weight,font-style,text-indent,text-decoration,text-align,border,margin,padding,line-height,page-break-before,margin-left,margin-right,margin-top,margin-bottom,text-transform' },
+        // - без margin-left;margin-right връщаме
+        valid_styles: { '*': 'color,font-size,font-weight,font-style,text-indent,text-decoration,text-align,border,padding,line-height,page-break-before,margin-top,margin-bottom,text-transform,margin-left,margin-right' },
         //paste_word_valid_elements: "b,strong,i,em,h1,h2,u,p,ol,ul,li,a[href],span,color,font-size,font-color,font-family,mark",
         //toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
         toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat | help',
@@ -298,7 +308,18 @@ function initPersonSearch() {
         $(e).find('.uic--search').click(function () {
             let uicType = personControl.find('select[id$="UicTypeId"]').val();
             let uic = personControl.find('input[id$="Uic"]').val();
-            requestGET_Json(rootDir + "RegixReport/PersonSearch", { uic: uic, uicType: uicType }, function (data) {
+            let regix_caseid = $('#RegixRequestReason_RegixReasonCaseId').val();
+            let regix_documentid = $('#RegixRequestReason_RegixReasonDocumentId').val();
+            let regix_description = $('#RegixRequestReason_RegixReasonDescription').val();
+            let regix_guid = $('#RegixRequestReason_RegixReasonGuid').val();
+            let regix_type_id = $('#RegixRequestReason_RegixRequestTypeId').val();
+
+            requestGET_Json(rootDir + "RegixReport/PersonSearch", {
+                uic: uic, uicType: uicType,
+                regixReasonDocumentId: regix_documentid, regixReasonCaseId: regix_caseid,
+                regixReasonDescription: regix_description, regixReasonGuid: regix_guid,
+                regixRequestTypeId: regix_type_id
+            }, function (data) {
                 personSearchData = data;
                 let _template = '{{#if this}}{{#each this}}<p><h4>{{registerName}}</h4>{{#if fullName}} Наименование: <b>{{fullName}}</b>{{else}} Имена: <b>{{firstName}} {{middleName}} {{familyName}}</b>{{/if}} <a href="#" onclick="selectPersonSearchData(this,\'{{id}}\',\'' + $(personControl).data('controlid') + '\');return false;"  class="btn btn-xs btn-primary select-person-data">Избери</a></p><hr/>{{/each}}{{else}}<p>Няма намерени данни.</p>{{/if}}';
                 let _html = HandlebarsToHtml(_template, personSearchData);
@@ -339,6 +360,7 @@ function initDatePicker() {
         //showButtonPanel: true,
         format: 'dd.mm.yyyy',
         language: 'bg-BG',
+        orientation: 'bottom'
     });
 
     $(".date-picker").keyup(function (e) {
@@ -365,6 +387,15 @@ function initDatePicker() {
         minViewMode: 'years',
         maxDate: '2030',
         minDate: '1900'
+    });
+
+    $('.datemonthyear-picker').datepicker({
+        todayHighlight: true,
+        autoclose: true,
+        format: 'mm.yyyy',
+        language: 'bg-BG',
+        viewMode: 'months',
+        minViewMode: 'months'
     });
 
     $('.datetime-picker').datetimepicker({

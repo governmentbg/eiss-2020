@@ -1,12 +1,11 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.LogOperation.Models;
+﻿using IO.LogOperation.Models;
 using IO.SignTools.Contracts;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -22,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace IOWebApplication.Controllers
 {
@@ -36,7 +36,6 @@ namespace IOWebApplication.Controllers
         private readonly IDocumentTemplateService documentTemplateService;
         private readonly IConfiguration config;
         private readonly ILogger<FilesController> logger;
-        private readonly IIOSignToolsService signTools;
 
         public FilesController(
             ICdnService _cdnService,
@@ -46,7 +45,6 @@ namespace IOWebApplication.Controllers
             ICaseSessionFastDocumentService _caseSessionFastDocumentService,
             IDocumentService _documentService,
             IDocumentTemplateService _documentTemplateService,
-            IIOSignToolsService _signTools,
             IConfiguration _config,
             ILogger<FilesController> _logger)
         {
@@ -57,7 +55,6 @@ namespace IOWebApplication.Controllers
             caseSessionFastDocumentService = _caseSessionFastDocumentService;
             documentService = _documentService;
             documentTemplateService = _documentTemplateService;
-            signTools = _signTools;
             config = _config;
             logger = _logger;
         }
@@ -66,6 +63,7 @@ namespace IOWebApplication.Controllers
             return View();
         }
 
+        [DisableAudit]
         public IActionResult GetFileList(int sourceType, string sourceID)
         {
             List<CdnItemVM> model = FileList(sourceType, sourceID);
@@ -101,7 +99,7 @@ namespace IOWebApplication.Controllers
                     model = cdnService.Select(sourceType, sourceID).ToList();
                     break;
             }
-            return model;
+            return model.Where(x => x.DateExpired == null).ToList();
         }
 
         private List<CdnItemVM> fileList_CaseSessionDoc(string sourceID)
@@ -210,6 +208,9 @@ namespace IOWebApplication.Controllers
 
         public PartialViewResult UploadFile(int sourceType, string sourceId, string container, string defaultTitle)
         {
+
+
+
             CdnUploadRequest model = new CdnUploadRequest()
             {
                 SourceType = sourceType,
@@ -217,6 +218,17 @@ namespace IOWebApplication.Controllers
                 FileContainer = container,
                 Title = defaultTitle
             };
+
+            var maxFileSize = documentService.SystemParam_Select($"max_filesize_sourcetype_{sourceType}");
+            if (maxFileSize != null)
+            {
+                try
+                {
+                    model.MaxFileSize = int.Parse(maxFileSize.ParamValue);
+                }
+                catch { }
+            }
+
             model.FileUploadEnabled = config.GetValue<bool>("Environment:FileUploadEnabled");
             return PartialView(model);
         }
@@ -227,31 +239,44 @@ namespace IOWebApplication.Controllers
         {
             if (files != null && files.Count() > 0)
             {
-                var file = files.First();
-                using (var ms = new MemoryStream())
+                string result = "failed";
+                if (model.MaxFileSize > 0)
                 {
-                    file.CopyTo(ms);
-                    model.FileContentBase64 = Convert.ToBase64String(ms.ToArray());
-                }
-                model.ContentType = file.ContentType;
-                model.FileName = Path.GetFileName(file.FileName);
-                var response = await cdnService.MongoCdn_UploadFile(model);
-                if (response != null && response.Succeded)
-                {
-                    model.FileId = response.FileId;
-                    epepService.AppendFile(model, EpepConstants.ServiceMethod.Add);
-                    LogFileOperation(model.SourceType, model.SourceId, $"Добавен нов файл {model.FileName}:{model.Title}", OperationTypes.Patch);
-                    return Content("ok");
-                }
-                else
-                {
-                    if (response != null)
+                    long maxSize = (long)model.MaxFileSize * 1024 * 1024;
+                    if (files.Any(x => x.Length > maxSize))
                     {
-                        logger.LogError($"UploadFile Error from CDN: {response.ErrorMessage}");
+                        return Content("max_size");
                     }
-                    return Content("failed");
-
                 }
+                foreach (var file in files)
+                {
+
+                    using (var ms = new MemoryStream())
+                    {
+                        file.CopyTo(ms);
+                        model.FileContentBase64 = Convert.ToBase64String(ms.ToArray());
+                    }
+                    model.ContentType = file.ContentType;
+                    model.FileName = Path.GetFileName(file.FileName);
+                    var response = await cdnService.MongoCdn_UploadFile(model);
+                    if (response != null && response.Succeded)
+                    {
+                        model.FileId = response.FileId;
+                        epepService.AppendFile(model, EpepConstants.ServiceMethod.Add);
+                        LogFileOperation(model.SourceType, model.SourceId, $"Добавен нов файл {model.FileName}:{model.Title}", OperationTypes.Patch);
+                        result = "ok";
+                    }
+                    else
+                    {
+                        if (response != null)
+                        {
+                            logger.LogError($"UploadFile Error from CDN: {response.ErrorMessage}");
+                        }
+                        result = "failed";
+                        break;
+                    }
+                }
+                return Content(result);
             }
             else
             {
@@ -278,12 +303,49 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        public async Task<IActionResult> DeleteFile(string cdnFileId)
+        [HttpPost]
+        public IActionResult ExpireFile(ExpiredInfoVM model)
+        {
+            if (!string.IsNullOrEmpty(model.StringId))
+            {
+                var fileInfo = cdnService.Select(0, null, model.StringId).FirstOrDefault();
+                model.Id = fileInfo.MongoFileId;
+                if (epepService.SaveExpireInfo<MongoFile>(model))
+                {
+                    LogFileOperation(fileInfo.SourceType, fileInfo.SourceId, $"Премахване на файл {fileInfo.FileName}:{fileInfo.Title}", OperationTypes.Patch);
+
+                    return Json(new { result = true, fileContainer = model.FileContainerName });
+                }
+                else
+                {
+                    return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+                }
+            }
+            else
+            {
+                return Json(new { result = false, message = "Няма избран файл." });
+            }
+            //var actModel = service.GetById<CaseSessionAct>(model.Id);
+            //if (service.SaveExpireInfo<CaseSessionAct>(model))
+            //{
+            //    taskService.ExpireAllUnfinishedTasks(SourceTypeSelectVM.CaseSessionAct, model.Id);
+            //    SetAuditContextDelete(service, SourceTypeSelectVM.CaseSessionAct, model.Id);
+            //    SetSuccessMessage(MessageConstant.Values.ActExpireOK);
+            //    return Json(new { result = true, redirectUrl = Url.Action("Preview", "CaseSession", new { id = actModel.CaseSessionId }) });
+            //}
+            //else
+            //{
+            //    return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            //}
+        }
+
+
+        public IActionResult DeleteFile(string cdnFileId)
         {
             if (!string.IsNullOrEmpty(cdnFileId))
             {
                 var fileInfo = cdnService.Select(0, null, cdnFileId).FirstOrDefault();
-                if (await cdnService.MongoCdn_DeleteFile(cdnFileId))
+                if (epepService.SaveExpireInfo<MongoFile>(new ExpiredInfoVM() { Id = fileInfo.MongoFileId }))
                 {
                     LogFileOperation(fileInfo.SourceType, fileInfo.SourceId, $"Премахване на файл {fileInfo.FileName}:{fileInfo.Title}", OperationTypes.Patch);
 
@@ -302,27 +364,23 @@ namespace IOWebApplication.Controllers
         [AllowAnonymous]
         public async Task<FileResult> Preview(string id)
         {
-            var model = await cdnService.MongoCdn_Download(id);
+            var model = await cdnService.MongoCdn_Download(id, CdnFileSelect.PostProcess.Flatten);
 
             var contentDispositionHeader = new ContentDisposition
             {
                 Inline = true,
-                FileName = model.FileName
+                FileName = HttpUtility.UrlPathEncode(model.FileName).Replace(",", "%2C")
             };
 
             Response.Headers.Add("Content-Disposition", contentDispositionHeader.ToString());
+
             byte[] fileBytes = Convert.FromBase64String(model.FileContentBase64);
 
-            //if (model.ContentType.ToLower() == NomenclatureConstants.ContentTypes.Pdf.ToLower())
-            //{
-            //    using (MemoryStream ms = new MemoryStream(fileBytes))
-            //    {
-            //        fileBytes = signTools.FlattenSignature(ms).flattenPdf;
-            //    }
-            //}
 
             return File(fileBytes, model.ContentType);
         }
+
+
 
         [AllowAnonymous]
         public async Task<FileResult> Download(string id)

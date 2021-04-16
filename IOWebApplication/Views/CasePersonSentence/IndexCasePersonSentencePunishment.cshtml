@@ -29,6 +29,11 @@
     </div>
 </div>
 
+<div>
+    <div id="pcContainer">
+    </div>
+</div>
+
 @section scripts {
     <script>
         $(function () {
@@ -53,6 +58,13 @@
                         name: 'sentenceText',
                         data: 'sentenceText',
                         title: 'Описание',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'isMainPunishmentText',
+                        data: 'isMainPunishmentText',
+                        title: 'Основно наказание',
                         sortable: true,
                         searchable: false
                     },
@@ -89,6 +101,6 @@
         {
             <a href="@Url.Action("EditCasePersonSentencePunishment", "CasePersonSentence")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
         }
-        <a href="@Url.Action("IndexCasePersonSentencePunishmentCrime", "CasePersonSentence")?CasePersonSentencePunishmentId={{this}}" class="btn btn-def btn-sm" title="Участие"><i class="fa fa-universal-access"></i><span class="hidden-sm hidden-xs"></span></a>
+        @*<a href="@Url.Action("IndexCasePersonSentencePunishmentCrime", "CasePersonSentence")?CasePersonSentencePunishmentId={{this}}" class="btn btn-def btn-sm" title="Участие"><i class="fa fa-universal-access"></i><span class="hidden-sm hidden-xs"></span></a>*@
     </script>
 }

@@ -23,6 +23,7 @@
         <div class="col-lg-3">
             @Html.EditorFor(m => m.DateToSpr, "DateTime")
         </div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseStateId, "GenericDropDown")</div>
     </div>
 
     <div class="row">
@@ -67,7 +68,8 @@
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
                             CaseCodeId: $("#CaseCodeId").val(),
-                            JudgeReporterId: $("#JudgeReporterId").val()
+                            JudgeReporterId: $("#JudgeReporterId").val(),
+                            CaseStateId: $("#CaseStateId").val()
                         };
                     }
                 },
@@ -131,6 +133,13 @@
                         name: 'caseLifeCycle',
                         data: 'caseLifeCycle',
                         title: 'Срок от първото образуване',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseStateName',
+                        data: 'caseStateName',
+                        title: 'Статус',
                         sortable: true,
                         searchable: true
                     },

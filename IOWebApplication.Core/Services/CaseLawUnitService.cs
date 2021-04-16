@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using AutoMapper.QueryableExtensions;
+﻿using AutoMapper.QueryableExtensions;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
@@ -26,15 +23,18 @@ namespace IOWebApplication.Core.Services
     public class CaseLawUnitService : BaseService, ICaseLawUnitService
     {
         private readonly ICourtLoadPeriodService courtLoadPeriodService;
+        private readonly ICommonService commonService;
 
         public CaseLawUnitService(ILogger<CaseLawUnitService> _logger,
                                   IRepository _repo,
                                   IUserContext _userContext,
+                                  ICommonService _commonService,
                                   ICourtLoadPeriodService _courtLoadPeriodService)
         {
             logger = _logger;
             repo = _repo;
             userContext = _userContext;
+            commonService = _commonService;
             courtLoadPeriodService = _courtLoadPeriodService;
         }
 
@@ -149,7 +149,7 @@ namespace IOWebApplication.Core.Services
 
         public List<SelectListItem> CaseLawUnit_SelectForDropDownList(int caseId, int? caseSessionId)
         {
-            var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == caseSessionId && x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit).ToList();
+            var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>().Where(x => x.CaseSessionId == caseSessionId && x.DateExpired == null && x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit).ToList();
             var date = ((caseSessionId ?? 0) == 0) ? DateTime.Now : repo.GetById<CaseSession>(caseSessionId).DateFrom;
             var result = repo.AllReadonly<CaseLawUnit>()
                              .Include(x => x.LawUnit)
@@ -946,6 +946,7 @@ namespace IOWebApplication.Core.Services
                 }
 
                 repo.SaveChanges();
+                commonService.UpdateCaseJudicalCompositionOtdelenie(model.CaseId);
                 return true;
             }
             catch (Exception ex)
@@ -1006,6 +1007,7 @@ namespace IOWebApplication.Core.Services
             var substitutionsAvailable = repo.AllReadonly<CourtLawUnitSubstitution>()
                                             .Where(x => x.CourtId == caseSession.CourtId)
                                             .Where(x => sessionLawUnitIds.Contains(x.LawUnitId))
+                                            .Where(x => !sessionLawUnitIds.Contains(x.SubstituteLawUnitId))
                                             .Where(x => x.DateFrom <= caseSession.DateTo && x.DateTo >= caseSession.DateFrom)
                                             .Where(FilterExpireInfo<CourtLawUnitSubstitution>(false))
                                             .ProjectTo<CourtLawUnitSubstitutionVM>(CourtLawUnitSubstitutionVM.GetMapping())
@@ -1198,6 +1200,86 @@ namespace IOWebApplication.Core.Services
             }
 
             return selectListItems;
+        }
+
+        public List<CheckListVM> GetCheckListCaseLawUnitByCase(int caseId)
+        {
+            DateTime dateFrom = DateTime.Now;
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+            var lawUnits = repo.AllReadonly<CaseLawUnit>()
+                               .Include(x => x.LawUnit)
+                               .Include(x => x.JudgeRole)
+                               .Include(x => x.JudgeDepartmentRole)
+                               .Where(x => (x.CaseId == caseId) &&
+                                           (x.CaseSessionId == null) &&
+                                           (NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) &&
+                                           (((x.DateTo ?? dateEnd) >= dateFrom))).ToList();
+
+            var result = new List<CheckListVM>();
+
+            if (lawUnits.Count > 1)
+            {
+                foreach (var caseLaw in lawUnits)
+                {
+                    var checkElement = new CheckListVM()
+                    {
+                        Checked = caseLaw.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter,
+                        Label = caseLaw.LawUnit.FullName + " (" + caseLaw.JudgeRole.Label + (caseLaw.JudgeDepartmentRole != null ? "/" + caseLaw.JudgeDepartmentRole.Label : string.Empty) + ")",
+                        Value = caseLaw.Id.ToString()
+                    };
+
+                    result.Add(checkElement);
+                }
+            }
+
+            return result;
+        }
+
+        public List<CheckListVM> GetCheckListCaseLawUnitByCaseAll(int caseId)
+        {
+            DateTime dateFrom = DateTime.Now;
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+            var lawUnits = repo.AllReadonly<CaseLawUnit>()
+                               .Include(x => x.LawUnit)
+                               .Include(x => x.JudgeRole)
+                               .Include(x => x.JudgeDepartmentRole)
+                               .Where(x => (x.CaseId == caseId) &&
+                                           (x.CaseSessionId == null) &&
+                                           (NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) &&
+                                           (((x.DateTo ?? dateEnd) >= dateFrom))).ToList();
+
+            var result = new List<CheckListVM>();
+
+            foreach (var caseLaw in lawUnits)
+            {
+                var checkElement = new CheckListVM()
+                {
+                    Checked = caseLaw.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter,
+                    Label = caseLaw.LawUnit.FullName + " (" + caseLaw.JudgeRole.Label + (caseLaw.JudgeDepartmentRole != null ? "/" + caseLaw.JudgeDepartmentRole.Label : string.Empty) + ")",
+                    Value = caseLaw.Id.ToString()
+                };
+
+                result.Add(checkElement);
+            }
+
+            return result;
+        }
+
+        public bool IsExistJudgeLawUnitInCase(int CaseId)
+        {
+            var lawUnitId = userContext.LawUnitId;
+            var lawUnit = repo.GetById<LawUnit>(lawUnitId);
+            if (lawUnit.LawUnitTypeId != NomenclatureConstants.LawUnitTypes.Judge)
+                return true;
+
+            DateTime dateFrom = DateTime.Now;
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+            return repo.AllReadonly<CaseLawUnit>()
+                       .Any(x => (x.CaseId == CaseId) &&
+                                 (x.CaseSessionId == null) &&
+                                 (x.LawUnitId == lawUnitId) &&
+                                 (NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) &&
+                                 (((x.DateTo ?? dateEnd) >= dateFrom)));
         }
     }
 }

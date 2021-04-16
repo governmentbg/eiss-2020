@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IO.LogOperation.Models;
 using IO.LogOperation.Service;
 using IOWebApplication.Core.Contracts;
@@ -12,12 +9,17 @@ using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Text.Encodings.Web;
+using System.Web;
 
 namespace IOWebApplication.Controllers
 {
@@ -71,6 +73,12 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
+        public IActionResult SearchEkatteEispp(string query)
+        {
+            return new JsonResult(nomenclatureService.GetEkatteEispp(query));
+        }
+
+        [HttpGet]
         public IActionResult GetEkatte(string id)
         {
             var ekatte = nomenclatureService.GetEkatteById(id);
@@ -83,14 +91,16 @@ namespace IOWebApplication.Controllers
             return new JsonResult(ekatte);
         }
 
+        [ResponseCache(Duration = 3600)]
         [AllowAnonymous]
-        public IActionResult GetBlankFooter(int id)
+        public IActionResult GetBlankFooter(int id, string date, string time)
         {
             var court = nomenclatureService.GetById<Infrastructure.Data.Models.Common.Court>(id);
 
             if (court != null)
             {
-                return Content($"<!DOCTYPE html><html><head><meta http-equiv=Content-Type content=\"text/html;charset=utf-8\"></head><body style=\"width:80%;text-align:center;\">{court.Address}, {court.CityName}</body></html>", "text/html");
+                var _info = System.Net.WebUtility.HtmlEncode($"{court.Address}, {court.CityName}");
+                return Content($"<!DOCTYPE html><html><head><meta http-equiv=Content-Type content=\"text/html;charset=utf-8\"></head><body style=\"width:80%;text-align:center;\">{_info}</body></html>", "text/html");
             }
 
             return Content("");
@@ -126,6 +136,18 @@ namespace IOWebApplication.Controllers
             return new JsonResult(model);
         }
 
+        [HttpGet]
+        public IActionResult GetEkatteByEisppCodeCategory(string eisppCode)
+        {
+            var model = nomenclatureService.GetEkatteByEisppCodeCategory(eisppCode);
+
+            if (model == null)
+            {
+                return BadRequest();
+            }
+
+            return new JsonResult(model);
+        }
 
 
         [HttpGet]
@@ -170,9 +192,17 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetDDL_CaseTypeFromCourtType(int caseGroupId, bool addDefaultElement = true)
+        public IActionResult GetDDL_CaseTypes(string caseGroupIds, bool addDefaultElement = false)
         {
-            var model = nomenclatureService.GetDDL_CaseTypeFromCourtType(caseGroupId, addDefaultElement);
+            var model = nomenclatureService.GetDDL_CaseTypes(caseGroupIds, addDefaultElement);
+
+            return Json(model);
+        }
+
+        [HttpGet]
+        public IActionResult GetDDL_CaseTypeFromCourtType(int caseGroupId, string caseInstanceIds, bool addDefaultElement = true)
+        {
+            var model = nomenclatureService.GetDDL_CaseTypeFromCourtType(caseGroupId, caseInstanceIds, addDefaultElement);
 
             return Json(model);
         }
@@ -226,7 +256,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult GetDDL_CaseCode(int caseTypeId)
         {
-            var model = nomenclatureService.GetDDL_CaseCode(caseTypeId);
+            var model = nomenclatureService.GetDDL_CaseCode(caseTypeId.ValueToArray<int>());
 
             return Json(model);
         }
@@ -248,22 +278,22 @@ namespace IOWebApplication.Controllers
 
             return Json(model);
         }
+        //[HttpGet]
+        //public IActionResult Get_CaseCode(int caseTypeId, string query = null, int? id = null)
+        //{
+        //    var model = nomenclatureService.GetDDL_CaseCode(caseTypeId.ValueToArray<int>(), query, id);
+
+        //    return Json(model);
+        //}
         [HttpGet]
-        public IActionResult Get_CaseCode(int caseTypeId, string query = null, int? id = null)
+        public IActionResult Get_CaseCodeByLoadGroup(string caseTypeId, string query = null, int? id = null)
         {
-            var model = nomenclatureService.GetDDL_CaseCode(caseTypeId, query, id);
+            var model = nomenclatureService.GetDDL_CaseCode(caseTypeId.StringToIntArray(), query, id, userContext.CourtTypeId != NomenclatureConstants.CourtType.VKS);
 
             return Json(model);
         }
         [HttpGet]
-        public IActionResult Get_CaseCodeByLoadGroup(int caseTypeId, string query = null, int? id = null)
-        {
-            var model = nomenclatureService.GetDDL_CaseCode(caseTypeId, query, id, userContext.CourtTypeId != NomenclatureConstants.CourtType.VKS);
-
-            return Json(model);
-        }
-        [HttpGet]
-        public PartialViewResult SearchCaseCode(string containerId, int caseTypeId, string callback)
+        public PartialViewResult SearchCaseCode(string containerId, string caseTypeId, string callback)
         {
             var model = new SelectCaseCodeVM()
             {
@@ -273,9 +303,9 @@ namespace IOWebApplication.Controllers
             };
             return PartialView("_SelectCaseCode", model);
         }
-        public IActionResult LoadData_CaseCodeSearch(IDataTablesRequest request, int caseTypeId)
+        public IActionResult LoadData_CaseCodeSearch(IDataTablesRequest request, string caseTypeId)
         {
-            var data = nomenclatureService.GetDDL_CaseCode(caseTypeId, request.Search?.Value, null, userContext.CourtTypeId != NomenclatureConstants.CourtType.VKS);
+            var data = nomenclatureService.GetDDL_CaseCode(caseTypeId.StringToIntArray(), request.Search?.Value, null, userContext.CourtTypeId != NomenclatureConstants.CourtType.VKS);
 
             return request.GetResponse(data.AsQueryable());
         }
@@ -284,6 +314,19 @@ namespace IOWebApplication.Controllers
         public IActionResult Get_Courts(string query = null, int? id = null)
         {
             var model = commonService.Get_Courts(query.EmptyToNull(), id);
+            return Json(model);
+        }
+
+        [HttpGet]
+        public IActionResult Get_Organizations(string query = null, int? id = null)
+        {
+            var model = commonService.Get_Organizations(query.EmptyToNull(), id);
+            return Json(model);
+        }
+        [HttpGet]
+        public IActionResult Get_CaseReasons(string query = null, int? id = null)
+        {
+            var model = commonService.Get_CaseReasons(query.EmptyToNull(), id);
             return Json(model);
         }
         public IActionResult GetDDL_AddressType()
@@ -304,16 +347,27 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get_Institution(int institutionTypeId = 0, string query = null, int? id = null)
+        public IActionResult Get_Institution(int institutionTypeId = 0, string query = null, int? id = null, string institutionTypeIds = null)
         {
-
-            var model = commonService.Institution_Select(institutionTypeId, query.EmptyToNull(), id.EmptyToNull(0).EmptyToNull())
-                                        .ToList()
-                                        .Select(x => new LabelValueVM
-                                        {
-                                            Value = x.Id.ToString(),
-                                            Label = x.FullName + ((!string.IsNullOrEmpty(x.Code)) ? $" ({x.Code})" : "")
-                                        });
+            if (institutionTypeId == 0 && (id ?? 0) == 0)
+            {
+                institutionTypeId = -1;
+                //id = -1;
+            }
+            Expression<Func<InstitutionVM, bool>> dateSearch = x => true;
+            if (!string.IsNullOrEmpty(query))
+            {
+                var dtNow = DateTime.Now.Date;
+                dateSearch = x => x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow;
+            }
+            var model = commonService.Institution_Select(institutionTypeId, query.EmptyToNull(), id.EmptyToNull(), institutionTypeIds)
+                                            .Where(dateSearch)
+                                            .ToList()
+                                            .Select(x => new LabelValueVM
+                                            {
+                                                Value = x.Id.ToString(),
+                                                Label = x.FullName + ((!string.IsNullOrEmpty(x.Code)) ? $" ({x.Code})" : "")
+                                            });
             return Json(model);
         }
 
@@ -352,6 +406,8 @@ namespace IOWebApplication.Controllers
         public ContentResult Get_LogOperationHTML(long id)
         {
             var html = logOperation.LoadData(id);
+            if (!string.IsNullOrEmpty(html))
+                html = html.Replace("multi-transfer-changed_css", "multi-transfer-changed");
             return Content(html);
         }
 
@@ -363,6 +419,8 @@ namespace IOWebApplication.Controllers
                         .Take(1)
                         .FirstOrDefault();
             var currentHtml = logOperation.LoadData(currentId);
+            if (!string.IsNullOrEmpty(currentHtml))
+                currentHtml = currentHtml.Replace("multi-transfer-changed_css", "multi-transfer-changed");
             var priorHtml = string.Empty;
             if (priorOperation != null)
             {
@@ -404,9 +462,9 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
         [HttpGet]
-        public IActionResult GetDDL_HtmlTemplateByDocType(int documentTypeId, int caseId, int sourceType)
+        public IActionResult GetDDL_HtmlTemplateByDocType(int documentTypeId, int caseId, int sourceType, bool setDefault)
         {
-            var model = nomenclatureService.GetDDL_HtmlTemplateByDocType(documentTypeId, caseId, sourceType, userContext.CourtTypeId);
+            var model = nomenclatureService.GetDDL_HtmlTemplateByDocType(documentTypeId, caseId, sourceType, userContext.CourtTypeId, setDefault);
             return Json(model);
         }
 
@@ -492,9 +550,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetDDL_CaseTypeGroupInstance(int caseGroupId, int caseInstanceId)
+        public IActionResult GetDDL_CaseTypeGroupInstance(int caseGroupId, int caseInstanceId, string caseInstanceIds)
         {
-            var model = nomenclatureService.GetDDL_CaseTypeGroupInstance(caseGroupId, caseInstanceId);
+            var model = nomenclatureService.GetDDL_CaseTypeGroupInstance(caseGroupId, caseInstanceId, caseInstanceIds);
 
             return Json(model);
         }
@@ -547,6 +605,39 @@ namespace IOWebApplication.Controllers
         public IActionResult Get_ActLawBase(int id)
         {
             var model = nomenclatureService.Get_ActLawBase(null, id).FirstOrDefault();
+
+            return Json(model);
+        }
+
+        [HttpGet]
+        public IActionResult Get_Source(int sourceTypeId = 0, string query = null, long? id = null)
+        {
+            IEnumerable<LabelValueVM> model;
+            int intId = (int)(id ?? -1);
+            switch (sourceTypeId)
+            {
+                case SourceTypeSelectVM.Court:
+                    {
+                        model = commonService.Get_Courts(query.EmptyToNull(), intId);
+                        break;
+                    }
+                case SourceTypeSelectVM.Instutution:
+                    {
+                        model = commonService.Institution_Select(0, query.EmptyToNull(), intId)
+                                            .ToList()
+                                            .Select(x => new LabelValueVM
+                                            {
+                                                Value = x.Id.ToString(),
+                                                Label = x.FullName + ((!string.IsNullOrEmpty(x.Code)) ? $" ({x.Code})" : "")
+                                            });
+                        break;
+                    }
+                default:
+                    {
+                        model = Enumerable.Empty<LabelValueVM>();
+                        break;
+                    }
+            }
 
             return Json(model);
         }

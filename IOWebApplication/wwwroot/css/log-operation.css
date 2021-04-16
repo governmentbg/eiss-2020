@@ -16,3 +16,7 @@
 .form-group.changed{
     background-color:#fcf7e4;
 }
+
+.multi-transfer-changed {
+    background-color: #fcf7e4 !important;
+}

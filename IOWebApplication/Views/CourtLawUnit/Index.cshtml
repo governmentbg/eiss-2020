@@ -126,7 +126,7 @@
         @switch (lawUnitType)
         {
             case NomenclatureConstants.LawUnitTypes.Judge:
-                @if (periodType == NomenclatureConstants.PeriodTypes.Appoint || periodType == NomenclatureConstants.PeriodTypes.Move)
+                @if (NomenclatureConstants.PeriodTypes.CurrentlyCourtActions.Contains(periodType))
                 {
                     <a href="@Url.Action("EditCourtLawUnitGroup")/{{this}}" class="btn btn-primary btn-sm" title="Групи"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Групи</span></a>
                 }

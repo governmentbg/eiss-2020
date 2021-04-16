@@ -17,6 +17,10 @@
         <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
         <div class="col-lg-4">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     </div>
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.WithActDescription)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.WithoutActDescriptionCaseRestriction)</div>
+    </div>
 </form>
 
 <div class="row">
@@ -41,6 +45,7 @@
         }
         else {
             $('#mainTable').DataTable({
+                'order': [[4, 'asc']],
                 ajax: {
                     "url": "@Url.Action("ListDataCaseDecisionReport", "Report")",
                     "type": "POST",

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Common;
+﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplicationService.Infrastructure.Contracts;
 using IOWebApplicationService.Infrastructure.Data.Common;
@@ -17,6 +14,7 @@ using System.Text;
 using System.Transactions;
 using IOWebApplicationService.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Models.Integrations.DW;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
@@ -24,10 +22,12 @@ namespace IOWebApplicationService.Infrastructure.Services
   {
     private readonly IRepository repo;
     private readonly IDWRepository dwRepo;
-    public DWDocumentService(IRepository _repo, IDWRepository _dwRepo)
+    private readonly IDWErrorLogService serviceErrorLog;
+    public DWDocumentService(IRepository _repo, IDWRepository _dwRepo, IDWErrorLogService _serviceErrorLog)
     {
       this.repo = _repo;
       this.dwRepo = _dwRepo;
+      this.serviceErrorLog = _serviceErrorLog;
     }
     #region Document
     public bool DocumentInsertUpdate(DWDocument current, DWCourt court)
@@ -108,7 +108,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "document", current.Id, ex.Message);
       }
 
 
@@ -184,26 +184,29 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void DocumentTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "DocumentTransfer", 0, "Стартирал");
       IEnumerable<DWDocument> dwDocuments = SelectDocumentTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
 
-
-      while (dwDocuments.Any())
+      bool insertRow = true;
+      while (dwDocuments.Any() && insertRow)
       {
-
+      
 
         foreach (var current in dwDocuments)
         {
-          bool insertRow = DocumentInsertUpdate(current, court);
+          insertRow = DocumentInsertUpdate(current, court);
           if (insertRow)
           {
-            var main = repo.GetById<Document>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<Document>(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.Document}')");
+
+            //var main = repo.GetById<Document>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<Document>(main);
           }
 
         }
         dwRepo.SaveChanges();
-        repo.SaveChanges();
+       // repo.SaveChanges();
         //  ts.Complete();
         //}
 
@@ -284,7 +287,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "document_case_info", current.Id, ex.Message);
       }
 
       return result;
@@ -444,7 +447,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "document_person", current.Id, ex.Message);
       }
 
       return result;
@@ -607,7 +610,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "document_institution_case_info", current.Id, ex.Message);
       }
 
       return result;
@@ -751,7 +754,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "document_link", current.Id, ex.Message);
       }
 
       return result;
@@ -813,12 +816,12 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void DocumentLinkTransfer(DWCourt court, long documenId)
     {
-      IEnumerable<DWDocumentLink> dwDocumentsCseInfo = SelectDocumentLinkTransfer(documenId, court);
+      IEnumerable<DWDocumentLink> dwDocumentLink = SelectDocumentLinkTransfer(documenId, court);
 
 
 
 
-      foreach (var current in dwDocumentsCseInfo)
+      foreach (var current in dwDocumentLink)
       {
         bool insertRow = DocumentLinkInsertUpdate(current);
 
@@ -904,7 +907,7 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "document_decision", current.Id, ex.Message);
       }
 
 
@@ -976,26 +979,29 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void DocumentDecisionTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "DocumentDecisionTransfer", 0, "Стартирал");
       IEnumerable<DWDocumentDecision> dwDocumentsDecisions = SelectDocumentDecisionTransfer(DWConstants.DWTransfer.TransferRowCounts, court);
 
-
-      while (dwDocumentsDecisions.Any())
+      bool insertRow = true;
+      while (dwDocumentsDecisions.Any() && insertRow)
       {
 
 
         foreach (var current in dwDocumentsDecisions)
         {
-          bool insertRow = DocumentDecisionInsertUpdate(current, court);
+          insertRow = DocumentDecisionInsertUpdate(current, court);
           if (insertRow)
           {
-            var main = repo.GetById<DocumentDecision>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<DocumentDecision>(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.DocumentDecision}')");
+
+            //var main = repo.GetById<DocumentDecision>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<DocumentDecision>(main);
           }
 
         }
         dwRepo.SaveChanges();
-        repo.SaveChanges();
+        //repo.SaveChanges();
         //  ts.Complete();
         //}
 
@@ -1070,7 +1076,8 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "document_decision_case", current.Id, ex.Message);
+
       }
 
       return result;

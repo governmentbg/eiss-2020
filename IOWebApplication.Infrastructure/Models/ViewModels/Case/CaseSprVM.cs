@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -52,5 +49,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string ActTypeLabel { get; set; }
         public DateTime? ActReturnDate { get; set; }
         public string LifecycleInfo { get; set; }
+
+        [Display(Name = "Статус")]
+        public string CaseStateName { get; set; }
+
+        public string IsExistFinalAct { get; set; }
     }
 }

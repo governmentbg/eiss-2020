@@ -36,16 +36,18 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { label = ViewBag.lawUnitTypeName, lawUnitType = Model.MasterLawUnitTypeId, courtId = lawUnitSelectCourtId })
+                @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, label = ViewBag.lawUnitTypeName, lawUnitType = Model.MasterLawUnitTypeId, courtId = lawUnitSelectCourtId })
 
-                @if (Model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint || Model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Move)
+                @if (NomenclatureConstants.PeriodTypes.CurrentlyCourtActions.Contains(Model.PeriodTypeId))
                 {
                     @Html.EditorFor(x => x.CourtOrganizationId, "GenericDropDown")
                     @Html.EditorFor(x => x.LawUnitPositionId, "GenericDropDown")
                 }
 
-                @Html.EditorFor(x => x.DateFrom)
-                @Html.EditorFor(x => x.DateTo)
+            <div class="row">
+                <div class="col-lg-6">@Html.EditorFor(m => m.DateFrom)</div>
+                <div class="col-lg-6">@Html.EditorFor(m => m.DateTo)</div>
+            </div>
                 @Html.EditorFor(x => x.Description, "Textarea")
             </div>
 

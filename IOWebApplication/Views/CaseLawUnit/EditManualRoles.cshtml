@@ -40,7 +40,7 @@
                     <partial name="_SaveFormContent" model="@("#saveContainer")" />
 
                     <div class="row">
-                        <div class="col-lg-12">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "5" })</div>
+                        <div class="col-lg-12">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitTypes = "5" })</div>
                     </div>
 
                     <div class="row">

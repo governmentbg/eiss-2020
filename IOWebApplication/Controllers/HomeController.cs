@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
@@ -30,6 +27,11 @@ namespace IOWebApplication.Controllers
             logger = _logger;
             newsService = _newsService;
         }
+
+        //public IActionResult yearname(DateTime id)
+        //{
+        //    return Content(id.FullDateDiggitName());
+        //}
 
         //[Route("signin-stampit?{error}")]
         //[AllowAnonymous]

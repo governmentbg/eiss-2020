@@ -1,6 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +6,7 @@ using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels
 {
-    public class CaseSessionFilterVM
+    public class CaseSessionFilterVM : DataTableFilterExportVM
     {
         [Display(Name = "От дата")]
         public DateTime? DateFrom { get; set; }
@@ -31,8 +29,16 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Основен вид дело")]
         public int CaseGroupId { get; set; }
 
+        [Display(Name = "Основен вид дело")]
+        public string CaseGroupIds { get; set; }
+        public string CaseGroupIds_text { get; set; }
+
         [Display(Name = "Точен вид дело")]
         public int CaseTypeId { get; set; }
+
+        [Display(Name = "Точен вид дело")]
+        public string CaseTypeIds { get; set; }
+        public string CaseTypeIds_text { get; set; }
 
         [Display(Name = "Номер на дело")]
         public string RegNumber { get; set; }
@@ -48,5 +54,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Съдия докладчик")]
         public int JudgeReporterId { get; set; }
+
+        [Display(Name = "Отделение")]
+        public int CourtDepartmentOtdelenieId { get; set; }
     }
 }

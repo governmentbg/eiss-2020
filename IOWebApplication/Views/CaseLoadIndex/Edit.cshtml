@@ -30,7 +30,7 @@
             @Html.HiddenFor(x => x.CaseSessionId)
             @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.IsMainActivity)
-            @Html.HiddenFor(x => x.DescriptionExpired)
+            @Html.HiddenFor(x => x.ActTypeId)
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
@@ -46,7 +46,12 @@
                     </div>
 
                     <div id="divCaseLoadAddActivity">
-                        <div class="col-lg-12">@Html.EditorFor(x => x.CaseLoadAddActivityId, "SelectCaseLoadAddActivity")</div>
+                        @*<div class="col-lg-12">@Html.EditorFor(x => x.CaseLoadAddActivityId, "SelectCaseLoadAddActivity")</div>*@
+                        <div class="col-lg-12">@Html.EditorFor(x => x.CaseLoadAddActivityId, "GenericDropDown")</div>
+                    </div>
+
+                    <div id="divCaseLoadElement">
+                        <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
                     </div>
 
                     <div class="col-lg-12">@Html.EditorFor(x => x.DateActivity, "DateTime")</div>
@@ -58,7 +63,7 @@
                 {
                     <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
                 }
-                @if (string.IsNullOrEmpty(Model.DescriptionExpired))
+                @if (Model.ActTypeId == null)
                 {
                     <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@Model.CaseSessionId" class="btn btn-danger">Назад</a>
                 }
@@ -69,6 +74,11 @@
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
+                        @if (access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, OtherBool = (Model.ActTypeId != null), DialogTitle = "Премахване на натовареност", ExpireSubmitUrl = Url.Action("CaseLoadIndex_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }
@@ -81,7 +91,7 @@
 
     $(document).ready(function () {
         CaseLoadElementGroupIdChange();
-        initCaseLoadAddActivity();
+        //initCaseLoadAddActivity();
         ED_Elements();
     });
 

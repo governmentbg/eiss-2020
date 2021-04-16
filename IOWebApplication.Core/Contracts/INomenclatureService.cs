@@ -1,10 +1,8 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Models;
+﻿using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models;
@@ -129,7 +127,8 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="caseGroupId"></param>
         /// <returns></returns>
         List<SelectListItem> GetDDL_CaseType(int caseGroupId, bool addDefaultElement = true);
-        List<SelectListItem> GetDDL_CaseTypeFromCourtType(int caseGroupId, bool addDefaultElement = true);
+        List<SelectListItem> GetDDL_CaseTypes(string caseGroupIds, bool addDefaultElement = true);
+        List<SelectListItem> GetDDL_CaseTypeFromCourtType(int caseGroupId, string caseInstanceIds, bool addDefaultElement = true);
 
         List<SelectListItem> GetDDL_CaseTypeByDocType(int documentTypeId, int? caseCharacter = null, int? courtOrganizationId = null);
 
@@ -138,8 +137,8 @@ namespace IOWebApplication.Core.Contracts
         /// </summary>
         /// <param name="caseTypeId"></param>
         /// <returns></returns>
-        List<LabelValueVM> GetDDL_CaseCode(int caseTypeId, string search = null, int? caseCodeId = null, bool byLoadGroup = false);
-        IQueryable<CaseCode> Get_CaseCode(int caseTypeId, string search = null, int? caseCodeId = null, bool byLoadGroup = false);
+        List<LabelValueVM> GetDDL_CaseCode(int[] caseTypeIds, string search = null, int? caseCodeId = null, bool byLoadGroup = false);
+        //IQueryable<CaseCode> Get_CaseCode(int caseTypeId, string search = null, int? caseCodeId = null, bool byLoadGroup = false);
 
         /// <summary>
         /// Зарежда характер на делото
@@ -182,7 +181,7 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDDL_LoadGroupLink(int courtTypeId, int caseTypeId, int caseCodeId = NomenclatureConstants.NullVal);
 
         List<HtmlTemplateDdlVM> GetDDL_HtmlTemplate(int notificationTypeId, int caseId, bool addDefaultElement = true);
-        List<SelectListItem> GetDDL_HtmlTemplateByDocType(int documentTypeId, int caseId, int sourceType, int courtTypeId);
+        List<SelectListItem> GetDDL_HtmlTemplateByDocType(int documentTypeId, int caseId, int sourceType, int courtTypeId, bool setDefault);
 
         /// <summary>
         /// Всички codes за една група за мултиселекта
@@ -228,7 +227,7 @@ namespace IOWebApplication.Core.Contracts
         bool CaseCodeGroup_Check(string alias, int caseCodeId);
         List<SelectListItem> GetDDL_MoneyFeeType(int documentGroupId);
         Bank GetBankByCodeSearch(string codeSearch);
-        List<SelectListItem> GetDDL_CaseTypeGroupInstance(int caseGroupId, int caseInstanceId);
+        List<SelectListItem> GetDDL_CaseTypeGroupInstance(int caseGroupId, int caseInstanceId, string caseInstanceIds);
         List<SelectListItem> GetDDL_DecisionType(int documentTypeId);
         int[] GetCaseCodeGroupingByGroup(int groupId);
         List<SelectListItem> GetCountriesWitoutBG_DDL();
@@ -250,8 +249,11 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDDL_ByCourtTypeInstanceList(int[] courtTypeInstanceList, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_SessionState(bool InitialOnly);
         List<SelectListItem> GetDDL_SessionStateFiltered(int currentStateId);
+        List<SelectListItem> GetDDL_SessionStateRoute(int currentStateId);
         List<SelectListItem> GetDDL_Specyality_ByLowUnit_Type(int lawunitTypeId, bool addDefaultElement = true, bool addAllElement = false);
         int GetInnerCodeFromCodeMapping(string alias, string outerCode);
+        string GetOuterCodeFromCodeMapping(string alias, string innerCode);
+        CodeMapping GetInnerCodeFromCodeMappingStr(string alias, string outerCode);
         List<SelectListItem> GetDDL_CaseSessionResult(bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_CaseTypeByCourtType(int caseGroupId, int courtTypeId, bool addDefaultElement);
         List<SelectListItem> GetDDL_MoneyFineType(int caseGroupId, bool addDefaultElement = true);
@@ -274,5 +276,18 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDDL_IsFinalAct(bool addDefaultElement = true);
         CaseRegNumberVM DecodeCaseRegNumber(string regNumber);
         IEnumerable<LabelValueVM> Get_ActLawBase(string query, int id);
+        List<SelectListItem> GetDDL_ObligationJuryReportPersonType();
+
+        int[] GetHtmlTemplateForCasePerson();
+        List<SelectListItem> GetDDL_MoneyCountryReceiver();
+        HierarchicalNomenclatureDisplayModel GetEkatteEispp(string query);
+        HierarchicalNomenclatureDisplayItem GetEkatteByEisppCodeCategory(string eisppCode);
+
+        IQueryable<LawBaseVM> LawBase_Select(int CaseId);
+        bool LawBase_SaveData(LawBaseEditVM model);
+        Case GetCaseWithIncluded(int CaseId);
+        LawBaseEditVM LawBase_GetById(int id);
+        IEnumerable<SelectListItem> GetDDL_LawBase(int CaseId, bool addDefaultElement = true, bool addAllElement = false);
+        bool IsExistsNameLawBase(string Label);
     }
 }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
@@ -42,7 +39,7 @@ namespace IOWebApplication.Core.Services
                             .FirstOrDefault();
             if (result == null)
             {
-                throw new Exception($"ЕПЕП/Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
+                throw new Exception($"Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
             }
             return result;
         }

@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using ICSharpCode.SharpZipLib.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
@@ -26,13 +23,19 @@ namespace IOWebApplication.Controllers
 
         private readonly ICaseDeactivationService service;
         private readonly ICdnService cdnService;
+        private readonly ICaseSessionService caseSessionService;
+        private readonly ICaseSessionActService caseSessionActService;
 
         public CaseDeactivationController(
             ICaseDeactivationService _service,
-            ICdnService _cdnService)
+            ICdnService _cdnService,
+            ICaseSessionService _caseSessionService,
+            ICaseSessionActService _caseSessionActService)
         {
             this.service = _service;
             this.cdnService = _cdnService;
+            caseSessionService = _caseSessionService;
+            caseSessionActService = _caseSessionActService;
         }
 
         public IActionResult Index()
@@ -41,6 +44,7 @@ namespace IOWebApplication.Controllers
             {
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1)
             };
+            SetHelpFile(HelpFileValues.AnnulledCasesRegister);
             return View(model);
         }
 
@@ -55,14 +59,38 @@ namespace IOWebApplication.Controllers
         {
             var model = new CaseDeactivation();
             ViewBag.courtId = userContext.CourtId;
+            SetHelpFile(HelpFileValues.AnnulledCasesRegister);
             return View(model);
+        }
+
+        private string IsValid(CaseDeactivation model)
+        {
+            if (caseSessionActService.IsExistCaseSessionActByCase(model.CaseId))
+            {
+                return "Не може да анулирате дело в което има активни актове.";
+            }
+
+            if (caseSessionService.IsExistCaseSession(model.CaseId))
+            {
+                return "Не може да анулирате дело в което има активни заседания.";
+            }
+
+            return string.Empty;
         }
 
         [HttpPost]
         public async Task<IActionResult> Add(CaseDeactivation model)
         {
+            SetHelpFile(HelpFileValues.AnnulledCasesRegister);
             if (!ModelState.IsValid)
             {
+                return View(model);
+            }
+
+            string _isvalid = IsValid(model);
+            if (_isvalid != string.Empty)
+            {
+                SetErrorMessage(_isvalid);
                 return View(model);
             }
 
@@ -104,6 +132,7 @@ namespace IOWebApplication.Controllers
         {
             var model = service.Select(new CaseDeactivationFilterVM { Id = id }).FirstOrDefault();
             ViewBag.html = await this.RenderPartialViewAsync("~/Views/CaseDeactivation/", "_Protokol.cshtml", model, true);
+            SetHelpFile(HelpFileValues.AnnulledCasesRegister);
             return View(model);
         }
 

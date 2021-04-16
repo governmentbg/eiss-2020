@@ -56,7 +56,7 @@
         }
         else
         {
-            @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { label = "none", lawUnitTypes = Model.LawUnitTypeId, courtId = userContext.CourtId })
+            @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, label = "none", lawUnitTypes = Model.LawUnitTypeId, courtId = userContext.CourtId })
         }
     </div>
     @*@if (Model.LawUnitTypeId != NomenclatureConstants.LawUnitTypes.Jury.ToString())*@

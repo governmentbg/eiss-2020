@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Xml.Serialization;
 
 namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
@@ -56,6 +53,13 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         /// </summary>
         [XmlAttribute("dvjdlodvn")]
         public string RegistrationNumber { get; set; }
+
+        /// <summary>
+        /// dvjprc
+        /// Причина за изпращане на НД
+        /// </summary>
+        [XmlAttribute("dvjprc")]
+        public int Reason { get; set; }
 
         /// <summary>
         /// Дата, която трябва да се игнорира

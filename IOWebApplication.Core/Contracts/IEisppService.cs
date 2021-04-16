@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -29,16 +26,15 @@ namespace IOWebApplication.Core.Contracts
         EisppTblElement GetByCode(string Code);
         IEnumerable<LabelValueVM> Get_EISPPTblElement(string EisppTblCode, string term, string id);
 
-        Task<EisppPackage> GeneratePackage(int caseId, int eventType, int? casePersonId, string connectedCaseId, int? caseSessionActId, int? oldMeasureId, int? measureId);
+        Task<EisppPackage> GeneratePackage(EisppEventVM model);
         bool SaveCasePackageData(EisppPackage model, int? eventFromId);
-        List<SelectListItem> GetDDL_EISPPEventType(int caseCodeId, int caseTypeId, bool addDefaultElement = true);
-        Task<bool> DeletePackageJson(EisppPackage model);
-        void CPPersonCrimeUnion(EisppPackage eisppPackage);
+        List<SelectListItem> GetDDL_EISPPEventType(int caseCodeId, int caseTypeId, bool isExternal, bool addDefaultElement = true);
+         void CPPersonCrimeUnion(EisppPackage eisppPackage);
         EisppEventVM GetEisppEventVM(string sourceType, string sourceId, int caseId, int? caseSessionActId);
         EisppDropDownVM GetDDL_EISPPTblElementWithRules(string EisppTblCode, int eventType, string rulePath, bool addDefaultElement = true);
         string CheckSum(string code);
         List<SelectListItem> GetDDL_ConnectedCases(int caseId, bool addDefaultElement = true);
-        Task<bool> GetCase(EisppEventVM model);
+        Task<bool> SaveCaseMigration(EisppEventVM model);
         IQueryable<EisppEventItemVM> GetPackages(EisppEventFilterVM filter);
         List<SelectListItem> GetLinkTypeDDL(bool addDefaultElement = true);
         List<SelectListItem> CaseSessionActDDL(int caseId, int? eventTypeId, DateTime? DateFrom, DateTime? DateTo, string defaultText = "Избери");
@@ -50,7 +46,7 @@ namespace IOWebApplication.Core.Contracts
         Task<CdnDownloadResult> GetNPCard(int id);
         Task<CdnDownloadResult> GetEisppResponse(int id);
         byte[] GetEisppRequest(int id);
-        List<SelectListItem> GetPersonProceduralCoercionMeasure(int casePersonId, bool isOld, bool addDefaultElement = true);
+        List<SelectListItem> GetPersonProceduralCoercionMeasure(int casePersonId, bool isOld, int eventId, bool addDefaultElement = true);
         CasePersonSentence GetSentence(int? casePersonId, int? caseSessionActId);
         EisppChangeVM GeneratePackageFrom(int eventFromId);
         int GeneratePackageDelete(int eventId);
@@ -63,5 +59,15 @@ namespace IOWebApplication.Core.Contracts
         Task<List<SelectListItem>> GetDDL_PneNumbers(int caseId, string eisppNumber);
         string GetEisppNumber(int caseId);
         string GetElementLabel(string code);
+        bool IsForEisppNum(Case caseCurrent);
+        bool MakeEisppNumberPNE(CaseCrime caseCrime, int courtId);
+        bool MakeEisppNumberNP(Case caseCurrent);
+        List<SelectListItem> GetIntegrationStateDDL();
+        bool HaveEventForMeasure(int measureId);
+        bool HaveEventForPunishment(int casePersonSentencePunishmentId);
+        bool HaveEventForCrime(int caseCrimeId);
+        List<SelectListItem> GetDDL_CaseMigrations(int caseId);
+        List<SelectListItem> DocumentComplaintDDL(int caseId);
+        bool GetCaseIsExternal(int caseId);
     }
 }

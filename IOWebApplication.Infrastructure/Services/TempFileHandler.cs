@@ -1,27 +1,23 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IO.SignTools.Contracts;
+﻿using IO.SignTools.Contracts;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Services
 {
     public class TempFileHandler : ITempFileHandler
     {
-        private readonly ICdnService cdn;
+        private readonly IBaseCdnService cdn;
 
         private readonly ILogger logger;
 
         public TempFileHandler(
-            ICdnService _cdn,
+            IBaseCdnService _cdn,
             ILogger<TempFileHandler> _logger)
         {
             cdn = _cdn;
@@ -39,23 +35,23 @@ namespace IOWebApplication.Infrastructure.Services
 
         public async Task<byte[]> ReadFile(string filename)
         {
-            var result = await cdn.MongoCdn_Download(new CdnFileSelect() 
-            {
-                SourceId = filename,
-                SourceType = SourceTypeSelectVM.TemporaryFile
-            });
+            var fileItem = cdn.Select(SourceTypeSelectVM.TemporaryFile, filename).FirstOrDefault();
 
-            if (result != null)
+            if (fileItem != null)
             {
-                return Convert.FromBase64String(result.FileContentBase64);
+                var result = await cdn.GetFileById(fileItem.FileId);
+
+                if (result != null)
+                {
+                    return Convert.FromBase64String(result.FileContentBase64);
+                }
             }
-
             throw new FileNotFoundException($"File { filename } not found");
         }
 
         public async Task SaveFile(string filename, byte[] data)
         {
-            var result = await cdn.MongoCdn_UploadFile(new CdnUploadRequest() 
+            var result = await cdn.MongoCdn_UploadFile(new CdnUploadRequest()
             {
                 ContentType = "application/octet-stream",
                 FileContentBase64 = Convert.ToBase64String(data),

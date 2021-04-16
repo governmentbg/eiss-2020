@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -43,20 +40,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         public int CaseCodeId { get; set; }
 
-        public string CasePersonLeft { get; set; }
-        public string CasePersonRight { get; set; }
-
         [Display(Name = "Страни")]
-        public string CasePersonString 
-        {
-            get 
-            {
-                if (string.IsNullOrEmpty(CasePersonRight) == false)
-                    return CasePersonLeft + Environment.NewLine + "срещу" + Environment.NewLine + CasePersonRight;
-                else
-                    return CasePersonLeft;
-            }
-        }
+        public string CasePersons { get; set; }
 
         [Display(Name = "Дата на обявяване на делото за решаване")]
         public string SlovingDate { get; set; }
@@ -158,5 +143,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Точен вид дело")]
         public int CaseTypeId { get; set; }
+
+        [Display(Name = "Съдия докладчик")]
+        public int JudgeReporterId { get; set; }
+
+        [Display(Name = "Съдебен състав")]
+        public int DepartmentId { get; set; }
+
+        [Display(Name = "Диспозитив")]
+        public bool ActDescription { get; set; }
     }
 }

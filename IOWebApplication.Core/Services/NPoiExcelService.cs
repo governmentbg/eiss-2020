@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using NPOI.HSSF.UserModel;
+﻿using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -459,6 +456,25 @@ namespace IOWebApplication.Core.Services
             }
 
             return source;
+        }
+        public string GetValue(int row, int col)
+        {
+            return sheet.GetRow(row).GetCell(col).StringCellValue;
+        }
+        public string GetValue()
+        {
+            string result = string.Empty;
+            if (sheet?.GetRow(rowIndex)?.GetCell(colIndex)?.CellType == null)
+                return null;
+            if (sheet.GetRow(rowIndex).GetCell(colIndex).CellType == CellType.Numeric)
+            {
+                result = sheet.GetRow(rowIndex).GetCell(colIndex).NumericCellValue.ToString();
+            } else
+            {
+                result = sheet.GetRow(rowIndex).GetCell(colIndex).StringCellValue;
+            }
+            colIndex++;
+            return result;
         }
     }
 }

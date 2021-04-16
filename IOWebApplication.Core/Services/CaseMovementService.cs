@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -200,11 +197,11 @@ namespace IOWebApplication.Core.Services
                     saved.CourtId = model.CourtId;
                     saved.MovementTypeId = model.MovementTypeId;
 
-                    if (saved.MovementTypeId == NomenclatureConstants.CaseMovementType.ToOutStructure)
-                    {
-                        saved.DateAccept = DateTime.Now;
-                        saved.AcceptUserId = userContext.UserId;
-                    }
+                    //if (saved.MovementTypeId == NomenclatureConstants.CaseMovementType.ToOutStructure)
+                    //{
+                    //    saved.DateAccept = DateTime.Now;
+                    //    saved.AcceptUserId = userContext.UserId;
+                    //}
 
                     saved.ToUserId = model.ToUserId;
                     saved.CourtOrganizationId = model.CourtOrganizationId;

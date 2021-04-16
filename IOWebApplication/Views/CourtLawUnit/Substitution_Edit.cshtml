@@ -28,8 +28,8 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
-                @Html.EditorFor(x => x.SubstituteLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+                @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+                @Html.EditorFor(x => x.SubstituteLawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
 
                 @Html.EditorFor(x => x.DateFrom)
                 @Html.EditorFor(x => x.DateTo)

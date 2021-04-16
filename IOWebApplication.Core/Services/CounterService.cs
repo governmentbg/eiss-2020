@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -13,8 +10,6 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NPOI.OpenXmlFormats.Dml;
-using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -219,7 +214,7 @@ namespace IOWebApplication.Core.Services
 
         private (int intValue, string stringValue) Counter_GetValueMulti(int counterId)
         {
-            var counter = repo.ExecuteProc<GetCounterValueVM>("public.get_counter_value({0})", counterId).FirstOrDefault();
+            var counter = repo.ExecuteProc<GetCounterValueVM>("public.get_counter_value_multi({0},{1})", counterId, 1).FirstOrDefault();
 
             return (intValue: counter.Value, stringValue: string.Format("{0}{1:D" + counter.DigitCount.ToString() + "}{2}", counter.Prefix, counter.Value, counter.Suffix));
         }
@@ -623,7 +618,7 @@ namespace IOWebApplication.Core.Services
         public void InitAllCounters()
         {
 
-            return;
+            //return;
             //if (repo.AllReadonly<Counter>()
             //        .Where(x => x.CounterTypeId == NomenclatureConstants.CounterTypes.DocumentResolution)
             //        .Any())
@@ -860,6 +855,37 @@ namespace IOWebApplication.Core.Services
                 //};
                 //repo.Add(counterDocResolution);
 
+                ////Броячи за ЕИСПП Наказателни производства
+                //var counterEISPP_NP = new Counter()
+                //{
+                //    CourtId = court.Id,
+                //    CounterTypeId = NomenclatureConstants.CounterTypes.EisppNP,
+                //    Label = $"{court.Label} : ЕИСПП Наказателни производства",
+                //    ResetTypeId = 1,
+                //    InitValue = 0,
+                //    Value = 0,
+                //    DigitCount = 1
+                //};
+                //if (!repo.AllReadonly<Counter>().Where(x => x.CounterTypeId == counterEISPP_NP.CounterTypeId && x.CourtId == counterEISPP_NP.CourtId).Any())
+                //{
+                //    repo.Add(counterEISPP_NP);
+                //}
+                ////Броячи за ЕИСПП Престъпления
+                //var counterEISPP_Crime = new Counter()
+                //{
+                //    CourtId = court.Id,
+                //    CounterTypeId = NomenclatureConstants.CounterTypes.EisppCrime,
+                //    Label = $"{court.Label} : ЕИСПП Престъпления",
+                //    ResetTypeId = 1,
+                //    InitValue = 0,
+                //    Value = 0,
+                //    DigitCount = 1
+                //};
+                //if (!repo.AllReadonly<Counter>().Where(x => x.CounterTypeId == counterEISPP_Crime.CounterTypeId && x.CourtId == counterEISPP_Crime.CourtId).Any())
+                //{
+                //    repo.Add(counterEISPP_Crime);
+                //}
+
                 repo.SaveChanges();
             }
         }
@@ -926,6 +952,52 @@ namespace IOWebApplication.Core.Services
                 logger.LogError(ex, "Counter_GetDocumentResolutionCounter");
             }
             return false;
+        }
+        public string Counter_GetCaseEisppNumber(int courtId)
+        {
+            try
+            {
+                var counterId = repo.AllReadonly<Counter>()
+                                    .Where(x => x.CourtId == courtId && x.CounterTypeId == NomenclatureConstants.CounterTypes.EisppNP)
+                                    .Select(x => x.Id)
+                                    .FirstOrDefault();
+                if (counterId > 0)
+                {
+                    return Counter_GetValue(counterId);
+                }
+                else
+                {
+                    throw new Exception($"Няма настроен брояч за ЕИСПП. Court={courtId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на брояч за ЕИСПП. Court={courtId}");
+            }
+            return string.Empty;
+        }
+        public string Counter_GetCrimeEisppNumber(int courtId)
+        {
+            try
+            {
+                var counterId = repo.AllReadonly<Counter>()
+                                    .Where(x => x.CourtId == courtId && x.CounterTypeId == NomenclatureConstants.CounterTypes.EisppCrime)
+                                    .Select(x => x.Id)
+                                    .FirstOrDefault();
+                if (counterId > 0)
+                {
+                    return Counter_GetValue(counterId);
+                }
+                else
+                {
+                    throw new Exception($"Няма настроен брояч за ЕИСПП. Court={courtId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на брояч за ЕИСПП. Court={courtId}");
+            }
+            return string.Empty;
         }
     }
 }

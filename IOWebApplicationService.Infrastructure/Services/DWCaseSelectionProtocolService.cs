@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Common;
+﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplicationService.Infrastructure.Contracts;
 using IOWebApplicationService.Infrastructure.Data.Common;
@@ -17,6 +14,7 @@ using System.Text;
 using System.Transactions;
 using IOWebApplicationService.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Models.Integrations.DW;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
@@ -24,10 +22,12 @@ namespace IOWebApplicationService.Infrastructure.Services
   {
     private readonly IRepository repo;
     private readonly IDWRepository dwRepo;
-    public DWCaseSelectionProtocolService(IRepository _repo, IDWRepository _dwRepo)
+    private readonly IDWErrorLogService serviceErrorLog;
+    public DWCaseSelectionProtocolService(IRepository _repo, IDWRepository _dwRepo, IDWErrorLogService _serviceErrorLog)
     {
       this.repo = _repo;
       this.dwRepo = _dwRepo;
+      this.serviceErrorLog = _serviceErrorLog;
     }
     #region CaseSelectionProtocol
     public bool CaseSelectionProtocolInsertUpdate(DWCaseSelectionProtocol current, DWCourt court)
@@ -103,7 +103,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case+selection_protocol", current.Id, ex.Message);
+
+
       }
 
 
@@ -185,26 +187,29 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void CaseSelectionProtokolTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "CaseSelectionProtokolTransfer", 0, "Стартирал");
       IEnumerable<DWCaseSelectionProtocol> dwSelectCaseSelectionProtokol = SelectCaseSelectionProtokol(DWConstants.DWTransfer.TransferRowCounts, court);
 
-
-      while (dwSelectCaseSelectionProtokol.Any())
+      bool insertRow = true;
+      while (dwSelectCaseSelectionProtokol.Any() && insertRow)
       {
 
 
         foreach (var current in dwSelectCaseSelectionProtokol)
         {
-          bool insertRow = CaseSelectionProtocolInsertUpdate(current, court);
+           insertRow = CaseSelectionProtocolInsertUpdate(current, court);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSelectionProtokol>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSelectionProtokol>(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSelectionProtocol}')");
+
+            //var main = repo.GetById<CaseSelectionProtokol>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSelectionProtokol>(main);
           }
 
         }
         dwRepo.SaveChanges();
-        repo.SaveChanges();
+       // repo.SaveChanges();
         //  ts.Complete();
         //}
 
@@ -278,7 +283,9 @@ namespace IOWebApplicationService.Infrastructure.Services
       catch (Exception ex)
       {
 
-        throw;
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_Selection_Protocol_Compartment", current.Id, ex.Message);
+
+
       }
 
 
@@ -344,26 +351,29 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void CaseSelectionProtocolCompartmentTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "CaseSelectionProtocolCompartmentTransfer", 0, "Стартирал");
       IEnumerable<DWCaseSelectionProtocolCompartment> dw = SelectCaseSelectionProtokolCompartment(DWConstants.DWTransfer.TransferRowCounts, court);
+      bool insertRow = true;
 
-
-      while (dw.Any())
+      while (dw.Any() && insertRow)
       {
 
 
         foreach (var current in dw)
         {
-          bool insertRow = CaseSelectionProtocolCompartmentInsertUpdate(current, court);
+          insertRow = CaseSelectionProtocolCompartmentInsertUpdate(current, court);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSelectionProtokolCompartment>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSelectionProtokolCompartment>(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSelectionProtocolCompartment}')");
+
+            //var main = repo.GetById<CaseSelectionProtokolCompartment>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSelectionProtokolCompartment>(main);
           }
 
         }
         dwRepo.SaveChanges();
-        repo.SaveChanges();
+        //repo.SaveChanges();
         //  ts.Complete();
         //}
 
@@ -444,8 +454,8 @@ namespace IOWebApplicationService.Infrastructure.Services
       }
       catch (Exception ex)
       {
+        serviceErrorLog.LogError((current.CourtId ?? 0), current.CourtName, "case_selection_protocol_lawunit", current.Id, ex.Message);
 
-        throw;
       }
 
 
@@ -520,26 +530,29 @@ namespace IOWebApplicationService.Infrastructure.Services
     }
     public void CaseSelectionProtocolLawunitTransfer(DWCourt court)
     {
+      serviceErrorLog.LogError((court.CourtId ?? 0), court.CourtName, "CaseSelectionProtocolLawunitTransfer", 0, "Стартирал");
       IEnumerable<DWCaseSelectionProtocolLawunit> dw = SelectCaseSelectionProtokolLawUnit(DWConstants.DWTransfer.TransferRowCounts, court);
+      bool insertRow = true;
 
-
-      while (dw.Any())
+      while (dw.Any() && insertRow)
       {
 
 
         foreach (var current in dw)
         {
-          bool insertRow = CaseSelectionProtocolLawUnitInsertUpdate(current, court);
+           insertRow = CaseSelectionProtocolLawUnitInsertUpdate(current, court);
           if (insertRow)
           {
-            var main = repo.GetById<CaseSelectionProtokolLawUnit>(current.Id);
-            main.DateTransferedDW = DateTime.Now;
-            repo.Update<CaseSelectionProtokolLawUnit>(main);
+            var updResult = repo.ExecuteProc<UpdateDateTransferedVM>($"{UpdateDateTransferedVM.ProcedureName}({current.Id},'{UpdateDateTransferedVM.Tables.CaseSelectionProtocolLawunit}')");
+
+            //var main = repo.GetById<CaseSelectionProtokolLawUnit>(current.Id);
+            //main.DateTransferedDW = DateTime.Now;
+            //repo.Update<CaseSelectionProtokolLawUnit>(main);
           }
 
         }
         dwRepo.SaveChanges();
-        repo.SaveChanges();
+        //repo.SaveChanges();
         //  ts.Complete();
         //}
 

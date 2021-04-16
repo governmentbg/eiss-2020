@@ -97,6 +97,13 @@
                         }
                     },
                     {
+                        name: 'moneyGroupName',
+                        data: 'moneyGroupName',
+                        title: 'От сметка',
+                        sortable: true,
+                        searchable: true
+                    },                    
+                    {
                         name: 'expenseOrderStateName',
                         data: 'expenseOrderStateName',
                         title: 'Статус',
@@ -132,7 +139,6 @@
 
     <script id="templateEdit" type="text/x-handlebars-template">
         <a href="@Url.Action("EditExpenseOrder")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
-        <a href="@Url.Action("PreviewRawExpenseOrder")/{{this}}" class="btn btn-primary btn-sm" title="Печат"><i class="fa fa-print"></i><span class="hidden-sm hidden-xs"></span></a>
         <a href="#" class="btn btn-sm btn-danger" onclick="StornoOrder('{{this}}');"><i class="fa fa-remove"></i></a>
     </script>
 

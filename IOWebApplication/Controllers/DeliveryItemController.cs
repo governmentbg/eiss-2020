@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -46,9 +43,9 @@ namespace IOWebApplication.Controllers
         private readonly ICdnService cdnService;
 
         public DeliveryItemController(
-            IDeliveryItemService _deliveryItemService, 
-            ICommonService _commonService, 
-            ICompositeViewEngine _viewEngine, 
+            IDeliveryItemService _deliveryItemService,
+            ICommonService _commonService,
+            ICompositeViewEngine _viewEngine,
             INomenclatureService _nomService,
             IDeliveryAreaService _areaService,
             IDeliveryAreaAddressService _deliveryAreaAddressService,
@@ -67,14 +64,27 @@ namespace IOWebApplication.Controllers
             notificationService = _notificationService;
             cdnService = _cdnService;
         }
+
+        private void SetHelpFileByFilterType(int filterType)
+        {
+            if (filterType == NomenclatureConstants.DeliveryItemFilterType.Inner)
+                SetHelpFile(HelpFileValues.Summons1);
+            else if (filterType == NomenclatureConstants.DeliveryItemFilterType.FromOther)
+                SetHelpFile(HelpFileValues.Summons2);
+            else if (filterType == NomenclatureConstants.DeliveryItemFilterType.ToOther)
+                SetHelpFile(HelpFileValues.Summons3);
+        }
+
         public IActionResult Index(int? filterType)
         {
             var model = new DeliveryItemFilterVM();
             model.FilterType = filterType ?? 0;
             if (model.FilterType == 0)
-               model.FilterType = NomenclatureConstants.DeliveryItemFilterType.Inner;
+                model.FilterType = NomenclatureConstants.DeliveryItemFilterType.Inner;
             model.NoAutoLoad = "Y";
-            SetHelpFile(HelpFileValues.Summons);
+
+            SetHelpFileByFilterType(model.FilterType);
+
             return LoadIndex(model);
         }
         public IActionResult LoadIndex(DeliveryItemFilterVM model)
@@ -85,20 +95,21 @@ namespace IOWebApplication.Controllers
                 model.FilterType = NomenclatureConstants.DeliveryItemFilterType.Inner;
             SetViewbag(userContext.CourtId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItems(model.FilterType).DeleteOrDisableLast();
-            return View(model);
+            return View(nameof(Index), model);
         }
 
         [HttpPost]
         public IActionResult Index(string filterJson)
         {
             DeliveryItemFilterVM model = null;
-            if (!string.IsNullOrEmpty(filterJson)) {
+            if (!string.IsNullOrEmpty(filterJson))
+            {
                 var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
-                model = JsonConvert.DeserializeObject<DeliveryItemFilterVM>(filterJson, dateTimeConverter); 
+                model = JsonConvert.DeserializeObject<DeliveryItemFilterVM>(filterJson, dateTimeConverter);
             }
             return LoadIndex(model);
         }
-       
+
 
         public IActionResult IndexTrans(int toNotificationStateId)
         {
@@ -106,11 +117,17 @@ namespace IOWebApplication.Controllers
             model.ToNotificationStateId = toNotificationStateId;
             model.initNotificationStateId();
             SetViewbagToCourt(model);
-            
-            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemsTrans(toNotificationStateId).DeleteOrDisableLast();
-            SetHelpFile(HelpFileValues.Summons);
 
-            return View(nameof(IndexTrans) , model);
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemsTrans(toNotificationStateId).DeleteOrDisableLast();
+
+            if (model.ToNotificationStateId == NomenclatureConstants.NotificationState.Send)
+                SetHelpFile(HelpFileValues.Summons4);
+            else if (model.ToNotificationStateId == NomenclatureConstants.NotificationState.Received)
+                SetHelpFile(HelpFileValues.Summons5);
+            else if (model.ToNotificationStateId == NomenclatureConstants.NotificationState.ForDelivery)
+                SetHelpFile(HelpFileValues.Summons6);
+
+            return View(nameof(IndexTrans), model);
         }
         public IActionResult ChangeLawUnit()
         {
@@ -119,7 +136,7 @@ namespace IOWebApplication.Controllers
             model.NewCourtId = model.CourtId;
             SetViewbagChangeLawUnit();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemChangeLawUnit().DeleteOrDisableLast();
-            SetHelpFile(HelpFileValues.Summons);
+            SetHelpFile(HelpFileValues.Summons7);
 
             return View(model);
         }
@@ -134,6 +151,8 @@ namespace IOWebApplication.Controllers
             ModelState.Clear();
             int filterType = getFilterTypeFromJson(filterJson);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryItemEditRaion(filterType, id).DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Summons);
+
             return View(nameof(Edit), model);
         }
 
@@ -151,8 +170,7 @@ namespace IOWebApplication.Controllers
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
-                ModelState.Clear();
-                return View(nameof(Edit), model);
+                return RedirectToAction(nameof(Edit), new { id = model.Id, filterJson });
             }
             else
             {
@@ -186,9 +204,9 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.filterJson = filterJson;
             ViewBag.ToCourtId = userContext.CourtId;
-            SetViewbag(userContext.CourtId); 
+            SetViewbag(userContext.CourtId);
             SetViewbagArea(userContext.CourtId);
-            
+
             DeliveryItem newModel = new DeliveryItem();
             newModel.CourtId = userContext.CourtId;
             ViewBag.conteinerId = Guid.NewGuid();
@@ -222,11 +240,11 @@ namespace IOWebApplication.Controllers
             ViewBag.conteinerId = guidForSave;
             string conteinerIdAdd = ViewBag.conteinerId;
             ValidateModel(model);
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || !string.IsNullOrEmpty(messageErr))
             {
                 viewAdd = await RenderPartialViewToString("_AddReceived", model);
                 errors = ModelState.Where(x => x.Value.ValidationState == ModelValidationState.Invalid)
-                                   .Select(x => new SelectListItem() { Value = x.Key, Text = x.Value.Errors.First().ErrorMessage})
+                                   .Select(x => new SelectListItem() { Value = x.Key, Text = x.Value.Errors.First().ErrorMessage })
                                    .ToList();
                 //errors = modelErrors.Select(x => new SelectListItem() {Value = x.Key, Text = x. })
             }
@@ -248,22 +266,24 @@ namespace IOWebApplication.Controllers
                     ViewBag.showButtons = false;
                     ViewBag.conteinerId = Guid.NewGuid();
                     viewSaved = await RenderPartialViewToString("_AddReceived", model);
-                } else
+                }
+                else
                 {
                     saveFailed = MessageConstant.Values.SaveFailed;
                     viewAdd = await RenderPartialViewToString("_AddReceived", model);
                 }
             }
-            return Json(new {
+            return Json(new
+            {
                 isOk,
-                messageErr, 
-                viewAdd, 
+                messageErr,
+                viewAdd,
                 viewSaved,
                 saveOk,
                 saveFailed,
                 conteinerIdAdd,
                 errors
-            }); 
+            });
         }
 
         [HttpPost]
@@ -276,13 +296,13 @@ namespace IOWebApplication.Controllers
             string messageErr = "";
             List<string> viewsForDay = new List<string>();
 
-            List<DeliveryItem>  deliveries = service.GetReceivedForToday(userContext.UserId, DateTime.Now.Date).ToList();
+            List<DeliveryItem> deliveries = service.GetReceivedForToday(userContext.UserId, DateTime.Now.Date).ToList();
             foreach (var model in deliveries)
             {
                 ViewBag.showButtons = false;
                 ViewBag.conteinerId = Guid.NewGuid();
                 var item = await RenderPartialViewToString("_AddReceived", model);
-                viewsForDay.Add(item) ;
+                viewsForDay.Add(item);
             }
             return Json(new
             {
@@ -302,11 +322,11 @@ namespace IOWebApplication.Controllers
                 lawUnitId = deliveryAreaFind.LawUnitId
             });
         }
-        
+
         [HttpPost]
-        public JsonResult GetDeliveryAreaAndCourt(int notificationPersonType,  int casePersonAddressId, int lawUnitAddressId)
+        public JsonResult GetDeliveryAreaAndCourt(int notificationPersonType, int casePersonAddressId, int lawUnitAddressId)
         {
-             DeliveryAreaFindVM deliveryAreaFind;
+            DeliveryAreaFindVM deliveryAreaFind;
             if (notificationPersonType == 2)
                 deliveryAreaFind = deliveryAreaAddressService.DeliveryAreaAddressIdFind(lawUnitAddressId);
             else
@@ -378,7 +398,7 @@ namespace IOWebApplication.Controllers
                     writer,
                     new HtmlHelperOptions()
                 );
-               
+
                 await viewResult.View.RenderAsync(viewContext);
 
                 return writer.GetStringBuilder().ToString();
@@ -399,7 +419,7 @@ namespace IOWebApplication.Controllers
             var data = service.DeliveryItemTransSelect(filterData, false);
             return Json(data.ToList());
         }
-        
+
         [HttpPost]
         public IActionResult ListDataChangeLawUnit(IDataTablesRequest request, DeliveryItemChangeLawUnitVM filterData)
         {
@@ -418,6 +438,8 @@ namespace IOWebApplication.Controllers
 
         public IActionResult EditReturn(int deliveryItemId, string filterJson, bool isFromVisit)
         {
+            if (filterJson == null && TempData["filterJson"] != null)
+                filterJson = TempData["filterJson"].ToString();
             ViewBag.filterJson = filterJson;
             var model = service.GetDeliveryItemReturn(deliveryItemId);
             SetViewbag(-1);
@@ -440,7 +462,7 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditReturn), model);
         }
 
-        
+
         [HttpPost]
         public async Task<IActionResult> EditReturnPost(ICollection<IFormFile> returnFiles, DeliveryItemReturnVM model, string filterJson)
         {
@@ -457,13 +479,16 @@ namespace IOWebApplication.Controllers
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 if (filterJson == null)
                 {
-                    return RedirectToAction(nameof(NotificatiionEditReturn), new { notificationId });
+                    return RedirectToAction("Edit", "CaseNotification", new { id = notificationId });
                 }
                 else
                 {
-                    return RedirectToAction(nameof(EditReturn), new { deliveryItemId = model.Id, filterJson });
+                    ModelState.Clear();
+                    return Index(filterJson);
                 }
-            } else {
+            }
+            else
+            {
                 if (filterJson == null)
                 {
                     var delivery = service.GetById<DeliveryItem>(model.Id);
@@ -479,7 +504,7 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
                 return View(nameof(EditReturn), model);
             }
-         
+
         }
 
 
@@ -498,19 +523,27 @@ namespace IOWebApplication.Controllers
 
             return View(nameof(EditState), model);
         }
-  
+
         [HttpPost]
         public IActionResult EditStatePost(DeliveryItem model, string filterJson)
         {
             ViewBag.filterJson = filterJson;
             var notification = notificationService.GetById<CaseNotification>(model.CaseNotificationId);
+            if (model.DeliveryDateCC < model.RegDate?.Date)
+            {
+                ModelState.AddModelError(nameof(model.DeliveryDateCC), $"{MessageConstant.ValidationErrors.DeliveryDateBeforeRegDate} {model.RegDate?.ToString(FormattingConstant.NormalDateFormat)}");
+            }
+            if (model.DeliveryDateCC > DateTime.Now.AddMinutes(10))
+            {
+                ModelState.AddModelError(nameof(model.DeliveryDateCC), MessageConstant.ValidationErrors.DeliveryDateFuture);
+            }
             if (!ModelState.IsValid)
             {
                 SetViewbagState(notification?.NotificationDeliveryGroupId ?? -1);
                 return View(nameof(EditState), model);
             }
-            
-            if (service.DeliveryItemSaveState(model.Id, model.NotificationStateId, model.DeliveryDateCC))
+
+            if (service.DeliveryItemSaveState(model.Id, model.NotificationStateId, model.DeliveryDateCC, model.DeliveryInfo))
             {
                 this.SaveLogOperation(false, model.Id);
                 return RedirectToAction(nameof(EditState), new { id = model.Id, filterJson });
@@ -523,17 +556,18 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
                 return View(nameof(EditState), model);
             }
-
         }
-
         #region Out/ResultList
         public IActionResult OutList()
         {
-            DeliveryItemListVM model = new DeliveryItemListVM() { 
+            DeliveryItemListVM model = new DeliveryItemListVM()
+            {
                 FromCourtId = userContext.CourtId
             };
             SetViewbagOutList();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryOutList().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Register23);
+
             return View(nameof(OutList), model);
         }
 
@@ -544,7 +578,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-         public IActionResult ResultList()
+        public IActionResult ResultList()
         {
             DeliveryItemListVM model = new DeliveryItemListVM()
             {
@@ -552,6 +586,8 @@ namespace IOWebApplication.Controllers
             };
             SetViewbagOutList();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDeliveryResultList().DeleteOrDisableLast();
+            SetHelpFile(HelpFileValues.Register24);
+
             return View(nameof(ResultList), model);
         }
 
@@ -606,8 +642,6 @@ namespace IOWebApplication.Controllers
                 NomenclatureConstants.NotificationDeliveryGroup.WithSummons, -1
             );
             ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupSelect();
-
-            SetHelpFile(HelpFileValues.Summons);
         }
         void SetViewbagState(int notificationDeliveryGroupId)
         {
@@ -642,7 +676,7 @@ namespace IOWebApplication.Controllers
             ViewBag.LawUnitId_ddl = service.LawUnitForCourt_SelectDdlAllInDeliveryItem(forCourtId, lawUnits);
             ViewBag.NewCourtId_ddl = commonService.CourtForDelivery_SelectDDL(-1);
             ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(
-                NomenclatureConstants.NotificationDeliveryGroup.WithSummons, 
+                NomenclatureConstants.NotificationDeliveryGroup.WithSummons,
                 NomenclatureConstants.NotificationState.Visited
             );
             ViewBag.DeliveryAreaId_ddl = areaService.DeliveryAreaSelectDDL(forCourtId, true);
@@ -655,17 +689,31 @@ namespace IOWebApplication.Controllers
                 var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
                 DeliveryItemFilterVM model = JsonConvert.DeserializeObject<DeliveryItemFilterVM>(filterJson, dateTimeConverter);
                 return model.FilterType;
-            } catch
+            }
+            catch
             {
                 return 0;
             }
         }
-        
+
         public IActionResult ToCaseNotification(int Id)
         {
             var deliveryItem = service.GetById<DeliveryItem>(Id);
             return RedirectToAction("Edit", "CaseNotification", new { id = deliveryItem.CaseNotificationId });
         }
-   
+        [HttpPost]
+        public IActionResult  DeliveryItem_ExpiredInfo(ExpiredInfoVM model)
+        {
+             if (service.SaveExpireInfo<DeliveryItem>(model))
+            {
+                SetAuditContextDelete(service, SourceTypeSelectVM.CaseNotification, model.Id);
+                SetSuccessMessage(MessageConstant.Values.CaseNotificationExpireOK);
+                return Json(new { result = true, redirectUrl = model.ReturnUrl });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
     }
 }

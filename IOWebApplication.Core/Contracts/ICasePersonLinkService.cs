@@ -1,7 +1,4 @@
-﻿// Copyright (C) Information Services. All Rights Reserved.
-// Licensed under the Apache License, Version 2.0
-
-using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -24,5 +21,9 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> SecondLinkDirectionDDL();
         List<SelectListItem> SeccondRelationalPersonDDL(int caseId, string defaultElementText = null);
         bool HaveCaseNotification(int casePersonLinkId);
+        List<SelectListItem> PersonYDDL(int caseId, int linkDirectionId, string defaultElementText = null);
+        List<SelectListItem> RoleKindDDL();
+        List<CasePersonLinkSideItemVM> GetPersonXBySide(int caseId, int roleKindId);
+        bool Save_AddSide(CasePersonLinkSideVM model, List<int> personIds);
     }
 }
