@@ -15,6 +15,7 @@ namespace IOWebApplication.Core.Contracts
         string GetEisppRuleValue(int eventType, string propName);
         string GetPunishmentKindMode(int punishmentKind);
         int GetResSidFromRules(int eventType);
+        string MaxRuleFlag(string rulesPath, int eventType);
         void SetIsSelectedAndClear(EisppPackage model);
     }
 }

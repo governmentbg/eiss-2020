@@ -36,6 +36,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public bool? IsAdministrativePunishment { get; set; }
 
         [Display(Name = "Присъда")]
+        [AllowHtml]
         public string SentenceDescription { get; set; }
 
         [Display(Name = "Осъждан")]

@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +34,7 @@ namespace IOWebApplication.Extensions
             {
                 user.LawUnit = repo.GetById<LawUnit>(user.LawUnitId);
                 string[] courtListIds = repo.AllReadonly<CourtLawUnit>()
-                                        .Where(x => x.LawUnitId == user.LawUnitId)
+                                        .Where(x => x.LawUnitId == user.LawUnitId && x.DateExpired == null)
                                         .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                         .Where(x => x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
                                         .Select(x => x.CourtId.ToString())
@@ -42,10 +43,11 @@ namespace IOWebApplication.Extensions
                 string courtList = string.Join(',', courtListIds);
                 ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.CourtList, courtList));
             }
-            ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.FullName, user.LawUnit.FullName));
+            ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.FullName, System.Web.HttpUtility.HtmlDecode(user.LawUnit.FullName)));
             ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.Uic, user.LawUnit.Uic ?? ""));
             ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.CourtId, user.CourtId.ToString()));
             ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.LawUnitId, user.LawUnitId.ToString()));
+            ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.LawUnitTypeId, user.LawUnit.LawUnitTypeId.ToString()));
             var courtInfo = repo.AllReadonly<Court>()
                                     .Include(x => x.CourtType)
                                     .Where(x => x.Id == user.CourtId)
@@ -64,6 +66,7 @@ namespace IOWebApplication.Extensions
                 ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.OrganizationList, userCourtOrganizations(user)));
                 ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.SubDepartments, generateSubDepartmentList(user)));
                 ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.SubDocRegistry, generateSubRegistryList(user)));
+                ((ClaimsIdentity)principal.Identity).AddClaim(new Claim(CustomClaimType.SystemFeatures, systemFeatures()));
 
             }
 
@@ -74,10 +77,19 @@ namespace IOWebApplication.Extensions
             return principal;
         }
 
+        private string systemFeatures()
+        {
+            return repo.AllReadonly<SystemParam>()
+                                               .Where(x => x.ParamName == NomenclatureConstants.SystemParamName.SystemFeatures)
+                                               .Select(x => x.ParamValue)
+                                               .DefaultIfEmpty("")
+                                               .FirstOrDefault();
+        }
+
         private string userCourtOrganizations(ApplicationUser user)
         {
             var orgList = repo.AllReadonly<CourtLawUnit>()
-                                               .Where(x => x.CourtId == user.CourtId
+                                               .Where(x => x.CourtId == user.CourtId && x.DateExpired == null
                                                && x.LawUnitId == user.LawUnitId
                                                && (NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                                && (x.DateTo ?? DateTime.Now) >= DateTime.Now.AddMinutes(-1))
@@ -128,7 +140,7 @@ namespace IOWebApplication.Extensions
 
             var orgInfo = repo.AllReadonly<CourtLawUnit>()
                                     .Include(x => x.CourtOrganization)
-                                    .Where(x => x.LawUnitId == user.LawUnitId && x.CourtId == user.CourtId)
+                                    .Where(x => x.LawUnitId == user.LawUnitId && x.CourtId == user.CourtId && x.DateExpired == null)
                                     .Where(x => x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
                                     .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                     .Select(x => new

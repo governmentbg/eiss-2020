@@ -1,0 +1,168 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+
+
+    ViewData["Title"] = "Периоди ВКС Наказателно направление";
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        @if (ViewBag.CanEdit)
+        {
+            <a asp-action="Add" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+        }
+
+        @*@if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(lawUnitType.Id))
+        {
+            <a href="@Url.Action("Index", "CourtLawUnit", new { periodType = NomenclatureConstants.PeriodTypes.Appoint, lawUnitType = lawUnitType.Id })" class="btn btn-primary" title="Назначаване"><i class="fa fa-briefcase"></i><span class="hidden-sm hidden-xs"> Назначаване</span></a>
+            @if (lawUnitType.Id == NomenclatureConstants.LawUnitTypes.Judge || lawUnitType.Id == NomenclatureConstants.LawUnitTypes.OtherEmployee)
+            {
+                <a href="@Url.Action("Index", "CourtLawUnit", new { periodType = NomenclatureConstants.PeriodTypes.Move, lawUnitType = lawUnitType.Id })" class="btn btn-warning" title="Командироване"><i class="fa fa-car"></i><span class="hidden-sm hidden-xs"> Командироване</span></a>
+            }
+        }*@
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {}
+                },
+                filter: false,
+
+                columns: [
+                    {
+                        name: 'selectionYear',
+                        data: 'selectionYear',
+                        title: 'Година',
+                        sortable: true,
+                        searchable: false
+                    }
+
+  ,
+                    {
+                        name: 'periodNoString',
+                        data: 'periodNoString',
+                        title: 'Период',
+                        sortable: true,
+                        searchable: false
+                    }
+                  ,
+                       {
+                           name: 'kolegiaName',
+                           data: 'kolegiaName',
+                        title: 'Колегия',
+                        sortable: true,
+                        searchable: false
+                    }
+
+                    ,
+
+
+                    {
+                        name: 'selections',
+                        data: "selections",
+                        title: "Отделения",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateDepartments', value);
+                        }
+                    },
+                    //{
+                    //    name: 'selections',
+                    //    data: "selections",
+                    //    title: "Разпределения",
+                    //    sortable: false,
+                    //    searchable: false,
+                    //    className: "text-center noExport",
+                    //    "render": function (value) {
+                    //        return TemplateToHtml('#templateDepartmentsCalendar', value);
+                    //    }
+                    //},
+                    //{
+                    //    name: 'selections',
+                    //    data: "selections",
+                    //    title: "Ново разпределение",
+                    //    sortable: false,
+                    //    searchable: false,
+                    //    className: "text-center noExport",
+                    //    "render": function (value) {
+                    //        return TemplateToHtml('#templateDepartmentsStaff', value);
+                    //    }
+                    //},
+
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                                return TemplateToHtml('#templateEdit', value);
+                            }
+                        }
+                ]
+            });
+            table.order([0, 'desc']);
+
+        });
+    </script>
+    <script id="templateDepartments" type="text/x-handlebars-template">
+
+        {{#each this}}
+        <a href="@Url.Action("Lawunits")/{{this.id}}">{{courtDepartmentName}}</a>
+
+        </br>
+        {{/each}}
+
+    </script>
+
+    <script id="templateDepartmentsCalendar" type="text/x-handlebars-template">
+
+        {{#each this}}
+
+        <a href="@Url.Action("Preview")/{{this.id}}">разпределение</a>
+        </br>
+        {{/each}}
+
+    </script>
+    <script id="templateDepartmentsStaff" type="text/x-handlebars-template">
+
+        {{#each this}}
+
+        <a href="@Url.Action("GenerateSelectionStaff")/{{this.id}}">Генерирай</a>
+        </br>
+        {{/each}}
+
+    </script>
+    <script id="templateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+
+
+
+    </script>
+}

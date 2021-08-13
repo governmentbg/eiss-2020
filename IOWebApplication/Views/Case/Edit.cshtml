@@ -187,7 +187,7 @@
                         <a asp-controller="CaseSelectionProtokol" asp-action="Add" asp-route-caseId="@Model.Id" class="btn btn-info">Разпределение</a>
                     }
                 }
-                @if (ViewBag.savedCaseStateId == NomenclatureConstants.CaseState.Rejected)
+                @if (NomenclatureConstants.CaseState.UnregisteredManageble.Contains((int)ViewBag.savedCaseStateId))
                 {
                     if (hasDocResolution)
                     {
@@ -242,7 +242,8 @@
                 requestCombo('@Url.Action("Get_CaseTypeUnits","Ajax")', { caseTypeId: $(this).val() }, '#CaseTypeUnitId', '@Model.CaseTypeUnitId',
                     function (e) { $(e).trigger('change'); }
                 );
-                showHideEmtyCombo('@Url.Action("GetDDL_CaseReason","Ajax")', { caseTypeId: $(this).val() }, '#CaseReasonId', '@Model.CaseReasonId');
+                $('.caseReason-control').data('casetype', $(this).val());
+                //showHideEmtyCombo('@Url.Action("GetDDL_CaseReason","Ajax")', { caseTypeId: $(this).val() }, '#CaseReasonId', '@Model.CaseReasonId');
 
             }).trigger('change');
             $('#CaseTypeUnitId').change(function () {
@@ -264,7 +265,7 @@
         function getLoadGroup() {
             if (@Model.CourtTypeId != @NomenclatureConstants.CourtType.VKS) {
                 requestCombo('@Url.Action("GetDDL_LoadGroupLink","Ajax")', { courtTypeId:@Model.CourtTypeId, caseTypeId: $('#CaseTypeId').val(), caseCodeId: $('#CaseCodeId').val() }, '#LoadGroupLinkId', '@Model.LoadGroupLinkId');
-            } 
+            }
         }
 
         function caseCodeChange() {

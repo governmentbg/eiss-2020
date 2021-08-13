@@ -24,5 +24,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public DateTime? ActInforcedDate { get; set; }
         public DateTime? ActDeclaredDate { get; set; }
         public string JudgeReport { get; set; }
+        public string DepartmentOtdelenieText { get; set; }
     }
 }

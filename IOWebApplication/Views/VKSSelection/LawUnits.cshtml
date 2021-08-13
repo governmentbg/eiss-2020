@@ -1,0 +1,188 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Data.Models.VKS
+@model VksSelection;
+
+@{
+
+
+    ViewData["Title"] = @ViewBag.Title;
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+
+        @if (ViewBag.PeriodNo > 0)
+        {
+            <li><a href="@Url.Action("Index","VksSelection")">Периоди ВКС</a></li>
+        }
+        else
+        {
+            <li><a href="@Url.Action("IndexTO","VksSelection")">Периоди ВКС</a></li>
+        }
+
+    </ol>
+}
+
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseTab">
+        <li class="active"><a href="@Url.Action("LawUnits")"><i class="fa fa-users"></i> Състав</a></li>
+        <li class=""><a href="@Url.Action("Preview")/@Model.Id"><i class="fa fa-user"></i> Разпределение</a></li>
+        @if (ViewBag.PeriodNo > 0)
+        {
+            <li class=""><a href="@Url.Action("ProtocolList")/@Model.Id"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+
+        }
+
+
+    </ul>
+</div>
+
+@if (ViewBag.HasSignedProtocol == false && ViewBag.PeriodNo > 0 && ViewBag.CanEdit)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+
+            <a href="@Url.Action("LawUnitsUpdate")/@Model.Id" class="btn btn-success" title="Актуализирай от отделение"> Актуализирай</a>
+            <a href="@Url.Action("AddUnknownLawUnits")/@Model.Id" class="btn btn-success" title="Добави неизвестен">Добави неизвестен</a>
+
+
+
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSelectionLawunits")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+
+                        d.selectionId= @(Model.Id);
+
+                    }
+                },
+                filter: false,
+
+                columns: [
+                    {
+                        name: 'lawunitName',
+                        data: 'lawunitName',
+                        title: 'Име',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+
+
+
+                     {
+                        name: 'dateStart',
+                        data: 'dateStart',
+                        title: 'Добавен на',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                       {
+                        name: 'actions',
+                        data: null,
+                        title: "Роля",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a,b,value,c) {
+
+                            if (value.judgeDepartmentRole) {
+                                return value.judgeDepartmentRole.label;
+                            } else { return '';}
+                           }
+
+                    }
+                    ,
+                    {
+                        name: 'actions',
+                        data: null,
+                        title: "Структура",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a, b, value, c) {
+
+                            if (value.departmentType) {
+                                return value.departmentType.label;
+                            } else { return ''; }
+                        }
+
+                    }
+                    ,
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateReplace', value);
+                        }
+
+                    }
+                    ,
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateRemove', value);
+                        }
+
+                    }
+
+
+                ]
+            });
+            table.order([0, 'desc']);
+
+        });
+
+
+    </script>
+    @*<a asp-action="Index" class="btn btn-danger">Назад</a>*@
+    <script id="templateRole" type="text/x-handlebars-template">
+
+        {{label}}
+
+    </script>
+    <script id="templateRemove" type="text/x-handlebars-template">
+        @if (ViewBag.HasSignedProtocol == false && ViewBag.CanEdit)
+        {
+            <a href="@Url.Action("DeleteLawunit")/{{this}}" class="btn btn-danger btn-sm" title="Премахни"><i class="fa fa-remove"></i></a>
+        }
+    </script>
+    <script id="templateReplace" type="text/x-handlebars-template">
+
+        @if (ViewBag.CanEdit)
+        {
+            <a href="@Url.Action("LawunitReplace")/{{this}}" class="btn btn btn-sm" title="Замени"><i class="fa fa-random"></i></a>
+        }
+
+
+    </script>
+}

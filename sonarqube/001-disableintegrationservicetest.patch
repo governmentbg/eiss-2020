@@ -1,0 +1,32 @@
+diff --git a/EISS.sln b/EISS.sln
+index d8890cf3d..c56ce4a21 100644
+--- a/EISS.sln
++++ b/EISS.sln
+@@ -30,8 +30,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integrations", "Integration
+ EndProject
+ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationService.Eispp", "IntegrationService.Eispp\IntegrationService.Eispp.csproj", "{B5364BBE-EAC4-46C6-84FC-D4FEB0D2ECBA}"
+ EndProject
+-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationService.Test", "IntegrationService.Test\IntegrationService.Test.csproj", "{AF15E59C-158A-4AAC-A6C8-5CAC218B8DE7}"
+-EndProject
+ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOWebApplication.ReportViewer", "IOWebApplication.ReportViewer\IOWebApplication.ReportViewer.csproj", "{73C0C2BC-9850-4731-A13C-4C5DEEFC070E}"
+ EndProject
+ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOWebApplication.Test", "IOWebApplication.Test\IOWebApplication.Test.csproj", "{D8E53C6C-4EDC-48B4-A903-47424A653676}"
+@@ -87,10 +85,6 @@ Global
+ 		{B5364BBE-EAC4-46C6-84FC-D4FEB0D2ECBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+ 		{B5364BBE-EAC4-46C6-84FC-D4FEB0D2ECBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+ 		{B5364BBE-EAC4-46C6-84FC-D4FEB0D2ECBA}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{AF15E59C-158A-4AAC-A6C8-5CAC218B8DE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{AF15E59C-158A-4AAC-A6C8-5CAC218B8DE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{AF15E59C-158A-4AAC-A6C8-5CAC218B8DE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{AF15E59C-158A-4AAC-A6C8-5CAC218B8DE7}.Release|Any CPU.Build.0 = Release|Any CPU
+ 		{73C0C2BC-9850-4731-A13C-4C5DEEFC070E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+ 		{73C0C2BC-9850-4731-A13C-4C5DEEFC070E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+ 		{73C0C2BC-9850-4731-A13C-4C5DEEFC070E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+@@ -110,7 +104,6 @@ Global
+ 	GlobalSection(NestedProjects) = preSolution
+ 		{DD6C3C47-D8DD-4653-A1EF-51DB4868F7D4} = {41C42A71-CF18-4258-A0CD-A964874D2175}
+ 		{B5364BBE-EAC4-46C6-84FC-D4FEB0D2ECBA} = {41C42A71-CF18-4258-A0CD-A964874D2175}
+-		{AF15E59C-158A-4AAC-A6C8-5CAC218B8DE7} = {41C42A71-CF18-4258-A0CD-A964874D2175}
+ 		{0FD0BFB6-B854-44B1-9D72-19163D318BBF} = {41C42A71-CF18-4258-A0CD-A964874D2175}
+ 	EndGlobalSection
+ 	GlobalSection(ExtensibilityGlobals) = postSolution

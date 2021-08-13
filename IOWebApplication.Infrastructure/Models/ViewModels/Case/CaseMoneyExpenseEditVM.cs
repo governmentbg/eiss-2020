@@ -32,6 +32,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         [Display(Name = "Солидарно разпределение")]
         public bool? JointDistribution { get; set; }
 
+        [Display(Name = "Дроб")]
+        public bool? IsFraction { get; set; }
+
         public IList<CasePersonListDecimalVM> CasePersonListDecimals { get; set; }
 
         public void ToEntity(CaseMoneyExpense model)
@@ -44,6 +47,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
             model.Amount = Amount;
             model.Description = Description;
             model.JointDistribution = JointDistribution;
+            model.IsFraction = IsFraction;
         }
     }
 }

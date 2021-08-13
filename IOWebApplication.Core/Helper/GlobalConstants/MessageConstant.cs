@@ -38,6 +38,7 @@
             public const string SaveFailed = "Проблем по време на запис.";
             public const string TimeoutSelectProtokol = "Сървърът е претоварен. Изберете бутон 'Запис' тново";
             public const string UpdateOK = "Обновяването премина успешно.";
+            public const string NewerDateWrt = "Данните са коригирани от друго лице.";
             public const string UpdateFailed = "Проблем при обновяването на данните.";
             public const string FileNotFound = "Файлът не е намерен!";
             public const string FileUploadFailed = "Грешка при запис на Файл!";
@@ -53,6 +54,7 @@
             public const string CaseSessionActComplainExpireOK = "Обжалването е премахнато успешно.";
             public const string CaseNotificationExpireOK = "Уведомлението е премахнато успешно.";
             public const string DocumentExpireOK = "Документът е премахнат успешно.";
+            public const string DocumentResolutionExpireOK = "Разпореждането е премахнато успешно.";
             public const string DescriptionExpireRequired = "Въведете причина за премахването.";
             public const string DeliveryAccountExpireOK = "Мобилният токен е премахнат успешно.";
             public const string EisppEventItemExpireOK = "Събитието към ЕИСПП е премахнат успешно.";
@@ -64,6 +66,10 @@
             public const string DeliveryAreaAddressExpireOK = "Районирането е премахнато успешно.";
             public const string DeliveryAreaExpireOK = "Района е премахнат успешно.";
             public const string CaseLoadIndexExpireOK = "Натоварването е премахнато успешно.";
+            public const string CourtLawUnitExpireOK = "Премахнато успешно.";
+            public const string DocumentTemplateExpireOK = "Документът е премахнат успешно.";
+            public const string DivorceExpireOK = "Съобщението е премахнато успешно.";
+            public const string ObjectWasDeleted = "Търсения от Вас обект е премахнат.";
         }
         public static class ValidationErrors{
             public const string DeliveryDateFuture = "Не може да въвеждате посещение с бъдеща дата и час.";

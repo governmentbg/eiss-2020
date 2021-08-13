@@ -46,6 +46,17 @@ namespace IOWebApplication.Infrastructure.Data.Common
         T GetByIds<T>(object[] id) where T : class;
 
         /// <summary>
+        /// Gets single property value  of type Tprop via where expression passed
+        /// </summary>
+        /// <typeparam name="T">Type of entity</typeparam>
+        /// <typeparam name="Tprop">Type of property</typeparam>
+        /// <param name="where">Where clause expression</param>
+        /// <param name="select">Select property expression</param>
+        /// <returns></returns>
+        Tprop GetPropById<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select)
+            where T : class;
+
+        /// <summary>
         /// Adds entity to the database
         /// </summary>
         /// <param name="entity">Entity to add</param>
@@ -84,6 +95,7 @@ namespace IOWebApplication.Infrastructure.Data.Common
         void DeleteRange<T>(IEnumerable<T> entities) where T : class;
         void DeleteRange<T>(Expression<Func<T, bool>> deleteWhereClause) where T : class;
 
+        void PropUnmodified<T>(Expression<Func<T>> selectProp) where T : class;
 
         /// <summary>
         /// Detaches given entity from the context

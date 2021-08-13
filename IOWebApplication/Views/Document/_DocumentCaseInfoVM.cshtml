@@ -13,9 +13,16 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-lg-6 col-md-6 legacy-case-select">
+        <div class="col-lg-5 col-md-5 legacy-case-select">
             @Html.EditorFor(x => x.CaseRegNumber)
         </div>
+        @if (!string.IsNullOrEmpty(Model.CourtName))
+        {
+            <div class="col-lg-1 col-md-1 legacy-case-select">
+                <br/>
+                <a href="#" class="btn btn-info" title="@Model.CourtName"><i class="fa fa-info-circle"></i></a>
+            </div>
+        }
         <div class="col-lg-3 col-md-6 eiss-case-select">
             @Html.EditorFor(x => x.CourtId, "SelectCourt", new { onChange = "courtSelect();" })
         </div>

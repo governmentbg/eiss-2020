@@ -1,5 +1,7 @@
 ﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 @model DeliveryItemListVM;
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Книга за получени и върнати призовки и други съдебни книжа";
@@ -37,12 +39,28 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-4 text-left pb-15">
-            <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResult()" value="Експорт в Excel " title="Експорт в Excel">
-                Експорт в Excel
-                <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
-            </button>
-        </div>
+        @if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.ReqBooks))
+        {
+            <div class="col-md-4 text-left pb-15">
+                <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResultNew()" value="Експорт в Excel " title="Експорт в Excel">
+                    Експорт в Excel
+                    <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
+                </button>
+                <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResult()" value="Експорт в Excel " title="Експорт в Excel стар">
+                    Експорт в Excel  стар
+                    <i class="fa fa-file-excel-o" title="Експорт в Excel стар"></i>
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="col-md-4 text-left pb-15">
+                <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="ExcelDataResult()" value="Експорт в Excel " title="Експорт в Excel">
+                    Експорт в Excel
+                    <i class="fa fa-file-excel-o" title="Експорт в Excel"></i>
+                </button>
+            </div>
+        }
     </div>
     <hr>
 </form>
@@ -77,6 +95,11 @@
         function ExcelDataResult() {
              $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
              $('#formPostEdit').attr('action', '@Url.Action("ExcelDataResult")');
+             $("#formPostEdit").submit();
+        }
+        function ExcelDataResultNew() {
+             $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+             $('#formPostEdit').attr('action', '@Url.Action("ExcelDataResultNew")');
              $("#formPostEdit").submit();
         }
     </script>

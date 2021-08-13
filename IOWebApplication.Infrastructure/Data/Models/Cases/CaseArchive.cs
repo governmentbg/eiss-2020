@@ -47,12 +47,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [Column("book_number")]
         [Display(Name = "Номер на Том")]
-        [Range(1, int.MaxValue, ErrorMessage = "Въведете стойност по-голяма от 0")]
-        public int BookNumber { get; set; }
+        public int? BookNumber { get; set; }
 
         [Column("book_year")]
         [Display(Name = "Година на Том")]
-        [Range(1, int.MaxValue, ErrorMessage = "Въведете стойност по-голяма от 0")]
         public int? BookYear { get; set; }
 
         [Column("storage_years")]

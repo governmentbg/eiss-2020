@@ -120,6 +120,11 @@
                                             <div class="col-lg-6" id="CaseSessionActComplain">@Html.EditorFor(x => x.CaseSessionActComplainId, "GenericDropDown")</div>
                                             <div class="col-lg-12" id="MultiComplain">@Html.EditorFor(x => x.MultiComplainIdVM, "GenericDropDownMultiple")</div>
                                         </div>
+                                        <div id="NotificationIspnReasonDiv" class="row">
+                                            <div class="col-lg-12">
+                                                @Html.EditorFor(x => x.NotificationIspnReasonId, "GenericDropDown")
+                                            </div>
+                                        </div>
                                         <div id="ExpertReportDiv">
                                             <div class="row">
                                                 <div class="col-lg-6">@Html.EditorFor(x => x.ExpertDeadDate, "DateTime")</div>
@@ -131,6 +136,16 @@
                                         <div id="DocumentSenderPersonDiv">
                                             <div class="row">
                                                 <div class="col-lg-12">@Html.EditorFor(x => x.DocumentSenderPersonId, "GenericDropDown")</div>
+                                            </div>
+                                        </div>
+                                        <div id="InstitutionDocumentDiv" class="row institution-document-container">
+                                            <div class="col-lg-12">
+                                                @Html.EditorFor(x => x.InstitutionDocumentId, "EisppDropDownString", null, new { Ddl = ViewBag.InstitutionDocumentId_ddl, @class = "case-cause-dd" })
+                                            </div>
+                                        </div>
+                                        <div id="MoneyObligationDiv">
+                                            <div class="row">
+                                                <div class="col-lg-12">@Html.EditorFor(x => x.MoneyObligationId, "GenericDropDown")</div>
                                             </div>
                                         </div>
                                         <div class="row rajon-add">
@@ -197,7 +212,7 @@
                                             {
                                                 if (Model.DatePrint == null)
                                                 {
-                                                    <a href=@Url.Action("EditTinyMCE", new { sourceId = Model.Id }) class="btn btn-warning" title="Генериране на призовка/съобщение"><i class="fa fa-check"></i> Генериране</a>
+                                                    <a href=@Url.Action("EditTinyMCE", new { sourceType=SourceTypeSelectVM.CaseNotificationPrint, sourceId = Model.Id }) class="btn btn-warning" title="Генериране на призовка/съобщение"><i class="fa fa-check"></i> Генериране</a>
                                                 }
                                                 else
                                                 {
@@ -241,7 +256,7 @@
                                     <div class="row">
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ReturnDate, "DateTimeWithTime")</div>
                                         <div class="col-lg-6">
-                                            <div id="returnFileList" class="cdn-files" data-url="@Url.Action("GetFileList")" data-sourcetype="@SourceTypeSelectVM.CaseNotificationReturn" data-sourceid="@Model.Id" data-editmode="@cndEditMode"></div>
+                                            <div id="returnFileList" class="cdn-files" data-sourcetype="@SourceTypeSelectVM.CaseNotificationReturn" data-sourceid="@Model.Id" data-editmode="@cndEditMode"></div>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -399,7 +414,7 @@
                 error: log_ajax_err
             });
         };
-        function CasePersonIdChange() {
+        function CasePersonIdChange(runCheckDeliveryEpep) {
             var linkId = $("#CasePersonLinkId").val();
             var casePersonId = $("#CasePersonId").val();
             var addressId = $('#CasePersonAddressId').val();
@@ -422,7 +437,8 @@
                     } else {
                         $("#divCasePersonLinks").show();
                     }
-                    CheckDeliveryGroupForEpep();
+                    if (runCheckDeliveryEpep)
+                        CheckDeliveryGroupForEpep();
                 },
                 error: log_ajax_err
             });
@@ -450,7 +466,6 @@
                     fillCombo(response.addrList, $('#CasePersonAddressId'));
                     setComboSelectedOrFirst($('#CasePersonAddressId'), addressId);
                     dataSet = response.linkList;
-                    console.log(dataSet);
                     $("#select-all").prop('checked', false);
                     var table = $('#casePersonLinks').DataTable();
                     table.clear();
@@ -557,6 +572,9 @@
                     haveExpertReport: false,
                     haveMultiActComplain: false,
                     haveDocumentSenderPerson: false,
+                    haveInstitutionDocument: false,
+                    haveMoneyObligation: false,
+                    haveNotificationIspnReason: false
                 }
             }
             return htmlTemplate;
@@ -583,14 +601,16 @@
                     $('#CaseSessionActComplainId').prop("disabled", false);
                     $('#CaseSessionActComplain').show();
                     $('#CaseSessionActId').change();
-                    $('#MultiComplain').hide();
                 } else {
                     $('#CaseSessionActComplainId').rules('remove', 'required');
                     $('#CaseSessionActComplainId').prop("disabled", true);
                     $('#CaseSessionActComplain').hide();
                 }
+
                 if (htmlTemplate.haveSessionActComplain && htmlTemplate.haveMultiActComplain) {
                     $('#MultiComplain').show();
+                } else {
+                    $('#MultiComplain').hide();
                 }
                 if (htmlTemplate.haveSessionActComplain) {
                     LoadCaseSessionActComplain();
@@ -626,6 +646,27 @@
                     $('#DocumentSenderPersonId').prop("disabled", true);
                     $("#DocumentSenderPersonDiv").hide();
                 }
+                if (htmlTemplate.haveMoneyObligation) {
+                    $('#MoneyObligationId').prop("disabled", false);
+                    $("#MoneyObligationDiv").show();
+                } else {
+                    $('#MoneyObligationId').prop("disabled", true);
+                    $("#MoneyObligationDiv").hide();
+                }
+                if (htmlTemplate.haveInstitutionDocument) {
+                    $('#InstitutionDocumentId').prop("disabled", false);
+                    $("#InstitutionDocumentDiv").show();
+                } else {
+                    $('#InstitutionDocumentId').prop("disabled", true);
+                    $("#InstitutionDocumentDiv").hide();
+                }
+                if (htmlTemplate.haveNotificationIspnReason) {
+                    $('#NotificationIspnReasonId').prop("disabled", false);
+                    $("#NotificationIspnReasonDiv").show();
+                } else {
+                    $('#NotificationIspnReasonId').prop("disabled", true);
+                    $("#NotificationIspnReasonDiv").hide();
+                }
             }
         });
         function LoadCaseSessionActComplain() {
@@ -634,26 +675,53 @@
             var complainIdInit =  "@Model.CaseSessionActComplainId";
             var htmlTemplateId = $('#HtmlTemplateId').val();
             var htmlTemplate = GetHtmlTemplate(htmlTemplateId);
-            if (htmlTemplate.haveSessionActComplain && htmlTemplate.haveMultiActComplain) {
-                requestComboMulti('@Url.Action("CaseSessionActComplainMultiDDL")',
-                    { caseId: '@Model.CaseId', caseNotificationId: '@Model.Id', caseSessionActId: caseSessionActId, htmlTemplateId: htmlTemplateId },
-                    '#MultiComplainIdVM',
-                    $('#MultiComplainIdVM').val()
-                );
-            } else {
-                $.ajax({
-                    type: "POST",
-                    url: '@Url.Action("CaseSessionActComplainDDL")',
-                    dataType: "json",
-                    cache: false,
-                    data: {  caseId: '@Model.CaseId', caseSessionActId: caseSessionActId, htmlTemplateId: htmlTemplateId },
-                    success: function (response) {
-                        fillCombo(response, $('#CaseSessionActComplainId'));
-                        $('#CaseSessionActComplainId').val(complainId);
-                        if ($('#CaseSessionActComplainId').prop("selectedIndex") < 0) {
-                            $('#CaseSessionActComplainId').val(complainIdInit);
+            if (htmlTemplate.haveSessionActComplain) {
+                if (htmlTemplate.haveMultiActComplain) {
+                    requestComboMulti('@Url.Action("CaseSessionActComplainMultiDDL")',
+                        { caseId: '@Model.CaseId', caseNotificationId: '@Model.Id', caseSessionActId: caseSessionActId, htmlTemplateId: htmlTemplateId },
+                        '#MultiComplainIdVM',
+                        $('#MultiComplainIdVM').val()
+                    );
+                } else {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("CaseSessionActComplainDDL")',
+                        dataType: "json",
+                        cache: false,
+                        data: { caseId: '@Model.CaseId', caseSessionActId: caseSessionActId, htmlTemplateId: htmlTemplateId },
+                        success: function (response) {
+                            fillCombo(response, $('#CaseSessionActComplainId'));
+                            $('#CaseSessionActComplainId').val(complainId);
                             if ($('#CaseSessionActComplainId').prop("selectedIndex") < 0) {
-                                $('#CaseSessionActComplainId').prop("selectedIndex", 0);
+                                $('#CaseSessionActComplainId').val(complainIdInit);
+                                if ($('#CaseSessionActComplainId').prop("selectedIndex") < 0) {
+                                    $('#CaseSessionActComplainId').prop("selectedIndex", 0);
+                                }
+                            };
+                        },
+                        complete: function () { },
+                        error: log_ajax_err
+                    });
+                }
+            }
+            if (htmlTemplate.haveMoneyObligation) {
+                var linkId = $("#CasePersonLinkId").val();
+                var casePersonId = $("#CasePersonId").val();
+                var moneyObligationId = $('#MoneyObligationId').val();
+                var moneyObligationIdInit = "@Model.MoneyObligationId";
+                 $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("GetMoneyObligationDDL")',
+                    dataType: "json",
+                     cache: false,
+                     data: { caseSessionActId: caseSessionActId, casePersonId: casePersonId, caseLinkId: linkId },
+                    success: function (response) {
+                        fillCombo(response, $('#MoneyObligationId'));
+                        $('#MoneyObligationId').val(moneyObligationId);
+                        if ($('#MoneyObligationId').prop("selectedIndex") < 0) {
+                            $('#MoneyObligationId').val(moneyObligationIdInit);
+                            if ($('#MoneyObligationId').prop("selectedIndex") < 0) {
+                                $('#MoneyObligationId').prop("selectedIndex", 0);
                             }
                         };
                     },
@@ -666,7 +734,7 @@
             LoadCaseSessionActComplain();
         });
         $('#CasePersonId').change(function () {
-            CasePersonIdChange();
+            CasePersonIdChange(true);
         });
 
         $('#CasePersonLinkId').change(function () {
@@ -846,7 +914,7 @@
             if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
                 NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail)
             {
-                CasePersonIdChange();
+                CasePersonIdChange(false);
             }
         };
 

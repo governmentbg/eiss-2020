@@ -13,6 +13,7 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -37,6 +38,7 @@ namespace IOWebApplication.Controllers
             courtOrganizationService = _courtOrganizationService;
         }
 
+        
         private void SetHelpByLawUnitType(int lawUnitTypeId)
         {
             switch (lawUnitTypeId)
@@ -167,11 +169,14 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult Edit(CourtLawUnit model)
         {
+            if (model.LawUnitId <= 0)
+            {
+                ModelState.AddModelError(nameof(CourtLawUnit.LawUnitId), "Изберете служител.");
+            }
             if (model.DateTo != null && model.DateTo.ForceStartDate() < model.DateFrom.ForceStartDate())
             {
                 ModelState.AddModelError(nameof(CourtLawUnit.DateTo), "Дата до не може да е преди Дата от");
             }
-
 
             model.DateFrom = model.DateFrom.ForceStartDate();
             model.DateTo = model.DateTo.ForceEndDate();
@@ -198,6 +203,21 @@ namespace IOWebApplication.Controllers
             SetBreadcrums(model.PeriodTypeId, model.MasterLawUnitTypeId, model.Id);
             SetViewBag(model);
             return View(nameof(Edit), model);
+        }
+
+        [HttpPost]
+        public IActionResult CourtLawUnit_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var expireObject = service.GetById<CourtLawUnit>(model.Id);
+            if (service.SaveExpireInfo<CourtLawUnit>(model))
+            {
+                SetSuccessMessage(MessageConstant.Values.CourtLawUnitExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("Index", "CourtLawUnit", new { periodType = expireObject.PeriodTypeId, lawUnitType = model.OtherId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
         }
 
         /// <summary>

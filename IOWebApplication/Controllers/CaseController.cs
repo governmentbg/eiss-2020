@@ -109,8 +109,9 @@ namespace IOWebApplication.Controllers
         /// Редакция на дело
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="taskid"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public IActionResult Edit(int id, long? taskid = null)
         {
             var model = service.Case_SelectForEdit(id);
             if (model == null)
@@ -139,10 +140,20 @@ namespace IOWebApplication.Controllers
                 model.Description = document.Description;
             }
 
+            int newCaseStateId = NomenclatureConstants.CaseState.New;
+            if(taskid > 0)
+            {
+                var _task= service.GetById<Infrastructure.Data.Models.Common.WorkTask>(taskid);
+                if(_task != null && _task.TaskTypeId == WorkTaskConstants.Types.Case_ForReject)
+                {
+                    newCaseStateId = NomenclatureConstants.CaseState.Rejected;
+                }
+            }
+
             //Ако не е образувано делото (чернова) - се предлага по подразбиране Образувано
             if (model.CaseStateId == NomenclatureConstants.CaseState.Draft && string.IsNullOrEmpty(model.RegNumber))
             {
-                model.CaseStateId = NomenclatureConstants.CaseState.New;
+                model.CaseStateId = newCaseStateId;
             }
 
             SetViewBagEdit(model);
@@ -210,7 +221,7 @@ namespace IOWebApplication.Controllers
                 }
             }
 
-            if (model.CaseStateId == NomenclatureConstants.CaseState.Rejected)
+            if (NomenclatureConstants.CaseState.UnregisteredManageble.Contains(model.CaseStateId))
             {
                 //Ако делото е отказано от образуване - следните полета не са задължителни:
                 model.CaseCodeId = 0;
@@ -371,6 +382,7 @@ namespace IOWebApplication.Controllers
 
         void SetViewbagIndex()
         {
+            ViewBag.CaseGroupIds_ddl = nomService.GetDropDownList<CaseGroup>(false);
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.CaseClassificationId_ddl = nomService.GetDropDownList<Classification>();
             ViewBag.CaseStateId_ddl = nomService.GetDropDownList<CaseState>();
@@ -400,7 +412,11 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseProtokolLawUnit_Count = caseSelectProtokolService.CaseSelectionProtokolLawUnit_SelectCount(model.Id);
             bool isInitial = string.IsNullOrEmpty(model.RegNumber);
             var states = nomService.GetDDL_CaseState(isInitial, !isInitial);
-            if (model.CaseStateId == NomenclatureConstants.CaseState.Rejected)
+            if (model.CaseStateId == NomenclatureConstants.CaseState.Archive)
+            {
+                states.Add(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem("Архивирано", NomenclatureConstants.CaseState.Archive.ToString()));
+            }
+            if (NomenclatureConstants.CaseState.UnregisteredManageble.Contains(model.CaseStateId))
             {
                 ViewBag.CaseStateId_ddl = states.Where(x => x.Value != NomenclatureConstants.CaseState.New.ToString()).ToList();
             }
@@ -496,10 +512,23 @@ namespace IOWebApplication.Controllers
         /// <param name="filterJson"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CaseReport_ListData(IDataTablesRequest request, string filterJson)
+        public IActionResult CaseReport_ListData(IDataTablesRequest request, [AllowHtml] string filterJson)
         {
             var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
             CaseFilterReport model = JsonConvert.DeserializeObject<CaseFilterReport>(filterJson, dateTimeConverter);
+
+            if (model.VisibleOtherSystemHidden)
+            {
+                model.LinkDelo_CourtId = null;
+                model.LinkDelo_RegNumber = string.Empty;
+                model.LinkDelo_Description = string.Empty;
+            }
+            else
+            {
+                model.CourtOtherSystem = null;
+                model.YearOtherSystem = null;
+                model.RegNumberOtherSystem = string.Empty;
+            }
 
             var data = service.CaseReport_Select(userContext.CourtId, model);
             return request.GetResponse(data);

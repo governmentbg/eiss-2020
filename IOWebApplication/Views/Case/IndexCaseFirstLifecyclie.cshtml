@@ -159,7 +159,7 @@
     });
 
     $('#CaseGroupId').change(function () {
-        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtTypeFirsLifecyclie", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
     });
 
     $(function () {

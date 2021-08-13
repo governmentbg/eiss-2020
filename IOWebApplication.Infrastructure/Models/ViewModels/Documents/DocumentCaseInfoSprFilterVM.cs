@@ -13,11 +13,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         [Display(Name = "До дата")]
         public DateTime? DateTo { get; set; }
 
-        [Display(Name = "Основен вид докумет")]
+        [Display(Name = "Основен вид докумет регистратура")]
         public int DocumentGroupId { get; set; }
 
-        [Display(Name = "Точен вид документ")]
+        [Display(Name = "Точен вид документ регистратура")]
         public int DocumentTypeId { get; set; }
+
+        [Display(Name = "Вид документ представен в заседание")]
+        public int SessionDocTypeId { get; set; }
 
         [Display(Name = "Основен вид дело")]
         public int CaseGroupId { get; set; }

@@ -5,6 +5,7 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -18,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using IOWebApplication.Core.Extensions;
 
 namespace IOWebApplication.Core.Services
 {
@@ -32,6 +34,7 @@ namespace IOWebApplication.Core.Services
     private readonly ICommonService commonService;
     private readonly ICourtLawUnitService courtLawUnitService;
     private readonly ICdnService cdnService;
+    private readonly IWorkTaskService worktaskService;
     public CaseSelectionProtokolService(ILogger<CaseSelectionProtokolService> _logger,
         IRepository _repo,
         IUserContext _userContext,
@@ -42,7 +45,8 @@ namespace IOWebApplication.Core.Services
         ICommonService _commonService,
         ICourtLawUnitService _courtLawUnitService,
         ICaseDeadlineService _caseDeadlineService,
-       ICdnService _cdnService)
+       ICdnService _cdnService,
+       IWorkTaskService _worktaskService)
 
     {
       logger = _logger;
@@ -56,6 +60,7 @@ namespace IOWebApplication.Core.Services
       caseDeadlineService = _caseDeadlineService;
       cdnService = _cdnService;
       courtLawUnitService = _courtLawUnitService;
+      worktaskService = _worktaskService;
     }
     /// <summary>
     /// Зарежда списък с спротокли за избор на съдебен състав
@@ -336,6 +341,7 @@ namespace IOWebApplication.Core.Services
       bool result = true;
       var caseLawUnitDismis = repo.AllReadonly<CaseLawUnitDismisal>()
                                         .Include(x => x.CaseLawUnit)
+                                        .Where(CaseExtensions.ConfirmedDismissalsOnly())
                                         .Where(x => x.CaseLawUnit.CaseId == model.CaseId).ToList();
 
       foreach (var item in model.LawUnits)
@@ -625,7 +631,7 @@ namespace IOWebApplication.Core.Services
                                    .Where(selectSpeciality)
                                    .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
                                    .Where(x => x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint)
-                                   .Where(x => x.CourtId == courtId)
+                                   .Where(x => x.CourtId == courtId && x.DateExpired == null)
                                    .Where(x => x.DateFrom <= date && (x.DateTo ?? endDate) >= date)
                                       .Where(x => x.LawUnit.DateFrom <= date && (x.LawUnit.DateTo ?? endDate) >= date)
                                    .ToList();
@@ -715,6 +721,7 @@ namespace IOWebApplication.Core.Services
     {
       var caseLawUnitDismis = repo.AllReadonly<CaseLawUnitDismisal>()
                                         .Include(x => x.CaseLawUnit)
+                                        .Where(CaseExtensions.ConfirmedDismissalsOnly())
                                         .Where(x => x.CaseLawUnit.CaseId == caseId).ToList();
 
       //Списък на използвани преразпределения
@@ -732,7 +739,7 @@ namespace IOWebApplication.Core.Services
       var courtlawUnit = repo.AllReadonly<CourtLawUnit>()
                              .Include(x => x.LawUnit)
                                //.Where(x => x.CourtId == courtId &&
-                               .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge &&
+                               .Where(x => x.DateExpired == null && x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge &&
                                 x.DateFrom.Date <= today && (x.DateTo ?? endDate).Date >= today &&
                                 ((x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill && x.CourtId == courtId)
                                 || (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday && x.CourtId == courtId)
@@ -753,7 +760,7 @@ namespace IOWebApplication.Core.Services
         if (dismisal != null)
         {
           model[i].StateId = NomenclatureConstants.SelectionProtokolLawUnitState.Exclude;
-          model[i].Description = "Прерзпределение:" + dismisal.Description;
+          model[i].Description = "Преразпределение:" + dismisal.Description;
           model[i].EnableState = false;
           continue;
         }
@@ -995,22 +1002,13 @@ namespace IOWebApplication.Core.Services
       DateTime dateFromSearch = model.DateFrom == null ? DateTime.Now.AddYears(-100) : (DateTime)model.DateFrom;
       DateTime dateToSearch = model.DateTo == null ? DateTime.Now.AddYears(100) : (DateTime)model.DateTo;
 
-
-      Expression<Func<CaseLawUnit, bool>> dateSearch = x => true;
-      if (model.DateFrom != null || model.DateTo != null)
-        dateSearch = x => x.CaseSelectionProtokol.SelectionDate.Date >= dateFromSearch.Date && x.CaseSelectionProtokol.SelectionDate.Date <= dateToSearch.Date;
-
       Expression<Func<CaseLawUnit, bool>> nameSearch = x => true;
       if (!string.IsNullOrEmpty(model.FullName))
         nameSearch = x => EF.Functions.ILike(x.LawUnit.FullName, model.FullName.ToPaternSearch());
 
-      Expression<Func<CaseLawUnit, bool>> caseRegnumberSearch = x => true;
-      if (!string.IsNullOrEmpty(model.CaseRegNumber))
-        caseRegnumberSearch = x => x.CaseSelectionProtokol.Case.RegNumber.EndsWith((model.CaseRegNumber.ToShortCaseNumber() ?? x.CaseSelectionProtokol.Case.RegNumber), StringComparison.InvariantCultureIgnoreCase);
-
-      Expression<Func<CaseLawUnit, bool>> roleSearch = x => true;
-      if (model.JudgeRoleId > 0)
-        roleSearch = x => x.CaseSelectionProtokol.JudgeRoleId == model.JudgeRoleId;
+      Expression<Func<CaseSelectionProtokol, bool>> nameSearchNotSigned = x => true;
+      if (!string.IsNullOrEmpty(model.FullName))
+        nameSearchNotSigned = x => EF.Functions.ILike(x.SelectedLawUnit.FullName, model.FullName.ToPaternSearch());
 
       Expression<Func<CaseLawUnit, bool>> modeSearch = x => true;
       if (model.SelectionModeId > 0)
@@ -1025,85 +1023,195 @@ namespace IOWebApplication.Core.Services
         }
       }
 
+      Expression<Func<CaseSelectionProtokol, bool>> modeSearchNotSigned = x => true;
+      if (model.SelectionModeId > 0)
+      {
+        modeSearchNotSigned = x => (x.SelectionModeId == model.SelectionModeId);
+      }
 
-      Expression<Func<CaseLawUnit, bool>> userWhere = x => true;
+      Func<CaseSelectionProtokol, bool> dateSearch = x => true;
+      if (model.DateFrom != null || model.DateTo != null)
+        dateSearch = x => x.SelectionDate.Date >= dateFromSearch.Date && x.SelectionDate.Date <= dateToSearch.Date;
+
+
+
+      Func<Case, bool> caseRegnumberSearch = x => true;
+      if (!string.IsNullOrEmpty(model.CaseRegNumber))
+        caseRegnumberSearch = x => EF.Functions.ILike(x.RegNumber, model.CaseRegNumber.ToCasePaternSearch());
+
+      Func<CaseSelectionProtokol, bool> roleSearch = x => true;
+      if (model.JudgeRoleId > 0)
+        roleSearch = x => x.JudgeRoleId == model.JudgeRoleId;
+
+
+
+
+      Func<CaseSelectionProtokol, bool> userWhere = x => true;
       if (string.IsNullOrEmpty(model.UserId) == false && model.UserId != "0")
-        userWhere = x => x.CaseSelectionProtokol.UserId == model.UserId;
+        userWhere = x => x.UserId == model.UserId;
 
-      Expression<Func<CaseLawUnit, bool>> yearWhere = x => true;
+      Func<CaseSelectionProtokol, bool> yearWhere = x => true;
       if ((model.Year ?? 0) > 0)
-        yearWhere = x => x.CaseSelectionProtokol.SelectionDate.Year == model.Year;
+        yearWhere = x => x.SelectionDate.Year == model.Year;
 
-      Expression<Func<CaseLawUnit, bool>> stateWhere = x => true;
-      if (model.ProtokolState > 0)
-        stateWhere = x => x.CaseSelectionProtokol.SelectionProtokolStateId == model.ProtokolState;
+      //Func<Case, bool> caseGroupWhere = x => true;
+      //if (model.CaseGroupId > 0)
+      //    caseGroupWhere = x => x.CaseGroupId == model.CaseGroupId;
 
-      Expression<Func<CaseLawUnit, bool>> caseGroupWhere = x => true;
-      if (model.CaseGroupId > 0)
-        caseGroupWhere = x => x.CaseSelectionProtokol.Case.CaseGroupId == model.CaseGroupId;
+      //Func<Case, bool> caseTypeWhere = x => true;
+      //if (model.CaseTypeId > 0)
+      //    caseTypeWhere = x => x.CaseTypeId == model.CaseTypeId;
 
-      Expression<Func<CaseLawUnit, bool>> caseTypeWhere = x => true;
-      if (model.CaseTypeId > 0)
-        caseTypeWhere = x => x.CaseSelectionProtokol.Case.CaseTypeId == model.CaseTypeId;
+      Func<Case, bool> caseGroupWhere = x => true;
+      if (!string.IsNullOrEmpty(model.CaseGroupIds_text))
+      {
+        var listGroupIds = new List<int>();
+        if (!string.IsNullOrEmpty(model.CaseGroupIds_text))
+          listGroupIds = model.CaseGroupIds_text.Split(',').Select(Int32.Parse).ToList();
+        caseGroupWhere = x => listGroupIds.Contains(x.CaseGroupId);
+      }
 
-      Expression<Func<CaseLawUnit, bool>> courtGroupWhere = x => true;
-      if (model.CourtGroupId > 0)
-        caseTypeWhere = x => x.CaseSelectionProtokol.Case.CourtGroupId == model.CourtGroupId;
+      Func<Case, bool> caseTypeWhere = x => true;
+      if (!string.IsNullOrEmpty(model.CaseTypeIds_text))
+      {
+        var listTypeIds = new List<int>();
+        if (!string.IsNullOrEmpty(model.CaseTypeIds_text))
+          listTypeIds = model.CaseTypeIds_text.Split(',').Select(Int32.Parse).ToList();
+        caseTypeWhere = x => listTypeIds.Contains(x.CaseTypeId);
+      }
 
-      Expression<Func<CaseLawUnit, bool>> loadGroupLinkWhere = x => true;
-      if (model.LoadGroupLinkId > 0)
-        caseTypeWhere = x => x.CaseSelectionProtokol.Case.LoadGroupLinkId == model.LoadGroupLinkId;
+      //Func<Case, bool> courtGroupWhere = x => true;
+      //if (model.CourtGroupId > 0)
+      //    caseTypeWhere = x => x.CourtGroupId == model.CourtGroupId;
 
-      Expression<Func<CaseLawUnit, bool>> documentSearch = x => true;
+      Func<Case, bool> courtGroupWhere = x => true;
+      if (!string.IsNullOrEmpty(model.CourtGroupIds_text))
+      {
+        var listCourtGroupIds = new List<int>();
+        if (!string.IsNullOrEmpty(model.CourtGroupIds_text))
+          listCourtGroupIds = model.CourtGroupIds_text.Split(',').Select(Int32.Parse).ToList();
+        caseTypeWhere = x => listCourtGroupIds.Contains(x.CourtGroupId ?? 0);
+      }
+
+      //Func<Case, bool> loadGroupLinkWhere = x => true;
+      //if (model.LoadGroupLinkId > 0)
+      //    caseTypeWhere = x => x.LoadGroupLinkId == model.LoadGroupLinkId;
+
+      Func<Case, bool> loadGroupLinkWhere = x => true;
+      if (!string.IsNullOrEmpty(model.LoadGroupLinkIds_text))
+      {
+        var listLoadGroupLinkIds = new List<int>();
+        if (!string.IsNullOrEmpty(model.LoadGroupLinkIds_text))
+          listLoadGroupLinkIds = model.LoadGroupLinkIds_text.Split(',').Select(Int32.Parse).ToList();
+        caseTypeWhere = x => listLoadGroupLinkIds.Contains(x.LoadGroupLinkId ?? 0);
+      }
+
+      Func<Document, bool> documentSearch = x => true;
       if (!string.IsNullOrEmpty(model.DocumentNumber))
-        documentSearch = x => x.CaseSelectionProtokol.Case.Document.DocumentNumber.ToLower().Contains(model.DocumentNumber.ToLower());
+        documentSearch = x => x.DocumentNumber.ToLower().Contains(model.DocumentNumber.ToLower());
 
-      return repo.AllReadonly<CaseLawUnit>()
-                .Include(x => x.CaseSelectionProtokol)
-                .Include(x => x.CaseSelectionProtokol.SelectedLawUnit)
-                .Include(x => x.CaseSelectionProtokol.JudgeRole)
-                .Include(x => x.CaseSelectionProtokol.SelectionMode)
-                .Include(x => x.CaseSelectionProtokol.Case)
-                .Include(x => x.CaseSelectionProtokol.Case.CaseState)
-                .Include(x => x.CaseSelectionProtokol.Case.Document)
-                .Include(x => x.CaseSelectionProtokol.SelectionProtokolState)
-                .Include(x => x.CaseSelectionProtokol.User)
-                .Include(x => x.CaseSelectionProtokol.User.LawUnit)
-                .Where(x => x.CaseSelectionProtokol.Case.CourtId == courtId)
-                .Where(x => x.CaseSessionId == null)
-                .Where(dateSearch)
-                .Where(nameSearch)
-                .Where(caseRegnumberSearch)
-                .Where(roleSearch)
-                .Where(modeSearch)
-                .Where(userWhere)
-                .Where(yearWhere)
-                .Where(stateWhere)
-                .Where(caseGroupWhere)
-                .Where(caseTypeWhere)
-                .Where(documentSearch)
-                .Where(courtGroupWhere)
-                .Where(loadGroupLinkWhere)
-                .Select(x => new CaseSelectionProtokolReportVM()
-                {
-                  Id = x.CaseSelectionProtokol.Id,
-                  CaseId = x.CaseSelectionProtokol.CaseId,
-                  CaseNumber = x.CaseSelectionProtokol.Case.RegNumber,
-                  CaseDate = x.CaseSelectionProtokol.Case.RegDate,
-                  DocumentId = x.Case.DocumentId,
-                  DocumentNumber = x.Case.Document.DocumentNumber,
-                  DocumentNumberVal = x.Case.Document.DocumentNumberValue,
-                  Uic = x.CaseSelectionProtokol.SelectedLawUnit.Uic,
-                  FullName = x.LawUnit.FullName,
-                  SelectionDate = x.CaseSelectionProtokol.SelectionDate,
-                  JudgeRoleName = (x.CaseSelectionProtokol.SelectedLawUnitId == x.LawUnitId) ? x.CaseSelectionProtokol.JudgeRole.Label : x.CaseSelectionProtokol.JudgeRole.Label + " (избран като член от състав)",
-                  SelectionModeName = (x.CaseSelectionProtokol.SelectedLawUnitId == x.LawUnitId) ? x.CaseSelectionProtokol.SelectionMode.Label : "Постоянен състав",
-                  CaseStateLabel = x.CaseSelectionProtokol.Case.CaseState.Label,
-                  SelectionProtokolStateName = x.CaseSelectionProtokol.SelectionProtokolState.Label,
-                  UserName = x.CaseSelectionProtokol.User.LawUnit.FullName,
-                  CaseTypeLabel = (x.CaseSelectionProtokol.Case.CaseType != null) ? x.CaseSelectionProtokol.Case.CaseType.Code : string.Empty,
-                  CaseCodeLabel = (x.CaseSelectionProtokol.Case.CaseCode != null) ? x.CaseSelectionProtokol.Case.CaseCode.Code : string.Empty,
-                }).AsQueryable();
+      if (model.ProtokolState == NomenclatureConstants.SelectionProtokolState.Signed)
+      {
+        return repo.AllReadonly<CaseLawUnit>()
+                  .Include(x => x.CaseSelectionProtokol)
+                  .ThenInclude(x => x.SelectedLawUnit)
+                  .Include(x => x.CaseSelectionProtokol)
+                  .ThenInclude(x => x.JudgeRole)
+                  .Include(x => x.CaseSelectionProtokol)
+                  .ThenInclude(x => x.SelectionMode)
+                  .Include(x => x.CaseSelectionProtokol)
+                  .ThenInclude(x => x.Case)
+                  .ThenInclude(x => x.CaseState)
+                  .Include(x => x.CaseSelectionProtokol)
+                  .ThenInclude(x => x.Case)
+                  .ThenInclude(x => x.Document)
+                  .Include(x => x.CaseSelectionProtokol)
+                  .ThenInclude(x => x.SelectionProtokolState)
+                  .Include(x => x.CaseSelectionProtokol)
+                  .ThenInclude(x => x.User)
+                  .ThenInclude(x => x.LawUnit)
+                  .Where(nameSearch)
+                  .Where(modeSearch)
+                  .Where(x => x.CaseSelectionProtokol.Case.CourtId == courtId)
+                  .Where(x => dateSearch(x.CaseSelectionProtokol))
+                  .Where(x => caseRegnumberSearch(x.CaseSelectionProtokol.Case))
+                  .Where(x => roleSearch(x.CaseSelectionProtokol))
+                  .Where(x => userWhere(x.CaseSelectionProtokol))
+                  .Where(x => yearWhere(x.CaseSelectionProtokol))
+                  .Where(x => caseGroupWhere(x.CaseSelectionProtokol.Case))
+                  .Where(x => caseTypeWhere(x.CaseSelectionProtokol.Case))
+                  .Where(x => documentSearch(x.CaseSelectionProtokol.Case.Document))
+                  .Where(x => courtGroupWhere(x.CaseSelectionProtokol.Case))
+                  .Where(x => loadGroupLinkWhere(x.CaseSelectionProtokol.Case))
+                  .Where(x => x.CaseSessionId == null)
+                  .Select(x => new CaseSelectionProtokolReportVM()
+                  {
+                    Id = x.CaseSelectionProtokol.Id,
+                    CaseId = x.CaseSelectionProtokol.CaseId,
+                    CaseNumber = x.CaseSelectionProtokol.Case.RegNumber,
+                    CaseDate = x.CaseSelectionProtokol.Case.RegDate,
+                    DocumentId = x.Case.DocumentId,
+                    DocumentNumber = x.Case.Document.DocumentNumber,
+                    DocumentNumberVal = x.Case.Document.DocumentNumberValue,
+                    Uic = x.CaseSelectionProtokol.SelectedLawUnit.Uic,
+                    FullName = x.LawUnit.FullName,
+                    SelectionDate = x.CaseSelectionProtokol.SelectionDate,
+                    JudgeRoleName = (x.CaseSelectionProtokol.SelectedLawUnitId == x.LawUnitId) ? x.CaseSelectionProtokol.JudgeRole.Label : x.CaseSelectionProtokol.JudgeRole.Label + " (избран като член от състав)",
+                    SelectionModeName = (x.CaseSelectionProtokol.SelectedLawUnitId == x.LawUnitId) ? x.CaseSelectionProtokol.SelectionMode.Label : "Постоянен състав",
+                    CaseStateLabel = x.CaseSelectionProtokol.Case.CaseState.Label,
+                    SelectionProtokolStateName = x.CaseSelectionProtokol.SelectionProtokolState.Label,
+                    UserName = x.CaseSelectionProtokol.User.LawUnit.FullName,
+                    CaseTypeLabel = (x.CaseSelectionProtokol.Case.CaseType != null) ? x.CaseSelectionProtokol.Case.CaseType.Code : string.Empty,
+                    CaseCodeLabel = (x.CaseSelectionProtokol.Case.CaseCode != null) ? x.CaseSelectionProtokol.Case.CaseCode.Code : string.Empty,
+                  }).AsQueryable();
+      }
+      else
+      {
+        return repo.AllReadonly<CaseSelectionProtokol>()
+                  .Include(x => x.SelectedLawUnit)
+                  .Include(x => x.JudgeRole)
+                  .Include(x => x.SelectionMode)
+                  .Include(x => x.Case)
+                  .Include(x => x.Case.CaseState)
+                  .Include(x => x.Case.Document)
+                  .Include(x => x.SelectionProtokolState)
+                  .Include(x => x.User)
+                  .Include(x => x.User.LawUnit)
+                  .Where(nameSearchNotSigned)
+                  .Where(modeSearchNotSigned)
+                  .Where(x => x.Case.CourtId == courtId)
+                  .Where(x => dateSearch(x))
+                  .Where(x => caseRegnumberSearch(x.Case))
+                  .Where(x => roleSearch(x))
+                  .Where(x => userWhere(x))
+                  .Where(x => yearWhere(x))
+                  .Where(x => caseGroupWhere(x.Case))
+                  .Where(x => caseTypeWhere(x.Case))
+                  .Where(x => documentSearch(x.Case.Document))
+                  .Where(x => courtGroupWhere(x.Case))
+                  .Where(x => loadGroupLinkWhere(x.Case))
+                  .Where(x => x.SelectionProtokolStateId != NomenclatureConstants.SelectionProtokolState.Signed)
+                  .Select(x => new CaseSelectionProtokolReportVM()
+                  {
+                    Id = x.Id,
+                    CaseId = x.CaseId,
+                    CaseNumber = x.Case.RegNumber,
+                    CaseDate = x.Case.RegDate,
+                    DocumentId = x.Case.DocumentId,
+                    DocumentNumber = x.Case.Document.DocumentNumber,
+                    DocumentNumberVal = x.Case.Document.DocumentNumberValue,
+                    Uic = x.SelectedLawUnit.Uic,
+                    FullName = x.SelectedLawUnit.FullName,
+                    SelectionDate = x.SelectionDate,
+                    JudgeRoleName = x.JudgeRole.Label,
+                    SelectionModeName = x.SelectionMode.Label,
+                    CaseStateLabel = x.Case.CaseState.Label,
+                    SelectionProtokolStateName = x.SelectionProtokolState.Label,
+                    UserName = x.User.LawUnit.FullName,
+                    CaseTypeLabel = (x.Case.CaseType != null) ? x.Case.CaseType.Code : string.Empty,
+                    CaseCodeLabel = (x.Case.CaseCode != null) ? x.Case.CaseCode.Code : string.Empty,
+                  }).AsQueryable();
+      }
     }
     /// <summary>
     /// Зарежда съдии по група дела
@@ -1473,12 +1581,26 @@ namespace IOWebApplication.Core.Services
       if (model.SelectedLawUnitId != null)
       {
         CaseLowUnitsFroSelectionProtocom_insert(id);
-        courtLawUnitService.CourtLawUnitOrder_ActualizeForCase(model.CaseId);
+        courtLawUnitService.CourtDepartmentUnitOrder_ActualizeForCase(model.CaseId);
         caseDeadlineService.DeadLineCompanyCaseByCaseId(model.CaseId);
-
+        finishWorkTasks(model);
       }
       return true;
     }
+
+    private void finishWorkTasks(CaseSelectionProtokol model)
+    {
+      int[] selectionTasks = { WorkTaskConstants.Types.SendFor_NewSelection };
+      var caseTasks = repo.All<WorkTask>()
+                                      .Where(x => x.SourceType == SourceTypeSelectVM.Case && x.SourceId == model.CaseId)
+                                      .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                      .ToList();
+      foreach (var item in caseTasks)
+      {
+        worktaskService.CompleteTask(item);
+      }
+    }
+
     /// <summary>
     /// Прехвърля съдии от протокол в дело
     /// </summary>
@@ -1659,6 +1781,7 @@ namespace IOWebApplication.Core.Services
           var caseLawUnitDismislUsers = repo.AllReadonly<CaseLawUnitDismisal>()
                                        .Include(x => x.CaseLawUnit)
                                        .Where(x => x.CaseLawUnit.CaseId == selectionProtokol.CaseId)
+                                       .Where(CaseExtensions.ConfirmedDismissalsOnly())
                                        .Where(x => NomenclatureConstants.DismisalType.DismisalList.Contains(x.DismisalTypeId))
                                        .Select(x => x.CaseLawUnitId).ToArray();
 
@@ -1747,14 +1870,23 @@ namespace IOWebApplication.Core.Services
 
         }
         mqEpepService.AppendCaseSelectionProtocol(selectionProtokol, EpepConstants.ServiceMethod.Add);
+        if (selectionProtokol.CaseLawUnitDismisalId > 0)
+        {
+          mqEpepService.EPRO_AppendReplace(selectionProtokol.Id, selectionProtokol.CaseLawUnitDismisalId.Value);
+        }
 
         addCaseLawUnits.Add(first_judge);
-        foreach (var lawUnit in addCaseLawUnits)
+
+        //Заявка 1
+        if (userContext.CourtTypeId != NomenclatureConstants.CourtType.VKS)
         {
-          var notification = notificationService.NewWorkNotification(lawUnit);
-          if (notification != null)
+          foreach (var lawUnit in addCaseLawUnits)
           {
-            notificationService.SaveWorkNotification(notification);
+            var notification = notificationService.NewWorkNotification(lawUnit);
+            if (notification != null)
+            {
+              notificationService.SaveWorkNotification(notification);
+            }
           }
         }
         commonService.UpdateCaseJudicalCompositionOtdelenie(selectionProtokol.CaseId);
@@ -1933,33 +2065,32 @@ namespace IOWebApplication.Core.Services
     /// <returns></returns>
     public IQueryable<JuryYearDays> JuryYearDays_Select(int courtId, int year, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId)
     {
-      DateTime first_date_of_year = (DateFrom ?? (new DateTime(year, 01, 01)));
-      DateTime last_date_of_year = (DateTo ?? new DateTime(year + 1, 01, 01));
+      DateTime first_date_of_year = (DateFrom ?? (new DateTime(year, 1, 1))).ForceStartDate();
+      DateTime last_date_of_year = (DateTo ?? new DateTime(year, 12, 31)).ForceEndDate();
 
-      if (DateTo != null)
-      {
-        last_date_of_year = last_date_of_year.AddDays(1);
-      }
-
-      var court_year_jury = repo.AllReadonly<CourtLawUnit>()
-                                .Include(x => x.LawUnit)
-                                .Where(x => x.CourtId == courtId)
-                                .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
-                                .Where(x => ((first_date_of_year <= (x.DateTo ?? first_date_of_year)) && x.DateFrom <= last_date_of_year))
-                                .ToList();
+      //var court_year_jury = repo.AllReadonly<CourtLawUnit>()
+      //                          .Include(x => x.LawUnit)
+      //                          .Where(x => x.CourtId == courtId && x.DateExpired == null)
+      //                          .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
+      //                          .Where(x => ((first_date_of_year <= (x.DateTo ?? first_date_of_year)) && x.DateFrom <= last_date_of_year))
+      //                          .ToList();
 
       var case_sessions = repo.AllReadonly<CaseLawUnit>()
+                              .Include(x => x.CaseSession)
+                              .Where(x => x.CourtId == courtId)
                               .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
-                              .Where(x => (x.DateTo ?? x.CaseSession.DateFrom) >= x.CaseSession.DateFrom)
+                              //.Where(x => (x.DateTo ?? x.CaseSession.DateFrom) >= x.CaseSession.DateFrom)
                               .Where(x => x.CaseSession.DateExpired == null)
                               .Where(x => x.CaseSessionId != null)
-                              .Where(x => ((first_date_of_year <= (x.DateTo ?? first_date_of_year)) && x.DateFrom <= last_date_of_year))
+                              .Where(x => (first_date_of_year <= x.CaseSession.DateFrom) && (x.CaseSession.DateFrom <= last_date_of_year))
                               .Select(x => new JuryYearDays()
                               {
                                 Id = x.LawUnitId,
                                 DateFrom = x.CaseSession.DateFrom.Date,
                                 SessionStateID = x.CaseSession.SessionStateId
-                              });
+                              }).ToList();
+
+      //var lawunits = case_sessions.Select(x => x.Id).Distinct().ToList();
 
       Expression<Func<CourtLawUnit, bool>> selectLawUnit = x => true;
       if (LawUnitId != null)
@@ -1970,8 +2101,9 @@ namespace IOWebApplication.Core.Services
 
       return repo.AllReadonly<CourtLawUnit>()
                  .Where(selectLawUnit)
-                 .Where(x => x.CourtId == courtId)
+                 .Where(x => x.CourtId == courtId && x.DateExpired == null)
                  .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
+                 //.Where(x => lawunits.Contains(x.LawUnitId))
                  .Where(x => ((first_date_of_year <= (x.DateTo ?? first_date_of_year)) && x.DateFrom <= last_date_of_year))
                  .Select(x => new JuryYearDays()
                  {
@@ -1980,7 +2112,7 @@ namespace IOWebApplication.Core.Services
                    DateTo = x.DateTo,
                    FullName = x.LawUnit.FullName,
                    DaysCount = case_sessions.Where(a => a.Id == x.LawUnitId).Where(a => a.SessionStateID == NomenclatureConstants.SessionState.Provedeno).Select(a => a.DateFrom).Distinct().Count(),
-                   DaysCountAppointed = case_sessions.Where(a => a.Id == x.LawUnitId).Where(a => a.SessionStateID != NomenclatureConstants.SessionState.Provedeno).Select(a => a.DateFrom).Distinct().Count()
+                   DaysCountAppointed = case_sessions.Where(a => a.Id == x.LawUnitId).Where(a => a.SessionStateID == NomenclatureConstants.SessionState.Nasrocheno).Select(a => a.DateFrom).Distinct().Count()
 
                  }).AsQueryable();
     }
@@ -2205,27 +2337,27 @@ namespace IOWebApplication.Core.Services
         {
           x.LawUnitId,
           x.LawUnit.FullName
-                //,x.CourtLoadPeriod.CourtGroupId
-                //,
-                //  dateFrom = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
-                //OrderByDescending(a => a.DateFrom.Date).Select(a => a.DateFrom.Date).FirstOrDefault(),
-                //  loadIndex = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
-                //OrderByDescending(a => a.DateFrom.Date).Select(a => a.LoadIndex).FirstOrDefault(),
+          //,x.CourtLoadPeriod.CourtGroupId
+          //,
+          //  dateFrom = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
+          //OrderByDescending(a => a.DateFrom.Date).Select(a => a.DateFrom.Date).FirstOrDefault(),
+          //  loadIndex = x.CourtLoadPeriod.CourtGroup.CourtLawUnitGroups.Where(a => a.LawUnitId == x.LawUnitId).
+          //OrderByDescending(a => a.DateFrom.Date).Select(a => a.LoadIndex).FirstOrDefault(),
 
-              })
+        })
                                 .Select(g => new CaseSelectionProtokolLawUnitPreviewVM
                                 {
                                   LawUnitId = g.Key.LawUnitId ?? 0,
                                   LawUnitFullName = (g.Key.FullName == null ? "Общо" : g.Key.FullName),
-                                        //CaseCount = g.Sum(x => (g.Key.LawUnitId != null) ? x.DayCases : x.DayCases)),
-                                        CaseCount = g.Sum(x => (int)Math.Round(x.DayCases)),
+                                  //CaseCount = g.Sum(x => (g.Key.LawUnitId != null) ? x.DayCases : x.DayCases)),
+                                  CaseCount = g.Sum(x => (int)Math.Round(x.DayCases)),
                                   CaseCourtTotalCount = 1
-                                        //,
-                                        //FromDateInGROUP = g.Key.dateFrom,
-                                        //LoadIndex = g.Key.loadIndex
+                                  //,
+                                  //FromDateInGROUP = g.Key.dateFrom,
+                                  //LoadIndex = g.Key.loadIndex
 
 
-                                      }).ToList();
+                                }).ToList();
 
       foreach (var item in result)
       {
@@ -2262,13 +2394,14 @@ namespace IOWebApplication.Core.Services
       var lawUnits = repo.AllReadonly<CourtLawUnit>()
                                    .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge)
                                    .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
-                                   .Where(x => x.CourtId == courtId)
+                                   .Where(x => x.CourtId == courtId && x.DateExpired == null)
                                    .Where(x => x.DateFrom <= date && (x.DateTo ?? endDate) >= date)
                                   .ToList();
       int[] caseLawUnitDismisel = repo.AllReadonly<CaseLawUnitDismisal>()
                                        .Include(x => x.CaseLawUnit)
                                        .Where(x => x.CaseLawUnit.CaseId == caseID)
                                        .Where(x => x.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod || x.DismisalTypeId == NomenclatureConstants.DismisalType.SamoOtvod)
+                                       .Where(CaseExtensions.ConfirmedDismissalsOnly())
                                        .Select(x => x.CaseLawUnit.LawUnitId).ToArray();
 
       int freelawUnitCount = lawUnits.Where(x => !caseLawUnitDismisel.Contains(x.LawUnitId)).Count();
@@ -2398,17 +2531,13 @@ namespace IOWebApplication.Core.Services
                                                              )
                                                    .ToList();
         var courtlawUnitHolidayOrIll = repo.AllReadonly<CourtLawUnit>()
-                           .Include(x => x.LawUnit)
-
-                             .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury &&
-                             (
-                               ((x.DateFrom <= next_case_meeting.DateFrom) && ((x.DateTo ?? next_case_meeting.DateFrom) >= next_case_meeting.DateFrom)) ||
-                               ((next_case_meeting.DateFrom <= x.DateFrom) && (next_case_meeting.DateTo >= x.DateFrom))
-                               )
-                             &&
-                              ((x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill) || (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday))
-                              && (x.CourtId == next_case_meeting.CourtId)
-                           ).ToList();
+                                           .Include(x => x.LawUnit)
+                                           .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury && x.DateExpired == null &&
+                                                       (((x.DateFrom <= next_case_meeting.DateFrom) && ((x.DateTo ?? next_case_meeting.DateFrom) >= next_case_meeting.DateFrom)) ||
+                                                        ((next_case_meeting.DateFrom <= x.DateFrom) && (next_case_meeting.DateTo >= x.DateFrom))) &&
+                                                       ((x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill) || (x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday)) &&
+                                                       (x.CourtId == next_case_meeting.CourtId))
+                                           .ToList();
 
 
         foreach (var lu in current_lawunits)
@@ -2466,5 +2595,41 @@ namespace IOWebApplication.Core.Services
       return current_lawunits;
     }
 
+
+
+    public IQueryable<CaseSelectionProtokolCaseInGroupsVM> CaseSelectionProtokolCaseInGroups(int courtId)
+    {
+
+      DateTime date_now = DateTime.Now;
+      return repo.AllReadonly<CourtLoadPeriodLawUnit>()
+
+                .Where(x => x.CourtLoadPeriod.CourtLoadResetPeriod.DateFrom < date_now && (x.CourtLoadPeriod.CourtLoadResetPeriod.DateTo ?? date_now) >= date_now)
+                .Where(x => x.CourtLoadPeriod.CourtLoadResetPeriod.CourtId == courtId)
+                 .Where(x => x.LawUnit.FullName.Length>0)
+                  .GroupBy(x => new
+                  {
+            
+                    x.LawUnit.FullName,
+                 
+                    x.CourtLoadPeriod.CourtGroup.Label
+
+                  })
+                                .Select(g => new CaseSelectionProtokolCaseInGroupsVM
+                                {
+
+
+                                  CourtGroupName = g.Key.Label,
+                                  LawunitFullName = g.Key.FullName,
+                                  RealCases =Math.Round( g.Sum(x => x.DayCases),4),
+                                  AverageCases = Math.Round(g.Sum(x => x.AverageCases), 4),
+                                  TotalCases = Math.Round(g.Sum(x => x.TotalDayCases), 4)
+
+
+
+
+
+                                }).AsQueryable();
+    }
   }
 }
+

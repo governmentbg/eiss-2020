@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
@@ -17,7 +18,7 @@ namespace IOWebApplication.Core.Contracts
     public interface ICaseNotificationService: IBaseService
     {
         IQueryable<CaseNotificationVM> CaseNotification_Select(int CaseId, int? caseSessionId, int? caseSessionActId);
-        bool CaseNotification_SaveData(CaseNotification model, List<CaseNotificationMLink> casePersonLinks, int[] complainIds);
+        bool CaseNotification_SaveData(CaseNotification model, List<CaseNotificationMLink> caseNotificationMLinks, int[] complainIds);
         IQueryable<CaseSessionNotificationListVM> CaseSessionNotificationList_Select(int caseSessionId, int NotificationListTypeId);
         IQueryable<CaseSessionNotificationListVM> CaseSessionNotificationList_SelectByCaseId(int caseId);
         CheckListViewVM Person_SelectForCheck(int caseId, int caseSessionId, int NotificationListTypeId, bool isCasePerson);
@@ -43,5 +44,10 @@ namespace IOWebApplication.Core.Contracts
         void InitCaseNotificationComplains(CaseNotification caseNotification);
         List<SelectListItem> DocumentSenderPersonDDL(int caseId);
         List<CaseNotification> GetNotPrintedEpep();
+        List<SelectListItem> GetMoneyObligationDDL(int casePersonId, int caseLinkId, int caseSessionActId);
+        List<HtmlTemplate> HtmlTemplateNotificationHave_Test();
+        List<SelectListItem> GetDDL_ConnectedCases(int caseId, bool addDefaultElement = true);
+        List<SelectListItem> GetNotificationIspnReasonDDL(bool addDefaultElement = true);
+        Task<(bool, int)> DeliveryItemSaveReturnDocument(DeliveryItemReturnVM model, ICollection<IFormFile> returnFiles);
     }
 }

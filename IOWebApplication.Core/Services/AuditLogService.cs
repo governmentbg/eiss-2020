@@ -118,15 +118,25 @@ namespace IOWebApplication.Core.Services
             {
                 whereRegNumber = x => EF.Functions.ILike(x.BaseObject, RegNumber.ToPaternSearch());
             }
+            Expression<Func<AuditLog, bool>> whereUser = x => true;
+            if (!string.IsNullOrEmpty(UserId))
+            {
+                whereUser = x => x.UserId == UserId;
+            }
+            Expression<Func<AuditLog, bool>> whereOper = x => true;
+            if (!string.IsNullOrEmpty(Operation))
+            {
+                whereOper = x => x.Operation == Operation;
+            }
             return repo.AllReadonly<AuditLog>()
                              .Include(x => x.ApplicationUser)
                              .ThenInclude(x => x.LawUnit)
                              .Where(x => x.CourtId == courtId)
                              .Where(x => x.InsertedDate >= DateFrom && x.InsertedDate <= DateTo)
-                             .Where(x => x.UserId == (UserId ?? x.UserId))
-                             .Where(x => x.Operation == (Operation ?? x.Operation))
-                             .Where(x => (x.FullName ?? "") != "JsonResult")
+                             .Where(whereUser)
+                             .Where(whereOper)
                              .Where(whereRegNumber)
+                             .Where(x => !EF.Functions.ILike(x.FullName ?? "", "JsonResult"))
                              .Select(x => new AuditLogSprVM
                              {
                                  Date = x.InsertedDate,

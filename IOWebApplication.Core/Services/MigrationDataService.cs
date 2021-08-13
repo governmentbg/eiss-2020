@@ -170,7 +170,7 @@ namespace IOWebApplication.Core.Services
                 var uic = data[0];
                 var lawunit = repo.AllReadonly<CourtLawUnit>()
                                             .Include(x => x.LawUnit)
-                                            .Where(x => x.CourtId == item.CourtId && x.LawUnit.Uic == uic
+                                            .Where(x => x.CourtId == item.CourtId && x.LawUnit.Uic == uic && x.DateExpired == null
                                             && x.PeriodTypeId == NomenclatureConstants.PeriodTypes.Appoint)
                                             .Select(x => x.LawUnit).FirstOrDefault();
 

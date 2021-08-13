@@ -1,0 +1,11 @@
+﻿@model bool?
+@{
+    bool value = Model ?? false;
+}
+<div class="form-group">
+    <label class="control-label">
+        @Html.CheckBox("", value, new { disabled = "disabled" }) @Html.DisplayNameFor(model => model)
+    </label>
+    <br />
+    @Html.HiddenFor(x => x)
+</div>

@@ -18,8 +18,10 @@
                     data: function (d) {
                         d.caseId = @Model.Id;
                     }
-
+                    ,
+                    initialCall: false
                 },
+                deferLoading: deferLoadingOnTab('#caseHronologiaMainTable'),
                 columns: [
                    {
                         name: 'date',

@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Тестово прикачване на json заявка за регистриране на заявление";
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","Document")">Съдебна регистратура</a></li>
+    </ol>
+}
+<div class="row">
+    <div class="col-md-12">
+        <form action="@Url.Action("TestUploadRequest")" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" id="file" />
+            <span class="text-muted">За да изтеглите примерна заявка, моля натиснете <a href="/data/apiRequest.json" target="_blank">тук</a></span><br />
+            <span class="text-muted">За да изтеглите списъка на използваните номенклатури, моля натиснете <a href="/data/EPEP_WebApiNomenclatures.xlsx" target="_blank">тук</a></span>
+            <br />
+            <br />
+            <input type="submit" value="Прикачи Json" class="btn btn-danger" />
+        </form>
+    </div>
+</div>

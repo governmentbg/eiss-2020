@@ -1,0 +1,70 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.VksNotificationPrintVM
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Constants
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Печат списък за държавен вестник";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<form id="formFilter" asp-action="VksNotificationPrint" method="post" class="quick-submit">
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.VksNotificationHeaderId, "GenericDropDown")
+        </div>
+        <div class="col-md-2 pb-15">
+            <br />
+            <a class="btn btn-primary" onclick="printVksNotification()" id="btnPrint" value="Печат" title="Печат">
+                Печат
+                <i class="fa fa-print" title="Печат"></i>
+            </a>
+        </div>
+        <div class="col-md-4">
+            @Html.EditorFor(x => x.PaperEdition)
+        </div>
+        <div class="col-md-2 pb-15">
+            <br />
+            <button class="btn btn-success" id="btnSave" value="Запис" title="Запис">
+                Запис
+                <i class="fa fa-save" title="Запис"></i>
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <hr>
+    </div>
+</form>
+
+
+@section scripts {
+    <script>
+        function printVksNotification() {
+            let month = $('#VksNotificationHeaderId').val();
+            window.open('@Url.Action("PrintDoc")?vksMonth=' + month, '_blank');
+        }
+        function LoadPaperEdition() {
+            let vksNotificationHeaderId = $('#VksNotificationHeaderId').val();
+            $.ajax({
+            type: "POST",
+            url: "@Url.Action("GetPaperEdition")",
+            dataType: "json",
+               cache: false,
+               data: { vksNotificationHeaderId: vksNotificationHeaderId },
+               success: function (response) {
+                  $('#PaperEdition').val(response)
+            },
+            complete: function () { },
+            error: log_ajax_err
+           });
+        }
+        $('#VksNotificationHeaderId').change(function () {
+            LoadPaperEdition();
+        });
+    </script>
+}
+

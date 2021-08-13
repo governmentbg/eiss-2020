@@ -9,8 +9,18 @@
 		<!--
 		/* Font Definitions */
 		@font-face {
+			font-family: Helvetica;
+			panose-1: 2 11 6 4 2 2 2 2 2 4;
+		}
+
+		@font-face {
 			font-family: Wingdings;
 			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: SimSun;
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
 		}
 
 		@font-face {
@@ -24,16 +34,51 @@
 		}
 
 		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
 			font-family: "Arial Narrow";
 			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: Cambria;
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: Tahoma;
+			panose-1: 2 11 6 4 3 5 4 4 2 4;
+		}
+
+		@font-face {
+			font-family: "Century Gothic";
+			panose-1: 2 11 5 2 2 2 2 2 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
+
+		@font-face {
+			font-family: "\@SimSun";
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+
+		@font-face {
+			font-family: Verdana;
+			panose-1: 2 11 6 4 3 5 4 4 2 4;
 		}
 		/* Style Definitions */
 		p.MsoNormal, li.MsoNormal, div.MsoNormal {
 			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
-			margin-top: 0cm;
-			margin-right: 0cm;
+			margin-top: 0in;
+			margin-right: 0in;
 			margin-bottom: 10.0pt;
-			margin-left: 0cm;
+			margin-left: 0in;
 			text-align: justify;
 			text-indent: 35.45pt;
 			line-height: 115%;
@@ -41,12 +86,46 @@
 			font-family: "Times New Roman",serif;
 		}
 
+		h1 {
+			mso-style-link: "Heading 1 Char";
+			margin-top: 12.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 16.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
 		h3 {
 			mso-style-link: "Heading 3 Char";
 			margin-top: 2.0pt;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 0cm;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
 			margin-bottom: .0001pt;
 			text-align: justify;
 			text-indent: 35.45pt;
@@ -58,73 +137,629 @@
 			font-weight: normal;
 		}
 
-		p.MsoCaption, li.MsoCaption, div.MsoCaption {
-			margin-top: 0cm;
-			margin-right: 0cm;
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: normal;
+		}
+
+		h5 {
+			mso-style-link: "Heading 5 Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h6 {
+			mso-style-link: "Heading 6 Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		p.MsoHeading7, li.MsoHeading7, div.MsoHeading7 {
+			mso-style-name: "Heading 7\,Heading 7 ЕИСС";
+			mso-style-link: "Heading 7 Char\,Heading 7 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .9in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoHeading8, li.MsoHeading8, div.MsoHeading8 {
+			mso-style-link: "Heading 8 Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 1.0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -1.0in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 10.5pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #272727;
+		}
+
+		p.MsoHeading9, li.MsoHeading9, div.MsoHeading9 {
+			mso-style-link: "Heading 9 Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 1.1in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -1.1in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 10.5pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #272727;
+			font-style: italic;
+		}
+
+		p.MsoToc1, li.MsoToc1, div.MsoToc1 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc2, li.MsoToc2, div.MsoToc2 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 12.0pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc3, li.MsoToc3, div.MsoToc3 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 24.0pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc4, li.MsoToc4, div.MsoToc4 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: .5in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc5, li.MsoToc5, div.MsoToc5 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 48.0pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc6, li.MsoToc6, div.MsoToc6 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 55.0pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc7, li.MsoToc7, div.MsoToc7 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 66.0pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc8, li.MsoToc8, div.MsoToc8 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 77.0pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoToc9, li.MsoToc9, div.MsoToc9 {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 5.0pt;
+			margin-left: 88.0pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoFootnoteText, li.MsoFootnoteText, div.MsoFootnoteText {
+			mso-style-link: "Footnote Text Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 10.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoCommentText, li.MsoCommentText, div.MsoCommentText {
+			mso-style-link: "Comment Text Char";
+			margin-top: 0in;
+			margin-right: 0in;
 			margin-bottom: 10.0pt;
-			margin-left: 0cm;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 10.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoHeader, li.MsoHeader, div.MsoHeader {
+			mso-style-link: "Header Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoFooter, li.MsoFooter, div.MsoFooter {
+			mso-style-link: "Footer Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 3.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: center;
+			text-indent: 35.45pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoTof, li.MsoTof, div.MsoTof {
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.MsoFootnoteReference {
+			vertical-align: super;
+		}
+
+		span.MsoEndnoteReference {
+			vertical-align: super;
+		}
+
+		p.MsoEndnoteText, li.MsoEndnoteText, div.MsoEndnoteText {
+			mso-style-link: "Endnote Text Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 10.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBullet, li.MsoListBullet, div.MsoListBullet {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: .25in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpFirst, li.MsoListBulletCxSpFirst, div.MsoListBulletCxSpFirst {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .25in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpMiddle, li.MsoListBulletCxSpMiddle, div.MsoListBulletCxSpMiddle {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .25in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBulletCxSpLast, li.MsoListBulletCxSpLast, div.MsoListBulletCxSpLast {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: .25in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListBullet2, li.MsoListBullet2, div.MsoListBullet2 {
+			margin-top: 6.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 32.15pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoTitle, li.MsoTitle, div.MsoTitle {
+			mso-style-link: "Title Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 15.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 26.0pt;
+			font-family: "Times New Roman",serif;
+			color: #17365D;
+			letter-spacing: .25pt;
+		}
+
+		p.MsoTitleCxSpFirst, li.MsoTitleCxSpFirst, div.MsoTitleCxSpFirst {
+			mso-style-link: "Title Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 26.0pt;
+			font-family: "Times New Roman",serif;
+			color: #17365D;
+			letter-spacing: .25pt;
+		}
+
+		p.MsoTitleCxSpMiddle, li.MsoTitleCxSpMiddle, div.MsoTitleCxSpMiddle {
+			mso-style-link: "Title Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 26.0pt;
+			font-family: "Times New Roman",serif;
+			color: #17365D;
+			letter-spacing: .25pt;
+		}
+
+		p.MsoTitleCxSpLast, li.MsoTitleCxSpLast, div.MsoTitleCxSpLast {
+			mso-style-link: "Title Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 15.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 26.0pt;
+			font-family: "Times New Roman",serif;
+			color: #17365D;
+			letter-spacing: .25pt;
+		}
+
+		p.MsoBodyText, li.MsoBodyText, div.MsoBodyText {
+			mso-style-name: "Body Text\, Char Char";
+			mso-style-link: "Body Text Char\, Char Char Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 42.55pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			position: relative;
+			top: -4.0pt;
+		}
+
+		p.MsoSubtitle, li.MsoSubtitle, div.MsoSubtitle {
+			mso-style-link: "Subtitle Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Cambria",serif;
+			color: #4F81BD;
+			letter-spacing: .75pt;
+			font-style: italic;
+		}
+
+		a:link, span.MsoHyperlink {
+			color: #0563C1;
+			text-decoration: underline;
+		}
+
+		a:visited, span.MsoHyperlinkFollowed {
+			color: #954F72;
+			text-decoration: underline;
+		}
+
+		p.MsoDocumentMap, li.MsoDocumentMap, div.MsoDocumentMap {
+			mso-style-link: "Document Map Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: navy;
+			font-size: 12.0pt;
+			font-family: "Tahoma",sans-serif;
+		}
+
+		p.MsoPlainText, li.MsoPlainText, div.MsoPlainText {
+			mso-style-link: "Plain Text Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: 0in;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+			color: #002060;
+		}
+
+		p {
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		pre {
+			mso-style-link: "HTML Preformatted Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 10.0pt;
+			font-family: "Courier New";
+		}
+
+		p.MsoCommentSubject, li.MsoCommentSubject, div.MsoCommentSubject {
+			mso-style-link: "Comment Subject Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 10.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
 			text-align: justify;
 			text-indent: 35.45pt;
 			font-size: 9.0pt;
-			font-family: "Times New Roman",serif;
-			color: #44546A;
-			font-style: italic;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoNoSpacing, li.MsoNoSpacing, div.MsoNoSpacing {
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: 0in;
+			font-size: 11.0pt;
+			font-family: "Calibri",sans-serif;
+		}
+
+		p.MsoRMPane, li.MsoRMPane, div.MsoRMPane {
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: 0in;
+			font-size: 11.0pt;
+			font-family: "Calibri",sans-serif;
 		}
 
 		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
 			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
-			line-height: 150%;
+			text-indent: -.25in;
+			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
 		}
 
 		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
 			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
-			line-height: 150%;
+			text-indent: -.25in;
+			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
 		}
 
 		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
 			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
-			line-height: 150%;
+			text-indent: -.25in;
+			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
 		}
 
 		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
 			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
-			line-height: 150%;
+			text-indent: -.25in;
+			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoTocHeading, li.MsoTocHeading, div.MsoTocHeading {
+			margin-top: 12.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: 0in;
+			line-height: 107%;
+			page-break-after: avoid;
+			font-size: 16.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		span.Heading1Char {
+			mso-style-name: "Heading 1 Char";
+			mso-style-link: "Heading 1";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
 		}
 
 		span.Heading3Char {
@@ -134,16 +769,350 @@
 			color: #1F4D78;
 		}
 
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading5Char {
+			mso-style-name: "Heading 5 Char";
+			mso-style-link: "Heading 5";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		span.Heading6Char {
+			mso-style-name: "Heading 6 Char";
+			mso-style-link: "Heading 6";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.Heading7Char {
+			mso-style-name: "Heading 7 Char\,Heading 7 ЕИСС Char";
+			mso-style-link: "Heading 7\,Heading 7 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading8Char {
+			mso-style-name: "Heading 8 Char";
+			mso-style-link: "Heading 8";
+			font-family: "Calibri Light",sans-serif;
+			color: #272727;
+		}
+
+		span.Heading9Char {
+			mso-style-name: "Heading 9 Char";
+			mso-style-link: "Heading 9";
+			font-family: "Calibri Light",sans-serif;
+			color: #272727;
+			font-style: italic;
+		}
+
+		span.HeaderChar {
+			mso-style-name: "Header Char";
+			mso-style-link: Header;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.FooterChar {
+			mso-style-name: "Footer Char";
+			mso-style-link: Footer;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.TitleChar {
+			mso-style-name: "Title Char";
+			mso-style-link: Title;
+			font-family: "Times New Roman",serif;
+			color: #17365D;
+			letter-spacing: .25pt;
+		}
+
+		p.EISSHeading1, li.EISSHeading1, div.EISSHeading1 {
+			mso-style-name: "EISS Heading1";
+			mso-style-link: "EISS Heading1 Char";
+			margin-top: 12.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: #2E74B5;
+			font-weight: bold;
+		}
+
+		p.EISSHeading2, li.EISSHeading2, div.EISSHeading2 {
+			mso-style-name: "EISS Heading2";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 53.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		span.EISSHeading1Char {
+			mso-style-name: "EISS Heading1 Char";
+			mso-style-link: "EISS Heading1";
+			font-family: "Times New Roman",serif;
+			color: #2E74B5;
+			font-weight: bold;
+		}
+
+		p.EISSHeading3, li.EISSHeading3, div.EISSHeading3 {
+			mso-style-name: "EISS Heading3";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 107.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.5in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.EISSHeading4, li.EISSHeading4, div.EISSHeading4 {
+			mso-style-name: "EISS Heading4";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 107.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-style: italic;
+		}
+
+		p.EISSHeading5, li.EISSHeading5, div.EISSHeading5 {
+			mso-style-name: "EISS Heading5";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 125.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSHeading6, li.EISSHeading6, div.EISSHeading6 {
+			mso-style-name: "EISS Heading6";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 161.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBullet, li.EISSBullet, div.EISSBullet {
+			mso-style-name: "EISS Bullet";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 53.4pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpFirst, li.EISSBulletCxSpFirst, div.EISSBulletCxSpFirst {
+			mso-style-name: "EISS BulletCxSpFirst";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 53.4pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpMiddle, li.EISSBulletCxSpMiddle, div.EISSBulletCxSpMiddle {
+			mso-style-name: "EISS BulletCxSpMiddle";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 53.4pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSBulletCxSpLast, li.EISSBulletCxSpLast, div.EISSBulletCxSpLast {
+			mso-style-name: "EISS BulletCxSpLast";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 53.4pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2, li.ListParagraph2, div.ListParagraph2 {
+			mso-style-name: "List Paragraph2 ЕИСС";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpFirst, li.ListParagraph2CxSpFirst, div.ListParagraph2CxSpFirst {
+			mso-style-name: "List Paragraph2 ЕИССCxSpFirst";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpMiddle, li.ListParagraph2CxSpMiddle, div.ListParagraph2CxSpMiddle {
+			mso-style-name: "List Paragraph2 ЕИССCxSpMiddle";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.ListParagraph2CxSpLast, li.ListParagraph2CxSpLast, div.ListParagraph2CxSpLast {
+			mso-style-name: "List Paragraph2 ЕИССCxSpLast";
+			mso-style-link: "List Paragraph2 ЕИСС Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Normal, li.Normal, div.Normal {
+			mso-style-name: "МФ Normal";
+			mso-style-link: "МФ Normal Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 28.35pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.NormalChar {
+			mso-style-name: "МФ Normal Char";
+			mso-style-link: "МФ Normal";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraph2Char {
+			mso-style-name: "List Paragraph2 ЕИСС Char";
+			mso-style-link: "List Paragraph2 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			mso-style-link: "Style4 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 3.0pt;
+			margin-left: 1.5in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Style4Char {
+			mso-style-name: "Style4 Char";
+			mso-style-link: Style4;
+			font-family: "Times New Roman",serif;
+		}
+
 		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
 			mso-style-name: "EISS Style5 ЕИСС";
 			mso-style-link: "EISS Style5 ЕИСС Char";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .5in;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
+			text-indent: -.25in;
 			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
@@ -152,13 +1121,13 @@
 		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
 			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
 			mso-style-link: "EISS Style5 ЕИСС Char";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .5in;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
+			text-indent: -.25in;
 			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
@@ -167,13 +1136,13 @@
 		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
 			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
 			mso-style-link: "EISS Style5 ЕИСС Char";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .5in;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
+			text-indent: -.25in;
 			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
@@ -182,22 +1151,2193 @@
 		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
 			mso-style-name: "EISS Style5 ЕИССCxSpLast";
 			mso-style-link: "EISS Style5 ЕИСС Char";
-			margin-top: 0cm;
-			margin-right: 0cm;
-			margin-bottom: 0cm;
-			margin-left: 81.85pt;
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .5in;
 			margin-bottom: .0001pt;
 			text-align: justify;
-			text-indent: -18.0pt;
+			text-indent: -.25in;
 			line-height: 115%;
 			font-size: 12.0pt;
 			font-family: "Times New Roman",serif;
+		}
+
+		p.Heading2IO, li.Heading2IO, div.Heading2IO {
+			mso-style-name: "Heading 2 IO";
+			margin-top: 6.0pt;
+			margin-right: 0in;
+			margin-bottom: 6.0pt;
+			margin-left: .4in;
+			text-align: justify;
+			text-indent: -.4in;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.Heading3IO, li.Heading3IO, div.Heading3IO {
+			mso-style-name: "Heading 3 IO";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .5in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.5in;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
 		}
 
 		span.EISSStyle5Char {
 			mso-style-name: "EISS Style5 ЕИСС Char";
 			mso-style-link: "EISS Style5 ЕИСС";
 			font-family: "Times New Roman",serif;
+		}
+
+		p.lastincell, li.lastincell, div.lastincell {
+			mso-style-name: lastincell;
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 140%;
+			font-size: 8.5pt;
+			font-family: "Verdana",sans-serif;
+		}
+
+		span.st {
+			mso-style-name: st;
+		}
+
+		span.CommentTextChar {
+			mso-style-name: "Comment Text Char";
+			mso-style-link: "Comment Text";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.CommentSubjectChar {
+			mso-style-name: "Comment Subject Char";
+			mso-style-link: "Comment Subject";
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.TableText, li.TableText, div.TableText {
+			mso-style-name: "Table Text";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 105%;
+			font-size: 10.0pt;
+			font-family: "Calibri",sans-serif;
+		}
+
+		p.TableBullet, li.TableBullet, div.TableBullet {
+			mso-style-name: "Table Bullet";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 18.4pt;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: -14.15pt;
+			font-size: 10.0pt;
+			font-family: "Calibri",sans-serif;
+		}
+
+		span.FontStyle35 {
+			mso-style-name: "Font Style35";
+			font-family: "Arial",sans-serif;
+		}
+
+		p.TableSectionHead, li.TableSectionHead, div.TableSectionHead {
+			mso-style-name: "Table Section Head";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: 0in;
+			font-size: 12.0pt;
+			font-family: "Calibri",sans-serif;
+			font-weight: bold;
+		}
+
+		p.Tablenormal, li.Tablenormal, div.Tablenormal {
+			mso-style-name: "Table normal";
+			mso-style-link: "Table normal Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.TablenormalCxSpFirst, li.TablenormalCxSpFirst, div.TablenormalCxSpFirst {
+			mso-style-name: "Table normalCxSpFirst";
+			mso-style-link: "Table normal Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.TablenormalCxSpMiddle, li.TablenormalCxSpMiddle, div.TablenormalCxSpMiddle {
+			mso-style-name: "Table normalCxSpMiddle";
+			mso-style-link: "Table normal Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.TablenormalCxSpLast, li.TablenormalCxSpLast, div.TablenormalCxSpLast {
+			mso-style-name: "Table normalCxSpLast";
+			mso-style-link: "Table normal Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		span.TablenormalChar {
+			mso-style-name: "Table normal Char";
+			mso-style-link: "Table normal";
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.REQTableText, li.REQTableText, div.REQTableText {
+			mso-style-name: "REQ Table Text";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.REQID, li.REQID, div.REQID {
+			mso-style-name: REQ_ID;
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 40.5pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.GeorgyHeading3, li.GeorgyHeading3, div.GeorgyHeading3 {
+			mso-style-name: "Georgy Heading 3";
+			mso-style-link: "Georgy Heading 3 Char Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.GeorgyHeading3CharChar {
+			mso-style-name: "Georgy Heading 3 Char Char";
+			mso-style-link: "Georgy Heading 3";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.Buleted, li.Buleted, div.Buleted {
+			mso-style-name: "Buleted ЕИСС";
+			mso-style-link: "Buleted ЕИСС Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 46.2pt;
+			text-align: justify;
+			text-indent: -17.85pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.BuletedChar {
+			mso-style-name: "Buleted ЕИСС Char";
+			mso-style-link: "Buleted ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.TNRoman-Normal-12, li.TNRoman-Normal-12, div.TNRoman-Normal-12 {
+			mso-style-name: TNRoman-Normal-12;
+			mso-style-link: "TNRoman-Normal-12 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		span.TNRoman-Normal-12Char {
+			mso-style-name: "TNRoman-Normal-12 Char";
+			mso-style-link: TNRoman-Normal-12;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.firstline, li.firstline, div.firstline {
+			mso-style-name: firstline;
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 32.0pt;
+			line-height: 12.0pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+		}
+
+		span.BodyTextChar {
+			mso-style-name: "Body Text Char\, Char Char Char";
+			mso-style-link: "Body Text\, Char Char";
+			font-family: "Times New Roman",serif;
+			position: relative;
+			top: -4.0pt;
+		}
+
+		p.CellBody, li.CellBody, div.CellBody {
+			mso-style-name: CellBody;
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 1.0pt;
+			margin-left: 2.85pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 10.0pt;
+			font-family: "Arial",sans-serif;
+		}
+
+		p.HelpCont, li.HelpCont, div.HelpCont {
+			mso-style-name: "Help Cont";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 36.85pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 10.0pt;
+			font-family: "Helvetica",sans-serif;
+			color: blue;
+			font-style: italic;
+		}
+
+		p.a, li.a, div.a {
+			mso-style-name: роли;
+			mso-style-link: "роли Char";
+			margin-top: .25in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 42.55pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Verdana",sans-serif;
+			font-weight: bold;
+			text-decoration: underline;
+		}
+
+		span.Char {
+			mso-style-name: "роли Char";
+			mso-style-link: роли;
+			font-family: "Verdana",sans-serif;
+			font-weight: bold;
+			text-decoration: underline;
+		}
+
+		span.FootnoteTextChar {
+			mso-style-name: "Footnote Text Char";
+			mso-style-link: "Footnote Text";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.FontStyle25 {
+			mso-style-name: "Font Style25";
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.Default, li.Default, div.Default {
+			mso-style-name: Default;
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: 0in;
+			text-autospace: none;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+		}
+
+		p.msonormal0, li.msonormal0, div.msonormal0 {
+			mso-style-name: msonormal;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl68, li.xl68, div.xl68 {
+			mso-style-name: xl68;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			font-size: 18.0pt;
+			font-family: "Times New Roman",serif;
+			color: red;
+			font-weight: bold;
+		}
+
+		p.xl69, li.xl69, div.xl69 {
+			mso-style-name: xl69;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-style: italic;
+		}
+
+		p.xl70, li.xl70, div.xl70 {
+			mso-style-name: xl70;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl71, li.xl71, div.xl71 {
+			mso-style-name: xl71;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl72, li.xl72, div.xl72 {
+			mso-style-name: xl72;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: blue;
+			text-decoration: underline;
+		}
+
+		p.xl73, li.xl73, div.xl73 {
+			mso-style-name: xl73;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: #C6EFCE;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Calibri",sans-serif;
+			color: #006100;
+		}
+
+		p.xl74, li.xl74, div.xl74 {
+			mso-style-name: xl74;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: #FFC7CE;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Calibri",sans-serif;
+			color: #9C0006;
+		}
+
+		p.FeatureBullet, li.FeatureBullet, div.FeatureBullet {
+			mso-style-name: "Feature Bullet";
+			margin-top: 6.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 1.0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			font-size: 12.0pt;
+			font-family: "Arial",sans-serif;
+		}
+
+		p.NormalIO, li.NormalIO, div.NormalIO {
+			mso-style-name: "Normal IO";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.SUBTitleIO, li.SUBTitleIO, div.SUBTitleIO {
+			mso-style-name: "SUBTitle IO";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 16.0pt;
+			font-family: "Arial Narrow",sans-serif;
+			font-variant: small-caps;
+			color: #1F497D;
+			font-weight: bold;
+		}
+
+		p.Headin1IO, li.Headin1IO, div.Headin1IO {
+			mso-style-name: "Headin 1 IO";
+			margin-top: 24.0pt;
+			margin-right: 0in;
+			margin-bottom: 24.0pt;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 0in;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 16.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #4F81BD;
+			font-weight: bold;
+		}
+
+		p.Heading4IO, li.Heading4IO, div.Heading4IO {
+			mso-style-name: "Heading 4 IO";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 160.9pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.4pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-style: italic;
+		}
+
+		p.font5, li.font5, div.font5 {
+			mso-style-name: font5;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Tahoma",sans-serif;
+			color: black;
+		}
+
+		p.font6, li.font6, div.font6 {
+			mso-style-name: font6;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Tahoma",sans-serif;
+			color: black;
+			font-weight: bold;
+		}
+
+		p.font7, li.font7, div.font7 {
+			mso-style-name: font7;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+		}
+
+		p.font8, li.font8, div.font8 {
+			mso-style-name: font8;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: red;
+		}
+
+		p.font9, li.font9, div.font9 {
+			mso-style-name: font9;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+		}
+
+		p.font10, li.font10, div.font10 {
+			mso-style-name: font10;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+			font-weight: bold;
+		}
+
+		p.font11, li.font11, div.font11 {
+			mso-style-name: font11;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+			font-weight: bold;
+			font-style: italic;
+		}
+
+		p.xl63, li.xl63, div.xl63 {
+			mso-style-name: xl63;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl64, li.xl64, div.xl64 {
+			mso-style-name: xl64;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: red;
+		}
+
+		p.xl65, li.xl65, div.xl65 {
+			mso-style-name: xl65;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl66, li.xl66, div.xl66 {
+			mso-style-name: xl66;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl67, li.xl67, div.xl67 {
+			mso-style-name: xl67;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl75, li.xl75, div.xl75 {
+			mso-style-name: xl75;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl76, li.xl76, div.xl76 {
+			mso-style-name: xl76;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl77, li.xl77, div.xl77 {
+			mso-style-name: xl77;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl78, li.xl78, div.xl78 {
+			mso-style-name: xl78;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl79, li.xl79, div.xl79 {
+			mso-style-name: xl79;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl80, li.xl80, div.xl80 {
+			mso-style-name: xl80;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl81, li.xl81, div.xl81 {
+			mso-style-name: xl81;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl82, li.xl82, div.xl82 {
+			mso-style-name: xl82;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl83, li.xl83, div.xl83 {
+			mso-style-name: xl83;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl84, li.xl84, div.xl84 {
+			mso-style-name: xl84;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl85, li.xl85, div.xl85 {
+			mso-style-name: xl85;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl86, li.xl86, div.xl86 {
+			mso-style-name: xl86;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl87, li.xl87, div.xl87 {
+			mso-style-name: xl87;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl88, li.xl88, div.xl88 {
+			mso-style-name: xl88;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #D9D9D9;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl89, li.xl89, div.xl89 {
+			mso-style-name: xl89;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #D9D9D9;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl90, li.xl90, div.xl90 {
+			mso-style-name: xl90;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #D9D9D9;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl91, li.xl91, div.xl91 {
+			mso-style-name: xl91;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #D9D9D9;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl92, li.xl92, div.xl92 {
+			mso-style-name: xl92;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #D9D9D9;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl93, li.xl93, div.xl93 {
+			mso-style-name: xl93;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #D9D9D9;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: red;
+		}
+
+		p.xl94, li.xl94, div.xl94 {
+			mso-style-name: xl94;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: #375623;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: white;
+			font-weight: bold;
+		}
+
+		p.xl95, li.xl95, div.xl95 {
+			mso-style-name: xl95;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl96, li.xl96, div.xl96 {
+			mso-style-name: xl96;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl97, li.xl97, div.xl97 {
+			mso-style-name: xl97;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: red;
+		}
+
+		p.xl98, li.xl98, div.xl98 {
+			mso-style-name: xl98;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl99, li.xl99, div.xl99 {
+			mso-style-name: xl99;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl100, li.xl100, div.xl100 {
+			mso-style-name: xl100;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl101, li.xl101, div.xl101 {
+			mso-style-name: xl101;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl102, li.xl102, div.xl102 {
+			mso-style-name: xl102;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: red;
+		}
+
+		p.xl103, li.xl103, div.xl103 {
+			mso-style-name: xl103;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl104, li.xl104, div.xl104 {
+			mso-style-name: xl104;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl105, li.xl105, div.xl105 {
+			mso-style-name: xl105;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl106, li.xl106, div.xl106 {
+			mso-style-name: xl106;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: #BDD7EE;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl107, li.xl107, div.xl107 {
+			mso-style-name: xl107;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: #BDD7EE;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl108, li.xl108, div.xl108 {
+			mso-style-name: xl108;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl109, li.xl109, div.xl109 {
+			mso-style-name: xl109;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl110, li.xl110, div.xl110 {
+			mso-style-name: xl110;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: #9C0006;
+		}
+
+		p.xl111, li.xl111, div.xl111 {
+			mso-style-name: xl111;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl112, li.xl112, div.xl112 {
+			mso-style-name: xl112;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: red;
+		}
+
+		p.xl113, li.xl113, div.xl113 {
+			mso-style-name: xl113;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl114, li.xl114, div.xl114 {
+			mso-style-name: xl114;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl115, li.xl115, div.xl115 {
+			mso-style-name: xl115;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl116, li.xl116, div.xl116 {
+			mso-style-name: xl116;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl117, li.xl117, div.xl117 {
+			mso-style-name: xl117;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl118, li.xl118, div.xl118 {
+			mso-style-name: xl118;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl119, li.xl119, div.xl119 {
+			mso-style-name: xl119;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl120, li.xl120, div.xl120 {
+			mso-style-name: xl120;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: #375623;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: white;
+			font-weight: bold;
+		}
+
+		p.xl121, li.xl121, div.xl121 {
+			mso-style-name: xl121;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: white;
+			font-weight: bold;
+		}
+
+		p.xl122, li.xl122, div.xl122 {
+			mso-style-name: xl122;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl123, li.xl123, div.xl123 {
+			mso-style-name: xl123;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl124, li.xl124, div.xl124 {
+			mso-style-name: xl124;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl125, li.xl125, div.xl125 {
+			mso-style-name: xl125;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl126, li.xl126, div.xl126 {
+			mso-style-name: xl126;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl127, li.xl127, div.xl127 {
+			mso-style-name: xl127;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl128, li.xl128, div.xl128 {
+			mso-style-name: xl128;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			background: white;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl129, li.xl129, div.xl129 {
+			mso-style-name: xl129;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl130, li.xl130, div.xl130 {
+			mso-style-name: xl130;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl131, li.xl131, div.xl131 {
+			mso-style-name: xl131;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl132, li.xl132, div.xl132 {
+			mso-style-name: xl132;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl133, li.xl133, div.xl133 {
+			mso-style-name: xl133;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl134, li.xl134, div.xl134 {
+			mso-style-name: xl134;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl135, li.xl135, div.xl135 {
+			mso-style-name: xl135;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl136, li.xl136, div.xl136 {
+			mso-style-name: xl136;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl137, li.xl137, div.xl137 {
+			mso-style-name: xl137;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #E2EFDA;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl138, li.xl138, div.xl138 {
+			mso-style-name: xl138;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl139, li.xl139, div.xl139 {
+			mso-style-name: xl139;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl140, li.xl140, div.xl140 {
+			mso-style-name: xl140;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: #9C0006;
+		}
+
+		p.xl141, li.xl141, div.xl141 {
+			mso-style-name: xl141;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl142, li.xl142, div.xl142 {
+			mso-style-name: xl142;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl143, li.xl143, div.xl143 {
+			mso-style-name: xl143;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl144, li.xl144, div.xl144 {
+			mso-style-name: xl144;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl145, li.xl145, div.xl145 {
+			mso-style-name: xl145;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl146, li.xl146, div.xl146 {
+			mso-style-name: xl146;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 16.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl147, li.xl147, div.xl147 {
+			mso-style-name: xl147;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl148, li.xl148, div.xl148 {
+			mso-style-name: xl148;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl149, li.xl149, div.xl149 {
+			mso-style-name: xl149;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl150, li.xl150, div.xl150 {
+			mso-style-name: xl150;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl151, li.xl151, div.xl151 {
+			mso-style-name: xl151;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl152, li.xl152, div.xl152 {
+			mso-style-name: xl152;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl153, li.xl153, div.xl153 {
+			mso-style-name: xl153;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl154, li.xl154, div.xl154 {
+			mso-style-name: xl154;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl155, li.xl155, div.xl155 {
+			mso-style-name: xl155;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl156, li.xl156, div.xl156 {
+			mso-style-name: xl156;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl157, li.xl157, div.xl157 {
+			mso-style-name: xl157;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl158, li.xl158, div.xl158 {
+			mso-style-name: xl158;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl159, li.xl159, div.xl159 {
+			mso-style-name: xl159;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl160, li.xl160, div.xl160 {
+			mso-style-name: xl160;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl161, li.xl161, div.xl161 {
+			mso-style-name: xl161;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #DDEBF7;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl162, li.xl162, div.xl162 {
+			mso-style-name: xl162;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl163, li.xl163, div.xl163 {
+			mso-style-name: xl163;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #FFF2CC;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.xl164, li.xl164, div.xl164 {
+			mso-style-name: xl164;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #A5A5A5;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl165, li.xl165, div.xl165 {
+			mso-style-name: xl165;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #A5A5A5;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl166, li.xl166, div.xl166 {
+			mso-style-name: xl166;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			background: #A5A5A5;
+			border: none;
+			padding: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.xl167, li.xl167, div.xl167 {
+			mso-style-name: xl167;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.CustomHeading2, li.CustomHeading2, div.CustomHeading2 {
+			mso-style-name: "Custom Heading 2";
+			margin-top: 12.0pt;
+			margin-right: 28.35pt;
+			margin-bottom: 6.0pt;
+			margin-left: 1.25in;
+			text-align: justify;
+			text-indent: -.25in;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+			font-weight: bold;
+		}
+
+		p.Style2, li.Style2, div.Style2 {
+			mso-style-name: Style2;
+			margin-top: 6.0pt;
+			margin-right: 0in;
+			margin-bottom: 8.0pt;
+			margin-left: 28.7pt;
+			text-align: justify;
+			text-indent: -.3in;
+			line-height: 106%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.Style3, li.Style3, div.Style3 {
+			mso-style-name: Style3;
+			margin-top: 6.0pt;
+			margin-right: 0in;
+			margin-bottom: 8.0pt;
+			margin-left: .8in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 106%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: bold;
+		}
+
+		p.Tabletext0, li.Tabletext0, div.Tabletext0 {
+			mso-style-name: Tabletext;
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 6.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 12.0pt;
+			font-size: 10.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.remarks, li.remarks, div.remarks {
+			mso-style-name: remarks;
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 31.15pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -14.15pt;
+			punctuation-wrap: simple;
+			text-autospace: none;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.DocumentMapChar {
+			mso-style-name: "Document Map Char";
+			mso-style-link: "Document Map";
+			font-family: "Tahoma",sans-serif;
+			background: navy;
+		}
+
+		span.HTMLPreformattedChar {
+			mso-style-name: "HTML Preformatted Char";
+			mso-style-link: "HTML Preformatted";
+			font-family: "Courier New";
+		}
+
+		span.syntaxquotesyntaxquotebacktick {
+			mso-style-name: "syntax_quote syntax_quote_backtick";
+		}
+
+		span.SubtitleChar {
+			mso-style-name: "Subtitle Char";
+			mso-style-link: Subtitle;
+			font-family: "Cambria",serif;
+			color: #4F81BD;
+			letter-spacing: .75pt;
+			font-style: italic;
+		}
+
+		p.Cellheading, li.Cellheading, div.Cellheading {
+			mso-style-name: Cellheading;
+			margin-top: 3.0pt;
+			margin-right: 0in;
+			margin-bottom: 2.0pt;
+			margin-left: 0in;
+			text-align: left;
+			text-indent: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+			font-weight: bold;
+		}
+
+		p.Cellnormal, li.Cellnormal, div.Cellnormal {
+			mso-style-name: Cellnormal;
+			margin-top: 3.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 0in;
+			font-size: 11.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+		}
+
+		p.F-xxx-1, li.F-xxx-1, div.F-xxx-1 {
+			mso-style-name: F-xxx-1;
+			margin-top: 3.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .25in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: -.25in;
+			font-size: 11.0pt;
+			font-family: "Times New Roman",serif;
+			font-variant: small-caps;
+			font-weight: bold;
+		}
+
+		p.F-xxx-1-1, li.F-xxx-1-1, div.F-xxx-1-1 {
+			mso-style-name: F-xxx-1-1;
+			margin-top: 3.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .55in;
+			margin-bottom: .0001pt;
+			text-align: left;
+			text-indent: -.55in;
+			font-size: 11.0pt;
+			font-family: "Times New Roman",serif;
+			font-variant: small-caps;
+			font-weight: bold;
+		}
+
+		p.StyleHeading1CenturyGothic12ptBlack, li.StyleHeading1CenturyGothic12ptBlack, div.StyleHeading1CenturyGothic12ptBlack {
+			mso-style-name: "Style Heading 1 + Century Gothic 12 pt Black";
+			margin-top: 12.0pt;
+			margin-right: 0in;
+			margin-bottom: 3.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 0in;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Century Gothic",sans-serif;
+			font-variant: small-caps;
+			color: black;
+			font-weight: bold;
+		}
+
+		p.Description, li.Description, div.Description {
+			mso-style-name: Description;
+			margin-top: 3.0pt;
+			margin-right: 0in;
+			margin-bottom: 2.0pt;
+			margin-left: 0in;
+			text-align: left;
+			text-indent: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			color: black;
+			font-weight: bold;
+		}
+
+		p.Style11, li.Style11, div.Style11 {
+			mso-style-name: Style11;
+			mso-style-link: "Style11 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Style11Char {
+			mso-style-name: "Style11 Char";
+			mso-style-link: Style11;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.address-title {
+			mso-style-name: address-title;
+		}
+
+		p.ListParagraph20, li.ListParagraph20, div.ListParagraph20 {
+			mso-style-name: "List Paragraph2";
+			mso-style-link: "List Paragraph2 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.ListParagraph20CxSpFirst, li.ListParagraph20CxSpFirst, div.ListParagraph20CxSpFirst {
+			mso-style-name: "List Paragraph2CxSpFirst";
+			mso-style-link: "List Paragraph2 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.ListParagraph20CxSpMiddle, li.ListParagraph20CxSpMiddle, div.ListParagraph20CxSpMiddle {
+			mso-style-name: "List Paragraph2CxSpMiddle";
+			mso-style-link: "List Paragraph2 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		p.ListParagraph20CxSpLast, li.ListParagraph20CxSpLast, div.ListParagraph20CxSpLast {
+			mso-style-name: "List Paragraph2CxSpLast";
+			mso-style-link: "List Paragraph2 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .8in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		span.ListParagraph2Char0 {
+			mso-style-name: "List Paragraph2 Char";
+			mso-style-link: "List Paragraph2";
+			font-family: "Arial Narrow",sans-serif;
+		}
+
+		span.EndnoteTextChar {
+			mso-style-name: "Endnote Text Char";
+			mso-style-link: "Endnote Text";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.paragraph, li.paragraph, div.paragraph {
+			mso-style-name: paragraph;
+			margin-right: 0in;
+			margin-left: 0in;
+			text-align: left;
+			text-indent: 0in;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.normaltextrun {
+			mso-style-name: normaltextrun;
+		}
+
+		span.PlainTextChar {
+			mso-style-name: "Plain Text Char";
+			mso-style-link: "Plain Text";
+			font-family: "Arial Narrow",sans-serif;
+			color: #002060;
 		}
 
 		.MsoChpDefault {
@@ -219,23 +3359,23 @@
 		}
 		/* List Definitions */
 		ol {
-			margin-bottom: 0cm;
+			margin-bottom: 0in;
 		}
 
 		ul {
-			margin-bottom: 0cm;
+			margin-bottom: 0in;
 		}
 		-->
 	</style>
 
 </head>
 
-<body lang=BG>
+<body lang=BG link="#0563C1" vlink="#954F72">
 
 	<div class=WordSection1>
 
-		<h3 style='margin-left:71.45pt;text-indent:-36.0pt'>
-			<a name="_Toc55137018"></a><a name="_Toc39426267">
+		<h3 style='margin-left:71.45pt;text-indent:-.5in'>
+			<a name="_Toc75359160"></a><a name="_Toc39426267">
 				1.1.1<span style='font:7.0pt "Times New Roman"'>
 					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 				</span>Таб Заседания
@@ -249,20 +3389,20 @@
 			</span>
 		</p>
 
-		<p class=MsoNormal align=center style='text-align:center;text-indent:0cm'>
+		<p class=MsoNormal align=center style='text-align:center;text-indent:0in'>
 			<span style='line-height:115%'>
-				<img width=604 height=157 id="Picture 141709"
+				<img width=605 height=143 id="Picture 142050"
 					 src="casesession_files/image001.jpg">
 			</span>
 		</p>
 
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
 			Чрез този
 			таб има възможност за насрочване и отразяване на провеждане на съдебни
 			заседания по делата.
 		</p>
 
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
 			Добавяне на
 			закрито заседание става посредством избор на бутон <img width=97 height=25
 														   id="Picture 141713" src="casesession_files/image002.jpg">. Отваря се екранна
@@ -275,145 +3415,180 @@
 			е минал и по този начин заседанието автоматично става проведено!
 		</p>
 
-		<p class=MsoNormal>
-			<img width=437 height=252 id="Picture 141716"
-				 src="casesession_files/image003.jpg">
+		<p class=MsoNormal style='margin-left:70.8pt'>
+			<img width=331 height=257
+				 id="Picture 4509" src="casesession_files/image003.jpg">
 		</p>
 
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+		<p class=MsoNormal>
+			<b><span style='color:red'>Важно!</span></b><span style='color:red'>
+				<b>
+					Чекбокс Финализиращ акт задължително се маркира преди
+					Регистриране на съдебния акт/протокол, тъй като заедно с генериране на пореден
+					регистрационен номер на акт се генерира и ECLI номер. В случай, че чекбокс
+					Финализиращ акт се маркира след регистриране на акта/протокола, ECLI номер няма
+					да се генерира.
+				</b>
+			</span><b><span style='color:red'> </span></b>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0in'>
+			<span style='color:red'>
+				Резултат/степен
+				на уважаване на иска се избира посредством падащо меню.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span style='color:red'>
+				При избор на финализиращ акт и в
+				случай че съдебният състав по делото е непълен се извежда предупредително
+				съобщение.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
+			В случай, че
+			акта подлежи на обжалване, може да бъде отбелязан преди изготвяне на съдебния
+			акт посредством избор на чекбокс Подлежи на обжалване.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
 			След избора
 			на Тип акт се избира бутон  <img width=114 height=24 id="Picture 141717"
 									   src="casesession_files/image004.jpg">, и се преминава директно към изготвянето
-			на съдебен акт. След изготвяне на съдебния акт, посредством бърз бутон Регистриране
-			<img width=95 height=26 id="Picture 143649" src="casesession_files/image005.jpg">,
-			акта получава номер / дата на регистрация.
+			на съдебен акт. След изготвяне на съдебния акт, посредством бърз бутон
+			Регистриране <img width=95 height=26 id="Picture 143649"
+						   src="casesession_files/image005.jpg">, акта получава номер / дата на
+			регистрация.
 		</p>
 
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
 			Чрез бутон
 			Изпращане за подпис <img width=111 height=27 id="Picture 143650"
 							src="casesession_files/image006.jpg">автоматично се стига до подписване на
 			съдебния акт.
 		</p>
 
-		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
 			Посредством
 			избор на бутон Добави резултат <img width=95 height=22 id="Picture 143651"
 											 src="casesession_files/image007.jpg">, се дава възможност за въвеждане на
 			резултата от проведено заседание.
 		</p>
 
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
+			Когато в
+			заседанието няма изготвен съдебен акт системата или липсва резултата, системата
+			изкарва предупреждение посредством знак <img width=31 height=31
+														 id="Picture 141411" src="casesession_files/image008.jpg"> и <img width=24
+																														  height=31 id="Picture 141616" src="casesession_files/image009.jpg">.
+			Визуализира се следния екран:
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
+			<img width=605 height=198 id="Picture 141615" src="casesession_files/image010.jpg">
+		</p>
+
 		<p class=MsoNormal>
 			Добавяне на ново заседание става посредством избор на <span style='line-height:115%'>бутон </span><img width=72 height=34
-																											 id="Picture 142993" src="casesession_files/image008.jpg"><span style='line-height:115%'>
+																											 id="Picture 142993" src="casesession_files/image011.jpg"><span style='line-height:115%'>
 				. Отваря се екранната форма за въвеждане на основни
 				данни за заседание, в която се въвеждат съответните данни:
 			</span>
 		</p>
 
-		<p class=MsoNormal style='text-indent:0cm'>
+		<p class=MsoNormal style='text-indent:0in'>
 			<img width=605 height=149
-				 id="Picture 36" src="casesession_files/image009.jpg">
+				 id="Picture 36" src="casesession_files/image012.jpg">
 		</p>
 
 		<p class=EISSStyle5CxSpFirst>
-			<span style='font-family:"Arial Narrow",sans-serif'>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span>Вид заседание – Избира се вида на заседанието в зависимост от вида
-			на делото;
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Вид заседание – Избира се вида на заседанието в зависимост от вида на делото;
 		</p>
 
 		<p class=EISSStyle5CxSpLast>
-			<span style='font-family:"Arial Narrow",sans-serif'>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span>Статус на заседанието – Избира се статуса на заседание. При
-			добавяне на заседанието са активни статуси – насрочено и проведено. По
-			подразбира е зададено насрочено;
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Статус на заседанието – Избира се статуса на заседание. При добавяне на
+			заседанието са активни статуси – насрочено и проведено. По подразбиране е
+			зададен статус насрочено. Когато в заседанието липсва активен съдия-докладчик и
+			при промяна на статуса на заседанието от насрочено на проведено, системата
+			изкарва спиращо съобщение.
 		</p>
 
 		<p class=MsoNormal>
-			<b>Забележка:</b> Заседания може да се нарочват само с
-			бъдеща дата, проведени заседания преди текущата дата и час може да се добавят в
-			статус проведено без да е необходимо насрочване. Това е приложимо основно за
-			закритите заседания, които се отразяват след като са проведени. Не е възможно
-			създаване на повече от едно заседание с един и същи начален час.
+			<b><span style='color:red'>Забележка:</span></b> Заседания
+			може да се нарочват само с бъдеща дата, проведени заседания преди текущата дата
+			и час може да се добавят в статус проведено без да е необходимо насрочване.
+			Това е приложимо основно за закритите заседания, които се отразяват след като
+			са проведени. Не е възможно създаване на повече от едно заседание с един и същи
+			начален час.
 		</p>
 
 		<p class=EISSStyle5CxSpFirst>
-			<span style='font-family:"Arial Narrow",sans-serif'>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			</span>Начало (дата) – Въвежда се дата на заседанието;
 		</p>
 
 		<p class=EISSStyle5CxSpMiddle>
-			<span style='font-family:"Arial Narrow",sans-serif'>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			</span>Начало (час) – Въвежда се начален час на заседанието;
 		</p>
 
 		<p class=EISSStyle5CxSpMiddle>
-			<span style='font-family:"Arial Narrow",sans-serif'>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			</span>Зала – избира се от падащ списък с предварително въведени зали на
 			текущия съд залата за провеждане на заседанието. Полето не е със задължителен
-			характер, но ако се избере полето <b>Прогнозна продължителност</b> е
-			задължително. Преди избор на зала чрез избор на бутон Заетост <img width=82
-																		 height=19 id="Picture 39" src="casesession_files/image010.jpg">може да се
-			направи справка за графика на залите в съда.
+			характер, но ако се избере полето Прогнозна продължителност е задължително.
+			Преди избор на зала чрез избор на бутон Заетост <img width=82 height=19
+															  id="Picture 39" src="casesession_files/image013.jpg">може да се направи справка
+			за графика на залите в съда.
 		</p>
 
 		<p class=EISSStyle5CxSpMiddle>
-			<span style='font-family:"Arial Narrow",sans-serif'>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span>Прогнозна продължително – Въвежда се с цел планиране на графика
-			на залите. Полето е обвързано с поле <b>Зала</b>.
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Прогнозна продължително – Въвежда се с цел планиране на графика на
+			залите. Полето е обвързано с поле Зала.
 		</p>
 
 		<p class=EISSStyle5CxSpLast>
-			<span style='font-family:"Arial Narrow",sans-serif'>
-				-<span style='font:7.0pt "Times New Roman"'>
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</span>
-			</span>Забележка – При необходимост от въвеждане на допълнителна
-			информация.
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Забележка – При необходимост от въвеждане на допълнителна информация.
 		</p>
 
 		<p class=MsoNormal>
-			<b>Забележка: </b>При въвеждане на зала за заседание , което
-			е планирано за период, в който залата е заета се извежда предупредително
-			съобщение за заетост на залата. Съобщението няма стопиращ характер или избор на
-			бутон Потвърди, може да се премине към запис на данните по заседанието.
+			<b><span style='color:red'>Забележка:</span> </b>При
+			въвеждане на зала за заседание , което е планирано за период, в който залата е
+			заета се извежда предупредително съобщение за заетост на залата. Съобщението
+			няма стопиращ характер или избор на бутон Потвърди, може да се премине към
+			запис на данните по заседанието.
 		</p>
 
 		<p class=MsoNormal align=center style='text-align:center'>
 			<img width=257
-				 height=165 id="Picture 37" src="casesession_files/image011.jpg">
+				 height=165 id="Picture 37" src="casesession_files/image014.jpg">
 		</p>
 
 		<p class=MsoNormal>&nbsp;</p>
 
-		<p class=MsoNormal style='text-indent:0cm'>
+		<p class=MsoNormal style='text-indent:0in'>
 			<img width=605 height=167
-				 id="Picture 142994" src="casesession_files/image012.jpg">
+				 id="Picture 142994" src="casesession_files/image015.jpg">
 		</p>
 
 		<p class=MsoNormal style='text-indent:35.4pt'>
 			<span style='line-height:115%'>
 				След
 				въвеждане на всички изискуеми данни и избор на бутон Запис
-			</span><img width=47 height=25 id="Picture 143226" src="casesession_files/image013.jpg"><span style='line-height:115%'>успешно се добавя ново заседание по делото.</span>
+			</span><img width=47 height=25 id="Picture 143226" src="casesession_files/image016.jpg"><span style='line-height:115%'>успешно се добавя ново заседание по делото.</span>
 		</p>
 
 		<p class=MsoNormal style='text-indent:35.4pt'>
@@ -426,9 +3601,9 @@
 			</span>
 		</p>
 
-		<p class=MsoNormal style='text-indent:0cm'>
+		<p class=MsoNormal style='text-indent:0in'>
 			<img width=605 height=213
-				 id="Picture 4487" src="casesession_files/image014.jpg">
+				 id="Picture 4487" src="casesession_files/image017.jpg">
 		</p>
 
 		<p class=MsoNormal>

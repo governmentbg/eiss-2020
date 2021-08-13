@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels;
@@ -24,5 +25,7 @@ namespace IOWebApplication.Core.Contracts
         TinyMCEVM FillHtmlTemplateNotificationTestOne(int caseNotificationId, int htmlTemplateId);
         TinyMCEVM GetHtmlTemplateNull(int caseNotificationId);
         void HtmlTemplateNotificationHave_F_FIRST_SET_NO_YEAR();
+        IList<KeyValuePairVM> fillList_UpperCourt(int courtId, CaseSessionActComplain caseSessionActComplain);
+        TinyMCEVM FillHtmlTemplateDocumentNotification(int documentNotificationId);
     }
 }

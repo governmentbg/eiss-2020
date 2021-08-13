@@ -1,7 +1,9 @@
 ﻿using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplicationService.Infrastructure.Data.DW;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace IOWebApplicationService.Infrastructure.Data.Common
 {
@@ -13,6 +15,11 @@ namespace IOWebApplicationService.Infrastructure.Data.Common
         }
 
         public int TrackerCount => Context.ChangeTracker.Entries().Count();
+
+        public void PropUnmodified<T>(Expression<Func<T>> selectProp) where T : class
+        {
+            throw new NotImplementedException();
+        }
 
         public void RefreshDbContext(string connectionString)
         {

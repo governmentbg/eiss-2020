@@ -20,6 +20,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Вид заседание")]
         public int CaseSessionTypeId { get; set; }
 
+        [Display(Name = "Вид заседание")]
+        public string CaseSessionTypeIds { get; set; }
+        public string CaseSessionTypeIds_text { get; set; }
+
         [Display(Name = "Зала")]
         public int HallId { get; set; }
 
@@ -46,13 +50,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Резултат от заседание")]
         public int SessionResultId { get; set; }
 
+        [Display(Name = "Резултат от заседание")]
+        public string SessionResultIds { get; set; }
+        public string SessionResultIds_text { get; set; }
+
         [Display(Name = "Статус")]
         public int SessionStateId { get; set; }
 
         [Display(Name = "Състав")]
         public int CourtDepartmentId { get; set; }
 
-        [Display(Name = "Съдия докладчик")]
+        [Display(Name = "Съдия-докладчик")]
         public int JudgeReporterId { get; set; }
 
         [Display(Name = "Отделение")]

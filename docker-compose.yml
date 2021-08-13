@@ -61,8 +61,8 @@ services:
     container_name: eispp-proxy
     image: nginx:1.16.1-alpine
     volumes:
-      - "./eispp-proxy/certificates/eispp-test-cert.pem:/certs/eispp-test-cert.pem"
-      - "./eispp-proxy/certificates/eispp-test-key.pem:/certs/eispp-test-key.pem"
+      - "./eispp-proxy/certificates/$$SECRET$$:/certs/$$SECRET$$"
+      - "./eispp-proxy/certificates/$$SECRET$$:/certs/$$SECRET$$"
       - "./eispp-proxy/nginx.conf:/etc/nginx/nginx.conf"
     restart: always
     expose:
@@ -70,7 +70,7 @@ services:
     environment:
       VIRTUAL_HOST: 'eispp-proxy'
       NETWORK_ACCESS: 'internal'
-    command: /bin/sh -c "echo 'ipaddress proxyvss.eispp-proxy.net' >> /etc/hosts ;env ; cat /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
+    command: /bin/sh -c "echo '$$SECRET$$ $$SECRET$$' >> /etc/hosts ;env ; cat /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"
 
 
   elk:

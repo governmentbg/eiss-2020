@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,29 @@ namespace IOWebApplicationService.Services.MockUp
 
         public string CertificateNumber => throw new NotImplementedException();
 
+        public int LawUnitTypeId => throw new NotImplementedException();
+
+        public bool CheckHash(string hash, object id, object parent = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckHash(BlankEditVM blankModel)
+        {
+            throw new NotImplementedException();
+        }
+
         public string ClaimValue(string claimType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GenHash(object id, object parent = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsSystemInFeature(string feature)
         {
             throw new NotImplementedException();
         }

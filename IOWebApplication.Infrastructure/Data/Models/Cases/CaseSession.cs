@@ -21,7 +21,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CaseId))]
         public virtual Case Case { get; set; }
-       
+
 
         [ForeignKey(nameof(SessionTypeId))]
         public virtual SessionType SessionType { get; set; }
@@ -36,7 +36,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual ICollection<CaseSessionResult> CaseSessionResults { get; set; }
         public virtual ICollection<CaseSessionH> History { get; set; }
         public virtual ICollection<CaseSessionAct> CaseSessionActs { get; set; }
+
+        [InverseProperty(nameof(CaseLawUnit.CaseSession))]
         public virtual ICollection<CaseLawUnit> CaseLawUnits { get; set; }
+
+        [InverseProperty(nameof(CaseLawUnit.FromCaseSession))]
+        public virtual ICollection<CaseLawUnit> FromCaseLawUnits { get; set; }
+        [InverseProperty(nameof(CaseLawUnit.ToCaseSession))]
+        public virtual ICollection<CaseLawUnit> ToCaseLawUnits { get; set; }
         public virtual ICollection<CaseSessionDoc> CaseSessionDocs { get; set; }
         public virtual ICollection<CaseSessionMeeting> CaseSessionMeetings { get; set; }
 
@@ -84,7 +91,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("session_type_id")]
         [Display(Name = "Вид заседаниe")]
         public int SessionTypeId { get; set; }
-       
+
 
         [Column("court_hall_id")]
         [Display(Name = "Зала")]
@@ -122,6 +129,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("description_expired")]
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
+
+        /// <summary>
+        /// Само за НД, ВКС при избор 1 - Промяна на състава, се изтегля нов състав по делото според графика
+        /// 1 - промяна
+        /// null,2 - без промяна
+        /// </summary>
+        [Display(Name = "Промяна на състава по делото")]
+        [Column("case_lawunit_change")]
+        public int? CaseLawunitChange { get; set; }
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }

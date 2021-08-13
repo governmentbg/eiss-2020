@@ -25,13 +25,13 @@ namespace IOWebApplication.Core.Contracts
         /// След това по населено място
         /// </summary>
         /// <returns></returns>
-        DeliveryAreaFindVM DeliveryAreaAddressFind(Address address);
+        DeliveryAreaFindVM DeliveryAreaAddressFind(Address address, int courtId);
 
-        DeliveryAreaFindVM DeliveryAreaCasePersonAddressIdFind(int CasePersonAddressId);
+        DeliveryAreaFindVM DeliveryAreaCasePersonAddressIdFind(int CasePersonAddressId, int courtId);
 
-        DeliveryAreaFindVM DeliveryAreaAddressIdFind(int AddressId);
+        DeliveryAreaFindVM DeliveryAreaAddressIdFind(int AddressId, int courtId);
         IQueryable<DeliveryAreaAddressVM> DeliveryAreaAddressDuplication(int courtId);
-        DeliveryAreaAddressTestVM DeliveryAreaAddressFindTest(DeliveryAreaAddressTestVM model);
+        DeliveryAreaAddressTestVM DeliveryAreaAddressFindTest(DeliveryAreaAddressTestVM model, int courtId);
         IQueryable<MultiSelectTransferVM> EkStreetForSelect_Select(string cityId, int courtId);
         bool DeliveryAreaAddressSaveListData(int deliveryAreaId, List<int> streets, string cityId);
         List<SelectListItem> ExpiredTypeDDL();

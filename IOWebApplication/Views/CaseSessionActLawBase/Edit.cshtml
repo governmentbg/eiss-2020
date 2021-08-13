@@ -34,7 +34,7 @@
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
                 <div class="row">
-                    <div class="col-lg-7">@Html.EditorFor(x => x.LawBaseId, "GenericDropDown")</div>
+                    <div class="col-lg-7">@Html.EditorFor(x => x.LawBaseId, "GenericSelect2")</div>
                     @if (access.CanChangeFull)
                     {
                         <div class="col-lg-5" style="position:relative;left:15px;top:26px;"><a asp-action="IndexLawBase" asp-controller="Nomenclature" aps-co asp-route-CaseId="@Model.CaseId" target="_blank" class="btn btn-def btn-sm btn-block"><i class="fa fa-wrench"></i> Номенклатура за нормативни текстове</a></div>
@@ -63,5 +63,6 @@
 <script>
     $(function () {
         initActLawBaseAutoComplete();
+        $('.select2').select2();
     })
 </script>

@@ -1,4 +1,6 @@
-﻿namespace IOWebApplication.Models
+﻿using System;
+
+namespace IOWebApplication.Models
 {
     /// <summary>
     /// Result of signing PDF document
@@ -20,6 +22,7 @@
         /// </summary>
         public string FileName { get; set; }
         public string FileTitle { get; set; }
+        public string FileId { get; set; }
 
         /// <summary>
         /// Result code returned by StampitLSM
@@ -35,7 +38,7 @@
         /// Type of the attached file
         /// </summary>
         public int SourceType { get; set; }
-
+        public int SignituresCount { get; set; }
         /// <summary>
         /// URL to be redirected after signing
         /// </summary>

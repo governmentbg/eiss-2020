@@ -14,6 +14,267 @@ namespace Integration.Epep
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
+    [System.Runtime.Serialization.DataContractAttribute(Name="Side", Namespace="http://www.abbaty.com/eCase/v2")]
+    public partial class Side : object
+    {
+        
+        private System.Guid CaseIdField;
+        
+        private Integration.Epep.Entity EntityField;
+        
+        private System.DateTime InsertDateField;
+        
+        private bool IsActiveField;
+        
+        private Integration.Epep.Person PersonField;
+        
+        private string ProceduralRelationField;
+        
+        private System.Nullable<System.Guid> SideIdField;
+        
+        private string SideInvolvementKindCodeField;
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Guid CaseId
+        {
+            get
+            {
+                return this.CaseIdField;
+            }
+            set
+            {
+                this.CaseIdField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Entity Entity
+        {
+            get
+            {
+                return this.EntityField;
+            }
+            set
+            {
+                this.EntityField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.DateTime InsertDate
+        {
+            get
+            {
+                return this.InsertDateField;
+            }
+            set
+            {
+                this.InsertDateField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public bool IsActive
+        {
+            get
+            {
+                return this.IsActiveField;
+            }
+            set
+            {
+                this.IsActiveField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public Integration.Epep.Person Person
+        {
+            get
+            {
+                return this.PersonField;
+            }
+            set
+            {
+                this.PersonField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ProceduralRelation
+        {
+            get
+            {
+                return this.ProceduralRelationField;
+            }
+            set
+            {
+                this.ProceduralRelationField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> SideId
+        {
+            get
+            {
+                return this.SideIdField;
+            }
+            set
+            {
+                this.SideIdField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string SideInvolvementKindCode
+        {
+            get
+            {
+                return this.SideInvolvementKindCodeField;
+            }
+            set
+            {
+                this.SideInvolvementKindCodeField = value;
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
+    [System.Runtime.Serialization.DataContractAttribute(Name="Entity", Namespace="http://www.abbaty.com/eCase/v2")]
+    public partial class Entity : object
+    {
+        
+        private string AddressField;
+        
+        private string BulstatField;
+        
+        private string NameField;
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Address
+        {
+            get
+            {
+                return this.AddressField;
+            }
+            set
+            {
+                this.AddressField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Bulstat
+        {
+            get
+            {
+                return this.BulstatField;
+            }
+            set
+            {
+                this.BulstatField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Name
+        {
+            get
+            {
+                return this.NameField;
+            }
+            set
+            {
+                this.NameField = value;
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
+    [System.Runtime.Serialization.DataContractAttribute(Name="Person", Namespace="http://www.abbaty.com/eCase/v2")]
+    public partial class Person : object
+    {
+        
+        private string AddressField;
+        
+        private string EGNField;
+        
+        private string FirstnameField;
+        
+        private string LastnameField;
+        
+        private string SecondnameField;
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Address
+        {
+            get
+            {
+                return this.AddressField;
+            }
+            set
+            {
+                this.AddressField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string EGN
+        {
+            get
+            {
+                return this.EGNField;
+            }
+            set
+            {
+                this.EGNField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Firstname
+        {
+            get
+            {
+                return this.FirstnameField;
+            }
+            set
+            {
+                this.FirstnameField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Lastname
+        {
+            get
+            {
+                return this.LastnameField;
+            }
+            set
+            {
+                this.LastnameField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Secondname
+        {
+            get
+            {
+                return this.SecondnameField;
+            }
+            set
+            {
+                this.SecondnameField = value;
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
     [System.Runtime.Serialization.DataContractAttribute(Name="InfocaseFault", Namespace="http://www.abbaty.com/eCase/v2")]
     public partial class InfocaseFault : object
     {
@@ -1460,140 +1721,6 @@ namespace Integration.Epep
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Entity", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Entity : object
-    {
-        
-        private string AddressField;
-        
-        private string BulstatField;
-        
-        private string NameField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Address
-        {
-            get
-            {
-                return this.AddressField;
-            }
-            set
-            {
-                this.AddressField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Bulstat
-        {
-            get
-            {
-                return this.BulstatField;
-            }
-            set
-            {
-                this.BulstatField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Name
-        {
-            get
-            {
-                return this.NameField;
-            }
-            set
-            {
-                this.NameField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Person", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Person : object
-    {
-        
-        private string AddressField;
-        
-        private string EGNField;
-        
-        private string FirstnameField;
-        
-        private string LastnameField;
-        
-        private string SecondnameField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Address
-        {
-            get
-            {
-                return this.AddressField;
-            }
-            set
-            {
-                this.AddressField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string EGN
-        {
-            get
-            {
-                return this.EGNField;
-            }
-            set
-            {
-                this.EGNField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Firstname
-        {
-            get
-            {
-                return this.FirstnameField;
-            }
-            set
-            {
-                this.FirstnameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Lastname
-        {
-            get
-            {
-                return this.LastnameField;
-            }
-            set
-            {
-                this.LastnameField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string Secondname
-        {
-            get
-            {
-                return this.SecondnameField;
-            }
-            set
-            {
-                this.SecondnameField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
     [System.Runtime.Serialization.DataContractAttribute(Name="OutgoingDocument", Namespace="http://www.abbaty.com/eCase/v2")]
     public partial class OutgoingDocument : object
     {
@@ -2856,133 +2983,6 @@ namespace Integration.Epep
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
-    [System.Runtime.Serialization.DataContractAttribute(Name="Side", Namespace="http://www.abbaty.com/eCase/v2")]
-    public partial class Side : object
-    {
-        
-        private System.Guid CaseIdField;
-        
-        private Integration.Epep.Entity EntityField;
-        
-        private System.DateTime InsertDateField;
-        
-        private bool IsActiveField;
-        
-        private Integration.Epep.Person PersonField;
-        
-        private string ProceduralRelationField;
-        
-        private System.Nullable<System.Guid> SideIdField;
-        
-        private string SideInvolvementKindCodeField;
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Guid CaseId
-        {
-            get
-            {
-                return this.CaseIdField;
-            }
-            set
-            {
-                this.CaseIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public Integration.Epep.Entity Entity
-        {
-            get
-            {
-                return this.EntityField;
-            }
-            set
-            {
-                this.EntityField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.DateTime InsertDate
-        {
-            get
-            {
-                return this.InsertDateField;
-            }
-            set
-            {
-                this.InsertDateField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public bool IsActive
-        {
-            get
-            {
-                return this.IsActiveField;
-            }
-            set
-            {
-                this.IsActiveField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public Integration.Epep.Person Person
-        {
-            get
-            {
-                return this.PersonField;
-            }
-            set
-            {
-                this.PersonField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string ProceduralRelation
-        {
-            get
-            {
-                return this.ProceduralRelationField;
-            }
-            set
-            {
-                this.ProceduralRelationField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public System.Nullable<System.Guid> SideId
-        {
-            get
-            {
-                return this.SideIdField;
-            }
-            set
-            {
-                this.SideIdField = value;
-            }
-        }
-        
-        [System.Runtime.Serialization.DataMemberAttribute()]
-        public string SideInvolvementKindCode
-        {
-            get
-            {
-                return this.SideInvolvementKindCodeField;
-            }
-            set
-            {
-                this.SideInvolvementKindCodeField = value;
-            }
-        }
-    }
-    
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
     [System.Runtime.Serialization.DataContractAttribute(Name="Lawyer", Namespace="http://www.abbaty.com/eCase/v2")]
     public partial class Lawyer : object
     {
@@ -3048,10 +3048,69 @@ namespace Integration.Epep
         }
     }
     
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
+    [System.Runtime.Serialization.DataContractAttribute(Name="UserRegistrationInfo", Namespace="http://www.abbaty.com/eCase/v2")]
+    public partial class UserRegistrationInfo : object
+    {
+        
+        private bool IsRegisteredField;
+        
+        private System.Nullable<System.Guid> LawyerRegistrationIdField;
+        
+        private System.Nullable<System.Guid> PersonRegistrationIdField;
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public bool IsRegistered
+        {
+            get
+            {
+                return this.IsRegisteredField;
+            }
+            set
+            {
+                this.IsRegisteredField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> LawyerRegistrationId
+        {
+            get
+            {
+                return this.LawyerRegistrationIdField;
+            }
+            set
+            {
+                this.LawyerRegistrationIdField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.Guid> PersonRegistrationId
+        {
+            get
+            {
+                return this.PersonRegistrationIdField;
+            }
+            set
+            {
+                this.PersonRegistrationIdField = value;
+            }
+        }
+    }
+    
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
     [System.ServiceModel.ServiceContractAttribute(Namespace="http://www.abbaty.com/eCase/v2", ConfigurationName="Integration.Epep.IeCaseService")]
     public interface IeCaseService
     {
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdInfocaseFaultFault", Name="InfocaseFault")]
+        Integration.Epep.Side GetSideById(System.Guid sideId);
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
+        System.Threading.Tasks.Task<Integration.Epep.Side> GetSideByIdAsync(System.Guid sideId);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdResponse")]
         [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideIdentifiersByCaseIdInfocaseFa" +
@@ -3966,6 +4025,16 @@ namespace Integration.Epep
             "")]
         System.Threading.Tasks.Task<System.Nullable<System.Guid>> DeactivatePersonRegistrationAsync(System.Guid personRegistrationId);
         
+        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsername", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameRes" +
+            "ponse")]
+        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameInf" +
+            "ocaseFaultFault", Name="InfocaseFault")]
+        Integration.Epep.UserRegistrationInfo GetUserRegistrationInfoByUsername(string username);
+        
+        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsername", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetUserRegistrationInfoByUsernameRes" +
+            "ponse")]
+        System.Threading.Tasks.Task<Integration.Epep.UserRegistrationInfo> GetUserRegistrationInfoByUsernameAsync(string username);
+        
         [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsername", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameResponse")]
         [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/UpdateUsernameInfocaseFaultFault", Name="InfocaseFault")]
         System.Nullable<System.Guid> UpdateUsername(string oldUsername, string newUsername, string courtCode);
@@ -4387,13 +4456,6 @@ namespace Integration.Epep
         [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseId", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetCaseRulingIdentifiersByCaseIdResp" +
             "onse")]
         System.Threading.Tasks.Task<System.Guid[]> GetCaseRulingIdentifiersByCaseIdAsync(System.Guid caseId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
-        [System.ServiceModel.FaultContractAttribute(typeof(Integration.Epep.InfocaseFault), Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdInfocaseFaultFault", Name="InfocaseFault")]
-        Integration.Epep.Side GetSideById(System.Guid sideId);
-        
-        [System.ServiceModel.OperationContractAttribute(Action="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideById", ReplyAction="http://www.abbaty.com/eCase/v2/IeCaseService/GetSideByIdResponse")]
-        System.Threading.Tasks.Task<Integration.Epep.Side> GetSideByIdAsync(System.Guid sideId);
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.0.2")]
@@ -4444,6 +4506,16 @@ namespace Integration.Epep
         public IeCaseServiceClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) : 
                 base(binding, remoteAddress)
         {
+        }
+        
+        public Integration.Epep.Side GetSideById(System.Guid sideId)
+        {
+            return base.Channel.GetSideById(sideId);
+        }
+        
+        public System.Threading.Tasks.Task<Integration.Epep.Side> GetSideByIdAsync(System.Guid sideId)
+        {
+            return base.Channel.GetSideByIdAsync(sideId);
         }
         
         public System.Guid[] GetSideIdentifiersByCaseId(System.Guid caseId)
@@ -5546,6 +5618,16 @@ namespace Integration.Epep
             return base.Channel.DeactivatePersonRegistrationAsync(personRegistrationId);
         }
         
+        public Integration.Epep.UserRegistrationInfo GetUserRegistrationInfoByUsername(string username)
+        {
+            return base.Channel.GetUserRegistrationInfoByUsername(username);
+        }
+        
+        public System.Threading.Tasks.Task<Integration.Epep.UserRegistrationInfo> GetUserRegistrationInfoByUsernameAsync(string username)
+        {
+            return base.Channel.GetUserRegistrationInfoByUsernameAsync(username);
+        }
+        
         public System.Nullable<System.Guid> UpdateUsername(string oldUsername, string newUsername, string courtCode)
         {
             return base.Channel.UpdateUsername(oldUsername, newUsername, courtCode);
@@ -6064,16 +6146,6 @@ namespace Integration.Epep
         public System.Threading.Tasks.Task<System.Guid[]> GetCaseRulingIdentifiersByCaseIdAsync(System.Guid caseId)
         {
             return base.Channel.GetCaseRulingIdentifiersByCaseIdAsync(caseId);
-        }
-        
-        public Integration.Epep.Side GetSideById(System.Guid sideId)
-        {
-            return base.Channel.GetSideById(sideId);
-        }
-        
-        public System.Threading.Tasks.Task<Integration.Epep.Side> GetSideByIdAsync(System.Guid sideId)
-        {
-            return base.Channel.GetSideByIdAsync(sideId);
         }
         
         public virtual System.Threading.Tasks.Task OpenAsync()

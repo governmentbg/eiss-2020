@@ -44,9 +44,9 @@
                             <div class="row">
                                 <div class="col-lg-12">@Html.EditorFor(x => x.CasePersonInheritanceResultId, "GenericDropDown")</div>
                             </div>
-                            <div class="row">
-                                <div class="col-lg-12">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
-                            </div>
+                            @*<div class="row">
+                                    <div class="col-lg-12">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
+                                </div>*@
                         </fieldset>
                     </div>
                 </div>
@@ -61,6 +61,11 @@
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
+                        @if (access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на наследство", ExpireSubmitUrl = Url.Action("CasePersonInheritance_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }

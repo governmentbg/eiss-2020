@@ -153,6 +153,21 @@ namespace IOWebApplication.Test.Mockups
             throw new NotImplementedException();
         }
 
+        public int[] SystemParam_SelectIntValues(string paramName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string SystemParam_SelectValue(string paramName)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool ICounterService.Counter_GetNotificationCounter(DocumentNotification model, int courtId)
+        {
+            throw new NotImplementedException();
+        }
+
         bool IBaseService.SaveExpireInfo<T>(ExpiredInfoVM model)
         {
             throw new NotImplementedException();

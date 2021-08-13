@@ -9,6 +9,7 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Constants;
 using System.Linq;
 using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Delivery
 {
@@ -60,6 +61,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
 
         [Column("case_notification_id")]
         public int? CaseNotificationId { get; set; }
+
+        [Column("document_notification_id")]
+        public int? DocumentNotificationId { get; set; }
 
         [Column("delivery_area_id")]
         [Display(Name = "Район")]
@@ -137,6 +141,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Delivery
 
         [ForeignKey(nameof(CaseNotificationId))]
         public virtual CaseNotification CaseNotification { get; set; }
+
+        [ForeignKey(nameof(DocumentNotificationId))]
+        public virtual DocumentNotification DocumentNotification { get; set; }
 
         [ForeignKey(nameof(NotificationStateId))]
         public virtual NotificationState NotificationState { get; set; }

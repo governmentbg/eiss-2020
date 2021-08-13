@@ -66,7 +66,9 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary>
             public const string SessionActAppealDocType = "epep_appeal_doctype";
 
-
+            public class PunishmentActivity
+            {
+            }
         }
         public enum ServiceMethod
         {
@@ -115,8 +117,10 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int DisabledByDelete = 30;
 
             public static int[] ReturnToMQStates = { WaitForParentIdError, TransferError };
+            public static int?[] ReturnToMQStatesNulls = { WaitForParentIdError, TransferError };
             public static int[] ResetMQErrorStates = { MissingLawyerError, DataContentError, TransferError, TransferErrorLimitExceeded };
             public static int[] UnfinishedMQStates = { New, WaitForParentIdError, TransferError, TransferErrorLimitExceeded };
+            public static int?[] UnfinishedMQStatesNulls = { New, WaitForParentIdError, TransferError, TransferErrorLimitExceeded };
         }
 
         public const string SummonTypeCode_Prizovka = "4";

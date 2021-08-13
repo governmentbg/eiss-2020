@@ -6,6 +6,7 @@ using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models;
@@ -19,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Encodings.Web;
+using System.Threading;
 using System.Web;
 
 namespace IOWebApplication.Controllers
@@ -35,7 +37,6 @@ namespace IOWebApplication.Controllers
         private readonly ICalendarService calendarService;
         private readonly ICaseGroupService caseGroupService;
         private readonly ICaseLoadIndexService caseLoadIndexService;
-        private readonly IEisppService eisppService;
         private readonly ICdnService cdnService;
 
         protected readonly ILogOperationService<ApplicationDbContext> logOperation;
@@ -49,7 +50,6 @@ namespace IOWebApplication.Controllers
             ICalendarService _calendarService,
             ICaseGroupService _caseGroupService,
             ICaseLoadIndexService _caseLoadIndexService,
-            IEisppService _eisppService,
             ILogOperationService<ApplicationDbContext> _logOperation,
             ICdnService _cdnService)
         {
@@ -62,7 +62,6 @@ namespace IOWebApplication.Controllers
             casePersonService = _casePersonService;
             caseGroupService = _caseGroupService;
             caseLoadIndexService = _caseLoadIndexService;
-            eisppService = _eisppService;
             cdnService = _cdnService;
         }
 
@@ -99,7 +98,16 @@ namespace IOWebApplication.Controllers
 
             if (court != null)
             {
-                var _info = System.Net.WebUtility.HtmlEncode($"{court.Address}, {court.CityName}");
+                var addData = "";
+                if (!string.IsNullOrEmpty(court.PhoneNumber))
+                {
+                    addData += $";тел: {court.PhoneNumber.Trim()}";
+                }
+                if (!string.IsNullOrEmpty(court.Email))
+                {
+                    addData += $";email: {court.Email.Trim()}";
+                }
+                var _info = System.Net.WebUtility.HtmlEncode($"{court.Address}{addData}, {court.CityName}");
                 return Content($"<!DOCTYPE html><html><head><meta http-equiv=Content-Type content=\"text/html;charset=utf-8\"></head><body style=\"width:80%;text-align:center;\">{_info}</body></html>", "text/html");
             }
 
@@ -167,11 +175,13 @@ namespace IOWebApplication.Controllers
         }
         public IActionResult GetDDL_DocumentGroupByCourt(int documentKindId, int? courtOrganizationId = null)
         {
+            //Thread.Sleep(2000);
             return Json(nomenclatureService.GetDDL_DocumentGroupByCourt(documentKindId, courtOrganizationId));
         }
         [HttpGet]
         public IActionResult GetDDL_DocumentType(int documentGroupId, bool addDefaultElement = false)
         {
+            //Thread.Sleep(2000);
             var model = nomenclatureService.GetDDL_DocumentType(documentGroupId, addDefaultElement);
 
             return Json(model);
@@ -207,6 +217,13 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
+        [HttpGet]
+        public IActionResult GetDDL_CaseTypeFromCourtTypeFirsLifecyclie(int caseGroupId, string caseInstanceIds, bool addDefaultElement = true)
+        {
+            var model = nomenclatureService.GetDDL_CaseTypeFromCourtType(caseGroupId, caseInstanceIds, addDefaultElement).Where(x => int.Parse(x.Value) != NomenclatureConstants.CaseTypes.VGD && int.Parse(x.Value) != NomenclatureConstants.CaseTypes.VChGD);
+
+            return Json(model);
+        }
 
         [HttpGet]
         public IActionResult Get_CaseTypeUnits(int caseTypeId)
@@ -248,7 +265,9 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult GetDDL_CaseTypeByDocType(int documentTypeId, int? courtOrganizationId = null)
         {
-            var model = nomenclatureService.GetDDL_CaseTypeByDocType(documentTypeId, null, courtOrganizationId);
+            var model = nomenclatureService.GetDDL_CaseTypeByDocType(documentTypeId, null, courtOrganizationId)
+                .Prepend(new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem("Избери", "-1")).ToList()
+                .SingleOrChoose();
 
             return Json(model);
         }
@@ -272,9 +291,23 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
         [HttpGet]
-        public IActionResult GetDDL_CaseSessionActs(int caseId)
+        public IActionResult Get_CaseInfo(int caseId)
         {
-            var model = caseService.GetDDL_SessionActsByCase(caseId);
+            if (caseId <= 0)
+            {
+                return null;
+            }
+            var model = caseService.GetById<Case>(caseId);
+            if (model != null)
+            {
+                return Json(new { courtId = model.CourtId, regNumber = model.RegNumber, caseType = model.CaseTypeId, caseGroup = model.CaseGroupId });
+            }
+            return null;
+        }
+        [HttpGet]
+        public IActionResult GetDDL_CaseSessionActs(int caseId, bool declaredOnly = true)
+        {
+            var model = caseService.GetDDL_SessionActsByCase(caseId, false, declaredOnly);
 
             return Json(model);
         }
@@ -290,6 +323,12 @@ namespace IOWebApplication.Controllers
         {
             var model = nomenclatureService.GetDDL_CaseCode(caseTypeId.StringToIntArray(), query, id, userContext.CourtTypeId != NomenclatureConstants.CourtType.VKS);
 
+            return Json(model);
+        }
+        [HttpGet]
+        public IActionResult Get_PersonRoles(string query = null, int? id = null)
+        {
+            var model = nomenclatureService.Get_PersonRoles(query, id);
             return Json(model);
         }
         [HttpGet]
@@ -324,9 +363,9 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
         [HttpGet]
-        public IActionResult Get_CaseReasons(string query = null, int? id = null)
+        public IActionResult Get_CaseReasons(string query = null, int? ct = null, int? id = null)
         {
-            var model = commonService.Get_CaseReasons(query.EmptyToNull(), id);
+            var model = commonService.Get_CaseReasons(query.EmptyToNull(), ct, id);
             return Json(model);
         }
         public IActionResult GetDDL_AddressType()
@@ -525,7 +564,7 @@ namespace IOWebApplication.Controllers
                 objectTypeId = int.Parse(sourceType.Replace(SourceTypeSelectVM.LawUnitPrefix, ""));
             }
             var model = commonService.SelectEntity_Select(st, request.Search?.Value.EmptyToNull(), objectTypeId);
-            return request.GetResponse(model);
+            return request.GetResponse(model, model);
         }
 
         [HttpGet]
@@ -573,7 +612,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult Get_EISPPTblElement(string eisppTblCode, string query = null, string id = "")
         {
-            var model = eisppService.Get_EISPPTblElement(eisppTblCode.EmptyToNull(), query.EmptyToNull(), id.EmptyToNull());
+            var model = nomenclatureService.Get_EISPPTblElement(eisppTblCode.EmptyToNull(), query.EmptyToNull(), id.EmptyToNull());
             return Json(model);
         }
 

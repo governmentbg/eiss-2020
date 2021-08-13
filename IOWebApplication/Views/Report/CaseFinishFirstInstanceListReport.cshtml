@@ -84,9 +84,21 @@
                         name: 'caseRegNumber',
                         data: 'caseRegNumber',
                         title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNumber + "</a>";
+                        },
                         sortable: true,
                         searchable: true
                     },
+                    //{
+                    //    name: 'caseRegNumber',
+                    //    data: 'caseRegNumber',
+                    //    title: 'Номер на дело',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
                     {
                         name: 'judgeReporterName',
                         data: 'judgeReporterName',

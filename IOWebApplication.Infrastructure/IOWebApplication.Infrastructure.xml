@@ -4,6 +4,11 @@
         <name>IOWebApplication.Infrastructure</name>
     </assembly>
     <members>
+        <member name="T:IOWebApplication.AllowHtmlAttribute">
+            <summary>
+            Атрибут, с който се разрешава HTML съдържание в съответното поле
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Models.Eispp.ActualData.execTSAKTSTSRequest">
             <remarks/>
         </member>
@@ -1213,6 +1218,24 @@
             <summary>
             Element id of div tag file container
             </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.IndexService.IndexRequestModel.Method">
+            <summary> 
+            add;delete
+            </summary>
+            <value>The method.</value>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.IndexService.IndexRequestModel.ActId">
+            <summary>
+            CaseSessionActId
+            </summary>
+            <value>The file identifier.</value>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.IndexService.IndexRequestModel.IntegrationActKey">
+            <summary>
+            Integration Key GUID
+            </summary>
+            <value>The act key.</value>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Models.Integrations.Eispp.BirthPlace">
             <summary>
@@ -6382,6 +6405,62 @@
             Акт/Протокол 
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.CaseId">
+            <summary>
+            ид дело
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.EventType">
+            <summary>
+            ЕИСПП Събитие
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.CaseType">
+            <summary>
+            Вид дело
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.Year">
+            <summary>
+            година на делото
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.ShortNumber">
+            <summary>
+            кратък номер, а не 14-цифрен  номер
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.CaseSessionActId">
+            <summary>
+            Акт/протокол
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.ConnectedCaseId">
+            <summary>
+            Свързано дело което се получава
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.ReasonId">
+            <summary>
+            Причина за изпращане на НД
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.ExactCaseType">
+            <summary>
+            точен вид дело
+            системен код на елемент от nmk_dlosig
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.CaseMigrationId">
+            <summary>
+            Свързано дело което се получава
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventGSVM.Mode">
+            <summary>
+            Дали редиректа е от делото или от съд
+            </summary>
+        </member>
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventItemVM.EventDate">
             <summary>
             Дата на събитие
@@ -6476,7 +6555,7 @@
         </member>
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.ReasonId">
             <summary>
-            Свързано дело което се получава
+            Причина за изпращане на НД
             </summary>
         </member>
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.ExactCaseType">
@@ -6498,6 +6577,11 @@
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.PersonMeasureId">
             <summary>
             Наложена мяркa
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.CaseAddedId">
+            <summary>
+            Обединено дело
             </summary>
         </member>
         <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.Eispp.EisppEventVM.Mode">
@@ -6613,6 +6697,40 @@
             Филтър Актове за обезличаване
             </summary>
         </member>
+        <!-- Badly formed XML comment ignored for member "T:IOWebApplication.Infrastructure.Models.ViewModels.VksMainSessionAddVM" -->
+        <member name="T:IOWebApplication.Infrastructure.Models.ViewModels.VksSelectionCalendarVM">
+            <summary>
+            Избор за един месец
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:IOWebApplication.Infrastructure.Models.ViewModels.VksSelectionCalendarVM.PeriodNo" -->
+        <member name="T:IOWebApplication.Infrastructure.Models.ViewModels.VksSelectionHeaderVM">
+            <summary>
+            Полугодишен избор на съдии за ВКС VM
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Models.ViewModels.VksSelectionHeaderVM.PeriodNo">
+            <summary>
+            Полугодие: 1,2
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.ViewModels.VksSelectionProtocolVM">
+            <summary>
+            Полугодишен избор на съдии за ВКС VM
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Models.ViewModels.VksSelectionVM">
+            <summary>
+            Полугодишен избор на съдии за ВКС VM
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:IOWebApplication.Infrastructure.Models.ViewModels.VksSelectionVM.PeriodNo" -->
+        <member name="T:IOWebApplication.Infrastructure.Models.ViewModels.VksSessionDayCalendarVM">
+            <summary>
+            ДАТА За насрочване да дела със списък на състава и техните дела за този ден
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:IOWebApplication.Infrastructure.Models.ViewModels.VksSessionDayCalendarVM.PeriodNo" -->
         <member name="F:IOWebApplication.Infrastructure.Constants.AccountConstants.PasswordLoginEnabled">
             <summary>
             Разрешен достъп с парола
@@ -6648,6 +6766,11 @@
             3.4. Призоваване
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.AccountConstants.Roles.CourtManager">
+            <summary>
+            3.5. Ръководство
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.AccountConstants.Roles.MoneyAccount">
             <summary>
             4. Счетоводство
@@ -6656,6 +6779,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.AccountConstants.Roles.Statistic">
             <summary>
             5. Статистика
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.AccountConstants.Roles.StatisticRegix">
+            <summary>
+            5.1 Статистика
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.AccountConstants.Roles.Supervisor">
@@ -6761,6 +6889,21 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.DocumentConstants.DeliveryGroups.PostOffice">
             <summary>
             По пощата
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.DocumentConstants.DeliveryGroups.WebPortal">
+            <summary>
+            През ЕПЕП
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.DocumentConstants.ResolutionTypes.ResolutionForSelection">
+            <summary>
+            Разпореждане за преразпределение
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.DocumentConstants.ResolutionTypes.ResolutionForScheduling">
+            <summary>
+            Разпореждане за насрочване
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EisppTableCode.EISS_PNE">
@@ -7168,6 +7311,11 @@
             Приемане на чужда присъда за изпълнение
              </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.EventType.CaseUnion">
+            <summary>
+            Обединяване на НД
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.SidType.Event">
             <summary>
             Събитие
@@ -7302,6 +7450,21 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.PunishmentType.Union">
             <summary>
             Общо наказание по присъда
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Constants.EISPPConstants.PunishmentActivity">
+            <summary>
+            Вид наказание
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.PunishmentActivity.Imposed">
+            <summary>
+            наложено
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.EISPPConstants.PunishmentActivity.Cumulated">
+            <summary>
+            кумулирано
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Constants.EISPPConstants.SentenceResultType">
@@ -7484,6 +7647,16 @@
             ТД на НАП
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.InstitutionTypes.CHSI">
+            <summary>
+            ЧСИ
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.InstitutionTypes.DSI">
+            <summary>
+            ДСИ
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.InstitutionTypes.Vss">
             <summary>
             ВСС
@@ -7502,6 +7675,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.InstitutionTypes.Courts">
             <summary>
             Съд
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.InstitutionTypes.JudgeRegistry">
+            <summary>
+            Съдия по вписванията
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PersonKinds">
@@ -7542,6 +7720,21 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.LawUnitTypes.Lawyer">
             <summary>
             Адвокат
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.LawUnitSelectMode.Current">
+            <summary>
+            Назначени/командировани текущо в съда
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.LawUnitSelectMode.CurrentWithHistory">
+            <summary>
+            Назначени/командировани текущо в съда или някога са били - за стари дела
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS">
+            <summary>
+            Назначени/командировани текущо в съда или някога са били - за стари дела без смесени състави на ВАС
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PeriodTypes.Appoint">
@@ -7592,6 +7785,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtended">
             <summary>
             Статуси за проверка за наличност - разширени
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtendedNoVas">
+            <summary>
+            Статуси за проверка за наличност - разширени - без ВАС
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.Draft">
@@ -7652,6 +7850,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.ComingIntoForce">
             <summary>
             Влязло в сила
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.ReturnForAdministration">
+            <summary>
+            Върнато за администриране
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.CaseState.DisableEditStates">
@@ -7719,9 +7922,24 @@
             UnDeliveredMail
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.NotificationState.NoDeliveryArea">
+            <summary>
+            ненасочен
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.NotificationState.AllForReceived">
+            <summary>
+            Всички статус в приемане
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DeliveryOper.Send">
             <summary>
             Изпратена
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DeliveryOper.ToLawUnit">
+            <summary>
+            Предадена на призовкар "За връчване:
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DeliveryOper.Visit1">
@@ -7944,6 +8162,16 @@
             Месторабота
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DismissalStates.Confirmed">
+            <summary>
+            Уважено искане за отвод
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DismissalStates.Declined">
+            <summary>
+            Неуважено искане за отвод
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.PersonMaturity.Adult">
             <summary>
             Пълнолетни
@@ -7989,6 +8217,16 @@
             ЦСРД
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.IntegrationTypes.EPRO">
+            <summary>
+            ЕПРО - Регистър на отводите
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.IntegrationTypes.ElasticService">
+            <summary>
+            Индексиране на данни за съдебни актове
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.HtmlTemplateAlias.HeritageLetters">
             <summary>
             Писмата, които се пускат за наследство
@@ -8009,9 +8247,84 @@
             Константи за тип на реда - код или обект
             </summary>
         </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.VKS_const.SelectionState.New">
+            <summary>
+            Нов
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.VKS_const.SelectionState.Closed">
+            <summary>
+            Затворен
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.VksSessionLawunitChange.WithChange">
+            <summary>
+            С промяна на състава по делото в зависимост от датата на заседанието
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.VksSessionLawunitChange.NoChange">
+            <summary>
+            Без промяна на състава, каквото последно е валидно по делото
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.SystemParamName.req_4_2021">
+            <summary>
+            Активирана Заявка 4 - 1 за стартирана и 0 за спряна
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.SystemParamName.VKS_CaseType_CalendarExclude">
+            <summary>
+            ID-та на NomCaseType, които не се зареждат в календара на ВКС
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.SystemParamValue.req_4_2021_Start">
+            <summary>
+            Активирана на Заявка 4
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.SystemFeatures.ReqBooks">
+            <summary>
+            Заявка за промяна №6-12 (Промяна на описни книги и регистри)
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.SystemFeatures.PrintLandscapeRotate180">
+            <summary>
+            Завъртане на втората страница на призовки на 180 градуса ако се печата Landscape
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.SystemFeatures.EproDismissal">
+            <summary>
+            Интеграция с ЕПРО
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.SystemFeatures.JurySign">
+            <summary>
+            Подписване на актове и от съдебни заседатели
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.NomenclatureConstants.TaskStates.Cancel">
+            <summary>
+            Отменена задача
+            </summary>
+        </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.Case_SelectLawUnit">
             <summary>
             Разпределение на дело
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.Case_ForReject">
+            <summary>
+            За отказ от образуване
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.For_Resolution">
+            <summary>
+            За резолюция
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.ReassignmentByCompetence">
+            <summary>
+            Пренасочване по компетенция
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.CaseSessionAct_SentToCoordinate">
@@ -8032,6 +8345,11 @@
         <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.SelfCompleteTasks">
             <summary>
             Задачи, които се приключват сами и неможе да се приключват ръчно
+            </summary>
+        </member>
+        <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.AutoCompleteTasks">
+            <summary>
+            Задачи, които се приключват сами при създаването
             </summary>
         </member>
         <member name="F:IOWebApplication.Infrastructure.Constants.WorkTaskConstants.Types.TaskCantUpdate">
@@ -8139,6 +8457,36 @@
             <param name="region">Код на Съдебен район (по номенклатура на регистъра)</param>
             <returns></returns>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.ApiModels.FastProcess.FastProcessBankAccountModel">
+            <summary>
+            Описание на начини на плащане и банкови сметки
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.ApiModels.FastProcess.FastProcessClaimModel">
+            <summary>
+            Обстоятелство към искане
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.ApiModels.FastProcess.FastProcessClaimMoneyModel">
+            <summary>
+            Вземане към обстоятелство
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.ApiModels.FastProcess.FastProcessClaimMoneyModel.CollectionGroup">
+            <summary>
+            Основен вид на вземането: Парично вземане, предаване на заместими вещи
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.ApiModels.FastProcess.FastProcessClaimMoneyModel.CollectionType">
+            <summary>
+            Точен вид на вземането: Парично вземане: главница, друг вид вземане, Предавания на движима вещ, 
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.ApiModels.FastProcess.FastProcessClaimMoneyModel.CollectionKind">
+            <summary>
+            Вид допълнително парично вземане: лихва, такса, друго
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.Case">
             <summary>
             Съдебни дела
@@ -8221,6 +8569,11 @@
             Отделение
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.BaseInfo_Case.IsGeneratedEisppNumber">
+            <summary>
+            дали ЕИСПП Номера е генериран в ЕИСС
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseArchive">
             <summary>
             Архивиране на дела
@@ -8244,6 +8597,11 @@
         <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CaseCrime.CrimeCode">
             <summary>
             от NomEisppTblElements, table code = eiss_pne
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CaseCrime.IsGeneratedEisppNumber">
+            <summary>
+            дали ЕИСПП Номера е генериран в ЕИСС
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseDeactivation">
@@ -8296,6 +8654,16 @@
             Съдебен състав по дело - заседатели
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnit.FromCaseSessionId">
+            <summary>
+            Само за ВКС, при избор на състав от графика: Датата на новото заседание или датата на насрочване за първото
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnit.ToCaseSessionId">
+            <summary>
+            Само за ВКС, при избор на състав от графика: Прекратява предходно валидните по делото, избрани с FromCaseSessionId до датата на ToCaseSession следващото заседание
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnitCount">
             <summary>
             Съдебен състав по дело - необходим брой лица
@@ -8319,6 +8687,21 @@
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawUnitTaskChange">
             <summary>
             Регистър на смяна на изпълнител на задача при обективна невъзможност за изпълнение
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawyerHelp">
+            <summary>
+            Искане за Правна помощ
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawyerHelpOtherLawyer">
+            <summary>
+            Адвокати на другата страна
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLawyerHelpPerson">
+            <summary>
+            Лица, за които се иска правна помощ
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseLifecycle">
@@ -8784,6 +9167,13 @@
             Статус на заседание: насрочено, отложено
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Cases.BaseInfo_CaseSession.CaseLawunitChange">
+            <summary>
+            Само за НД, ВКС при избор 1 - Промяна на състава, се изтегля нов състав по делото според графика
+            1 - промяна
+            null,2 - без промяна
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionAct">
             <summary>
             Съдебни актове
@@ -9054,6 +9444,11 @@
             Съдилища
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Common.CourtApiKey">
+            <summary>
+            Ключове за интеграция на ниво съд
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Common.CourtArchiveCommittee">
             <summary>
             Комисии за архивните индекси
@@ -9232,6 +9627,16 @@
         <member name="P:IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplate.HaveCasePerson">
             <summary>
             Да се избира ли лице от делото в DocumentTemplate
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplate.HaveFromToDate">
+            <summary>
+            Да се въвежда период в DocumentTemplate
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplate.DefaultZoom">
+            <summary>
+            Да се въвежда период в DocumentTemplate
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Common.HtmlTemplateLink">
@@ -9470,6 +9875,61 @@
             Предходен документ дата
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentNotification">
+            <summary>
+            Съобщение/призовки/уведомяване към документ
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentNotification.DeliveryDateCC">
+            <summary>
+            Данни за доставка при доставка от куриер/кметство 
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.NotificationTypeId">
+            <summary>
+            Вид съобщение, уведомление
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.RegNumber">
+            <summary>
+            Код за съд, година, номер за съда и баркод EAN13
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.RegDate">
+            <summary>
+            Today
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.NotificationNumber">
+            <summary>
+            Пореден номер на призовка/писмо за заседание
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.NotificationDeliveryGroupId">
+            <summary>
+            Вид доставка
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.NotificationStateId">
+            <summary>
+            За връчване, връчена, невръчена
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.HtmlTemplateId">
+            <summary>
+            Вид бланка
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.DeliveryDate">
+            <summary>
+            Данни за доставка
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.BaseInfo_DocumentNotification.ReturnInfo">
+            <summary>
+             Данни за връщане Сканирано копие на върнатата призовка/ Дата и Допълнителна информация
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentPerson">
             <summary>
             Лица към деловоден документ (Кореспондент)
@@ -9480,6 +9940,16 @@
             Адреси към Лице към деловоден документ
             </summary>
         </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentPersonLink.DocumentPersonSecondRelId">
+            <summary>
+            Допълнително лице по връзката, втори представляващ на първия такъв
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentPersonLink.LinkDirectionId">
+            <summary>
+            Ред на представляване: CasePersonId Чрез CasePersonRelId/ CasePersonRelId като CasePersonRel.PersonRole на CasePersonId
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentResolution">
             <summary>
             Разпореждания по документ
@@ -9488,6 +9958,16 @@
         <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentResolution.DeclaredDate">
             <summary>
             Дата на постановяване: след подписване
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentResolution.ActCreatorUserId">
+            <summary>
+            Потребител, създал бланката на акта
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentResolutionCase">
+            <summary>
+            Дела към Разпореждания по документ
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Documents.DocumentTemplate">
@@ -9948,6 +10428,11 @@
             Видове отвод на съдия/заседател
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.DismissalState">
+            <summary>
+            Статус на отвод: 1- Уважен,2-Неуважен
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.DocumentDecisionState">
             <summary>
             Статус на решение за документ
@@ -10051,6 +10536,11 @@
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.EvidenceType">
             <summary>
             Тип на веществено доказателство
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.ExcelReportActIspnReason">
+            <summary>
+            Статистика Основание по ТЗ
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.ExcelReportCaseTypeCol">
@@ -10186,6 +10676,21 @@
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LawUnitTypePosition">
             <summary>
             Връзки вид лице към длъжност
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LawyerHelpBase">
+            <summary>
+            Основание за изпращане на искането на правна помощ
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LawyerHelpBasisAppointment">
+            <summary>
+            Основание за назначаване
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LawyerHelpType">
+            <summary>
+            Вид правна помощ
             </summary>
         </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.LifecycleType">
@@ -10573,6 +11078,16 @@
             Вид на идентификатор: ЕГН/ЕИК/ЛНЧ
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.VksNotificationState">
+            <summary>
+            Статус на призован чрез ДВ в списъка за призоваване ВКС
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.VksSelectionState">
+            <summary>
+            Статус на Период за случайно разпределение на ВКС
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Models.Nomenclatures.WorkNotificationType">
             <summary>
             Видове известия
@@ -10825,6 +11340,61 @@
             Справки за различните интеграции
             </summary>
         </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelection">
+            <summary>
+            Полугодишен избор на съдии за ВКС
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionHeader">
+            <summary>
+            Полугодишен избор на съдии за ВКС
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionHeader.PeriodNo">
+            <summary>
+            Полугодие: 1,2
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionLawunit">
+            <summary>
+            Участници към Полугодишен избор на съдии за ВКС
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionLawunit.CourtDepartmentTypeId">
+            <summary>
+            Отделение, колегия на съдията
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionLawunit.LawunitKey">
+            <summary>
+            Уникален GUID за всеки нов оригинален съдия или ключа на заместения съдия
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionMonth">
+            <summary>
+            Месечно разпределение към Полугодишен избор на съдии за ВКС
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionMonth.SelectionDay">
+            <summary>
+            Дата за заседаване: 1,2,3,4,5 или 6
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionMonthLawunit">
+            <summary>
+            Участници към месечно разпределение за избор на съдии за ВКС
+            </summary>
+        </member>
+        <member name="P:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionMonthLawunit.LawunitKey">
+            <summary>
+            Уникален GUID за всеки нов оригинален съдия или ключа на заместения съдия
+            </summary>
+        </member>
+        <member name="T:IOWebApplication.Infrastructure.Data.Models.VKS.VksSelectionProtocol">
+            <summary>
+            Генерирани протоколи към случаен избор ВКС
+            </summary>
+        </member>
         <member name="T:IOWebApplication.Infrastructure.Data.Common.BaseRepository">
             <summary>
             Implementation of repository access methods
@@ -10953,6 +11523,16 @@
             <param name="id">record identificator</param>
             <returns>Single record</returns>
         </member>
+        <member name="M:IOWebApplication.Infrastructure.Data.Common.IRepository.GetPropById``2(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{``0,``1}})">
+            <summary>
+            Gets single property value  of type Tprop via where expression passed
+            </summary>
+            <typeparam name="T">Type of entity</typeparam>
+            <typeparam name="Tprop">Type of property</typeparam>
+            <param name="where">Where clause expression</param>
+            <param name="select">Select property expression</param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Infrastructure.Data.Common.IRepository.Add``1(``0)">
             <summary>
             Adds entity to the database
@@ -11016,6 +11596,14 @@
             <param name="client"></param>
             <param name="method">HttpMethod</param>
             <param name="data">Обект за изпращане</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Infrastructure.Extensions.GenericExtensions.ToShortNameCyrlillic(System.String,System.Boolean)">
+            <summary>
+            Съкращава имена до първа гласна буква
+            </summary>
+            <param name="name"></param>
+            <param name="appendDot"></param>
             <returns></returns>
         </member>
         <!-- Badly formed XML comment ignored for member "M:IOWebApplication.Infrastructure.Extensions.NomenclatureExtensions.ToSelectList(System.Linq.IQueryable{IOWebApplication.Infrastructure.Contracts.ICommonNomenclature},System.Boolean,System.Boolean,System.Boolean)" -->

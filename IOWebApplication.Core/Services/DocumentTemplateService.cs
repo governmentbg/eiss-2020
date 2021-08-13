@@ -134,6 +134,12 @@ namespace IOWebApplication.Core.Services
                                         .Select(x => x.CaseId)
                                         .FirstOrDefault();
                     break;
+                case SourceTypeSelectVM.CaseLawyerHelp:
+                    caseId = repo.AllReadonly<CaseLawyerHelp>()
+                                        .Where(x => x.Id == (int)model.SourceId)
+                                        .Select(x => x.CaseId)
+                                        .FirstOrDefault();
+                    break;
             }
 
             model.CaseId = caseId;
@@ -153,6 +159,7 @@ namespace IOWebApplication.Core.Services
                             .Where(x => x.SourceType == sourceType &&
                                         x.SourceId == sourceId &&
                                         x.Document.DateExpired == null)
+                            .Where(x => x.DateExpired == null)
                             .OrderByDescending(x => x.DateWrt)
                             .Select(x => new DocumentTemplateVM()
                             {
@@ -187,6 +194,8 @@ namespace IOWebApplication.Core.Services
                     saved.DocumentTemplateStateId = model.DocumentTemplateStateId;
                     saved.CasePersonId = model.CasePersonId;
                     saved.CasePersonAddressId = model.CasePersonAddressId;
+                    saved.DateFrom = model.DateFrom;
+                    saved.DateTo = model.DateTo;
                     repo.Update(saved);
                     repo.SaveChanges();
                 }
@@ -321,7 +330,11 @@ namespace IOWebApplication.Core.Services
                             }
                             if (caseMigration.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendNextLevel && caseMigration.CaseSessionActId > 0)
                             {
-                                mqService.LegalActs_SendAct(caseMigration.CaseSessionActId.Value, EpepConstants.ServiceMethod.Update);
+                                var _act = repo.GetById<CaseSessionAct>((int)caseMigration.CaseSessionActId);
+                                if (_act.IsFinalDoc && !string.IsNullOrEmpty(_act.EcliCode))
+                                {
+                                    mqService.LegalActs_SendAct(caseMigration.CaseSessionActId.Value, EpepConstants.ServiceMethod.Update);
+                                }
                             }
                         }
                         break;
@@ -409,6 +422,32 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<DocumentTemplate>()
                                 .Where(x => x.DocumentId == documentId)
                                 .FirstOrDefault();
+        }
+
+        public (bool result, string errorMessage) DocumentTemplate_SaveExpired(ExpiredInfoVM model)
+        {
+            try
+            {
+                var expireObject = repo.GetById<DocumentTemplate>(model.Id);
+
+                if (expireObject.DocumentId != null)
+                {
+                    return (result: false, errorMessage: "Има изготвен изходящ документ");
+                }
+
+                expireObject.DateExpired = DateTime.Now;
+                expireObject.UserExpiredId = userContext.UserId;
+                expireObject.DescriptionExpired = model.DescriptionExpired;
+                repo.Update(expireObject);
+
+                repo.SaveChanges();
+                return (result: true, errorMessage: "");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при премахване на документ с Id={ model.Id }");
+                return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
+            }
         }
     }
 }

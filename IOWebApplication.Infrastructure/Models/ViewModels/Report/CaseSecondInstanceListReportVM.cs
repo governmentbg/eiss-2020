@@ -37,13 +37,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
             {
                 if (LifeCycleCount > 1)
                     return "Продължено под същия номер";
-                else if (migration == null)
+                else if (migration == null && IsNewCaseNewNumber == false)
                     return "Новообразувано";
-                else if (migration.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptJurisdiction)
+                else if (migration?.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptJurisdiction)
                     return "Получено по подсъдност";
-                else if (migration.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptProsecutors)
+                else if (migration?.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptProsecutors)
                     return "Връщане след доразследване";
-                else if (migration.ReturnCaseId > 0 && migration.ReturnCaseId != this.CaseId)
+                else if (IsNewCaseNewNumber == true)
                     return "Върнато за ново разглеждане";
 
                 return "Новообразувано";
@@ -70,6 +70,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public CaseMigrationDataReportVM migration { get; set; }
 
         public int LifeCycleCount { get; set; }
+
+        public bool IsNewCaseNewNumber { get; set; }
     }
 
     /// <summary>

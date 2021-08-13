@@ -110,7 +110,10 @@
     <a href="@Url.Action("View", "Document")?id={{documentId}}" title="Преглед на документа" target="_blank">{{documentNumber}}</a>
 </script>
 <script id="documentTemplateTemplateEdit" type="text/x-handlebars-template">
-    <a href="@Url.Action("Edit", "DocumentTemplate")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "DocumentTemplate")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
 </script>
 
 

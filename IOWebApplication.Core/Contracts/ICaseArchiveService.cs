@@ -10,7 +10,7 @@ namespace IOWebApplication.Core.Contracts
 {
     public interface ICaseArchiveService : IBaseService
     {
-        IQueryable<CaseForArchiveVM> CaseForArchive_Select(int courtId);
+        IQueryable<CaseForArchiveVM> CaseForArchive_Select(int courtId, CaseForArchiveFilterVM model);
 
         IQueryable<CaseArchiveListVM> CaseArchive_Select(int courtId, CaseArchiveFilterVM model);
 

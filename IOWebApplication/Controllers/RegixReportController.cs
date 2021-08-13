@@ -52,12 +52,28 @@ namespace IOWebApplication.Controllers
             {
                 ModelState.AddModelError("", "Изберете поне едно от следните: Документ/Дело");
             }
+
+            if (model.DocumentId > 0)
+            {
+                if (!service.GetCurrentContext(SourceTypeSelectVM.Document, model.DocumentId, AuditConstants.Operations.View).CanAccess)
+                {
+                    ModelState.AddModelError("Report.DocumentId", "Нямате достъп до избрания документ.");
+                    model.DocumentId = 0;
+                }
+            }
+            if (model.CaseId > 0)
+            {
+                if (!service.GetCurrentContext(SourceTypeSelectVM.Case, model.CaseId, AuditConstants.Operations.View).CanAccess)
+                {
+                    ModelState.AddModelError("Report.CaseId", "Нямате достъп до избраното дело.");
+                    model.CaseId = 0;
+                }
+            }
         }
 
         private void SetRegixReportMainData(RegixReportVM model)
         {
             model.CourtId = userContext.CourtId;
-            model.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
         }
 
         #region PersonData
@@ -78,6 +94,7 @@ namespace IOWebApplication.Controllers
                 model = new RegixPersonDataVM();
                 SetRegixReportMainData(model.Report);
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
 
             SetHelpFile(HelpFileValues.Inquiry1);
             return View(model);
@@ -139,6 +156,8 @@ namespace IOWebApplication.Controllers
                 SetRegixReportMainData(model.Report);
                 model.AddressTypeId = addressTypeId;
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
+
             if (addressTypeId == NomenclatureConstants.RegixType.PersonPermanentAddress)
                 SetHelpFile(HelpFileValues.Inquiry2);
             else if (addressTypeId == NomenclatureConstants.RegixType.PersonCurrentAddress)
@@ -203,6 +222,8 @@ namespace IOWebApplication.Controllers
                 model = new RegixEmploymentContractsVM();
                 SetRegixReportMainData(model.Report);
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
+
             SetHelpFile(HelpFileValues.Inquiry5);
 
             return View(model);
@@ -269,6 +290,7 @@ namespace IOWebApplication.Controllers
                 model.CompensationByPaymentPeriodFilter.DateFromFilter = DateTime.Now;
                 model.CompensationByPaymentPeriodFilter.DateToFilter = DateTime.Now;
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
 
             if (compensationTypeId == NomenclatureConstants.RegixType.DisabilityCompensationByPaymentPeriod)
                 SetHelpFile(HelpFileValues.Inquiry6);
@@ -334,6 +356,8 @@ namespace IOWebApplication.Controllers
                 model.PensionIncomeAmountFilter.DateFromFilter = DateTime.Now;
                 model.PensionIncomeAmountFilter.DateToFilter = DateTime.Now;
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
+
             SetHelpFile(HelpFileValues.Inquiry8);
 
             return View(model);
@@ -387,6 +411,7 @@ namespace IOWebApplication.Controllers
                 model = new RegixPersonalIdentityV2VM();
                 SetRegixReportMainData(model.Report);
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
 
             SetHelpFile(HelpFileValues.Inquiry9);
             return View(model);
@@ -449,6 +474,7 @@ namespace IOWebApplication.Controllers
                 model = new RegixActualStateV3VM();
                 SetRegixReportMainData(model.Report);
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
 
             SetHelpFile(HelpFileValues.Inquiry10);
             return View(model);
@@ -501,6 +527,7 @@ namespace IOWebApplication.Controllers
                 model = new RegixStateOfPlayVM();
                 SetRegixReportMainData(model.Report);
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
 
             SetHelpFile(HelpFileValues.Inquiry11);
             return View(model);
@@ -571,6 +598,8 @@ namespace IOWebApplication.Controllers
                 model = new RegixPersonDataAddressVM();
                 SetRegixReportMainData(model.Report);
             }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
+
             SetHelpFile(HelpFileValues.Inquiry4);
 
             return View(model);

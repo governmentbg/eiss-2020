@@ -10,21 +10,7 @@
                 <label asp-for="AddressTypeId" class="control-label io-req"></label>
                 <div>
                     @Html.DropDownListFor(x => x.AddressTypeId, (IEnumerable<SelectListItem>)ViewBag.AddressTypesDDL, new { @class = "form-control address-type" })
-
-                    @*@foreach (var addressType in (IEnumerable<SelectListItem>)ViewBag.AddressTypesDDL)
-                        {
-                            if (addressType.Value == "-1")
-                            {
-                                continue;
-                            }
-                            <label>
-                                @Html.RadioButtonFor(x => x.AddressTypeId, addressType.Value)
-                                @addressType.Text.Replace(" адрес", "")
-                                &nbsp;
-                            </label>
-                        }*@
                 </div>
-                @*@Html.DropDownListFor(x => x.AddressTypeId, ((IEnumerable<SelectListItem>)ViewBag.AddressTypesDDL).ToSelectList(x => x.Value, x => x.Text, Model.AddressTypeId), null, new { @class = "form-control" })*@
             </div>
         </div>
         <div class="col-md-6">
@@ -63,7 +49,7 @@
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="SubNumber"></label>
-                <input asp-for="@Model.SubNumber" class="form-control" />
+                @Html.EditorFor(x => x.SubNumber, "StringInline")
             </div>
         </div>
         <div class="col-md-3">
@@ -75,7 +61,7 @@
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="SubBlock"></label>
-                <input asp-for="@Model.SubBlock" class="form-control" />
+                @Html.EditorFor(x => x.SubBlock, "StringInline")
             </div>
         </div>
     </div>
@@ -83,26 +69,26 @@
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="Entrance"></label>
-                <input asp-for="@Model.Entrance" class="form-control" />
+                @Html.EditorFor(x => x.Entrance, "StringInline")
             </div>
         </div>
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="Floor"></label>
-                <input asp-for="@Model.Floor" class="form-control" />
+                @Html.EditorFor(x => x.Floor, "StringInline")
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="Appartment"></label>
-                <input asp-for="@Model.Appartment" class="form-control" />
+                @Html.EditorFor(x => x.Appartment, "StringInline")
             </div>
         </div>
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="Email"></label>
-                <input asp-for="@Model.Email" class="form-control" />
+                @Html.EditorFor(x => x.Email, "StringInline")
             </div>
         </div>
     </div>
@@ -110,7 +96,7 @@
         <div class="col-md-12">
             <div class="form-group">
                 <label asp-for="ForeignAddress" class="io-req"></label>
-                <input asp-for="@Model.ForeignAddress" class="form-control" />
+                @Html.EditorFor(x => x.ForeignAddress, "StringInline")
             </div>
         </div>
     </div>
@@ -118,19 +104,19 @@
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="Phone"></label>
-                <input asp-for="@Model.Phone" class="form-control" />
+                @Html.EditorFor(x => x.Phone, "StringInline")
             </div>
         </div>
         <div class="col-md-3">
             <div class="form-group">
                 <label asp-for="Fax"></label>
-                <input asp-for="@Model.Fax" class="form-control" />
+                @Html.EditorFor(x => x.Fax, "StringInline")
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="Description"></label>
-                <input asp-for="@Model.Description" class="form-control" />
+                @Html.EditorFor(x => x.Description, "StringInline")
             </div>
         </div>
     </div>

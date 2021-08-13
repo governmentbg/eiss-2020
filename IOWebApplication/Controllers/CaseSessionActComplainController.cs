@@ -229,7 +229,8 @@ namespace IOWebApplication.Controllers
                 CaseSessionActComplainId = CaseSessionActComplainId,
                 DateResult = DateTime.Now,
                 CaseSessionActComplains = service.GetCheckListCaseSessionActComplains(caseSessionActComplain.Id, caseSessionActComplain.CaseSessionActId),
-                IsStartNewLifecycle = false
+                IsStartNewLifecycle = false,
+                CaseOtherSystem = false
             };
             return View(nameof(EditResult), model);
         }
@@ -250,11 +251,44 @@ namespace IOWebApplication.Controllers
 
         private string IsValidResult(CaseSessionActComplainResultEditVM model)
         {
-            if (model.ComplainCaseId < 1)
-                return "Изберете дело";
+            if (model.CaseOtherSystem)
+            {
+                if (string.IsNullOrEmpty(model.CaseRegNumberOtherSystem))
+                    return "Въведете номер дело";
 
-            if (model.CaseSessionActId < 1)
-                return "Изберете акт";
+                if (string.IsNullOrEmpty(model.CaseSessionActOtherSystem))
+                    return "Въведете номер акт";
+
+                if ((model.DateFromLifeCycle == null) && (model.IsStartNewLifecycle))
+                    return "Въведете начало на интервал";
+
+                var caseNumberDecoded = nomService.DecodeCaseRegNumber(model.CaseRegNumberOtherSystem);
+                if (!caseNumberDecoded.IsValid)
+                {
+                    return caseNumberDecoded.ErrorMessage;
+                }
+                else
+                {
+                    model.ComplainCourtId = caseNumberDecoded.CourtId;
+                    model.CaseShortNumberOtherSystem = caseNumberDecoded.ShortNumber;
+                    model.CaseYearOtherSystem = caseNumberDecoded.Year;
+                    model.ComplainCaseId = null;
+                    model.CaseSessionActId = null;
+                }
+            }
+            else
+            {
+                model.ComplainCourtId = null;
+                model.CaseShortNumberOtherSystem = string.Empty;
+                model.CaseYearOtherSystem = null;
+                model.CaseRegNumberOtherSystem = string.Empty;
+
+                if (model.ComplainCaseId < 1)
+                    return "Изберете дело";
+
+                if (model.CaseSessionActId < 1)
+                    return "Изберете акт";
+            }
 
             if (model.ActResultId < 1)
                 return "Изберете резултат";
@@ -309,7 +343,7 @@ namespace IOWebApplication.Controllers
             var caseSession = service.GetById<CaseSession>(caseSessionAct.CaseSessionId);
 
             ViewBag.ComplainCaseId_ddl = caseMigrationService.GetDropDownList_CourtCase(caseSession.CaseId);
-            ViewBag.ActResultId_ddl = nomService.GetDropDownList<ActResult>();
+            //ViewBag.ActResultId_ddl = nomService.GetDropDownList<ActResult>();
             
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSessionActComplainEdit(CaseSessionActComplainId);
             ViewBag.hasIsStartNewLifecycle = caseLifecycleService.CaseLifecycle_IsAllLifcycleClose(caseSession.CaseId);
@@ -320,6 +354,13 @@ namespace IOWebApplication.Controllers
         public IActionResult GetDDL_ActResult(int CaseFromId, int CaseSessionActComplainId)
         {
             var model = nomService.GetDDL_ActResult(CaseFromId, CaseSessionActComplainId);
+            return Json(model);
+        }
+
+        [HttpGet]
+        public IActionResult GetDDL_ActResultOtherCase(string CaseRegNumberOtherSystem, int CaseSessionActComplainId)
+        {
+            var model = nomService.GetDDL_ActResultOtherCase(CaseRegNumberOtherSystem, CaseSessionActComplainId);
             return Json(model);
         }
 

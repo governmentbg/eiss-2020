@@ -54,5 +54,6 @@ namespace IOWebApplication.Core.Contracts
     List<SelectListItem> SelectJudgeRole_ForDropDownList();
      Int32 IfJuryReturnCaseIdToRedirect(int id);
     CaseSessionMeeting NextCaseOpenSessionMeeting(int case_id, DateTime dateAfterSearch);
+    IQueryable<CaseSelectionProtokolCaseInGroupsVM> CaseSelectionProtokolCaseInGroups(int courtId);
   }
 }

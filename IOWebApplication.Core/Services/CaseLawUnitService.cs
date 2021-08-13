@@ -1,5 +1,6 @@
 ﻿using AutoMapper.QueryableExtensions;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -24,18 +25,21 @@ namespace IOWebApplication.Core.Services
     {
         private readonly ICourtLoadPeriodService courtLoadPeriodService;
         private readonly ICommonService commonService;
+        private readonly IMQEpepService mqService;
 
         public CaseLawUnitService(ILogger<CaseLawUnitService> _logger,
                                   IRepository _repo,
                                   IUserContext _userContext,
                                   ICommonService _commonService,
-                                  ICourtLoadPeriodService _courtLoadPeriodService)
+                                  ICourtLoadPeriodService _courtLoadPeriodService,
+                                  IMQEpepService _mqService)
         {
             logger = _logger;
             repo = _repo;
             userContext = _userContext;
             commonService = _commonService;
             courtLoadPeriodService = _courtLoadPeriodService;
+            mqService = _mqService;
         }
 
         /// <summary>
@@ -59,7 +63,7 @@ namespace IOWebApplication.Core.Services
                                      .Include(x => x.LawUnitSubstitution)
                                      .Where(x => x.CaseId == caseId &&
                                                  (x.CaseSessionId ?? 0) == (caseSessionId ?? 0) &&
-                                                 ((!allData) ? ((x.DateTo ?? date.AddDays(1)) >= date) : true) &&
+                                                 ((!allData) ? ((x.DateTo ?? date.AddYears(1)) >= date) : true) &&
                                                  (isManualRoles ? (NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId)) : (!NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId))))
                                      .Select(x => new CaseLawUnitVM()
                                      {
@@ -433,6 +437,7 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<CaseLawUnitDismisal>()
                        .Include(x => x.DismisalType)
                        .Where(x => x.CaseLawUnitId == CaseLawUnitId)
+                       .Where(CaseExtensions.ConfirmedDismissalsOnly())
                        .Select(x => x).FirstOrDefault();
         }
 
@@ -444,6 +449,13 @@ namespace IOWebApplication.Core.Services
         public bool CaseLawUnitDismisal_SaveData(CaseLawUnitDismisal model)
         {
             model.CaseSessionActId = model.CaseSessionActId.EmptyToNull();
+            if (model.DismisalTypeId != NomenclatureConstants.DismisalType.Otvod)
+            {
+                //Документ и лице искало отвода се избира само при Отвод
+                model.DocumentId = null;
+                model.DocumentPersonId = null;
+                model.DismissalStateId = null;
+            }
             bool removeSelectionCount = false;
             try
             {
@@ -469,33 +481,42 @@ namespace IOWebApplication.Core.Services
                     removeSelectionCount = true;
                 }
 
-                var lawUnit = repo.GetById<CaseLawUnit>(model.CaseLawUnitId);
-                lawUnit.DateTo = model.DismisalDate;
-                lawUnit.DateWrt = DateTime.Now;
-                lawUnit.UserId = userContext.UserId;
-                repo.Update(lawUnit);
-
-                var caseLawUnits = repo.AllReadonly<CaseLawUnit>()
-                                       .Include(x => x.CaseSession)
-                                       .Where(x => x.LawUnitId == lawUnit.LawUnitId &&
-                                                   x.CaseSessionId != null &&
-                                                   x.CaseSession.DateFrom >= model.DismisalDate &&
-                                                   x.CaseId == model.CaseId)
-                                       .ToList() ?? new List<CaseLawUnit>();
-
-                foreach (var caseLaw in caseLawUnits)
+                CaseLawUnit lawUnit = repo.GetById<CaseLawUnit>(model.CaseLawUnitId);
+                if ((model.DismissalStateId ?? NomenclatureConstants.DismissalStates.Confirmed) == NomenclatureConstants.DismissalStates.Confirmed)
                 {
-                    caseLaw.DateTo = model.DismisalDate;
-                    caseLaw.DateWrt = DateTime.Now;
-                    caseLaw.UserId = userContext.UserId;
-                    repo.Update(caseLaw);
+                    //Реално се отвеждат само уважените!!! отводи, самоотводи и преразпределение
+                    lawUnit.DateTo = model.DismisalDate;
+                    lawUnit.DateWrt = DateTime.Now;
+                    lawUnit.UserId = userContext.UserId;
+                    //repo.Update(lawUnit);
+
+                    var caseLawUnits = repo.All<CaseLawUnit>()
+                                           .Include(x => x.CaseSession)
+                                           .Where(x => x.LawUnitId == lawUnit.LawUnitId &&
+                                                       x.CaseSessionId != null &&
+                                                       x.CaseSession.DateFrom >= model.DismisalDate &&
+                                                       x.CaseId == model.CaseId)
+                                           .ToList() ?? new List<CaseLawUnit>();
+
+                    foreach (var caseLaw in caseLawUnits)
+                    {
+                        caseLaw.DateTo = model.DismisalDate;
+                        caseLaw.DateWrt = DateTime.Now;
+                        caseLaw.UserId = userContext.UserId;
+                        //repo.Update(caseLaw);
+                    }
                 }
 
                 repo.SaveChanges();
 
-                if ((lawUnit.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter) && removeSelectionCount)
+                mqService.EPRO_AppendDismissal(model.Id, model.DismisalTypeId);
+
+                if ((model.DismissalStateId ?? NomenclatureConstants.DismissalStates.Confirmed) == NomenclatureConstants.DismissalStates.Confirmed)
                 {
-                    courtLoadPeriodService.UpdateDailyLoadPeriod_RemoveByDismisal(model.CaseLawUnitId);
+                    if ((lawUnit.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter) && removeSelectionCount)
+                    {
+                        courtLoadPeriodService.UpdateDailyLoadPeriod_RemoveByDismisal(model.CaseLawUnitId);
+                    }
                 }
 
                 return true;
@@ -532,7 +553,7 @@ namespace IOWebApplication.Core.Services
                            CaseLawUnitRole = x.CaseLawUnit.JudgeRole.Label,
                            CaseLawUnitRoleId = x.CaseLawUnit.JudgeRoleId,
                            CaseLawUnitAkt = x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.ActState.Label + " " + (x.CaseSessionAct.RegNumber ?? string.Empty) + ((x.CaseSessionAct.RegDate != null) ? "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty),
-                           DismisalTypeLabel = x.DismisalType.Label,
+                           DismisalTypeLabel = x.DismisalType.Label + ((x.DismissalStateId == NomenclatureConstants.DismissalStates.Declined) ? " - Неуважен" : ""),
                            DismisalDate = x.DismisalDate,
                            Description = x.Description
                        })
@@ -559,6 +580,7 @@ namespace IOWebApplication.Core.Services
                              .Where(x => (NomenclatureConstants.DismisalType.DismisalList.Contains(x.DismisalTypeId)) || x.DismisalTypeId == NomenclatureConstants.DismisalType.Prerazpredelqne)
                              //Само по отвод за същата роля
                              .Where(x => x.CaseLawUnit.JudgeRoleId == roleId)
+                             .Where(CaseExtensions.ConfirmedDismissalsOnly())
                              .Select(x => new SelectListItem()
                              {
                                  Value = x.Id.ToString(),
@@ -684,7 +706,6 @@ namespace IOWebApplication.Core.Services
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     repo.Update(saved);
-                    repo.SaveChanges();
                 }
                 else
                 {
@@ -692,9 +713,38 @@ namespace IOWebApplication.Core.Services
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
                     repo.Add<CaseLawUnit>(model);
-                    repo.SaveChanges();
                 }
 
+                if (model.DateTo != null && model.CaseSessionId == null)
+                {
+                    var caseLawUnits = repo.AllReadonly<CaseLawUnit>()
+                                           .Where(x => x.CaseId == model.CaseId &&
+                                                       x.CaseSessionId != null &&
+                                                       x.LawUnitId == model.LawUnitId &&
+                                                       x.JudgeRoleId == model.JudgeRoleId)
+                                           .ToList();
+
+                    foreach (var caseLaw in caseLawUnits)
+                    {
+                        caseLaw.DateTo = model.DateTo;
+                        caseLaw.DateWrt = DateTime.Now;
+                        caseLaw.UserId = userContext.UserId;
+                        repo.Update(caseLaw);
+                    }
+
+                    if (model.JudgeRoleId == NomenclatureConstants.JudgeRole.Secretary)
+                    {
+                        var caseSessionMeetingUsers = repo.AllReadonly<CaseSessionMeetingUser>()
+                                                          .Where(x => x.CaseId == model.CaseId &&
+                                                                      x.SecretaryUserId == model.LawUnitUserId &&
+                                                                      x.CaseSessionMeeting.DateFrom >= model.DateTo)
+                                                          .ToList();
+
+                        repo.DeleteRange(caseSessionMeetingUsers);
+                    }
+                }
+
+                repo.SaveChanges();
                 return true;
             }
             catch (Exception ex)
@@ -714,7 +764,8 @@ namespace IOWebApplication.Core.Services
                 var CaseCaseLawUnits = repo.AllReadonly<CaseLawUnit>()
                                            .Where(x => x.CaseId == CaseId &&
                                                        x.CaseSessionId == null &&
-                                                       NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId))
+                                                       NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId) &&
+                                                       (x.DateTo ?? caseSession.DateFrom.AddYears(100)) >= caseSession.DateFrom)
                                            .ToList();
 
                 var SessionCaseLawUnits = repo.AllReadonly<CaseLawUnit>()
@@ -748,6 +799,19 @@ namespace IOWebApplication.Core.Services
                     }
                 }
 
+                foreach (var lawUnit in SessionCaseLawUnits)
+                {
+                    var caseLawUnit = CaseCaseLawUnits.Where(x => x.LawUnitId == lawUnit.LawUnitId && x.JudgeRoleId == lawUnit.JudgeRoleId).OrderByDescending(x => x.Id).FirstOrDefault();
+                    if (caseLawUnit == null)
+                    {
+                        lawUnit.DateTo = caseSession.DateFrom.AddMinutes(-1);
+                        lawUnit.DateWrt = DateTime.Now;
+                        lawUnit.UserId = userContext.UserId;
+                        repo.Update<CaseLawUnit>(lawUnit);
+                    }
+
+                }
+
                 repo.SaveChanges();
                 return true;
             }
@@ -775,23 +839,25 @@ namespace IOWebApplication.Core.Services
 
         private List<CaseLawUnit> GetJudgeCaseLawUnitFromCase(int caseId, int? CaseSessionId = null)
         {
-            return repo.AllReadonly<CaseLawUnit>()
+            var dateTimeNow = DateTime.Now;
+            return repo.All<CaseLawUnit>()
                        .Where(x => (x.CaseId == caseId) &&
                                    (CaseSessionId == null ? x.CaseSessionId == null : x.CaseSessionId == CaseSessionId) &&
                                    (NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) &&
-                                   (x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.Now.AddYears(100)) >= DateTime.Now))
+                                   (x.DateFrom <= dateTimeNow && (x.DateTo ?? dateTimeNow.AddYears(100)) >= dateTimeNow))
                        .ToList() ?? new List<CaseLawUnit>();
         }
 
         private List<CaseLawUnit> GetJudgeCaseLawUnitFromCaseSessionAfterDate(int caseId)
         {
-            return repo.AllReadonly<CaseLawUnit>()
+            var dateTimeNow = DateTime.Now;
+            return repo.All<CaseLawUnit>()
                        .Where(x => (x.CaseId == caseId) &&
                                    (x.CaseSessionId != null) &&
                                    (x.CaseSession.DateFrom >= DateTime.Now) &&
                                    (x.CaseSession.DateExpired == null) &&
                                    (NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) &&
-                                   (x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.Now.AddYears(100)) >= DateTime.Now))
+                                   (x.DateFrom <= dateTimeNow && (x.DateTo ?? dateTimeNow.AddYears(100)) >= dateTimeNow))
                        .ToList() ?? new List<CaseLawUnit>();
         }
 
@@ -874,6 +940,22 @@ namespace IOWebApplication.Core.Services
                 }
             }
 
+            //Ако съществува протокол за СД без състав се добавя и възможност за премахване на състава
+            var hasProtokolsWithNoCompartment = repo.AllReadonly<CaseSelectionProtokol>()
+                            .Where(x => x.CaseId == caseId)
+                            .Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter && x.CompartmentID == null)
+                            .Where(x => x.SelectionProtokolStateId == NomenclatureConstants.SelectionProtokolState.Signed)
+                            .Any();
+
+            if (hasProtokolsWithNoCompartment)
+            {
+                selectListItems.Add(new SelectListItem()
+                {
+                    Value = "-1",
+                    Text = "Без избран състав"
+                });
+            }
+
             return selectListItems;
         }
 
@@ -900,6 +982,7 @@ namespace IOWebApplication.Core.Services
 
         public bool GetCaseLawUnitChangeDepRol_Save(CaseLawUnitChangeDepRolVM model)
         {
+            bool removeDepartment = model.DepartmentId == -1;
             model.CaseLawUnitId = model.CaseLawUnitId.EmptyToNull();
             model.DepartmentId = model.DepartmentId.EmptyToNull();
 
@@ -918,6 +1001,10 @@ namespace IOWebApplication.Core.Services
 
                             if (model.DepartmentId != null)
                                 caseLaw.CourtDepartmentId = model.DepartmentId;
+                            if (removeDepartment)
+                            {
+                                caseLaw.CourtDepartmentId = null;
+                            }
                         }
                         else
                         {
@@ -925,11 +1012,16 @@ namespace IOWebApplication.Core.Services
 
                             if (model.DepartmentId != null)
                                 caseLaw.CourtDepartmentId = model.DepartmentId;
+
+                            if (removeDepartment)
+                            {
+                                caseLaw.CourtDepartmentId = null;
+                            }
                         }
 
                         caseLaw.DateWrt = DateTime.Now;
                         caseLaw.UserId = userContext.UserId;
-                        repo.Update(caseLaw);
+                        //repo.Update(caseLaw);
 
                         if (model.CaseSessionId == null)
                         {
@@ -939,7 +1031,7 @@ namespace IOWebApplication.Core.Services
                                 caseLawSession.CourtDepartmentId = caseLaw.CourtDepartmentId;
                                 caseLawSession.DateWrt = DateTime.Now;
                                 caseLawSession.UserId = userContext.UserId;
-                                repo.Update(caseLawSession);
+                                //repo.Update(caseLawSession);
                             }
                         }
                     }
@@ -992,6 +1084,17 @@ namespace IOWebApplication.Core.Services
                        .Any(x => (x.CaseId == CaseId) &&
                                  (x.CaseSessionId == null) &&
                                  (x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter) &&
+                                 ((x.DateFrom <= DateFrom) && ((x.DateTo ?? dateEnd) >= DateFrom)));
+        }
+
+        public bool IsExistManualLawUnitByCase(int CaseId, int LawUnitId, DateTime DateFrom)
+        {
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+            return repo.AllReadonly<CaseLawUnit>()
+                       .Any(x => (x.CaseId == CaseId) &&
+                                 (x.CaseSessionId == null) &&
+                                 (x.LawUnitId == LawUnitId) &&
+                                 (NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId)) &&
                                  ((x.DateFrom <= DateFrom) && ((x.DateTo ?? dateEnd) >= DateFrom)));
         }
 
@@ -1058,6 +1161,7 @@ namespace IOWebApplication.Core.Services
                 var lawUnit = repo.GetById<CaseLawUnit>(judgeToReplace.Id);
                 lawUnit.LawUnitId = substitution.SubstituteLawUnitId;
                 lawUnit.LawUnitSubstitutionId = substitution.Id;
+                lawUnit.LawUnitUserId = GetUserIdByLawUnitId(lawUnit.LawUnitId);
                 repo.Update(lawUnit);
                 repo.SaveChanges();
                 return true;
@@ -1083,7 +1187,7 @@ namespace IOWebApplication.Core.Services
                        .Where(x => x.Id == (id ?? x.Id))
                        .Where(x => x.CourtId == userContext.CourtId)
                        .Where(x =>
-                          x.Case.RegNumber.EndsWith((caseNumber.ToShortCaseNumber() ?? x.Case.RegNumber), StringComparison.InvariantCultureIgnoreCase)
+                          EF.Functions.ILike(x.Case.RegNumber, caseNumber.ToCasePaternSearch())
                           && x.DateWrt >= (dateFrom ?? DateTime.MinValue) && x.DateWrt <= (dateTo ?? DateTime.MaxValue)
                        )
                        .Where(x => EF.Functions.ILike(x.LawUnit.FullName, lawunitName.ToPaternSearch()))
@@ -1280,6 +1384,18 @@ namespace IOWebApplication.Core.Services
                                  (x.LawUnitId == lawUnitId) &&
                                  (NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) &&
                                  (((x.DateTo ?? dateEnd) >= dateFrom)));
+        }
+
+        public bool IsExistIsExistManualLawUnitInConductedSession(int caseId, DateTime dateTo, int lawUnitId)
+        {
+            var dateNow = DateTime.Now;
+            return repo.AllReadonly<CaseSession>()
+                       .Any(x => x.CaseId == caseId &&
+                                 x.DateExpired == null &&
+                                 x.SessionStateId == NomenclatureConstants.SessionState.Provedeno &&
+                                 x.DateFrom >= dateTo &&
+                                 x.CaseLawUnits.Any(l => l.LawUnitId == lawUnitId &&
+                                                         (l.DateTo ?? dateNow.AddYears(100)) >= dateTo));
         }
     }
 }

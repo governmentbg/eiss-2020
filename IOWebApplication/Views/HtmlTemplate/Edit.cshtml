@@ -11,7 +11,7 @@
         ViewData["Title"] = "Добавяне на бланка";
     }
     var filterJson = ViewBag.filterJson;
- 
+
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
@@ -47,6 +47,10 @@
                 <div class="col-md-12">
                     @Html.EditorFor(x => x.Description)
                 </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
             </div>
             <div class="row">
                 <div class="col-md-12">
@@ -96,6 +100,26 @@
             <div class="row">
                 <div class="col-md-12">
                     @Html.EditorFor(x => x.HaveDocumentSenderPerson)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.HaveMoneyObligation)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.HaveInstitutionDocument)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.HaveNotificationIspnReason)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    @Html.EditorFor(x => x.HaveFromToDate)
                 </div>
             </div>
             <div class="row">

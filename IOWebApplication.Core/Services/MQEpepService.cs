@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
 using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants;
 
@@ -27,6 +28,7 @@ namespace IOWebApplication.Core.Services
         private readonly ICdnService cdnService;
         private readonly IConfiguration configuration;
         //private readonly ICaseLifecycleService lifecycleService;
+        public string mqID = null;
 
         public MQEpepService(
             ILogger<DocumentService> _logger,
@@ -72,7 +74,7 @@ namespace IOWebApplication.Core.Services
             var className = epepModel.GetType().Name;
             var mq = new MQEpep()
             {
-                MQId = Guid.NewGuid().ToString(),
+                MQId = mqID ?? Guid.NewGuid().ToString(),
                 IntegrationTypeId = NomenclatureConstants.IntegrationTypes.EPEP,
                 SourceType = sourceType,
                 SourceId = sourceId,
@@ -102,7 +104,7 @@ namespace IOWebApplication.Core.Services
         {
             var mq = new MQEpep()
             {
-                MQId = Guid.NewGuid().ToString(),
+                MQId = mqID ?? Guid.NewGuid().ToString(),
                 IntegrationTypeId = integrationTypeId,
                 SourceType = sourceType,
                 SourceId = sourceId,
@@ -208,6 +210,16 @@ namespace IOWebApplication.Core.Services
                 {
                     return false;
                 }
+                if (method != EpepConstants.ServiceMethod.Add)
+                {
+                    epep.IncomingDocumentId = getKeyGUID(SourceTypeSelectVM.Document, model.Id) ?? Guid.Empty;
+                }
+                if (method == ServiceMethod.Delete)
+                {
+                    initFromEpepModel(epep, SourceTypeSelectVM.Document, model.Id, method);
+                    return true;
+                }
+
                 int caseId = 0;
                 if (model.DocumentCaseInfo.Count > 0)
                 {
@@ -220,10 +232,7 @@ namespace IOWebApplication.Core.Services
                 epep.Person = GetPersonFromModel(firstPerson);
                 epep.Entity = GetEntityFromModel(firstPerson);
 
-                if (method != EpepConstants.ServiceMethod.Add)
-                {
-                    epep.IncomingDocumentId = getKeyGUID(SourceTypeSelectVM.Document, model.Id) ?? Guid.Empty;
-                }
+
                 initFromEpepModel(epep, SourceTypeSelectVM.Document, model.Id, method);
                 if (caseId > 0 && !string.IsNullOrEmpty(model.DocumentNumber))
                 {
@@ -254,6 +263,16 @@ namespace IOWebApplication.Core.Services
                     OutgoingNumber = model.DocumentNumberValue ?? 0,
                     OutgoingDate = model.DocumentDate
                 };
+                if (method != EpepConstants.ServiceMethod.Add)
+                {
+                    epep.OutgoingDocumentId = getKeyGUID(SourceTypeSelectVM.Document, model.Id) ?? Guid.Empty;
+                }
+
+                if (method == ServiceMethod.Delete)
+                {
+                    initFromEpepModel(epep, SourceTypeSelectVM.Document, model.Id, method);
+                    return true;
+                }
                 int caseId = 0;
                 if (model.DocumentCaseInfo.Count > 0)
                 {
@@ -264,10 +283,7 @@ namespace IOWebApplication.Core.Services
                 var firstPerson = model.DocumentPersons.FirstOrDefault();
                 epep.Person = GetPersonFromModel(firstPerson);
                 epep.Entity = GetEntityFromModel(firstPerson);
-                if (method != EpepConstants.ServiceMethod.Add)
-                {
-                    epep.OutgoingDocumentId = getKeyGUID(SourceTypeSelectVM.Document, model.Id) ?? Guid.Empty;
-                }
+
                 initFromEpepModel(epep, SourceTypeSelectVM.Document, model.Id, method);
                 if (caseId > 0 && !string.IsNullOrEmpty(model.DocumentNumber))
                 {
@@ -636,6 +652,8 @@ namespace IOWebApplication.Core.Services
                                         {
                                             CaseId = x.CaseId,
                                             CasePersonIdentificator = x.CasePerson.CasePersonIdentificator,
+                                            CasePersonIdentificatorL2 = (x.CasePersonL2 != null) ? x.CasePersonL2.CasePersonIdentificator : (string)null,
+                                            CasePersonIdentificatorL3 = (x.CasePersonL3 != null) ? x.CasePersonL3.CasePersonIdentificator : (string)null,
                                             FullName = x.CasePerson.FullName,
                                             BlankName = x.HtmlTemplate.Label,
                                             Description = x.Description
@@ -646,10 +664,15 @@ namespace IOWebApplication.Core.Services
                              .Select(x => x.Id)
                              .FirstOrDefault();
 
-                var epepUserId = repo.AllReadonly<EpepUserAssignment>()
-                                       .Where(x => x.CaseId == notificationInfo.CaseId && x.CasePersonId == casePersonId)
-                                       .Select(x => x.EpepUserId)
-                                       .FirstOrDefault();
+                var epepCPid = notificationInfo.CasePersonIdentificatorL3 ?? (notificationInfo.CasePersonIdentificatorL2 ?? notificationInfo.CasePersonIdentificator);
+
+                var epepUserId = getEpepUserIdByCasePersonIdentificator(notificationInfo.CaseId, epepCPid);
+
+                if (epepUserId == 0 && epepCPid != notificationInfo.CasePersonIdentificator)
+                {
+                    epepUserId = getEpepUserIdByCasePersonIdentificator(notificationInfo.CaseId, notificationInfo.CasePersonIdentificator);
+                }
+
                 if (epepUserId == 0)
                 {
                     return false;
@@ -682,6 +705,20 @@ namespace IOWebApplication.Core.Services
             }
         }
 
+        private int getEpepUserIdByCasePersonIdentificator(int caseId, string personIdentificatior)
+        {
+            var epepCasePersonId = repo.AllReadonly<CasePerson>()
+                            .Where(x => x.CasePersonIdentificator == personIdentificatior && x.CaseSessionId == null)
+                            .Select(x => x.Id)
+                            .FirstOrDefault();
+
+            return repo.AllReadonly<EpepUserAssignment>()
+                                   .Where(x => x.CaseId == caseId && x.CasePersonId == epepCasePersonId)
+                                   .Where(x => x.CanSummon == true)
+                                   .Select(x => x.EpepUserId)
+                                   .FirstOrDefault();
+        }
+
         public bool AppendCaseNotificationFile(int caseNotificationId)
         {
             var epep = new Integration.Epep.SummonFile();
@@ -689,11 +726,51 @@ namespace IOWebApplication.Core.Services
             return true;
         }
 
+        public bool SendActPreparators(int caseSessionActId)
+        {
+            try
+            {
+                var epep = new Integration.Epep.ActPreparator();
+                initFromEpepModel(epep, SourceTypeSelectVM.CaseSessionActPreparatorByAct, caseSessionActId, EpepConstants.ServiceMethod.Update);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "SendActPreparators");
+                return false;
+            }
+        }
+
+        private bool checkSessionActCanSent(int actId)
+        {
+            var info = repo.AllReadonly<CaseSessionAct>()
+                            .Include(x => x.CaseSession)
+                            .Where(x => x.Id == actId)
+                            .Where(x => x.DateExpired == null)
+                            .Where(x => x.ActDeclaredDate != null)
+                            .Select(x => new
+                            {
+                                x.RegNumber,
+                                x.CaseSession.SessionStateId
+                            }).FirstOrDefault();
+            if (info == null)
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(info.RegNumber))
+            {
+                return false;
+            }
+            if (info.SessionStateId != NomenclatureConstants.SessionState.Provedeno)
+            {
+                return false;
+            }
+            return true;
+        }
 
         public bool AppendCaseSessionAct(CaseSessionAct model, ServiceMethod method)
         {
-
-            if (!model.ActDeclaredDate.HasValue)
+            if (!checkSessionActCanSent(model.Id))
             {
                 return true;
             }
@@ -726,6 +803,47 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
+
+        public bool AppendActsFromSession(int sessionId)
+        {
+            //Всички постановени актове, които могат да се подписват по време на заседанието
+            var sessionActs = repo.AllReadonly<CaseSessionAct>()
+                                     .Where(x => x.CaseSessionId == sessionId)
+                                     .Where(x => x.DateExpired == null && x.ActDeclaredDate != null)
+                                     .Where(x => NomenclatureConstants.ActType.CanSignBeforeSessionEnd.Contains(x.ActTypeId))
+                                     .ToList();
+
+            foreach (var act in sessionActs)
+            {
+                if (!checkSessionActCanSent(act.Id))
+                {
+                    continue;
+                }
+                var hasMQrecords = repo.AllReadonly<MQEpep>()
+                                            .Where(x => x.SourceType == SourceTypeSelectVM.CaseSessionAct && x.SourceId == (long)act.Id)
+                                            .Where(x => x.IntegrationTypeId == NomenclatureConstants.IntegrationTypes.EPEP)
+                                            .Any();
+                if (hasMQrecords)
+                {
+                    continue;
+                }
+
+                AppendCaseSessionAct(act, ServiceMethod.Add);
+                AppendCaseSessionAct_Public(act.Id, ServiceMethod.Add);
+                var hasSignTasks = repo.AllReadonly<WorkTask>()
+                                            .Where(x => x.SourceType == SourceTypeSelectVM.CaseSessionAct && x.SourceId == (long)act.Id)
+                                            .Where(x => x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_Sign)
+                                            .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                            .Any();
+                if (!hasSignTasks)
+                {
+                    AppendCaseSessionAct_Private(act.Id, ServiceMethod.Add);
+                }
+            }
+
+            return sessionActs.Any();
+        }
+
         public bool AppendCaseSessionComplain(CaseSessionActComplain model, ServiceMethod method)
         {
             var info = repo.AllReadonly<CaseSessionActComplain>()
@@ -769,6 +887,10 @@ namespace IOWebApplication.Core.Services
         }
         public bool AppendCaseSessionAct_Private(int actId, ServiceMethod method)
         {
+            if (!checkSessionActCanSent(actId))
+            {
+                return true;
+            }
             var actFile = cdnService.Select(SourceTypeSelectVM.CaseSessionActPdf, actId.ToString()).FirstOrDefault();
             if (actFile != null)
             {
@@ -789,7 +911,15 @@ namespace IOWebApplication.Core.Services
 
         public bool AppendCaseSessionAct_Public(int actId, ServiceMethod method)
         {
-
+            if (!checkSessionActCanSent(actId))
+            {
+                return true;
+            }
+            var actFile = cdnService.Select(SourceTypeSelectVM.CaseSessionActDepersonalized, actId.ToString()).FirstOrDefault();
+            if (actFile == null)
+            {
+                return false;
+            }
             var epep = new Integration.Epep.PublicActFile()
             {
                 PublicActFileId = getKeyGUID(SourceTypeSelectVM.CaseSessionActDepersonalized, actId),
@@ -801,12 +931,20 @@ namespace IOWebApplication.Core.Services
             {
                 LegalActs_SendAct(actId, method);
             }
+            if (method == ServiceMethod.Add)
+            {
+                EPRO_AppendActFile(actModel);
+            }
             return true;
 
         }
 
         public bool AppendCaseSessionAct_PrivateMotive(int actId, ServiceMethod method)
         {
+            if (!checkSessionActCanSent(actId))
+            {
+                return true;
+            }
             var actFile = cdnService.Select(SourceTypeSelectVM.CaseSessionActMotivePdf, actId.ToString()).FirstOrDefault();
             if (actFile != null)
             {
@@ -826,7 +964,15 @@ namespace IOWebApplication.Core.Services
 
         public bool AppendCaseSessionAct_PublicMotive(int actId, ServiceMethod method)
         {
-
+            if (!checkSessionActCanSent(actId))
+            {
+                return true;
+            }
+            var actFile = cdnService.Select(SourceTypeSelectVM.CaseSessionActMotiveDepersonalized, actId.ToString()).FirstOrDefault();
+            if (actFile == null)
+            {
+                return false;
+            }
             var epep = new Integration.Epep.PublicMotiveFile()
             {
                 PublicMotiveFileId = getKeyGUID(SourceTypeSelectVM.CaseSessionActMotiveDepersonalized, actId),
@@ -970,12 +1116,13 @@ namespace IOWebApplication.Core.Services
         }
 
 
-        public IQueryable<EpepUserVM> EpepUser_Select(int? userType, string search)
+        public IQueryable<EpepUserVM> EpepUser_Select(EpepUserFilterVM filter)
         {
+            filter.UpdateNullables();
             return repo.AllReadonly<EpepUser>()
                             .Include(x => x.LawyerLawUnit)
                             .Include(x => x.EpepUserType)
-                            .Where(x => x.EpepUserTypeId == (userType ?? x.EpepUserTypeId))
+                            .Where(x => x.EpepUserTypeId == (filter.EpepUserTypeId ?? x.EpepUserTypeId))
                             .Where(FilterExpireInfo<EpepUser>(false))
                             .OrderBy(x => x.FullName)
                             .Select(x => new EpepUserVM
@@ -987,7 +1134,8 @@ namespace IOWebApplication.Core.Services
                                 FullName = (x.LawyerLawUnit != null) ? x.LawyerLawUnit.FullName : x.FullName,
                                 LawyerNumber = x.LawyerNumber
                             })
-                            .Where(x => EF.Functions.ILike(x.FullName, search.ToPaternSearch()) || x.Email.Contains((search ?? x.Email), StringComparison.InvariantCultureIgnoreCase))
+                            .Where(x => EF.Functions.ILike(x.FullName, filter.FullName.ToPaternSearch()))
+                            .Where(x => EF.Functions.ILike(x.Email, filter.Email.ToPaternSearch()))
                             .AsQueryable();
         }
         public string EpepUser_Validate(EpepUser model)
@@ -1024,6 +1172,8 @@ namespace IOWebApplication.Core.Services
                 return "Въведете Електронна поща.";
             }
 
+            model.Email = model.Email.Trim();
+
             if (repo.AllReadonly<EpepUser>().Where(x => x.Email == model.Email.Trim() && x.Id != model.Id).Any())
             {
                 return "За избраната електронна поща вече съществува потребител в ЕПЕП.";
@@ -1052,18 +1202,18 @@ namespace IOWebApplication.Core.Services
             if (model.Id > 0)
             {
                 var saved = repo.GetById<EpepUser>(model.Id);
+                saved.Uic = model.Uic;
                 saved.FullName = model.FullName;
                 saved.Email = model.Email;
                 saved.BirthDate = model.BirthDate;
                 saved.Address = model.Address;
                 saved.Description = model.Description;
                 saved.LawyerNumber = model.LawyerNumber;
+                saved.LawyerLawUnitId = model.LawyerLawUnitId;
 
                 SetUserDateWRT(saved);
                 repo.Update(saved);
                 repo.SaveChanges();
-
-
             }
             else
             {
@@ -1100,9 +1250,11 @@ namespace IOWebApplication.Core.Services
                                     {
                                         Id = x.Id,
                                         CaseId = x.CaseId,
+                                        CanChange = (x.CourtId == userContext.CourtId),
                                         CourtName = x.Court.Label,
                                         CaseInfo = $"{x.Case.CaseType.Code} {x.Case.RegNumber}",
-                                        SideInfo = $"{x.CasePerson.FullName} ({x.CasePerson.PersonRole.Label})"
+                                        SideInfo = $"{x.CasePerson.FullName} ({x.CasePerson.PersonRole.Label})",
+                                        CanSummon = x.CanSummon ?? false
                                     }).AsQueryable();
         }
 
@@ -1118,6 +1270,7 @@ namespace IOWebApplication.Core.Services
                 saved.CaseId = model.CaseId;
                 saved.CasePersonId = model.CasePersonId;
                 saved.DateFrom = model.DateFrom;
+                saved.CanSummon = model.CanSummon;
 
                 SetUserDateWRT(saved);
                 repo.Update(saved);
@@ -1212,7 +1365,7 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<IntegrationKey>()
                             .Where(x => x.IntegrationTypeId == integrationType
-                            && string.Compare(x.OuterCode, key, StringComparison.InvariantCultureIgnoreCase) == 0)
+                            && EF.Functions.ILike(x.OuterCode, key))
                             .OrderBy(x => x.Id)
                             .FirstOrDefault();
         }
@@ -1294,8 +1447,18 @@ namespace IOWebApplication.Core.Services
         {
             if (integrationType == IntegrationTypes.ISPN)
                 return MQEpep_SelectISPN(sourceId);
+
+            Expression<Func<MQEpep, bool>> whereClause = x => x.SourceType == sourceType && x.SourceId == sourceId;
+
+
+            if (sourceType == SourceTypeSelectVM.DocumentFiles)
+            {
+
+                whereClause = x => x.SourceType == SourceTypeSelectVM.Files && x.ParentSourceId == sourceId;
+            }
+
             return repo.AllReadonly<MQEpep>()
-                                .Where(x => x.SourceType == sourceType && x.SourceId == sourceId)
+                                .Where(whereClause)
                                 .Where(x => x.IntegrationTypeId == integrationType)
                                 .OrderBy(x => x.Id)
                                 .Select(x => new MQEpepVM
@@ -1313,7 +1476,8 @@ namespace IOWebApplication.Core.Services
         {
             var ids = repo.All<ID_List>().ToList();
             int saved = 0;
-            var epepClient = (Integration.Epep.IeCaseServiceClient)client;
+            this.mqID = "scanedFiles";
+            //var epepClient = (Integration.Epep.IeCaseServiceClient)client;
             foreach (var item in ids)
             {
                 if (saved % 500 == 0)
@@ -1322,207 +1486,17 @@ namespace IOWebApplication.Core.Services
                 }
                 saved++;
 
-                var act = repo.GetById<CaseSessionAct>((int)item.Id);
+                var _file = repo.GetById<MongoFile>((int)item.Id);
 
-                if (act.ActDeclaredDate == null)
+                AppendFile(new CdnUploadRequest()
                 {
-                    continue;
-                }
-
-                
-                //lifecycleService.CaseLifecycle_CloseInterval(act.CaseId ?? 0, act.Id, act.ActDeclaredDate.Value);
-
-                //var _doc = repo.AllReadonly<Document>()
-                //                .Include(x => x.DocumentCaseInfo)
-                //                .Include(x => x.DocumentPersons)
-                //                .Where(x => x.Id == item.Id)
-                //                .FirstOrDefault();
-                //if (_doc != null)
-                //{
-
-
-
-                //    try
-                //    {
-                //        var _code = getNomValue(EpepConstants.Nomenclatures.IncommingDocumentTypes, _doc.DocumentTypeId);
-                //        if (string.IsNullOrEmpty(_code))
-                //        {
-                //            continue;
-                //        }
-                //        if (AppendDocument(_doc, ServiceMethod.Add))
-                //        {
-                //            ResendDataToEPEP_Files(SourceTypeSelectVM.Document, _doc.Id);
-                //            //  saved++;
-                //            //repo.SaveChanges();
-                //        }
-                //    }
-                //    catch (Exception ex) { }
-                //}
-
-                //var caseGuid = getKeyGUID(SourceTypeSelectVM.Case, item.Id);
-                //if (!caseGuid.HasValue)
-                //{
-                //    item.Remark = "noguid";
-                //    continue;
-                //}
-
-                //var info = repo.AllReadonly<Case>()
-                //               .Include(x => x.Document)
-                //               .Include(x => x.CaseState)
-                //               .Include(x => x.CaseCode)
-                //               .Where(x => x.Id == item.Id)
-                //               .Select(x => new
-                //               {
-                //                   x.DocumentId,
-                //                   x.Document.DocumentNumber,
-                //                   StateName = x.CaseState.Label,
-                //                   x.CourtId,
-                //                   x.CaseTypeId,
-                //                   x.CaseGroupId,
-                //                   x.RegDate,
-                //                   x.ShortNumberValue
-                //               }).FirstOrDefault();
-
-                //var epep = new Integration.Epep.Case()
-                //{
-                //    CourtCode = getNomValue(EpepConstants.Nomenclatures.Courts, info.CourtId),
-                //    IncomingDocumentId = getKeyGUID(SourceTypeSelectVM.Document, info.DocumentId) ?? Guid.Empty,
-                //    CaseKindCode = getNomValue(EpepConstants.Nomenclatures.CaseTypes, info.CaseTypeId),
-                //    CaseTypeCode = getNomValue(EpepConstants.Nomenclatures.CaseGroups, info.CaseGroupId),
-                //    CaseYear = info.RegDate.Year,
-                //    Number = info.ShortNumberValue ?? 0,
-                //    FormationDate = info.RegDate.Date
-                //};
-
-                //var epepInfo = epepClient.GetCaseById(caseGuid.Value);
-                //if (epepInfo == null)
-                //{
-                //    item.Remark = "notfound";
-                //    continue;
-                //}
-
-                //if (epepInfo.Number == epep.Number
-                //    && epepInfo.FormationDate.Date == epep.FormationDate.Date
-                //    && epepInfo.CourtCode == epep.CourtCode)
-                //{
-                //    if (epepInfo.IncomingDocumentId != epep.IncomingDocumentId)
-                //    {
-                //        item.Remark = "difInDoc:epep=" + epepInfo.IncomingDocumentId.ToString();
-                //        continue;
-                //    }
-
-                //    item.Remark = "same";
-                //    continue;
-                //}
-
-
-                //item.Remark = $"diferent: EPEP: Court:{epepInfo.CourtCode};Type:{epepInfo.CaseKindCode};Number:{epepInfo.Number};FormationDate:{epepInfo.FormationDate:dd.MM.yyyy}| EISS: Court: { epep.CourtCode}; Type: { epep.CaseKindCode}; Number: { epep.Number}; FormationDate: { epep.FormationDate:dd.MM.yyyy}";
-                //continue;
-
-                //var model = repo.GetById<CaseSessionAct>((int)item);
-                //AppendCaseSessionAct(model, ServiceMethod.Add);
-                //if (repo.AllReadonly<MongoFile>().Any(x => x.SourceType == SourceTypeSelectVM.CaseSessionActPdf && x.SourceId == model.Id.ToString()))
-                //{
-                //    if (!repo.AllReadonly<MQEpep>().Where(x => x.IntegrationTypeId == 2 && x.SourceId == item && x.SourceType == SourceTypeSelectVM.CaseSessionActPdf).Any())
-                //    {
-                //        AppendCaseSessionAct_Private((int)item, ServiceMethod.Add);
-                //    }
-                //}
-                //if (model.DepersonalizeEndDate.HasValue)
-                //{
-                //    if (repo.AllReadonly<MongoFile>().Any(x => x.SourceType == SourceTypeSelectVM.CaseSessionActDepersonalized && x.SourceId == model.Id.ToString()))
-                //    {
-                //        if (!repo.AllReadonly<MQEpep>().Where(x => x.IntegrationTypeId == 2 && x.SourceId == item && x.SourceType == SourceTypeSelectVM.CaseSessionActDepersonalized).Any())
-                //        {
-                //            AppendCaseSessionAct_Public((int)item, ServiceMethod.Add);
-                //        }
-                //    }
-                //}
-                //if (model.ActMotivesDeclaredDate.HasValue)
-                //{
-                //    if (repo.AllReadonly<MongoFile>().Any(x => x.SourceType == SourceTypeSelectVM.CaseSessionActMotivePdf && x.SourceId == model.Id.ToString()))
-                //    {
-                //        AppendCaseSessionAct_PrivateMotive((int)item, ServiceMethod.Add);
-                //    }
-                //    if (repo.AllReadonly<MongoFile>().Any(x => x.SourceType == SourceTypeSelectVM.CaseSessionActMotiveDepersonalized && x.SourceId == model.Id.ToString()))
-                //    {
-                //        AppendCaseSessionAct_PublicMotive((int)item, ServiceMethod.Add);
-                //    }
-                //}
-
+                    SourceType = SourceTypeSelectVM.Document,
+                    SourceId = _file.SourceId,
+                    FileId = _file.FileId
+                }, ServiceMethod.Add);
 
             }
 
-
-            //var epepClient = (Integration.Epep.IeCaseServiceClient)client;
-            //int saved = 0;
-            //foreach (var id in ids)
-            //{
-            //    //Дела
-            //    var model = repo.AllReadonly<Case>()
-            //                        .Include(x => x.Document)
-            //                        .Include(x => x.Court)
-            //                        .Where(x => x.Id == id)
-            //                        .Select(x => new
-            //                        {
-            //                            DocNumber = x.Document.DocumentNumberValue.Value,
-            //                            DocYear = x.Document.DocumentDate.Year,
-            //                            CourtCode = x.Court.Code
-            //                        })
-            //                        .FirstOrDefault();
-            //    if (model != null)
-            //    {
-            //        try
-            //        {
-            //            var caseId = epepClient.GetCaseId(model.DocNumber, model.DocYear, model.CourtCode);
-
-            //            if (caseId.HasValue && caseId != Guid.Empty)
-            //            {
-            //                var mq = repo.All<MQEpep>()
-            //                             .Where(x => x.SourceType == 2 && x.SourceId == id && x.IntegrationTypeId == 2)
-            //                             .Where(x => x.MethodName == "add")
-            //                             .FirstOrDefault();
-            //                if (mq != null)
-            //                {
-            //                    mq.ReturnGuidId = caseId.ToString().ToLower();
-            //                    mq.DateTransfered = DateTime.Now;
-            //                    mq.IntegrationStateId = IntegrationStates.TransferOK;
-            //                    repo.Update(mq);
-
-            //                    var newIK = new IntegrationKey()
-            //                    {
-            //                        IntegrationTypeId = IntegrationTypes.EPEP,
-            //                        SourceType = SourceTypeSelectVM.Case,
-            //                        SourceId = id,
-            //                        OuterCode = mq.ReturnGuidId,
-            //                        DateWrt = DateTime.Now
-            //                    };
-
-            //                    repo.Add(newIK);
-            //                    repo.SaveChanges();
-
-            //                    saved++;
-            //                }
-            //            }
-            //        }
-            //        catch (FaultException fex)
-            //        {
-            //            var _error = fex.GetMessageFault();
-            //        }
-            //        catch (Exception ex)
-            //        {
-
-            //        }
-            //    }
-
-            ////Заседания
-            //var model = repo.All<CaseSession>()
-            //                    .Where(x => x.Id == id).FirstOrDefault();
-            //if (model != null)
-            //{
-            //    AppendCaseSession(model, ServiceMethod.Add);
-            //}
-            //}
             return $"Saved {saved}/{ids.Count} items.";
         }
 
@@ -1769,6 +1743,72 @@ namespace IOWebApplication.Core.Services
             }
         }
 
+        public LawUnit GetLawyerByNumber(string lawyerNumber)
+        {
+            return repo.All<LawUnit>()
+                            .Where(x => x.LawUnitTypeId == LawUnitTypes.Lawyer && x.Code == lawyerNumber && x.DateTo == null)
+                            .FirstOrDefault();
+        }
+
+        public void EPRO_AppendDismissal(int caseDismissalId, int dismissalTypeId)
+        {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EproDismissal))
+            {
+                return;
+            }
+            //В ЕПРО се изпращат само Отвод и самоотвод
+            if (!NomenclatureConstants.DismisalType.EproDismissalTypes.Contains(dismissalTypeId))
+            {
+                return;
+            }
+            InitMQ(NomenclatureConstants.IntegrationTypes.EPRO, SourceTypeSelectVM.CaseLawUnitDismisal, caseDismissalId, EpepConstants.ServiceMethod.Add);
+        }
+
+        public void EPRO_AppendReplace(int caseSelectionProtocolId, int caseDismissalId)
+        {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EproDismissal))
+            {
+                return;
+            }
+            var dismissalTypeId = repo.AllReadonly<CaseLawUnitDismisal>().Where(x => x.Id == caseDismissalId).Select(x => x.DismisalTypeId).FirstOrDefault();
+            //В ЕПРО се изпращат само Отвод и самоотвод
+            if (!NomenclatureConstants.DismisalType.EproDismissalTypes.Contains(dismissalTypeId))
+            {
+                return;
+            }
+            InitMQ(NomenclatureConstants.IntegrationTypes.EPRO, SourceTypeSelectVM.CaseSelectionProtokol, caseSelectionProtocolId, EpepConstants.ServiceMethod.Add, caseDismissalId);
+        }
+
+        public void EPRO_AppendActFile(CaseSessionAct actModel)
+        {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EproDismissal))
+            {
+                return;
+            }
+            var dismissalsByActId = repo.AllReadonly<CaseLawUnitDismisal>()
+                                            .Where(x => x.CaseSessionActId == actModel.Id && x.CaseId == actModel.CaseId)
+                                            .Select(x => x.Id)
+                                            .ToList();
+            foreach (var dismissalId in dismissalsByActId)
+            {
+                InitMQ(NomenclatureConstants.IntegrationTypes.EPRO, SourceTypeSelectVM.CaseSessionActDepersonalized, actModel.Id, EpepConstants.ServiceMethod.Add, dismissalId);
+            }
+        }
+
+        public string EpepUserAssignment_Validate(EpepUserAssignment model)
+        {
+
+            if (repo.AllReadonly<EpepUserAssignment>()
+                        .Where(x => x.CaseId == model.CaseId && x.CasePersonId == model.CasePersonId && x.Id != model.Id)
+                        .Where(x => x.EpepUserId == model.EpepUserId)
+                        .Where(x => x.DateExpired == null)
+                        .Any())
+            {
+                return "Вече съществува достъп до избраното дело и лице";
+            }
+
+            return null;
+        }
 
 
         #endregion ИСПН

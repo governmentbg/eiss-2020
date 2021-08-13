@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
 
         [Display(Name = "Изпращане към ЕИСПП")]
         public bool IsForSend { get; set; }
-
+        [AllowHtml]
         public string ModelJson { get; set; }
 
         public const string NormalDateFormat = "dd.MM.yyyy";
@@ -67,5 +67,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
 
         public long? MQEpepId { get; set; }
         public string Mode { get; set; }
+        public bool IsEdit { get; set; }
     }
 }

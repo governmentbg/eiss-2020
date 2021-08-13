@@ -44,7 +44,11 @@ namespace IOWebApplication.Components
             try
             {
                 var pdf = await cdn.MongoCdn_Download(new CdnFileSelect() { FileId = info.FileId, SourceId = info.SourceId, SourceType = info.SourceType });
-
+                if (pdf == null)
+                {
+                    model.ErrorMessage = "Невалиден файл за подписване";
+                    return await Task.FromResult<IViewComponentResult>(View("Error", model));
+                }
                 using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(pdf.FileContentBase64)))
                 {
                     var (hash, tempPdfId) = await cdn.SignTools.GetPdfHash(ms, info.Reason, info.Location);
@@ -54,20 +58,21 @@ namespace IOWebApplication.Components
                     model.PdfHash = hash;
                     model.FileName = pdf.FileName;
                     model.FileTitle = pdf.FileTitle;
+                    model.FileId = pdf.FileId;
+                    model.SignituresCount = pdf.SignituresCount ?? 0;
                 }
             }
             catch (ArgumentException aex)
             {
                 logger.LogError(aex, "SignPdf Error");
-                string message = "Невалиден файл за подписване";
+                model.ErrorMessage = "Невалиден файл за подписване";
 
-                return await Task.FromResult<IViewComponentResult>(View("Error", message));
+                return await Task.FromResult<IViewComponentResult>(View("Error", model));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "SignPdf Error");
-
-                return await Task.FromResult<IViewComponentResult>(View("Error", ex.Message));
+                return await Task.FromResult<IViewComponentResult>(View("Error", model));
             }
 
             return await Task.FromResult<IViewComponentResult>(View(viewName, model));

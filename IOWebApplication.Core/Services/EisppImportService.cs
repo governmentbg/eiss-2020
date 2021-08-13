@@ -10,12 +10,17 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
+using IOWebApplication.Infrastructure.Models.ViewModels.Eispp;
+using IOWebApplication.Infrastructure.Data.Models.EISPP;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static IOWebApplication.Infrastructure.Constants.EpepConstants;
+using System.Linq.Expressions;
+using IOWebApplication.Core.Helper.GlobalConstants;
 
 namespace IOWebApplication.Core.Services
 {
@@ -302,6 +307,68 @@ namespace IOWebApplication.Core.Services
                 repo.SaveChanges();
             }
         }
-     
+
+        public EisppReportFilterVM GetDefaultFilter()
+        {
+            var now = DateTime.Now;
+            int dayInWeek = (int)now.DayOfWeek;
+            var previousMonday = now;
+            previousMonday = previousMonday.Date + TimeSpan.FromHours(10);
+            if (dayInWeek != 1)
+                previousMonday = now.AddDays(-((dayInWeek + 6) % 7));
+            previousMonday = previousMonday.AddDays(-3);
+            return new EisppReportFilterVM()
+            {
+                DateFrom = previousMonday.AddDays(-7),
+                DateTo = previousMonday
+            };
+        }
+        public byte[] MakeFridayReport(EisppReportFilterVM filter)
+        {
+            NPoiExcelService excelService = new NPoiExcelService("ЕИСПП");
+            var eventNames = repo.AllReadonly<EisppTblElement>()
+                                 .Where(x => x.EisppTblCode == EISPPConstants.EisppTableCode.EventType)
+                                 .ToList();
+            var mqEpep = repo.AllReadonly<MQEpep>();
+                             
+                         
+            var reportItems = repo.AllReadonly<EisppEventItem>()
+                                  .Join(mqEpep, e => e.MQEpepId, m => m.Id, (e, m) => new { e, m })
+                                  .Where(x => x.m.DateTransfered <= filter.DateTo)
+                                  .GroupBy(x => x.e.EventType)
+                                  .Select(g => new EisppReportItemVM()
+                                  {
+                                      EventType = g.Key,
+                                      CountOK = g.Sum(x => x.m.DateTransfered >= filter.DateFrom && x.m.IntegrationStateId == IntegrationStates.TransferOK ? 1 : 0),
+                                      CountErr = g.Sum(x => x.m.IntegrationStateId != IntegrationStates.TransferOK ? 1 : 0),
+                                      CountOkAll = g.Sum(x => x.m.IntegrationStateId == IntegrationStates.TransferOK ? 1 : 0) 
+                                  })
+                                  .ToList();
+            foreach (var item in reportItems)
+            {
+                item.Label = eventNames.Where(x => x.Code == item.EventType.ToString())
+                                       .Select(x => x.Label)
+                                       .FirstOrDefault();
+            }
+            reportItems = reportItems.OrderBy(x => x.Label).ToList();
+            excelService.AddRange("ЕИСПП събития за период от " + filter.DateFrom.ToString(FormattingConstant.DateFormat) + " до " + filter.DateTo.ToString(FormattingConstant.DateFormat), 4); excelService.AddRow();
+            excelService.AddList(
+               reportItems,
+               new int[] { 35000, 5000, 5000, 5000 },
+               new List<Expression<Func<EisppReportItemVM, object>>>()
+               {
+                    x => x.Label,
+                    x => x.CountOK,
+                    x => x.CountOkAll,
+                    x => x.CountErr,
+               },
+               //NPOI.HSSF.Util.HSSFColor.Grey40Percent.Index,
+               //NPOI.HSSF.Util.HSSFColor.Grey25Percent.Index,
+               NPOI.HSSF.Util.HSSFColor.White.Index,
+               NPOI.HSSF.Util.HSSFColor.White.Index,
+               NPOI.HSSF.Util.HSSFColor.White.Index
+           );
+            return excelService.ToArray();
+        }
     }
 }

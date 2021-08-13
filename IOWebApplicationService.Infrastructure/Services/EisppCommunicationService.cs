@@ -388,7 +388,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                     mq = repo.All<MQEpep>()
                         .FirstOrDefault(m => m.MQId == correlationId);
                 }
-
+                mq.DateTransfered = DateTime.Now;
                 mq.IntegrationStateId = IntegrationStates.TransferOK;
 
                 repo.SaveChanges();
@@ -529,7 +529,8 @@ namespace IOWebApplicationService.Infrastructure.Services
         {
             try
             {
-                mq.DateTransfered = DateTime.Now;
+                // DateTransfered да се сетва при връщане
+                // mq.DateTransfered = DateTime.Now;
                 mq.IntegrationStateId = EpepConstants.IntegrationStates.WaitingForReply;
                 mq.Content = Encoding.UTF8.GetBytes(message);
 

@@ -251,6 +251,15 @@ namespace IOWebApplication.Test.Mockups
             throw new NotImplementedException();
         }
 
-       
+        public Tprop GetPropById<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select)
+            where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public void PropUnmodified<T>(Expression<Func<T>> selectProp) where T : class
+        {
+            throw new NotImplementedException();
+        }
     }
 }

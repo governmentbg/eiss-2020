@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -126,7 +127,7 @@ namespace IOWebApplication.Core.Services
             var ekatte = repo.All<EkEkatte>()
                 .Include(e => e.Munincipality)
                 .Include(e => e.District)
-                .Where(e => e.Name.Contains(query ?? e.Name, StringComparison.InvariantCultureIgnoreCase))
+                .Where(e => EF.Functions.ILike(e.Name, query.ToPaternSearch()))
                 .Select(e => new HierarchicalNomenclatureDisplayItem()
                 {
                     Id = e.Ekatte,
@@ -137,7 +138,7 @@ namespace IOWebApplication.Core.Services
             result.Data.AddRange(ekatte);
 
             var sobr = repo.All<EkSobr>()
-                .Where(s => s.Name.Contains(query ?? s.Name, StringComparison.InvariantCultureIgnoreCase))
+                .Where(s => EF.Functions.ILike(s.Name, query.ToPaternSearch()))
                 .Select(s => new HierarchicalNomenclatureDisplayItem()
                 {
                     Id = s.Ekatte,
@@ -163,7 +164,7 @@ namespace IOWebApplication.Core.Services
                 .Include(e => e.Munincipality)
                 .Include(e => e.District)
                 .Where(e => !string.IsNullOrEmpty(e.EisppCode))
-                .Where(e => e.Name.Contains(query ?? e.Name, StringComparison.InvariantCultureIgnoreCase))
+                .Where(e => EF.Functions.ILike(e.Name, query.ToPaternSearch()))
                 .Select(e => new HierarchicalNomenclatureDisplayItem()
                 {
                     Id = e.EisppCode,
@@ -648,7 +649,7 @@ namespace IOWebApplication.Core.Services
 
                 courtOrgSelect = x => caseGroupsByOrganization.Contains(x.CaseType.CaseGroupId);
             }
-            return repo.AllReadonly<DocumentTypeCaseType>()
+            return (repo.AllReadonly<DocumentTypeCaseType>()
                 .Include(x => x.CaseType)
                 .ThenInclude(x => x.CaseGroup)
                 .Include(x => x.DocumentType)
@@ -666,7 +667,7 @@ namespace IOWebApplication.Core.Services
                 {
                     Text = $"{x.CaseType.Label } ({x.CaseType.CaseGroup.Label})",
                     Value = x.CaseType.Id.ToString()
-                }).ToList() ?? new List<SelectListItem>();
+                }).ToList() ?? new List<SelectListItem>());
         }
 
 
@@ -694,6 +695,41 @@ namespace IOWebApplication.Core.Services
 
         public void SetFullAddress(Address model)
         {
+            model.FullAddress = GetFullAddress(model, true, false, false);
+        }
+        public string MakeVksCase(string streetKvartal)
+        {
+            var specialPrefix = new List<string>()
+            {
+                "Ул.",
+                "Пл.",
+                "Бул.",
+                "Жк.",
+                "Жк ",
+                "Ж.К.",
+                "Кв.",
+                "Квартал",
+                "Местн",
+                "Кк.",
+                "К.К.",
+            };
+            if (string.IsNullOrEmpty(streetKvartal))
+                return streetKvartal;
+            TextInfo myTI = new CultureInfo("bg-BG", false).TextInfo;
+            streetKvartal = myTI.ToTitleCase(streetKvartal.ToLower());
+            foreach (var prefix in specialPrefix)
+            {
+                if (streetKvartal.StartsWith(prefix))
+                {
+                    streetKvartal = streetKvartal.Replace(prefix, prefix.ToLower());
+                    break;
+                }
+            }
+            
+            return streetKvartal;
+        }
+        public string GetFullAddress(Address model, bool setContactData, bool munAreaNameFirst, bool vksCase)
+        {
             string result = "";
             string munAreaName = "";
             if (model.CountryCode == NomenclatureConstants.CountryBG)
@@ -702,14 +738,28 @@ namespace IOWebApplication.Core.Services
                 if (ekkateInfo != null)
                 {
                     munAreaName = ekkateInfo.Category;
-                    result = ekkateInfo.Label;
+                    if (!string.IsNullOrEmpty(munAreaName) && munAreaNameFirst)
+                    {
+                        result += $"{munAreaName}, {ekkateInfo.Label}";
+                    }
+                    else
+                    {
+                        result = ekkateInfo.Label;
+                    }
                 }
                 if (!string.IsNullOrEmpty(model.ResidentionAreaCode))
                 {
                     var resAreaInfo = repo.AllReadonly<EkStreet>().FirstOrDefault(x => x.Ekatte == model.CityCode && x.Code == model.ResidentionAreaCode);
                     if (resAreaInfo != null)
                     {
-                        result += $", {resAreaInfo.Name}";
+                        if (vksCase)
+                        {
+                            result += $", {MakeVksCase(resAreaInfo.Name)}";
+                        }
+                        else
+                        {
+                            result += $", {resAreaInfo.Name}";
+                        }
                     }
                 }
                 if (!string.IsNullOrEmpty(model.StreetCode))
@@ -717,7 +767,14 @@ namespace IOWebApplication.Core.Services
                     var streetInfo = repo.AllReadonly<EkStreet>().FirstOrDefault(x => x.Ekatte == model.CityCode && x.Code == model.StreetCode);
                     if (streetInfo != null)
                     {
-                        result += $", {streetInfo.Name}";
+                        if (vksCase)
+                        {
+                            result += $", {MakeVksCase(streetInfo.Name)}";
+                        }
+                        else
+                        {
+                            result += $", {streetInfo.Name}";
+                        }
                     }
                 }
                 if (model.StreetNumber.HasValue)
@@ -726,7 +783,7 @@ namespace IOWebApplication.Core.Services
                 }
                 if (model.Block.HasValue || string.IsNullOrEmpty(model.SubBlock) == false)
                 {
-                    result += $",бл.";
+                    result += $", бл.";
                     if (model.Block.HasValue)
                         result += $"{model.Block}";
                     if (string.IsNullOrEmpty(model.SubBlock) == false)
@@ -734,15 +791,15 @@ namespace IOWebApplication.Core.Services
                 }
                 if (!string.IsNullOrEmpty(model.Entrance))
                 {
-                    result += $",вх.{model.Entrance}";
+                    result += $", вх.{model.Entrance}";
                 }
                 if (!string.IsNullOrEmpty(model.Floor))
                 {
-                    result += $",ет.{model.Floor}";
+                    result += $", ет.{model.Floor}";
                 }
                 if (!string.IsNullOrEmpty(model.Appartment))
                 {
-                    result += $",ап.{model.Appartment}";
+                    result += $", ап.{model.Appartment}";
                 }
 
             }
@@ -754,29 +811,33 @@ namespace IOWebApplication.Core.Services
                     result = $"{country.Name}, {model.ForeignAddress}";
                 }
             }
-            if (!string.IsNullOrEmpty(model.Phone))
+
+            if (setContactData == true)
             {
-                result += $",тел: {model.Phone}";
+                if (!string.IsNullOrEmpty(model.Phone))
+                {
+                    result += $", тел: {model.Phone}";
+                }
+                if (!string.IsNullOrEmpty(model.Fax))
+                {
+                    result += $", факс: {model.Fax}";
+                }
+                if (!string.IsNullOrEmpty(model.Email))
+                {
+                    result += $", e-mail: {model.Email}";
+                }
             }
-            if (!string.IsNullOrEmpty(model.Fax))
-            {
-                result += $",факс: {model.Fax}";
-            }
-            if (!string.IsNullOrEmpty(model.Email))
-            {
-                result += $",e-mail: {model.Email}";
-            }
+
             if (!string.IsNullOrEmpty(model.Description))
             {
                 result += $", {model.Description}";
             }
-            if (!string.IsNullOrEmpty(munAreaName))
+            if (!string.IsNullOrEmpty(munAreaName) && !munAreaNameFirst)
             {
                 result += $", {munAreaName}";
-
             }
 
-            model.FullAddress = result;
+            return result;
         }
 
         public List<SelectListItem> GetDDL_LoadGroupLink(int courtTypeId, int caseTypeId, int caseCodeId = NomenclatureConstants.NullVal)
@@ -836,7 +897,8 @@ namespace IOWebApplication.Core.Services
             if (!list.Any())
                 list = repo.All<HtmlTemplate>()
                 .Include(x => x.HtmlTemplateLinks)
-                .Where(x => (x.HtmlTemplateTypeId == htmlTemplateTypeId) &&
+                .Where(x => (x.DateTo == null || x.DateTo > DateTime.Now) &&
+                            (x.HtmlTemplateTypeId == htmlTemplateTypeId) &&
                             (!x.HtmlTemplateLinks.Any()))
                 .ToList();
             var result = list.Select(x => new HtmlTemplateDdlVM()
@@ -849,10 +911,52 @@ namespace IOWebApplication.Core.Services
                 HaveSessionActComplain = x.HaveSessionActComplain ?? false,
                 RequiredSessionActComplain = x.RequiredSessionActComplain ?? false,
                 HaveMultiActComplain = x.HaveMultiActComplain ?? false,
-                HaveDocumentSenderPerson = x.HaveDocumentSenderPerson ?? false
+                HaveDocumentSenderPerson = x.HaveDocumentSenderPerson ?? false,
+                HaveMoneyObligation = x.HaveMoneyObligation ?? false,
+                HaveInstitutionDocument = x.HaveInstitutionDocument ?? false,
+                HaveNotificationIspnReason = x.HaveNotificationIspnReason ?? false
             }).ToList();
             if (notificationTypeId != NomenclatureConstants.HtmlTemplateTypes.All3Notification)
                 result.AddRange(GetDDL_HtmlTemplate(NomenclatureConstants.HtmlTemplateTypes.All3Notification, caseId, false));
+            result = result.OrderBy(x => x.Text).ToList();
+            if (addDefaultElement)
+            {
+                result = result
+                    .Prepend(new HtmlTemplateDdlVM() { Text = "Избери", Value = "-1" })
+                    .ToList();
+            }
+
+
+            return result;
+        }
+        public List<HtmlTemplateDdlVM> GetDDL_HtmlTemplateAll(int notificationTypeId, bool addDefaultElement = true)
+        {
+
+            // var notificationType = repo.GetById<NotificationType>(notificationTypeId);
+            // int htmlTemplateTypeId = notificationType?.HtmlTemplateTypeId ?? notificationTypeId;
+            int htmlTemplateTypeId = notificationTypeId == NomenclatureConstants.NotificationType.Message ?
+                                     NomenclatureConstants.HtmlTemplateTypes.MessageResolution :
+                                     NomenclatureConstants.HtmlTemplateTypes.NotificationResolution;
+            var dateTimeNow = DateTime.Now;
+            var dateTimeAddOneYear = DateTime.Now.AddYears(1);
+            var result = repo.AllReadonly<HtmlTemplate>()
+                             .Where(x => (x.DateFrom <= dateTimeNow && dateTimeNow <= (x.DateTo ?? dateTimeAddOneYear)) &&
+                                        x.HtmlTemplateTypeId == htmlTemplateTypeId)
+                             .Select(x => new HtmlTemplateDdlVM()
+                             {
+                                 Value = x.Id.ToString(),
+                                 Alias = x.Alias,
+                                 Text = x.Label,
+                                 HaveExpertReport = x.HaveExpertReport ?? false,
+                                 HaveSessionAct = x.HaveSessionAct ?? false,
+                                 HaveSessionActComplain = x.HaveSessionActComplain ?? false,
+                                 RequiredSessionActComplain = x.RequiredSessionActComplain ?? false,
+                                 HaveMultiActComplain = x.HaveMultiActComplain ?? false,
+                                 HaveDocumentSenderPerson = x.HaveDocumentSenderPerson ?? false,
+                                 HaveMoneyObligation = x.HaveMoneyObligation ?? false,
+                                 HaveInstitutionDocument = x.HaveInstitutionDocument ?? false,
+                                 HaveNotificationIspnReason = x.HaveNotificationIspnReason ?? false
+                             }).ToList();
             result = result.OrderBy(x => x.Text).ToList();
             if (addDefaultElement)
             {
@@ -1719,6 +1823,21 @@ namespace IOWebApplication.Core.Services
             return selectListItems;
         }
 
+        private List<SelectListItem> GetActResultGrouping(int fromCaseInstanceId, int toCaseInstanceId, int caseGroupId, int documentTypeId)
+        {
+            return repo.All<ActResultGrouping>()
+                       .Include(x => x.ActResult)
+                       .Where(x => x.FromCaseInstanceId == fromCaseInstanceId &&
+                                   x.ToCaseInstanceId == toCaseInstanceId &&
+                                   x.CaseGroupId == caseGroupId &&
+                                   x.DocumentTypeId == documentTypeId)
+                       .Select(x => new SelectListItem()
+                       {
+                           Text = x.ActResult.Label,
+                           Value = x.ActResult.Id.ToString()
+                       }).OrderBy(x => x.Text).ToList() ?? new List<SelectListItem>();
+        }
+
         public List<SelectListItem> GetDDL_ActResult(int CaseFromId, int CaseSessionActComplainId, bool addDefaultElement = true, bool addAllElement = false)
         {
             var caseSessionActComplain = repo.AllReadonly<CaseSessionActComplain>()
@@ -1735,17 +1854,66 @@ namespace IOWebApplication.Core.Services
                                .Where(x => x.Id == CaseFromId)
                                .FirstOrDefault();
 
-            var selectListItems = repo.All<ActResultGrouping>()
-                                      .Include(x => x.ActResult)
-                                      .Where(x => x.FromCaseInstanceId == ((caseFrom != null) ? caseFrom.CaseType.CaseInstanceId : -1) &&
-                                                  x.ToCaseInstanceId == caseSessionActComplain.CaseSessionAct.CaseSession.Case.CaseType.CaseInstanceId &&
-                                                  x.CaseGroupId == caseSessionActComplain.CaseSessionAct.CaseSession.Case.CaseGroupId &&
-                                                  x.DocumentTypeId == caseSessionActComplain.ComplainDocument.DocumentTypeId)
-                                      .Select(x => new SelectListItem()
-                                      {
-                                          Text = x.ActResult.Label,
-                                          Value = x.ActResult.Id.ToString()
-                                      }).OrderBy(x => x.Text).ToList() ?? new List<SelectListItem>();
+            var selectListItems = GetActResultGrouping(((caseFrom != null) ? caseFrom.CaseType.CaseInstanceId : -1),
+                                                       caseSessionActComplain.CaseSessionAct.CaseSession.Case.CaseType.CaseInstanceId,
+                                                       caseSessionActComplain.CaseSessionAct.CaseSession.Case.CaseGroupId,
+                                                       caseSessionActComplain.ComplainDocument.DocumentTypeId);
+
+            if (selectListItems.Count != 1)
+            {
+                if (addDefaultElement)
+                {
+                    selectListItems = selectListItems
+                        .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
+                        .ToList();
+                }
+
+                if (addAllElement)
+                {
+                    selectListItems = selectListItems
+                        .Prepend(new SelectListItem() { Text = "Всички", Value = "0" })
+                        .ToList();
+                }
+            }
+
+            return selectListItems;
+        }
+
+        public List<SelectListItem> GetDDL_ActResultOtherCase(string CaseRegNumberOtherSystem, int CaseSessionActComplainId, bool addDefaultElement = true, bool addAllElement = false)
+        {
+            var instance = -1;
+            var caseNumberDecoded = DecodeCaseRegNumber(CaseRegNumberOtherSystem);
+            if (!caseNumberDecoded.IsValid)
+            {
+                return (new List<SelectListItem>()).Prepend(new SelectListItem() { Text = "Избери", Value = "0" }).ToList();
+            }
+            else
+            {
+                var court = repo.AllReadonly<Court>()
+                                .Include(x => x.CourtType)
+                                .Where(x => x.Id == caseNumberDecoded.CourtId)
+                                .FirstOrDefault();
+
+                if (court == null)
+                    return (new List<SelectListItem>()).Prepend(new SelectListItem() { Text = "Избери", Value = "0" }).ToList();
+
+                var listCourt = court.CourtType.InstanceList.Split(',').Select(Int32.Parse).ToList();
+                instance = listCourt.Max(x => x);
+            }
+
+            var caseSessionActComplain = repo.AllReadonly<CaseSessionActComplain>()
+                                             .Include(x => x.ComplainDocument)
+                                             .Include(x => x.CaseSessionAct)
+                                             .ThenInclude(x => x.CaseSession)
+                                             .ThenInclude(x => x.Case)
+                                             .ThenInclude(x => x.CaseType)
+                                             .Where(x => x.Id == CaseSessionActComplainId)
+                                             .FirstOrDefault();
+
+            var selectListItems = GetActResultGrouping(instance,
+                                                       caseSessionActComplain.CaseSessionAct.CaseSession.Case.CaseType.CaseInstanceId,
+                                                       caseSessionActComplain.CaseSessionAct.CaseSession.Case.CaseGroupId,
+                                                       caseSessionActComplain.ComplainDocument.DocumentTypeId);
 
             if (selectListItems.Count != 1)
             {
@@ -1853,7 +2021,7 @@ namespace IOWebApplication.Core.Services
                                       .ToSelectList();
         }
 
-        public List<SelectListItem> GetDDL_CaseSessionActState(bool InitialOnly, bool HideInitialStates)
+        public List<SelectListItem> GetDDL_CaseSessionActState(bool InitialOnly, bool HideInitialStates, bool actIsDeclared)
         {
             Expression<Func<ActState, bool>> whereInitial = x => true;
             if (InitialOnly)
@@ -1864,8 +2032,15 @@ namespace IOWebApplication.Core.Services
             {
                 whereInitial = x => x.IsInitialState == false;
             }
+            Expression<Func<ActState, bool>> whereDeclared = x => true;
+            if (actIsDeclared)
+            {
+                int[] disabledStatesAfterDeclaration = { NomenclatureConstants.SessionActState.Project, NomenclatureConstants.SessionActState.Coordinated, NomenclatureConstants.SessionActState.Registered };
+                whereDeclared = x => !disabledStatesAfterDeclaration.Contains(x.Id);
+            }
             return repo.AllReadonly<ActState>()
                                       .Where(whereInitial)
+                                      .Where(whereDeclared)
                                       .ToSelectList();
         }
 
@@ -2375,7 +2550,7 @@ namespace IOWebApplication.Core.Services
                         Id = ekStreet.Id,
                         Name = ekStreet.Name,
                         City = ekEkattes.Where(x => x.Ekatte == ekStreet.Ekatte).Select(x => x.Name).FirstOrDefault(),
-                        StreetTypeLabel = (((ekStreet.StreetType ?? 0) == 1) ? "Булевард/Улица/Полощад" : "Квартал")
+                        StreetTypeLabel = (((ekStreet.StreetType ?? 0) == 1) ? "Булевард/Улица/Площад" : "Квартал")
                     });
                 }
             }
@@ -2706,8 +2881,22 @@ namespace IOWebApplication.Core.Services
 
         public int[] GetHtmlTemplateForCasePerson()
         {
+            var dateTimeNow = DateTime.Now;
+            var dateTimeAddOneYear = DateTime.Now.AddYears(1);
             return repo.AllReadonly<HtmlTemplate>()
-                       .Where(x => (x.HaveCasePerson ?? false) == true)
+                       .Where(x => ((x.HaveCasePerson ?? false) == true) &&
+                                   (x.DateFrom <= dateTimeNow && dateTimeNow <= (x.DateTo ?? dateTimeAddOneYear)))
+                       .Select(x => x.Id)
+                       .ToArray();
+        }
+
+        public int[] GetHtmlTemplateForFromToDate()
+        {
+            var dateTimeNow = DateTime.Now;
+            var dateTimeAddOneYear = DateTime.Now.AddYears(1);
+            return repo.AllReadonly<HtmlTemplate>()
+                       .Where(x => ((x.HaveFromToDate ?? false) == true) &&
+                                   (x.DateFrom <= dateTimeNow && dateTimeNow <= (x.DateTo ?? dateTimeAddOneYear)))
                        .Select(x => x.Id)
                        .ToArray();
         }
@@ -2840,7 +3029,68 @@ namespace IOWebApplication.Core.Services
         {
             var _label = Label.ToUpper();
             return repo.AllReadonly<LawBase>()
-                       .Any(x => x.Label.ToUpper().Contains(_label));
+                       .Any(x => EF.Functions.ILike(x.Label, _label.ToPaternSearch()));
+        }
+
+        public List<SelectListItem> GetDropDownListFromCode<T>(bool addDefaultElement, bool addAllElement, bool orderByNumber) where T : class, ICommonNomenclature
+        {
+            var result = repo.All<T>()
+                         .Where(x => x.IsActive)
+                         .ToSelectListFromCode(addDefaultElement, addAllElement, orderByNumber);
+
+            return result;
+        }
+
+        public IEnumerable<LabelValueVM> Get_PersonRoles(string query, int? id)
+        {
+            Expression<Func<PersonRole, bool>> filterId = x => true;
+            if (id > 0)
+                filterId = x => x.Id == id;
+
+            Expression<Func<PersonRole, bool>> filterQuery = x => true;
+            if (string.IsNullOrEmpty(query) == false)
+                filterQuery = x => EF.Functions.ILike(x.Label, query.ToPaternSearch());
+
+            return repo.AllReadonly<PersonRole>()
+                            .Where(filterId)
+                            .Where(filterQuery)
+                            .Select(x => new LabelValueVM()
+                            {
+                                Value = x.Id.ToString(),
+                                Label = x.Label
+                            });
+        }
+        public IEnumerable<LabelValueVM> Get_EISPPTblElement(string EisppTblCode, string term, string id)
+        {
+            term = term.SafeLower();
+            Expression<Func<EisppTblElement, bool>> filter = x => x.Label.Contains(term ?? x.Label, StringComparison.InvariantCultureIgnoreCase);
+            if (!string.IsNullOrEmpty(id))
+            {
+                filter = x => x.Code == id;
+            }
+            return repo.AllReadonly<EisppTblElement>()
+                            .Where(filter)
+                            .Where(x => x.EisppTblCode == EisppTblCode && x.IsActive)
+                            .OrderBy(x => x.Label)
+                            .Select(x => new LabelValueVM
+                            {
+                                Value = x.Code,
+                                Label = x.Label
+                            }).ToList();
+        }
+        public EisppTblElement GetByCode_EISPPTblElement(string Code)
+        {
+            return repo.AllReadonly<EisppTblElement>()
+                                .Where(x => x.Code == Code)
+                                .FirstOrDefault();
+        }
+
+        public List<SelectListItem> GetDDL_VksSessionLawunitChange()
+        {
+            var selectListItems = new List<SelectListItem>();
+            selectListItems.Add(new SelectListItem() { Text = "С промяна на състава", Value = NomenclatureConstants.VksSessionLawunitChange.WithChange.ToString() });
+            selectListItems.Add(new SelectListItem() { Text = "Без промяна на състава", Value = NomenclatureConstants.VksSessionLawunitChange.NoChange.ToString() });
+            return selectListItems;
         }
     }
 }

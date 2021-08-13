@@ -167,7 +167,7 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<CaseLoadCorrection>()
                        .Include(x => x.CaseLoadCorrectionActivity)
-                       .Where(x => x.CaseId == CaseId)
+                       .Where(x => x.CaseId == CaseId && x.DateExpired == null)
                        .Select(x => new CaseLoadCorrectionVM()
                        {
                            Id = x.Id,
@@ -197,7 +197,7 @@ namespace IOWebApplication.Core.Services
         private decimal GetSumCorrectionForCaseId(int CaseId)
         {
             return repo.AllReadonly<CaseLoadCorrection>()
-                       .Where(x => x.CaseId == CaseId)
+                       .Where(x => x.CaseId == CaseId && x.DateExpired == null)
                        .Sum(x => x.CorrectionLoadIndex);
         }
 
@@ -331,7 +331,7 @@ namespace IOWebApplication.Core.Services
         public bool IsExistCaseLoadCorrection(int ModelId, int CaseId, int CaseLoadCorrectionActivityId)
         {
             return repo.AllReadonly<CaseLoadCorrection>()
-                       .Any(x => x.CaseId == CaseId &&
+                       .Any(x => x.CaseId == CaseId && x.DateExpired == null &&
                                  ((ModelId > 0) ? x.Id != ModelId : true) &&
                                  x.CaseLoadCorrectionActivityId == CaseLoadCorrectionActivityId);
         }
@@ -367,6 +367,14 @@ namespace IOWebApplication.Core.Services
             }
 
             return result;
+        }
+
+        public bool IsExistCaseLoadIndex(int CaseId, DateTime dateTime)
+        {
+            return repo.AllReadonly<CaseLoadIndex>()
+                       .Any(x => x.CaseId == CaseId &&
+                                 x.DateExpired == null &&
+                                 x.DateActivity >= dateTime);
         }
     }
 }

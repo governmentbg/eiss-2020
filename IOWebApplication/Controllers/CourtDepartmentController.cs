@@ -195,7 +195,12 @@ namespace IOWebApplication.Controllers
             var department = service.GetById<CourtDepartment>(id);
 
             if (department.DepartmentTypeId != NomenclatureConstants.DepartmentType.Systav)
-                return RedirectToAction(nameof(LawUnits), new { id = id });
+            {
+                if (userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                    return RedirectToAction(nameof(IndexLawUnit), new { id = id });
+                else
+                    return RedirectToAction(nameof(LawUnits), new { id = id });
+            }
             else
                 return RedirectToAction(nameof(IndexLawUnit), new { id = id });
         }

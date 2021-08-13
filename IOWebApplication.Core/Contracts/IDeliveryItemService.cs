@@ -26,7 +26,7 @@ namespace IOWebApplication.Core.Contracts
         DeliveryItem getDeliveryItem(int id);
 
         bool DeliveryItemSaveOper(DeliveryItemOperVM model);
-        List<SelectListItem> DeliveryItemTransForIdDDL(DeliveryItemTransFilterVM filter);
+        List<Select2ItemVM> DeliveryItemTransForIdDDL(DeliveryItemTransFilterVM filter);
         bool SaveTrans(int[] deliveryItemIds, int notificationStateId, int deliverOperId);
 
         // Приети с чекиране призовки/съобщения от потребителя
@@ -63,5 +63,8 @@ namespace IOWebApplication.Core.Contracts
         string GetNotificationInfo(int notificationId);
         string GetNotificationInfoByDeliveryItemId(int deliveryItemId);
         int[] NotificationStateEnd();
+        DeliveryItem GetDeliveryItemByDocumentNotificationId(int notificationId);
+        DeliveryItemReturnVM GetDeliveryItemReturnByDocumentNotification(int notificationId);
+        (byte[], string) GetDeliveryItemReportResultToExcelNew(DeliveryItemListVM filter);
     }
 }

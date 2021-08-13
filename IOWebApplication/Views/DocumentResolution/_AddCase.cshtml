@@ -1,0 +1,30 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@model DocumentResolutionCase
+@using IOWebApplication.Infrastructure.Data.Models.Documents
+
+@using (Html.BeginForm(FormMethod.Post, null, new { id = "wtModalForm" }))
+{
+
+    @Html.EditorFor(x => x.CaseId, "SelectCase")
+
+    <div class="form-group">
+        <input type="submit" value="Запис" class="btn btn-success submit single-click-submit" />
+    </div>
+}
+<div id="modalMessageContainer">
+</div>
+<script>
+
+    $(function () {
+        attachAjaxForm('#wtModalForm', function (data) {
+            if (data.responseText == "ok") {
+                LoadTableCases();
+                HideModal();
+                messageHelper.ShowSuccessMessage("Делото е добавено успешно.");
+            } else {
+                messageHelper.ShowErrorMessage("Проблем при добавяне на дело", '#modalMessageContainer');
+            }
+        });
+        initCase();
+    })
+</script>

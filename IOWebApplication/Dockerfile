@@ -56,6 +56,6 @@ WORKDIR /app
 COPY --from=publish /app .
 RUN chmod 755 /app/wwwroot/Rotativa/wkhtmltopdf /app/wwwroot/Rotativa/wkhtmltoimage
 
-RUN echo '212.122.184.120 proxyvss.eispp-proxy.net' >> /etc/hosts
+RUN echo '$$SECRET$$ $$SECRET$$' >> /etc/hosts
 
 ENTRYPOINT ["dotnet", "IOWebApplication.dll"]

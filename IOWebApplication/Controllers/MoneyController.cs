@@ -63,6 +63,12 @@ namespace IOWebApplication.Controllers
             taskService = _taskService;
         }
 
+
+        public IActionResult testreq(int id)
+        {
+            CheckAccess(service, SourceTypeSelectVM.SessionActObligation, id, AuditConstants.Operations.View);
+            return Content("");
+        }
         /// <summary>
         /// Страница за задължения към Акт/Документ/Заседание
         /// </summary>
@@ -89,7 +95,7 @@ namespace IOWebApplication.Controllers
                     }
                 }
             }
-            
+
             ViewBag.caseSessionActId = caseSessionActId;
             ViewBag.documentId = documentId;
             ViewBag.caseSessionId = caseSessionId;
@@ -149,7 +155,7 @@ namespace IOWebApplication.Controllers
                     }
                 }
             }
-            
+
             if (sourceTypeId == 0)
             {
                 if (caseSessionActId > 0)
@@ -220,7 +226,24 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         public void ValidateModelObligation(ObligationEditVM model)
         {
-            if ((model.DocumentId??0) > 0 &&(model.MoneyFeeTypeId??0) <= 0 && string.IsNullOrEmpty(model.Description) == true)
+            if (model.CaseSessionId > 0)
+            {
+                var _session = service.GetById<CaseSession>(model.CaseSessionId.Value);
+                if (_session.DateExpired != null)
+                {
+                    ModelState.AddModelError("", "Заседанието е изтрито. Проверете данните по делото.");
+                }
+            }
+            if (model.DocumentId > 0)
+            {
+                var _parent = service.GetById<Document>(model.DocumentId.Value);
+                if (_parent.DateExpired != null)
+                {
+                    ModelState.AddModelError("", "Документът е изтрит.");
+                }
+            }
+
+            if ((model.DocumentId ?? 0) > 0 && (model.MoneyFeeTypeId ?? 0) <= 0 && string.IsNullOrEmpty(model.Description) == true)
             {
                 ModelState.AddModelError(nameof(ObligationEditVM.Description), "Въведете описание");
             }
@@ -321,7 +344,7 @@ namespace IOWebApplication.Controllers
                     ViewBag.Person_SourceId_ddl = caseLawUnitService.CaseLawUnitForCaseObligation_SelectForDropDownList(caseSession.CaseId);
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSessionActMoney(caseSessionActId ?? 0);
                 ViewBag.MoneySign_ddl = DropDownSign(false);
-                ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>();
+                ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>(true, false, false);
                 ViewBag.MoneyFineTypeId_ddl = nomService.GetDDL_MoneyFineType(caseSession.Case.CaseGroupId);
                 SetHelpFile(HelpFileValues.SessionAct);
             }
@@ -334,17 +357,17 @@ namespace IOWebApplication.Controllers
                 ViewBag.MoneySign_ddl = DropDownSign(false, false);
                 if (document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.InitialDocument)
                 {
-                    ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>()
+                    ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>(true, false, false)
                            .Where(x => x.Value == NomenclatureConstants.MoneyType.StateFee.ToString()).ToList();
                 }
                 else if (document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument)
                 {
-                    ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>()
+                    ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>(true, false, false)
                            .Where(x => NomenclatureConstants.MoneyType.MoneyCompliantDocumentList.Contains(int.Parse(x.Value))).ToList();
                 }
-                else 
+                else
                 {
-                    ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>();
+                    ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>(true, false, false);
                 }
             }
             else if ((caseSessionId ?? 0) > 0)
@@ -356,7 +379,7 @@ namespace IOWebApplication.Controllers
                     ViewBag.Person_SourceId_ddl = caseLawUnitService.GetJuryForSession_SelectForDropDownList(caseSessionId ?? 0);
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSession(caseSessionId ?? 0);
                 ViewBag.MoneySign_ddl = DropDownSign(false);
-                ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>();
+                ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>(true, false, false);
             }
         }
 
@@ -370,7 +393,7 @@ namespace IOWebApplication.Controllers
             statusObl.Add(new SelectListItem() { Text = MoneyConstants.ObligationStatus.StatusPaidStr, Value = MoneyConstants.ObligationStatus.StatusPaid.ToString() });
             statusObl.Add(new SelectListItem() { Text = MoneyConstants.ObligationStatus.StatusNotEndStr, Value = MoneyConstants.ObligationStatus.StatusNotEnd.ToString() });
             ViewBag.Status_ddl = statusObl;
-            ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>();
+            ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>(true, false, false);
         }
 
         /// <summary>
@@ -564,7 +587,7 @@ namespace IOWebApplication.Controllers
         /// Валидация преди запис на авансово плащане
         /// </summary>
         /// <param name="model"></param>
-        void ValidatePayment(PaymentVM model) 
+        void ValidatePayment(PaymentVM model)
         {
             if (Math.Abs(model.Amount) <= 0)
             {
@@ -642,21 +665,21 @@ namespace IOWebApplication.Controllers
 
             return PartialView(id);
         }
-        
+
         /// <summary>
         /// Извличане на задълженията за едно плащане
         /// </summary>
         /// <param name="request"></param>
         /// <param name="paymentId"></param>
         /// <returns></returns>
-         [HttpPost]
+        [HttpPost]
         public IActionResult ListDataObligationsForPayment(IDataTablesRequest request, int paymentId)
         {
             var data = service.ObligationPaymentForPayment_Select(paymentId);
 
             return request.GetResponse(data);
         }
-        
+
         /// <summary>
         /// Плащания за едно задължение
         /// </summary>
@@ -837,7 +860,7 @@ namespace IOWebApplication.Controllers
         /// Страница с незаписани плащания през ПОС
         /// </summary>
         /// <returns></returns>
-        public IActionResult UnsavedPosPayment() 
+        public IActionResult UnsavedPosPayment()
         {
             SetHelpFile(HelpFileValues.Finance);
             return View();
@@ -909,7 +932,7 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         public async Task<bool> SaveFileExpenseOrder(int id)
-        {            
+        {
             (TinyMCEVM htmlModel, string errorMessage) = printDocumentService.FillHtmlTemplateExpenseOrder(id);
             if (htmlModel != null)
             {
@@ -1374,7 +1397,7 @@ namespace IOWebApplication.Controllers
                 bankName = result.BankName
             });
         }
-        
+
         /// <summary>
         /// Файлове за обект
         /// </summary>
@@ -1542,7 +1565,7 @@ namespace IOWebApplication.Controllers
 
         void SetViewBagObligationThirdPersonFilter()
         {
-            ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>();
+            ViewBag.MoneyTypeId_ddl = nomService.GetDropDownList<MoneyType>(true, false, false);
         }
 
         /// <summary>
@@ -1599,6 +1622,7 @@ namespace IOWebApplication.Controllers
                 Title = "Изготвяне на " + SourceTypeSelectVM.GetSourceTypeName(sourceType).ToLower(),
                 SourceType = sourceType,
                 SourceId = id.ToString(),
+                SessionName = userContext.GenHash(id, sourceType),
                 HtmlHeader = string.Empty,
                 HtmlContent = html,
                 HtmlFooter = string.Empty,
@@ -1647,6 +1671,10 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> BlankExecList(BlankEditVM model, string btnPreview = null)
         {
+            if (!userContext.CheckHash(model))
+            {
+                return Redirect_Denied();
+            }
             if (string.IsNullOrEmpty(btnPreview))
             {
                 if (await BlankExecListSave(model.SourceId, model.HtmlContent ?? ""))
@@ -1767,6 +1795,17 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        public async Task SaveFileAfterRegister(int idInt, ExecList execList)
+        {
+            string actHTML = await GetExecListHTML(idInt);
+            //Ако се запише номер да попълня датата и номера за и да презапиша html
+            actHTML = actHTML.Replace("{F_EXEC_LIST_NO}", execList.RegNumber);
+            actHTML = actHTML.Replace("{F_TODAY}", execList.RegDate.DateToStr(FormattingConstant.NormalDateFormat));
+
+            await BlankExecListSave(idInt.ToString(), actHTML);
+            await SaveFileFromBlankExecList(actHTML, idInt);
+        }
+
         public async Task<IActionResult> SendForSign(long id, long taskId)
         {
             int idInt = (int)id;
@@ -1798,13 +1837,7 @@ namespace IOWebApplication.Controllers
             {
                 if (registerResult.SaveMethod == "register")
                 {
-                    string actHTML = await GetExecListHTML(idInt);
-                    //Ако се запише номер да попълня датата и номера за и да презапиша html
-                    actHTML = actHTML.Replace("{F_EXEC_LIST_NO}", execList.RegNumber);
-                    actHTML = actHTML.Replace("{F_TODAY}", execList.RegDate.DateToStr(FormattingConstant.NormalDateFormat));
-
-                    await BlankExecListSave(model.SourceId, actHTML);
-                    await SaveFileFromBlankExecList(actHTML, idInt);
+                    await SaveFileAfterRegister(idInt, execList);
                     return RedirectToAction(nameof(SendForSign), new { id, taskId });
                 }
             }
@@ -1817,6 +1850,33 @@ namespace IOWebApplication.Controllers
             }
 
             return View("_SignPdf", model);
+        }
+
+        public async Task<IActionResult> RegisterExecList(int id)
+        {
+            string actHTML = await GetExecListHTML(id);
+            if (string.IsNullOrEmpty(actHTML))
+            {
+                SetErrorMessage("Няма изготвен ИЛ.");
+                return RedirectToAction("EditExecList", new { id = id });
+            }
+
+            var execList = service.GetById<ExecList>(id);
+
+            var registerResult = service.ExecListRegister(execList);
+            if (!registerResult.Result)
+            {
+                SetErrorMessage(registerResult.ErrorMessage);
+            }
+            else
+            {
+                if (registerResult.SaveMethod == "register")
+                {
+                    await SaveFileAfterRegister(id, execList);
+                }
+            }
+
+            return RedirectToAction("EditExecList", new { id = id });
         }
 
         public IActionResult SignedOk(long taskId)

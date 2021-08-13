@@ -1,0 +1,101 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model VksSelectionHeaderVM
+
+@{
+    ViewData["Title"] = "Период";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+        @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frmCheckList" }))
+        {@Html.HiddenFor(x => x.Id)
+
+
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        @if (Model.Id > 0)
+        {
+            @Html.HiddenFor(x => x.KolegiaId)
+            @Html.HiddenFor(x => x.SelectionYear)
+            
+        }
+        <div class="row">
+            <div class="col-lg-3">
+                @Html.EditorFor(x => x.KolegiaId, "GenericDropDown")
+                @Html.EditorFor(x => x.SelectionYear, "GenericDropDown")
+            
+
+            </div>
+  
+        </div>
+        @if (@ViewBag.HasSignedProtocol == false)
+        {
+            <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+        }
+
+        <a asp-action="IndexTO" class="btn btn-danger">Назад</a>
+
+        @*<div class="form-group">
+            @if (!string.IsNullOrEmpty(Model.ButtonLabel))
+            {
+                <input id="subButton" type="button" value="@Model.ButtonLabel" onclick={SubmitCheckList()} class="btn btn-success" />
+            }
+            else
+            {
+                <input id="subButton" type="button" value="Запис" onclick={SubmitCheckList()} class="btn btn-success" />
+            }
+            <a href="@(ViewBag.backUrl)" class="btn btn-danger">Назад</a>
+            @if (Model.ShowLogOperation)
+            {
+                <div class="pull-right">
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.ObjectId.ToString() })
+                </div>
+            }
+        </div>*@
+    }
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.check-tools a').click(function () {
+            if ($(this).data('action') == 'all') {
+                $('.checklist').find('input[type="checkbox"]').prop('checked', true);
+            } else {
+                $('.checklist').find('input[type="checkbox"]').prop('checked', false);
+            }
+        })
+    });
+
+    $(document).ready(function () {
+        $('#subButton').removeAttr("disabled");
+        @if(Model.Id > 0 )
+        {
+  <text>
+        $('select#KolegiaId').attr('disabled', 'disabled');
+        $('select#SelectionYear').attr('disabled', 'disabled');
+        $('select#PeriodNo').attr('disabled', 'disabled');
+
+    </text>
+
+        }
+       @if (@ViewBag.HasSignedProtocol==true)
+        {  <text>
+        $('#CheckList').attr('disabled', 'disabled');
+          </text>
+           }
+    });
+
+    function SubmitCheckList() {
+        $("#subButton").attr("disabled", true);
+        $('#frmCheckList').trigger('submit');
+    }
+</script>

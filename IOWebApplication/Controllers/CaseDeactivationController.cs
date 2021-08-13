@@ -111,6 +111,11 @@ namespace IOWebApplication.Controllers
 
             return View(model);
         }
+        public async Task<IActionResult> recoverFile(int id)
+        {
+            await prepareProtokolFile(id);
+            return Content("ok");
+        }
         private async Task prepareProtokolFile(int id)
         {
             var model = service.Select(new CaseDeactivationFilterVM { Id = id }).FirstOrDefault();
@@ -136,13 +141,20 @@ namespace IOWebApplication.Controllers
             return View(model);
         }
 
-        public IActionResult SendForSign(int id)
+        public async Task<IActionResult> SendForSign(int id)
         {
             var saved = service.Select(new CaseDeactivationFilterVM { Id = id }).FirstOrDefault();
             if (saved.DeclaredDate != null)
             {
                 return RedirectToAction(nameof(View), new { id });
             }
+
+            var protokolFile = cdnService.Select(SourceTypeSelectVM.CaseDeactivate, id.ToString()).FirstOrDefault();
+            if(protokolFile == null)
+            {
+                await prepareProtokolFile(id);
+            }
+
             Uri urlSuccess = new Uri(Url.Action("Signed", "CaseDeactivation", new { id = id }), UriKind.Relative);
             Uri url = new Uri(Url.Action("View", "CaseDeactivation", new { id = id }), UriKind.Relative);
 
@@ -175,6 +187,25 @@ namespace IOWebApplication.Controllers
                 }
             }
             return RedirectToAction(nameof(View), new { id = id });
+        }
+
+        [HttpPost]
+        public IActionResult ExpiredInfo(ExpiredInfoVM model)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.Case, model.Id, AuditConstants.Operations.Delete))
+            {
+                return Redirect_Denied();
+            }
+            if (service.SaveExpireInfo<CaseDeactivation>(model))
+            {
+                SetAuditContextDelete(service, SourceTypeSelectVM.Case, model.Id);
+                SetSuccessMessage(MessageConstant.Values.ActExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("Index") });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
         }
     }
 }

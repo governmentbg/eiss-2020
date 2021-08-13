@@ -1,0 +1,132 @@
+﻿@model DocumentRequestFastProcess
+@using IOWebApplication.Infrastructure.Data.ApiModels.DocumentRequests
+@using IOWebApplication.Extensions
+@{
+    var fpModel = Model.Data;
+}
+<style>
+    fieldset ol {
+        counter-reset: item
+    }
+
+        fieldset ol li {
+            display: block
+        }
+
+            fieldset ol li:before {
+                content: counters(item, ".") " ";
+                counter-increment: item
+            }
+</style>
+<fieldset>
+    <legend>Заявление</legend>
+    <div class="row">
+        <div class="col-lg-10">@Html.DisplayFor(x => fpModel.Description, "obj", null, new { label = "Описание" })</div>
+        <div class="col-lg-2">@Html.DisplayFor(x => fpModel.TaxAmount, "objVal", null, new { label = "Държавна такса", value = $"{fpModel.TaxAmount:N2} {fpModel.Currency}" })</div>
+    </div>
+</fieldset>
+@if (!fpModel.BankAccounts.IsEmpty())
+{
+    <fieldset>
+        <legend>Банкови сметки</legend>
+        <ol>
+            @foreach (var item in fpModel.BankAccounts)
+            {
+                <li>
+                    <div class="row">
+                        <div class="col-lg-3">@Html.DisplayFor(x => item.BankName, "obj", null, new { label = "Наименование" })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => item.IBAN, "obj", null, new { label = "IBAN" })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => item.BIC, "obj", null, new { label = "BIC" })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => item.Description, "obj", null, new { label = "Описание" })</div>
+                    </div>
+                </li>
+            }
+        </ol>
+    </fieldset>
+}
+@if (!fpModel.MoneyClaims.IsEmpty())
+{
+    <fieldset>
+        <legend>Обстоятелства</legend>
+        <ol>
+            @foreach (var cl in fpModel.MoneyClaims)
+            {
+
+                <li>
+                    <div class="row">
+                        <div class="col-lg-2">@Html.DisplayFor(x => cl.ClaimGroup, "stringFromCombo", null, new { label = "Вид", data = ViewBag.claimGroup })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => cl.ClaimType, "stringFromCombo", null, new { label = " ", data = ViewBag.claimType })</div>
+                        <div class="col-lg-2">@Html.DisplayFor(x => cl.ClaimNumber, "obj", null, new { label = "Номер" })</div>
+                        <div class="col-lg-2">@Html.DisplayFor(x => cl.ClaimDate, "date", null, new { label = "Дата" })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => cl.Description, "obj", null, new { label = "Описание" })</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-7">@Html.DisplayFor(x => cl.PartyNames, "obj", null, new { label = "Страни" })</div>
+                        <div class="col-lg-5">@Html.DisplayFor(x => cl.Motive, "obj", null, new { label = "Мотиви" })</div>
+                    </div>
+                    <fieldset>
+                        <legend>
+                            Вземания към обстоятелството
+                        </legend>
+                        <ol>
+                            @foreach (var mc in cl.ClaimMoney.Where(x => string.IsNullOrEmpty(x.MainClaimMoneyId)))
+                            {
+                                <li>
+                                    @Html.DisplayFor(x => mc, new { fpRequest = Model })
+
+                                    @if (cl.ClaimMoney.Where(x => x.MainClaimMoneyId == mc.ClaimMoneyId).Any())
+                                    {
+                                        <ol>
+                                            @foreach (var amc in cl.ClaimMoney.Where(x => x.MainClaimMoneyId == mc.ClaimMoneyId))
+                                            {
+                                                <li>
+                                                    @Html.DisplayFor(x => amc, new { fpRequest = Model })
+                                                </li>
+                                            }
+                                        </ol>
+                                    }
+                                </li>
+                            }
+                        </ol>
+                    </fieldset>
+                </li>
+            }
+        </ol>
+    </fieldset>
+}
+
+@if (!fpModel.Exprenses.IsEmpty())
+{
+    <fieldset>
+        <legend>Претендирани разноски</legend>
+        <ol>
+            @foreach (var exp in fpModel.Exprenses)
+            {
+                <li>
+                    <div class="row">
+                        <div class="col-lg-3">@Html.DisplayFor(x => exp.ExpenseType, "stringFromCombo", null, new { label = "Вид", data = ViewBag.expenseType })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => exp.Amount, "objVal", null, new { label = "Сума", value = $"{exp.Amount:N2} {exp.Currency}" })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => exp.Description, "obj", null, new { label = "Описание" })</div>
+                        <div class="col-lg-3">@Html.DisplayFor(x => exp.IsJointDistribution, "objVal", null, new { label = "Солидарно разпределение", value = (exp.IsJointDistribution) ? "Да" : "Не" })</div>
+                    </div>
+                    @if (!exp.Distribution.IsEmpty())
+                    {
+                        <div class="row">
+                            <div class="col-lg-4"></div>
+                            <div class="col-lg-8">
+                                <fieldset>
+                                    <legend>Разпределение на разноските</legend>
+                                    @foreach (var dist in exp.Distribution)
+                                    {
+                                        @Html.DisplayFor(x => dist, "FastProcessDistributionModel", null, new { isFraction = false, fpRequest = Model })
+                                    }
+                                </fieldset>
+                            </div>
+                        </div>
+                    }
+                </li>
+            }
+        </ol>
+    </fieldset>
+}
+

@@ -20,11 +20,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public DateTime? ActDeclaredDate { get; set; }
         public string ActRegYear { get; set; }
         public string BlankDecisionText { get; set; }
+        public int CourtId { get; set; }
         public string CourtCity { get; set; }
         public string CourtName { get; set; }
         public string CourtLogo { get; set; }
         public string CourtParent { get; set; }
+        public bool IsMixedJuryVKS_VAS { get; set; }
 
+        public int? RelatedActId { get; set; }
         public string RelatedActTypeName { get; set; }
         public string RelatedActNumber { get; set; }
         public string RelatedActDate { get; set; }
@@ -46,6 +49,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int SessionStateId { get; set; }
 
         public string SessionActLabel { get; set; }
+
+        public int CaseSessionId { get; set; }
         public DateTime SessionDate { get; set; }
         public bool SessionIdOpen { get; set; }
         public int CaseId { get; set; }
@@ -74,6 +79,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string RightSideName { get; set; }
         public string RightSideCurrentAddress { get; set; }
         public string RightSideWorkAddress { get; set; }
+        public string LeftSide_410_417 { get; set; }
+        public string RightSide_410_417 { get; set; }
+        public string LeftRightSide_410_417 { get; set; }
+        public int LeftSide_410_417_Count { get; set; }
+        public int RightSide_410_417_Count { get; set; }
 
         public bool HeaderOnly { get; set; }
         public string MainBody { get; set; }

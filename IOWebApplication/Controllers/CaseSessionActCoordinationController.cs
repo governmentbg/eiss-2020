@@ -34,7 +34,7 @@ namespace IOWebApplication.Controllers
 
         public IActionResult Index(int CaseSessionActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActCoordination, CaseSessionActId, AuditConstants.Operations.Update))
+            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActCoordination, 0, AuditConstants.Operations.Update, CaseSessionActId))
             {
                 return Redirect_Denied();
             }
@@ -91,7 +91,7 @@ namespace IOWebApplication.Controllers
             {
                 throw new NotFoundException("Търсеното от Вас съгласуване на акт не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActCoordination, model.CaseSessionActId, AuditConstants.Operations.Update))
+            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActCoordination, id, AuditConstants.Operations.Update, model.CaseSessionActId))
             {
                 return Redirect_Denied();
             }

@@ -21,14 +21,17 @@ namespace IOWebApplication.Controllers
         private readonly INomenclatureService nomService;
         private readonly ICaseFastProcessService service;
         private readonly ICaseLawUnitService lawUnitService;
+        private readonly IApiDocumentService apiDocService;
 
-        public CaseFastProcessController(INomenclatureService _nomService, 
+        public CaseFastProcessController(INomenclatureService _nomService,
                                          ICaseFastProcessService _service,
-                                         ICaseLawUnitService _lawUnitService)
+                                         ICaseLawUnitService _lawUnitService,
+                                         IApiDocumentService _apiDocService)
         {
             nomService = _nomService;
             service = _service;
             lawUnitService = _lawUnitService;
+            apiDocService = _apiDocService;
         }
 
         /// <summary>
@@ -36,7 +39,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult Index(int caseId)
+        public async Task<IActionResult> Index(int caseId)
         {
             if (!CheckAccess(service, SourceTypeSelectVM.CaseFastProcess, null, AuditConstants.Operations.View, caseId))
             {
@@ -44,6 +47,10 @@ namespace IOWebApplication.Controllers
             }
             SetViewBag(caseId);
             SetHelpFile(HelpFileValues.CaseFastProcess);
+            if ((bool)ViewBag.req_4_2021 == true)
+            {
+                await apiDocService.UpdateFastProcessFromData(caseId);
+            }
             return View(caseId);
         }
 
@@ -52,6 +59,7 @@ namespace IOWebApplication.Controllers
             ViewBag.caseId = CaseId;
             var caseCase = service.GetById<Case>(CaseId);
             ViewBag.CaseName = caseCase.RegNumber;
+            ViewBag.req_4_2021 = ((service.SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start);
         }
 
         /// <summary>
@@ -350,6 +358,7 @@ namespace IOWebApplication.Controllers
             ViewBag.CaseMoneyCollectionGroupId_ddl = nomService.GetDropDownList<CaseMoneyCollectionGroup>();
             ViewBag.MoneyCollectionEndDateTypeId_ddl = nomService.GetDropDownList<MoneyCollectionEndDateType>();
             ViewBag.CurrencyId_ddl = nomService.GetDropDownList<Currency>();
+            ViewBag.MoneyCollectionEndDateTypes = nomService.GetDropDownList<MoneyCollectionEndDateType>();
         }
 
         /// <summary>
@@ -384,6 +393,46 @@ namespace IOWebApplication.Controllers
                     CaseMoneyCollectionGroupId = NomenclatureConstants.CaseMoneyCollectionGroup.Money,
                     CasePersonListDecimals = service.FillPersonList(caseId, null),
                     JointDistribution = true,
+                    MoneyCollectionEndDateTypeId = NomenclatureConstants.MoneyCollectionEndDateType.WithDate
+                };
+            }
+
+            SetViewBag_MoneyCollection();
+            return PartialView(model);
+        }
+
+        /// <summary>
+        /// Добавяне на Вземане към обстоятелство по заповедни производства
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <param name="moneyClaimId"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public IActionResult CaseMoneyCollectionWithKindItems(int caseId, int? moneyClaimId, int? id)
+        {
+            if (!CheckAccess(service, SourceTypeSelectVM.CaseMoneyCollection, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, moneyClaimId))
+            {
+                return Redirect_Denied();
+            }
+
+            CaseMoneyCollectionEditNewVM model;
+            if (id > 0)
+            {
+                model = service.GetById_EditNewVM(id ?? 0);
+            }
+            else
+            {
+                model = new CaseMoneyCollectionEditNewVM()
+                {
+                    CaseId = caseId,
+                    CourtId = userContext.CourtId,
+                    CaseMoneyClaimId = moneyClaimId ?? 0,
+                    CurrencyId = NomenclatureConstants.Currency.BGN,
+                    CaseMoneyCollectionGroupId = NomenclatureConstants.CaseMoneyCollectionGroup.Money,
+                    CasePersonListDecimals = service.FillPersonList(caseId, null),
+                    CaseMoneyCollectionData = service.FillCaseMoneyCollectionDataList(caseId, null),
+                    JointDistribution = true,
+                    IsFraction = false,
                     MoneyCollectionEndDateTypeId = NomenclatureConstants.MoneyCollectionEndDateType.WithDate
                 };
             }
@@ -496,6 +545,206 @@ namespace IOWebApplication.Controllers
             return string.Empty;
         }
 
+        private string ValidateCaseMoneyCollectionNew(CaseMoneyCollectionEditNewVM model)
+        {
+            if (model.CaseMoneyCollectionGroupId < 1)
+                return "Изберете вид.";
+
+            if (model.MoneyCollectionEndDateTypeId < 1)
+                return "Няма избран вид крайна дата.";
+
+            switch (model.CaseMoneyCollectionGroupId)
+            {
+                case NomenclatureConstants.CaseMoneyCollectionGroup.Money:
+                    {
+                        if (model.CurrencyId < 1)
+                            return "Изберете Валута.";
+
+                        //if (model.DateFrom == null)
+                        //    return "Въведете начална дата.";
+
+                        if (model.CasePersonListDecimals == null)
+                            return "Няма въведени длъжници по делото";
+
+                        if (model.CasePersonListDecimals.Count < 1)
+                            return "Няма въведени длъжници по делото";
+
+                        if (model.MoneyCollectionEndDateTypeId == NomenclatureConstants.MoneyCollectionEndDateType.WithDate)
+                        {
+                            if (model.DateFrom == null)
+                                return "Въведете начална дата.";
+
+                            if (model.DateTo == null)
+                                return "Въведете крайна дата.";
+                        }
+
+                        if (model.RespectedAmount > model.PretendedAmount)
+                        {
+                            return "Сумата от уважаването е по-голяма от претендираната.";
+                        }
+
+                        if (!model.JointDistribution)
+                        {
+                            if (!model.IsFraction ?? false)
+                            {
+                                if (!model.CasePersonListDecimals.Any(x => x.ValueOne > (decimal)0.01))
+                                {
+                                    return "Няма въведени стойности в разпределение на вземането.";
+                                }
+
+                                if (model.CasePersonListDecimals.Sum(x => x.ValueOne) > model.PretendedAmount)
+                                {
+                                    return "Сумата на разпределението е по-голяма от претендираната сума.";
+                                }
+
+                                if (model.CasePersonListDecimals.Sum(x => x.ValueTwo) != model.RespectedAmount)
+                                {
+                                    return "Сумата на разпределението за уважаване е различна от общо уважената сума.";
+                                }
+
+                                if (model.CasePersonListDecimals.Sum(x => x.ValueOne) < model.CasePersonListDecimals.Sum(x => x.ValueTwo))
+                                {
+                                    return "Сумата на разпределението за уважаване е по-голяма от сумата от разпределението за претендирането";
+                                }
+                            }
+                            else
+                            {
+                                if (model.CasePersonListDecimals.Any(x => x.AmountDenominator < (decimal)1 || x.AmountNumerator < (decimal)1))
+                                {
+                                    return "Няма въведени стойности в разпределение на вземането.";
+                                }
+
+                                if (model.CasePersonListDecimals.Sum(x => ((decimal)x.AmountNumerator / (decimal)x.AmountDenominator)) > (decimal)1.001)
+                                {
+                                    return "Сумата на дробите е по-голяма от 1.";
+                                }
+
+                                if (model.CasePersonListDecimals.Sum(x => ((decimal)x.AmountNumerator / (decimal)x.AmountDenominator)) < (decimal)0.99)
+                                {
+                                    return "Сумата на дробите е по-малка от 1.";
+                                }
+                            }
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool && x.CaseMoneyCollectionKindId != NomenclatureConstants.CaseMoneyCollectionKind.LegalInterest && x.InitialAmount < (decimal)0.001))
+                        {
+                            return "Има маркирано допълнително вземане без въведени суми.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool && x.DateFrom == null))
+                        {
+                            return "Има маркирано допълнително вземане и няма избрана начална дата.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool && x.RespectedAmount > x.PretendedAmount))
+                        {
+                            return "Има маркирано допълнително вземане и сумата от уважаването е по-голяма от претендираната..";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool && x.MoneyCollectionEndDateTypeId < 1))
+                        {
+                            return "Има маркирано допълнително вземане и няма избран вид крайна дата.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool && x.MoneyCollectionEndDateTypeId == NomenclatureConstants.MoneyCollectionEndDateType.WithDate && x.DateTo == null))
+                        {
+                            return "Има маркирано допълнително вземане с избор за крайна дата и не е въведена.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool &&
+                                                                   !x.JointDistribution &&
+                                                                   !(x.IsFraction ?? false) &&
+                                                                   !x.CasePersonListDataDecimals.Any(y => y.ValueOne > (decimal)0.01)))
+                        {
+                            return "Няма въведени стойности в допълнително вземане в разпределението.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool &&
+                                                                   !x.JointDistribution &&
+                                                                   !(x.IsFraction ?? false) &&
+                                                                   x.CasePersonListDataDecimals.Sum(y => y.ValueOne) > x.PretendedAmount))
+                        {
+                            return "Сумата на разпределението в допълнително вземане е по-голяма от претендираната сума.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool &&
+                                                                   !x.JointDistribution &&
+                                                                   !(x.IsFraction ?? false) &&
+                                                                   x.CasePersonListDataDecimals.Sum(y => y.ValueTwo) != x.RespectedAmount))
+                        {
+                            return "Сумата на разпределението в допълнително вземане за уважаване е различна от общо уважената сума.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool &&
+                                                                   !x.JointDistribution &&
+                                                                   !(x.IsFraction ?? false) &&
+                                                                   (x.CasePersonListDataDecimals.Sum(y => y.ValueOne) < x.CasePersonListDataDecimals.Sum(y => y.ValueTwo))))
+                        {
+                            return "Сумата на разпределението в допълнително вземане за уважаване е по-голяма от сумата от разпределението за претендирането";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool &&
+                                                                   !x.JointDistribution &&
+                                                                   (x.IsFraction ?? false) &&
+                                                                   x.CasePersonListDataDecimals.Any(y => y.AmountDenominator < (decimal)1 || y.AmountNumerator < (decimal)1)))
+                        {
+                            return "Няма въведени стойности в допълнително вземане в разпределение на вземането.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool &&
+                                                                   !x.JointDistribution &&
+                                                                   (x.IsFraction ?? false) &&
+                                                                   x.CasePersonListDataDecimals.Sum(y => (decimal)y.AmountNumerator / (decimal)y.AmountDenominator) > (decimal)1.001))
+                        {
+                            return "Сумата на дробите в допълнително вземане е по-голяма от 1.";
+                        }
+
+                        if (model.CaseMoneyCollectionData.Any(x => x.CaseMoneyCollectionKindBool &&
+                                                                   !x.JointDistribution &&
+                                                                   (x.IsFraction ?? false) &&
+                                                                   x.CasePersonListDataDecimals.Sum(y => (decimal)y.AmountNumerator / (decimal)y.AmountDenominator) < (decimal)0.99))
+                        {
+                            return "Сумата на дробите в допълнително вземане е по-малка от 1.";
+                        }
+                    }
+                    break;
+                case NomenclatureConstants.CaseMoneyCollectionGroup.Property:
+                    {
+                        if (model.CurrencyId < 1)
+                            return "Изберете Валута.";
+
+                        if (model.Amount < (decimal)0.01)
+                            return "Въведете сума.";
+
+                        if ((model.Description ?? string.Empty) == string.Empty)
+                            return "Въведете описание.";
+                    }
+                    break;
+                case NomenclatureConstants.CaseMoneyCollectionGroup.Movables:
+                    {
+                        if (model.CurrencyId < 1)
+                            return "Изберете Валута.";
+
+                        if (model.Amount < (decimal)0.01)
+                            return "Въведете сума.";
+
+                        if (model.Movables_CaseMoneyCollectionTypeId < 1)
+                            return "Изберете от какво произтича задължението за предаване.";
+
+                        if ((model.Description ?? string.Empty) == string.Empty)
+                            return "Въведете описание.";
+                    }
+                    break;
+            }
+
+            if (!CheckCourtIdFromCase(model.CaseId))
+            {
+                return $"Съда е променен на {userContext.CourtName}. Презаредете текущия екран.";
+            }
+
+            return string.Empty;
+        }
+
         /// <summary>
         /// Запис на Вземане към обстоятелство по заповедни производства
         /// </summary>
@@ -512,6 +761,24 @@ namespace IOWebApplication.Controllers
             var res = service.CaseMoneyCollection_SaveData(model);
             if (res > 0)
                 SetAuditContext(service, SourceTypeSelectVM.CaseMoneyCollection, res, currentId == 0);
+
+            return Json(new { result = res });
+        }
+
+        [HttpPost]
+        public JsonResult CaseMoneyCollectionWithKindItems(CaseMoneyCollectionEditNewVM model)
+        {
+            string validationError = ValidateCaseMoneyCollectionNew(model);
+            if (!string.IsNullOrEmpty(validationError))
+                return Json(new { result = false, message = validationError });
+
+            var currentId = model.Id;
+            var res = service.CaseMoneyCollectionNew_SaveData(model);
+            if (res > 0)
+            {
+                SaveLogOperation(currentId == 0, model.Id);
+                SetAuditContext(service, SourceTypeSelectVM.CaseMoneyCollection, res, currentId == 0);
+            }
 
             return Json(new { result = res });
         }
@@ -536,7 +803,7 @@ namespace IOWebApplication.Controllers
             }
 
             List<CaseMoneyCollectionRespectSumVM> model = service.FillCaseMoneyCollectionRespectSum(caseId);
-            
+
             return PartialView(model);
         }
 
@@ -548,6 +815,7 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.CaseMoneyExpenseTypeId_ddl = nomService.GetDropDownList<CaseMoneyExpenseType>();
             ViewBag.CurrencyId_ddl = nomService.GetDropDownList<Currency>();
+            ViewBag.req_4_2021 = ((service.SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start);
         }
 
         /// <summary>
@@ -574,14 +842,30 @@ namespace IOWebApplication.Controllers
 
             if (!(model.JointDistribution ?? true))
             {
-                if (!model.CasePersonListDecimals.Any(x => x.ValueOne > (decimal)0.01))
+                if (model.CasePersonListDecimals.Any(x => !(model.IsFraction ?? false) && x.ValueOne < (decimal)0.01))
                 {
                     return "Няма въведени стойности в разпределение на вземането.";
                 }
 
-                if (model.CasePersonListDecimals.Sum(x => x.ValueOne) != model.Amount)
+                if (model.CasePersonListDecimals.Any(x => (model.IsFraction ?? false) && (x.AmountDenominator < (decimal)0.01 || x.AmountNumerator < (decimal)0.01)))
                 {
-                    return "Сумата на разпределението е различна от претендираната сума.";
+                    return "Няма въведени стойности в разпределение на вземането.";
+                }
+
+
+                if (!(model.IsFraction ?? false))
+                {
+                    if (model.CasePersonListDecimals.Sum(x => x.ValueOne) != model.Amount)
+                    {
+                        return "Сумата на разпределението е различна от претендираната сума.";
+                    }
+                }
+                else
+                {
+                    if (model.CasePersonListDecimals.Sum(x => (decimal)x.AmountNumerator / (decimal)x.AmountDenominator) > (decimal)1.001)
+                    {
+                        return "Сумата на дробите е по-голяма от 1.";
+                    }
                 }
             }
 
@@ -613,12 +897,14 @@ namespace IOWebApplication.Controllers
             }
             else
             {
+                var isExistMoneyCollectionWithFraction = service.IsExistMoneyCollectionWithFraction(caseId);
                 model = new CaseMoneyExpenseEditVM()
                 {
                     CaseId = caseId,
                     CourtId = userContext.CourtId,
                     CurrencyId = NomenclatureConstants.Currency.BGN,
-                    JointDistribution = true,
+                    JointDistribution = (isExistMoneyCollectionWithFraction) ? false : true,
+                    IsFraction = isExistMoneyCollectionWithFraction ? true : false,
                     CasePersonListDecimals = service.FillPersonListExpense(caseId, null)
                 };
             }
@@ -702,7 +988,7 @@ namespace IOWebApplication.Controllers
             var res = service.CaseFastProcess_SaveData(model);
             if (res)
                 SetAuditContext(service, SourceTypeSelectVM.CaseFastProcess, model.Id, currentId == 0);
-            
+
             return Json(new { result = res });
         }
 

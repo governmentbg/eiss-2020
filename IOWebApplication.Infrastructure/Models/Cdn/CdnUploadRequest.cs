@@ -32,10 +32,15 @@ namespace IOWebApplication.Infrastructure.Models.Cdn
         /// </summary>
         public string FileContainer { get; set; }
 
-        public int SignersCount { get; set; }
+        public int SignituresCount { get; set; }
 
         public bool FileUploadEnabled { get; set; }
 
         public int MaxFileSize { get; set; }
+
+        public CdnUploadRequest()
+        {
+            SignituresCount = 0;
+        }
     }
 }

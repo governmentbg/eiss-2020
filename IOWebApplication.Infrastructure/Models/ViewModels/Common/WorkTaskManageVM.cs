@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IOWebApplication.Infrastructure.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 {
@@ -9,8 +10,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public bool ShowUser { get; set; }
 
         [Display(Name="Нов изпълнител на задачите")]
-        [Required(ErrorMessage ="Изберете {0}.")]
+        [IORequired]
         public string NewUserId { get; set; }
+
+        [Display(Name = "Начин на изпълнение")]
+        public int? TaskExecutionId { get; set; }
+        [Display(Name = "Изберете структура")]
+        [IORequired]
+        public int? CourtOrganizationId { get; set; }
+
 
         [Display(Name = "Основание")]
         [Required(ErrorMessage = "Въведете {0}.")]

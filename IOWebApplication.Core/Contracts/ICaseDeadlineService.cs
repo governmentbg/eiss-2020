@@ -21,5 +21,6 @@ namespace IOWebApplication.Core.Contracts
         void DeadLineOpenSessionResult(CaseSessionMeetingUser user);
         void DeadLineCompanyCaseStartOnDocument(Document document);
         void DeadLineCompanyCaseByCaseId(int caseId);
+        void DeadLineDeclaredForResolveComplete(CaseSessionAct caseSessionAct);
     }
 }

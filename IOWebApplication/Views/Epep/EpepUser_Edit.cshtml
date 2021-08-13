@@ -13,6 +13,7 @@
         ViewData["Title"] = "Добавяне на потребител в ЕПЕП";
     }
     var docInfo = (EpepDocumentInfoVM)ViewBag.documentInfo;
+    var hasEpepUserOtherType = ViewBag.hasEpepUserOtherType == true;
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
@@ -56,7 +57,17 @@
                 <div id="saveContainer">
                     <partial name="_SaveFormContent" model="@("#saveContainer")" />
                     <div class="row">
-                        <div class="col-lg-6">@Html.EditorFor(x => x.EpepUserTypeId, "GenericDropDown")</div>
+                        <div class="col-lg-6">
+                            @if (Model.Id > 0)
+                            {
+                                @Html.HiddenFor(x => x.EpepUserTypeId)
+                                @Html.DisplayFor(x => x.EpepUserTypeId, "objVal", new { value = ViewBag.epepUserType })
+                            }
+                            else
+                            {
+                                @Html.EditorFor(x => x.EpepUserTypeId, "GenericDropDown")
+                            }
+                        </div>
                         <div class="col-lg-6">@Html.EditorFor(x => x.BirthDate)</div>
                     </div>
                     <div id="lawyerControls">
@@ -130,6 +141,13 @@
                 <text>loadAssignments();</text>
             }
             initLawUnit();
+            @if (hasEpepUserOtherType) {
+                <text>
+            swalConfirm('Съществува създаден потребител от друг тип в ЕПЕП с тази електронна поща. Желаете ли да заредите съществуващите данни?', function () {
+                document.location.href = '@Url.Action("EpepUser_AddFromEmail",new { email = Model.Email})';
+                });
+                </text>
+            }
         });
         function loadAssignments() {
             $('#dtAssignments').DataTable({
@@ -144,6 +162,13 @@
                 filter:false,
                 columns: [
                     {
+                        name: 'courtName',
+                        data: 'courtName',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'caseInfo',
                         data: 'caseInfo',
                         title: 'Дело',
@@ -152,28 +177,40 @@
                     },
                     {
                         name: 'sideInfo',
-                        data: 'sideInfo',
+                        data: null,
                         title: 'Страна',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (a, b, item, c) {
+                            return TemplateToHtml('#templateSide', item);
+                        }
                     }
                     ,
                     {
                         name: 'actions',
-                        data: "id",
+                        data: null,
                         title: "",
                         sortable: false,
                         searchable: false,
                         className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#templateEdit', value);
+                        "render": function (a,b,item,c) {
+                            return TemplateToHtml('#templateEdit', item);
                         }
                     }
                 ]
             });
         }
     </script>
+    <script id="templateSide" type="text/x-handlebars-template">
+        {{sideInfo}}
+        {{#if canSummon}}
+        &nbsp;
+        <i class="text-yellow fa fa-bell" title="Разрешено призоваване чрез ЕПЕП"></i>
+        {{/if}}
+    </script>
     <script id="templateEdit" type="text/x-handlebars-template">
-        <a href="@Url.Action("EpepUserAssignment_Edit")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        {{#if canChange}}
+        <a href="@Url.Action("EpepUserAssignment_Edit")/{{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        {{/if}}
     </script>
 }

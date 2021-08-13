@@ -170,6 +170,10 @@ namespace IOWebApplicationApi
             app.UseSwagger();
             app.UseSwaggerUi3();
 
+            //  app.UseAuthentication();
+
+           // app.UseRouting();
+
             // global cors policy
             app.UseCors(x => x
                 .AllowAnyOrigin()
@@ -177,6 +181,7 @@ namespace IOWebApplicationApi
                 .AllowAnyHeader());
 
             app.UseAuthentication();
+           // app.UseAuthorization();
 
             app.UseMvc();
         }

@@ -1,7 +1,9 @@
 ﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Extensions;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Base
 {
@@ -42,6 +44,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         [Column("latin_name")]
         public string LatinName { get; set; }
 
+        [Column("is_deceased")]
+        [Display(Name = "Починало лице")]
+        public bool? IsDeceased { get; set; }
+
+        [Column("date_deceased")]
+        [Display(Name = "Дата на смъртта")]
+        public DateTime? DateDeceased { get; set; }
+
         [Column("person_source_type")]
         public int? Person_SourceType { get; set; }
         [Column("person_source_id")]
@@ -52,6 +62,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
 
         [ForeignKey(nameof(UicTypeId))]
         public virtual UicType UicType { get; set; }
+
+
 
         public string UicTypeLabel
         {
@@ -93,10 +105,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         {
             get
             {
-                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName[0] + "." + (!string.IsNullOrEmpty(MiddleName + FamilyName + Family2Name) ? " " : string.Empty) : "");
-                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName[0] + "." + (!string.IsNullOrEmpty(FamilyName + Family2Name) ? " " : string.Empty) : "");
-                var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName[0] + "." + (!string.IsNullOrEmpty(Family2Name) ? " " : string.Empty) : "");
-                var family2Name = (!string.IsNullOrEmpty(Family2Name) ? Family2Name[0] + "." : "");
+                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName.ToShortNameCyrlillic() + "." + (!string.IsNullOrEmpty(MiddleName + FamilyName + Family2Name) ? " " : string.Empty) : "");
+                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName.ToShortNameCyrlillic() + "." + (!string.IsNullOrEmpty(FamilyName + Family2Name) ? " " : string.Empty) : "");
+                var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName.ToShortNameCyrlillic() + "." + (!string.IsNullOrEmpty(Family2Name) ? " " : string.Empty) : "");
+                var family2Name = (!string.IsNullOrEmpty(Family2Name) ? Family2Name.ToShortNameCyrlillic() + "." : "");
                 return firstName + middleName + familyName + family2Name;
             }
         }
@@ -106,7 +118,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
             get
             {
                 var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName + (!string.IsNullOrEmpty(MiddleName + FamilyName + Family2Name) ? " " : string.Empty) : "");
-                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName[0] + "." + (!string.IsNullOrEmpty(FamilyName + Family2Name) ? " " : string.Empty) : "");
+                var middleName = (!string.IsNullOrEmpty(MiddleName) ? MiddleName.ToShortNameCyrlillic() + "." + (!string.IsNullOrEmpty(FamilyName + Family2Name) ? " " : string.Empty) : "");
                 var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName + (!string.IsNullOrEmpty(Family2Name) ? " " : string.Empty) : "");
                 var family2Name = (!string.IsNullOrEmpty(Family2Name) ? Family2Name : "");
                 return firstName + middleName + familyName + family2Name;
@@ -117,7 +129,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         {
             get
             {
-                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName[0] + "." + (!string.IsNullOrEmpty(FamilyName) ? " " : string.Empty) : "");
+                var firstName = (!string.IsNullOrEmpty(FirstName) ? FirstName.ToShortNameCyrlillic() + "." + (!string.IsNullOrEmpty(FamilyName) ? " " : string.Empty) : "");
                 var familyName = (!string.IsNullOrEmpty(FamilyName) ? FamilyName : "");
                 return firstName + familyName;
             }
@@ -127,8 +139,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         {
             get
             {
-                var firstName = !string.IsNullOrEmpty(FirstName) ? FirstName[0] + "." + (!string.IsNullOrEmpty(FamilyName) ? " " : string.Empty) : "";
-                var familyName = !string.IsNullOrEmpty(FamilyName) ? FamilyName[0] + "." : "";
+                var firstName = !string.IsNullOrEmpty(FirstName) ? FirstName.ToShortNameCyrlillic() + "." + (!string.IsNullOrEmpty(FamilyName) ? " " : string.Empty) : "";
+                var familyName = !string.IsNullOrEmpty(FamilyName) ? FamilyName.ToShortNameCyrlillic() + "." : "";
                 return firstName + familyName;
             }
         }

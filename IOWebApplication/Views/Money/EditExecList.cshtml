@@ -106,6 +106,7 @@
                                 <a href="#" onclick="editActBlank(); return false;" class="btn btn-primary">Изготвяне на ИЛ</a>
                                 @if (Model.RegDate == null)
                                 {
+                                    <a href="@Url.Action("RegisterExecList",new { id=Model.Id})" class="btn btn-primary" title="Регистрира ИЛ с номер и дата.">Регистриране</a>
                                     <a href="#" onclick="sendForSignCheck(this); return false;" class="btn btn-primary" title="Създава документа на ИЛ и задача за подпис">Изпращане за подпис</a>
                                 }
 

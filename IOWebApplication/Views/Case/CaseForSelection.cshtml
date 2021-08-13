@@ -12,6 +12,8 @@
     </ol>
 }
 
+@Html.HiddenFor(m => m.CaseGroupIds_text)
+@Html.HiddenFor(m => m.CaseTypeIds_text)
 <div class="row">
     <div class="col-lg-3">
         @Html.EditorFor(m => m.DateFrom, "DateTime")
@@ -24,8 +26,10 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupIds, "GenericDropDownMultiple")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeIds, "GenericDropDownMultiple")</div>
+    @*<div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>*@
     <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.DocumentNumber)</div>
 </div>
@@ -64,11 +68,11 @@
                         d.model = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
-                            CaseGroupId: $("#CaseGroupId").val(),
-                            CaseTypeId: $("#CaseTypeId").val(),
                             RegNumber: $("#RegNumber").val(),
                             CaseYear: $("#CaseYear").val(),
-                            DocumentNumber: $("#DocumentNumber").val()
+                            DocumentNumber: $("#DocumentNumber").val(),
+                            CaseGroupIds_text: $('#CaseGroupIds_text').val(),
+                            CaseTypeIds_text: $('#CaseTypeIds_text').val()
                         };
                     }
                 },
@@ -144,11 +148,31 @@
 @section scripts {
     <script>
         $(document).ready(function () {
-            $('#CaseGroupId').trigger('change');
+            $('#CaseGroupIds').select2({
+            });
+            $('#CaseTypeIds').select2({
+            });
         });
 
         $('#CaseGroupId').change(function () {
             requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+        });
+
+        $('#CaseGroupIds').change(function () {
+            var str = '';
+            if ($('#CaseGroupIds').val() !== null && $('#CaseGroupIds').val().length > 0) {
+                str = $('#CaseGroupIds').val().join(',');
+            }
+            $('#CaseGroupIds_text').val(str);
+            requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: str }, '#CaseTypeIds', @(Model.CaseTypeIds ?? "0"), function () { $('#CaseTypeIds').trigger('change') });
+        });
+
+        $('#CaseTypeIds').change(function () {
+            var str = '';
+            if ($('#CaseTypeIds').val() !== null && $('#CaseTypeIds').val().length > 0) {
+                str = $('#CaseTypeIds').val().join(',');
+            }
+            $('#CaseTypeIds_text').val(str);
         });
 
     </script>

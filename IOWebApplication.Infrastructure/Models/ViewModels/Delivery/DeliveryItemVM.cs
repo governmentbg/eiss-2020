@@ -56,5 +56,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         public string CaseInfo { get; set; }
 
         public int NotificationDeliveryGroupId { get; set; }
+
+        public string CheckRowOrder { get; set; }
+
+        public string NotificationType { get; set; }
+
+        public int? CaseNotificationId { get; set; }
+        public int? DocumentNotificationId { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -65,5 +66,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CaseMoneyClaimTypeId))]
         public virtual CaseMoneyClaimType CaseMoneyClaimType { get; set; }
+
+        public virtual ICollection<CaseMoneyCollection> CaseMoneyCollections { get; set; }
+
+        public CaseMoneyClaim()
+        {
+            CaseMoneyCollections = new HashSet<CaseMoneyCollection>();
+        }
     }
 }

@@ -1,0 +1,25 @@
+﻿@model int?
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_ddl";
+    IEnumerable<SelectListItem> ddl = null;
+
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+@if (ViewData[fieldName] != null)
+{
+    ddl = (List<SelectListItem>)ViewData[fieldName];
+}
+else
+{
+
+    ddl = new List<SelectListItem>();
+}
+
+<div class="form-group">
+
+    @Html.DropDownListFor(model => model, ddl.SetSelected(Model), new { @class = "form-control" })
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

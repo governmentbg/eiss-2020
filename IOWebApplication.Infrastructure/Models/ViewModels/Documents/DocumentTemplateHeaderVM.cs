@@ -21,6 +21,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public string DocumentTypeLabel { get; set; }
         public string HeaderTemplateName { get; set; }
         public int HtmlTemplateTypeId { get; set; }
+        [AllowHtml]
         public string CourtLogo { get; set; }
     }
 }

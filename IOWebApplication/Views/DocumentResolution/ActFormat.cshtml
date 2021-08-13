@@ -2,10 +2,30 @@
 @model DocumentResolutionVM
 @{
     Layout = null;
+    string sign = "_______________________";
 }
 <div class="act-body">
     <partial name="ActHeader" model="@Model" />
     <div>
         @Html.Raw(Model.Content)
+    </div>
+    <div style="text-align:right;width:100%;margin-top:30px;">
+        <table class="no-border row-space-single" align="right">
+            <tr>
+                <td align="right">
+                    <b>Съдия:</b>
+                </td>
+                <td>@sign</td>
+            </tr>
+            @if (Model.JudgeCount > 1)
+            {
+                <tr>
+                    <td align="right">
+                        <b>Съдия:</b>
+                    </td>
+                    <td>@sign</td>
+                </tr>
+            }
+        </table>
     </div>
 </div>

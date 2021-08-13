@@ -6,6 +6,7 @@ using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
@@ -46,6 +47,7 @@ namespace IOWebApplication.Core.Services
 
             return repo.AllReadonly<DocumentResolution>()
                             .Include(x => x.JudgeDecisionLawunit)
+                            .Include(x => x.JudgeDecisionLawunit2)
                             .Include(x => x.ResolutionType)
                             .Include(x => x.ResolutionState)
                             .Include(x => x.Court)
@@ -58,6 +60,7 @@ namespace IOWebApplication.Core.Services
                             .Where(x => x.JudgeDecisionLawunitId == (filter.JudgeId ?? x.JudgeDecisionLawunitId))
                             .Where(x => x.Document.DocumentNumber == (filter.DocumentNumber ?? x.Document.DocumentNumber))
                             .Where(x => x.Document.DocumentDate.Year == (filter.DocumentYear ?? x.Document.DocumentDate.Year))
+                            .Where(FilterExpireInfo<DocumentResolution>(false))
                             .ProjectTo<DocumentResolutionVM>(DocumentResolutionVM.GetMapping())
                             .AsQueryable();
         }
@@ -72,10 +75,12 @@ namespace IOWebApplication.Core.Services
             }
             return repo.AllReadonly<DocumentResolution>()
                             .Include(x => x.JudgeDecisionLawunit)
+                            .Include(x => x.JudgeDecisionLawunit2)
                             .Include(x => x.ResolutionType)
                             .Include(x => x.ResolutionState)
                             .Include(x => x.Court)
                             .Where(idSearch)
+                            .Where(FilterExpireInfo<DocumentResolution>(false))
                             .ProjectTo<DocumentResolutionVM>(DocumentResolutionVM.GetMapping())
                             //.Select(x => new DocumentResolutionVM
                             //{
@@ -103,13 +108,29 @@ namespace IOWebApplication.Core.Services
             {
                 return new SaveResultVM(false, "За избрания съдия няма потребител в системата");
             }
+            if (model.JudgeDecisionCount == 2 && model.JudgeDecisionLawunit2Id.HasValue)
+            {
+                model.JudgeDecisionUser2Id = GetUserIdByLawUnitId(model.JudgeDecisionLawunit2Id.Value);
+                if (string.IsNullOrEmpty(model.JudgeDecisionUser2Id))
+                {
+                    return new SaveResultVM(false, "За избрания съдия няма потребител в системата");
+                }
+            }
+            else
+            {
+                model.JudgeDecisionLawunit2Id = null;
+                model.JudgeDecisionUser2Id = null;
+            }
             try
             {
                 if (model.Id > 0)
                 {
                     var saved = repo.GetById<DocumentResolution>(model.Id);
+                    saved.JudgeDecisionCount = model.JudgeDecisionCount;
                     saved.JudgeDecisionLawunitId = model.JudgeDecisionLawunitId;
                     saved.JudgeDecisionUserId = model.JudgeDecisionUserId;
+                    saved.JudgeDecisionLawunit2Id = model.JudgeDecisionLawunit2Id;
+                    saved.JudgeDecisionUser2Id = model.JudgeDecisionUser2Id;
                     saved.ResolutionTypeId = model.ResolutionTypeId;
                     saved.UserDecisionId = model.UserDecisionId;
                     saved.Description = model.Description;
@@ -195,7 +216,7 @@ namespace IOWebApplication.Core.Services
                 case NomenclatureConstants.CaseState.Rejected:
                     //Когато има дело и то е с Отказ от образуване и съществува движение на делото към текущия съд - се връща на подателя
                     var lastMigration = migrationService.Case_GetPriorCase(model.DocumentId);
-                    if(lastMigration != null)
+                    if (lastMigration != null)
                     {
                         //var newMigration = new CaseMigration()
                         //{
@@ -221,6 +242,157 @@ namespace IOWebApplication.Core.Services
 
 
             return new SaveResultVM(true);
+        }
+
+        public IQueryable<DocumentResolutionCaseVM> SelectCasesByResolution(long documentResolutionId)
+        {
+            return repo.AllReadonly<DocumentResolutionCase>()
+                             .Include(x => x.Case)
+                             .ThenInclude(x => x.CaseType)
+                             .Where(x => x.DocumentResolutionId == documentResolutionId)
+                             .Select(x => new DocumentResolutionCaseVM
+                             {
+                                 Id = x.Id,
+                                 CaseId = x.CaseId,
+                                 CaseTypeName = x.Case.CaseType.Code,
+                                 CaseNumber = x.Case.RegNumber,
+                                 CaseShortNumber = x.Case.ShortNumberValue ?? 0,
+                                 CaseYear = x.Case.RegDate.Year
+                             }).AsQueryable();
+        }
+
+        public bool AppendCaseToResolution(long documentResolutionId, int caseId)
+        {
+            var saved = repo.AllReadonly<DocumentResolutionCase>()
+                            .Where(x => x.DocumentResolutionId == documentResolutionId && x.CaseId == caseId)
+                            .FirstOrDefault();
+
+            if (saved == null)
+            {
+                repo.Add(new DocumentResolutionCase()
+                {
+                    DocumentResolutionId = documentResolutionId,
+                    CaseId = caseId
+                });
+                repo.SaveChanges();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool RemoveCaseToResolution(long documentResolutionCaseId)
+        {
+            var saved = repo.All<DocumentResolutionCase>()
+                            .Where(x => x.Id == documentResolutionCaseId)
+                            .FirstOrDefault();
+            if (saved != null)
+            {
+                repo.Delete(saved);
+                repo.SaveChanges();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public SaveResultVM ResolutionExpire(ExpiredInfoVM model)
+        {
+            try
+            {
+                var saved = repo.GetById<DocumentResolution>(model.LongId);
+
+                if (saved.DateExpired != null)
+                {
+                    return new SaveResultVM(false, "Разпореждането вече е изтрито.");
+                }
+
+                if (saved != null)
+                {
+                    saved.DateExpired = DateTime.Now;
+                    saved.UserExpiredId = userContext.UserId;
+                    saved.DescriptionExpired = model.DescriptionExpired;
+                    repo.Update(saved);
+
+                    var docTasks = repo.All<WorkTask>()
+                                    .Where(x => x.SourceType == SourceTypeSelectVM.DocumentResolution && x.SourceId == model.LongId)
+                                    .ToList();
+                    if (docTasks.Any())
+                    {
+                        foreach (var task in docTasks)
+                        {
+                            task.TaskStateId = WorkTaskConstants.States.Deleted;
+                        }
+                    }
+
+                    repo.SaveChanges();
+
+                    return new SaveResultVM(true);
+                }
+                else
+                    return new SaveResultVM(false, "Ненамерено разпореждане.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при премахване на разпореждане Id={ model.LongId }");
+                return new SaveResultVM(false);
+            }
+        }
+
+        public (bool canAccess, string lawunitName) CheckActBlankAccess(bool forBlank, long id, DocumentResolution model = null)
+        {
+            var act = model ?? repo.GetById<DocumentResolution>(id);
+
+            if (forBlank && act.CourtId != userContext.CourtId)
+            {
+
+                return (false, string.Empty);
+            }
+            //Ако акта е постановен - има достъп
+            if (act.DeclaredDate != null)
+            {
+                return (true, string.Empty);
+            }
+            if (act.ActCreatorUserId == userContext.UserId ||
+                act.JudgeDecisionUserId == userContext.UserId ||
+                act.JudgeDecisionUser2Id == userContext.UserId)
+            {
+                return (true, string.Empty);
+            }
+
+            if (!string.IsNullOrEmpty(act.ActCreatorUserId))
+            {
+                var lawunitName = repo.All<ApplicationUser>()
+                                              .Include(x => x.LawUnit)
+                                              .Where(x => x.Id == act.ActCreatorUserId)
+                                              .Select(x => (x.LawUnit != null) ? x.LawUnit.FullName : "")
+                                              .FirstOrDefault();
+
+                return (false, lawunitName);
+            }
+
+            return (true, string.Empty);
+        }
+
+        public SaveResultVM UpdateActCreator(long id)
+        {
+            var act = repo.GetById<DocumentResolution>(id);
+            if (act == null)
+            {
+                return new SaveResultVM(false);
+            }
+            //Ако акта няма създател и акта все още не е издаден 
+            if (string.IsNullOrEmpty(act.ActCreatorUserId) && act.DeclaredDate == null)
+            {
+                act.ActCreatorUserId = userContext.UserId;
+                repo.SaveChanges();
+                return new SaveResultVM(true);
+            }
+            return new SaveResultVM(false);
         }
     }
 }

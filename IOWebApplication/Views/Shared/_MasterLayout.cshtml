@@ -85,5 +85,20 @@
     <script src="~/js/prod/site.min.js" asp-append-version="true"></script>
     @RenderSection("scripts", required: false)
 
+    <script type="text/javascript">
+        $(function () {
+            let currentMenuItem = '@ViewBag.MenuItemValue';
+            if (currentMenuItem.length > 0) {
+                $('ul.sidebar-menu li[data-li="' + currentMenuItem + '"]:first').addClass('active')
+                    .parents('li.treeview:first').addClass('menu-open')
+                    .find('ul.treeview-menu').show();
+            }
+        });
+        function selectCourt() {
+                requestContent('@Url.Action("SelectCourt","Account")',null, function (htmlModal) {
+                     ShowModalDialog('Изберете съд', htmlModal);
+                });
+        }
+    </script>
 </body>
 </html>

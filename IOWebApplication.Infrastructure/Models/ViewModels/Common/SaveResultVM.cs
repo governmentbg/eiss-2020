@@ -5,13 +5,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
     public class SaveResultVM
     {
         public bool Result { get; set; }
-
         public string ErrorMessage { get; set; }
         public string SaveMethod { get; set; }
-
+        public bool ReloadNeeded { get; set; }
         public SaveResultVM()
         {
             Result = false;
+            ReloadNeeded = false;
         }
 
         public SaveResultVM(bool result, string errorMessage = "", string saveMethod = "")

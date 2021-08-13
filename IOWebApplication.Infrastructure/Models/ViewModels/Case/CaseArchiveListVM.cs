@@ -18,7 +18,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public DateTime RegDate { get; set; }
 
         [Display(Name = "Номер на Том")]
-        public int BookNumber { get; set; }
+        public int? BookNumber { get; set; }
 
         [Display(Name = "Година на Том")]
         public int? BookYear { get; set; }
@@ -43,6 +43,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         [Display(Name = "Дата на унищожаване")]
         public DateTime? DateDestroy { get; set; }
+
+        [Display(Name = "Архивна връзка")]
+        public string ArchiveLink { get; set; }
     }
 
     public class CaseForDestroyFilterVM

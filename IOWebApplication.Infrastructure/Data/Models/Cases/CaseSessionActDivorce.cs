@@ -1,6 +1,8 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -13,7 +15,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Съобщение за прекратяване на граждански брак
     /// </summary>
     [Table("case_session_act_divorce")]
-    public class CaseSessionActDivorce : UserDateWRT
+    public class CaseSessionActDivorce : UserDateWRT, IExpiredInfo
     {
         [Column("id")]
         [Key]
@@ -144,6 +146,20 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("education_woman")]
         [Display(Name = "Степен на образование")]
         public string EducationWoman { get; set; }
+
+        [Column("date_expired")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateExpired { get; set; }
+
+        [Column("user_expired_id")]
+        public string UserExpiredId { get; set; }
+
+        [Column("description_expired")]
+        [Display(Name = "Причина за анулиране")]
+        public string DescriptionExpired { get; set; }
+
+        [ForeignKey(nameof(UserExpiredId))]
+        public virtual ApplicationUser UserExpired { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

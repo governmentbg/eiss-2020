@@ -3,6 +3,7 @@ using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Report;
@@ -22,6 +23,8 @@ namespace IOWebApplication.Controllers
         private readonly ICourtDepartmentService departmentService;
         private readonly ICommonService commonService;
         private readonly IExcelReportService excelReportService;
+        private readonly ICourtDepartmentService courtDepartmentService;
+        private readonly IElasticService elasticService;
 
         /// <summary>
         /// Справки
@@ -30,17 +33,23 @@ namespace IOWebApplication.Controllers
         /// <param name="_nomService"></param>
         /// <param name="_departmentService"></param>
         /// <param name="_commonService"></param>
+        /// <param name="_courtDepartmentService"></param>
         /// <param name="_excelReportService"></param>
+        /// <param name="_elasticService"></param>
         public ReportController(IReportService _service, INomenclatureService _nomService,
                  ICourtDepartmentService _departmentService,
                  ICommonService _commonService,
-                 IExcelReportService _excelReportService)
+                 ICourtDepartmentService _courtDepartmentService,
+                 IExcelReportService _excelReportService,
+                 IElasticService _elasticService)
         {
             service = _service;
             nomService = _nomService;
             departmentService = _departmentService;
             commonService = _commonService;
             excelReportService = _excelReportService;
+            courtDepartmentService = _courtDepartmentService;
+            elasticService = _elasticService;
         }
 
         public async Task<IActionResult> Excel()
@@ -90,6 +99,18 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
+        /// Експорт ексел наизходящ дневник
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult DocumentOutGoingReportPrev(DocumentOutFilterReportVM model)
+        {
+            var xlsBytes = service.DocumentOutGoingReportToExcelOnePrev(model);
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
+        }
+
+        /// <summary>
         /// Входящ дневник
         /// </summary>
         /// <returns></returns>
@@ -106,6 +127,18 @@ namespace IOWebApplication.Controllers
             SetHelpFile(HelpFileValues.Register1);
 
             return View(model);
+        }
+
+        /// <summary>
+        /// Експорт в ексел на входящ дневник
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult DocumentInComingReportPrev(DocumentInFilterReportVM model)
+        {
+            var xlsBytes = service.DocumentInGoingReportToExcelOnePrev(model);
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
         }
 
         /// <summary>
@@ -545,6 +578,18 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
+        /// Регистър на заявленията за достъп до обществена информация 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult PublicInformationReportPrev(PublicInformationFilterReportVM model)
+        {
+            var xlsBytes = service.PublicInformationReportToExcelOnePrev(model);
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
+        }
+
+        /// <summary>
         /// Регистър на съдебните решения по чл. 235, ал. 5 ГПК
         /// </summary>
         /// <returns></returns>
@@ -674,6 +719,18 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
+        /// Експорт Регистър по чл. 39, т. 13 от ПАС
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult CaseMigrationReturnReportPrev(CaseMigrationReturnFilterReportVM model)
+        {
+            var xlsBytes = service.CaseMigrationReturnReportToExcelOnePrev(model);
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
+        }
+
+        /// <summary>
         /// Архивна книга
         /// </summary>
         /// <returns></returns>
@@ -699,6 +756,18 @@ namespace IOWebApplication.Controllers
         public IActionResult CaseArchiveReport(CaseArchiveFilterReportVM model)
         {
             var xlsBytes = service.CaseArchiveReportToExcelOne(model);
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
+        }
+
+        /// <summary>
+        /// Експорт Архивна книга
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult CaseArchiveReportPrev(CaseArchiveFilterReportVM model)
+        {
+            var xlsBytes = service.CaseArchiveReportToExcelOnePrev(model);
             return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
         }
 
@@ -808,6 +877,18 @@ namespace IOWebApplication.Controllers
         public IActionResult ExecListReport(ExecListFilterReportVM model)
         {
             var xlsBytes = service.ExecListReportToExcelOne(model);
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
+        }
+
+        /// <summary>
+        /// Експорт Регистър на изпълнителните листове
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ExecListReportPrev(ExecListFilterReportVM model)
+        {
+            var xlsBytes = service.ExecListReportToExcelOnePrev(model);
             return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "Spravka.xlsx");
         }
 
@@ -975,9 +1056,9 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
             ViewBag.DocumentGroupId_ddl = nomService.GetDDL_DocumentGroup(DocumentConstants.DocumentKind.InitialDocument);
-            ViewBag.InstitutionTypeId_ddl = nomService.GetDropDownList<InstitutionType>(); 
-            ViewBag.InstitutionCaseTypeId_ddl = nomService.GetDropDownList<InstitutionCaseType>(); 
-            ViewBag.CaseMigrationTypeId_ddl = nomService.GetDDL_CaseMigrationType(NomenclatureConstants.CaseMigrationDirections.Incoming); 
+            ViewBag.InstitutionTypeId_ddl = nomService.GetDropDownList<InstitutionType>();
+            ViewBag.InstitutionCaseTypeId_ddl = nomService.GetDropDownList<InstitutionCaseType>();
+            ViewBag.CaseMigrationTypeId_ddl = nomService.GetDDL_CaseMigrationType(NomenclatureConstants.CaseMigrationDirections.Incoming);
 
             var model = new CaseLinkFilterReportVM();
             model.DateFromCase = new DateTime(DateTime.Now.Year, 1, 1);
@@ -1083,6 +1164,10 @@ namespace IOWebApplication.Controllers
             model.DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             model.DateTo = DateTime.Now;
             ViewBag.IsFinalAct_ddl = nomService.GetDDL_IsFinalAct();
+            ViewBag.CaseGroupIds_ddl = nomService.GetDropDownList<CaseGroup>(false);
+            ViewBag.ActTypeIds_ddl = nomService.GetDropDownList<ActType>(false, false);
+            ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+            ViewBag.CourtDepartmentOtdelenieId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
             SetHelpFile(HelpFileValues.ActsFordePersonalization);
             return View(model);
         }
@@ -1341,6 +1426,12 @@ namespace IOWebApplication.Controllers
             return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, $"CourtStatsReport {date:dd.MM.yyyy}.xlsx");
         }
 
+        public IActionResult CourtGenericReport()
+        {
+            var xlsBytes = service.CourtReportGeneric();
+            return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, $"CourtReportGeneric {DateTime.Now:dd.MM.yyyy}.xlsx");
+        }
+
         /// <summary>
         /// Статистика за период
         /// </summary>
@@ -1388,5 +1479,30 @@ namespace IOWebApplication.Controllers
             return File(await excelReportService.GetReport(userContext.CourtId, model.DateTo.Year, model.DateTo.Month), "application/octet-stream", $"Отчет{userContext.CourtName}.xlsx");
         }
 
+        /// <summary>
+        /// Генериране на статистика
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult StatisticsGenerate()
+        {
+            DateTime date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddDays(-1);
+            ViewBag.messageMonth = "Ще бъде генерирана статистиката към месец " + date.Month + " година " + date.Year;
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult StatisticsSave()
+        {
+            DateTime date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddDays(-1);
+            excelReportService.StatisticsGenerate(date);
+            ViewBag.messageMonth = "Статистиката е генерирана успешно към месец " + date.Month + " година " + date.Year;
+
+            return View("StatisticsGenerate");
+        }
+
+        public IActionResult SearchAct(string term)
+        {
+            return Json(elasticService.Search(userContext.CourtId, term));
+        }
     }
 }

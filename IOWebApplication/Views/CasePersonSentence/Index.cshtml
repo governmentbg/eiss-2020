@@ -119,8 +119,12 @@
             <a href="@Url.Action("Edit", "CasePersonSentence")?id={{id}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
         }
         <a href="@Url.Action("IndexCasePersonSentencePunishment", "CasePersonSentence")?casePersonSentenceId={{id}}" class="btn btn-def btn-sm" title="Наказание"><i class="fa fa-link"></i><span class="hidden-sm hidden-xs"></span></a>
+        @if (access.CanChange)
+        {<text>
         {{#if isActive}}
         <a href="@Url.Action("AddBulletin", "CasePersonSentence")?personId=@casePersonId" class="btn btn-def btn-sm" title="Бюлетин за съдимост"><i class="fa fa-print"></i><span class="hidden-sm hidden-xs"></span></a>
         {{/if}}
+        </text>
+        }
     </script>
 }

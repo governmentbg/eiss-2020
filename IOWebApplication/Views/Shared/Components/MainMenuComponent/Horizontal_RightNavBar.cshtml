@@ -1,0 +1,29 @@
+﻿@inject IOWebApplication.Core.Contracts.IWorkTaskService workTaskContext;
+@{
+    string helpFile = TempData["HelpFile"]?.ToString();  
+}
+<!-- /.navbar-collapse -->
+<!-- Navbar Right Menu -->
+<div class="navbar-custom-menu">
+    <ul class="nav navbar-nav nav-main">
+        <li><a href="@Url.Action("CaseReport","Case")" title="Разширено търсене"><i class="fa fa-search"></i></a></li>
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyNotificationComponent), new { view = "NotificationCount" })
+        <partial name="_MyTaskCount" model="@workTaskContext.Select_ToDoCount()" />
+
+        @*@await Component.InvokeAsync(nameof(IOWebApplication.Components.MyTasksComponent), new { view = "TaskCount" })*@
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyMovementComponent), new { view = "MovementCount" })
+
+        @*@await Component.InvokeAsync(nameof(IOWebApplication.Components.UserInfoComponent), "CourtInfo")*@
+
+        <partial name="_LoginPartial" />
+        @if (helpFile != null)
+        {
+            <li class="dropdown">
+                <a id="horizontalUserguideId" href="@Url.Content($"~/userguide/{helpFile}.htm")" target="_blank" title="Ръководство на потребителя">
+                    <i class="fa fa-question-circle-o"></i>
+                </a>
+            </li>
+        }
+    </ul>
+</div>
+<!-- /.navbar-custom-menu -->

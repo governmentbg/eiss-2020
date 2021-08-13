@@ -34,7 +34,8 @@
                     //messageHelper.ShowSuccessMessage('Текущия съд е зададен успешно.');
                     document.location.href = '@Url.Action("Index","Home")';
                 } else {
-                    messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+                    document.location.href = '@Url.Action("AccessDenied", "Home")';
+                    //messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
                 }
             });
         })

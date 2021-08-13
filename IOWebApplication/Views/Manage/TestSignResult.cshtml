@@ -1,0 +1,28 @@
+﻿@model bool
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
+@{
+    if (Model)
+    {
+        ViewData["title"] = "Успешно подписване";
+    }
+    else
+    {
+        ViewData["title"] = "Грешка при подписване";
+    }
+}
+@if (Model)
+{
+    <fieldset>
+        <div class="cdn-files" data-label="Тестов документ" data-sourcetype="@SourceTypeSelectVM.TestSignPDF" data-sourceid="@userContext.LawUnitId" data-editmode="none"></div>
+    </fieldset>
+}
+else
+{
+    <h4 class="text-danger">@ViewBag.error</h4>
+}
+<br/>
+<a asp-action="TestSign">Ново тестово подписване</a>
+
+@section scripts{
+    <partial name="_CdnScript" />
+}

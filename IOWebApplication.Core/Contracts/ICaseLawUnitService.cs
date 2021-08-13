@@ -39,6 +39,7 @@ namespace IOWebApplication.Core.Contracts
 
         bool IsExistLawUnitByCase(int CaseId, DateTime DateFrom);
         bool IsExistJudgeReporterByCase(int CaseId, DateTime DateFrom);
+        bool IsExistManualLawUnitByCase(int CaseId, int LawUnitId, DateTime DateFrom);
 
 
         /// <summary>
@@ -66,5 +67,6 @@ namespace IOWebApplication.Core.Contracts
         List<CheckListVM> GetCheckListCaseLawUnitByCase(int caseId);
         List<CheckListVM> GetCheckListCaseLawUnitByCaseAll(int caseId);
         bool IsExistJudgeLawUnitInCase(int CaseId);
+        bool IsExistIsExistManualLawUnitInConductedSession(int caseId, DateTime dateTo, int lawUnitId);
     }
 }

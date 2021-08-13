@@ -3,6 +3,7 @@
 
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool hasReq_4_2021 = (bool)(ViewBag.req_4_2021 ?? false);
 }
 
 @using (Html.BeginForm(FormMethod.Post, null, new { id = "cmeModalForm" }))
@@ -29,8 +30,12 @@
     </div>
 
     <div id="PersonList_Div">
-        <fieldset class="is-fieldset">
+        <fieldset class="is-fieldset cpl-container">
             <legend class="legend_1">Разпределение на разноска</legend>
+            @if (hasReq_4_2021)
+            {
+                @Html.EditorFor(x => x.IsFraction, "Boolean")
+            }
             @Html.EditorFor(x => x.CasePersonListDecimals, new { visibleValueTwo = false })
         </fieldset>
     </div>
@@ -49,6 +54,7 @@
 <script>
     $(document).ready(function () {
         SH_PersonList();
+        SH_Fraction();
     });
 
     $(function () {
@@ -68,6 +74,34 @@
     $('#JointDistribution').change(function () {
         SH_PersonList();
     });
+
+    $('.cpl-container input[id*="IsFraction"]').change(function () {
+        SH_Fraction();
+    });
+
+    function SH_Fraction() {
+        $('#PersonList_Div').find('.cpl-fraction-edits').hide();
+        $('.cpl-container input[id*="IsFraction"]').each(function (i, e) {
+            if ($(e).is(":checked")) {
+                $(e).parents('.cpl-container').find('.cpl-fraction-edits').show();
+                $(e).parents('.cpl-container').find('.cpl-decimal-edit').attr("disabled", true);
+            } else {
+                $(e).parents('.cpl-container').find('.cpl-fraction-edits').hide();
+                $(e).parents('.cpl-container').find('.cpl-decimal-edit').removeAttr("disabled");
+            }
+        });
+
+        //var cbox = $("#IsFraction");
+        //var isFraction = $(cbox).is(":checked");
+        //if (isFraction) {
+        //    $(cbox).parents('.cpl-container').find('.cpl-fraction-edits').show();
+        //    $(cbox).parents('.cpl-container').find('.cpl-decimal-edit').attr("disabled", true);
+        //}
+        //else {
+        //    $(cbox).parents('.cpl-container').find('.cpl-fraction-edits').hide();
+        //    $(cbox).parents('.cpl-container').find('.cpl-decimal-edit').removeAttr("disabled");
+        //}
+    }
 
     function SH_PersonList() {
         //debugger;

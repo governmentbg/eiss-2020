@@ -1181,7 +1181,9 @@ namespace IOWebApplication.Core.Services
                             RegisterName = "Национална база данни",
                             FirstName = responseNBD.PersonNames.FirstName,
                             MiddleName = responseNBD.PersonNames.SurName,
-                            FamilyName = responseNBD.PersonNames.FamilyName
+                            FamilyName = responseNBD.PersonNames.FamilyName,
+                            IsDead = responseNBD.DeathDateSpecified && responseNBD.DeathDate.Year > 1900,
+                            DeathDate = responseNBD.DeathDate.ToString("dd.MM.yyyy")
                         };
                         result.Add(itemNBD);
                     }
@@ -1577,7 +1579,7 @@ namespace IOWebApplication.Core.Services
             foreach (var item in fromObj.CollectiveBodies)
             {
                 RegixCollectiveBodiesVM addCollectiveBody = new RegixCollectiveBodiesVM();
-                addCollectiveBody.Type = GetFromNomenclature(nomenclature, RegixStateDefinitionConstants.CollectiveBody, fromObj.Assignee.Type);
+                addCollectiveBody.Type = GetFromNomenclature(nomenclature, RegixStateDefinitionConstants.CollectiveBody, fromObj.Assignee?.Type);
 
                 if (item.Members != null)
                 {

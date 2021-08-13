@@ -8,7 +8,6 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Linq;
 
 namespace IOWebApplication.Controllers
@@ -128,6 +127,14 @@ namespace IOWebApplication.Controllers
                 SetViewBag(model);
                 return View(model);
             }
+            var checkResult = migService.CheckData(model);
+            if (!checkResult.Result)
+            {
+                SetErrorMessage(checkResult.ErrorMessage);
+                SetViewBag(model);
+                return View(model);
+            }
+            
             var currentId = model.Id;
             if (migService.SaveData(model))
             {

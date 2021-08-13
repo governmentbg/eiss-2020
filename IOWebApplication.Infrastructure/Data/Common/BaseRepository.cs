@@ -152,6 +152,14 @@ namespace IOWebApplication.Infrastructure.Data.Common
         {
             return this.DbSet<T>().Find(id);
         }
+
+
+        public Tprop GetPropById<T, Tprop>(Expression<Func<T, bool>> where, Expression<Func<T, Tprop>> select)
+            where T : class
+        {
+            return this.DbSet<T>().Where(where).Select(select).FirstOrDefault();
+        }
+
         /// <summary>
         /// Saves all made changes in trasaction
         /// </summary>

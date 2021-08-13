@@ -200,7 +200,7 @@ function fillComboMulti(items, combo) {
     $(combo).html(HandlebarsToHtml(tmlp, () => items));
 }
 function setSetSelected(items, selected) {
-    if (items && (selected !== undefined)) {
+    if (items && (selected !== undefined) && (selected !== null)) {
         for (var i = 0; i < items.length; i++) {
             if (items[i].value === selected.toString()) {
                 items[i].selected = true;
@@ -254,6 +254,58 @@ var messageHelper = (function () {
         ShowErrorMessage: ShowErrorMessage,
         ShowSuccessMessage: ShowSuccessMessage,
         ShowWarning: ShowWarning
+    };
+})();
+
+// LocalStorage helper
+var storageHelper = (function () {
+    const arrKeysName = 'storageHelperKeys';
+
+    const save = function (key, data) {
+        let arrKeys = [];
+        if (localStorage.getItem(arrKeysName) != undefined) {
+            arrKeys = localStorage.getItem(arrKeysName).split(',');
+        }
+        if (arrKeys.indexOf(key) == -1) {
+            arrKeys.push(key);
+        }
+        if (arrKeys.length > 5) {
+            try {
+                localStorage.removeItem(arrKeys[0]);
+                arrKeys.splice(0, 1);
+            } catch (e) { }
+        }
+        try {
+            localStorage.setItem(arrKeysName, arrKeys.join());
+            localStorage.setItem(key, data);
+        } catch (e) { }
+    };
+
+    const load = function (key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) { }
+        return '';
+    };
+
+    const remove = function (key) {
+        try {
+            let arrKeys = [];
+            if (localStorage.getItem(arrKeysName) == undefined) {
+                arrKeys = localStorage.getItem(arrKeysName).split(',');
+            }
+            if (arrKeys.indexOf(key) >= 0) {
+                arrKeys.splice(arrKeys.indexOf(key), 1);
+            }
+            localStorage.setItem(arrKeysName, arrKeys.join());
+            localStorage.removeItem(key);
+        } catch (e) { }
+    };
+
+    return {
+        save,
+        load,
+        remove
     };
 })();
 
@@ -327,12 +379,12 @@ function attachAjaxForm(form, completeCallback, errorCallback, beforeSendCallbac
 }
 
 
-// Презарежда DataTable 'dataTableID' при 'change' събитието на елемент 'elementID'
-function reloadDataTableOnElementChange(elementID, dataTableID) {
-    $(document).on('change', elementID, function () {
-        $(dataTableID).DataTable().ajax.reload(null, false);
-    });
-}
+//// Презарежда DataTable 'dataTableID' при 'change' събитието на елемент 'elementID'
+//function reloadDataTableOnElementChange(elementID, dataTableID) {
+//    $(document).on('change', elementID, function () {
+//        $(dataTableID).DataTable().ajax.reload(null, false);
+//    });
+//}
 
 
 // Презарежда DataTable 'dataTableID' при 'change' събитието на 'DateTimePicker' елемент 'elementID'
@@ -355,17 +407,17 @@ function checkFilterFormHasData(filterContainer, minFilledCount) {
     }
     let filledCount = 0;
     $(filterContainer).find('input[type="text"],input[type="number"]').each(function (i, e) {
-        if ($(e).val().length > 0 && $(e).val() != '0') {
+        if ($(e).val() && $(e).val().length > 0 && $(e).val() != '0') {
             filledCount++;
         }
     });
     $(filterContainer).find('input.ui-autocomplete-input').parent().find('input[type="hidden"]').each(function (i, e) {
-        if ($(e).val().length > 0 && $(e).val() != '0') {
+        if ($(e).val() && $(e).val().length > 0 && $(e).val() != '0') {
             filledCount++;
         }
     });
     $(filterContainer).find('select').each(function (i, e) {
-        if ($(e).val().length > 0 && $(e).val() > 0) {
+        if ($(e).val() && $(e).val().length > 0 && $(e).val() > 0) {
             filledCount++;
         }
     });
@@ -448,13 +500,22 @@ function swalSubmit(sender, text) {
             }
         });
 }
-function swalConfirm(text, callback, cancelCallback) {
+function swalConfirm(text, callback, cancelCallback, danger) {
+    let icon = "warning";
+    let dangerMode = false;
+    let title = 'Потвърди';
+    if (danger) {
+        title = 'Внимание!';
+        icon = "error";
+        dangerMode = true;
+    }
+
     swal({
-        title: 'Потвърди',
+        title: title,
         text: text,
-        icon: "warning",
-        buttons: ["Отказ", "Потвърди"]
-        //dangerMode: true
+        icon: icon,
+        buttons: ["Отказ", "Потвърди"],
+        dangerMode: dangerMode
     })
         .then((result) => {
             if (result) {
@@ -466,6 +527,7 @@ function swalConfirm(text, callback, cancelCallback) {
             }
         });
 }
+
 function swalConfirmClick(e, sender, text) {
     if ($(sender).data('confirmed') === true) {
         return true;
@@ -731,6 +793,37 @@ function singleClickSubmitEnable() {
     $('.single-click-submit').removeAttr("disabled");
 }
 
+function singleClickButton(sender) {
+    var disabled = isDisabled(sender);
+
+    if (!disabled) {
+        $(sender).attr('disabled', 'disabled');
+        setTimeout(function () {
+            $(sender).removeAttr('disabled');
+        }, 500);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function checkSingleClick(sender) {
+    let disabled = isDisabled(sender);
+    if (!disabled) {
+        $(sender).attr('disabled', 'disabled');
+        setTimeout(function () {
+            $(sender).removeAttr('disabled');
+        }, 1000);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function isDisabled(sender) {
+    return $(sender).is(':disabled') || $(sender).attr('disabled');
+}
+
 function CheckCertificate() {
     if (certNo && certNo !== "" && certCheckPath !== "") {
         $.ajax({
@@ -782,8 +875,9 @@ function getDataTablesVisibleColumns(tbl) {
     let colDefs = _tbl.settings().init().columns;
     for (var i = 0; i < colDefs.length; i++) {
         if (_tbl.columns().column(i).visible()) {
-            colVis += ',data:' + colDefs[i].data.toLowerCase() + '|name:' + colDefs[i].name.toLowerCase()+'|';
+            colVis += ',data:' + colDefs[i].data.toLowerCase() + '|name:' + colDefs[i].name.toLowerCase() + '|';
         }
     }
     return colVis;
 }
+

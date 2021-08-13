@@ -1,0 +1,30 @@
+﻿@model VksNotificationItemVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@{ 
+    var disabled = string.IsNullOrEmpty(Model.PaperEdition) ? "" : " notification-disabled";
+}
+<div class="row vks-notification-item">
+    <div class="col-sm-12">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">@Model.PersonName</legend>
+            @Html.HiddenFor(x => x.NotificationListId)
+            @Html.HiddenFor(x => x.CasePersonId, new { @class = "case-person-id" })
+            @Html.HiddenFor(x => x.PersonName)
+            <div class="col-md-2">
+                @Html.EditorFor(x => x.VksNotificationStateId, "DropDown", null, new { Ddl = Model.VksNotificationStatesDdl, @class= disabled })
+            </div>
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.CasePersonLinkId, "DropDown", null, new { Ddl = Model.CasePersonLinksDdl, @class = "case-person-link-id " + disabled })
+            </div>
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.NotificationAddressId, "DropDownLong", null, new { Ddl = Model.NotificationAddressesDdl, @class = "notification-address-id" + disabled })
+            </div>
+            @if (!string.IsNullOrEmpty(Model.PaperEdition))
+            {
+                <div class="col-md-2">
+                    @Html.EditorFor(x => x.PaperEdition, new { @class = disabled })
+                </div>
+            }
+        </fieldset>
+    </div>
+</div>

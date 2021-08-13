@@ -159,6 +159,10 @@ namespace IOWebApplication.Controllers
             if (model.InforcedDate != null)
             {
                 var caseSessionAct = service.GetById<CaseSessionAct>(model.CaseSessionActId);
+
+                if (caseSessionAct.ActInforcedDate == null)
+                    return "Няма въведена дата на влизане в сила на акта";
+
                 if ((model.InforcedDate ?? DateTime.Now).Date < (caseSessionAct.ActInforcedDate ?? DateTime.Now).Date)
                     return "Дата на влизане в сила на присъдатае по-малка от тази на акта";
             }

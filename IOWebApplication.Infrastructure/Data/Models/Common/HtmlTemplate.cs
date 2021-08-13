@@ -99,6 +99,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Има данни за експериза")]
         public bool? HaveExpertReport { get; set; }
 
+        [Column("have_notification_ispn_reason")]
+        [Display(Name = "Има основание за покана")]
+        public bool? HaveNotificationIspnReason { get; set; }
+
         [Column("xls_title_row")]
         [Display(Name = "Ред за филтър")]
         public int? XlsTitleRow { get; set; }
@@ -125,6 +129,28 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("have_document_sender_person")]
         [Display(Name = "Има подател нa съпровождащ документ")]
         public bool? HaveDocumentSenderPerson { get; set; }
+
+        [Column("have_money_obligation")]
+        [Display(Name = "Има сума държавна такса")]
+        public bool? HaveMoneyObligation { get; set; }
+
+        [Column("have_institution_document")]
+        [Display(Name = "Има дела на други институции или съдебни инстанции")]
+        public bool? HaveInstitutionDocument { get; set; }
+
+        /// <summary>
+        /// Да се въвежда период в DocumentTemplate
+        /// </summary>
+        [Column("have_from_to_date")]
+        [Display(Name = "Избор на От-До дата")]
+        public bool? HaveFromToDate { get; set; }
+
+        /// <summary>
+        /// Да се въвежда период в DocumentTemplate
+        /// </summary>
+        [Column("default_zoom")]
+        [Display(Name = "Намаление")]
+        public decimal? DefaultZoom { get; set; }
 
         [ForeignKey(nameof(HtmlTemplateTypeId))]
         public virtual HtmlTemplateType HtmlTemplateType { get; set; }

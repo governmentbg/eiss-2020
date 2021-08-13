@@ -16,7 +16,7 @@
         <form asp-action="Register" method="post" autocomplete="off">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
-                @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitTypes = "1,5,6" })
+                @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitTypes = "1,2,5,6" })
                 @Html.EditorFor(x => x.Email)
                 @if (IOWebApplication.Infrastructure.Constants.AccountConstants.PasswordLoginEnabled)
                 {

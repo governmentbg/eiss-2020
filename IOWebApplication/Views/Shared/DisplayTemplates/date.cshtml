@@ -1,5 +1,12 @@
 ﻿@model DateTime?
 <div class="form-group">
-    <label asp-for="@Model" class="control-label"></label>
+    @if (ViewData["label"] != null)
+    {
+        <label class="control-label">@ViewData["label"]</label>
+    }
+    else
+    {
+        <label asp-for="@Model" class="control-label"></label>
+    }
     <div>@((Model != null) ? Model.Value.ToString("dd.MM.yyyy") : "")</div>
 </div>

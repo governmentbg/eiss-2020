@@ -1,0 +1,19 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.VksNotificationPrintListVM
+@if (!string.IsNullOrEmpty(Model.SessionTimeLabel))
+{
+
+    <div style="width:100%">
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>@(Model.SessionTimeLabel)</b>
+    </div>
+}
+@if (!string.IsNullOrEmpty(Model.JudicalCompositionLabelGr))
+{
+    <div style="width:100%">
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i><b>@(Model.JudicalCompositionLabelGr)</b></i>
+    </div>
+}
+<div style="width:100%;margin-bottom:15px;">
+    <b>@(Model.JudicalCompositionLabel), @(Model.CaseLabel) </b>
+    по касационна жалба срещу решението по @(Model.CaseFromLabel)
+    подадена от @(Model.LeftSide), срещу @(Model.RightSide)
+</div>

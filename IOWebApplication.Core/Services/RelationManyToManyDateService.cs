@@ -1,5 +1,6 @@
 ﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using Microsoft.Extensions.Logging;
 using System;
@@ -13,12 +14,18 @@ namespace IOWebApplication.Core.Services
 {
     public class RelationManyToManyDateService : BaseService, IRelationManyToManyDateService
     {
+        private readonly ICourtLoadPeriodService courtLoadPeriodService;
         public RelationManyToManyDateService(
-         ILogger<RelationManyToManyDateService> _logger,
-         IRepository _repo)
+             ILogger<RelationManyToManyDateService> _logger,
+             IRepository _repo
+             , ICourtLoadPeriodService _courtLoadPeriodService
+            )
         {
             logger = _logger;
             repo = _repo;
+            courtLoadPeriodService = _courtLoadPeriodService;
+
+
         }
         private void SetPropertyValue<T, Tobj>(T target, Expression<Func<T, Tobj>> memberLambda, Tobj value)
         {
@@ -100,7 +107,7 @@ namespace IOWebApplication.Core.Services
                                 Expression<Func<T, DateTime?>> dateFromProp,
                                 Expression<Func<T, DateTime?>> dateToProp,
                                 Expression<Func<T, int>> percentProp,
-                                Func<T, bool> setNew)
+                                Func<T, bool> setNew, bool IsLawunit)
 
             where T : class, new()
         {
@@ -140,6 +147,25 @@ namespace IOWebApplication.Core.Services
                         SetPropertyValue<T, int>(newCode, itemProp, code.Id);
                         SetPropertyValue<T, DateTime?>(newCode, dateFromProp, DateTime.Now);
                         repo.Add<T>(newCode);
+
+                        ///////////////////// Преизчислява среднодневните на база сменения процент
+                        CourtLoadPeriodLawUnit courtLoadPeriodLawUnit = null;
+                        if (IsLawunit)
+                        {
+                            courtLoadPeriodLawUnit = courtLoadPeriodService.UpdateChangedProcentAverageCases(parentId, code.Id, code.Percent);
+                        }
+                        else
+                        {
+                            courtLoadPeriodLawUnit = courtLoadPeriodService.UpdateChangedProcentAverageCases(code.Id, parentId, code.Percent);
+                        }
+
+                        if (courtLoadPeriodLawUnit != null)
+                        {
+                            repo.Add<CourtLoadPeriodLawUnit>(courtLoadPeriodLawUnit);
+                        }
+
+                        ///////////////////// Преизчислява среднодневните на база сменения процент
+
                     }
                 }
                 repo.SaveChanges();
@@ -151,5 +177,6 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
+
     }
 }

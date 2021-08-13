@@ -33,7 +33,8 @@
                     "datatype": "json",
                     data: function (d) {
                         d.caseId = @Model.Id;
-                    }
+                    },
+                    initialCall: false
 
                 },
                 deferLoading: deferLoadingOnTab('#caseEvidenceMainTable'),

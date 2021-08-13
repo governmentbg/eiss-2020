@@ -12,6 +12,9 @@
                 <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕПЕП</a></li>
                 @switch (Model.SourceType)
                 {
+                    case SourceTypeSelectVM.Document:
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.DocumentFiles" data-si="@Model.SourceId">ЕПЕП - Файлове</a></li>
+                        break;
                     case SourceTypeSelectVM.CaseSessionAct:
                         <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActPdf" data-si="@Model.SourceId">ЕПЕП - Акт</a></li>
                         <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActDepersonalized" data-si="@Model.SourceId">ЕПЕП - Обезличен</a></li>
@@ -23,6 +26,9 @@
                     case SourceTypeSelectVM.Case:
                         <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EISPP" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕИСПП</a></li>
                         <li><a href="#" class="mq--info" data-it="@IntegrationTypes.ISPN" data-st="@Model.SourceType" data-si="@Model.SourceId">ИСПН</a></li>
+                        break;
+                    case SourceTypeSelectVM.CaseLawUnitDismisal:
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPRO" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕПРО</a></li>
                         break;
                 }
             </ul>

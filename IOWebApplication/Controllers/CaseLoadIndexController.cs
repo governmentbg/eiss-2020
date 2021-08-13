@@ -25,11 +25,13 @@ namespace IOWebApplication.Controllers
         private readonly ICaseLawUnitService caseLawUnitService;
         private readonly ICommonService commonService;
         private readonly ICaseSessionActService caseSessionActService;
+        private readonly ICourtDepartmentService courtDepartmentService;
 
         public CaseLoadIndexController(ICaseLoadIndexService _service, 
                                        INomenclatureService _nomService, 
                                        ICaseLawUnitService _caseLawUnitService,
                                        ICommonService _commonService,
+                                       ICourtDepartmentService _courtDepartmentService,
                                        ICaseSessionActService _caseSessionActService)
         {
             service = _service;
@@ -37,6 +39,7 @@ namespace IOWebApplication.Controllers
             caseLawUnitService = _caseLawUnitService;
             commonService = _commonService;
             caseSessionActService = _caseSessionActService;
+            courtDepartmentService = _courtDepartmentService;
         }
 
         #region Case Load Index
@@ -1297,6 +1300,14 @@ namespace IOWebApplication.Controllers
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
+
+            ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+            ViewBag.CourtDepartmentOtdelenieId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
+            ViewBag.SessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
+            ViewBag.SessionResultId_ddl = nomService.GetDropDownList<SessionResult>();
+            ViewBag.ActTypeId_ddl = nomService.GetDropDownList<ActType>();
+
             SetHelpFile(HelpFileValues.Report24);
 
             return View(model);
@@ -1311,9 +1322,9 @@ namespace IOWebApplication.Controllers
         /// <param name="LawUnitId"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataSpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId)
+        public IActionResult ListDataSpr(IDataTablesRequest request, CaseLoadIndexFilterVM model)
         {
-            var data = service.CaseLoadIndexSpr_Select(DateFrom ?? DateTime.Now, DateTo ?? DateTime.Now, LawUnitId);
+            var data = service.CaseLoadIndexSpr_Select(model);
             return request.GetResponse(data);
         }
 
@@ -1329,6 +1340,7 @@ namespace IOWebApplication.Controllers
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
             SetHelpFile(HelpFileValues.Report25);
+            ViewBag.JudgeLoadActivityId_ddl = nomService.GetDropDownList<JudgeLoadActivity>();
 
             return View(model);
         }
@@ -1342,9 +1354,9 @@ namespace IOWebApplication.Controllers
         /// <param name="LawUnitId"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataCourtLawUnitActivitySpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId)
+        public IActionResult ListDataCourtLawUnitActivitySpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId, int JudgeLoadActivityId)
         {
-            var data = service.CourtLawUnitActivitySpr_Select(DateFrom ?? DateTime.Now, DateTo ?? DateTime.Now, LawUnitId);
+            var data = service.CourtLawUnitActivitySpr_Select(DateFrom ?? DateTime.Now, DateTo ?? DateTime.Now, LawUnitId, JudgeLoadActivityId);
             return request.GetResponse(data);
         }
 

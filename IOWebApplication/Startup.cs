@@ -74,6 +74,15 @@ namespace IOWebApplication
                    IndexFormat = "eiss-log-{0:dd.MM.yyyy}"
                })
                .CreateLogger();
+
+            //Audit.Core.Configuration.Setup()
+            //    .UseElasticsearch(config => config
+            //        .ConnectionSettings(pool)
+            //        .Index(auditEvent => $"audit-log-{auditEvent.StartDate.Date.ToString("dd.MM.yyyy")}")
+            //        .Id(ev => Guid.NewGuid()));
+
+
+            
         }
 
         public IConfiguration Configuration { get; }

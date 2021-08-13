@@ -18,6 +18,7 @@
     {
         access.CanChange = false;
     }
+    var hasEpro = (bool)ViewBag.hasEproReq;
 }
 
 @section breadcrumb{
@@ -30,8 +31,7 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
-
+    <div class="col-md-8">
         <form asp-action="EditDismisal" method="post">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CourtId)
@@ -56,27 +56,40 @@
                             </div>
                         </div>
                     }
+
                     <div class="row">
                         <div class="col-lg-6">@Html.EditorFor(x => x.DismisalDate, "DateTimeDivided")</div>
                     </div>
-
+                    @if (hasEpro)
+                    {
+                        <div class="row dt-otvod">
+                            <div class="col-lg-6">@Html.EditorFor(x => x.DocumentId, "GenericDropDownLong")</div>
+                            <div class="col-lg-6">@Html.EditorFor(x => x.DocumentPersonId, "GenericDropDownLong")</div>
+                        </div>
+                        <div class="row dt-otvod">
+                            <div class="col-lg-6">@Html.EditorFor(x => x.DismissalStateId, "GenericDropDown")</div>
+                        </div>
+                    }
                     <div class="row">
                         <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
-
                     </div>
                 </div>
             </fieldset>
             <div class="form-group">
                 @if (access.CanChange)
                 {
-                    <input type="submit" value="Запис" class="btn btn-success" />
-                    <input type="submit" value="Преразпределение" class="btn btn-success" name="btnRedirectSelection" />
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    <input type="submit" value="Преразпределение" class="btn btn-success single-click-submit" name="btnRedirectSelection" />
                 }
                 <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@caseId" class="btn btn-danger">Назад</a>
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "EditDismisal" })
+                        @if (hasEpro)
+                        {
+                            <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CaseLawUnitDismisal, SourceId = Model.Id })" />
+                        }
                     </div>
                 }
             </div>
@@ -97,6 +110,24 @@
                     $("#act").hide();
                 }
             }).trigger('change');
-        });
+            @if (hasEpro)
+            {
+            <text>
+            $('#DismisalTypeId').change(function () {
+                let dt = $(this).val();
+                if (dt == @(NomenclatureConstants.DismisalType.Otvod)) {
+                    $('div.dt-otvod').show();
+                } else {
+                    $('div.dt-otvod').hide();
+                }
+            }).trigger('change');
+
+            $('#DocumentId').change(function () {
+                requestCombo('@Url.Action("Get_PersonsByDocument", "Document")', { documentId: $(this).val() }, '#DocumentPersonId');
+            }).trigger('change');
+
+                </text>
+                }
+            });
     </script>
 }

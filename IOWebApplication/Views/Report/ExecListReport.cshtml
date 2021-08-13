@@ -1,4 +1,6 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @model ExecListFilterReportVM
 
 @{
@@ -19,10 +21,36 @@
     </div>
     <div class="row">
         <div class="col-md-6 text-left pb-15">
-            <button type="submit" class="btn btn-primary">
-                Експорт в Excel
-                <i class="fa fa-file-excel-o" title="Търсене"></i>
-            </button>
+            @if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.ReqBooks))
+            {
+                <button type="button" onclick="ExcelData()" class="btn btn-primary">
+                    Експорт в Excel
+                    <i class="fa fa-file-excel-o" title="Търсене"></i>
+                </button>
+                <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
+                    Експорт в Excel стар
+                    <i class="fa fa-file-excel-o" title="Търсене"></i>
+                </button>
+            }
+            else
+            {
+                <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
+                    Експорт в Excel
+                    <i class="fa fa-file-excel-o" title="Търсене"></i>
+                </button>
+            }
         </div>
     </div>
 </form>
+
+<script>
+        function ExcelData() {
+        $('#formFilter').attr('action', '@Url.Action("ExecListReport")');
+        $("#formFilter").submit();
+    }
+
+    function ExcelDataPrev() {
+        $('#formFilter').attr('action', '@Url.Action("ExecListReportPrev")');
+        $("#formFilter").submit();
+    }
+</script>

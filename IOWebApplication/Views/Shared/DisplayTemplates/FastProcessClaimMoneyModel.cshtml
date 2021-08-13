@@ -1,0 +1,54 @@
+﻿@model FastProcessClaimMoneyModel
+@using IOWebApplication.Infrastructure.Data.ApiModels.FastProcess
+@using IOWebApplication.Extensions
+<div class="row">
+    <div class="col-lg-8">
+        @Html.DisplayFor(x => x.Label, "obj", null, new { label = "Наименование" })
+    </div>
+    <div class="col-lg-4">
+        @Html.DisplayFor(x => x.Motive, "obj", null, new { label = "Мотиви" })
+    </div>
+</div>
+<div class="row">
+    @if (string.IsNullOrEmpty(Model.MainClaimMoneyId))
+    {
+        <div class="col-lg-3">@Html.DisplayFor(x => x.CollectionGroup, "stringFromCombo", null, new { label = "Вид", data = ViewBag.collectionGroup })</div>
+        <div class="col-lg-3">@Html.DisplayFor(x => x.CollectionType, "stringFromCombo", null, new { label = " ", data = ViewBag.collectionType })</div>
+    }
+    else
+    {
+        <div class="col-lg-6">@Html.DisplayFor(x => x.CollectionKind, "stringFromCombo", null, new { label = "Вид", data = ViewBag.collectionKind })</div>
+    }
+    <div class="col-lg-2">@Html.DisplayFor(x => x.Currency, "obj", null, new { label = "Валута" })</div>
+    <div class="col-lg-2">@Html.DisplayFor(x => x.InitialAmount, "objVal", null, new { label = "Първоначално", value = $"{Model.InitialAmount:N2} {Model.Currency}" })</div>
+    <div class="col-lg-2">@Html.DisplayFor(x => x.PretendedAmount, "objVal", null, new { label = "Претендирано", value = $"{Model.PretendedAmount:N2} {Model.Currency}" })</div>
+</div>
+<div class="row">
+    <div class="col-lg-2">@Html.DisplayFor(x => x.DateFrom, "date", null, new { label = "Начало" })</div>
+    @switch (Model.DateToType)
+    {
+        case "1":
+            <div class="col-lg-2">@Html.DisplayFor(x => x.DateTo, "date", null, new { label = "Край" })</div>
+            break;
+        case "2":
+            <div class="col-lg-2">@Html.DisplayFor(x => x.DateTo, "objVal", null, new { label = "Край", value = "Без избор" })</div>
+            break;
+        case "3":
+            <div class="col-lg-2">@Html.DisplayFor(x => x.DateTo, "objVal", null, new { label = "Край", value = "До изплащане на вземането" })</div>
+            break;
+    }
+    <div class="col-lg-8">
+        @Html.DisplayFor(x => x.IsJointDistribution, "objVal", null, new { label = "Солидарно разпределение", value = (Model.IsJointDistribution) ? "Да" : "Не" })
+        <br />
+        @if (!Model.Distribution.IsEmpty())
+        {
+            <fieldset>
+                <legend>Разпределение на вземането</legend>
+                @foreach (var dist in Model.Distribution)
+                {
+                    @Html.DisplayFor(x => dist, "FastProcessDistributionModel", null, new { isFraction = Model.IsFraction })
+                }
+            </fieldset>
+        }
+    </div>
+</div>

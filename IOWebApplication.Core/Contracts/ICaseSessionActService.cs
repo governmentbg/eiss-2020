@@ -14,9 +14,10 @@ namespace IOWebApplication.Core.Contracts
     {
         IQueryable<CaseSessionActVM> CaseSessionAct_Select(int caseSessionId, int? caseId, DateTime? DateFrom,
              DateTime? DateTo, int? year, string caseRegNumber, bool showExpired = false);
-        bool CaseSessionAct_SaveData(CaseSessionAct model);
+        SaveResultVM CaseSessionAct_SaveData(CaseSessionAct model);
         bool CaseSessionAct_SaveDispositiv(int id, string dispositiv);
         bool CaseSessionAct_SaveMotiveCreator(int id);
+        bool CheckActPrivateFileAccess(int id, CaseSessionAct model = null);
         (bool canAccess, string lawunitName) CheckActBlankAccess(int id, CaseSessionAct model = null);
         (bool canAccess, string lawunitName) CheckMotiveBlankAccess(int id);
         SaveResultVM CaseSessionAct_RegisterAct(int id);
@@ -26,7 +27,7 @@ namespace IOWebApplication.Core.Contracts
         bool SendForCoordination_Init(int caseSessionActId, long taskId);
         SaveResultVM SendForSign_Init(int caseSessionActId, long taskId);
         bool SendForSignMotives_Init(int caseSessionActId, long taskId);
-        ICollection<CaseLawUnit> GetCaseLawUnitsByAct(int caseSessionActId, int caseSessionId = 0);
+        ICollection<CaseLawUnit> GetCaseLawUnitsByAct(int caseSessionActId, int caseSessionId = 0, bool forMotives = false);
         /// <summary>
         /// Зареждане в комбо на актовете от заседания по ID на дело
         /// </summary>
@@ -50,6 +51,7 @@ namespace IOWebApplication.Core.Contracts
         string AutoDepersonalizeAct(IEnumerable<DepersonalizationHistoryItem> rules, string html);
         CaseSessionActDivorce GetDivorceByActId(int actId);
         (bool result, string errorMessage) CaseSessionActDivorce_SaveData(CaseSessionActDivorce model);
+        (bool result, string errorMessage) CaseSessionActDivorce_SaveExpired(ExpiredInfoVM model);
         List<SelectListItem> GetDropDownList_CaseSessionAct(int CaseId, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDropDownList_CaseSessionActEnforced(int CaseId, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDropDownListBySessionId(int caseSessionId, bool addDefaultElement = true, bool addAllElement = false);
@@ -62,9 +64,9 @@ namespace IOWebApplication.Core.Contracts
         (bool result, string errorMessage) CaseSessionActCompany_SaveData(CaseSessionActCompany model);
         CaseSessionAct GetByIdWithOtherData(int actId);
         List<CaseSessionActVM> GetSessionActsFinal(int CaseId);
-        IQueryable<CaseSessionActVM> CaseSessionActSpr_Select(int courtId, CaseSessionActFilterVM model);
+        IQueryable<CaseSessionActVM> CaseSessionActSpr_Select(int courtId, CaseSessionActFilterVM model, bool forLawUnitCurrent = false);
         CaseSessionAct GetByRelatedActId(int actId);
         bool IsExistCaseSessionActByCase(int CaseId);
-        List<SelectListItem> GetDropDownList_CaseSessionActByCaseBySession(int? CaseId, int? CaseSessionId, bool addDefaultElement = true, bool addAllElement = false);
+        List<SelectListItem> GetDropDownList_CaseSessionActByCaseBySession(int? CaseId, int? CaseSessionId, bool addDefAllOne = false, bool addDefaultElement = true, bool addAllElement = false);
     }
 }

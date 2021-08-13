@@ -4,6 +4,8 @@
 
 @{
     var caseId = ViewBag.caseId;
+    bool hasReq_4_2021 = (bool)(ViewBag.req_4_2021 ?? false);
+
     ViewData["Title"] = "Данни за обстоятелства за вземане по дело " + ViewBag.CaseName;
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
 }
@@ -90,9 +92,30 @@
             });
     }
 
+    function cmcCreateMoneyCollectionNew(caseMoneyClaimId) {
+        requestContent('@Url.Action("CaseMoneyCollectionWithKindItems", "CaseFastProcess")'
+            , { caseId:@Model, moneyClaimId: caseMoneyClaimId, id: null }
+            , function (data) {
+                ShowModalDialog('Добавяне на вземане към обстоятелство', data, true);
+            });
+    }
+
     function cmcEditMoneyCollection(id) {
         requestContent('@Url.Action("CaseMoneyCollection","CaseFastProcess")'
             , { caseId:@Model, moneyClaimId: null, mainMoneyCollectionId: null, id: id }
+            , function (data) {
+                if ('@access.CanChange' == 'True') {
+                    ShowModalDialog('Редакция на вземане към обстоятелство', data, true);
+                }
+                else {
+                    ShowModalDialog('Преглед на вземане към обстоятелство', data, true);
+                }
+            });
+    }
+
+    function cmcEditMoneyCollectionNew(id) {
+        requestContent('@Url.Action("CaseMoneyCollectionWithKindItems", "CaseFastProcess")'
+            , { caseId:@Model, moneyClaimId: null, id: id }
             , function (data) {
                 if ('@access.CanChange' == 'True') {
                     ShowModalDialog('Редакция на вземане към обстоятелство', data, true);
@@ -266,7 +289,11 @@
             <div class="moneyclaim-item">
                 <div class="row">
                     <div class="col-lg-4"><b>Вид: {{caseMoneyClaimGroupLabel}}</b></div>
+                    {{#if claimDate}}
                     <div class="col-lg-8">Номер/Дата: {{claimNumber}}/{{date claimDate}}</div>
+                    {{else}}
+                    <div class="col-lg-8">Номер: {{claimNumber}}</div>
+                    {{/if}}
                 </div>
                 {{#if caseMoneyClaimTypeLabel}}
                 <div class="row">
@@ -289,7 +316,14 @@
                 &nbsp;
                 @if (access.CanChange)
                 {
-                    <a href="#" class="btn btn-xs btn-success" onclick="cmcCreateMoneyCollection('{{id}}'); return false;"><i class="fa fa-plus"></i> Добавяне на вземане към обстоятелство</a>
+                    if (!hasReq_4_2021)
+                    {
+                        <a href="#" class="btn btn-xs btn-success" onclick="cmcCreateMoneyCollection('{{id}}'); return false;"><i class="fa fa-plus"></i> Добавяне на вземане към обстоятелство</a>
+                    }
+                    else
+                    {
+                        <a href="#" class="btn btn-xs btn-success" onclick="cmcCreateMoneyCollectionNew('{{id}}'); return false;"><i class="fa fa-plus"></i> Добавяне на вземане към обстоятелство</a>
+                    }
                 }
                 &nbsp;
             </div>
@@ -328,7 +362,11 @@
                 </div>
                 <div class="row">
                     {{#if isMoney}}
+                    {{#if dateFrom}}
                     <div class="col-lg-3">Начало: {{date dateFrom}}</div>
+                    {{else}}
+                    <div class="col-lg-3">Начало:</div>
+                    {{/if}}
                     <div class="col-lg-3">Край: {{dateToLabel}}</div>
                     <div class="col-lg-3">Солидарно разпределение: {{jointDistribution}}</div>
                     {{/if}}
@@ -357,17 +395,35 @@
                 <br />
                 @if (access.CanChange)
                 {
-                    <a href="#" class="btn btn-xs btn-warning" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-edit"></i></a>
+                    if (!hasReq_4_2021)
+                    {
+                        <a href="#" class="btn btn-xs btn-warning" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-edit"></i></a>
+                    }
+                    else
+                    {
+                        <a href="#" class="btn btn-xs btn-warning" onclick="cmcEditMoneyCollectionNew('{{id}}'); return false;"><i class="fa fa-edit"></i></a>
+                    }
                 }
                 else
                 {
-                    <a href="#" class="btn btn-xs btn-def" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-eye"></i></a>
+                    if (!hasReq_4_2021)
+                    {
+                        <a href="#" class="btn btn-xs btn-def" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-eye"></i></a>
+                    }
+                    else
+                    {
+                        <a href="#" class="btn btn-xs btn-def" onclick="cmcEditMoneyCollectionNew('{{id}}'); return false;"><i class="fa fa-eye"></i></a>
+                    }
+
                 }
                 &nbsp;
                 {{#if isMoney}}
                 @if (access.CanChange)
                 {
-                    <a href="#" class="btn btn-xs btn-success" onclick="cmcCreateMoneyCollectionExtra('{{caseMoneyClaimId}}', '{{id}}'); return false;"><i class="fa fa-plus"></i> Допълнително вземане</a>
+                    if (!hasReq_4_2021)
+                    {
+                        <a href="#" class="btn btn-xs btn-success" onclick="cmcCreateMoneyCollectionExtra('{{caseMoneyClaimId}}', '{{id}}'); return false;"><i class="fa fa-plus"></i> Допълнително вземане</a>
+                    }
                 }
                 &nbsp;
                 {{/if}}
@@ -421,13 +477,16 @@
                         {{/if}}
 
                         <br />
-                        @if (access.CanChange)
+                        @if (!hasReq_4_2021)
                         {
-                            <a href="#" class="btn btn-xs btn-warning" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-edit"></i></a>
-                        }
-                        else
-                        {
-                            <a href="#" class="btn btn-xs btn-def" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-eye"></i></a>
+                            @if (access.CanChange)
+                            {
+                                <a href="#" class="btn btn-xs btn-warning" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-edit"></i></a>
+                            }
+                            else
+                            {
+                                <a href="#" class="btn btn-xs btn-def" onclick="cmcEditMoneyCollection('{{id}}'); return false;"><i class="fa fa-eye"></i></a>
+                            }
                         }
                         &nbsp;
                     </div>
@@ -497,6 +556,8 @@
     </fieldset>
     <fieldset class="is-fieldset">
         <legend class="legend_1" data-position="FastProcess"> Допълнителна информация</legend>
+        С включено разпореждане за незабавно изпълнение: {{{fastProcessVM.visibleOrderText}}}
+        <br />
         {{{fastProcessVM.description}}}
         <br />
         <br />

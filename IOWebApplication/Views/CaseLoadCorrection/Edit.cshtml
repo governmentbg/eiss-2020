@@ -51,6 +51,11 @@
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
+                        @if (access.CanChangeFull)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на коефициент", ExpireSubmitUrl = Url.Action("CaseLoadCorrection_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }

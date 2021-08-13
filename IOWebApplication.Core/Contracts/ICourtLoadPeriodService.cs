@@ -28,5 +28,6 @@ namespace IOWebApplication.Core.Contracts
     IEnumerable<CourtLoadResetPeriod> Get_CourtLoadResetPeriod_CrossPeriod( CourtLoadResetPeriod newPeriod);
 
     void UpdateDailyLoadPeriod_RemoveByDismisal(int case_lawunit_dismisal_id);
+    CourtLoadPeriodLawUnit UpdateChangedProcentAverageCases(int lawunitId, int courtGroupId, decimal newPercent);
   }
 }

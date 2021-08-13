@@ -645,7 +645,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                               .Select(x => new DWCaseSessionActComplainResult()
                               {
                                 Id = x.Id,
-                                CaseSessionActId = x.CaseSessionActId,
+                                CaseSessionActId = x.CaseSessionActId ?? 0,
                                 ActResultId = x.ActResultId,
                                 ActResultName = x.ActResult.Label,
                                 DateResult = x.DateResult,

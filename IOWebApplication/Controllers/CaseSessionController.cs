@@ -27,7 +27,6 @@ namespace IOWebApplication.Controllers
         private readonly ICaseSessionMeetingService caseSessionMeetingService;
         private readonly ICaseNotificationService caseNotificationService;
         private readonly ICaseSessionActService caseSessionActService;
-
         public CaseSessionController(ICaseSessionService _service,
                                      INomenclatureService _nomService,
                                      ICommonService _commonService,
@@ -69,8 +68,8 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.CaseGroupIds_ddl = nomService.GetDropDownList<CaseGroup>(false);
             ViewBag.HallId_ddl = commonService.GetDropDownList_CourtHall(userContext.CourtId);
-            ViewBag.CaseSessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
-            ViewBag.SessionResultId_ddl = nomService.GetDropDownList<SessionResult>();
+            ViewBag.CaseSessionTypeIds_ddl = nomService.GetDropDownList<SessionType>(false);
+            ViewBag.SessionResultIds_ddl = nomService.GetDropDownList<SessionResult>(false);
             ViewBag.SessionStateId_ddl = nomService.GetDropDownList<SessionState>();
             ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
             ViewBag.CourtDepartmentOtdelenieId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
@@ -130,8 +129,9 @@ namespace IOWebApplication.Controllers
         /// Добавяне на заседание към дело
         /// </summary>
         /// <param name="caseId"></param>
+        /// <param name="sessionDate"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseId)
+        public IActionResult Add(int caseId, DateTime? sessionDate = null)
         {
             if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.Append, caseId))
             {
@@ -145,9 +145,14 @@ namespace IOWebApplication.Controllers
                 DateFrom = DateTime.Now,
                 SessionStateId = NomenclatureConstants.SessionState.Nasrocheno,
             };
-
             //Следващия кръгъл час
             model.DateFrom = model.DateFrom.AddMinutes(-model.DateFrom.Minute).AddHours(1);
+
+            if (sessionDate != null)
+            {
+                model.DateFrom = sessionDate.ForceStartDate().Value.AddHours(9);
+            }
+
             SetViewbag(0, caseId, null);
             SetHelpFile(HelpFileValues.CaseSession);
             return View(nameof(Edit), model);
@@ -179,6 +184,7 @@ namespace IOWebApplication.Controllers
         /// Зареждане на цялостен преглед на заседание с табове за различни елементи на заседанието
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="notifListTypeId"></param>
         /// <returns></returns>
         public IActionResult Preview(int id, int? notifListTypeId)
         {
@@ -224,6 +230,15 @@ namespace IOWebApplication.Controllers
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(caseId);
             }
             ViewBag.hasSubstitutions = (lawUnitService.LawUnitSubstitution_SelectForSession(caseSessionId ?? 0) != null) ? lawUnitService.LawUnitSubstitution_SelectForSession(caseSessionId ?? 0).Any() : false;
+
+            if (id == 0)
+            {
+                var caseModel = service.GetById<Case>(caseId);
+                if (caseModel.CourtId == NomenclatureConstants.Courts.VKS && caseModel.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
+                {
+                    ViewBag.VksLawunitChange_ddl = nomService.GetDDL_VksSessionLawunitChange();
+                }
+            }
         }
 
         private void SetViewbagAddSessionAndAct(int caseId)
@@ -232,6 +247,10 @@ namespace IOWebApplication.Controllers
             //ViewBag.SessionStateId_ddl = nomService.GetDDL_SessionStateFiltered(0);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(caseId);
             //ViewBag.ActTypeId_ddl = caseSessionActService.GetActTypesFromCaseByCase(caseId);
+            var caseCase = service.GetById<Case>(caseId);
+            var actComplainResults = nomService.GetDDL_ActComplainResult(caseCase.CaseTypeId);
+            ViewBag.ActComplainResultId_ddl = actComplainResults;
+            ViewBag.hasComplainResult = actComplainResults.Count > 1;
         }
 
         /// <summary>
@@ -280,6 +299,11 @@ namespace IOWebApplication.Controllers
             }
             else
             {
+                if (saveResult.ReloadNeeded)
+                {
+                    SetErrorMessage(MessageConstant.Values.NewerDateWrt);
+                    return RedirectToAction(nameof(Edit), new { id = model.Id });
+                }
                 SetErrorMessage(saveResult.ErrorMessage);
             }
 
@@ -308,6 +332,7 @@ namespace IOWebApplication.Controllers
                 SessionStateId = NomenclatureConstants.SessionState.Provedeno,
                 CaseLawUnitByCase = lawUnitService.GetCheckListCaseLawUnitByCase(caseId),
                 ActCanAppeal = false,
+                IsFinalDoc = false,
                 CaseSessions = service.GetCheckListCaseSession(caseId)
             };
 
@@ -397,6 +422,16 @@ namespace IOWebApplication.Controllers
             if (model.ActTypeId <= 0)
                 return "Няма избран тип акт";
 
+            if (model.IsFinalDoc ?? false)
+            {
+                var _case = service.GetById<Case>(model.CaseId);
+                var actComplainResults = nomService.GetDDL_ActComplainResult(_case.CaseTypeId);
+                if ((model.ActComplainResultId < 1) && (actComplainResults.Count() > 1))
+                {
+                    return "Изберете резултат/степен на уважаване на иска";
+                }
+            }
+
             if (!lawUnitService.IsExistJudgeReporterByCase(model.CaseId, model.DateFrom))
             {
                 return "Няма активен съдия докладчик";
@@ -421,6 +456,15 @@ namespace IOWebApplication.Controllers
                 if (model.CaseSessions.Where(x => x.Checked).Count() > 1)
                 {
                     return "Може да бъде избрано само едно заседание";
+                }
+            }
+
+            var caseSessions = service.CaseSession_OldSelect(model.CaseId, null, null).ToList();
+            if (caseSessions.Count > 0)
+            {
+                if (caseSessions.Any(x => x.DateFrom == model.DateFrom))
+                {
+                    return "Вече има заседание в това дело с тази начална дата/час";
                 }
             }
 
@@ -631,6 +675,27 @@ namespace IOWebApplication.Controllers
                     return "Вече има избран основен резултат";
             }
 
+            if (model.Id == 0)
+            {
+                if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.S_opredelenie_za_otvod ||
+                    model.SessionResultId == NomenclatureConstants.CaseSessionResult.S_razporejdane_za_otvod)
+                {
+                    if (model.CaseLawUnitByCase == null)
+                        return "Няма избран съдия";
+                    else
+                    {
+                        if (!model.CaseLawUnitByCase.Any(x => x.Checked))
+                            return "Няма избран съдия";
+
+                        if (model.CaseLawUnitByCase.Where(x => x.Checked).Count() > 1)
+                            return "Избрани са повече от 1 съдия.";
+
+                        var check = model.CaseLawUnitByCase.Where(x => x.Checked).FirstOrDefault();
+                        model.CaseLawUnitSelectId = int.Parse(check.Value);
+                    }
+                }
+            }
+
             return string.Empty;
         }
 
@@ -764,7 +829,7 @@ namespace IOWebApplication.Controllers
             ViewBag.CourtHallId_ddl = commonService.GetDropDownList_CourtHall(userContext.CourtId);
             var model = new CaseSessionHallUseFilterVM();
             model.DateFrom = NomenclatureExtensions.ForceStartDate(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second));
-            model.DateTo = NomenclatureExtensions.ForceEndDate((model.DateFrom ?? DateTime.Now).AddDays(30));
+            model.DateTo = NomenclatureExtensions.ForceEndDate(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)));
             model.IsCalendar = false;
             if (HallId > 0) model.CourtHallId = HallId;
             SetHelpFile(HelpFileValues.HallOcupancy);
@@ -941,6 +1006,35 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
+        /// Проверка за открито и закрито заседание без постановен акт
+        /// </summary>
+        /// <param name="CaseId"></param>
+        /// <param name="SessionId"></param>
+        /// <param name="SessionTypeId"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResult IsExistSessionWithoutAct(int CaseId, int SessionId, int SessionTypeId)
+        {
+            if (SessionTypeId != NomenclatureConstants.SessionType.ClosedSession &&
+                SessionTypeId != NomenclatureConstants.SessionType.OpenSession)
+                return Json(new { result = false });
+
+            return Json(new { result = service.IsExistSessionWithoutAct(CaseId, SessionId, SessionTypeId) });
+        }
+
+        /// <summary>
+        /// Проверка за последно заседание дали има постановен акт
+        /// </summary>
+        /// <param name="CaseId"></param>
+        /// <param name="SessionId"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public JsonResult IsExistLastSessionWithoutAct(int CaseId, int SessionId)
+        {
+            return Json(new { result = service.IsExistLastSessionWithoutAct(CaseId, SessionId) });
+        }
+
+        /// <summary>
         /// Справка Заседания с не написани съдебни актове към [дата] от всички съдии
         /// </summary>
         /// <returns></returns>
@@ -953,6 +1047,7 @@ namespace IOWebApplication.Controllers
                 ActDateToSpr = DateTime.Now
             };
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            ViewBag.SessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
             SetHelpFile(HelpFileValues.Report19);
 
             return View(filter);

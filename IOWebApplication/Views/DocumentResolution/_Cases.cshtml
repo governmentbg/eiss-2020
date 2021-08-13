@@ -1,0 +1,95 @@
+﻿@model long
+@{
+    var canChange = (bool)ViewBag.canChange;
+}
+<fieldset class="is-fieldset">
+    <legend class="legend_1"> Дела по разпореждането</legend>
+    @if (canChange)
+    {
+        <div class="pull-right">
+            <a href="#" class="btn btn-success modal-loader" data-modal-title="Избери дело" data-modal-url="@Url.Action("AddCase",new { documentResolutionId = Model})">Добави</a>
+            <br />
+        </div>
+    }
+    <div class="row">
+        <div class="col-lg-6 col-md-8">
+            <table id="mainTableCases" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</fieldset>
+<script>
+    $(function () {
+        LoadTableCases();
+    });
+    function removeCase(id) {
+        swalConfirm("Потвърдете премахването на избраното дело!", function () {
+            postContent('@Url.Action("RemoveCase")', { id: id }, function (res) {
+                if (res == 'ok') {
+                    messageHelper.ShowSuccessMessage("Делото е премахнато успешно.");
+                    LoadTableCases();
+                } else {
+                    messageHelper.ShowErrorMessage("Проблем при премахване на дело");
+                }
+            });
+        });
+    }
+    function LoadTableCases() {
+        if ($.fn.dataTable.isDataTable('#mainTableCases')) {
+            refreshTable('#mainTableCases');
+        }
+        else {
+            var table = $('#mainTableCases').DataTable({
+                ajax: {
+                    "url": "@Url.Action("CasesByResolutions_ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.documentResolutionId = @Model;
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'caseTypeName',
+                        data: 'caseTypeName',
+                        title: 'Тип дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseNumber',
+                        data: 'caseNumber',
+                        title: 'Дело номер',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (a,b,value,c) {
+                            return TemplateToHtml('#templateCaseNumber', value);
+                        }
+                    }
+                   ,
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+            table.order([2, 'desc']);
+        }
+    }
+</script>
+<script id="templateCaseNumber" type="text/x-handlebars-template">
+    <a href="@Url.Action("CasePreview","Case")/{{caseId}}" target="_blank" title="Преглед на дело {{caseNumber}}">{{caseNumber}}</a>
+</script>
+<script id="templateEdit" type="text/x-handlebars-template">
+    @if (canChange)
+    {
+        <a href="#" class="btn btn-danger" onclick="removeCase({{this}}); return false;">Премахни</a>
+    }
+</script>

@@ -12,6 +12,10 @@
     @Html.HiddenFor(x => x.CourtId)
 
     <div class="row">
+        <div class="col-lg-12">@Html.EditorFor(x => x.VisibleOrder, "Boolean")</div>
+    </div>
+
+    <div class="row">
         <div class="col-lg-12">@Html.EditorFor(x => x.DescriptionEdit, "Textarea")</div>
     </div>
 

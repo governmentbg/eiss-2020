@@ -25,5 +25,6 @@ namespace IOWebApplication.Core.Contracts
         bool FillAll_RS_CourtsDataSheets(int reportYear, int reportMonth);
         bool RS_FillSheets_Sheet4(int courtId, int reportTemplateId, int reportYear, int reportMonth);
         Task<byte[]> GetReport_Test(int courtId, DateTime fromDate, DateTime toDate);
+        void StatisticsGenerate(DateTime date);
     }
 }

@@ -4,6 +4,7 @@
 
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool hasComplainResult = (bool)ViewBag.hasComplainResult;
 
     ViewData["Title"] = "Добавяне на акт в ЗЗ";
 }
@@ -50,7 +51,14 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-lg-12">@Html.EditorFor(x => x.ActCanAppeal, "Boolean")</div>
+                                <div class="col-lg-6">@Html.EditorFor(x => x.IsFinalDoc, "Boolean")</div>
+                                <div id="divComplainResult">
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.ActComplainResultId, "GenericDropDown")</div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">@Html.EditorFor(x => x.ActCanAppeal, "Boolean")</div>
                             </div>
                         </fieldset>
                     </div>
@@ -100,6 +108,7 @@
         SessionTypeIdChange();
         $('#subButton').removeAttr("disabled");
         $('#subButton1').removeAttr("disabled");
+        SH_ComplainResult();
     });
 
     function SubmitAddSessionAndAct(ActSaveType) {
@@ -113,19 +122,63 @@
             , function (data) {
                 if (data.result == false) {
                     swalConfirm('Не фигурирате по това дело!', function () {
-                        $('#frmAddSessionAndAct').trigger('submit');
-                        $("#subButton").removeAttr("disabled");
-                        $("#subButton1").removeAttr("disabled");
+                        SubmitAddSessionAndActIsExistSessionWithoutAct();
+
                     }, function () {
                             $("#subButton").removeAttr("disabled");
                             $("#subButton1").removeAttr("disabled");
                     });
                 } else {
-                    $('#frmAddSessionAndAct').trigger('submit');
-                    $("#subButton").removeAttr("disabled");
-                    $("#subButton1").removeAttr("disabled");
+                    SubmitAddSessionAndActIsExistSessionWithoutAct();
                 }
             });
+    }
+
+    function SubmitAddSessionAndActIsExistSessionWithoutAct() {
+        var caseId = @Model.CaseId;
+        postContent('@Url.Action("IsExistLastSessionWithoutAct", "CaseSession")'
+            , { CaseId: caseId, SessionId: 0 }
+            , function (data) {
+                if (data.result == true) {
+                    swalConfirm("Има насрочено/проведено заседание без акт", function () {
+                        SubmitAddSessionAndActFinal();
+                    }, function () {
+                        $('#subButton').removeAttr("disabled");
+                    });
+                } else {
+                    SubmitAddSessionAndActFinal();
+                }
+            });
+    }
+
+    function SubmitAddSessionAndActFinal() {
+        var caseId = @Model.CaseId;
+        var isFinalDoc = $("#IsFinalDoc").is(":checked");
+        if (isFinalDoc) {
+            postContent('@Url.Action("IsFullComposition", "CaseSession")'
+                , { CaseId: caseId }
+                , function (data) {
+                    if (data.result == false) {
+                        swalConfirm('Съставът по делото не е пълен!', function () {
+                            $('#frmAddSessionAndAct').trigger('submit');
+                            $("#subButton").removeAttr("disabled");
+                            $("#subButton1").removeAttr("disabled");
+                        }, function () {
+                            $("#subButton").removeAttr("disabled");
+                            $("#subButton1").removeAttr("disabled");
+                        });
+                    } else {
+                        $('#frmAddSessionAndAct').trigger('submit');
+                        $("#subButton").removeAttr("disabled");
+                        $("#subButton1").removeAttr("disabled");
+                    }
+                });
+        }
+        else {
+            $('#frmAddSessionAndAct').trigger('submit');
+            $("#subButton").removeAttr("disabled");
+            $("#subButton1").removeAttr("disabled");
+        }
     }
 
     $('#SessionTypeId').change(function () {
@@ -161,6 +214,21 @@
     $('#ActTypeId').change(function () {
         ActTypeIdChange();
     });
+
+    $('#IsFinalDoc').change(function () {
+        SH_ComplainResult();
+    });
+
+    function SH_ComplainResult() {
+        debugger;
+        var isFinalDoc = $("#IsFinalDoc").is(":checked");
+        if ((isFinalDoc) && ('@hasComplainResult' == 'True')) {
+            $("#divComplainResult").show();
+        }
+        else {
+            $("#divComplainResult").hide();
+        }
+    }
 
 </script>
 

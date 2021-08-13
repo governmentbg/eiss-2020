@@ -1,0 +1,70 @@
+﻿@model VksSessionDayCalendarVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+
+@{
+    ViewData["vks_sessionDate"] = Model.SessionDate;
+}
+<tr style="border:1px solid #666;">
+    <td>
+        <b>
+            @Model.SessionDate.DateToStr("dd.MM.yyyy")<br />@Model.SessionDate.DayNameOnly()
+        </b>
+        <br />
+        <table>
+            @if (Model.NoSessionCaseList.Count() > 0)
+            {
+                <tr>
+                    <td colspan="3" style="color:red">Ненасрочени дела</td>
+                </tr>
+
+                <tr>
+                    <td>
+                        номер дело
+                    </td>
+                    <td>
+                        ФС
+                    </td>
+                    <td>
+                        ПС
+                    </td>
+                </tr>
+
+
+            }
+            @foreach (var item in Model.NoSessionCaseList)
+            {
+
+
+                <tr>
+                    <td align="center"><a href="@Url.Action("Add","CaseSession",new { caseId = item.CaseId,sessionDate = Model.SessionDate.Value.ToString("dd.MM.yyyy") })"> @item.CaseNumber</a>
+
+                    <td align="right">@item.FS</td>
+                    <td align="right">@item.PS</td>
+
+
+                </tr>
+            }
+        </table>
+
+    </td>
+
+    <td valign="top"><b>@Html.Raw(Model.SelectionStaff)</b></td>
+    @for (int i = 0; i < 5; i++)
+    {
+        if (Model.LawUnitsList.Count > i)
+        {
+            <td valign="top">
+                <partial name="_SessionDayLawUnit" model="@Model.LawUnitsList[i]" />
+            </td>
+
+        }
+        else
+        {
+            <td></td>
+        }
+    }
+</tr>
+
+

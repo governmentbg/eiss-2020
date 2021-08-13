@@ -41,8 +41,16 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Основен вид дело")]
         public int CaseGroupId { get; set; }
 
+        [Display(Name = "Основен вид дело")]
+        public string CaseGroupIds { get; set; }
+        public string CaseGroupIds_text { get; set; }
+
         [Display(Name = "Точен вид дело")]
         public int CaseTypeId { get; set; }
+
+        [Display(Name = "Точен вид дело")]
+        public string CaseTypeIds { get; set; }
+        public string CaseTypeIds_text { get; set; }
 
         [Display(Name = "Статус на протокол")]
         public int ProtokolState { get; set; }
@@ -50,7 +58,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Съдебна група за разпределяне")]
         public int CourtGroupId { get; set; }
 
+        [Display(Name = "Съдебна група за разпределяне")]
+        public string CourtGroupIds { get; set; }
+        public string CourtGroupIds_text { get; set; }
+
         [Display(Name = "Група по натовареност")]
         public int LoadGroupLinkId { get; set; }
+
+        [Display(Name = "Група по натовареност")]
+        public string LoadGroupLinkIds { get; set; }
+        public string LoadGroupLinkIds_text { get; set; }
     }
 }

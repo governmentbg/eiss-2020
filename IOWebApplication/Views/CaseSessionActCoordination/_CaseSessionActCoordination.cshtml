@@ -69,18 +69,12 @@
 </script>
 
 <script id="caseSessionActCoordinationTemplateEdit" type="text/x-handlebars-template">
-    @if (access.CanChange)
-    {
-    <span>
-        {{#if canUpdate}}
-        <a href="@Url.Action("Edit", "CaseSessionActCoordination")?id={{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
-        {{/if}}
-    </span>
-    }
-    else
-    {
-        <a href="@Url.Action("Edit", "CaseSessionActCoordination")?id={{id}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
-    }
+
+    {{#if canUpdate}}
+    <a href="@Url.Action("Edit", "CaseSessionActCoordination")?id={{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Редакция</span></a>
+    {{else}}
+    <a href="@Url.Action("Edit", "CaseSessionActCoordination")?id={{id}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+    {{/if}}
 </script>
 
 

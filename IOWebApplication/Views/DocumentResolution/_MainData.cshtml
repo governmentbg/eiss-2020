@@ -2,7 +2,9 @@
 @using IOWebApplication.Infrastructure.Data.Models.Documents
 @using IOWebApplication.Infrastructure.Constants
 @inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
-
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
 <form asp-action="Edit" method="post">
     @Html.HiddenFor(x => x.Id)
     @Html.HiddenFor(x => x.DocumentId)
@@ -36,8 +38,31 @@
                     </div>
                 </div>
             }
+            <div class="form-group">
+                <label class="control-label">Разпореждането се подписва от</label>
+                <div>
+                    <label>
+                        @Html.RadioButtonFor(x => x.JudgeDecisionCount, 1, new { onchange = "judgeCountChange(this);" })
+                        &nbsp;Един съдия
+                    </label>
+                    <span>&nbsp;&nbsp;&nbsp;</span>
+                    <label>
+                        @Html.RadioButtonFor(x => x.JudgeDecisionCount, 2, new { onchange = "judgeCountChange(this);" })
+                        &nbsp;Двама съдии
+                    </label>
+                </div>
+                <span asp-validation-for="@Model.JudgeDecisionCount" class="text-danger"></span>
+            </div>
             @Html.EditorFor(x => x.JudgeDecisionLawunitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
+            <div id="secondJudge">
+                @Html.EditorFor(x => x.JudgeDecisionLawunit2Id, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge, courtId = userContext.CourtId })
+            </div>
             @Html.EditorFor(x => x.UserDecisionId, "SelectUser")
+
+            <div id="divTaskUser">
+                @Html.EditorFor(x => x.TaskUserId, "SelectUser")
+            </div>
+
             @Html.EditorFor(x => x.Description, "Textarea")
         </fieldset>
     </div>
@@ -53,6 +78,17 @@
 
             <a href="#" onclick="editActBlank(); return false;" class="btn btn-primary">Изготвяне на акт</a>
             <div class="pull-right">
+                @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                {
+                    <a href="@Url.Action("MainSession","VksSelection")" class="btn btn-success" target="_blank">График ВКС</a>
+                    <span>&nbsp;</span>
+                }
+                @if (string.IsNullOrEmpty(Model.RegNumber) && (Model.DateExpired == null) && (access?.CanChangeFull == true))
+                {
+                    @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { LongId = Model.Id, DialogTitle = "Премахване на разпореждане", ExpireSubmitUrl = Url.Action("Resolution_ExpiredInfo") })
+                    <span>&nbsp;</span>
+                }
+
                 @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
             </div>
         }

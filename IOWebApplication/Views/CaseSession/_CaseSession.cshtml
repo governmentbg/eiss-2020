@@ -36,7 +36,8 @@
                     "datatype": "json",
                     data: function (d) {
                         d.caseId = @Model.Id;
-                    }
+                    },
+                    initialCall: false
 
                 },
                 //title: table.container(),
@@ -128,9 +129,7 @@
                         }
                     }
                 ]
-            });
-
-
+            }).order([[1, "desc"]]);
         });
 </script>
 

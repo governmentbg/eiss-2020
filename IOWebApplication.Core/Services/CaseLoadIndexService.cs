@@ -24,6 +24,7 @@ using ZXing;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using Microsoft.Extensions.Configuration;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Core.Helper;
 
 namespace IOWebApplication.Core.Services
 {
@@ -252,6 +253,23 @@ namespace IOWebApplication.Core.Services
             }
         }
 
+        private decimal GetLoadIndexFromCaseH(int CaseId, int CourtId, DateTime dateTime)
+        {
+            var result = (decimal)0.00;
+
+            var caseH = repo.AllReadonly<CaseH>()
+                            .Where(x => x.Id == CaseId &&
+                                        x.CourtId == CourtId &&
+                                        x.DateWrt <= dateTime &&
+                                        x.HistoryDateExpire >= dateTime)
+                            .FirstOrDefault();
+
+            if (caseH != null)
+                return caseH.LoadIndex;
+
+            return result;
+        }
+
         private CaseLoadIndex FillCaseLoadIndex(List<CaseLoadIndex> caseLoadIndices, CaseSession caseSession, CaseSessionAct caseSessionAct, CaseSessionResult caseSessionResult, CaseLawUnit judgeRep, int CaseLoadElementGroupId, int CaseLoadElementTypeId, decimal LoadProcent, int? ReplaceCaseLoadElementTypeId, decimal CaseLoadCorrectionIndex)
         {
             var saveCaseLoadIndex = new CaseLoadIndex();
@@ -272,6 +290,9 @@ namespace IOWebApplication.Core.Services
                 }
             }
 
+            var loadIndexH = GetLoadIndexFromCaseH(caseSession.CaseId, caseSession.CourtId ?? 0, caseSession.DateFrom);
+            var caseLoadIndex = (loadIndexH > 0) ? loadIndexH : caseSession.Case.LoadIndex;
+
             saveCaseLoadIndex.CourtId = caseSession.CourtId;
             saveCaseLoadIndex.CaseId = caseSession.CaseId;
             saveCaseLoadIndex.CaseSessionId = caseSession.Id;
@@ -281,19 +302,19 @@ namespace IOWebApplication.Core.Services
             saveCaseLoadIndex.CaseSessionResultId = caseSessionResult != null ? caseSessionResult.Id : (int?)null;
             saveCaseLoadIndex.SessionResultId = caseSessionResult != null ? caseSessionResult.SessionResultId : (int?)null;
             saveCaseLoadIndex.LawUnitId = judgeRep.LawUnitId;
-            saveCaseLoadIndex.DateActivity = DateTime.Now;
+            saveCaseLoadIndex.DateActivity = caseSessionAct != null ? (caseSessionAct.ActDeclaredDate ?? caseSession.DateFrom) : caseSession.DateFrom;
             saveCaseLoadIndex.IsMainActivity = true;
             saveCaseLoadIndex.CaseLoadElementGroupId = CaseLoadElementGroupId;
             saveCaseLoadIndex.CaseLoadElementTypeId = CaseLoadElementTypeId;
             saveCaseLoadIndex.LoadProcent = LoadProcent;
-            saveCaseLoadIndex.BaseIndex = (CaseLoadCorrectionIndex > 0) ? caseSession.Case.LoadIndex * CaseLoadCorrectionIndex : caseSession.Case.LoadIndex;
+            saveCaseLoadIndex.BaseIndex = (CaseLoadCorrectionIndex > 0) ? caseLoadIndex * CaseLoadCorrectionIndex : caseLoadIndex;
             saveCaseLoadIndex.DateWrt = DateTime.Now;
             saveCaseLoadIndex.UserId = userContext.UserId;
 
             return saveCaseLoadIndex;
         }
 
-        private CaseLoadIndex FillCaseLoadIndex(List<CaseLoadIndex> caseLoadIndices, Case caseCase, CaseLawUnit judgeRep, int CaseLoadElementGroupId, int CaseLoadElementTypeId, decimal LoadProcent, int? ReplaceCaseLoadElementTypeId, decimal CaseLoadCorrectionIndex)
+        private CaseLoadIndex FillCaseLoadIndex(List<CaseLoadIndex> caseLoadIndices, Case caseCase, CaseLawUnit judgeRep, int CaseLoadElementGroupId, int CaseLoadElementTypeId, decimal LoadProcent, int? ReplaceCaseLoadElementTypeId, decimal CaseLoadCorrectionIndex, DateTime dateActive)
         {
             var saveCaseLoadIndex = new CaseLoadIndex();
 
@@ -313,6 +334,9 @@ namespace IOWebApplication.Core.Services
                 }
             }
 
+            var loadIndexH = GetLoadIndexFromCaseH(caseCase.Id, caseCase.CourtId, dateActive);
+            var caseLoadIndex = (loadIndexH > 0) ? loadIndexH : caseCase.LoadIndex;
+
             saveCaseLoadIndex.CourtId = caseCase.CourtId;
             saveCaseLoadIndex.CaseId = caseCase.Id;
             saveCaseLoadIndex.CaseSessionId = null;
@@ -322,12 +346,12 @@ namespace IOWebApplication.Core.Services
             saveCaseLoadIndex.CaseSessionResultId = null;
             saveCaseLoadIndex.SessionResultId = null;
             saveCaseLoadIndex.LawUnitId = judgeRep.LawUnitId;
-            saveCaseLoadIndex.DateActivity = DateTime.Now;
+            saveCaseLoadIndex.DateActivity = dateActive;
             saveCaseLoadIndex.IsMainActivity = true;
             saveCaseLoadIndex.CaseLoadElementGroupId = CaseLoadElementGroupId;
             saveCaseLoadIndex.CaseLoadElementTypeId = CaseLoadElementTypeId;
             saveCaseLoadIndex.LoadProcent = LoadProcent;
-            saveCaseLoadIndex.BaseIndex = (CaseLoadCorrectionIndex > 0) ? caseCase.LoadIndex * CaseLoadCorrectionIndex : caseCase.LoadIndex;
+            saveCaseLoadIndex.BaseIndex = (CaseLoadCorrectionIndex > 0) ? caseLoadIndex * CaseLoadCorrectionIndex : caseLoadIndex;
             saveCaseLoadIndex.DateWrt = DateTime.Now;
             saveCaseLoadIndex.UserId = userContext.UserId;
 
@@ -365,7 +389,7 @@ namespace IOWebApplication.Core.Services
             if (caseLoadElementGroups.Count < 1)
                 return false;
 
-            var caseLoadCorrectionIndex = caseLoadCorrectionService.GetCaseLoadCorrectionToDate(caseSession.CaseId, DateTime.Now);
+            var caseLoadCorrectionIndex = caseLoadCorrectionService.GetCaseLoadCorrectionToDate(caseSession.CaseId, caseSession.DateFrom);
 
             var caseLoadIndexSave = new List<CaseLoadIndex>();
             foreach (var caseLoad in caseLoadElementGroups)
@@ -524,7 +548,7 @@ namespace IOWebApplication.Core.Services
             if (caseLoadElementGroups.Count < 1)
                 return false;
 
-            var caseLoadCorrectionIndex = caseLoadCorrectionService.GetCaseLoadCorrectionToDate(CaseId, DateTime.Now);
+            var caseLoadCorrectionIndex = caseLoadCorrectionService.GetCaseLoadCorrectionToDate(CaseId, caseCase.RegDate);
 
             var caseLoadIndexSave = new List<CaseLoadIndex>();
             foreach (var caseLoad in caseLoadElementGroups)
@@ -542,7 +566,7 @@ namespace IOWebApplication.Core.Services
                         if (!IsExistCaseLoadActivity(0, CaseId, true, judgeRep.LawUnitId, caseLoadElementType.Id, null) &&
                             !IsExistCaseLoadActivityInListSave(caseLoadIndexSave, true, judgeRep.LawUnitId, caseLoadElementType.Id, null))
                         {
-                            caseLoadIndexSave.Add(FillCaseLoadIndex(caseLoadIndexSave, caseCase, judgeRep, caseLoadElementType.CaseLoadElementGroupId, caseLoadElementType.Id, caseLoadElementType.LoadProcent, caseLoadElementType.ReplaceCaseLoadElementTypeId, caseLoadCorrectionIndex));
+                            caseLoadIndexSave.Add(FillCaseLoadIndex(caseLoadIndexSave, caseCase, judgeRep, caseLoadElementType.CaseLoadElementGroupId, caseLoadElementType.Id, caseLoadElementType.LoadProcent, caseLoadElementType.ReplaceCaseLoadElementTypeId, caseLoadCorrectionIndex, caseCase.RegDate));
                         }
                     }
                 }
@@ -660,6 +684,7 @@ namespace IOWebApplication.Core.Services
             var result = new List<CaseLoadElementGroup>();
             var isND = (caseCase.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo);
 
+            var dateTimeNow = DateTime.Now;
             result.AddRange(repo.AllReadonly<CaseLoadElementGroup>()
                                 .Include(x => x.CaseLoadElementTypes)
                                 .ThenInclude(x => x.CaseLoadElementTypeRules)
@@ -668,7 +693,7 @@ namespace IOWebApplication.Core.Services
                                             (x.CaseTypeId == caseCase.CaseTypeId) &&
                                             (x.DocumentTypeId == null) &&
                                             (x.CaseCodeId == null) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             result.AddRange(repo.AllReadonly<CaseLoadElementGroup>()
@@ -679,7 +704,7 @@ namespace IOWebApplication.Core.Services
                                             (x.CaseTypeId == caseCase.CaseTypeId) &&
                                             (x.DocumentTypeId == caseCase.Document.DocumentTypeId) &&
                                             (x.CaseCodeId == null) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             result.AddRange(repo.AllReadonly<CaseLoadElementGroup>()
@@ -690,7 +715,7 @@ namespace IOWebApplication.Core.Services
                                             (x.CaseTypeId == caseCase.CaseTypeId) &&
                                             (x.DocumentTypeId == null) &&
                                             (x.CaseCodeId == caseCase.CaseCodeId) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             result.AddRange(repo.AllReadonly<CaseLoadElementGroup>()
@@ -701,7 +726,7 @@ namespace IOWebApplication.Core.Services
                                             (x.CaseTypeId == null) &&
                                             (x.DocumentTypeId == null) &&
                                             (x.CaseCodeId == null) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             return result;
@@ -722,6 +747,7 @@ namespace IOWebApplication.Core.Services
 
             var result = new List<CaseLoadElementGroup>();
             var isND = (caseCase.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo);
+            var dateTimeNow = DateTime.Now;
 
             // Извлича данните по тип документ и тип производство
             result.AddRange(repo.AllReadonly<CaseLoadElementGroup>()
@@ -733,7 +759,7 @@ namespace IOWebApplication.Core.Services
                                             (x.DocumentTypeId == caseCase.Document.DocumentTypeId) &&
                                             (x.ProcessPriorityId == caseCase.ProcessPriorityId) &&
                                             (x.CaseCodeId == null) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             if (result.Count > 0)
@@ -749,7 +775,7 @@ namespace IOWebApplication.Core.Services
                                             (x.DocumentTypeId == null) &&
                                             (x.ProcessPriorityId == null) &&
                                             (x.CaseCodeId == caseCase.CaseCodeId) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             if (result.Count > 0)
@@ -765,7 +791,7 @@ namespace IOWebApplication.Core.Services
                                             (x.DocumentTypeId == caseCase.Document.DocumentTypeId) &&
                                             (x.CaseCodeId == null) &&
                                             (x.ProcessPriorityId == null) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             if (result.Count > 0)
@@ -781,7 +807,7 @@ namespace IOWebApplication.Core.Services
                                             (x.DocumentTypeId == null) &&
                                             (x.CaseCodeId == null) &&
                                             (x.ProcessPriorityId == null) &&
-                                            ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                            ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                 .ToList() ?? new List<CaseLoadElementGroup>());
 
             return result;
@@ -831,9 +857,10 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<SelectListItem> GetDDL_CaseLoadElementType(int CaseLoadElementGroupeId, bool addDefaultElement = true, bool addAllElement = false)
         {
+            var dateTimeNow = DateTime.Now;
             var selectListItems = repo.AllReadonly<CaseLoadElementType>()
                                       .Where(x => (x.CaseLoadElementGroupId == CaseLoadElementGroupeId) &&
-                                                  ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                                  ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                       .Select(x => new SelectListItem()
                                       {
                                           Text = x.Label,
@@ -868,11 +895,12 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<SelectListItem> GetDDL_CaseLoadElementType_Replace(int CurrentId, bool addDefaultElement = true, bool addAllElement = false)
         {
+            var dateTimeNow = DateTime.Now;
             var selectListItems = repo.AllReadonly<CaseLoadElementType>()
                                       .Include(X => X.CaseLoadElementGroup)
                                       .Where(x => (CurrentId > 0 ? x.Id != CurrentId : true) &&
-                                                  ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)) &&
-                                                  ((x.CaseLoadElementGroup.DateStart <= DateTime.Now) && ((x.CaseLoadElementGroup.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                                  ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)) &&
+                                                  ((x.CaseLoadElementGroup.DateStart <= dateTimeNow) && ((x.CaseLoadElementGroup.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                       .Select(x => new SelectListItem()
                                       {
                                           Text = x.Label + " (" + x.CaseLoadElementGroup.Label + ")",
@@ -911,10 +939,11 @@ namespace IOWebApplication.Core.Services
                                .Where(x => x.Id == CaseId)
                                .FirstOrDefault();
 
+            var dateTimeNow = DateTime.Now;
             var isND = (caseCase.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo);
             var selectListItems = repo.AllReadonly<CaseLoadAddActivity>()
                                         .Where(x => (x.IsND == isND) &&
-                                                    ((x.DateStart <= DateTime.Now) && ((x.DateEnd ?? DateTime.Now.AddYears(100)) >= DateTime.Now)))
+                                                    ((x.DateStart <= dateTimeNow) && ((x.DateEnd ?? dateTimeNow.AddYears(100)) >= dateTimeNow)))
                                         .Select(x => new SelectListItem()
                                         {
                                             Text = x.Label,
@@ -1015,6 +1044,88 @@ namespace IOWebApplication.Core.Services
             }
         }
 
+        public bool EditSessionAndRecalcCase(int CaseId, int SessionId)
+        {
+            try
+            {
+                bool result = true;
+
+                var caseLoadIndex = repo.AllReadonly<CaseLoadIndex>()
+                                        .Include(x => x.CaseSession)
+                                        .Where(x => x.CaseId == CaseId &&
+                                                    x.CaseSessionId == SessionId).FirstOrDefault();
+
+                if (caseLoadIndex == null)
+                    return true;
+
+
+                if (caseLoadIndex.SessionTypeId != caseLoadIndex.CaseSession.SessionTypeId)
+                    result = string.IsNullOrEmpty(RecalcCaseLoadIndexByCase(CaseId));
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при преизчисляване на натовареност при редакция на заседание : " + CaseId.ToString());
+                return false;
+            };
+        }
+
+        public bool EditActAndRecalcCase(int CaseId, int ActId)
+        {
+            try
+            {
+                bool result = true;
+
+                var caseLoadIndex = repo.AllReadonly<CaseLoadIndex>()
+                                        .Include(x => x.CaseSessionAct)
+                                        .Where(x => x.CaseId == CaseId &&
+                                                    x.CaseSessionActId == ActId).FirstOrDefault();
+
+                if (caseLoadIndex == null)
+                    return true;
+
+
+                if (caseLoadIndex.ActTypeId != caseLoadIndex.CaseSessionAct.ActTypeId)
+                    result = string.IsNullOrEmpty(RecalcCaseLoadIndexByCase(CaseId));
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при преизчисляване на натовареност при редакция на акт : " + CaseId.ToString());
+                return false;
+            };
+        }
+
+        public bool EditSessionResultAndRecalcCase(int CaseId, int ResultId)
+        {
+            try
+            {
+                bool result = true;
+
+                var caseLoadIndex = repo.AllReadonly<CaseLoadIndex>()
+                                        .Include(x => x.CaseSessionResult)
+                                        .Where(x => x.CaseId == CaseId &&
+                                                    x.CaseSessionResultId == ResultId).FirstOrDefault();
+
+                if (caseLoadIndex == null)
+                    return true;
+
+
+                if ((caseLoadIndex.SessionResultId != caseLoadIndex.CaseSessionResult.SessionResultId) || 
+                    (caseLoadIndex.CaseSessionResult.DateExpired != null))
+                    result = string.IsNullOrEmpty(RecalcCaseLoadIndexByCase(CaseId));
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при преизчисляване на натовареност при редакция на резултат : " + CaseId.ToString());
+                return false;
+            };
+        }
+
         public string RecalcAllCase()
         {
             if (!DeleteCaseLoadIndexMainAllCase(null))
@@ -1073,6 +1184,28 @@ namespace IOWebApplication.Core.Services
             }
 
             return string.Empty;
+        }
+
+        public bool CaseLoadIndex_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var saved = repo.GetById<CaseLoadIndex>(model.Id);
+
+            if (saved != null)
+            {
+                saved.DateExpired = DateTime.Now;
+                saved.UserExpiredId = userContext.UserId;
+                saved.DescriptionExpired = model.DescriptionExpired;
+                repo.Update(saved);
+                repo.SaveChanges();
+
+                RecalcCaseLoadIndexByCase(saved.CaseId);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         #endregion
@@ -1712,7 +1845,7 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<CourtLawUnitActivity>()
                        .Any(x => ((ModelId > 0) ? x.Id != ModelId : true) &&
                                  (x.DateExpired == null) &&
-                                 ((x.JudgeLoadActivity.IsCalcOneTimeForPeriod ?? false) ? true : x.LawUnitId == LawUnitId) &&
+                                 ((x.JudgeLoadActivity.IsCalcOneTimeForPeriod ?? false) ? x.CourtId == userContext.CourtId : x.LawUnitId == LawUnitId) &&
                                  (x.JudgeLoadActivityId == JudgeLoadActivityId) &&
                                  (x.ActivityDate <= DateTo && x.DateTo >= ActivityDate));
         }
@@ -1757,17 +1890,69 @@ namespace IOWebApplication.Core.Services
         /// <param name="DateTo"></param>
         /// <param name="LawUnitId"></param>
         /// <returns></returns>
-        public IQueryable<CaseLoadIndexSprVM> CaseLoadIndexSpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId)
+        public IQueryable<CaseLoadIndexSprVM> CaseLoadIndexSpr_Select(CaseLoadIndexFilterVM model)
         {
-            LawUnitId = LawUnitId.NumberEmptyToNull();
+            model.LawUnitId = model.LawUnitId.NumberEmptyToNull();
+
+            Expression<Func<CaseLoadIndex, bool>> searchDate = x => true;
+            if (model.DateFrom != null || model.DateTo != null)
+                searchDate = x => x.DateActivity >= model.DateFrom && x.DateActivity <= model.DateTo;
+
+            Expression<Func<CaseLoadIndex, bool>> searchLawUnit = x => true;
+            if (model.LawUnitId > 0)
+                searchLawUnit = x => x.LawUnitId == model.LawUnitId;
+
+            Expression<Func<CaseLoadIndex, bool>> searchCaseGroup = x => true;
+            if (model.CaseGroupId > 0)
+                searchCaseGroup = x => x.Case.CaseGroupId == model.CaseGroupId;
+
+            Expression<Func<CaseLoadIndex, bool>> searchCaseType = x => true;
+            if (model.CaseTypeId > 0)
+                searchCaseType = x => x.Case.CaseTypeId == model.CaseTypeId;
+
+            Expression<Func<CaseLoadIndex, bool>> searchCaseCode = x => true;
+            if (model.CaseCodeId > 0)
+                searchCaseCode = x => x.Case.CaseCodeId == model.CaseCodeId;
+
+            Expression<Func<CaseLoadIndex, bool>> searchRegNumber = x => true;
+            if (!string.IsNullOrEmpty(model.RegNumber))
+                searchRegNumber = x => EF.Functions.ILike(x.Case.RegNumber, model.RegNumber.ToCasePaternSearch());
+
+            Expression<Func<CaseLoadIndex, bool>> searchCourtDepartment = x => true;
+            if (model.CourtDepartmentId > 0)
+                searchCourtDepartment = x => x.Case.JudicalCompositionId == model.CourtDepartmentId;
+            
+            Expression<Func<CaseLoadIndex, bool>> searchDepartmentOtdelenie = x => true;
+            if (model.CourtDepartmentOtdelenieId > 0)
+                searchDepartmentOtdelenie = x => x.Case.OtdelenieId == model.CourtDepartmentOtdelenieId;
+
+            Expression<Func<CaseLoadIndex, bool>> searchSessionType = x => true;
+            if (model.SessionTypeId > 0)
+                searchSessionType = x => x.SessionTypeId == model.SessionTypeId;
+            
+            Expression<Func<CaseLoadIndex, bool>> searchSessionResult = x => true;
+            if (model.SessionResultId > 0)
+                searchSessionResult = x => x.SessionResultId == model.SessionResultId;
+
+            Expression<Func<CaseLoadIndex, bool>> searchActType = x => true;
+            if (model.ActTypeId > 0)
+                searchActType = x => x.ActTypeId == model.ActTypeId;
 
             var caseLoadIndices = repo.AllReadonly<CaseLoadIndex>()
                                       .Include(x => x.Case)
                                       .Include(x => x.LawUnit)
-                                      .Where(x => x.CourtId == userContext.CourtId &&
-                                                  x.DateExpired == null &&
-                                                  x.DateActivity >= DateFrom && x.DateActivity <= DateTo &&
-                                                  ((LawUnitId != null) ? x.LawUnitId == LawUnitId : true))
+                                      .Where(x => x.CourtId == userContext.CourtId && x.DateExpired == null)
+                                      .Where(searchDate)
+                                      .Where(searchLawUnit)
+                                      .Where(searchCaseGroup)
+                                      .Where(searchCaseType)
+                                      .Where(searchCaseCode)
+                                      .Where(searchRegNumber)
+                                      .Where(searchCourtDepartment)
+                                      .Where(searchDepartmentOtdelenie)
+                                      .Where(searchSessionType)
+                                      .Where(searchSessionResult)
+                                      .Where(searchActType)
                                       .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
                                       .ToList();
 
@@ -1805,7 +1990,7 @@ namespace IOWebApplication.Core.Services
         /// <param name="DateTo"></param>
         /// <param name="LawUnitId"></param>
         /// <returns></returns>
-        public IQueryable<LawUnitLoadSprVM> CourtLawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId)
+        public IQueryable<LawUnitLoadSprVM> CourtLawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId, int JudgeLoadActivityId)
         {
             LawUnitId = LawUnitId.NumberEmptyToNull();
             var courtLawUnitActivities = repo.AllReadonly<CourtLawUnitActivity>()
@@ -1813,7 +1998,8 @@ namespace IOWebApplication.Core.Services
                                              .Where(x => x.CourtId == userContext.CourtId &&
                                                          x.DateExpired == null &&
                                                          x.ActivityDate >= DateFrom && x.ActivityDate <= DateTo &&
-                                                         ((LawUnitId != null) ? x.LawUnitId == LawUnitId : true))
+                                                         ((LawUnitId != null) ? x.LawUnitId == LawUnitId : true) &&
+                                                         ((JudgeLoadActivityId > 0) ? x.JudgeLoadActivityId == JudgeLoadActivityId : true))
                                              .ToList();
 
             List<LawUnitLoadSprVM> _result = new List<LawUnitLoadSprVM>();
@@ -1854,8 +2040,14 @@ namespace IOWebApplication.Core.Services
         public IQueryable<LawUnitLoadSprVM> LawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId)
         {
             LawUnitId = LawUnitId.NumberEmptyToNull();
-            var caseLoadIndexSprs = CaseLoadIndexSpr_Select(DateFrom, DateTo, LawUnitId).ToList();
-            var lawUnitLoadSprs = CourtLawUnitActivitySpr_Select(DateFrom, DateTo, LawUnitId).ToList();
+            var modelFilter = new CaseLoadIndexFilterVM()
+            {
+                DateFrom = DateFrom,
+                DateTo = DateTo,
+                LawUnitId = LawUnitId ?? 0
+            };
+            var caseLoadIndexSprs = CaseLoadIndexSpr_Select(modelFilter).ToList();
+            var lawUnitLoadSprs = CourtLawUnitActivitySpr_Select(DateFrom, DateTo, LawUnitId, 0).ToList();
 
             foreach (var caseLoad in caseLoadIndexSprs)
             {

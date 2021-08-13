@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -67,7 +68,7 @@ namespace IOWebApplication.Core.Services
                                         SourceType = x.SourceType,
                                         SourceId = x.SourceId,
                                         pop_title = "Задача",
-                                        pop_content =$"{x.TaskType.Label}, възложена от {x.UserCreated.LawUnit.FullName} на {x.DateCreated:dd.MM.yyyy HH:mm}"
+                                        pop_content = $"{x.TaskType.Label}, възложена от {x.UserCreated.LawUnit.FullName} на {x.DateCreated:dd.MM.yyyy HH:mm}"
                                     }).ToList();
 
             foreach (var item in currentTasks)
@@ -118,6 +119,23 @@ namespace IOWebApplication.Core.Services
                 item.url = urlHelper.Action("Preview", "CaseSession", new { id = item.id });
             }
             result.AddRange(sessions);
+
+            var holidays = repo.AllReadonly<WorkingDay>()
+                                .Where(x => x.DayTypeId == CommonContants.WorkingDays.NotWorkDay)
+                                .Where(x => x.Day >= start && x.Day <= end)
+                                .Where(x => (x.CourtId ?? userContext.CourtId) == userContext.CourtId)
+                                .Select(x => new CalendarVM
+                                {
+                                    id = x.Id,
+                                    //title = "Почивен ден",
+                                    title = x.Description ?? "Почивен ден",
+                                    start = x.Day,
+                                    allDay = true,
+                                    color = "#F5A9A9",
+                                    pop_title = x.Description
+                                }).ToList();
+
+            result.AddRange(holidays);
             return result;
         }
 

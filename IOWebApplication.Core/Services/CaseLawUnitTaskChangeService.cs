@@ -46,7 +46,7 @@ namespace IOWebApplication.Core.Services
                             .Where(x => x.Id == (id ?? x.Id))
                             .Where(x => x.CourtId == userContext.CourtId)
                             .Where(x =>
-                               x.Case.RegNumber.EndsWith((caseNumber.ToShortCaseNumber() ?? x.Case.RegNumber), StringComparison.InvariantCultureIgnoreCase)
+                               EF.Functions.ILike(x.Case.RegNumber,caseNumber.ToCasePaternSearch())
                                && x.DateWrt >= (dateFrom ?? DateTime.MinValue) && x.DateWrt <= (dateTo ?? DateTime.MaxValue)
                             )
                             .Where(x => EF.Functions.ILike(x.NewTaskUser.LawUnit.FullName, newTaskUserName.ToPaternSearch()))

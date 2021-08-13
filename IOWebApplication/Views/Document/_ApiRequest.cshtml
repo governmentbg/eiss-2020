@@ -1,0 +1,11 @@
+﻿@model DocumentRequestFastProcess
+@using IOWebApplication.Infrastructure.Data.ApiModels.DocumentRequests
+
+@if (Model != null)
+{
+    @Html.DisplayForModel()
+}
+else
+{
+    <h4>По дадения документ несъществува заявка от ЕПЕП</h4>
+}

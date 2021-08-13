@@ -136,12 +136,17 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [XmlIgnore]
         public int? PersonOldMeasureId { get; set; }
 
+        [XmlIgnore]
+        public bool IsAddedEvent { get; set; }
         /// <summary>
         /// Наложена мяркa
         /// </summary>
         [Display(Name = "Наложена мяркa за процесуална принуда")]
         [XmlIgnore]
         public int? PersonMeasureId { get; set; }
-    }
+
+        [XmlElement("SBE")]
+        public Event EventAdded { get; set; }
+}
 }
 

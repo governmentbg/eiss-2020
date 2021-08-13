@@ -1,0 +1,35 @@
+﻿@model FastProcessDistributionModel
+@using IOWebApplication.Infrastructure.Data.ApiModels.FastProcess
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var request = (IOWebApplication.Infrastructure.Data.ApiModels.DocumentRequests.DocumentRequestFastProcess)ViewData["fpRequest"];
+    var isFraction = (bool)ViewData["isFraction"];
+
+    var person = request.Document.DocumentPersons.Where(x => x.DocumentPersonId == Model.DocumentPersonId).FirstOrDefault();
+
+    var personName = string.Empty;
+    if (person != null)
+    {
+        personName = person.EntityName;
+        if (string.IsNullOrEmpty(person.EntityName))
+        {
+            personName = $"{person.FirstName} {person.MiddleName} {person.FamilyName}".TrimSpaces();
+            if (!string.IsNullOrEmpty(person.Family2Name))
+            {
+                personName += $"-{person.Family2Name}";
+            }
+        }
+    }
+}
+
+<div class="row">
+    <div class="col-lg-6">@Html.DisplayFor(x => x.DocumentPersonId, "objVal", null, new { label = "Имена", value = personName })</div>
+    @if (isFraction)
+    {
+        <div class="col-lg-6">@Html.DisplayFor(x => x.AmountDenominator, "objVal", null, new { label = "Отношение", value = $"{ Model.AmountNumerator} / { Model.AmountDenominator}" })</div>
+    }
+    else
+    {
+        <div class="col-lg-6">@Html.DisplayFor(x => x.PersonAmount, "objVal", null, new { label = "Сума", value = $"{ Model.PersonAmount:N2}" })</div>
+    }
+</div>

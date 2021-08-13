@@ -13,5 +13,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string ResetTypeName { get; set; }
 
         public int CurrentValue { get; set; }
+        public int OldValue { get; set; }
     }
 }

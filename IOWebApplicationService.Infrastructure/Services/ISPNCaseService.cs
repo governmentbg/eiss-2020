@@ -175,7 +175,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             var compliantDocuments = repo.AllReadonly<Document>()
                                 .Include(x => x.DocumentPersons)
                                 .Where(x => x.DocumentCaseInfo.Where(a => a.CaseId == caseAll.Id).Any())
-                                .Where(x => x.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument && 
+                                .Where(x => x.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument &&
                                             x.DateExpired == null)
                                 .ToList();
 
@@ -183,7 +183,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                              .Include(x => x.OutDocument)
                              .Where(x => x.CaseId == caseAll.Id)
                              .Where(x => x.CaseSessionActId != null)
-                             .Where(x => x.OutDocumentId != null && 
+                             .Where(x => x.OutDocumentId != null &&
                                          x.DateExpired == null)
                              .ToList();
 
@@ -226,11 +226,11 @@ namespace IOWebApplicationService.Infrastructure.Services
                                               .Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
                                               .ToList();
             var acts = session.CaseSessionActs
-                              .Where(x => x.DateExpired == null && 
+                              .Where(x => x.DateExpired == null &&
                                           x.ActDeclaredDate != null &&
                                           x.ActTypeId != NomenclatureConstants.ActType.ExecListPrivatePerson &&
-                                          x.ActTypeId != NomenclatureConstants.ActType.ObezpechitelnaZapoved 
-                                          )  
+                                          x.ActTypeId != NomenclatureConstants.ActType.ObezpechitelnaZapoved
+                                          )
                               .Select(x => FillActType(x, session, migrations)).ToArray();
             //acts = acts.Where(x => x.act_reason.Length > 0 || x.act_debtor_status > 0 || !string.IsNullOrEmpty(x.act_text)).ToArray();
             (var newId, var action) = AppendUpdateIntegrationKeyAction(SourceTypeSelectVM.CaseSession, session.Id, session.DateExpired != null);
@@ -240,7 +240,8 @@ namespace IOWebApplicationService.Infrastructure.Services
             try
             {
                 sessionResultIspn = GetNomValueInt(EpepConstants.Nomenclatures.SessionResults, sessionResult.Id); /* nom_session_result */
-            } catch
+            }
+            catch
             {
 
             }
@@ -471,18 +472,16 @@ namespace IOWebApplicationService.Infrastructure.Services
             string text = mq.Content == null ? "" : Encoding.UTF8.GetString(mq.Content);
             if (string.IsNullOrEmpty(text))
             {
-                using (var scope = new TransactionScope())
-                {
-                    text = GenerateXml(mq);
-                    mq.Content = Encoding.UTF8.GetBytes(text);
-                    repo.Update(mq);
-                    repo.SaveChanges();
-                    scope.Complete();
-                }
+
+                text = GenerateXml(mq);
+                mq.Content = Encoding.UTF8.GetBytes(text);
+                repo.Update(mq);
+                repo.SaveChanges();
+
             }
-           
+
             var response = await requester.PostAsyncTextXml(uploadUrl.AbsoluteUri, text);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
@@ -491,7 +490,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                 {
                     XDocument message = XDocument.Parse(content);
                     result = message?.Element("response")?.Element("success");
-                } else
+                }
+                else
                 {
                     content = "Получен е празен резултат от ИСПН";
                 }
@@ -534,8 +534,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                 throw new Exception($"Error {response.StatusCode} : {response.ReasonPhrase}  sending message ISPN!");
             }
         }
-       
-        
+
+
         protected (string, ServiceMethod) AppendUpdateIntegrationKeyAction(int sourceType, long sourceId, bool isDeleted)
         {
             string key = getKey(sourceType, sourceId);
@@ -572,7 +572,7 @@ namespace IOWebApplicationService.Infrastructure.Services
         /// </summary>
         public async Task<bool> PatchISPN(int caseId)
         {
-             if (!(await InitChanel()))
+            if (!(await InitChanel()))
             {
                 return false;
             }
@@ -610,15 +610,15 @@ namespace IOWebApplicationService.Infrastructure.Services
         }
         public List<int> GetCaseIdSurroundSideErr()
         {
-           return repo.AllReadonly<MQEpep>()
-                         .Where(x => x.IntegrationStateId != IntegrationStates.TransferOK &&
-                                     x.IntegrationTypeId == this.IntegrationTypeId &&
-                                     x.ErrorDescription.Contains("encoding="))
-                         //   x.ErrorDescription.Contains("{surround_text}"))
-                         .GroupBy(x => x.ParentSourceId)
-                         .Select(g => (int)g.FirstOrDefault().ParentSourceId)
-                         .OrderBy(x => x)
-                         .ToList();
+            return repo.AllReadonly<MQEpep>()
+                          .Where(x => x.IntegrationStateId != IntegrationStates.TransferOK &&
+                                      x.IntegrationTypeId == this.IntegrationTypeId &&
+                                      x.ErrorDescription.Contains("encoding="))
+                          //   x.ErrorDescription.Contains("{surround_text}"))
+                          .GroupBy(x => x.ParentSourceId)
+                          .Select(g => (int)g.FirstOrDefault().ParentSourceId)
+                          .OrderBy(x => x)
+                          .ToList();
         }
     }
 

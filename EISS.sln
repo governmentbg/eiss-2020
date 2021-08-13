@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOWebApplicationService", "
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{1B5058A7-0B7D-4765-8442-C23DAAD72F5E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOWebApplication.Cdn", "IOWebApplication.Cdn\IOWebApplication.Cdn.csproj", "{CACD0ED8-0895-42DD-8155-7526FEE5CF59}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C8F4FF75-3E60-4004-B478-1B92EE2196D2}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -40,6 +42,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationService.Csrd", "
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuditLogMigration", "AuditLogMigration\AuditLogMigration.csproj", "{F46D6486-52E7-41F1-8FEA-DE5C430D0808}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integration.RabbitMQ", "Integration.RabbitMQ\Integration.RabbitMQ.csproj", "{9DB23920-E16A-4F91-85B7-BC2AFC28E03F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +75,10 @@ Global
 		{1B5058A7-0B7D-4765-8442-C23DAAD72F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B5058A7-0B7D-4765-8442-C23DAAD72F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B5058A7-0B7D-4765-8442-C23DAAD72F5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CACD0ED8-0895-42DD-8155-7526FEE5CF59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CACD0ED8-0895-42DD-8155-7526FEE5CF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CACD0ED8-0895-42DD-8155-7526FEE5CF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CACD0ED8-0895-42DD-8155-7526FEE5CF59}.Release|Any CPU.Build.0 = Release|Any CPU
 		{79612492-9522-4928-8B1C-453A8FF2EC30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79612492-9522-4928-8B1C-453A8FF2EC30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79612492-9522-4928-8B1C-453A8FF2EC30}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -103,6 +111,10 @@ Global
 		{F46D6486-52E7-41F1-8FEA-DE5C430D0808}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F46D6486-52E7-41F1-8FEA-DE5C430D0808}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F46D6486-52E7-41F1-8FEA-DE5C430D0808}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DB23920-E16A-4F91-85B7-BC2AFC28E03F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DB23920-E16A-4F91-85B7-BC2AFC28E03F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DB23920-E16A-4F91-85B7-BC2AFC28E03F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DB23920-E16A-4F91-85B7-BC2AFC28E03F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -113,6 +125,7 @@ Global
 		{AF15E59C-158A-4AAC-A6C8-5CAC218B8DE7} = {41C42A71-CF18-4258-A0CD-A964874D2175}
 		{0FD0BFB6-B854-44B1-9D72-19163D318BBF} = {41C42A71-CF18-4258-A0CD-A964874D2175}
 		{F46D6486-52E7-41F1-8FEA-DE5C430D0808} = {C8F4FF75-3E60-4004-B478-1B92EE2196D2}
+		{9DB23920-E16A-4F91-85B7-BC2AFC28E03F} = {41C42A71-CF18-4258-A0CD-A964874D2175}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0E6D9DB2-0079-422F-81DE-4E1579A93314}

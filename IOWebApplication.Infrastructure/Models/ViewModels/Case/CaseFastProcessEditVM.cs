@@ -14,5 +14,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         
         [Display(Name = "Допълнителна иформация")]
         public string DescriptionEdit { get; set; }
+
+        [Display(Name = "С включено разпореждане за незабавно изпълнение")]
+        public bool? VisibleOrder { get; set; }
     }
 }

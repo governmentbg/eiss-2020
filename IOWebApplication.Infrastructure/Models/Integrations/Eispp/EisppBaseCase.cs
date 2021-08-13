@@ -32,7 +32,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         /// </summary>
         [XmlAttribute("dlonmr")]
         [Display(Name = "Номер")]
-        public int ShortNumber { get; set; }
+        public string ShortNumber { get; set; }
 
         /// <summary>
         /// dlosig
@@ -123,6 +123,9 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [XmlIgnore]
         [Display(Name = "Вид институция")]
         public string InstitutionTypeName { get; set; }
+        
+        [XmlIgnore]
+        public string CaseTypeName { get; set; }
 
         public bool ShouldSerializeCaseSetupType()
         {

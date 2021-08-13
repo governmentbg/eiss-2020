@@ -18,6 +18,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Военно звание")]
         public int? MilitaryRangId { get; set; }
+       
         public IList<DocumentPersonAddressVM> Addresses { get; set; }
 
         public DocumentPersonVM()

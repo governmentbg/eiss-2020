@@ -1,5 +1,6 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -23,5 +24,6 @@ namespace IOWebApplication.Core.Contracts
         string HtmlTemplate_GetNotSetParam(string alias);
         HtmlTemplateCreateVM GetById_HtmlTemplateCreate(int id);
         bool HtmlTemplateCreate_SaveData(HtmlTemplateCreateVM model);
+        bool HtmlTemplate_SaveDataTiny(TinyMCEVM model);
     }
 }

@@ -124,7 +124,8 @@ namespace IOWebApplication.Core.Services
         public List<SelectListItem> DeliveryAreaSelectDDL(int forCourtId, bool addNotSet)
         {
             var result = repo.AllReadonly<DeliveryArea>()
-                .Where(x => (x.CourtId == forCourtId && x.DateExpired == null))
+                       .Where(x => (x.CourtId == forCourtId && x.DateExpired == null))
+                       .OrderBy(x => x.Description)
                        .Select(x => new SelectListItem()
                        {
                            Text = x.Description,

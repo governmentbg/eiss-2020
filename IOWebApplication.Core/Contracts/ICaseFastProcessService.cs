@@ -10,21 +10,26 @@ namespace IOWebApplication.Core.Contracts
         CaseFastProcessViewVM Select(int CaseId);
         int CaseMoneyClaim_SaveData(CaseMoneyClaim model);
         int CaseMoneyCollection_SaveData(CaseMoneyCollectionEditVM model);
+        int CaseMoneyCollectionNew_SaveData(CaseMoneyCollectionEditNewVM model);
         List<CasePersonListDecimalVM> FillPersonList(int caseId, int? moneyCollectionId);
         List<CasePersonListDecimalVM> FillPersonListExpense(int caseId, int? caseMoneyExpenseId);
+        List<CaseMoneyCollectionDataVM> FillCaseMoneyCollectionDataList(int caseId, int? moneyCollectionId);
         int CaseMoneyExpense_SaveData(CaseMoneyExpenseEditVM model);
         int CaseBankAccount_SaveData(CaseBankAccount model);
         CaseMoneyCollectionEditVM GetById_EditVM(int Id);
         CaseMoneyExpenseEditVM GetById_ExpenseEditVM(int Id);
+        CaseMoneyCollectionEditNewVM GetById_EditNewVM(int Id);
         List<CaseMoneyCollectionRespectSumVM> FillCaseMoneyCollectionRespectSum(int caseId);
         bool CaseMoneyCollectionRespectSum_SaveData(List<CaseMoneyCollectionRespectSumVM> model);
         bool CaseBankAccount_DeleteData(int Id);
         bool CaseMoneyExpense_DeleteData(int Id);
+
         bool CaseMoneyCollection_DeleteData(int Id);
         bool CaseMoneyClaim_DeleteData(int Id);
         CaseFastProcessVM CaseFastProcess_Select(int CaseId);
         CaseFastProcessEditVM GetByCaseId_CaseFastProcess(int CaseId);
         bool CaseFastProcess_SaveData(CaseFastProcessEditVM model);
         CaseBankAccount CaseBankAccount_GetLastByPerson(int CasePersonId, int? CaseBankAccountId);
+        bool IsExistMoneyCollectionWithFraction(int CaseId);
     }
 }

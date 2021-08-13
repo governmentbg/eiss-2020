@@ -1,0 +1,73 @@
+﻿@model EisppUnionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+@{
+    ViewData["Title"] = "Обединяване на НД събитие към ЕИСПП";
+    bool isPostBack = (bool?)ViewBag.isPostBack == true;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        <form id="formEdit" asp-action="EisppUnionSave" method="post">
+            @Html.HiddenFor(x => x.EventId)
+            @Html.HiddenFor(x => x.ModelJson)
+            @Html.HiddenFor(x => x.MQEpepId)
+            @Html.HiddenFor(x => x.CasePrincipalId)
+            @Html.HiddenFor(x => x.CaseAddedId)
+            @Html.HiddenFor(x => x.IsValidatedAdded)
+            @Html.HiddenFor(x => x.IsValidatedPrincipal)
+            @Html.HiddenFor(x => x.Mode)
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="#" onclick="editEventPrincipal()" class="btn btn-def col-md-6 col-lg-6">Основно НД</a>
+                </div>
+            </div>
+            <div class="row">
+                <br />
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="#" onclick="editEventAdded()" class="btn btn-def col-md-6 col-lg-6">Добавено НД</a>
+                </div>
+            </div>
+            <div class="row">
+                <br />
+            </div>
+
+
+            <div class="form-group">
+                @if (Model.MQEpepId == null)
+                {
+                    @if (Model.IsValidatedPrincipal && Model.IsValidatedAdded)
+                    {
+                        @Html.EditorFor(x => x.IsForSend)
+                    }
+                    @if (!Model.IsForSend || isPostBack)
+                    {
+                        <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    }
+                }
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+
+    function editEventAdded() {
+        $('#formEdit').attr('action', '@Url.Action("EventAdded", "Eispp")');
+        $("#formEdit").submit();
+    }
+
+    function editEventPrincipal() {
+        $('#formEdit').attr('action', '@Url.Action("EventPrincipal", "Eispp")');
+        $("#formEdit").submit();
+    }
+</script>

@@ -7,6 +7,7 @@ namespace IOWebApplication.Infrastructure.Constants
     public class EISPPConstants
     {
         public const int CountryBG = 8805;
+        public const int UnknownPersonEGN = 1111111110;
         public class Gender
         {
             public const int Male = 706;
@@ -433,9 +434,11 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary>
             public const int ReciveSentence = 914;
 
-
-
-
+            /// <summary>
+            /// Обединяване на НД
+            /// </summary>
+            public const int CaseUnion = 898;
+            public const int CaseUnionInner = 1721;
         }
 
 
@@ -577,6 +580,20 @@ namespace IOWebApplication.Infrastructure.Constants
             public const int Union = 745;
         }
 
+        /// <summary>
+        /// Вид наказание
+        /// </summary>
+        public class PunishmentActivity
+        {
+            /// <summary>
+            /// наложено
+            /// </summary>
+            public const int Imposed = 1108;
+            /// <summary>
+            /// кумулирано
+            /// </summary>
+            public const int Cumulated = 1106;
+        }
         /// <summary>
         /// Резултат от присъда оправдателна/осъдителна
         /// </summary>

@@ -188,7 +188,7 @@ function ReplaceControlsInContent(containerSelector, page_title) {
     return _result;
 }
 var jsonPageSize = 10;
-function MakeJsonPager(data, pager_container, page_no, callbackName) {
+function MakeJsonPager(data, pager_container, page_no, callbackName, callbackNameArg) {
     var pageCount = Math.ceil(data.length / jsonPageSize);
     var pagerData = [];
     for (var i = 1; i <= pageCount; i++) {
@@ -199,7 +199,8 @@ function MakeJsonPager(data, pager_container, page_no, callbackName) {
         var _new = { page: i, selected: _selected };
         pagerData.push(_new);
     }
-    var pagerTemplate = '{{#each this}}<a href="#" class="btn {{#if selected}}light{{/if}}{{#unless selected}}dark{{/unless}}" onclick="' + callbackName + '({{page}});return false;">{{page}}</a>{{/each}}';
+    let carg = callbackNameArg || '';
+    var pagerTemplate = '{{#each this}}<a href="#" class="btn {{#if selected}}light{{/if}}{{#unless selected}}dark{{/unless}}" onclick="' + callbackName + '({{page}}' + carg+');return false;">{{page}}</a>{{/each}}';
     var pagerHtml = HandlebarsToHtml(pagerTemplate, pagerData);
     if (pageCount === 1)
         pagerHtml = '';

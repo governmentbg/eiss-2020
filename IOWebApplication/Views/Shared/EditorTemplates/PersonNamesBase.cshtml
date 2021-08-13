@@ -16,12 +16,16 @@
         uicTypes.Add(new SelectListItem("БУЛСТАТ", "5"));
     }
     var label = (string)ViewData["label"] ?? "Идентификация";
+    bool showDeceasedFields = (bool)(ViewData["deceased"] ?? false);
 }
 <input type="hidden" asp-for="@Model.PersonId" />
 @if (Model.Person != null)
 {
     <input type="hidden" asp-for="@Model.Person.Id" />
     <input type="hidden" asp-for="@Model.Person.PersonTypeId" />
+    @Html.HiddenFor(x => x.Person.Person_SourceType)
+    @Html.HiddenFor(x => x.Person.Person_SourceId)
+    @Html.HiddenFor(x => x.Person.Person_SourceCode)
 }
 <div class="form-group person--control" data-controlid="@Guid.NewGuid()">
     @*<label class="control-label">@label</label>*@
@@ -53,26 +57,26 @@
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="FirstName" class="io-req"></label>
-                <input asp-for="@Model.FirstName" class="form-control" title="Собствено име" />
+                @Html.EditorFor(x => x.FirstName, "StringInline")
                 <span asp-validation-for="@Model.FirstName" class="text-danger"></span>
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="MiddleName"></label>
-                <input asp-for="@Model.MiddleName" class="form-control" />
+                @Html.EditorFor(x => x.MiddleName, "StringInline")
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="FamilyName" class="io-req"></label>
-                <input asp-for="@Model.FamilyName" class="form-control" />
+                @Html.EditorFor(x => x.FamilyName, "StringInline")
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="Family2Name"></label>
-                <input asp-for="@Model.Family2Name" class="form-control" />
+                @Html.EditorFor(x => x.Family2Name, "StringInline")
             </div>
         </div>
     </div>
@@ -80,21 +84,22 @@
         <div class="col-md-12">
             <div class="form-group">
                 <label asp-for="FullName" class="io-req"></label>
-                <input asp-for="@Model.FullName" class="form-control" />
+                @Html.EditorFor(x => x.FullName, "StringInline")
                 <span asp-validation-for="@Model.FullName" class="text-danger"></span>
             </div>
         </div>
     </div>
-    @*<div class="row latin--name">
-            <div class="col-md-12">
-                <input asp-for="@Model.LatinName" class="form-control" placeholder="Изписване на латиница" />
+    @if (showDeceasedFields)
+    {
+        <div class="row row-deceased">
+            <div class="col-md-6">
+                @Html.EditorFor(x => x.IsDeceased)
+            </div>
+            <div class="col-md-6 date-deceased">
+                @Html.EditorFor(x => x.DateDeceased, "DateTime")
             </div>
         </div>
-        <div class="row department--name">
-            <div class="col-md-12">
-                <input asp-for="@Model.DepartmentName" class="form-control" placeholder="Отдел / дирекция" />
-            </div>
-        </div>*@
+    }
 </div>
 
 

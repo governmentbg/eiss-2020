@@ -7,7 +7,6 @@
     {
         ViewData["Title"] = "Изтриване на събитие към ЕИСПП";
     }
-    bool isPostBack = (bool?)ViewBag.isPostBack == true;
 }
 
 @section breadcrumb{
@@ -24,6 +23,7 @@
             @Html.HiddenFor(x => x.MQEpepId)
             @Html.HiddenFor(x => x.EventFromId)
             @Html.HiddenFor(x => x.Mode)
+            @Html.HiddenFor(x => x.IsEdit)
             <div class="row">
                 <div class="col-md-6">
                     <a href="#" onclick="showOldEvent()" class="btn btn-def col-md-6 col-lg-6">Преглед на старо състояние</a>
@@ -45,13 +45,10 @@
             }
 
             <div class="form-group">
-                @if (Model.MQEpepId == null)
+                @if (@Model.IsEdit)
                 {
                     @Html.EditorFor(x => x.IsForSend)
-                    @if (!Model.IsForSend || isPostBack)
-                    {
-                        <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
-                    }
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
                 }
                 @await Html.PartialAsync("_ButtonClose")
             </div>

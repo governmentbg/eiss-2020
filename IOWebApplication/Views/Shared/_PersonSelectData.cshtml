@@ -47,7 +47,7 @@
             </div>
         </div>
     </fieldset>
-    <a href="#" class="btn btn-success" onclick="saveCheckedData(); return false;">Добави избраните</a>
+    <a href="#" class="btn btn-success" onclick="saveCheckedData(this); return false;">Добави избраните</a>
 </script>
 <script>
     var personData = [];
@@ -76,7 +76,11 @@
         });
     });
 
-    function saveCheckedData() {
+    function saveCheckedData(sender) {
+        if (!checkSingleClick(sender)) {
+            return false;
+        }
+
         let model = {
             sourceType: $('#stValue').val(),
             sourceId: $('#sidValue').val()

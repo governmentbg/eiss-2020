@@ -22,10 +22,24 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
 
          [Display(Name = "Статус")]
         public int NotificationStateId { get; set; }
-        
+
+        [Display(Name = "Тип на документа")]
+        public int NotificationTypeId { get; set; }
+
         [Display(Name = "Нов статус")]
         public int ToNotificationStateId { get; set; }
 
+        [Display(Name = "Нов съд за разнасяне")]
+        public int NewCourtId { get; set; }
+
+        [Display(Name = "Нов призовкар от")]
+        public int NewLawUnitType { get; set; } = NomenclatureConstants.LawUnitTypes.MessageDeliverer;
+
+        [Display(Name = "Нов призовкар")]
+        public int NewLawUnitId { get; set; }
+
+        [Display(Name = "Нов район за доставка")]
+        public int NewDeliveryAreaId { get; set; }
 
         public static string GetTitle(int toNotificationStateId)
         {

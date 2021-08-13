@@ -12,6 +12,7 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
 using System.Threading.Tasks;
 using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -21,7 +22,7 @@ namespace IOWebApplication.Core.Contracts
         bool Institution_SaveData(Institution model);
         string Institution_Validate(Institution model);
         string LawUnit_Validate(LawUnit model);
-        IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId,bool showFree);
+        IQueryable<LawUnitVM> LawUnit_Select(int lawUnitType, string name, DateTime? fromDate, DateTime? toDate, int specialityId, bool showFree);
         IQueryable<LawUnitVM> LawUnitForDate_Select(int lawUnitType, DateTime? date);
         List<SelectListItem> LawUnitForDate_SelectDDL(int lawUnitType, DateTime? date);
         bool LawUnit_SaveData(LawUnit model);
@@ -51,7 +52,7 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="id">Id на lawunit</param>
         /// <returns></returns>
         LabelValueVM GetLawUnitById(int id);
-       
+
         /// <summary>
         /// Всички назначени/командировани съдии в съд
         /// </summary>
@@ -60,7 +61,7 @@ namespace IOWebApplication.Core.Contracts
         /// <returns></returns>
         IQueryable<LawUnit> LawUnit_JudgeByCourtDate(int court, DateTime? date);
 
-        IQueryable<UserProfileVM> Users_Select(int courtId, string fullName, string userId, bool forList = false);
+        IQueryable<UserProfileVM> Users_Select(UserFilterVM filter, bool forList = false);
 
         string Users_GetByLawUnitUIC(string uic);
         string Users_GetUserIdByLawunit(int lawUnitId);
@@ -126,7 +127,7 @@ namespace IOWebApplication.Core.Contracts
         IEnumerable<LabelValueVM> CourtSelect_ByUser(string userId);
         IEnumerable<LabelValueVM> Get_Courts(string term, int? id);
         IEnumerable<LabelValueVM> Get_Organizations(string term, int? id);
-        IEnumerable<LabelValueVM> Get_CaseReasons(string term, int? id);
+        IEnumerable<LabelValueVM> Get_CaseReasons(string term, int? caseType, int? id);
 
         IQueryable<LawUnit> LawUnit_ByCourtDate(int court, DateTime? date, int organizationId);
 
@@ -160,7 +161,7 @@ namespace IOWebApplication.Core.Contracts
 
         List<BreadcrumbsVM> Breadcrumbs_GetForCase(int CaseId);
         List<BreadcrumbsVM> Breadcrumbs_Document(long documentId);
-        List<BreadcrumbsVM> Breadcrumbs_DocumentResolution(long documentResolutionId);
+        List<BreadcrumbsVM> Breadcrumbs_DocumentResolution(long documentResolutionId, string tabName = "");
         List<BreadcrumbsVM> Breadcrumbs_GetForCaseSession(int CaseSessionId, bool IsViewRowSession = true);
         List<BreadcrumbsVM> Breadcrumbs_GetCaseSessionFastDocument(int CaseSessionId);
         List<BreadcrumbsVM> Breadcrumbs_GetForCaseSessionAct(int CaseSessionActId);
@@ -200,6 +201,8 @@ namespace IOWebApplication.Core.Contracts
         List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId);
         List<BreadcrumbsVM> Breadcrumbs_GetForCaseCrime(int CaseId);
         List<BreadcrumbsVM> Breadcrumbs_GetForCaseLoadIndex(int CaseId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForCaseLawyerHelp(int CaseId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForCaseLawyerHelpEdit(int CaseLawyerHelpId);
         List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonCrime(int CaseCrimeId);
 
         IEnumerable<SelectListItem> GetEnumSelectList<T>();
@@ -345,9 +348,31 @@ namespace IOWebApplication.Core.Contracts
         List<BreadcrumbsVM> Breadcrumbs_GetForCasePersonSentenceBulletin(int id);
         List<BreadcrumbsVM> Breadcrumbs_GetForCaseSessionActDivorce(int id);
         CourtLawUnit GetGeneralJudgeCourtLawUnit(int courtId);
+        /// <summary>
+        /// CourtDepartmentVM.Label - Състав;CourtDepartmentVM.ParentLabel - Отделение
+        /// </summary>
+        /// <param name="lawunit_id"></param>
+        /// <param name="dtNow"></param>
+        /// <returns></returns>
+        CourtDepartmentVM Read_LawUnitOtdelenieSystav(int lawunit_id, DateTime? dtNow = null,int ? court_id = 0);
         bool UpdateCaseJudicalCompositionOtdelenie(int CaseId);
         List<BreadcrumbsVM> Breadcrumbs_ForExecList();
         List<BreadcrumbsVM> Breadcrumbs_ForExecListEdit(int id);
         List<BreadcrumbsVM> Breadcrumbs_ForCaseNotificationListPrint(int caseSessionId, int notificationListTypeId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventUnionEdit(int caseId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventUnionEditPrincipal(int caseId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForEisppEventUnionEditAdded(int caseId);
+
+        string GetFullAddress(Address model, bool setContactData);
+        List<BreadcrumbsVM> Breadcrumbs_GetForDocumentPersonLinkEdit(long documentId, long documentResolutionId, int documentPersonLinkId);
+        List<BreadcrumbsVM> Breadcrumbs_GetForDocumentPersonLink(long documentId, long documentResolutionId);
+        List<BreadcrumbsVM> Breadcrumbs_DocumentNotification(int documentNotificationId, long documentId, long? documentResolutionId, int notificationTypeId);
+        List<BreadcrumbsVM> Breadcrumbs_ForDocumentNotificationDeliveryOperEdit(int notificationId, int deliveryOperId);
+        List<BreadcrumbsVM> Breadcrumbs_ForDocumentNotificationDeliveryOper(int notificationId);
+        List<BreadcrumbsVM> Breadcrumbs_ForDocumentNotificationEditTinyMCE(DocumentNotification notification);
+        List<BreadcrumbsVM> Breadcrumbs_ForDocumentNotificationEditReturn(int notificationId);
+        List<BreadcrumbsVM> Breadcrumbs_ForVksNotificationList();
+        List<BreadcrumbsVM> Breadcrumbs_ForVksNotificationPrint();
+        List<BreadcrumbsVM> Breadcrumbs_ForVksNotificationListEdit();
     }
 }

@@ -7,7 +7,7 @@
 }
 <div style="text-align:right;width:100%;margin-top:30px;">
     <table class="no-border row-space-single" align="right">
-        @if (Model.JudgeList.Count == 0 && Model.JuryList.Count == 0)
+        @if ((Model.JudgeList.Count == 0 && Model.JuryList.Count == 0) || (string.IsNullOrEmpty(Model.JudgeChairman) && Model.JudgeList.Count == 1))
         {
 
             <tr>

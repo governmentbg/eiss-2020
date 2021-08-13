@@ -1,0 +1,60 @@
+﻿@model EisppUnionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+@{
+    ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
+    bool isPostBack = (bool?)ViewBag.isPostBack == true;
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        <form id="formEdit" asp-action="EventAddedSave" method="post">
+            @Html.ValidationSummary()
+            @{
+                ViewData.TemplateInfo.HtmlFieldPrefix = $"EventAddedObj";
+                @await Html.PartialAsync("_Event", Model.EventAddedObj)
+                ViewData.TemplateInfo.HtmlFieldPrefix = currentHtmlPrefix;
+            }
+            @Html.HiddenFor(x => x.ModelJson)
+            @Html.HiddenFor(x => x.IsForSend)
+            @Html.HiddenFor(x => x.MQEpepId)
+            @Html.HiddenFor(x => x.EventId)
+            @Html.HiddenFor(x => x.CasePrincipalId)
+            @Html.HiddenFor(x => x.CaseAddedId)
+            @Html.HiddenFor(x => x.IsValidatedAdded)
+            @Html.HiddenFor(x => x.IsValidatedPrincipal)
+            <div class="form-group">
+                @if (Model.MQEpepId == null)
+                {
+                    <input type="submit" value="Потвърди" class="btn btn-success" />
+                }
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        </form>
+    </div>
+</div>
+<form id="formEventUnion" asp-action="EisppUnion" method="post">
+    @Html.HiddenFor(x => x.ModelJson)
+    @Html.HiddenFor(x => x.IsForSend)
+    @Html.HiddenFor(x => x.MQEpepId)
+    @Html.HiddenFor(x => x.EventId)
+    @Html.HiddenFor(x => x.CasePrincipalId)
+    @Html.HiddenFor(x => x.CaseAddedId)
+    @Html.HiddenFor(x => x.IsValidatedAdded)
+    @Html.HiddenFor(x => x.IsValidatedPrincipal)
+</form>
+@await Html.PartialAsync("_EisppScript")
+<script>
+    $(document).ready(function () {
+        EisppOnReady();
+    });
+    function PostToEventUnion() {
+        $("#formEventUnion").submit();
+    }
+</script>

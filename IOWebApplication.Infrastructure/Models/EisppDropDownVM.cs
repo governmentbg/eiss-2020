@@ -8,9 +8,9 @@ namespace IOWebApplication.Infrastructure.Models
 {
     public class EisppDropDownVM
     {
-        public string Label;
-        public int Flags;
-        public List<SelectListItem> DDList;
+        public string Label { get; set; }
+        public int Flags { get; set; }
+        public List<SelectListItem> DDList { get; set; }
         public string GetSelectedText(int? selected)
         {
             return DDList?.Where(x => x.Value == selected.ToString()).FirstOrDefault()?.Text ?? "";

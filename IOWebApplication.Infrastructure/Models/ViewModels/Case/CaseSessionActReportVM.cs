@@ -17,5 +17,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string DocumentInfo { get; set; }
         public string ActStateName { get; set; }
         public string JudgeReport { get; set; }
+        public string ActComplainResultLabel { get; set; }
     }
 }

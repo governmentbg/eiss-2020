@@ -25,9 +25,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string PersonRelRole { get; set; }
         public string PersonSecondRelRole { get; set; }
         public string LinkTemplate { get; set; }
+        public string LinkTemplateVks { get; set; }
         public string SecondLinkTemplate { get; set; }
+        public string SecondLinkTemplateVks { get; set; }
         public string Label { get; set; }
         public string LabelWithoutFirstPerson { get; set; }
+        public string LabelWithoutSecondRel { get; set; }
         public bool isXFirst { get; set; }
     }
 }

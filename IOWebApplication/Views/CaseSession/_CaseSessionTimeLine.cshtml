@@ -1,11 +1,14 @@
 ﻿@model CaseSessionElectronicFolderVM
 @using IOWebApplication.Infrastructure.Models.ViewModels.Case
-
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
+@{
+    bool IsCurrentCourt = Model.CourtId == userContext.CourtId;
+}
 <ul class="timeline">
     <!-- timeline time label -->
     <li class="time-label" data-target="S_@Model.Id">
         <span class="bg-purple">
-            <i class="fa fa-handshake-o"></i> @Model.SessionTypeLabel @Model.DateFrom.ToString("dd.MM.yyyy HH:mm")
+            <i class="fa fa-handshake-o"></i> @Model.SessionTypeLabel @(Model.DateFrom.ToString("dd.MM.yyyy HH:mm")  + " - " + Model.SessionStateLabel)
         </span>
     </li>
     <!-- /.timeline-label -->
@@ -69,7 +72,7 @@
             </div>
 
             <div class="timeline-footer hidden">
-                @if (!Model.IsOnlyFiles)
+                @if (!Model.IsOnlyFiles && IsCurrentCourt)
                 {
                     <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabMainData" class="btn btn-dropbox btn-xs" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Заседание</span></a>
                 }
@@ -145,7 +148,7 @@
                 }
             </div>
             <div class="timeline-footer hidden">
-                @if (!Model.IsOnlyFiles)
+                @if (!Model.IsOnlyFiles && IsCurrentCourt)
                 {
                     <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabPersonNotification" class="btn btn-dropbox btn-xs" title="Списък"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Списък</span></a>
                 }
@@ -180,7 +183,7 @@
             </div>
 
             <div class="timeline-footer hidden">
-                @if (!Model.IsOnlyFiles)
+                @if (!Model.IsOnlyFiles && IsCurrentCourt)
                 {
                     <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabNotification" class="btn btn-dropbox btn-xs" title="Уведомления"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Уведомления</span></a>
                 }
@@ -246,7 +249,7 @@
             </div>
 
             <div class="timeline-footer hidden">
-                @if (!Model.IsOnlyFiles)
+                @if (!Model.IsOnlyFiles && IsCurrentCourt)
                 {
                     if (Model.CaseSessionDocs.Count > 0)
                     {
@@ -280,17 +283,25 @@
                         <div>
                             @Html.Raw("<i class='fa fa-file-text'></i> " + row)
                         </div>
-
-                        <div class="cdn-listview" style="margin-left:5px;">
-                            <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                        <div style="display:flex">
+                            @if (IsCurrentCourt)
+                            {
+                                <div>
+                                    <a href="@Url.Action("Edit", "CaseSessionAct")?id=@caseSessionAct.Id&caseId=@caseSessionAct.CaseId" class="btn btn-dropbox btn-xs" title="Актове"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Акт</span></a>
+                                </div>
+                            }
+                            <div class="cdn-listview" style="margin-left:5px;">
+                                <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
+                            </div>
                         </div>
+
                     </div>
                 }
 
             </div>
 
             <div class="timeline-footer hidden">
-                @if (!Model.IsOnlyFiles)
+                @if (!Model.IsOnlyFiles && IsCurrentCourt)
                 {
                     <a href="@Url.Action("Preview", "CaseSession")?id=@Model.Id#tabSessionAct" class="btn btn-dropbox btn-xs" title="Актове"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Актове</span></a>
                 }

@@ -23,6 +23,7 @@ namespace IOWebApplication.Core.Extensions
         /// </summary>
         /// <param name="model"></param>
         /// <param name="source"></param>
+        /// <param name="copySourceData"></param>
         public static void CopyFrom(this NamesBase model, NamesBase source, bool copySourceData = true)
         {
             model.Uic = source.Uic?.Trim();
@@ -34,6 +35,8 @@ namespace IOWebApplication.Core.Extensions
             model.DepartmentName = source.DepartmentName?.Trim();
             model.LatinName = source.LatinName;
             model.FullName = source.MakeFullName();
+            model.IsDeceased = source.IsDeceased;
+            model.DateDeceased = source.DateDeceased;
 
             if (copySourceData)
             {

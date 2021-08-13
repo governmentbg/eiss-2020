@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -35,15 +36,30 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="courtId"></param>
         /// <returns></returns>
-        public IQueryable<CaseForArchiveVM> CaseForArchive_Select(int courtId)
+        public IQueryable<CaseForArchiveVM> CaseForArchive_Select(int courtId, CaseForArchiveFilterVM model)
         {
             int[] caseStateForArchive = { NomenclatureConstants.CaseState.Stop, NomenclatureConstants.CaseState.Suspend,
                                           NomenclatureConstants.CaseState.Resolution, NomenclatureConstants.CaseState.ComingIntoForce};
+
+            Expression<Func<Case, bool>> caseGroupWhere = x => true;
+            if (model.CaseGroupId > 0)
+                caseGroupWhere = x => x.CaseGroupId == model.CaseGroupId;
+
+            Expression<Func<Case, bool>> caseTypeWhere = x => true;
+            if (model.CaseTypeId > 0)
+                caseTypeWhere = x => x.CaseTypeId == model.CaseTypeId;
+
+            Expression<Func<Case, bool>> caseNumberSearch = x => true;
+            if (string.IsNullOrEmpty(model.CaseNumber) == false)
+                caseNumberSearch = x => EF.Functions.ILike(x.RegNumber, model.CaseNumber.ToCasePaternSearch());
 
             return repo.AllReadonly<Case>()
                 .Where(x => x.CourtId == courtId)
                 .Where(x => caseStateForArchive.Contains(x.CaseStateId))
                 .Where(x => x.CaseArchives.Any() == false)
+                .Where(caseGroupWhere)
+                .Where(caseTypeWhere)
+                .Where(caseNumberSearch)
                 .Select(x => new CaseForArchiveVM()
                 {
                     Id = x.Id,
@@ -51,7 +67,8 @@ namespace IOWebApplication.Core.Services
                     CaseStateLabel = x.CaseState.Label,
                     RegNumber = x.RegNumber,
                     ShortRegNumber = x.ShortNumber,
-                    RegDate = x.RegDate
+                    RegDate = x.RegDate,
+                    CaseCodeLabel = x.CaseCode.Code + " " + x.CaseCode.Label,
                 })
                 .AsQueryable();
         }
@@ -98,7 +115,8 @@ namespace IOWebApplication.Core.Services
                     BookYear = x.BookYear,
                     StorageYears = x.StorageYears,
                     CaseArchiveIndexName = x.CourtArchiveIndex.Label,
-                    DateDestroy = x.DateDestroy
+                    DateDestroy = x.DateDestroy,
+                    ArchiveLink = x.ArchiveLink
                 })
                 .AsQueryable();
         }

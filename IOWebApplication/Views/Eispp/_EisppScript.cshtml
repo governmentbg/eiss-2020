@@ -407,6 +407,14 @@
         $('.nav-tabs a').on('shown.bs.tab', function (e) {
             window.location.hash = e.target.hash;
         })
+
+        $('.eispp-srok-day').change(function () {
+            let days = $('.eispp-srok-day').first().val();
+            let srokDate = moment($('.eispp-event-date').first().val(), 'DD.MM.YYYY');
+            srokDate = srokDate.add(days, 'days');
+            $('.eispp-srok-date').first().val(srokDate.format('DD.MM.YYYY'));
+            $('.eispp-srok-date').first().datepicker('setDate', srokDate.format('DD.MM.YYYY'));
+        });
     }
 
 </script>

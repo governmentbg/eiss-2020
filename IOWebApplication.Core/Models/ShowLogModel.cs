@@ -12,5 +12,6 @@ namespace IOWebApplication.Core.Models
         public string ButtonLabel { get; set; }
         public string Title { get; set; }
         public bool IconOnly { get; set; }
+
     }
 }

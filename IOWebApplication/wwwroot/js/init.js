@@ -7,7 +7,8 @@
         titleAttr: 'Excel',
         className: 'btn-default',
         exportOptions: {
-            "columns": "thead th:not(.noExport)"
+            "columns": "thead th:not(.noExport)",
+            "columns": ":visible"
         }
     };
 
@@ -122,8 +123,9 @@
     $(document).on('click', 'a.modal-loader', function () {
         let _url = $(this).data('modal-url');
         let _title = $(this).data('modal-title');
+        let bigModal = $(this).hasClass('modal-big');
         requestContent(_url, null, function (html) {
-            ShowModalDialog(_title, html);
+            ShowModalDialog(_title, html, bigModal);
         });
         return false;
     });
@@ -154,6 +156,8 @@
         }
         return false;
     });
+
+
 
     loadDatatablesOnShow();
     mqInfoLoad();
@@ -212,6 +216,7 @@ function initTinyMCE() {
         //toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
         toolbar: 'undo redo | formatselect | bold italic backcolor | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat | help',
         visual_table_class: "table",
+        content_css: "/css/tinymce-generic-styles.css",
         //indentation: '30pt',
         table_default_attributes: { border: 0 },
         setup: function (editor) {
@@ -261,9 +266,11 @@ function initPersonControl() {
         if (isEntity) {
             $(this).parents('.person--control:first').find('.entity--names').show();
             $(this).parents('.person--control:first').find('.person--names').hide();
+            $(this).parents('.person--control:first').find('.row-deceased').hide();
         } else {
             $(this).parents('.person--control:first').find('.entity--names').hide();
             $(this).parents('.person--control:first').find('.person--names').show();
+            $(this).parents('.person--control:first').find('.row-deceased').show();
         }
     }).trigger('change');
 
@@ -281,20 +288,19 @@ function initPersonControl() {
                     personControl.find('input[id$="FullName"]').val(data.fullName);
                     personControl.find('input[id$="LatinName"]').val(data.latinName);
                     personControl.find('input[id$="DepartmentName"]').val(data.departmentName);
-                }
-                //else {
-                //    personControl.find('input[id$="FirstName"]').val('');
-                //    personControl.find('input[id$="MiddleName"]').val('');
-                //    personControl.find('input[id$="FamilyName"]').val('');
-                //    personControl.find('input[id$="Family2Name"]').val('');
-                //    personControl.find('input[id$="FullName"]').val('');
-                //    personControl.find('input[id$="LatinName"]').val('');
-                //    personControl.find('input[id$="DepartmentName"]').val('');
-                //}
+                }                
             });
         }
     });
-
+    $('.person--control input[id$="IsDeceased"]').change(function () {
+        let isDeceased = $(this).is(':checked');
+        let personControl = $(this).parents('.person--control:first');
+        if (isDeceased) {
+            personControl.find('div.date-deceased').show();
+        } else {
+            personControl.find('div.date-deceased').hide().find('input.date-picker').val('');
+        }
+    }).trigger('change');
 
 
     initPersonSearch();
@@ -339,8 +345,14 @@ function selectPersonSearchData(sender, personId, controlId) {
             $(personControl).find('input[id$="MiddleName"]').val(personData.middleName);
             $(personControl).find('input[id$="FamilyName"]').val(personData.familyName);
             $(personControl).find('input[id$="FamilyName2"]').val('');
+            if (personData.isDead) {
+                $(personControl).find('input[id$="IsDeceased"]').prop('checked', 'checked').trigger('change');
+                $(personControl).find('input[id$="DateDeceased"]').val(personData.deathDate);
+            }
 
-            appendAddressToDocumentPersonFromNBD(personData.uic, controlId);
+            if (typeof appendAddressToDocumentPersonFromNBD === 'function') {
+                appendAddressToDocumentPersonFromNBD(personData.uic, controlId);
+            }
         }
             break;
         default: {

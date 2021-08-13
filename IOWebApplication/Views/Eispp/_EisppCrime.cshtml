@@ -21,7 +21,7 @@
             <div class="col-lg-2">@Html.EditorFor(x => x.CrimeStatus.Status, "EisppDropDown", null, new { Ddl = ViewBag.CrimeStatusDDL, @class = "crime-status" })</div>
             @*<div class="col-lg-2">@Html.EditorFor(x => x.CrimeStatus.StatusDateVM, "EisppDateTime", new { flags = 1, @class = "crime-status-date" })</div>*@
         </div>
-        <div class="row">
+        <div class="row" style="display:none">
             <div class="col-lg-2">@Html.EditorFor(x => x.CiminalProceedingCrime.Status, "EisppDropDown", null, new { Ddl = ViewBag.CiminalProceedingCrimeDDL })</div>
             <div class="col-lg-2">@Html.EditorFor(x => x.CiminalProceedingCrime.StatusDateVM, "EisppDateTime")</div>
         </div>

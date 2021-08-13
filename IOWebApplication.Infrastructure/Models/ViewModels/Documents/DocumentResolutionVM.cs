@@ -16,8 +16,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public string ResolutionTypeName { get; set; }
         public string RegNumber { get; set; }
         public DateTime? RegDate { get; set; }
+        public int JudgeCount { get; set; }
         public string JudgeName { get; set; }
         public string JudgeUserId { get; set; }
+        public string JudgeName2 { get; set; }
+        public string JudgeUser2Id { get; set; }
         public string StateName { get; set; }
         public int CourtId { get; set; }
         public string CourtName { get; set; }
@@ -53,6 +56,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
                     .ForMember(d => d.StateName, s => s.MapFrom(m => m.ResolutionState.Label))
                     .ForMember(d => d.CourtName, s => s.MapFrom(m => m.Court.Label))
                     .ForMember(d => d.CourtCity, s => s.MapFrom(m => m.Court.CityName))
+                    .ForMember(d => d.JudgeCount, s => s.MapFrom(m => m.JudgeDecisionCount ?? 1))
+                    .ForMember(d => d.JudgeUser2Id, s => s.MapFrom(m => m.JudgeDecisionUser2Id))
+                    .ForMember(d => d.JudgeName2, s => s.MapFrom(m => (m.JudgeDecisionLawunit2 != null) ? m.JudgeDecisionLawunit2.FullName : ""))
                 ;
             });
 

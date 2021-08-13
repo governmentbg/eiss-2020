@@ -206,7 +206,7 @@
                         width: 240,
                         className: "text-left noExport",
                         "render": function (data, type, row) {
-                                 row.isNotExpired = (row.dateExpired === null && row.mqEpepId === null);
+                            row.isNotExpired = (row.dateExpired === null && (row.mqEpepId === null || row.canExpireError));
                                  row.isForEditWithReq = (row.dateExpired === null && row.eventFromId == null);
                                  row.isForEdit = (row.dateExpired === null &&
                                                   (row.mqEpepId === null || row.integrationStateId == @IOWebApplication.Infrastructure.Constants.EpepConstants.IntegrationStates.ReplyContainsError)

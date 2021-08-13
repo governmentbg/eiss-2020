@@ -82,9 +82,12 @@ namespace IOWebApplication.Controllers
                     }
                 }
 
-
-                //MemoryStream msPdf = new MemoryStream(resultFile);
-                //var signers = signTools.GetSignerInfo(msPdf);
+                var fileItem = cdn.Select(model.SourceType, model.SourceId).FirstOrDefault();
+                if (fileItem.FileId != model.FileId)
+                {
+                    SetErrorMessage("Заредения от вас документ е актуализиран/подписан от друг потребител. Моля, повторете стъпката по подписване, за да заредите актуалното му съдържание.");
+                    return LocalRedirect(model.ErrorUrl);
+                }
 
                 await cdn.MongoCdn_AppendUpdate(new CdnUploadRequest()
                 {
@@ -93,7 +96,8 @@ namespace IOWebApplication.Controllers
                     ContentType = MediaTypeNames.Application.Pdf,
                     FileContentBase64 = Convert.ToBase64String(resultFile),
                     FileName = model.FileName,
-                    Title = model.FileTitle
+                    Title = model.FileTitle,
+                    SignituresCount = model.SignituresCount + 1
                 });
 
                 SetSuccessMessage("Документът е успешно подписан");
@@ -104,6 +108,7 @@ namespace IOWebApplication.Controllers
             {
                 logger.LogError(ex, "Process Sign PDF result error");
                 SetErrorMessage("Възникна грешка при подписване на документа");
+                TempData["signError"] = ex.Message;
 
                 return LocalRedirect(model.ErrorUrl);
             }

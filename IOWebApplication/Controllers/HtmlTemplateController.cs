@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,15 +37,15 @@ namespace IOWebApplication.Controllers
         /// Страница с бланки на документи
         /// </summary>
         /// <returns></returns>
-        public IActionResult Index()
+        public IActionResult Index(int? htmlTemplateTypeId)
         {
-            HtmlTemplateFilterVM model = new HtmlTemplateFilterVM() { HtmlTemplateTypeId = -1 };
+            HtmlTemplateFilterVM model = new HtmlTemplateFilterVM() { HtmlTemplateTypeId = (htmlTemplateTypeId ?? -1) };
             SetViewbag();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_HtmlTemplate().DeleteOrDisableLast();
             return View(model);
         }
         [HttpPost]
-        public IActionResult Index(string filterJson)
+        public IActionResult Index([AllowHtml] string filterJson)
         {
             HtmlTemplateFilterVM model = null;
             if (!string.IsNullOrEmpty(filterJson))
@@ -61,7 +64,7 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <param name="filterJson"></param>
         /// <returns></returns>
-        public IActionResult IndexLink(int id, string filterJson)
+        public IActionResult IndexLink(int id, [AllowHtml] string filterJson)
         {
             SetViewbagIndex(id, filterJson);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_HtmlTemplateLink(id).DeleteOrDisableLast();
@@ -74,14 +77,14 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <param name="filterJson"></param>
         /// <returns></returns>
-        public IActionResult IndexParam(int id, string filterJson)
+        public IActionResult IndexParam(int id, [AllowHtml] string filterJson)
         {
             SetViewbagIndex(id, filterJson);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_HtmlTemplateParam(id).DeleteOrDisableLast();
             return View();
         }
         
-        private void SetViewbagIndex(int id, string filterJson)
+        private void SetViewbagIndex(int id, [AllowHtml] string filterJson)
         {
             var html = service.GetById<HtmlTemplate>(id);
             ViewBag.htmlId = id;
@@ -135,7 +138,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public void SetBreadcrums(int id, string filterJson)
+        public void SetBreadcrums(int id, [AllowHtml] string filterJson)
         {
             ViewBag.filterJson = filterJson;
 
@@ -150,7 +153,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="filterJson"></param>
         /// <returns></returns>
-        public IActionResult Add(string filterJson)
+        public IActionResult Add([AllowHtml] string filterJson)
         {
             SetBreadcrums(0, filterJson);
             var model = new HtmlTemplate();
@@ -164,10 +167,11 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <param name="filterJson"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id, string filterJson)
+        public IActionResult Edit(int id, [AllowHtml] string filterJson)
         {
             SetBreadcrums(id, filterJson);
             var model = service.GetById<HtmlTemplate>(id);
+            model.DateFrom = model.DateFrom.Date == (new DateTime(1, 1, 1)).Date ? DateTime.Now.AddYears(-1) : model.DateFrom;
             SetViewbag();
             return View(nameof(Edit), model);
         }
@@ -402,38 +406,14 @@ namespace IOWebApplication.Controllers
             ViewBag.PreviewTitle = model.Label;
             return View("PreviewRaw", htmlModel);
         }
-   
+
+        [DisableAudit]
         [Route("[controller]/Preview/{id}/style.css")]
         public IActionResult Style(int id)
         {
             var model = service.GetById<HtmlTemplate>(id);
             var htmlModel = printDocumentService.ConvertToTinyMCVM(model, false);
-            var deffStyle = @"table.bordered {
-                border-collapse: collapse;
-            }
-
-            table.bordered td {
-                padding: 3px 5px;
-                border: 1px solid #777;
-            }
-            table.table-report {
-                border-collapse: collapse;
-                table-layout:fixed; 
-                width:190mm;
-            }
-            table.table-report td {
-                padding: 3px 5px;
-                border: 1px solid #777;
-                white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
-                white-space: -webkit-pre-wrap;          /* Chrome & Safari */ 
-                white-space: -pre-wrap;                 /* Opera 4-6 */
-                white-space: -o-pre-wrap;               /* Opera 7 */
-                white-space: pre-wrap;                  /* CSS3 */
-                word-wrap: break-word;                  /* Internet Explorer 5.5+ */
-                word-break: break-all;
-                white-space: normal;
-            }
-";
+            var deffStyle = FormattingConstant.TinyMceTableDefStyle + FormattingConstant.PrintTableDefStyle;
             return Content(htmlModel?.Style ?? deffStyle, "text/css");
         }
 
@@ -504,6 +484,39 @@ namespace IOWebApplication.Controllers
             }
             return View(nameof(EditHtmlTemplateCreate), model);
         }
+        public async Task<IActionResult> EditTinyMCE(int sourceId, [AllowHtml] string filterJson)
+        {
+            ViewBag.filterJson = filterJson;
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_HtmlTemplatePreview(sourceId).DeleteOrDisableLast();
 
+            var model = service.GetById<HtmlTemplate>(sourceId);
+            var htmlModel = printDocumentService.ConvertToTinyMCVM(model, model.HaveSessionAct == true);
+
+            htmlModel.SourceId = sourceId;
+            htmlModel.SourceType = 0;
+
+            return View("EditTinyMCE", htmlModel);
+        }
+        [HttpPost]
+        public async Task<IActionResult> EditTinyMCESave(TinyMCEVM htmlModel, [AllowHtml] string filterJson)
+        {
+            htmlModel.Text = await this.RenderPartialViewAsync("~/Views/HtmlTemplate/", "Preview.cshtml", htmlModel, true);
+            int htmlTemplateTypeId = -1;
+            if (!string.IsNullOrEmpty(filterJson))
+            {
+                var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
+                var model = JsonConvert.DeserializeObject<HtmlTemplateFilterVM>(filterJson, dateTimeConverter);
+                htmlTemplateTypeId = model.HtmlTemplateTypeId;
+            }
+            if (service.HtmlTemplate_SaveDataTiny(htmlModel))
+            {
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return RedirectToAction(nameof(Index), new { htmlTemplateTypeId });
+        }
     }
 }

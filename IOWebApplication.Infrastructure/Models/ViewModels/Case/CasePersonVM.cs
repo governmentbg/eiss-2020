@@ -55,9 +55,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Дата на пререгистрация в АВ")]
         public DateTime? ReRegisterDate { get; set; }
 
-        [Display(Name = "Починало лице")]
-        public bool IsDeceased { get; set; }
-
         public RegixRequestReasonVM RegixRequestReason { get; set; }
 
         public CasePersonVM()

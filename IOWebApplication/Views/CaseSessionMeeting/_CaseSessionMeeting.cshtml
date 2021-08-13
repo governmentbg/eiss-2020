@@ -36,7 +36,8 @@
                     "datatype": "json",
                     data: function (d) {
                         d.caseSessionId = @Model.CaseSessionId;
-                    }
+                    },
+                    initialCall: false
                 },
                 dom: 'rt',
                 deferLoading: deferLoadingOnTab('#caseSessionMeetingMainTable'),

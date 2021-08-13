@@ -74,6 +74,7 @@ namespace IOWebApplication.Core.Services
                            Iteration = x.Iteration,
                            IterationText = ToRoman(x.Iteration) + " интервал",
                            DurationMonths = x.DurationMonths,
+                           DurationMonthsText = (x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop) ? "-" : x.DurationMonths.ToString(),
                            ModelEdit = (x.LifecycleTypeId != NomenclatureConstants.LifecycleType.InProgress)
                        })
                        .AsQueryable();
@@ -241,14 +242,14 @@ namespace IOWebApplication.Core.Services
 
             var caseSessionAct = repo.AllReadonly<CaseSessionAct>()
                                      .Where(x => x.CaseSessionId == CaseSessionId &&
-                                                 x.ActStateId == NomenclatureConstants.SessionActState.Enforced &&
-                                                 x.RegDate != null)
+                                                 x.DateExpired == null &&
+                                                 x.ActDeclaredDate != null)
                                      .FirstOrDefault();
 
             if (caseSessionAct == null)
                 return true;
 
-            var isSessionAndResult = ((caseSession.CaseSessionResults.Any(x => x.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSession)) &&
+            var isSessionAndResult = ((caseSession.CaseSessionResults.Any(x => x.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSession && x.DateExpired == null)) &&
                                       (caseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno));
 
             if (!isSessionAndResult)
@@ -283,7 +284,7 @@ namespace IOWebApplication.Core.Services
                 {
                     var caseLifecyclesStop = caseLifecycles.Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop &&
                                                                        x.Iteration == caseLifecycle.Iteration &&
-                                                                       x.DateTo == null)
+                                                                       x.DateTo != null)
                                                            .ToList() ?? new List<CaseLifecycle>();
 
                     foreach (var lifecycleStop in caseLifecyclesStop)

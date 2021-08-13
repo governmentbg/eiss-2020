@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Обезличаване на документ";
     Layout = "~/Views/Shared/_MasterLayout.cshtml";
-   // var history = Html.Raw(JsonConvert.SerializeObject(Model.DepersonalizationHistory).Replace("\"", "\\\"").Replace("\'", "\\\""));
+    // var history = Html.Raw(JsonConvert.SerializeObject(Model.DepersonalizationHistory).Replace("\"", "\\\"").Replace("\'", "\\\""));
 }
 
 @section menuHeader{
@@ -52,7 +52,7 @@
             <!-- /.box-body -->
 
             <div class="box-footer">
-                <form id="depersonalizationForm" action="@Html.Raw(Model.SubmitAction)" role="form" method="post">
+                <form id="depersonalizationForm" action="@Html.Raw(Model.SubmitAction)" role="form" method="post" enctype="multipart/form-data">
                     @Html.HiddenFor(x => x.CaseId)
                     @Html.HiddenFor(x => x.SourceId)
                     @*<input type="hidden" id="CaseId" name="CaseId" value="@Model.CaseId" />
@@ -63,7 +63,7 @@
                     <div id="depersonalizationButtons">
                         <a href="#" id="btnSave" class="btn btn-success">Запис</a>
                         <a href="@Model.CancelUrl" class="btn btn-danger">Назад</a>
-                        <a href="#" id="btnFinalize" class="btn btn-primary">Финализиране</a>
+                        <a href="#" id="btnFinalize" class="btn btn-primary">Публикувай</a>
                         <a href="#" id="btnEdit" class="btn btn-warning pull-right">Редакция</a>
                     </div>
                 </form>
@@ -242,7 +242,7 @@
                 });
             });
 
-           
+
 
             function getHashCode(str) {
                 var FNV1_32A_INIT = 0x811c9dc5;
@@ -470,9 +470,14 @@
                     disableRow(el);
                 }
 
-                const activeRowsCount = document.querySelectorAll('#searchResultsTable tbody tr:not(.not-allowed)').length;
+                let countActive = 0;
+                resultsTable.rows().every(function (i) {
+                    if (resultsTable.row(i).node().className.indexOf('not-allowed') < 0) {
+                        countActive++;
+                    }
+                });
 
-                if (activeRowsCount == 0) {
+                if (countActive == 0) {
                     cleanSearchFields();
                     document.getElementById('btnReplaceAll').setAttribute('disabled', 'disabled');
                 }

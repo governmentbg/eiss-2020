@@ -65,7 +65,7 @@
         </div>
 
         <div id="PersonList_Div">
-            <fieldset class="is-fieldset">
+            <fieldset class="is-fieldset cpl-container">
                 <legend class="legend_1">Разпределение на вземането</legend>
                 @Html.EditorFor(x => x.CasePersonListDecimals)
             </fieldset>
@@ -183,8 +183,13 @@
         }
     }
 
+    function SH_Fraction() {
+        $('#PersonList_Div').find('.cpl-fraction-edits').hide();
+    }
+
     function SH_Elements() {
         SH_PersonList();
+        SH_Fraction();
         if (@(Model.MainCaseMoneyCollectionId ?? 0) > 0) {
             $("#CaseMoneyCollectionKind_Div").show();
             $("#CaseMoneyCollectionGroup").hide();

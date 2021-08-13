@@ -76,8 +76,18 @@ namespace IOWebApplication.Extensions
             {
                 return new SelectList(new List<SelectListItem>());
             }
-            return new SelectList(source, "Value", "Text", selected);
+            var result = new SelectList(source, "Value", "Text", selected);
+            foreach (var item in result)
+            {
+                if (item.Text != null)
+                {
+                    item.Text = System.Web.HttpUtility.HtmlDecode(item.Text);
+                }
+            }
+            return result;
         }
+
+
 
         /// <summary>
         /// Добавя "Изберете" в SelectList, 

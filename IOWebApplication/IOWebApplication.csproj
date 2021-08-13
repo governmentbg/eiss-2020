@@ -44,9 +44,10 @@
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.1.1" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
     <PackageReference Include="DataTables.AspNet.AspNetCore" Version="2.0.2" />
+    <PackageReference Include="DocumentFormat.OpenXmlSDK" Version="2.0.0" />
     <PackageReference Include="IO.LogOperation" Version="1.0.5" />
     <PackageReference Include="IO.RegixClient" Version="1.0.3" />
-    <PackageReference Include="IO.SignTools" Version="1.0.22" />
+    <PackageReference Include="IO.SignTools" Version="1.0.29" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />
@@ -67,6 +68,7 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Sinks.ElasticSearch" Version="8.0.0" />
     <PackageReference Include="StampIT.Authentication.Id" Version="1.0.0" />
+    <PackageReference Include="System.IO.Packaging" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -77,14 +79,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\IOWebApplication.Core\IOWebApplication.Core.csproj" />
+    <ProjectReference Include="..\IOWebApplicationService.Infrastructure\IOWebApplicationService.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\CaseClassification\" />
     <Folder Include="Views\Pdf\" />
-    <Folder Include="Views\Shared\Components\SignPdfComponent\" />
     <Folder Include="wwwroot\css\prod\" />
-    <Folder Include="wwwroot\data\" />
     <Folder Include="wwwroot\js\prod\" />
     <Folder Include="wwwroot\lib\adminlte\plugins\chartJs\" />
   </ItemGroup>
@@ -258,6 +259,7 @@
     <None Include="wwwroot\lib\tinymce-enterprice\themes\mobile\theme.min.js" />
     <None Include="wwwroot\lib\tinymce-enterprice\themes\silver\theme.min.js" />
     <None Include="wwwroot\lib\tinymce-enterprice\tinymce.min.js" />
+    <None Include="wwwroot\Rotativa\wkhtmltopdf.exe" />
   </ItemGroup>
 
   <ItemGroup>
@@ -281,6 +283,66 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Index.resx</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\css\tinymce-generic-styles.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\data\apiRequest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\data\EPEP_WebApiNomenclatures.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltoimage">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltoimage.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltopdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltopdf.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\bin\wkhtmltoimage">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\bin\wkhtmltopdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\dllbegin.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\dllend.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\image.h">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\include\wkhtmltox\pdf.h">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0.12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\lib\libwkhtmltox.so.0.12.4">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\share\man\man1\wkhtmltoimage.1.gz">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\Rotativa\wkhtmltox\share\man\man1\wkhtmltopdf.1.gz">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -312,6 +374,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Certificates\Eispp\EISSTEST.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\eiss.local.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\Epep\epepCert2021.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\Epep\rs-varna.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\vss-regix-test.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Certificates\vss-regix.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Fonts\times.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -37,6 +37,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Страни")]
         public string CasePersonNames { get; set; }
+
+        [Display(Name = "Архивен номер")]
+        public string RegNumber { get; set; }
     }
 
     public class CaseArchiveFilterReportVM

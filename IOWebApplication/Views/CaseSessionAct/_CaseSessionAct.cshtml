@@ -60,17 +60,24 @@
                         sortable: true,
                         searchable: true
                     },
-                    {
-                        name: 'actResultLabel',
-                        data: 'actResultLabel',
-                        title: 'Вид на резултат',
-                        sortable: true,
-                        searchable: true
-                    },
+                    //{
+                    //    name: 'actResultLabel',
+                    //    data: 'actResultLabel',
+                    //    title: 'Вид на резултат',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
                     {
                         name: 'actStateLabel',
                         data: 'actStateLabel',
                         title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Рег. номер',
                         sortable: true,
                         searchable: true
                     },
@@ -82,18 +89,11 @@
                         searchable: false,
                         "render": function (item, type, row, meta) {
                             if (row.regNumberNew) {
-                                return "<div class='cdn-listview' style='margin-left:5px;'><a href='#' class='cdn-loader' data-sourceType='" + @SourceTypeSelectVM.CaseSessionActAllFiles + "' data-sourceId='" + row.id + "'> " + row.regNumberNew + "</a></div>";
+                                return "<div class='cdn-listview' style='margin-left:5px;'><a href='#' class='cdn-loader' data-sourceType='" + @SourceTypeSelectVM.CaseSessionActAllFiles + "' data-sourceId='" + row.id + "'>" + row.regNumberNew + "</a></div>";
                             } else {
                                 return "";
                             }
                         }
-                    },
-                    {
-                        name: 'regNumber',
-                        data: 'regNumber',
-                        title: 'Рег. номер',
-                        sortable: true,
-                        searchable: true
                     },
                     {
                         name: 'regDate',
@@ -176,14 +176,16 @@
 
         function SH_Columns() {
             var table = $('#caseSessionActMainTable').DataTable();
-            if ('@access.CanChange' == 'True') {
-                table.column(3).visible(true);
+            table.column(4).visible(true);
+            table.column(3).visible(false);
+            @*if ('@access.CanChange' == 'True') {
+                table.column(5).visible(true);
                 table.column(4).visible(false);
             }
             else {
-                table.column(3).visible(false);
+                table.column(5).visible(false);
                 table.column(4).visible(true);
-            }
+            }*@
         }
     </script>
 

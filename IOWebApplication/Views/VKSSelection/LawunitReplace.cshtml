@@ -1,0 +1,63 @@
+﻿@using IOWebApplication.Infrastructure.Data.Models.VKS
+@model VksSelectionLawunit
+
+@{
+    ViewData["Title"] = "Замяна на съдия";
+}
+
+
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","VksSelection")">Периоди ВКС</a></li>
+        <li><a href="@Url.Action("Lawunits")/@Model.VksSelectionId">Състав</a></li>
+    </ol>
+}
+<div class="row">
+    <div class="col-md-12">
+        @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frmCheckList" }))
+        {@Html.HiddenFor(x => x.Id)
+
+        @Html.HiddenFor(x => x.Id)
+        @Html.HiddenFor(x => x.LawunitName)
+        @Html.HiddenFor(x => x.VksSelectionId)
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row">
+            <div class="col-lg-3">
+                Замяна на: <b>  @Model.LawunitName  </b> c:
+
+            </div>
+
+
+            <div class="col-lg-3">
+                @Html.EditorFor(x => x.ReplacedLawunitId, "GenericDropDownInline")
+
+            </div>
+
+
+
+
+
+
+        </div>
+
+        <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+        <a href="@Url.Action("Lawunits")/@Model.VksSelectionId" class="btn btn-danger">Назад</a>
+
+
+    }
+    </div>
+</div>
+
+<script>
+
+
+
+    function SubmitCheckList() {
+        $("#subButton").attr("disabled", true);
+        $('#frmCheckList').trigger('submit');
+    }
+</script>

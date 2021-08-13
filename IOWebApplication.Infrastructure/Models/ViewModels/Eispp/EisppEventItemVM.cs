@@ -70,5 +70,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
 
         public int IntegrationStateId { get; set; }
         public int? EventFromId { get; set; }
+        public bool CanExpireError { get; set; }
     }
 }

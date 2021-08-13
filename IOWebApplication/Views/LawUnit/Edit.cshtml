@@ -12,7 +12,7 @@
         ViewData["Title"] = "Добавяне";
     }
 
-    bool readonlyEgn = (Model.Id > 0);
+    bool readonlyEgn = (Model.Id > 0) && string.IsNullOrEmpty(Model.Uic);
 }
 
 @section breadcrumb{
@@ -33,7 +33,7 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div id="saveContainer">
                     <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { egnOnly = true, readonlyEgn = readonlyEgn, label = "Наименование на лице" })
+                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { egnOnly = true, readonlyEgn = !string.IsNullOrEmpty(Model.Uic), label = "Наименование на лице" })
 
                     @if (NomenclatureConstants.LawUnitTypes.DepartmentPersons.Contains(Model.LawUnitTypeId))
                     {

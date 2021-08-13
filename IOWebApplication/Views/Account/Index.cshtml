@@ -7,6 +7,21 @@
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
+@model IOWebApplication.Infrastructure.Models.ViewModels.Identity.UserFilterVM
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.FullName)</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.Email)</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable')" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
 
 <div class="row">
     <div class="col-md-12 text-right pb-15">
@@ -31,9 +46,13 @@
                     "type": "POST",
                     "datatype": "json",
                     data: function (d) {
-
+                        d.filter = {
+                            FullName : $('#FullName').val(),
+                            Email : $('#Email').val()
+                        }
                     }
                 },
+                filter: false,
                 columns: [
                     {
                         name: 'courtName',

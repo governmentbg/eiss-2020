@@ -66,16 +66,33 @@
         <div class="legendbody">
             <div class="row">
                 <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.CaseEisppNumber)</div>
+                @if (hasRegNumberOtherSystem)
+                {
+                    <div class="col-lg-3">@Html.EditorFor(x => x.VisibleOtherSystem)</div>
+                }
             </div>
 
             <div class="row" id="linkCaseInfo">
                 <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt", new { onChange = "courtSelect();" })</div>
                 <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_CaseId, "SelectCase", new { courtId = userContext.CourtId })</div>
                 <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_Description)</div>
-                @if (hasRegNumberOtherSystem)
-                {
+            </div>
+
+            @if (hasRegNumberOtherSystem)
+            {
+                <div class="row" id="otherSystemDelo">
+                    <div class="col-lg-3"> @Html.EditorFor(x => x.CourtOtherSystem, "SelectCourt")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.YearOtherSystem, "DateTimeYear")</div>
                     <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
-                }
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionTypeId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionId, "SelectInstitution", null, new { institutionTypeContainer = "#InstitutionTypeId" })</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionCaseNumber)</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.InstitutionCaseYear, "DateTimeYear")</div>
             </div>
         </div>
     </fieldset>
@@ -97,6 +114,11 @@
 
 <script>
     function LoadTable() {
+        if (!checkFilterFormHasData('.filter-form')) {
+            swalOk('Въведете стойност в поне един филтър.', function () { });
+            return false;
+        }
+
         if ($.fn.dataTable.isDataTable('#mainTable')) {
             refreshTable('#mainTable');
         }
@@ -125,7 +147,15 @@
                             LinkDelo_CaseId: $('#LinkDelo_CaseId').val(),
                             LinkDelo_Description: $('#LinkDelo_Description').val(),
                             RegNumberOtherSystem: $('#RegNumberOtherSystem').val(),
+                            YearOtherSystem: $('#YearOtherSystem').val(),
+                            CourtOtherSystem: $('#CourtOtherSystem').val(),
+                            VisibleOtherSystem: $("#VisibleOtherSystem").is(":checked"),
                             CaseRegNumber: $('#CaseRegNumber').val(),
+                            CaseEisppNumber: $('#CaseEisppNumber').val(),
+                            InstitutionTypeId: $('#InstitutionTypeId').val(),
+                            InstitutionId: $('#InstitutionId').val(),
+                            InstitutionCaseNumber: $('#InstitutionCaseNumber').val(),
+                            InstitutionCaseYear: $('#InstitutionCaseYear').val()
                         };
                     }
                 },
@@ -233,12 +263,35 @@
 
     $(document).ready(function () {
         $(".legendbody").hide();
+        initInstitution();
+        $('#InstitutionTypeId').change(function () {
+            let instControl = $(this).parents('div.row:first').find('.institution-control:first')[0];
+            loadInstitution(instControl, '0');
+        });
+        SH_OtherSystem();
     });
 
     function courtSelect() {
         let courtId = $('#LinkDelo_CourtId').val();
         var courtData = $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court');
         $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court', courtId);
+    }
+
+    $('#VisibleOtherSystem').change(function () {
+        SH_OtherSystem();
+    });
+
+    function SH_OtherSystem() {
+        debugger;
+        var visibleOS = $("#VisibleOtherSystem").is(":checked");
+        if (visibleOS) {
+            $("#linkCaseInfo").hide();
+            $("#otherSystemDelo").show();
+        }
+        else {
+            $("#linkCaseInfo").show();
+            $("#otherSystemDelo").hide();
+        }
     }
 </script>
 
@@ -272,7 +325,7 @@
 <script id="templateCase" type="text/x-handlebars-template">
     {{#if caseId}}
     {{#if isCaseRejected}}
-    <a href="@Url.Action("Edit", "Case")?id={{caseId}}" target="_blank" title="Данни за образуване">Отказано за образуване</a>
+    <a href="@Url.Action("Edit", "Case")?id={{caseId}}" target="_blank" title="Данни за делото">{{rejectedStateName}}</a>
     {{else}}
     <a href="@Url.Action("CasePreview","Case")/{{caseId}}" target="_blank" title="Преглед дело">{{caseNumber}}</a>
     {{/if}}

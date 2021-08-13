@@ -36,7 +36,7 @@ namespace IOWebApplication.Controllers
             caseService = _caseService;
             commonService = _commonService;
         }
-        public IActionResult Index(string filterJson)
+        public IActionResult Index([AllowHtml] string filterJson)
         {
             CaseDeadLineFilterVM model = null;
             if (!string.IsNullOrEmpty(filterJson))

@@ -1,6 +1,7 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CaseMigrationVM> Select(int caseId);
         IQueryable<CaseMigrationVM> SelectOutMove(int caseId);
         CaseMigration InitNewMigration(int caseId);
+        SaveResultVM CheckData(CaseMigration model);
         bool SaveData(CaseMigration model);
         bool UnionCase(CaseMigrationUnionVM model);
         int GetLastMigrationAcceptToUse(CaseMigrationFindCaseVM model);

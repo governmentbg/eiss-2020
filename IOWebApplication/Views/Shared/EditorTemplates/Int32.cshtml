@@ -5,10 +5,11 @@
     {
         groupClass = (string)ViewData["groupClass"];
     }
+    var add_class = ((string)ViewData["class"] ?? "");
 }
 
 <div class="form-group @groupClass">
     <label asp-for="@Model" class="control-label"></label>
-    <input asp-for="@Model" class="form-control" />
+    <input asp-for="@Model" class="form-control @add_class" />
     <span asp-validation-for="@Model" class="text-danger"></span>
 </div>

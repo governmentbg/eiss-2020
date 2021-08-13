@@ -89,5 +89,6 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetAddressByCasePerson_DropDown(int casePersonId);
 
         SaveResultVM CasePersonAddress_IsUsed(CasePersonAddress model);
+        bool IsExistFastProcess(int CaseId, int PersonId);
     }
 }

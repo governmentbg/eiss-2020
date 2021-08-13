@@ -24,7 +24,7 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDocumentRegistratures(bool appendallItem = false);
 
         List<SelectListItem> GetDeliveryGroups(int documentDirection);
-        IEnumerable<LabelValueVM> GetDocument(int courtId, string documentNumber);
+        IEnumerable<LabelValueVM> GetDocument(int courtId, string documentNumber, int docDirection);
         bool CheckDocumentOldNumber(int courtId, int docDirectionId, string documentNumber, DateTime documentDate);
         LabelValueVM GetDocumentById(int id);
         List<SelectListItem> DocumentPerson_SelectForDropDownList(long documentId);
@@ -52,5 +52,15 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<DocumentInstitutionCaseInfoListVM> DocumentInstitutionCaseInfo_Select(long documentId);
         bool DocumentInstitutionCaseInfo_SaveData(DocumentInstitutionCaseInfoEditVM model);
         DocumentInstitutionCaseInfoEditVM GetById_InstitutionCaseInfoEditVM(long Id);
+        IQueryable<DocumentInfoVM> DocumentsOtherFromSameCourtByCaseId_Select(int CaseId);
+        IQueryable<DocumentInfoVM> DocumentsOtherFromDifferentCourtByCaseId_Select(int CaseId);
+
+        /// <summary>
+        /// всички съпровождащи документи по свързано дело
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <returns></returns>
+        List<SelectListItem> GetCompliantDocumentsByCaseId(int caseId);
+        List<SelectListItem> GetDocumentPersonsByDocumentId(long documentId);
     }
 }

@@ -36,6 +36,13 @@ namespace IntegrationService.Csrd
                 this.logger.LogDebug("ispnService started");
                 var ispnService = scope.ServiceProvider.GetService<IISPNCaseService>();
                 var ispnResult = ispnService.PushMQWithFetch(fetchCount).GetAwaiter().GetResult();
+                //var caseErr = ispnService.GetCaseIdSurroundSideErr();
+                //foreach (var caseId in caseErr)
+                //{
+                //    var ispnResult = ispnService.PatchISPN(caseId).GetAwaiter().GetResult();
+                //}
+
+               // var ispnResult = ispnService.PatchISPN(30002).GetAwaiter().GetResult();
                 this.logger.LogDebug("ispnService ended");
             }
         }

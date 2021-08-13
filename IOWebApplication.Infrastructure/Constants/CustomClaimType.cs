@@ -29,5 +29,7 @@
         public static string SubDocRegistry = "sub_doc_reg";
         public static string SubDepartments = "sub_deps";
         public static string LawUnitId = "law_unit_id";
+        public static string LawUnitTypeId = "lu_type_id";
+        public static string SystemFeatures = "sys_features";
     }
 }

@@ -39,6 +39,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         public int CallFromActId { get; set; }
 
+        public int? CaseLawUnitSelectId { get; set; }
+
         public virtual List<CheckListVM> CaseLawUnitByCase { get; set; }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Eispp;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 
@@ -41,7 +43,10 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         public int? PersonOldMeasureId { get; set; }
         [XmlIgnore]
         public int? PersonMeasureId { get; set; }
-
+        [XmlIgnore]
+        public bool SaveIfHaveDiff { get; set; }
+        [XmlIgnore]
+        public List<EisppCrimePersonVM> EisppCrimePersonDiff { get; set; }
         /// <summary>
         /// Създава празен обект за десериализация на пакет
         /// </summary>

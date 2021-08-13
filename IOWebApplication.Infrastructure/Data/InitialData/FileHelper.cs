@@ -33,5 +33,11 @@ namespace IOWebApplication.Infrastructure.Data.InitialData
 
             return result;
         }
+        
+
+        public static void SaveToFile(string path, string content)
+        {
+            File.WriteAllText(path, content);
+        }
     }
 }

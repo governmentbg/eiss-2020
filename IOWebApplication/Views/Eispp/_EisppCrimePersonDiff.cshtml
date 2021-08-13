@@ -1,0 +1,22 @@
+﻿@model EisppCrimePersonVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.PneNumber, "hd")
+    </div>
+    <div class="col-lg-2">
+        @Html.EditorFor(x => x.Uic, "hd")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.PersonName, "hd")
+    </div>
+    <div class="col-lg-4">
+        @Html.EditorFor(x => x.Difference, "hd")
+    </div>
+</div>
+
+
+
+
+

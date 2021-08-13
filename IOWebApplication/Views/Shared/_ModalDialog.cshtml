@@ -24,12 +24,17 @@
         $('.master-modal .modal-body').html(html);
         $('.master-modal').modal("show");
     }
-    function MakeBigModalDialog(container) {
+    function MakeBigModalDialog(container, dialogClass) {
         var _width = $(window).width() * 90 / 100;
         var _height = $(window).height() * 80 / 100;
+        let _dc = dialogClass || '';
         $(container)
             .dialog({
-                modal: true, width: _width, height: _height
+                modal: true, width: _width, height: _height,
+                dialogClass: _dc,
+                //open: function () {
+                //    $(this).find('a, select, input, textarea, button').first().blur();
+                //}
             });
     }
     function HideModal() {

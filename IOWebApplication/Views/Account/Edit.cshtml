@@ -29,7 +29,7 @@
                             @Html.DisplayFor(x => x.Email, "obj")
                         </div>
                     </div>
-                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitTypes = "1,5" })
+                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.Current, lawUnitTypes = "1,2,5,6" })
                     @Html.EditorFor(x => x.WorkNotificationToMail)
                     @Html.EditorFor(x => x.IsActive)
                 </fieldset>

@@ -12,6 +12,11 @@
     </ol>
 }
 
+@Html.HiddenFor(m => m.CaseGroupIds_text)
+@Html.HiddenFor(m => m.CaseTypeIds_text)
+@Html.HiddenFor(m => m.CourtGroupIds_text)
+@Html.HiddenFor(m => m.LoadGroupLinkIds_text)
+
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
@@ -30,15 +35,19 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupIds, "GenericDropDownMultiple")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeIds, "GenericDropDownMultiple")</div>
+    @*<div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>*@
     <div class="col-lg-3">@Html.EditorFor(x => x.CaseRegNumber)</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.DocumentNumber)</div>
 </div>
 
 <div class="row">
-    <div class="col-lg-3">@Html.EditorFor(x => x.CourtGroupId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.LoadGroupLinkId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CourtGroupIds, "GenericDropDownMultiple")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.LoadGroupLinkIds, "GenericDropDownMultiple")</div>
+    @*<div class="col-lg-3">@Html.EditorFor(x => x.CourtGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.LoadGroupLinkId, "GenericDropDown")</div>*@
 </div>
 
 <div class="row">
@@ -80,12 +89,16 @@
                             ProtokolState: $('#ProtokolState').val(),
                             FullName: $('#FullName').val(),
                             UserId: $('#UserId').val(),
-                            CaseGroupId: $('#CaseGroupId').val(),
-                            CaseTypeId: $('#CaseTypeId').val(),
+                            //CaseGroupId: $('#CaseGroupId').val(),
+                            //CaseTypeId: $('#CaseTypeId').val(),
                             CaseRegNumber: $('#CaseRegNumber').val(),
                             DocumentNumber: $('#DocumentNumber').val(),
                             CourtGroupId: $('#CourtGroupId').val(),
-                            LoadGroupLinkId: $('#LoadGroupLinkId').val()
+                            LoadGroupLinkId: $('#LoadGroupLinkId').val(),
+                            CaseGroupIds_text: $('#CaseGroupIds_text').val(),
+                            CaseTypeIds_text: $('#CaseTypeIds_text').val(),
+                            CourtGroupIds_text: $('#CourtGroupIds_text').val(),
+                            LoadGroupLinkIds_text: $('#LoadGroupLinkIds_text').val()
                         };
                     }
                 },
@@ -126,7 +139,6 @@
                     {
                         name: 'documentNumberVal',
                         data: 'documentNumberVal',
-                        className: 'text-right',
                         title: 'Документ',
                         "render": function (item, type, row, meta) {
                             var url = '@(Url.Action("View", "Document",new { id = 666}))';
@@ -219,11 +231,52 @@
 
 <script>
     $(document).ready(function () {
-        $('#CaseGroupId').trigger('change');
+        //$('#CaseGroupId').trigger('change');
+        $('#CaseGroupIds').select2({
+        });
+        $('#CaseTypeIds').select2({
+        });
+        $('#CourtGroupIds').select2({
+        });
+        $('#LoadGroupLinkIds').select2({
+        });
     });
 
     $('#CaseGroupId').change(function () {
         requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+    });
+
+    $('#CaseGroupIds').change(function () {
+        var str = '';
+        if ($('#CaseGroupIds').val() !== null && $('#CaseGroupIds').val().length > 0) {
+            str = $('#CaseGroupIds').val().join(',');
+        }
+        $('#CaseGroupIds_text').val(str);
+        requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: str }, '#CaseTypeIds', @(Model.CaseTypeIds ?? "0"), function () { $('#CaseTypeIds').trigger('change') });
+    });
+
+    $('#CaseTypeIds').change(function () {
+        var str = '';
+        if ($('#CaseTypeIds').val() !== null && $('#CaseTypeIds').val().length > 0) {
+            str = $('#CaseTypeIds').val().join(',');
+        }
+        $('#CaseTypeIds_text').val(str);
+    });
+
+    $('#CourtGroupIds').change(function () {
+        var str = '';
+        if ($('#CourtGroupIds').val() !== null && $('#CourtGroupIds').val().length > 0) {
+            str = $('#CourtGroupIds').val().join(',');
+        }
+        $('#CourtGroupIds_text').val(str);
+    });
+
+    $('#LoadGroupLinkIds').change(function () {
+        var str = '';
+        if ($('#LoadGroupLinkIds').val() !== null && $('#LoadGroupLinkIds').val().length > 0) {
+            str = $('#LoadGroupLinkIds').val().join(',');
+        }
+        $('#LoadGroupLinkIds_text').val(str);
     });
 
     $(function () {

@@ -116,7 +116,8 @@ namespace IOWebApplication.Controllers
             var model = new WorkTaskManageVM()
             {
                 TaskIds = taskIds,
-                ShowUser = true
+                ShowUser = true,
+                TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser
             };
             return PartialView("ManageTasks", model);
         }
@@ -125,7 +126,7 @@ namespace IOWebApplication.Controllers
         public IActionResult RerouteTasks(WorkTaskManageVM model)
         {
             long[] taskIds = model.TaskIds.Split(',').Select(x => long.Parse(x)).ToArray();
-            if (workTaskService.RerouteTasks(taskIds, model.NewUserId, model.Description))
+            if (workTaskService.RerouteTasks(taskIds, model))
             {
                 SetSuccessMessage("Задачите са успешно пренасочени.");
             }
@@ -165,7 +166,13 @@ namespace IOWebApplication.Controllers
         public IActionResult CreateTask(int sourceType, long sourceId)
         {
             var model = workTaskService.InitTask(sourceType, sourceId);
-            ViewBag.TaskTypeId_ddl = workTaskService.GetDDL_TaskTypes(sourceType, sourceId);
+            var taskTypes = workTaskService.GetDDL_TaskTypes(sourceType, sourceId);
+
+            if (userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+            {
+                taskTypes = taskTypes.Prepend(new SelectListItem("Изберете", null)).ToList();
+            }
+            ViewBag.TaskTypeId_ddl = taskTypes;
             //ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
             ViewBag.SelfTasks = JsonConvert.SerializeObject(workTaskService.GetSelfTask());
             ViewBag.TaskInfo = JsonConvert.SerializeObject(nomenclatureService.GetList<TaskType>());
@@ -206,14 +213,21 @@ namespace IOWebApplication.Controllers
         {
             model.UserId = model.UserId.EmptyToNull("0");
             string errorMessage = string.Empty;
-            var taskType = commonService.GetById<TaskType>(model.TaskTypeId);
-            if (model.TaskExecutionId == WorkTaskConstants.TaskExecution.ByUser && string.IsNullOrEmpty(model.UserId) && (taskType.SelfTask == false))
+            if (model.TaskTypeId <= 0)
             {
-                errorMessage = "Изберете потребител.";
+                errorMessage = "Изберете вид задача.";
             }
-            if (model.TaskExecutionId == WorkTaskConstants.TaskExecution.ByOrganization && model.CourtOrganizationId <= 0 && (taskType.SelfTask == false))
+            else
             {
-                errorMessage = "Изберете структура.";
+                var taskType = commonService.GetById<TaskType>(model.TaskTypeId);
+                if (model.TaskExecutionId == WorkTaskConstants.TaskExecution.ByUser && string.IsNullOrEmpty(model.UserId) && (taskType.SelfTask == false))
+                {
+                    errorMessage = "Изберете потребител.";
+                }
+                if (model.TaskExecutionId == WorkTaskConstants.TaskExecution.ByOrganization && model.CourtOrganizationId <= 0 && (taskType.SelfTask == false))
+                {
+                    errorMessage = "Изберете структура.";
+                }
             }
             if (model.Id == 0 && model.DateEnd.HasValue && model.DateEnd.Value.Date < DateTime.Now.Date)
             {
@@ -296,7 +310,7 @@ namespace IOWebApplication.Controllers
         public IActionResult DoTask_Case_SelectLawUnit(long id)
         {
             var caseId = workTaskService.GetCaseIdByDocTaskId(id);
-            return RedirectToAction("Edit", "Case", new { id = caseId });
+            return RedirectToAction("Edit", "Case", new { id = caseId, taskid = id });
         }
 
         #endregion

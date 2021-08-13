@@ -20,8 +20,12 @@
     <div class="col-lg-3">
         @Html.EditorFor(m => m.DateTo, "DateTime")
     </div>
+</div>
+
+<div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SessionDocTypeId, "GenericDropDown")</div>
 </div>
 
 <div class="row">
@@ -64,7 +68,8 @@
                             CaseTypeId: $("#CaseTypeId").val(),
                             CaseCodeId: $("#CaseCodeId").val(),
                             DocumentGroupId: $("#DocumentGroupId").val(),
-                            DocumentTypeId: $("#DocumentTypeId").val()
+                            DocumentTypeId: $("#DocumentTypeId").val(),
+                            SessionDocTypeId: $("#SessionDocTypeId").val(),
                         };
                     }
                 },

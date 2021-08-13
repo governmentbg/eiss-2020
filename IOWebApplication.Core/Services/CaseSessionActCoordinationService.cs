@@ -34,6 +34,7 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseSessionActCoordinationVM> CaseSessionActCoordination_Select(int CaseSessionActId)
         {
+            bool isGlobal = userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator);
             return repo.AllReadonly<CaseSessionActCoordination>()
                 .Include(x => x.CaseSessionAct)
                 .ThenInclude(x => x.ActType)
@@ -56,7 +57,7 @@ namespace IOWebApplication.Core.Services
                     ActTypeName = x.CaseSessionAct.ActType.Label,
                     ActNumber = x.CaseSessionAct.RegNumber,
                     ActDate = x.CaseSessionAct.ActDate,
-                    CanUpdate = x.CaseLawUnit.LawUnitId == userContext.LawUnitId
+                    CanUpdate = x.CaseLawUnit.LawUnitId == userContext.LawUnitId || isGlobal
                 }).AsQueryable();
         }
 

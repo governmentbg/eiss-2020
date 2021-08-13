@@ -13,7 +13,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Наследство по лице в дело
     /// </summary>
     [Table("case_person_inheritance")]
-    public class CasePersonInheritance : UserDateWRT
+    public class CasePersonInheritance : UserDateWRT, IExpiredInfo
     {
         [Key]
         [Column("id")]
@@ -49,6 +49,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Описание за присъдата")]
         public string Description { get; set; }
 
+        [Column("user_expired_id")]
+        public string UserExpiredId { get; set; }
+
+        [Column("date_expired")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateExpired { get; set; }
+
+        [Column("description_expired")]
+        [Display(Name = "Причина за анулиране")]
+        public string DescriptionExpired { get; set; }
+
         [ForeignKey(nameof(CaseId))]
         public virtual Case Case { get; set; }
 
@@ -66,5 +77,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CasePersonInheritanceResultId))]
         public virtual CasePersonInheritanceResult CasePersonInheritanceResult { get; set; }
+
+        [ForeignKey(nameof(UserExpiredId))]
+        public virtual ApplicationUser UserExpired { get; set; }
     }
 }

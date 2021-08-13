@@ -91,7 +91,7 @@
     function DeleteFile(fileID, fileName, container) {
         let sourceType = $(container).data('sourcetype');
 
-        if (sourceType == @(SourceTypeSelectVM.Document)) {
+        if (sourceType == @(SourceTypeSelectVM.Document) || sourceType == @(SourceTypeSelectVM.CaseNotificationReturn)) {
 
             requestContent('@Url.Action("ExpiredInfo", "Manage")',
                 {

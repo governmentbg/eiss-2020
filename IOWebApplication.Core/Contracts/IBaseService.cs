@@ -28,5 +28,7 @@ namespace IOWebApplication.Core.Contracts
         CurrentContextModel GetCurrentContext(int sourceType, long? sourceId, string operation = "", object parentId = null);
 
         SystemParam SystemParam_Select(string paramName);
+        string SystemParam_SelectValue(string paramName);
+        int[] SystemParam_SelectIntValues(string paramName);
     }
 }

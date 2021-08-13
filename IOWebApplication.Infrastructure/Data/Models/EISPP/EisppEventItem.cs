@@ -76,15 +76,18 @@ namespace IOWebApplication.Infrastructure.Data.Models.EISPP
 
         [Column("source_id")]
         public long SourceId { get; set; }
-
+        [AllowHtml]
         [Column("request_data", TypeName = "jsonb")]
         public string RequestData { get; set; }
-
+        [AllowHtml]
         [Column("response_data", TypeName = "jsonb")]
         public string ResponseData { get; set; }
-
+        [AllowHtml]
         [Column("request_xml")]
         public string RequestXML { get; set; }
+       
+        [Column("eispp_number")]
+        public string EISSPNumber { get; set; }
 
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]

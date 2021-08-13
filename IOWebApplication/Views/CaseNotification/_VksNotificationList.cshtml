@@ -1,0 +1,87 @@
+﻿@model VksNotificationListVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+<div class="vks-notification-list">
+    <form id="editVksNotificationList" action="@Url.Action("VksNotificationList", "CaseNotification")" method="post">
+        @Html.HiddenFor(x => x.CaseId)
+        @Html.HiddenFor(x => x.CaseSessionId, new { @class = "case-session-id" })
+        @*<div class="row">
+                <div class="col-lg-3">
+                    @Html.EditorFor(m => m.NotificationListTypeId, "DropDown", null, new { Ddl = Model.NotificationListTypesDdl, @class = "notification-list-type-id" })
+                </div>
+            </div>*@
+        @Html.ValidationSummary()
+        @for (int i = 0; i < Model.VksNotificationItems?.Count; i++)
+        {
+            ViewData.TemplateInfo.HtmlFieldPrefix = $"VksNotificationItems[{i}]";
+            @await Html.PartialAsync("../CaseNotification/_VksNotificationItem", Model.VksNotificationItems[i])
+        }
+        @if (string.IsNullOrEmpty(Model.PaperEdition))
+        {
+            <input id="btnSave" type="submit" value="Запис" class="btn btn-success" />
+        }
+        else
+        {
+    <div>
+        За месеца, в който е насрочено текущото заседание, вече има публикация в ДВ: (@Model.PaperEdition)
+    </div>
+        }
+        @await Html.PartialAsync("_ButtonClose")
+        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.CaseSessionId.ToString(), Action = "edit" })
+    </form>
+</div>
+
+<script>
+    function VksCasePersonLinkIdChange(el) {
+        let $notificationContainer = $(el.target).parents('.vks-notification-item:first');
+        let casePersonLinkId = $notificationContainer.find('.case-person-link-id').val();;
+        let casePersonId = $notificationContainer.find('.case-person-id').val();
+        let addressId = $notificationContainer.find('.notification-address-id').val();
+        let $notificationListContainer = $(el.target).parents('.vks-notification-list:first');
+        let notificationListTypeId = $notificationListContainer.find(".notification-list-type-id").val();
+
+        $.ajax({
+            type: "Get",
+            url: "@Url.Action("GetVksPersonAdress", "CaseNotification")",
+            dataType: "json",
+            cache: false,
+            data: {
+                casePersonId: casePersonId,
+                casePersonLinkId: casePersonLinkId,
+                notificationListTypeId: notificationListTypeId,
+            },
+            success: function (response) {
+                console.log(response.addrList)
+                console.log($notificationContainer.find('.notification-address-id'))
+                fillCombo(response.addrList, $notificationContainer.find('.notification-address-id'));
+                setComboSelectedOrFirst($notificationContainer.find('.notification-address-id'), addressId);
+            },
+            error: log_ajax_err
+        });
+    };
+    function VksNotificationTypeIdChange(el) {
+        let $notificationListContainer = $(el.target).parents('.vks-notification-list:first');
+        let caseSessionId = $notificationListContainer.find('.case-session-id').val();;
+        let notificationListTypeId = $notificationListContainer.find(".notification-list-type-id").val();
+        requestContent(
+            '@Url.Action("GetVksNotificationList", "CaseNotification")',
+            { caseSessionId: caseSessionId, notificationListTypeId: notificationListTypeId },
+            function (html) {
+                $notificationListContainer.html(html);
+                $('.notification-list-type-id').change(function (el) {
+                    VksNotificationTypeIdChange(el);
+                });
+            }
+        );
+    };
+    function setReadOnly($el) {
+        $el.attr('readonly', true);
+        $el.attr("style", "pointer-events: none;");
+        if ($("label[for='" + $el.attr("id") + "']").hasClass("io-req")) {
+            $("label[for='" + $el.attr("id") + "']").addClass("io-delreq");
+            $("label[for='" + $el.attr("id") + "']").removeClass("io-req");
+        }
+    }
+    $('.notification-disabled').each(function (i, e) {
+        setReadOnly($(e))
+    });
+</script>

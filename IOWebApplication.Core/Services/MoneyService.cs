@@ -1,5 +1,6 @@
 ﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -93,7 +94,7 @@ namespace IOWebApplication.Core.Services
         private void SetObligationReceiveData(ObligationEditVM model, ObligationReceive saved)
         {
             saved.ExecListTypeId = model.ExecListTypeId;
-            if ((model.ExecListTypeId??0) == NomenclatureConstants.ExecListTypes.Country)
+            if ((model.ExecListTypeId ?? 0) == NomenclatureConstants.ExecListTypes.Country)
             {
                 var entityData = commonService.SelectEntity_Select(model.ReceiveSourceTypeId, null, null, model.ReceiveSourceId).FirstOrDefault();
                 if (entityData != null)
@@ -165,7 +166,7 @@ namespace IOWebApplication.Core.Services
                 model.CaseSessionId = (model.CaseSessionId ?? 0) <= 0 ? null : model.CaseSessionId;
                 model.MoneyFeeTypeId = (model.MoneyFeeTypeId ?? 0) <= 0 ? null : model.MoneyFeeTypeId;
                 model.Person_SourceType = (model.Person_SourceType ?? 0) <= 0 ? null : model.Person_SourceType;
-                
+
                 model.MoneyFineTypeId = model.MoneyFineTypeId.EmptyToNull();
                 //Това е пояснение само за глоби
                 if (model.MoneyTypeId != NomenclatureConstants.MoneyType.Fine)
@@ -189,7 +190,7 @@ namespace IOWebApplication.Core.Services
                                .FirstOrDefault();
 
                     isDeactivate = (saved.IsActive ?? true) == true && model.IsActive == false;
-                    
+
                     if ((saved.IsActive ?? true) == false)
                     {
                         return (result: false, errorMessage: "Задължението е деактивирано");
@@ -305,7 +306,7 @@ namespace IOWebApplication.Core.Services
                 if (model.Id > 0)
                 {
                     //Update
-                    using (TransactionScope ts = new TransactionScope())
+                    using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
                     {
                         repo.Update(saved);
                         repo.SaveChanges();
@@ -386,13 +387,15 @@ namespace IOWebApplication.Core.Services
 
             //Това е за получателите на парите
             var receive = item.ObligationReceives.FirstOrDefault();
-            if (receive != null) {
+            if (receive != null)
+            {
                 result.ExecListTypeId = receive.ExecListTypeId;
                 result.PersonReceiveId = receive.CasePersonId;
                 result.Iban = receive.Iban;
                 result.BIC = receive.BIC;
                 result.BankName = receive.BankName;
-                if (receive.Person_SourceType != null) {
+                if (receive.Person_SourceType != null)
+                {
                     result.ReceiveSourceTypeId = receive.Person_SourceType ?? 0;
                     result.ReceiveSourceId = receive.Person_SourceId;
                 }
@@ -421,11 +424,11 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<Obligation, bool>> nameSearch = x => true;
             if (!string.IsNullOrEmpty(model.PersonNameSearch))
-                nameSearch = x => x.FullName.ToLower().Contains(model.PersonNameSearch.ToLower());
+                nameSearch = x => EF.Functions.ILike(x.FullName, model.PersonNameSearch.ToPaternSearch());
 
             Expression<Func<ObligationForPayVM, bool>> expenseOrderNumberWhere = x => true;
             if (!string.IsNullOrEmpty(model.ExpenseOrderSearch))
-                expenseOrderNumberWhere = x => x.RegNumberExpenseOrder.Contains(model.ExpenseOrderSearch);
+                expenseOrderNumberWhere = x => EF.Functions.ILike(x.RegNumberExpenseOrder, model.ExpenseOrderSearch.ToPaternSearch());
 
             Expression<Func<Obligation, bool>> signWhere = x => true;
             if (model.Sign != 0)
@@ -444,7 +447,7 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<Obligation, bool>> caseRegnumberSearch = x => true;
             if (!string.IsNullOrEmpty(model.CaseRegNumber))
-                caseRegnumberSearch = x => x.Case.RegNumber.ToLower().Contains(model.CaseRegNumber.ToLower());
+                caseRegnumberSearch = x => EF.Functions.ILike(x.Case.RegNumber, model.CaseRegNumber.ToCasePaternSearch());
 
             return repo.AllReadonly<Obligation>()
            .Where(x => x.CourtId == courtId && (x.IsActive ?? true))
@@ -464,11 +467,11 @@ namespace IOWebApplication.Core.Services
                PersonName = x.FullName ?? "",
                MoneyTypeName = x.MoneyType.Label,
                Amount = x.Amount,
-               AmountPay = x.ObligationPayments.Where(a => a.IsActive == true).Select(a => a.Amount).DefaultIfEmpty(0).Sum(),
+               AmountPay = x.ObligationPayments.Where(a => a.IsActive == true).Sum(a => (decimal?)a.Amount) ?? 0M,
                CaseData = x.Case.CaseGroup.Code + " " + x.Case.RegNumber,
                ObligationInfo = x.ObligationInfo ?? "",
-               RegNumberExpenseOrder = model.Sign == NomenclatureConstants.MoneySign.SignPlus ? "" : x.ExpenseOrderObligations.Where(o => o.ExpenseOrder.IsActive == true).Select(o => o.ExpenseOrder.RegNumber).DefaultIfEmpty("").FirstOrDefault(),
-               RegNumberExecList = model.Sign == NomenclatureConstants.MoneySign.SignMinus ? "" : x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecList.RegNumber ?? "В проект").DefaultIfEmpty("").FirstOrDefault(),
+               RegNumberExpenseOrder = model.Sign == NomenclatureConstants.MoneySign.SignPlus ? "" : x.ExpenseOrderObligations.Where(o => o.ExpenseOrder.IsActive == true).Select(o => o.ExpenseOrder.RegNumber).FirstOrDefault(),
+               RegNumberExecList = model.Sign == NomenclatureConstants.MoneySign.SignMinus ? "" : x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecList.RegNumber ?? "В проект").FirstOrDefault(),
                ExecListId = model.Sign == NomenclatureConstants.MoneySign.SignMinus ? 0 : x.ExecListObligations.Where(o => o.ExecList.IsActive == true).Select(o => o.ExecListId).FirstOrDefault(),
                ExpenseOrderId = model.Sign == NomenclatureConstants.MoneySign.SignPlus ? 0 : x.ExpenseOrderObligations.Where(o => o.ExpenseOrder.IsActive == true).Select(o => o.ExpenseOrderId).FirstOrDefault(),
            }).Where(statusWhere).Where(expenseOrderNumberWhere).AsQueryable();
@@ -481,11 +484,10 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public decimal GetSumForPay(string ids)
         {
-            List<string> idList = new List<string>();
-            idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            var idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
             return repo.AllReadonly<Obligation>()
            .Include(x => x.ObligationPayments)
-           .Where(x => idList.Contains(x.Id.ToString()))
+           .Where(x => idList.Contains(x.Id))
            .Select(x => x.Amount - x.ObligationPayments.Where(a => a.IsActive == true).Select(a => a.Amount).DefaultIfEmpty(0).Sum()).Sum();
         }
 
@@ -795,12 +797,11 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<ObligationForPayVM> ObligationForPayByIds_Select(string ids)
         {
-            List<string> idList = new List<string>();
-            idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            var idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
 
             return repo.AllReadonly<Obligation>()
            .Include(x => x.ObligationPayments)
-           .Where(x => idList.Contains(x.Id.ToString()) && (x.IsActive ?? true))
+           .Where(x => idList.Contains(x.Id) && (x.IsActive ?? true))
            .Select(x => new ObligationForPayVM()
            {
                Id = x.Id,
@@ -816,12 +817,11 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<int> MoneyGroup_Select(string ids)
         {
-            List<string> idList = new List<string>();
-            idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            var idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
 
             return repo.AllReadonly<Obligation>()
                 .Include(x => x.MoneyType)
-                .Where(x => idList.Contains(x.Id.ToString()))
+                .Where(x => idList.Contains(x.Id))
                 .Select(x => x.MoneyType.MoneyGroupId)
                 .Distinct()
                 .ToList();
@@ -862,12 +862,12 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<Payment, bool>> personSearch = x => true;
             if (string.IsNullOrEmpty(model.SenderName) == false)
-                personSearch = x => x.SenderName.ToLower().Contains(model.SenderName.ToLower());
+                personSearch = x => EF.Functions.ILike(x.SenderName, model.SenderName.ToPaternSearch());
 
             Expression<Func<Payment, bool>> regNumberSearch = x => true;
             if (string.IsNullOrEmpty(model.CaseRegNumber) == false)
                 regNumberSearch = x => x.ObligationPayments
-                           .Where(a => a.Obligation.Case.RegNumber.ToLower().Contains(model.CaseRegNumber.ToLower())).Any();
+                           .Where(a => EF.Functions.ILike(a.Obligation.Case.RegNumber, model.CaseRegNumber.ToCasePaternSearch())).Any();
 
             Expression<Func<Payment, bool>> activeWhere = x => true;
             if (model.ActivePayment)
@@ -1150,7 +1150,7 @@ namespace IOWebApplication.Core.Services
                             .Include(x => x.CourtBankAccount)
                             .Where(x => x.CourtId == courtId)
                             .Where(x => x.IsActive == true)
-                            .Where(x => (x.SenderName.ToLower().Contains(senderName) || x.PaymentNumber == senderName))
+                            .Where(x => EF.Functions.ILike(x.SenderName, senderName.ToPaternSearch()) || x.PaymentNumber == senderName)
                             .Where(x => x.Amount > x.ObligationPayments.Where(p => p.IsActive == true).Select(p => p.Amount).DefaultIfEmpty(0).Sum())
                             .Where(x => x.CourtBankAccount.MoneyGroupId == moneyGroupId)
                             .OrderBy(x => x.SenderName)
@@ -1625,7 +1625,7 @@ namespace IOWebApplication.Core.Services
 
                 // Ако има заседатели, за които е било начислено и после са премахнати - да се оправят минималнити суми на ден
                 if (caseLawUnitsRemove != null && caseLawUnitsRemove.Count > 0)
-                {                    
+                {
                     (bool resultSaveMinAmount, string errorMessageSaveMinAmount) = ObligationMinAmountForday_SaveData(caseSession.Id, dateObligations, caseLawUnitsRemove,
                                                                              courtJuryFee, moneys, courtId, true);
                     if (resultSaveMinAmount == false)
@@ -1672,13 +1672,12 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<Obligation> ObligationByIds_Select(string ids)
         {
-            List<string> idList = new List<string>();
-            idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            var idList = ids.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
 
             return repo.AllReadonly<Obligation>()
            .Include(x => x.CaseSessionAct)
            .Include(x => x.MoneyType)
-           .Where(x => idList.Contains(x.Id.ToString()))
+           .Where(x => idList.Contains(x.Id))
            .AsQueryable();
         }
 
@@ -1800,11 +1799,11 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<ExpenseOrder, bool>> nameWhere = x => true;
             if (!string.IsNullOrEmpty(name))
-                nameWhere = x => x.ExpenseOrderObligations.Where(o => o.Obligation.FullName.ToLower().Contains(name.ToLower())).Any();
+                nameWhere = x => x.ExpenseOrderObligations.Where(o => EF.Functions.ILike(o.Obligation.FullName, name.ToPaternSearch())).Any();
 
             Expression<Func<ExpenseOrder, bool>> expenseOrderNumberWhere = x => true;
             if (!string.IsNullOrEmpty(expenseOrderRegNumber))
-                expenseOrderNumberWhere = x => x.RegNumber.Contains(expenseOrderRegNumber);
+                expenseOrderNumberWhere = x => EF.Functions.ILike(x.RegNumber, expenseOrderRegNumber.ToPaternSearch());
 
             return repo.AllReadonly<ExpenseOrder>()
                 .Where(x => x.CourtId == courtId)
@@ -1932,7 +1931,7 @@ namespace IOWebApplication.Core.Services
                     orderPersonWhere = x => x.ExpenseOrderObligations.Where(o => o.Obligation.UicTypeId == obligation.UicTypeId && o.Obligation.Uic == obligation.Uic).Any();
                 else
                     orderPersonWhere = x => x.ExpenseOrderObligations.Where(o => o.Obligation.UicTypeId == obligation.UicTypeId
-                                                             && o.Obligation.FullName.ToLower().Contains(obligation.FullName.ToLower())).Any();
+                                                             && EF.Functions.ILike(o.Obligation.FullName,obligation.FullName.ToPaternSearch())).Any();
 
 
                 result = repo.AllReadonly<ExpenseOrder>()
@@ -2098,6 +2097,7 @@ namespace IOWebApplication.Core.Services
                              .Include(x => x.Addresses)
                              .ThenInclude(x => x.Address)
                              .Include(x => x.PersonRole)
+                             .Where(x => x.CaseId == caseId)
                              .Where(x => x.CaseSessionId == null)
                              .Where(x => x.DateExpired == null)
                              .ToList();
@@ -2172,8 +2172,7 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         private (List<Obligation> obligations, List<int> execListTypes, List<int> cases) ReadDataForSaveExecList(string obligationIds)
         {
-            List<string> idList = new List<string>();
-            idList = obligationIds.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            var idList = obligationIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
 
             List<Obligation> obligations = repo.AllReadonly<Obligation>()
                 .Include(x => x.CaseSessionAct)
@@ -2182,7 +2181,7 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.MoneyType)
                 .Include(x => x.UicType)
                 .Include(x => x.ObligationPayments)
-                .Where(x => idList.Contains(x.Id.ToString()))
+                .Where(x => idList.Contains(x.Id))
                 .ToList();
 
             List<int> execListTypes = obligations.Select(x => x.ObligationReceives
@@ -2360,15 +2359,15 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<ExecList, bool>> nameWhere = x => true;
             if (!string.IsNullOrEmpty(model.FullName))
-                nameWhere = x => x.ExecListObligations.Where(o => o.Obligation.FullName.ToLower().Contains(model.FullName.ToLower())).Any();
+                nameWhere = x => x.ExecListObligations.Where(o => EF.Functions.ILike(o.Obligation.FullName,model.FullName.ToPaternSearch())).Any();
 
             Expression<Func<ExecList, bool>> nameReceiveWhere = x => true;
             if (!string.IsNullOrEmpty(model.FullNameReceive))
-                nameReceiveWhere = x => x.ExecListObligations.Where(o => o.Obligation.ObligationReceives.Where(a => a.FullName.ToLower().Contains(model.FullNameReceive.ToLower())).Any()).Any();
+                nameReceiveWhere = x => x.ExecListObligations.Where(o => o.Obligation.ObligationReceives.Where(a => EF.Functions.ILike(a.FullName,model.FullNameReceive.ToPaternSearch())).Any()).Any();
 
             Expression<Func<ExecList, bool>> execListNumberWhere = x => true;
             if (!string.IsNullOrEmpty(model.RegNumber))
-                execListNumberWhere = x => x.RegNumber.Contains(model.RegNumber);
+                execListNumberWhere = x => EF.Functions.ILike(x.RegNumber,model.RegNumber.ToPaternSearch());
 
             Expression<Func<ExecList, bool>> execListTypeWhere = x => true;
             if (model.ExecListTypeId > 0)
@@ -2518,7 +2517,7 @@ namespace IOWebApplication.Core.Services
                     ExecListStateId = x.ExecListStateId,
                 })
                 .FirstOrDefault();
-        }        
+        }
 
         /// <summary>
         ///  Извличане на данни за получател на сума
@@ -2585,6 +2584,7 @@ namespace IOWebApplication.Core.Services
                     RegDate = x.RegDate,
                     ExecListTypeName = x.ExecListType.Label,
                     FullName = string.Join(",", x.ExecListObligations.Select(o => o.Obligation.FullName).Distinct()),
+                    FullNameReceive = string.Join("<br>", x.ExecListObligations.Select(o => o.Obligation.ObligationReceives.Select(a => a.FullName).FirstOrDefault()).Distinct()),
                     Amount = x.ExecListObligations.Select(o => o.Obligation.Amount).DefaultIfEmpty(0).Sum(),
                 }).AsQueryable();
         }
@@ -2616,13 +2616,12 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         private (List<ExecList> execList, List<int> institutions) ReadDataForSaveExchangeDoc(string execListIds)
         {
-            List<string> idList = new List<string>();
-            idList = execListIds.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+            var idList = execListIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
 
             var execList = repo.AllReadonly<ExecList>()
                 .Include(x => x.OutDocument)
                 .Include(x => x.OutDocument.DocumentPersons)
-                .Where(x => idList.Contains(x.Id.ToString()))
+                .Where(x => idList.Contains(x.Id))
                 .ToList();
 
             var institutionNaps = repo.AllReadonly<Institution>()
@@ -2653,7 +2652,7 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         private (bool result, string errorMessage) VaidateExchangeDoc(List<ExecList> execList, List<int> institutions)
         {
-            if (execList.Count() == 0)
+            if (execList.Count == 0)
             {
                 return (result: false, errorMessage: "Изберете ИЛ");
             }
@@ -2757,7 +2756,7 @@ namespace IOWebApplication.Core.Services
             DateTime toDateNull = (model.DateTo == null ? DateTime.Now.AddYears(100) : (DateTime)model.DateTo).ForceEndDate();
             Expression<Func<ExchangeDoc, bool>> dateWhere = x => true;
             if (model.DateFrom != null || model.DateTo != null)
-                dateWhere = x => x.RegDate!= null && x.RegDate >= fromDateNull && x.RegDate <= toDateNull;
+                dateWhere = x => x.RegDate != null && x.RegDate >= fromDateNull && x.RegDate <= toDateNull;
 
             Expression<Func<ExchangeDoc, bool>> institutionWhere = x => true;
             if (model.InstitutionId > 0)
@@ -2855,15 +2854,15 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<ExecList, bool>> nameWhere = x => true;
             if (!string.IsNullOrEmpty(model.FullName))
-                nameWhere = x => x.ExecListObligations.Where(o => o.Obligation.FullName.ToLower().Contains(model.FullName.ToLower())).Any();
+                nameWhere = x => x.ExecListObligations.Where(o => EF.Functions.ILike(o.Obligation.FullName,model.FullName.ToPaternSearch())).Any();
 
             Expression<Func<ExecList, bool>> nameReceiveWhere = x => true;
             if (!string.IsNullOrEmpty(model.FullNameReceive))
-                nameReceiveWhere = x => x.ExecListObligations.Where(o => o.Obligation.ObligationReceives.Where(a => a.FullName.ToLower().Contains(model.FullNameReceive.ToLower())).Any()).Any();
+                nameReceiveWhere = x => x.ExecListObligations.Where(o => o.Obligation.ObligationReceives.Where(a => EF.Functions.ILike(a.FullName,model.FullNameReceive.ToPaternSearch())).Any()).Any();
 
             Expression<Func<ExecList, bool>> execListNumberWhere = x => true;
             if (!string.IsNullOrEmpty(model.RegNumber))
-                execListNumberWhere = x => x.RegNumber.Contains(model.RegNumber);
+                execListNumberWhere = x => EF.Functions.ILike(x.RegNumber,model.RegNumber.ToPaternSearch());
 
             Expression<Func<ExecList, bool>> execListTypeWhere = x => true;
             if (model.ExecListTypeId > 0)
@@ -2888,6 +2887,7 @@ namespace IOWebApplication.Core.Services
                 {
                     RegNumber = x.RegNumber,
                     CaseData = x.ExecListObligations.Select(o => o.Obligation.Case.CaseType.Code + " " +
+                                          o.Obligation.Case.RegNumber + " " +
                                           o.Obligation.Case.CaseLawUnits.Where(a => a.CaseSessionId == null &&
                                           a.DateTo == null && a.CourtDepartmentId != null)
                                           .Select(a => a.CourtDepartment.Label).DefaultIfEmpty("").FirstOrDefault()).FirstOrDefault(),
@@ -2964,7 +2964,7 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<Obligation, bool>> nameSearch = x => true;
             if (!string.IsNullOrEmpty(model.PersonNameSearch))
-                nameSearch = x => x.FullName.ToLower().Contains(model.PersonNameSearch.ToLower());
+                nameSearch = x => EF.Functions.ILike(x.FullName,model.PersonNameSearch.ToPaternSearch());
 
             DateTime dateFromSearch = model.DateFrom == null ? DateTime.Now.AddYears(-100) : (DateTime)model.DateFrom;
             DateTime dateToSearch = model.DateTo == null ? DateTime.Now.AddYears(100) : (DateTime)model.DateTo;
@@ -2979,7 +2979,7 @@ namespace IOWebApplication.Core.Services
 
             Expression<Func<Obligation, bool>> caseRegnumberSearch = x => true;
             if (!string.IsNullOrEmpty(model.CaseRegNumber))
-                caseRegnumberSearch = x => x.Case.RegNumber.ToLower().Contains(model.CaseRegNumber.ToLower());
+                caseRegnumberSearch = x => EF.Functions.ILike(x.Case.RegNumber,model.CaseRegNumber.ToCasePaternSearch());
 
             return repo.AllReadonly<Obligation>()
            .Where(x => x.CourtId == courtId && (x.IsActive ?? true))

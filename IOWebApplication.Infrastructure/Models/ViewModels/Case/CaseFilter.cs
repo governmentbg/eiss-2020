@@ -8,7 +8,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     public class CaseFilter
     {
         [Display(Name = "Основен вид дело")]
+        public string CaseGroupIds { get; set; }
+        public string CaseGroupIds_text { get; set; }
+
+        [Display(Name = "Основен вид дело")]
         public int CaseGroupId { get; set; }
+
+        [Display(Name = "Точен вид дело")]
+        public string CaseTypeIds { get; set; }
+        public string CaseTypeIds_text { get; set; }
 
         [Display(Name = "Точен вид дело")]
         public int CaseTypeId { get; set; }
@@ -31,7 +39,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Номер на инициращ документ")]
         public string DocumentNumber { get; set; }
 
-        [Display(Name = "Съдия докладчик")]
+        [Display(Name = "Съдия-докладчик")]
         public int JudgeReporterId { get; set; }
 
         [Display(Name = "Индикатор")]

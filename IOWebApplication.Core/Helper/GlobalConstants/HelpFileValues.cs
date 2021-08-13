@@ -161,5 +161,10 @@
         public const string Nom16 = "nom16";
         public const string Nom17 = "nom17";
         public const string Nom18 = "nom18";
+        public const string Lawyerhelp = "lawyerhelp";
+        public const string Reassignmenttask = "reassignmenttask";
+        public const string Scheduletask = "scheduletask";
+        public const string Casetasks = "casetasks";
+        public const string Notificationstatenewspaper = "notificationstatenewspaper";
     }
 }

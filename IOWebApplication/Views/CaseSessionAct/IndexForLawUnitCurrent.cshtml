@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Съдебни актове и протоколи";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <partial name="../CaseSessionAct/_CaseSessionActForLawUnitCurrent_Spr.cshtml">
+    </div>
+</div>

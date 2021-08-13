@@ -84,6 +84,7 @@ namespace IOWebApplicationApi.Controllers
         [HttpPost("SaveVisit")]
         public JsonResult SaveVisit([FromBody]DeliveryItemVisitMobile model)
         {
+            model.DateOper = model.DateOper.AddHours(3);
             model.LawUnitId = GetLawUnitId();
             if (model.CourtId <= 0)
                 model.CourtId = GetCourtId();

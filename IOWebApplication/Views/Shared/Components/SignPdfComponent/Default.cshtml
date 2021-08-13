@@ -22,8 +22,8 @@
                 }
             </div>
             <div class="box-body">
-                <object data="@Model.PdfUrl" type="application/pdf" width="100%" style="height:70vh;">
-                    <embed src="@Model.PdfUrl" type="application/pdf" width="100%" style="height:70vh;" />
+                <object data="@(Model.PdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;">
+                    <embed src="@(Model.PdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;" />
                 </object>
             </div>
             <div class="box-footer">
@@ -37,6 +37,8 @@
                     @Html.HiddenFor(m => m.SignerName)
                     @Html.HiddenFor(m => m.SignerUic)
                     @Html.HiddenFor(m => m.FileTitle)
+                    @Html.HiddenFor(m => m.FileId)
+                    @Html.HiddenFor(m => m.SignituresCount)
                     @Html.HiddenFor(m => m.PdfHash, new { disabled = "disabled" })
                     <input name="Signature" id="Signature" type="hidden" />
                     <input name="ErrorCode" id="ErrorCode" type="hidden" />

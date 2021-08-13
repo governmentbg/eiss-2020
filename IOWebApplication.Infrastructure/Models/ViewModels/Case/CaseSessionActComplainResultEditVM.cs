@@ -10,7 +10,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int Id { get; set; }
         public int? ComplainCourtId { get; set; }
         
-        [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}.")]
         [Display(Name = "Дело")]
         public int? ComplainCaseId { get; set; }
 
@@ -18,9 +17,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int CourtId { get; set; }
         public int CaseId { get; set; }
         
-        [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}.")]
         [Display(Name = "Акт")]
-        public int CaseSessionActId { get; set; }
+        public int? CaseSessionActId { get; set; }
 
         [Display(Name = "Резултат от обжалване")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}.")]
@@ -31,6 +29,24 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         [Display(Name = "Дата на отразяване на резултат")]
         public DateTime? DateResult { get; set; }
+
+        [Display(Name = "Дело от друга система")]
+        public bool CaseOtherSystem { get; set; }
+
+        [Display(Name = "Номер дело")]
+        public string CaseRegNumberOtherSystem { get; set; }
+
+        [Display(Name = "Година дело")]
+        public int? CaseYearOtherSystem { get; set; }
+
+        [Display(Name = "Код на дело")]
+        public string CaseShortNumberOtherSystem { get; set; }
+
+        [Display(Name = "Акт")]
+        public string CaseSessionActOtherSystem { get; set; }
+
+        [Display(Name = "Начална дата на интервал")]
+        public DateTime? DateFromLifeCycle { get; set; }
 
         [Display(Name = "Стартирай нов интервал по делото")]
         public bool IsStartNewLifecycle { get; set; }

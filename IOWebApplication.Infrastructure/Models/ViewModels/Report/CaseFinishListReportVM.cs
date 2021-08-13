@@ -10,6 +10,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     /// </summary>
     public class CaseFinishListReportVM
     {
+        public int CaseId { get; set; }
+
         [Display(Name = "Точен вид дело")]
         public string CaseTypeName { get; set; }
 

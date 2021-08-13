@@ -5,6 +5,10 @@
 @{
     Layout = null;
     string courtText = Model.CourtName;
+    if (Model.IsMixedJuryVKS_VAS)
+    {
+        courtText = "Върховният касационен съд и Върховният административен съд на Република България";
+    }
     if (!string.IsNullOrEmpty(Model.DepartmentName))
     {
         courtText += ", " + Model.DepartmentName;

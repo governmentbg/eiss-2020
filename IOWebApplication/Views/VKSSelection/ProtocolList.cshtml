@@ -1,0 +1,212 @@
+﻿@{
+    var selectionId = ViewBag.selectionId;
+    bool showAdd = ViewBag.ShowAddButton;
+    ViewData["Title"] = @ViewBag.Title;
+
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","VksSelection")">Периоди ВКС</a></li>
+    </ol>
+}
+@if (showAdd)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            @if (ViewBag.CanEdit)
+            {
+                <a id="Add" asp-controller="VksSelection" asp-action="CreateProtocol" asp-route-Id="@selectionId" class="btn btn-success">
+                    <i class="fa fa-plus"></i>
+                    Добави
+                </a>
+            }
+
+        </div>
+    </div>
+
+}
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseTab">
+        <li class=""><a href="@Url.Action("LawUnits")/@selectionId"><i class="fa fa-users"></i> Състав</a></li>
+        <li class=""><a href="@Url.Action("Preview")/@selectionId"><i class="fa fa-user"></i> Разпределение</a></li>
+        <li class="active"><a href="@Url.Action("ProtocolList")"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+
+
+    </ul>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="vksSelectionProtokolMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+
+
+            var table = $('#vksSelectionProtokolMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataProtocol", "VKSSelection")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.selectionId = @selectionId;
+                    }
+
+                },
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'dateGenerated',
+                        data: 'dateGenerated',
+                        title: 'Дата ',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY HH:mm");
+                            else
+                                return "";
+                        }
+                    },
+                          {
+                    name: 'userGeneratedName',
+                    data: 'userGeneratedName',
+                        title: 'Генерирал',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                    className: 'col-md-1',
+                    name: 'dateSigned',
+                    data: 'dateSigned',
+                    title: 'Подписан на',
+                    sortable: true,
+                    searchable: false,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
+                    }
+                    },
+                    {
+                        name: 'userSignedName',
+                        data: 'userSignedName',
+                        title: 'Подписал',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'isSigned',
+                        data: 'isSigned',
+                        title: 'Статус',
+                        "render": function (item, type, row, meta) {
+                            var sign = "";
+                            if (row.isSigned) {
+                                sign = "Подписан"
+
+                            }
+                            else {
+                                sign = "Не подписан"
+
+                            }
+
+                            return sign;
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+
+
+                    {
+                        name: 'fileName',
+                        data: 'fileName',
+                        title: 'файл ',
+                       "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("Download", "Files",new { id = 666}))';
+                           url = url.replace('666', row.fileId);
+                           return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.fileName + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                    name: 'isSigned',
+                    data: 'isSigned',
+                    title: ' ',
+                    "render": function (item, type, row, meta) {
+
+
+                        var result = "";
+                        if (!row.isSigned) {
+
+
+                            result = TemplateToHtml('#Sign', row.id);
+
+                     }
+
+                        return result;
+                    },
+                    sortable: true,
+                    searchable: true
+                    },
+                    {
+                        name: 'isSigned',
+                        data: 'isSigned',
+                        title: ' ',
+                        "render": function (item, type, row, meta) {
+
+
+                            var result = "";
+                            if (!row.isSigned) {
+
+
+                                result = TemplateToHtml('#ReGen', @selectionId );
+                            }
+
+                            return result;
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+
+
+
+
+                ]
+            });
+        });
+    </script>
+
+    <script id="Sign" type="text/x-handlebars-template">
+        @if (ViewBag.CanEdit)
+        {
+            <a href="@Url.Action("SendForSign", "VKSselection")/{{this}}" class="btn btn-success" title="Подпиши"><span class="hidden-sm hidden-xs"> Подпиши</span></a>
+
+        }
+    </script>
+    <script id="ReGen" type="text/x-handlebars-template">
+        @if (ViewBag.CanEdit)
+        {
+            <a href="@Url.Action("CreateProtocol", "VKSselection")/{{this}}" class="btn btn-warning btn-sm" title="Прегенерирай"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Прегенерирай</span></a>
+        }
+    </script>
+
+}
+<script>
+
+
+
+
+    function HideAddButton(showA) {
+        if (show) {
+            x.style.display = "show"
+        }
+        else { x.style.display = "none" };
+    }
+
+</script>

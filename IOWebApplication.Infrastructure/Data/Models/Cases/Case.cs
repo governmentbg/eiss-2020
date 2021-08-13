@@ -268,5 +268,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         /// </summary>
         [Column("otdelenie_id")]
         public int? OtdelenieId { get; set; }
+
+        /// <summary>
+        /// дали ЕИСПП Номера е генериран в ЕИСС
+        /// </summary>
+        [Column("is_generated_eispp_number")]
+        public bool? IsGeneratedEisppNumber { get; set; }
+
+        
     }
 }

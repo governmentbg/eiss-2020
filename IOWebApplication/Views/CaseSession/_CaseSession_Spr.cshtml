@@ -6,6 +6,8 @@
     @Html.HiddenFor(m => m.ColumnVisibility)
     @Html.HiddenFor(m => m.CaseGroupIds_text)
     @Html.HiddenFor(m => m.CaseTypeIds_text)
+    @Html.HiddenFor(m => m.CaseSessionTypeIds_text)
+    @Html.HiddenFor(m => m.SessionResultIds_text)
     <div class="row">
         <div class="col-lg-3">
             @Html.EditorFor(m => m.DateFrom, "DateTimeWithTime")
@@ -19,13 +21,13 @@
     </div>
     <div class="row">
         <div class="col-lg-3">
-            @Html.EditorFor(m => m.CaseSessionTypeId, "GenericDropDown")
+            @Html.EditorFor(m => m.CaseSessionTypeIds, "GenericDropDownMultiple")
         </div>
         <div class="col-lg-3">
             @Html.EditorFor(m => m.HallId, "GenericDropDown")
         </div>
         <div class="col-lg-3">
-            @Html.EditorFor(x => x.SessionResultId, "GenericDropDown")
+            @Html.EditorFor(x => x.SessionResultIds, "GenericDropDownMultiple")
         </div>
         <div class="col-lg-3">
             @Html.EditorFor(x => x.SessionStateId, "GenericDropDown")
@@ -41,7 +43,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentOtdelenieId, "GenericDropDown")</div>
     </div>
@@ -93,7 +95,9 @@
                             SessionStateId: $('#SessionStateId').val(),
                             JudgeReporterId: $('#JudgeReporterId').val(),
                             CourtDepartmentId: $('#CourtDepartmentId').val(),
-                            CourtDepartmentOtdelenieId: $('#CourtDepartmentOtdelenieId').val()
+                            CourtDepartmentOtdelenieId: $('#CourtDepartmentOtdelenieId').val(),
+                            CaseSessionTypeIds_text: $('#CaseSessionTypeIds_text').val(),
+                            SessionResultIds_text: $('#SessionResultIds_text').val()
                         };
                     }
 
@@ -161,7 +165,14 @@
                         className: 'col-md-1',
                         name: 'judgeReporterLabel',
                         data: 'judgeReporterLabel',
-                        title: 'Съдия докладчик',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'departmentOtdelenieText',
+                        data: 'departmentOtdelenieText',
+                        title: 'Отделение/Състав',
                         sortable: true,
                         searchable: true
                     },
@@ -230,9 +241,11 @@
         });
         $('#CaseTypeIds').select2({
         });
+        $('#CaseSessionTypeIds').select2({
+        });
+        $('#SessionResultIds').select2({
+        });
         $('#CaseGroupIds').trigger('change');
-
-       
     });
 
     $('#CaseGroupIds').change(function () {
@@ -250,6 +263,22 @@
             str = $('#CaseTypeIds').val().join(',');
         }
         $('#CaseTypeIds_text').val(str);
+    });
+
+    $('#CaseSessionTypeIds').change(function () {
+        var str = '';
+        if ($('#CaseSessionTypeIds').val() !== null && $('#CaseSessionTypeIds').val().length > 0) {
+            str = $('#CaseSessionTypeIds').val().join(',');
+        }
+        $('#CaseSessionTypeIds_text').val(str);
+    });
+
+    $('#SessionResultIds').change(function () {
+        var str = '';
+        if ($('#SessionResultIds').val() !== null && $('#SessionResultIds').val().length > 0) {
+            str = $('#SessionResultIds').val().join(',');
+        }
+        $('#SessionResultIds_text').val(str);
     });
 
     $(function () {

@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Attributes;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         public bool CanChange { get; set; }
         public long Id { get; set; }
+        public int CourtId { get; set; }
         public int TemplateId { get; set; }
 
         [Display(Name = "Стар номер")]
@@ -109,6 +111,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         //---------------По дело-----------------------
 
         public int? CaseId { get; set; }
+        public bool CaseIsRejected { get; set; }
+        public string CaseRejectStateName { get; set; }
         public string CaseRegisterNumber { get; set; }
         [Display(Name = "ЕИСПП номер на НП")]
         [RegularExpression("[а-яА-Я]{3}[0-9]{8}[а-яА-Я]{3}", ErrorMessage = "Невалиден {0}.")]
@@ -145,7 +149,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public IList<DocumentInstitutionCaseInfoVM> InstitutionCaseInfo { get; set; }
         public IList<DocumentLinkVM> DocumentLinks { get; set; }
 
+        public IList<DocumentLinkToOtherVM> DocumentLinkToOther { get; set; }
+
         public RegixRequestReasonVM RegixRequestReason { get; set; }
+
+        public DateTime? DateExpired { get; set; }
 
         public DocumentVM()
         {

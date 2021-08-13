@@ -29,6 +29,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         {
             obligations = new HashSet<ExecListObligationReportVM>();
         }
+
+        public int ExecListStateId { get; set; }
     }
 
     public class ExecListFilterReportVM

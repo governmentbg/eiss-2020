@@ -1,0 +1,5 @@
+﻿/* TinyMCE styles to override some blank formats */
+/* USE WITH EXTREME CAUTION */
+span.tmce-manual-highlight {
+    background: yellow;
+}

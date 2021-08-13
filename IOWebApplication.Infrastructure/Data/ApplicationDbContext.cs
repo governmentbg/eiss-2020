@@ -10,6 +10,7 @@ using IOWebApplication.Infrastructure.Data.Models.Messages;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Data.Models.Regix;
+using IOWebApplication.Infrastructure.Data.Models.VKS;
 using IOWebApplication.Infrastructure.Models.Integrations.DW;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,10 @@ namespace IOWebApplication.Infrastructure.Data.Models
                .Property(p => p.DateFrom)
                .HasDefaultValueSql("make_date(2000,1,1)");
 
+            builder.Entity<DocumentResolution>()
+               .Property(p => p.JudgeDecisionCount)
+               .HasDefaultValueSql("1");
+
             base.OnModelCreating(builder);
 
             builder.Entity<Case>().HasKey(x => x.Id);
@@ -103,6 +108,12 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
             builder.Entity<SessionActType>()
                 .HasKey(x => new { x.SessionActGroupId, x.ActTypeId });
+
+            builder.Entity<LawyerHelpTypeCaseGroup>()
+                .HasKey(x => new { x.LawyerHelpTypeId, x.CaseGroupId });
+
+            builder.Entity<LawyerHelpBaseCaseGroup>()
+                .HasKey(x => new { x.LawyerHelpBaseId, x.CaseGroupId });
 
             builder.Entity<DeliveryDirectionGroup>()
               .HasKey(x => new { x.DeliveryGroupId, x.DocumentDirectionId });
@@ -189,6 +200,9 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
             builder.Entity<NewsUser>()
                 .HasKey(k => new { k.NewsId, k.UserId });
+            
+            builder.Entity<CourtDeliverer>()
+              .HasKey(k => new { k.CourtId, k.Ekatte });
 
             builder.Entity<NewsUser>()
                 .HasOne(x => x.News)
@@ -200,6 +214,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
 
         public DbQuery<GetCounterValueVM> GetCounterValueVM { get; set; }
         public DbQuery<ReportCourtStatsVM> ReportCourtStatsVM { get; set; }
+        public DbQuery<ReportCourtGenericVM> ReportCourtGenericVM { get; set; }
         public DbQuery<UpdateDateTransferedVM> UpdateDateTransferedVM { get; set; }
 
         #region Cases
@@ -223,6 +238,9 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<CaseLawUnitManualJudge> CaseLawUnitManualJudges { get; set; }
         public DbSet<CaseLawUnitReplace> CaseLawUnitReplaces { get; set; }
         public DbSet<CaseLawUnitTaskChange> CaseLawUnitTaskChanges { get; set; }
+        public DbSet<CaseLawyerHelp> CaseLawyerHelps { get; set; }
+        public DbSet<CaseLawyerHelpOtherLawyer> CaseLawyerHelpOtherLawyers { get; set; }
+        public DbSet<CaseLawyerHelpPerson> CaseLawyerHelpPersons { get; set; }
 
         public DbSet<CaseLifecycle> CaseLifecycles { get; set; }
         public DbSet<CaseLoadCorrection> CaseLoadCorrection { get; set; }
@@ -299,6 +317,8 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<CounterCase> CounterCases { get; set; }
         public DbSet<CounterSessionAct> CounterSessionActs { get; set; }
         public DbSet<Court> Courts { get; set; }
+        public DbSet<CourtApiKey> CourtApiKeys { get; set; }
+
         public DbSet<CourtArchiveIndex> CourtArchiveIndexes { get; set; }
         public DbSet<CourtArchiveIndexCode> CourtArchiveIndexCodes { get; set; }
         public DbSet<CourtBankAccount> CourtBankAccounts { get; set; }
@@ -360,6 +380,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<EMailMessageState> EMailMessageState { get; set; }
         public DbSet<EMailFile> EMailFile { get; set; }
         public DbSet<BankAccount> BankAccount { get; set; }
+        public DbSet<CourtDeliverer> CourtDeliverer { get; set; }
         #endregion Common
 
         #region Delivery
@@ -503,6 +524,7 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<DeliveryType> DeliveryTypes { get; set; }
         public DbSet<DepartmentType> DepartmentTypes { get; set; }
         public DbSet<DismisalType> DismisalType { get; set; }
+        public DbSet<DismissalState> DismissalStates { get; set; }
         public DbSet<DocumentDirection> DocumentDirections { get; set; }
         public DbSet<DocumentGroup> DocumentGroups { get; set; }
         public DbSet<DocumentKind> DocumentKinds { get; set; }
@@ -539,6 +561,9 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<LawUnitType> LawUnitTypes { get; set; }
         public DbSet<LawUnitPosition> LawUnitPosition { get; set; }
         public DbSet<LawUnitTypePosition> LawUnitTypePosition { get; set; }
+        public DbSet<LawyerHelpBase> LawyerHelpBases { get; set; }
+        public DbSet<LawyerHelpType> LawyerHelpTypes { get; set; }
+        public DbSet<LawyerHelpBasisAppointment> LawyerHelpBasisAppointments { get; set; }
 
         public DbSet<LifecycleType> LifecycleTypes { get; set; }
 
@@ -598,6 +623,8 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<SentenceType> SentenceTypes { get; set; }
         public DbSet<SessionActGroup> SessionActGroups { get; set; }
         public DbSet<SessionActType> SessionActTypes { get; set; }
+        public DbSet<LawyerHelpTypeCaseGroup> LawyerHelpTypeCaseGroups { get; set; }
+        public DbSet<LawyerHelpBaseCaseGroup> LawyerHelpBaseCaseGroups { get; set; }
         public DbSet<SessionDocState> SessionDocStates { get; set; }
         public DbSet<SessionDocType> SessionDocTypes { get; set; }
         public DbSet<SessionDuration> SessionDuration { get; set; }
@@ -646,6 +673,9 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<ExcelReportCaseTypeRow> ExcelReportCaseTypeRows { get; set; }
         public DbSet<SystemParam> SystemParams { get; set; }
         public DbSet<ExcelReportCaseTypeCol> ExcelReportCaseTypeCols { get; set; }
+        public DbSet<ExcelReportActIspnReason> ExcelReportActIspnReasons { get; set; }
+        public DbSet<NotificationIspnReason> NotificationIspnReason { get; set; }
+
         #endregion Nomenclatures
 
         #region Regix
@@ -658,10 +688,20 @@ namespace IOWebApplication.Infrastructure.Data.Models
         public DbSet<EisppRules> EisppRules { get; set; }
         public DbSet<EisppEventItem> EisppEventItem { get; set; }
         public DbSet<EisppSignal> EisppSignal { get; set; }
+        public DbSet<EisppAcutalDataLog> EisppAcutalDataLog { get; set; }
         #endregion
 
+        #region VKS
+        public DbSet<VksSelection> VksSelections { get; set; }
+        public DbSet<VksSelectionLawunit> VksSelectionLawunits { get; set; }
+        public DbSet<VksSelectionMonth> VksSelectionMonths { get; set; }
+        public DbSet<VksSelectionMonthLawunit> VksSelectionMonthLawunits { get; set; }
+        public DbSet<VksSelectionProtocol> VksSelectionProtocols { get; set; }
+        #endregion
         public DbSet<News> News { get; set; }
 
         public DbSet<NewsUser> NewsUsers { get; set; }
+        public DbSet<VksNotificationPrintList> VksNotificationPrintList { get; set; }
+        public DbSet<VksNotificationHeader> VksNotificationHeader { get; set; }
     }
 }

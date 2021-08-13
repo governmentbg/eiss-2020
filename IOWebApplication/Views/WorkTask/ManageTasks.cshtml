@@ -1,4 +1,5 @@
 ﻿@model WorkTaskManageVM
+@using IOWebApplication.Infrastructure.Constants
 @{
     var canSave = !string.IsNullOrEmpty(Model.TaskIds);
 }
@@ -8,7 +9,20 @@
 
     @if (Model.ShowUser)
     {
-        @Html.EditorFor(x => x.NewUserId, "SelectUser")
+        <div class="form-group">
+            <label class="control-label">Начин на изпълнение</label>
+            <div>
+                <label>@Html.RadioButtonFor(x => x.TaskExecutionId, WorkTaskConstants.TaskExecution.ByUser)&nbsp;От потребител</label>
+                &nbsp;&nbsp;&nbsp;
+                <label>@Html.RadioButtonFor(x => x.TaskExecutionId, WorkTaskConstants.TaskExecution.ByOrganization)&nbsp;От структура</label>
+            </div>
+        </div>
+        <div id="selectUser">
+            @Html.EditorFor(x => x.NewUserId, "SelectUser")
+        </div>
+        <div id="selectOrganization">
+            @Html.EditorFor(x => x.CourtOrganizationId, "SelectOrganization")
+        </div>
     }
     @Html.EditorFor(x => x.Description, "textarea")
     @if (Model.ShowUser)
@@ -28,6 +42,23 @@
 <script>
     $(function () {
         initUserAutoComplete();
+        initOrganizations();
+
+        $('input[name="TaskExecutionId"]').click(function () {
+            if ($(this).is(':checked')) {
+                switch ($(this).val()) {
+                    case '@WorkTaskConstants.TaskExecution.ByUser':
+                        $('#selectUser').show();
+                        $('#selectOrganization').hide();
+                        break;
+                    case '@WorkTaskConstants.TaskExecution.ByOrganization':
+                        $('#selectUser').hide();
+                        $('#selectOrganization').show();
+                        break;
+                }
+            }
+        })
+        $('input[name="TaskExecutionId"]:checked').trigger('click');
     });
     function validationCheck(e) {
         if ($('#Description').val().length < 5) {

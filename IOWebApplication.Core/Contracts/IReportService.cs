@@ -19,20 +19,26 @@ namespace IOWebApplication.Core.Contracts
         byte[] EuropeanHeritageReportToExcelOne(EuropeanHeritageFilterReportVM model);
         byte[] InsolvencyReportToExcelOne(InsolvencyFilterReportVM model);
         byte[] PublicInformationReportToExcelOne(PublicInformationFilterReportVM model);
+        byte[] PublicInformationReportToExcelOnePrev(PublicInformationFilterReportVM model);
         byte[] CaseDecisionReportToExcelOne(CaseDecisionFilterReportVM model, string url);
         byte[] HeritageReportToExcelOne(HeritageFilterReportVM model);
         byte[] CaseFirstInstanceReportToExcelOne(CaseFirstInstanceFilterReportVM model);
         byte[] CaseMigrationReturnReportToExcelOne(CaseMigrationReturnFilterReportVM model);
+        byte[] CaseMigrationReturnReportToExcelOnePrev(CaseMigrationReturnFilterReportVM model);
         byte[] CaseArchiveReportToExcelOne(CaseArchiveFilterReportVM model);
+        byte[] CaseArchiveReportToExcelOnePrev(CaseArchiveFilterReportVM model);
         byte[] DivorceReportToExcelOne(DivorceFilterReportVM model);
         byte[] CaseSecondInstanceReportToExcelOne(CaseSecondInstanceFilterReportVM model);
         byte[] SentenceReportToExcelOne(SentenceFilterReportVM model);
+        byte[] DocumentOutGoingReportToExcelOnePrev(DocumentOutFilterReportVM model);
         byte[] DocumentOutGoingReportToExcelOne(DocumentOutFilterReportVM model);
-        byte[] DocumentInGoingReportToExcelOne(DocumentInFilterReportVM model);
+
+        byte[] DocumentInGoingReportToExcelOnePrev(DocumentInFilterReportVM model);
         byte[] DeliveryBookReportToExcelOne(DeliveryBookFilterVM model);
         byte[] DismisalReportToExcelOne(DismisalReportFilterVM model);
         byte[] CaseObligationReportToExcelOne(CaseObligationFilterReportVM model);
         byte[] ExecListReportToExcelOne(ExecListFilterReportVM model);
+        byte[] ExecListReportToExcelOnePrev(ExecListFilterReportVM model);
         byte[] CaseArchiveListReportToExcelOne(CaseArchiveListFilterReportVM model);
         byte[] DocumentOutListReportToExcelOne(DocumentOutListFilterReportVM model);
         byte[] PosDeviceReportToExcelOne(PosDeviceFilterReportVM model);
@@ -42,6 +48,7 @@ namespace IOWebApplication.Core.Contracts
         byte[] StateFeeReportExportExcel(StateFeeFilterReportVM model);
         byte[] PaymentPosReportToExcelOne(PaymentPosFilterReportVM model);
         byte[] CourtStatsReport(DateTime? date);
+        byte[] CourtReportGeneric();
         IQueryable<CaseArchiveListReportVM> CaseArchiveListReport_Select(int courtId, CaseArchiveListFilterReportVM model);
         IQueryable<DocumentOutListReportVM> DocumentOutListReport_Select(int courtId, DocumentOutListFilterReportVM model, string newLine);
         IQueryable<PosDeviceReportVM> PosDeviceReport_Select(int courtId, PosDeviceFilterReportVM model);
@@ -64,5 +71,6 @@ namespace IOWebApplication.Core.Contracts
         byte[] CaseFinishFirstInstanceListReportExportExcel(CaseFinishListFilterReportVM model);
         IQueryable<CaseFinishListReportVM> CaseFinishSecondInstanceListReport_Select(int courtId, CaseFinishListFilterReportVM model, string newLine);
         byte[] CaseFinishSecondInstanceListReportExportExcel(CaseFinishListFilterReportVM model);
+        byte[] DocumentInGoingReportToExcelOne(DocumentInFilterReportVM model);
     }
 }

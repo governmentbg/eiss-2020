@@ -1,5 +1,6 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -43,7 +44,19 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public string Description { get; set; }
 
         [Column("dismisal_kind_id")]
-        public int? DismisalKindId{ get; set; }
+        public int? DismisalKindId { get; set; }
+
+        [Column("dismissal_state_id")]
+        [Display(Name = "Статус на отвода")]
+        public int? DismissalStateId { get; set; }
+
+        [Display(Name = "Документ, с който се иска отвода")]
+        [Column("document_id")]
+        public long? DocumentId { get; set; }
+
+        [Display(Name = "Вносител на искането")]
+        [Column("document_person_id")]
+        public long? DocumentPersonId { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -59,5 +72,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(DismisalTypeId))]
         public virtual DismisalType DismisalType { get; set; }
+
+        [ForeignKey(nameof(DismissalStateId))]
+        public virtual DismissalState DismissalState { get; set; }
+
+        [ForeignKey(nameof(DocumentId))]
+        public virtual Document Document { get; set; }
+
+        [ForeignKey(nameof(DocumentPersonId))]
+        public virtual DocumentPerson DocumentPerson { get; set; }
     }
 }

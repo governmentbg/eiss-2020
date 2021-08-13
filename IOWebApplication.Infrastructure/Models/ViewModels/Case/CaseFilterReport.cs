@@ -36,6 +36,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Статус")]
         public int? CaseStateId { get; set; }
 
+        [Display(Name = "ЕИСПП Номер")]
+        public string EisppNumber { get; set; }
+
         [Display(Name = "Свързано дело от съд")]
         public int? LinkDelo_CourtId { get; set; }
 
@@ -48,8 +51,19 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         //[Display(Name = "Свързано дело номер")]
         //public int? LinkDelo_CaseId { get; set; }
 
-        [Display(Name = "Дело от друга система")]
+        [Display(Name = "Дело от друга система номер")]
         public string RegNumberOtherSystem { get; set; }
+
+        [Display(Name = "Дело от друга система")]
+        public bool VisibleOtherSystem { get; set; }
+
+        public bool VisibleOtherSystemHidden { get; set; }
+
+        [Display(Name = "Дело от друга система година")]
+        public int? YearOtherSystem { get; set; }
+
+        [Display(Name = "Дело от друга система от съд")]
+        public int? CourtOtherSystem { get; set; }
 
         [Display(Name = "Свързано дело на външна институция")]
         public int Institution_InstitutionTypeId { get; set; }
@@ -106,7 +120,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public bool ActIsFinalDoc { get; set; }
         public bool ActIsFinalDocHidden { get; set; }
 
-        [Display(Name = "Нормативен текст")]
+        [Display(Name = "Нормативен текст/Ключова дума или израз")]
         public int ActLawBaseId { get; set; }
 
         [Display(Name = "Име")]

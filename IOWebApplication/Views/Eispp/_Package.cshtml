@@ -13,6 +13,7 @@
 @Html.HiddenFor(x => x.CorrelationId)
 @Html.HiddenFor(x => x.PersonMeasureId)
 @Html.HiddenFor(x => x.PersonOldMeasureId)
+@Html.HiddenFor(x => x.SaveIfHaveDiff)
 @{
     if (Model.Data.Events.Length > 0)
     {

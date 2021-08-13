@@ -53,10 +53,35 @@ namespace IOWebApplication.Infrastructure.Models.Documents
         public string LinkDelo_Description { get; set; }
 
         [Display(Name = "Дело от друга система")]
+        public bool VisibleOtherSystem { get; set; }
+
+        [Display(Name = "Дело от друга система номер")]
         public string RegNumberOtherSystem { get; set; }
+
+        [Display(Name = "Дело от друга система година")]
+        public int? YearOtherSystem { get; set; }
+
+        [Display(Name = "Дело от друга система от съд")]
+        public int? CourtOtherSystem { get; set; }
 
         [Display(Name = "Номер на дело")]
         public string CaseRegNumber { get; set; }
+
+        [Display(Name = "ЕИСПП номер")]
+        public string CaseEisppNumber { get; set; }
+
+        [Display(Name = "Вид външна институция")]
+        public int? InstitutionTypeId { get; set; }
+
+        [Display(Name = "Институция")]
+        public int? InstitutionId { get; set; }
+
+        [Display(Name = "Дело на външна институция")]
+        public string InstitutionCaseNumber { get; set; }
+
+
+        [Display(Name = "Година")]
+        public int? InstitutionCaseYear { get; set; }
 
         public void NormalizeValues()
         {
@@ -71,6 +96,13 @@ namespace IOWebApplication.Infrastructure.Models.Documents
             PersonName = PersonName.EmptyToNull();
             PersonUIC = PersonUIC.EmptyToNull();
             PersonRoleId = PersonRoleId.EmptyToNull();
+            CaseRegNumber = CaseRegNumber.EmptyToNull();
+            CaseEisppNumber = CaseEisppNumber.EmptyToNull();
+
+            InstitutionTypeId = InstitutionTypeId.EmptyToNull();
+            InstitutionId = InstitutionId.EmptyToNull();
+            InstitutionCaseNumber = InstitutionCaseNumber.EmptyToNull();
+            InstitutionCaseYear = InstitutionCaseYear.EmptyToNull();
         }
     }
 }

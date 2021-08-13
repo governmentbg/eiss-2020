@@ -9,17 +9,20 @@
             <div class="col-lg-6 col-md-6 col-sm-12">
                 <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
                 @Html.HiddenFor(x => x.Id)
-                @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "" })
+                @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "", deceased = true })
                 <div class="row">
                     <div class="col-md-6">
-                        @Html.EditorFor(x => x.PersonRoleId, "DropDown", null, new { Ddl = ViewBag.PersonRoles })
+                        @Html.EditorFor(x => x.PersonRoleId, "SelectPersonRole")
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4" id="@(Model.GetPrefix + "_" + Model.Index + "_divPersonMaturity")">
                         @Html.EditorFor(x => x.PersonMaturityId, "DropDown", null, new { Ddl = ViewBag.PersonMaturities })
                     </div>
+                    @*<div class="col-md-2">
+                            @Html.EditorFor(x => x.IsDeceased, "bool")
+                        </div>*@
                     @if (ViewBag.MilitaryRangs != null)
                     {
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="@(Model.GetPrefix + "_" + Model.Index + "_divMilitaryRang")">
                             @Html.EditorFor(x => x.MilitaryRangId, "DropDown", null, new { Ddl = ViewBag.MilitaryRangs })
                         </div>
                     }
@@ -35,6 +38,9 @@
 <script>
     $(function () {
         initPersonControl();
+        initPersonRole();
+        ChangeUicType();
+        initDatePicker();
     });
 
     $("input[name='" + '@Model.GetPath' + ".Uic" + "']").blur(function () {
@@ -47,5 +53,19 @@
             }
         }
     });
+
+    $("select[name='" + '@Model.GetPath' + ".UicTypeId" + "']").change(function () {
+        ChangeUicType();
+    });
+
+    function ChangeUicType() {
+        var uicTypeId = $("select[name='" + '@Model.GetPath' + ".UicTypeId" + "']").val();
+        $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divPersonMaturity")").show();
+        $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divMilitaryRang")").show();
+        if (uicTypeId == '@NomenclatureConstants.UicTypes.Bulstat' || uicTypeId == '@NomenclatureConstants.UicTypes.EIK') {
+            $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divPersonMaturity")").hide();
+            $("@("#" + Model.GetPrefix + "_" + Model.Index + "_divMilitaryRang")").hide();
+        }
+    }
 
 </script>

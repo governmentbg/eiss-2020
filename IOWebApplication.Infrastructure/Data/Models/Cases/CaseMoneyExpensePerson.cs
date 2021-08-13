@@ -43,6 +43,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Описание")]
         public string Description { get; set; }
 
+        [Column("amount_numerator")]
+        [Display(Name = "Числител")]
+        public decimal? AmountNumerator { get; set; }
+
+        [Column("amount_denominator")]
+        [Display(Name = "Знаменател")]
+        public decimal? AmountDenominator { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 

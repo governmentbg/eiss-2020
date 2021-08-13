@@ -15,29 +15,85 @@
     <div class="col-md-12 col-lg-12">
         <form id="formEdit" asp-action="SendPackage" method="post">
             @Html.ValidationSummary()
+            <div><h3>@ViewBag.EventName</h3></div>
             <div id="saveContainer">
-             <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
                 @await Html.PartialAsync("_Package", Model)
-            <div class="form-group">
-                @Html.HiddenFor(x => x.IsForEdit)
-                @Html.EditorFor(x => x.IsForSend)
-                @Html.HiddenFor(x => x.EventTypeId)
-                @Html.HiddenFor(x => x.IsGeneratedEisppNumber)
-                @if(!Model.IsForSend || isPostBack || Model.IsForEdit)
-                {
-                <input type="submit" value="Запис" class="btn btn-success" />
-                }
-                @await Html.PartialAsync("_ButtonClose")
-                @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "edit" })
-            </div>
+                <div class="form-group">
+                    @Html.HiddenFor(x => x.IsForEdit)
+                    @Html.EditorFor(x => x.IsForSend)
+                    @Html.HiddenFor(x => x.EventTypeId)
+                    @Html.HiddenFor(x => x.IsGeneratedEisppNumber)
+                    @if (!Model.IsForSend || isPostBack || Model.IsForEdit)
+                    {
+                        @if (Model.EisppCrimePersonDiff?.Count > 0)
+                        {
+                            <input id="btnSave" type="submit" value="Запис" class="btn btn-success" disabled />
+                        }
+                        else
+                        {
+                            <input id="btnSave" type="submit" value="Запис" class="btn btn-success" />
+                        }
+                    }
+                    @await Html.PartialAsync("_ButtonClose")
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "edit" })
+                </div>
             </div>
         </form>
     </div>
 </div>
-
+@{
+    @if (Model.EisppCrimePersonDiff?.Count > 0)
+    {
+        <div id="divEisppCrimePersonDiff" style="display:none">
+            @for (int i = 0; i < Model.EisppCrimePersonDiff.Count; i++)
+            {
+                @await Html.PartialAsync("_EisppCrimePersonDiff", Model.EisppCrimePersonDiff[i])
+            }
+            <div class="row">
+                <div class="col-lg-12">
+                    <input type="button" value="Потвърди" onclick="submitPackage()" class="btn btn-success" />
+                    <input type="button" value="Отказ" onclick=" HideModal()" class="btn btn-danger" />
+                </div>
+            </div>
+        </div>
+    }
+}
 @await Html.PartialAsync("_EisppScript")
 <script>
     $(document).ready(function () {
         EisppOnReady();
+        $(document).on('click', '#btnSave', function (e) {
+            saveClickSubmitDisable(this);
+            e.preventDefault();
+
+            if (!$(this).parents('form:first').valid()) {
+                saveClickSubmitEnable();
+            }
+            return false;
+        });
+        if ($('#divEisppCrimePersonDiff').length > 0) {
+            $('#SaveIfHaveDiff').val(false);
+            let data = $('#divEisppCrimePersonDiff').html();
+            ShowModalDialog('Моля, потвърдете връзките лица-престъпления', data, true);
+            setTimeout(function () { $('#btnSave').attr("disabled", false); }, 3000);
+        }
+
     });
+    function submitPackage() {
+        $('#SaveIfHaveDiff').val(true);
+        $('#formEdit').submit();
+    }
+    function saveClickSubmitDisable(sender) {
+        var disabled = $(sender).is(':disabled') || $(sender).attr('disabled');
+
+        if (!disabled) {
+            $(sender).attr('disabled', 'disabled');
+            $(sender).parents('form:first').trigger('submit');
+        }
+    }
+    function saveClickSubmitEnable() {
+        $('#btnSave').removeAttr("disabled");
+    }
+
 </script>

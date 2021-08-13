@@ -9,6 +9,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
     {
         public string ID { get; set; }
         public string RegisterName { get; set; }
+        public bool IsDead { get; set; }
+        public string DeathDate { get; set; }
 
         public PersonSearchVM()
         {

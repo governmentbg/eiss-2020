@@ -43,32 +43,32 @@
             @Html.HiddenFor(x => x.CaseTypeId)
             @Html.HiddenFor(x => x.CaseGroupId)
 
-            <fieldset class="is-fieldset">
+            <fieldset class="is-fieldset case-person-container">
                 <legend class="legend_1">Основни данни за лице</legend>
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div id="saveContainer">
                     <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "" })
+                    @Html.EditorFor(x => x, "PersonNamesBase", null, new { label = "", deceased = true })
 
                     @*@if (Model.CaseSessionId == null)
-        {
-            @Html.EditorFor(x => x.IsInitialPerson)
-        }*@
+                        {
+                            @Html.EditorFor(x => x.IsInitialPerson)
+                        }*@
                     <div class="row">
                         <div class="col-md-6"> @Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
                         <div class="col-md-6">@Html.EditorFor(x => x.DateTo, "DateTimeDivided")</div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">@Html.EditorFor(x => x.PersonRoleId, "GenericDropDown")</div>
-                        <div class="col-md-6">@Html.EditorFor(x => x.PersonMaturityId, "GenericDropDown")</div>
+                        <div class="col-md-6"> @Html.EditorFor(x => x.PersonRoleId, "SelectPersonRole")</div>
+                        <div class="col-md-6" id="divPersonMaturity">@Html.EditorFor(x => x.PersonMaturityId, "GenericDropDown")</div>
                     </div>
                     <div class="row">
                         <div id="divIsArrested" class="col-md-3">
                             @Html.EditorFor(x => x.IsArrested)
                         </div>
-                        <div id="divIsDeceased" class="col-md-3">
-                            @Html.EditorFor(x => x.IsDeceased)
-                        </div>
+                        @*<div id="divIsDeceased" class="col-md-3">
+                                @Html.EditorFor(x => x.IsDeceased)
+                            </div>*@
                     </div>
 
                     @if (ViewBag.isRegisterCompany)
@@ -86,7 +86,9 @@
 
                     @if (ViewBag.MilitaryRangId_ddl != null)
                     {
-                        @Html.EditorFor(x => x.MilitaryRangId, "GenericDropDown")
+                        <div id="divMilitaryRang">
+                            @Html.EditorFor(x => x.MilitaryRangId, "GenericDropDown")
+                        </div>
                     }
 
                     <div>
@@ -119,7 +121,11 @@
                                 <span>&nbsp;</span>
                             }
                             @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
-                            <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CasePerson, SourceId = Model.Id })" />
+                            @if (Model.CaseSessionId == null)
+                            {
+                                <span>&nbsp;</span>
+                                <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CasePerson, SourceId = Model.Id })" />
+                            }
                         </div>
                     }
                 </div>
@@ -222,6 +228,7 @@
     $(document).ready(function () {
         arrayRoleKind = @Html.Raw(Json.Serialize(@ViewBag.PersonRolesForArrested));
         ChangePerson();
+        initPersonRole();
     });
 
     function selectAddress(sender) {
@@ -270,6 +277,16 @@
             if (personMaturity != "-1") {
                 $("#PersonMaturityId").val(personMaturity);
             }
+        }
+    });
+
+    $('#UicTypeId').change(function () {
+        var uicTypeId = $('#UicTypeId').val();
+        $('#divPersonMaturity').show();
+        $('#divMilitaryRang').show();
+        if (uicTypeId == '@NomenclatureConstants.UicTypes.Bulstat' || uicTypeId == '@NomenclatureConstants.UicTypes.EIK') {
+            $('#divPersonMaturity').hide();
+            $('#divMilitaryRang').hide();
         }
     });
 

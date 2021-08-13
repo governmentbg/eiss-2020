@@ -53,6 +53,11 @@
                         <div class="col-lg-6">@Html.EditorFor(x => x.CasePersonAddressId, "GenericDropDown")</div>
                     </div>
                 }
+
+                <div id="fromToDateDiv" class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
+                </div>
             </div>
 
             <div class="row">
@@ -78,6 +83,12 @@
                             <a asp-action="AddFromTemplate" asp-controller="Document" asp-route-templateId="@Model.Id" target="_blank" class="btn btn-warning">Регистриране на документ</a>
                         }
                         <div class="pull-right">
+                            @if (access.CanChangeFull)
+                            {
+                                @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на документ", ExpireSubmitUrl = Url.Action("DocumentTemplate_ExpiredInfo") })
+                                <span>&nbsp;</span>
+                            }
+
                             @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                         </div>
                     }
@@ -90,7 +101,9 @@
 @section scripts{
     <script>
         var arrayHavePersonIds;
+        var arrayHaveFromToDateIds;
         $(document).ready(function () {
+            arrayHaveFromToDateIds = @Html.Raw(Json.Serialize(@ViewBag.haveFromToDateIds));
             if ('@(Model.CaseId??0)' > 0) {
                 arrayHavePersonIds = @Html.Raw(Json.Serialize(@ViewBag.haveCasePersonIds));
             }
@@ -116,8 +129,20 @@
             });
 
             $('#HtmlTemplateId').change(function () {
+                var htmlTemplateId = $(this).val();
+                var hasFromToDate = arrayHaveFromToDateIds.find(x => x == htmlTemplateId);
+                if (hasFromToDate != undefined) {
+                    $('#DateFrom').prop("disabled", false);
+                    $('#DateTo').prop("disabled", false);
+                    $('#fromToDateDiv').show();
+                }
+                else {
+                    $('#DateFrom').prop("disabled", true);
+                    $('#DateTo').prop("disabled", false);
+                    $('#fromToDateDiv').hide();
+                }
+                
                 if (@(Model.CaseId ?? 0) > 0) {
-                    var htmlTemplateId = $(this).val();
                     var hasPerson = arrayHavePersonIds.find(x => x == htmlTemplateId);
                     if (hasPerson != undefined) {
                         $('#CasePersonId').prop("disabled", false);

@@ -383,6 +383,34 @@ namespace IOWebApplication.Core.Services
             }
             return false;
         }
+        public bool Counter_GetNotificationCounter(DocumentNotification model, int courtId)
+        {
+            try
+            {
+                var counterId = repo.AllReadonly<Counter>()
+                                    .Where(x => x.CourtId == courtId && x.CounterTypeId == NomenclatureConstants.CounterTypes.Notification)
+                                    .Select(x => x.Id)
+                                    .FirstOrDefault();
+                if (counterId > 0)
+                {
+                    var courtCode = repo.AllReadonly<Court>().FirstOrDefault(x => x.Id == courtId)?.Code;
+
+
+                    model.RegNumber = $"{DateTime.Now.Year}{courtCode}{Counter_GetValue(counterId)}";
+                    model.RegDate = DateTime.Now;
+                    return true;
+                }
+                else
+                {
+                    throw new Exception($"Няма настроен брояч за известия. Court={courtId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на брояч за известия. Court={courtId}");
+            }
+            return false;
+        }
 
         public bool Counter_GetEvidenceCounter(CaseEvidence model, int courtId)
         {
@@ -901,7 +929,8 @@ namespace IOWebApplication.Core.Services
                                 CounterTypeId = x.CounterTypeId,
                                 CounterTypeName = x.CounterType.Label,
                                 Label = x.Label,
-                                CurrentValue = x.Value
+                                CurrentValue = x.Value,
+                                OldValue = x.Value
                             }).OrderBy(x => x.CounterTypeName).ThenBy(x => x.Label).ToArray();
 
             foreach (var item in result)
@@ -914,12 +943,13 @@ namespace IOWebApplication.Core.Services
 
         public bool Counter_SetCurrentValues(CounterVM[] model)
         {
-            int[] counterIds = model.Select(x => x.Id).ToArray();
+            int[] counterIds = model.Where(x => x.OldValue != x.CurrentValue).Select(x => x.Id).ToArray();
             var counters = repo.All<Counter>().Where(x => counterIds.Contains(x.Id)).ToList();
             foreach (var counter in counters)
             {
                 var newVal = model.Where(x => x.Id == counter.Id).Select(x => x.CurrentValue).FirstOrDefault();
                 counter.Value = newVal;
+                counter.LastUsed = DateTime.Now;
             }
             if (counterIds.Any())
             {

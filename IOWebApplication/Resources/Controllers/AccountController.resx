@@ -129,6 +129,9 @@
   <data name="CASE_INIT" xml:space="preserve">
     <value>3.1. Разпределение</value>
   </data>
+  <data name="COURT_MAN" xml:space="preserve">
+    <value>3.5. Ръководство</value>
+  </data>
   <data name="DEL_USER" xml:space="preserve">
     <value>3.4. Призоваване</value>
   </data>
@@ -155,6 +158,9 @@
   </data>
   <data name="STAT" xml:space="preserve">
     <value>5. Статистика</value>
+  </data>
+  <data name="STAT_REGIX" xml:space="preserve">
+    <value>5.1. Справки - регистри</value>
   </data>
   <data name="SUPER" xml:space="preserve">
     <value>6. Супервайзор</value>

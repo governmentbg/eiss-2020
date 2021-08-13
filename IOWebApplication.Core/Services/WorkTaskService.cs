@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -130,16 +131,27 @@ namespace IOWebApplication.Core.Services
             //                    || (x.TaskStateId == WorkTaskConstants.States.Accepted && x.UserId == userId)))
             //                .Count();
 
+
+            //var result = repo.AllReadonly<WorkTask>()
+            //                .Where(x => x.CourtId == userContext.CourtId)
+            //                .Where(x => x.TaskStateId == WorkTaskConstants.States.New && x.UserId == userId)
+            //                .Union(repo.AllReadonly<WorkTask>()
+            //                .Where(x => x.CourtId == userContext.CourtId)
+            //                .Where(x => x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId)))
+            //                .Union(repo.AllReadonly<WorkTask>()
+            //                .Where(x => x.CourtId == userContext.CourtId)
+            //                .Where(x => x.TaskStateId == WorkTaskConstants.States.Accepted && x.UserId == userId))
+            //                .Count();
+
             var result = repo.AllReadonly<WorkTask>()
-                            .Where(x => x.CourtId == userContext.CourtId)
-                            .Where(x => x.TaskStateId == WorkTaskConstants.States.New && x.UserId == userId)
-                            .Union(repo.AllReadonly<WorkTask>()
-                            .Where(x => x.CourtId == userContext.CourtId)
-                            .Where(x => x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId)))
-                            .Union(repo.AllReadonly<WorkTask>()
-                            .Where(x => x.CourtId == userContext.CourtId)
-                            .Where(x => x.TaskStateId == WorkTaskConstants.States.Accepted && x.UserId == userId))
-                            .Count();
+                           .Where(x => x.CourtId == userContext.CourtId)
+                           .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId) && x.UserId == userId)
+                           .Count();
+            result += repo.AllReadonly<WorkTask>()
+                           .Where(x => x.CourtId == userContext.CourtId)
+                           .Where(x => x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId)
+                           && x.UserId == null)
+                           .Count();
             return result;
         }
         public IEnumerable<WorkTaskVM> Select(WorkTaskFilterVM filter)
@@ -226,7 +238,16 @@ namespace IOWebApplication.Core.Services
         {
             var result = selectTasks(false, false, sourceType, sourceId).ToList();
             setTaskActions(result);
-
+            if (!ValidateSourceCourt(sourceType, sourceId))
+            {
+                foreach (var item in result)
+                {
+                    item.CanAccept = false;
+                    item.CanUpdate = false;
+                    item.CanDoAction = false;
+                    item.CanRedirect = false;
+                }
+            }
             return result;
         }
 
@@ -336,6 +357,9 @@ namespace IOWebApplication.Core.Services
 
             switch (sourceType)
             {
+                case SourceTypeSelectVM.Case:
+                    caseId = (int)sourceId;
+                    break;
                 case SourceTypeSelectVM.CaseNotification:
                     caseId = repo.GetById<CaseNotification>((int)sourceId)?.CaseId;
                     break;
@@ -350,13 +374,21 @@ namespace IOWebApplication.Core.Services
                         .Select(x => x.ExecListObligations.Select(a => a.Obligation.CaseId).FirstOrDefault())
                         .FirstOrDefault();
                     break;
+                case SourceTypeSelectVM.DocumentResolution:
+                    caseId = repo.AllReadonly<DocumentResolution>()
+                                    .Include(x => x.Document)
+                                    .ThenInclude(x => x.Cases)
+                                    .Where(x => x.Id == sourceId)
+                                    .Select(x => x.Document.Cases.Select(c => c.Id).FirstOrDefault())
+                                    .FirstOrDefault();
+                    break;
             }
-            if (!caseId.HasValue)
+            if (caseId > 0)
             {
-                return null;
+                return urlHelper.Action("CasePreview", "Case", new { id = caseId });
             }
+            return null;
 
-            return urlHelper.Action("CasePreview", "Case", new { id = caseId });
         }
 
 
@@ -365,6 +397,7 @@ namespace IOWebApplication.Core.Services
             switch (model.TaskTypeId)
             {
                 case WorkTaskConstants.Types.Case_SelectLawUnit:
+                case WorkTaskConstants.Types.Case_ForReject:
                     model.DoActionUrl = urlHelper.Action("DoTask_Case_SelectLawUnit", "WorkTask", new { id = model.Id });
                     break;
                 case WorkTaskConstants.Types.CaseSessionAct_SentToCoordinate:
@@ -411,6 +444,12 @@ namespace IOWebApplication.Core.Services
                 case WorkTaskConstants.Types.ExecList_Sign:
                     model.DoActionUrl = urlHelper.Action("SendForSign", "Money", new { id = model.SourceId, taskId = model.Id });
                     break;
+                case WorkTaskConstants.Types.SendFor_NewSession:
+                    {
+                        var _case = repo.GetById<Case>((int)model.SourceId);
+                        model.DoActionUrl = urlHelper.Action("Add", "DocumentResolution", new { documentId = _case.DocumentId });
+                    }
+                    break;
                 default:
                     model.DoActionUrl = null;
                     break;
@@ -453,12 +492,17 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
+                if (string.IsNullOrEmpty(model.UserCreatedId))
+                {
+                    model.UserCreatedId = null;
+                }
+
                 var entity = new WorkTask();
                 model.ToEntity(entity);
 
                 entity.CourtId = userContext.CourtId;
                 entity.DateCreated = DateTime.Now;
-                entity.UserCreatedId = userContext.UserId;
+                entity.UserCreatedId = model.UserCreatedId ?? userContext.UserId;
                 entity.TaskStateId = WorkTaskConstants.States.New;
                 if (!model.DisableSelfAcceptCheck)
                 {
@@ -473,6 +517,7 @@ namespace IOWebApplication.Core.Services
                 CreateTaskSourceDescription(entity);
                 repo.Add(entity);
                 repo.SaveChanges();
+                autoCompleteTasks(entity);
                 model.Id = entity.Id;
                 return true;
             }
@@ -480,6 +525,18 @@ namespace IOWebApplication.Core.Services
             {
                 logger.LogError(ex.Message);
                 return false;
+            }
+        }
+        private void autoCompleteTasks(WorkTask task)
+        {
+            if (!WorkTaskConstants.Types.AutoCompleteTasks.Contains(task.TaskTypeId))
+            {
+                return;
+            }
+
+            if (CompleteTask(task))
+            {
+                UpdateAfterCompleteTask(task);
             }
         }
         public bool UpdateTask(WorkTaskEditVM model)
@@ -530,6 +587,24 @@ namespace IOWebApplication.Core.Services
                         }
                     }
                     break;
+                case SourceTypeSelectVM.DocumentResolution:
+                    {
+                        var info = repo.AllReadonly<DocumentResolution>()
+                                        .Include(x => x.Document)
+                                       .ThenInclude(x => x.DocumentType)
+                                       .Include(x => x.Document)
+                                       .ThenInclude(x => x.Cases)
+                                       .Where(x => x.Id == model.SourceId)
+                                       .Select(x => new
+                                       {
+                                           sd = $" към {x.Document.DocumentType.Label} {x.Document.DocumentNumber}/{x.Document.DocumentDate:dd.MM.yyyy}",
+                                           pd = (x.Document.Cases.Any()) ? x.Document.Cases.Select(c => c.RegNumber).FirstOrDefault() : ""
+                                       })
+                                       .FirstOrDefault();
+                        model.SourceDescription = info.sd;
+                        model.ParentDescription = info.pd;
+                    }
+                    break;
                 case SourceTypeSelectVM.CaseSessionAct:
                     {
                         var info = repo.AllReadonly<CaseSessionAct>()
@@ -557,6 +632,22 @@ namespace IOWebApplication.Core.Services
                                             pd = x.ExecListObligations.Select(a => a.Obligation.Case.RegNumber).FirstOrDefault(),
                                         })
                                         .FirstOrDefault();
+
+                        model.SourceDescription = info.sd;
+                        model.ParentDescription = info.pd;
+                    }
+                    break;
+                case SourceTypeSelectVM.Case:
+                    {
+                        var info = repo.AllReadonly<Case>()
+                                           .Include(x => x.CaseType)
+                                           .Where(x => x.Id == (int)model.SourceId)
+                                           .Select(x => new
+                                           {
+                                               sd = $"{x.CaseType.Code} {x.ShortNumber}/{x.RegDate:dd.MM.yyyy}",
+                                               pd = x.RegNumber
+                                           })
+                                           .FirstOrDefault();
 
                         model.SourceDescription = info.sd;
                         model.ParentDescription = info.pd;
@@ -642,6 +733,14 @@ namespace IOWebApplication.Core.Services
                             (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActCoordination_Sign);
                     }
                     break;
+                case WorkTaskConstants.Types.CaseSessionActMotives_SentToSign:
+                    {
+
+                        selectToDelete = x =>
+                            (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActMotives_SentToSign) ||
+                            (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActMotives_Sign);
+                    }
+                    break;
                 case WorkTaskConstants.Types.DocumentResolution_SentToSign:
                     {
                         selectToDelete = x =>
@@ -682,6 +781,7 @@ namespace IOWebApplication.Core.Services
                         var hasUnCompletedCoTasks = repo.AllReadonly<WorkTask>()
                                                             .Where(x => x.ParentTaskId == model.ParentTaskId)
                                                             .Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
+                                                            .Where(x => x.TaskTypeId == model.TaskTypeId)
                                                             .Any();
                         var actModel = repo.GetById<CaseSessionAct>((int)model.SourceId);
                         if (!hasUnCompletedCoTasks && actModel.ActStateId < NomenclatureConstants.SessionActState.Coordinated)
@@ -699,6 +799,7 @@ namespace IOWebApplication.Core.Services
                         var signTasks = repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToList();
                         var hasUnCompletedCoTasks = signTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
                                                              .Where(x => x.TaskStateId != WorkTaskConstants.States.Deleted)
+                                                             .Where(x => x.TaskTypeId == model.TaskTypeId)
                                                              .Any();
 
                         var actModel = repo.GetById<CaseSessionAct>((int)model.SourceId);
@@ -706,24 +807,22 @@ namespace IOWebApplication.Core.Services
                         {
                             if (actModel.ActDeclaredDate == null)
                             {
-                                using (TransactionScope ts = new TransactionScope())
+                                actModel.ActStateId = NomenclatureConstants.SessionActState.Enforced;
+                                actModel.ActDeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
+                                actModel.DateWrt = DateTime.Now;
+
+                                //Автоматично влизане в сила на актове, неподлежащи на обжалване
+                                if (actModel.CanAppeal == false)
                                 {
-
-                                    actModel.ActStateId = NomenclatureConstants.SessionActState.Enforced;
-                                    actModel.ActDeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
-                                    actModel.DateWrt = DateTime.Now;
-
-                                    //Автоматично влизане в сила на актове, неподлежащи на обжалване
-                                    if (actModel.CanAppeal == false)
-                                    {
-                                        actModel.ActStateId = NomenclatureConstants.SessionActState.ComingIntoForce;
-                                        actModel.ActInforcedDate = actModel.ActDeclaredDate;
-                                    }
-
+                                    actModel.ActStateId = NomenclatureConstants.SessionActState.ComingIntoForce;
+                                    actModel.ActInforcedDate = actModel.ActDeclaredDate;
+                                }
+                                repo.Update(actModel);
+                                repo.SaveChanges();
+                                using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                                {
                                     caseDeadlineService.DeadLineMotive(actModel);
-
-                                    repo.Update(actModel);
-
+                                    caseDeadlineService.DeadLineDeclaredForResolveComplete(actModel);
                                     // Автоматизиране на статус - решено
                                     var caseCase = repo.GetById<Case>(actModel.CaseId);
                                     if ((caseCase.CaseStateId == NomenclatureConstants.CaseState.AnnouncedForResolution) && (actModel.ActTypeId == NomenclatureConstants.ActType.Answer))
@@ -732,10 +831,10 @@ namespace IOWebApplication.Core.Services
                                         caseCase.DateWrt = DateTime.Now;
                                         caseCase.UserId = userContext.UserId;
                                         repo.Update(caseCase);
+                                        caseDeadlineService.DeadLineOnCase(caseCase);
                                     }
 
                                     repo.SaveChanges();
-
 
                                     lifecycleService.CaseLifecycle_SaveFirst_ForCaseType(actModel.CaseSessionId);
 
@@ -764,15 +863,16 @@ namespace IOWebApplication.Core.Services
                     break;
                 case WorkTaskConstants.Types.CaseSessionActMotives_Sign:
                     {
-                        var acts = repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToList();
-                        var hasUnCompletedCoTasks = acts.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
+                        var motivesTasks = repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToList();
+                        var hasUnCompletedCoTasks = motivesTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
+                                                        .Where(x => x.TaskTypeId == model.TaskTypeId)
                                                         .Any();
                         var actModel = repo.GetById<CaseSessionAct>((int)model.SourceId);
                         if (!hasUnCompletedCoTasks && actModel.ActMotivesDeclaredDate == null)
                         {
-                            using (TransactionScope ts = new TransactionScope())
+                            using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
                             {
-                                actModel.ActMotivesDeclaredDate = acts.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
+                                actModel.ActMotivesDeclaredDate = motivesTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
                                 caseDeadlineService.DeadLineMotive(actModel);
                                 repo.Update(actModel);
                                 repo.SaveChanges();
@@ -788,23 +888,68 @@ namespace IOWebApplication.Core.Services
                     {
                         var signTasks = repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToList();
                         var hasUnCompletedCoTasks = signTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
+                                                        .Where(x => x.TaskTypeId == model.TaskTypeId)
                                                         .Any();
 
-                        var actModel = repo.GetById<DocumentResolution>(model.SourceId);
-                        if (!hasUnCompletedCoTasks && (actModel.DeclaredDate == null))
+                        var resolutionModel = repo.AllReadonly<DocumentResolution>()
+                                                        .Include(x => x.ResolutionType)
+                                                        .Where(x => x.Id == model.SourceId)
+                                                        .FirstOrDefault(); ;
+                        if (!hasUnCompletedCoTasks && (resolutionModel.DeclaredDate == null))
                         {
-                            using (TransactionScope ts = new TransactionScope())
+                            using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
                             {
-                                actModel.ResolutionStateId = NomenclatureConstants.ResolutionStates.Enforced;
-                                actModel.DeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
-                                actModel.DateWrt = DateTime.Now;
+                                resolutionModel.ResolutionStateId = NomenclatureConstants.ResolutionStates.Enforced;
+                                resolutionModel.DeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
+                                resolutionModel.DateWrt = DateTime.Now;
 
-                                repo.Update(actModel);
+                                repo.Update(resolutionModel);
                                 repo.SaveChanges();
+
+                                if (resolutionModel.ResolutionTypeId == DocumentConstants.ResolutionTypes.ResolutionForSelection)
+                                {
+                                    var cases = repo.AllReadonly<DocumentResolutionCase>().Where(x => x.DocumentResolutionId == resolutionModel.Id)
+                                                        .Select(x => x.CaseId).ToList();
+                                    foreach (var caseId in cases)
+                                    {
+                                        var newTask = new WorkTaskEditVM()
+                                        {
+                                            SourceType = SourceTypeSelectVM.Case,
+                                            SourceId = caseId,
+                                            TaskTypeId = WorkTaskConstants.Types.SendFor_NewSelection,
+                                            UserCreatedId = resolutionModel.UserDecisionId,
+                                            UserId = resolutionModel.TaskUserId,
+                                            TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser,
+                                            DescriptionCreated = $"{resolutionModel.ResolutionType.Label} {resolutionModel.RegNumber}/{resolutionModel.RegDate:dd.MM.yyyy}"
+                                        };
+
+                                        CreateTask(newTask);
+                                    }
+                                }
 
                                 ts.Complete();
                                 return new SaveResultVM(true, "", "reload");
                             }
+                        }
+                    }
+                    break;
+
+                case WorkTaskConstants.Types.SendFor_Competency:
+                    {
+                        int[] tasksToDelete = { WorkTaskConstants.Types.DocumentResolution_SentToSign, WorkTaskConstants.Types.DocumentResolution_Sign };
+                        var unCompletedTasks = repo.All<WorkTask>()
+                                                            .Where(x => x.SourceType == model.SourceType)
+                                                            .Where(x => x.SourceId == model.SourceId)
+                                                            .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                                            .Where(x => tasksToDelete.Contains(x.TaskTypeId))
+                                                            .ToList();
+                        if (unCompletedTasks.Any())
+                        {
+                            foreach (var item in unCompletedTasks)
+                            {
+                                item.TaskStateId = WorkTaskConstants.States.Deleted;
+                            }
+                            repo.SaveChanges();
                         }
                     }
                     break;
@@ -823,7 +968,13 @@ namespace IOWebApplication.Core.Services
             try
             {
                 var task = repo.GetById<WorkTask>(taskId);
-                var caseModel = repo.AllReadonly<Case>(x => x.DocumentId == task.SourceId).FirstOrDefault();
+                long docId = task.SourceId;
+                if (task.SourceType == SourceTypeSelectVM.DocumentResolution)
+                {
+                    var docRes = repo.GetById<DocumentResolution>(task.SourceId);
+                    docId = docRes.DocumentId;
+                }
+                var caseModel = repo.AllReadonly<Case>(x => x.DocumentId == docId).FirstOrDefault();
                 if (caseModel != null)
                 {
                     return caseModel.Id;
@@ -884,19 +1035,34 @@ namespace IOWebApplication.Core.Services
                                 sourceIdWhere = x => !initialDocOnlyTasks.Contains(x.Id);
                                 break;
                             case DocumentConstants.DocumentKind.CompliantDocument:
-                                int[] compliantDocOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit };
+                                int[] compliantDocOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.Case_ForReject };
                                 sourceIdWhere = x => !compliantDocOnlyTasks.Contains(x.Id);
                                 break;
                             case DocumentConstants.DocumentKind.InAdministrationDocument:
-                                int[] inAdministrationDocAndReportOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.ForReport };
+                                int[] inAdministrationDocAndReportOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.Case_ForReject, WorkTaskConstants.Types.ForReport };
                                 sourceIdWhere = x => !inAdministrationDocAndReportOnlyTasks.Contains(x.Id);
                                 break;
                             default:
-                                int[] initialDocAndReportOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.ForReport, WorkTaskConstants.Types.DocumentDecision };
+                                int[] initialDocAndReportOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.Case_ForReject, WorkTaskConstants.Types.ForReport, WorkTaskConstants.Types.DocumentDecision };
                                 sourceIdWhere = x => !initialDocAndReportOnlyTasks.Contains(x.Id);
                                 break;
 
                         }
+                    }
+                    break;
+                case SourceTypeSelectVM.DocumentResolution:
+                    var hasCase = repo.AllReadonly<DocumentResolution>()
+                                    .Include(x => x.Document)
+                                    .ThenInclude(x => x.Cases)
+                                    .Where(x => x.Id == sourceId)
+                                    .Where(x => x.Document.Cases != null)
+                                    .Select(x => x.Document)
+                                    .SelectMany(x => x.Cases)
+                                    .Any();
+                    if (!hasCase)
+                    {
+                        int[] caseTaskForDocumentResolution = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.Case_ForReject };
+                        sourceIdWhere = x => !caseTaskForDocumentResolution.Contains(x.Id);
                     }
                     break;
             }
@@ -928,14 +1094,24 @@ namespace IOWebApplication.Core.Services
 
         public bool ValidateSourceCourt(int sourceType, long sourceId)
         {
+            int? sourceCourtId = GetSourceCourtId(sourceType, sourceId);
+            return (sourceCourtId == userContext.CourtId) || (sourceCourtId == null);
+        }
+
+        public int? GetSourceCourtId(int sourceType, long sourceId)
+        {
             switch (sourceType)
             {
                 case SourceTypeSelectVM.Document:
-                    return repo.AllReadonly<Document>().Where(x => x.Id == sourceId).Select(x => x.CourtId).FirstOrDefault() == userContext.CourtId;
+                    return repo.AllReadonly<Document>().Where(x => x.Id == sourceId).Select(x => x.CourtId).FirstOrDefault();
                 case SourceTypeSelectVM.CaseSessionAct:
-                    return repo.AllReadonly<CaseSessionAct>().Where(x => x.Id == (int)sourceId).Select(x => x.CourtId).FirstOrDefault() == userContext.CourtId;
+                    return repo.AllReadonly<CaseSessionAct>().Where(x => x.Id == (int)sourceId).Select(x => x.CourtId).FirstOrDefault();
+                case SourceTypeSelectVM.Case:
+                    return repo.AllReadonly<Case>().Where(x => x.Id == (int)sourceId).Select(x => x.CourtId).FirstOrDefault();
+                case SourceTypeSelectVM.DocumentResolution:
+                    return repo.AllReadonly<DocumentResolution>().Where(x => x.Id == sourceId).Select(x => x.CourtId).FirstOrDefault();
                 default:
-                    return true;
+                    return null;
             }
         }
 
@@ -1019,7 +1195,7 @@ namespace IOWebApplication.Core.Services
 
         }
 
-        public bool RerouteTasks(long[] taskIds, string newUserId, string description)
+        public bool RerouteTasks(long[] taskIds, WorkTaskManageVM model)
         {
             var tasks = repo.All<WorkTask>()
                              .Where(x => taskIds.Contains(x.Id))
@@ -1031,9 +1207,17 @@ namespace IOWebApplication.Core.Services
             {
                 return false;
             }
+            switch (model.TaskExecutionId)
+            {
+                case WorkTaskConstants.TaskExecution.ByUser:
+                    model.CourtOrganizationId = null;
+                    break;
+                case WorkTaskConstants.TaskExecution.ByOrganization:
+                    model.NewUserId = null;
+                    break;
+            }
             foreach (var task in tasks)
             {
-
 
                 var newTask = new WorkTaskEditVM()
                 {
@@ -1042,9 +1226,10 @@ namespace IOWebApplication.Core.Services
                     SourceType = task.SourceType,
                     SourceId = task.SourceId,
                     TaskTypeId = task.TaskTypeId,
-                    TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser,
+                    TaskExecutionId = model.TaskExecutionId,
                     DateEnd = task.DateEnd,
-                    UserId = newUserId,
+                    UserId = model.NewUserId,
+                    CourtOrganizationId = model.CourtOrganizationId,
                     DisableSelfAcceptCheck = true
                 };
                 if (CreateTask(newTask))
@@ -1052,7 +1237,7 @@ namespace IOWebApplication.Core.Services
 
                     task.TaskStateId = WorkTaskConstants.States.Redirected;
                     task.DescriptionCreated = (task.DescriptionCreated ?? "");
-                    task.DescriptionCreated += $"; Пренасочена на {DateTime.Now:dd.MM.yyyy HH:mm:ss} от {userContext.FullName};{description}";
+                    task.DescriptionCreated += $"; Пренасочена на {DateTime.Now:dd.MM.yyyy HH:mm:ss} от {userContext.FullName};{model.Description}";
                     repo.Update(task);
                 }
             }
@@ -1060,5 +1245,7 @@ namespace IOWebApplication.Core.Services
             repo.SaveChanges();
             return true;
         }
+
+
     }
 }

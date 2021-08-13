@@ -97,6 +97,15 @@ namespace IOWebApplication.Resources.Controllers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 3.5. Ръководство.
+        /// </summary>
+        public static string COURT_MAN {
+            get {
+                return ResourceManager.GetString("COURT_MAN", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 3.4. Призоваване.
         /// </summary>
         public static string DEL_USER {
@@ -174,6 +183,15 @@ namespace IOWebApplication.Resources.Controllers {
         public static string STAT {
             get {
                 return ResourceManager.GetString("STAT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 5.1. Справки - регистри.
+        /// </summary>
+        public static string STAT_REGIX {
+            get {
+                return ResourceManager.GetString("STAT_REGIX", resourceCulture);
             }
         }
         

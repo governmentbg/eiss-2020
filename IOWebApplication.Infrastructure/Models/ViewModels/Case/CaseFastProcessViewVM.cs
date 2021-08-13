@@ -11,6 +11,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public virtual ICollection<CaseBankAccountVM> CaseBankAccounts { get; set; }
         public virtual ICollection<CaseMoneyClaimVM> CaseMoneyClaims { get; set; }
         public virtual ICollection<CaseMoneyExpenseVM> CaseMoneyExpenses { get; set; }
+        public virtual ICollection<CaseMoneyPersonListTextVM> PersonSum { get; set; }
+        public string SummTotal { get; set; }
+        public bool JointDistribution { get; set; }
 
         public CaseFastProcessViewVM()
         {

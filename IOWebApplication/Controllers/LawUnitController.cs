@@ -162,6 +162,11 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         void ValidateModel(LawUnit model)
         {
+            if (!string.IsNullOrEmpty(model.Code))
+            {
+                model.Code = model.Code.Trim();
+            }
+
             switch (model.LawUnitTypeId)
             {
                 case NomenclatureConstants.LawUnitTypes.Lawyer:
@@ -175,23 +180,26 @@ namespace IOWebApplication.Controllers
                     }
                     break;
                 default:
-                    if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(model.LawUnitTypeId))
+                    if (model.DateTo == null)
                     {
-                        if (string.IsNullOrEmpty(model.Uic))
+                        if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(model.LawUnitTypeId))
                         {
-                            ModelState.AddModelError(nameof(model.Uic), "Въведете ЕГН");
+                            if (string.IsNullOrEmpty(model.Uic))
+                            {
+                                ModelState.AddModelError(nameof(model.Uic), "Въведете ЕГН");
+                            }
                         }
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(model.Uic) && string.IsNullOrEmpty(model.Code))
+                        else
                         {
-                            ModelState.AddModelError(nameof(model.Code), "Въведете 'Код' или 'ЕГН'");
+                            if (string.IsNullOrEmpty(model.Uic) && string.IsNullOrEmpty(model.Code))
+                            {
+                                ModelState.AddModelError(nameof(model.Code), "Въведете 'Код' или 'ЕГН'");
+                            }
                         }
                     }
                     break;
             }
-           
+
 
             if (string.IsNullOrEmpty(model.FirstName))
             {
@@ -225,7 +233,7 @@ namespace IOWebApplication.Controllers
         /// <param name="courtId"></param>
         /// <returns></returns>
         [HttpGet]
-        public IActionResult SearchLawUnit(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = NomenclatureConstants.LawUnitSelectMode.All)
+        public IActionResult SearchLawUnit(int lawUnitType, string lawUnitTypes, string query, int courtId, string selectmode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistory)
         {
             return Json(commonService.GetLawUnitAutoComplete(lawUnitType, lawUnitTypes, query, courtId, selectmode));
         }

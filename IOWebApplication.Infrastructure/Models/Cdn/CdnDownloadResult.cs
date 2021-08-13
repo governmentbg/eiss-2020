@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.Cdn
 {
@@ -20,6 +18,9 @@ namespace IOWebApplication.Infrastructure.Models.Cdn
         public string FileTitle { get; set; }
 
         public string FileContentBase64 { get; set; }
+        public int? SignituresCount { get; set; }
+
+        public DateTime DateUploaded { get; set; }
 
         public byte[] GetBytes()
         {

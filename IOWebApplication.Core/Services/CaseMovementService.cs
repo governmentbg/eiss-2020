@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using static IOWebApplication.Infrastructure.Constants.AccountConstants;
 
 namespace IOWebApplication.Core.Services
 {
@@ -109,14 +110,20 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         private bool IsEdit(CaseMovementVM model)
         {
-            if (model.UserId != userContext.UserId)
-                return false;
-
             if (model.DateAccept != null)
                 return false;
 
             if (!model.IsActive)
                 return false;
+
+            if (model.UserId != userContext.UserId)
+            {
+                if (userContext.IsUserInRole(Roles.Supervisor) ||
+                    userContext.IsUserInRole(Roles.Administrator))
+                    return true;
+                else
+                    return false;
+            }
 
             return true;
         }
@@ -132,7 +139,13 @@ namespace IOWebApplication.Core.Services
                 return false;
 
             if (model.AcceptUserId != userContext.UserId)
-                return false;
+            {
+                if (userContext.IsUserInRole(Roles.Supervisor) ||
+                    userContext.IsUserInRole(Roles.Administrator))
+                    return true;
+                else
+                    return false;
+            }
 
             return true;
         }
@@ -150,7 +163,13 @@ namespace IOWebApplication.Core.Services
             if (model.MovementTypeId == NomenclatureConstants.CaseMovementType.ToPerson)
             {
                 if (model.ToUserId != userContext.UserId)
-                    return false;
+                {
+                    if (userContext.IsUserInRole(Roles.Supervisor) ||
+                        userContext.IsUserInRole(Roles.Administrator))
+                        return true;
+                    else
+                        return false;
+                }
             }
             else
             {
@@ -158,7 +177,13 @@ namespace IOWebApplication.Core.Services
                 {
                     var lawUnits = commonService.LawUnit_ByCourtDate(userContext.CourtId, DateTime.Now, model.CourtOrganizationId ?? 0);
                     if (!lawUnits.Any(x => x.Id == userContext.LawUnitId))
-                        return false;
+                    {
+                        if (userContext.IsUserInRole(Roles.Supervisor) ||
+                            userContext.IsUserInRole(Roles.Administrator))
+                            return true;
+                        else
+                            return false;
+                    }
                 }
             }
 
@@ -357,7 +382,7 @@ namespace IOWebApplication.Core.Services
         public bool IsAddNewMovement(int CaseId)
         {
             var movements = repo.AllReadonly<CaseMovement>().Where(x => x.CaseId == CaseId).ToList();
-
+            
             if (movements.Count < 1)
                 return true;
             else
@@ -370,7 +395,13 @@ namespace IOWebApplication.Core.Services
                         return false;
 
                     if (maxIdElement.AcceptUserId != userContext.UserId)
-                        return false;
+                    {
+                        if (userContext.IsUserInRole(Roles.Supervisor) ||
+                            userContext.IsUserInRole(Roles.Administrator))
+                            return true;
+                        else
+                            return false;
+                    }
                 }
             }
 
@@ -422,7 +453,8 @@ namespace IOWebApplication.Core.Services
             var courtLawUnit = repo.AllReadonly<CourtLawUnit>()
                         .Where(x => x.CourtId == userContext.CourtId &&
                                     x.LawUnitId == userContext.LawUnitId &&
-                                    (x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.Now.AddDays(1)) >= DateTime.Now))
+                                    (x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.Now.AddDays(1)) >= DateTime.Now) &&
+                                    x.DateExpired == null)
                         .FirstOrDefault();
             var courtOrganizationId = (courtLawUnit != null) ? (courtLawUnit.CourtOrganizationId ?? 0) : 0;
 

@@ -179,8 +179,6 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Дата на пререгистрация в АВ")]
         public DateTime? ReRegisterDate { get; set; }
 
-        [Column("is_deceased")]
-        [Display(Name = "Починало лице")]
-        public bool? IsDeceased { get; set; }
+       
     }
 }

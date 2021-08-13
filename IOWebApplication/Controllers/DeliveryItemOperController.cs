@@ -51,7 +51,7 @@ namespace IOWebApplication.Controllers
             return View(nameof(Index),DeliveryItemId);
         }
         [HttpPost]
-        public IActionResult Index(int DeliveryItemId, string filterJson)
+        public IActionResult Index(int DeliveryItemId, [AllowHtml] string filterJson)
         {
             return LoadIndex(DeliveryItemId, filterJson);
         }
@@ -66,7 +66,18 @@ namespace IOWebApplication.Controllers
             ViewBag.NotificationInfo = itemService.GetNotificationInfo(notificationId);
             return View(deliveryItemId);
         }
-        public IActionResult IndexHistory(int deliveryItemId, string filterJson)
+        [HttpGet]
+        public IActionResult IndexDocument(int notificationId)
+        {
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDocumentNotificationDeliveryOper(notificationId).DeleteOrDisableLast();
+            var deliveryItem = itemService.GetDeliveryItemByDocumentNotificationId(notificationId);
+            int deliveryItemId = deliveryItem?.Id ?? 0;
+            ViewBag.filterJson = "";
+            ViewBag.canAdd = service.CanAdd(deliveryItemId);
+            ViewBag.NotificationInfo = itemService.GetNotificationInfo(notificationId);
+            return View(nameof(Index), deliveryItemId);
+        }
+        public IActionResult IndexHistory(int deliveryItemId, [AllowHtml] string filterJson)
         {
             ViewBag.filterJson = filterJson;
             int filterType = getFilterTypeFromJson(filterJson);
@@ -75,14 +86,20 @@ namespace IOWebApplication.Controllers
 
             return View(deliveryItemId);
         }
-        public IActionResult Edit(int id, string filterJson)
+        public IActionResult Edit(int id, [AllowHtml] string filterJson)
         {
             var model = service.getDeliveryItemOper(id);
             var deliveryItem = itemService.getDeliveryItem(model.DeliveryItemId);
-            ViewBag.notificationId = deliveryItem.CaseNotificationId;
             if (filterJson == null)
             {
-                  ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                if (deliveryItem.DocumentNotificationId > 0)
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDocumentNotificationDeliveryOperEdit(deliveryItem.DocumentNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
+                else
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
             }
             else
             {
@@ -94,14 +111,20 @@ namespace IOWebApplication.Controllers
             ModelState.Clear();
             return View(nameof(Edit), model);
         }
-        public IActionResult Add(int deliveryItemId, string filterJson)
+        public IActionResult Add(int deliveryItemId, [AllowHtml] string filterJson)
         {
             ViewBag.filterJson = filterJson;
             var deliveryItem = itemService.getDeliveryItem(deliveryItemId);
-            ViewBag.notificationId = deliveryItem.CaseNotificationId;
             if (filterJson == null)
             {
-                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                if (deliveryItem.DocumentNotificationId > 0)
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDocumentNotificationDeliveryOperEdit(deliveryItem.DocumentNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
+                else
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
             }
             else
             {
@@ -114,13 +137,20 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
         [HttpPost]
-        public IActionResult EditPost(DeliveryItemOperVM model, string filterJson)
+        public IActionResult EditPost(DeliveryItemOperVM model, [AllowHtml] string filterJson)
         {
             var deliveryItem = itemService.getDeliveryItem(model.DeliveryItemId);
             ViewBag.notificationId = deliveryItem.CaseNotificationId;
             if (filterJson == null)
             {
-                 ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                if (deliveryItem.DocumentNotificationId > 0)
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDocumentNotificationDeliveryOperEdit(deliveryItem.DocumentNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
+                else
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
             }
             else
             {
@@ -150,7 +180,13 @@ namespace IOWebApplication.Controllers
                 }
                 else
                 {
-                    return RedirectToAction(nameof(Index), new { notificationId =  deliveryItem.CaseNotificationId });
+                    if (deliveryItem.DocumentNotificationId > 0)
+                    {
+                        return RedirectToAction(nameof(IndexDocument), new { notificationId = deliveryItem.DocumentNotificationId });
+                    }
+                    {
+                        return RedirectToAction(nameof(Index), new { notificationId = deliveryItem.CaseNotificationId });
+                    }
                 }
             }
             else
@@ -170,7 +206,7 @@ namespace IOWebApplication.Controllers
             var data = service.DeliveryItemOperSelect(deliveryItemId, onlyLast);
             return request.GetResponse(data);
         }
-        public IActionResult Location(int id, string filterJson)
+        public IActionResult Location(int id, [AllowHtml] string filterJson)
         {
             var deliveryItemOper = service.getDeliveryItemOper(id);
             ViewBag.hereMaps_ApiKey = configuration["HereMaps_ApiKey"];
@@ -180,8 +216,14 @@ namespace IOWebApplication.Controllers
             if (filterJson == null)
             {
                 var deliveryItem = itemService.getDeliveryItem(deliveryItemOper.DeliveryItemId);
-                ViewBag.notificationId = deliveryItem.CaseNotificationId;
-                ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                if (deliveryItem.DocumentNotificationId > 0)
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForDocumentNotificationDeliveryOperEdit(deliveryItem.DocumentNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
+                else
+                {
+                    ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationDeliveryOperEdit(deliveryItem.CaseNotificationId ?? 0, 0).DeleteOrDisableLast();
+                }
             }
             else
             {

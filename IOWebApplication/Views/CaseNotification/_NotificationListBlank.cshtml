@@ -35,14 +35,29 @@
 
         @foreach (var notList in Model.NotificationLists)
         {
-            <tr style="page-break-inside: avoid">
-                <td align="center" width="10%">@notList.RowNumber</td>
-                <td width="10%">@notList.PersonRole</td>
-                <td width="10%">@notList.PersonName</td>
-                <td width="30%">@notList.AddressString.Replace("<br>", Environment.NewLine)</td>
-                <td width="25%">@notList.Remark.Replace("</br>", Environment.NewLine)</td>
-                <td align="center" width="10%">@notList.DateSend?.ToString("dd.MM.yyyy HH:mm")</td>
-            </tr>
+            var rowSpan = notList.Notifications.Count;
+            if (rowSpan < 1)
+            {
+                rowSpan = 1;
+            }
+            bool isFirst = true;
+            @foreach (var not in notList.Notifications)
+            {
+                <tr style="page-break-inside: avoid">
+                    @if (isFirst)
+                    {
+                        <td align="center" width="10%" rowspan="@rowSpan">@notList.RowNumber</td>
+                        <td width="10%" rowspan="@rowSpan">@notList.PersonRole</td>
+                        <td width="10%" rowspan="@rowSpan">@notList.PersonName.Decode()</td>
+                    }
+                    @{
+                        isFirst = false;
+                    }
+                    <td width="30%">@not.AddressString?.Replace("<br>", Environment.NewLine)</td>
+                    <td width="25%">@not.Remark?.Replace("</br>", Environment.NewLine)</td>
+                    <td align="center" width="10%">@not.DateSend</td>
+                </tr>
+            }
         }
     </table>
 

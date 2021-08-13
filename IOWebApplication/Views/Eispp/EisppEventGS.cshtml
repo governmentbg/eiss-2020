@@ -1,0 +1,176 @@
+﻿@model EisppEventGSVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
+@using IOWebApplication.Infrastructure.Constants
+@{
+    ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-12">
+        <form id="formEdit" asp-action="EisppEventGSSave" method="post">
+            @Html.ValidationSummary()
+            @Html.HiddenFor(x => x.ModelJson)
+            @Html.HiddenFor(x => x.CaseId)
+            @Html.HiddenFor(x => x.IsEdit)
+            @Html.HiddenFor(x => x.IsForSend)
+            @Html.HiddenFor(x => x.IsOld)
+            @Html.HiddenFor(x => x.IsValidated)
+            @Html.HiddenFor(x => x.EventFromId)
+            @Html.HiddenFor(x => x.IsChange)
+            <div class="row">
+                <div class="col-lg-2 col-md-6">
+                    <div id="divEISPP">
+                        @Html.EditorFor(x => x.EISPPNumber, "EisppNumber")
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-1">
+                    @Html.EditorFor(x => x.Year, "hd")
+                </div>
+                <div class="col-lg-1">
+                    @Html.EditorFor(x => x.ShortNumber, "hd")
+                </div>
+                <div class="col-lg-8">
+                    @Html.EditorFor(x => x.CaseType, "hd")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.EventType, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")
+                </div>
+            </div>
+
+            <div class="row get-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.ConnectedCaseId, "GenericDropDownString")
+                </div>
+            </div>
+            <div class="row get-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.ExactCaseType, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row send-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.CaseMigrationId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="row send-case">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.ReasonId, "GenericDropDown")
+                </div>
+            </div>
+            <div class="form-group">
+                @if (Model.IsEdit)
+                {
+                    <input type="submit" value="Потвърди" class="btn btn-success" />
+                }
+                @await Html.PartialAsync("_ButtonClose")
+            </div>
+        </form>
+    </div>
+</div>
+<form id="formEventChange" asp-action="EisppChange" method="post">
+    @Html.HiddenFor(x => x.ModelJson)
+    @Html.HiddenFor(x => x.IsEdit)
+    @Html.HiddenFor(x => x.IsForSend)
+    @Html.HiddenFor(x => x.IsOld)
+    @Html.HiddenFor(x => x.IsValidated)
+    @Html.HiddenFor(x => x.EventFromId)
+    @Html.HiddenFor(x => x.IsChange)
+</form>
+
+<script>
+    function PostToEventChange() {
+        $("#formEventChange").submit();
+    }
+    function SetEventType() {
+        var eventTypeId = $('#EventType').val();
+        $('#EventType').attr('readonly', true);
+        if (eventTypeId == @EISPPConstants.EventType.GetCase) {
+            $('.get-case').show();
+            $('#ConnectedCaseId').attr("disabled", false);
+            $('#ExactCaseType').attr("disabled", false);
+        } else {
+            $('.get-case').hide();
+            $('#ConnectedCaseId').attr("disabled", true);
+            $('#ExactCaseType').attr("disabled", true);
+        }
+
+        if (eventTypeId == @EISPPConstants.EventType.SendCase) {
+            $('.send-case').show();
+            $('#CaseMigrationId').attr("disabled", false);
+            $('#ReasonId').attr("disabled", false);
+        } else {
+            $('.send-case').hide();
+            $('#CaseMigrationId').attr("disabled", true);
+            $('#ReasonId').attr("disabled", true);
+        }
+    }
+
+    function setCaseCauseRange(el) {
+        if (el.length === 0)
+            return;
+
+        $.validator.addMethod('caseCauseValidate', function (value, element, arg) {
+            return this.optional(element) || (value > "C");
+        },
+            'Изберете Свързано дело'
+        );
+
+        el.rules('add', {
+            required: true,
+            caseCauseValidate: 5,
+            messages: { required: 'Изберете Свързано дело' }
+        });
+        $("label[for='" + el.attr("id") + "']").addClass("io-req");
+    }
+
+
+    function GetExactCaseType() {
+        let caseId = $('#CaseId').val();
+        let eventType = $('#EventType').val();
+        let connectedCaseId = $('#ConnectedCaseId').val();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetExactCaseType", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: {
+                caseId: caseId,
+                eventType: eventType,
+                connectedCaseId: connectedCaseId
+            },
+            success: function (response) {
+                fillCombo(response.exactCaseTypeDDL, $('#ExactCaseType'), $('#ExactCaseType').val());
+                if (response.exactCaseType !== "0")
+                   setComboSelectedOrFirst($('#ExactCaseType'), response.exactCaseType);
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
+
+    $(document).ready(function () {
+        SetEventType();
+        setCaseCauseRange($('#ConnectedCaseId'));
+        $('#EISPPNumber').prop('readOnly', true);
+        $('#ConnectedCaseId').change(function () {
+            GetExactCaseType();
+        });
+        $('#ConnectedCaseId').change();
+    });
+</script>

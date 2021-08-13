@@ -1,15 +1,15 @@
-﻿#historyContainer TD.tdList {
+﻿.historyContainer TD.tdList {
     color: #888;
     font-weight: normal !important;
 }
 
-    #historyContainer TD.tdList td.selected {
+    .historyContainer TD.tdList td.selected {
         color: #000;
         font-weight: normal !important;
     }
 
 
-#historyContainer label.control-label {
+.historyContainer label.control-label {
     color: #888;
 }
 

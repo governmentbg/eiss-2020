@@ -1,7 +1,9 @@
 ﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -48,6 +50,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("row_number")]
         public int RowNumber { get; set; }
 
+        [Column("case_person_link_id")]
+        [Display(Name = "Връзки по страни")]
+        public int? CasePersonLinkId { get; set; }
+
+        [Column("vks_notification_state_id")]
+        [Display(Name = "Призован")]
+        public int? VksNotificationStateId { get; set; }
+
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]
         public DateTime? DateExpired { get; set; }
@@ -58,7 +68,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("description_expired")]
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
-
+        
+        [Column("vks_notification_header_id")]
+        public int? VksNotificationHeaderId { get; set; }
+        
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
 
@@ -79,5 +92,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(NotificationAddressId))]
         public virtual Address NotificationAddress { get; set; }
+
+        [ForeignKey(nameof(CasePersonLinkId))]
+        public virtual CasePersonLink CasePersonLink { get; set; }
+
+        [ForeignKey(nameof(VksNotificationStateId))]
+        public virtual VksNotificationState VksNotificationState { get; set; }
+        [ForeignKey(nameof(VksNotificationHeaderId))]
+        public virtual VksNotificationHeader VksNotificationHeader { get; set; }
     }
 }

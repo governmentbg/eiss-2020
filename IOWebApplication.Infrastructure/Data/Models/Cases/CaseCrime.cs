@@ -72,6 +72,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("status_date")]
         [Display(Name = "Дата на статус")]
         public DateTime? StatusDate { get; set; }
+        
+        /// <summary>
+        /// дали ЕИСПП Номера е генериран в ЕИСС
+        /// </summary>
+        [Column("is_generated_eispp_number")]
+        public bool? IsGeneratedEisppNumber { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

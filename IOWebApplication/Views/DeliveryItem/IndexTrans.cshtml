@@ -14,7 +14,6 @@
     ViewData["Title"] = DeliveryItemTransFilterVM.GetTitle(Model.ToNotificationStateId);
     ViewData["DateFrom"] = DeliveryItemTransFilterVM.GetDateFromLabel(Model.ToNotificationStateId);
     ViewData["DateTo"] = DeliveryItemTransFilterVM.GetDateToLabel(Model.ToNotificationStateId);
-    IEnumerable<SelectListItem> ForID_ddl = (List<SelectListItem>)ViewBag.ForID_ddl;
     bool showCheckOnRegNum = false;
 }
 <form id="formFilter" asp-action="Edit" method="post">
@@ -23,6 +22,9 @@
     <div class="row">
         <div class="col-md-2">
             @Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")
         </div>
         @if (Model.ToNotificationStateId != NomenclatureConstants.NotificationState.Send)
         {
@@ -43,10 +45,8 @@
         {
             <div class="col-md-2">
             </div>
-            <div class="col-md-2">
-            </div>
         }
-        <div class="col-md-2 text-right pb-15">
+        <div class="col-md-2 pb-15">
             <br>
             <button type="button" class="btn btn-primary" id="btnFilter" name="btnFilter" onclick="LoadDeliveryTransItems()" value="Филтриране" title="Филтриране">
                 Филтриране
@@ -58,7 +58,7 @@
     <div class="row for-show" style = "display:none">
         <div class="col-md-6">
             <label for="ForId" class="control-label">@Html.Raw(DeliveryItemTransFilterVM.GetForIdLabel(Model.ToNotificationStateId))</label>
-            @Html.DropDownListFor(model => model.ForId, @ForID_ddl.SetSelected(Model.ForId), new { @class = "form-control" })
+            @Html.DropDownListFor(model => model.ForId, new List<SelectListItem>(), new { @class = "form-control" })
             <br />
         </div>
     </div>
@@ -96,7 +96,7 @@
     <input type="hidden" id="filterJson" name="filterJson" value="">
 </form>
 <form name="formPrintPdfsPost" id="formPrintPdfsPost" action="@Url.Action("PrintPdfsFromDeliveryItemIds", "CaseNotification")" method="post">
-    <input type="hidden" id="deliveryItemIds" name="deliveryItemIds" value="">
+    <input type="hidden" id="deliveryItemIdsJson" name="deliveryItemIdsJson" value="">
 </form>
 <div class="row for-show" style = "display:none">
     <div class="col-md-12">
@@ -112,7 +112,27 @@
         <button id="print_button" onclick="printAllCheckDeliveryItem()" class="btn btn-def">Печат на маркираните</button>
     </div>
 </div>
-
+@if (Model.ToNotificationStateId == NomenclatureConstants.NotificationState.ForDelivery || Model.ToNotificationStateId == NomenclatureConstants.NotificationState.Received)
+{
+<hr>
+<div class="row for-show" style="display:none">
+    <div class="col-md-2">
+        @Html.EditorFor(x => x.NewCourtId, "GenericDropDown")
+    </div>
+    <div class="col-md-2">
+        @Html.EditorFor(x => x.NewDeliveryAreaId, "GenericDropDown")
+    </div>
+    <div class="col-md-2">
+        @Html.EditorFor(x => x.NewLawUnitType, "GenericDropDown")
+    </div>
+    <div class="col-md-3">
+        @Html.EditorFor(x => x.NewLawUnitId, "GenericDropDown")
+    </div>
+    <div class="col-md-2" style="margin-top:25px;">
+        <button id="submit_button" onclick="submitAllCheckDeliveryItemChange()" class="btn btn-success btn-block">Промени</button>
+    </div>
+</div>
+}
 <script>
     var dataSet = [];
 
@@ -121,6 +141,10 @@
             data: dataSet,
             serverSide: false,
             'order': [[1, 'asc']],
+            columnDefs: [{
+                targets: [0],
+                orderData: [8]
+            }],
             "paging": false,
             "lengthMenu": [[-1], ["Покажи всички"]],
              dom: '<"row"<"col-sm-6 dataTables_buttons"B><"col-sm-6">>rtp',
@@ -145,18 +169,34 @@
                     searchable: false,
                      "render": function (item, type, row, meta) {
                          if (type === 'display' || type === 'filter') {
-                             return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" onchange="checkedRowChange(' + row.id + ')">';
+                             let checkVal = (row.checkRow ? " checked" : "");
+                             return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" onchange="checkedRowChange(' + row.id + ')"' + checkVal +'>' ;
                          }
                          return row.checkRow;
                     }
                 },
                 {
-                    name: 'regNumber',
-                    data: 'regNumber',
-                    title: 'Рег. номер',
-                    width: 100,
-                    sortable: true,
-                    searchable: false
+                     name: 'regNumber',
+                     data: 'regNumber',
+                     title: 'Рег. номер',
+                     width: 100,
+                     "render": function (item, type, row, meta) {
+                         if (row.caseNotificationId > 0) {
+                             return '<a style="cursor: pointer;" data-toggle="tooltip" onclick="printNotificationRaw(' + row.caseNotificationId + ')" title="Печат">' + row.regNumber + '</a>';
+                         } else {
+                             return row.regNumber;
+                         }
+                     },
+                     sortable: true,
+                     searchable: true
+                 },
+                 {
+                     name: 'notificationType',
+                     data: 'notificationType',
+                     title: 'Тип на документа',
+                     width: 100,
+                     sortable: true,
+                     searchable: false
                  },
                  {
                      name: 'caseInfo',
@@ -192,7 +232,15 @@
                     title: 'Район',
                     sortable: true,
                     searchable: false
-                }
+                 },
+                 {
+                     name: 'checkRowOrder',
+                     data: 'checkRowOrder',
+                     title: 'Сортиране',
+                     sortable: true,
+                     searchable: false,
+                     className: 'hidden text-center noExport'
+                 }
             ]
         });
     });
@@ -206,11 +254,20 @@
 
     function checkedRowChange(id) {
         var isCheck = $('#chk' + id.toString()).prop('checked');
+        let idxChange = -1;
+        let dataChange = null;
         $('#mainTable').DataTable()
             .rows(function (idx, data, node) {
-                if (data.id === id)
+                if (data.id === id) {
                     data.checkRow = isCheck;
+                    data.checkRowOrder = (isCheck ? "0Z" : "1Z") + data.regNumber;
+                    idxChange = idx;
+                    dataChange = data;
+                }
             })
+        if (idxChange >= 0) {
+            $('#mainTable').dataTable().fnUpdate(dataChange, idxChange, undefined, false);
+        }
         setMarkedLabel();
     }
 
@@ -232,27 +289,22 @@
             cache: false,
             data: { filterData: filterData },
             success: function (response) {
-                var tempStr = response.map(
-                    function myFunction(value) {
-                        return '<option title="' + value.text + '" value="' + value.value + '">' + value.text + "</option>";
-                    }
-                ).join();
-                $("#select-all").prop('checked', false);
-                $("#ForId").html(tempStr);
-                $("#ForId").val(oldVal);
-                if ($("#ForId").prop("selectedIndex") == -1)
-                    $("#ForId").prop("selectedIndex", 0);
+                $('#ForId').empty().trigger("change");
+                $('#ForId').select2({
+                    language: "bg",
+                    data: response.forId_ddl
+                });
+                $("#ForId").val(oldVal).trigger('change');
+                if ($("#ForId").prop("selectedIndex") == -1) {
+                    $("#ForId").prop("selectedIndex", 0).trigger('change');
+                }
                 var filterData = getFormData($('#formFilter'));
                 filterData.ForId = $("#ForId").val();
                 $('#filterJson').val(JSON.stringify(filterData));
                 LoadDataSet();
             },
             complete: function () { },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.log({ jqXHR: jqXHR });
-                console.log({ textStatus: textStatus });
-                console.log({ errorThrown: errorThrown });
-            }
+            error: log_ajax_err
         });
     }
 
@@ -275,13 +327,10 @@
                 var table = $('#mainTable').DataTable();
                 table.clear();
                 table.rows.add(dataSet).draw();
+                setMarkedLabel();
             },
             complete: function () { },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.log({ jqXHR: jqXHR });
-                console.log({ textStatus: textStatus });
-                console.log({ errorThrown: errorThrown });
-            }
+            error: log_ajax_err
         });
     }
 
@@ -299,6 +348,7 @@
         if ($('#mainTable').DataTable() === undefined) return;
 
         var deliveryItemIds = getMarkedDeliveryItemIds();
+
         if (deliveryItemIds.length === 0) {
             messageHelper.ShowErrorMessage('Изберете поне еднa призовка/съобщение.');
             $(window).scrollTop(0);
@@ -310,7 +360,7 @@
             url: "@Url.Action("SaveTrans")",
             dataType: "json",
             cache: false,
-            data: { deliveryItemIds: deliveryItemIds, filterData : filterData },
+            data: { deliveryItemIdsJson: deliveryItemIds, filterData : filterData },
             success: function (response) {
                 if (response.result) {
                     messageHelper.ShowSuccessMessage("@Html.Raw(@MessageConstant.Values.SaveOK)");
@@ -322,11 +372,7 @@
                 }
             },
             complete: function () { },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.log({ jqXHR: jqXHR });
-                console.log({ textStatus: textStatus });
-                console.log({ errorThrown: errorThrown });
-            }
+            error: log_ajax_err
         });
     }
     function printAllCheckDeliveryItem() {
@@ -339,23 +385,39 @@
             return;
         }
         $('#print_button').attr("disabled", true);
-        $('#deliveryItemIds').val(JSON.stringify(deliveryItemIds));
+        $('#deliveryItemIdsJson').val(JSON.stringify(deliveryItemIds));
         $("#formPrintPdfsPost").submit();
-       
+
         setTimeout(function(){ $('#print_button').attr("disabled", false); }, 3000);
     }
 
     function findAndCheckDeliveryItem() {
         var regNum = $("#regNumber").val();
-        var rows = $('#mainTable').DataTable()
+        //var rows = $('#mainTable').DataTable()
+        //    .rows(function (idx, data, node) {
+        //        if (data.regNumber === regNum.trim())
+        //            data.checkRow = true;
+        //        return data.regNumber === regNum.trim() ?   true : false;
+        //    })
+        //    .nodes();
+
+        //$('input[type="checkbox"]', rows).prop('checked', true);
+        let idxChange = -1;
+        let dataChange = null;
+        $('#mainTable').DataTable()
             .rows(function (idx, data, node) {
-                if (data.regNumber === regNum.trim())
+                if (data.regNumber === regNum.trim()) {
                     data.checkRow = true;
-                return data.regNumber === regNum.trim() ?   true : false;
+                    data.checkRowOrder = (data.checkRow ? "0Z" : "1Z") + data.regNumber;
+                    idxChange = idx;
+                    dataChange = data;
+                }
             })
-            .nodes();
-        $('input[type="checkbox"]', rows).prop('checked', true);
+        if (idxChange >= 0) {
+            $('#mainTable').dataTable().fnUpdate(dataChange, idxChange, undefined, false);
+        }
         setMarkedLabel();
+        $('#mainTable').DataTable().column('0:visible').order('asc').draw();
     }
 
     function setMarkedLabel() {
@@ -367,15 +429,7 @@
         $('#labelRecap').html(message);
     }
 
-    $("#ForId").change(function () {
-        if ($('#btnFilter').attr("disabled") === true) {
-            return;
-        }
-        var filterData = JSON.parse($('#filterJson').val());
-        filterData.ForId = $("#ForId").val();
-        $('#filterJson').val(JSON.stringify(filterData));
-        LoadDataSet();
-    });
+
 
     $('#showCheckOnRegNum').change(function () {
         if ($('#showCheckOnRegNum').is(":checked")) {
@@ -385,9 +439,141 @@
             $('.check-on-regnum').hide();
         }
     });
+    function submitAllCheckDeliveryItemChange() {
+        if ($('#mainTable').DataTable() === undefined) return;
 
+        var deliveryItemIds = getMarkedDeliveryItemIds();
+        if (deliveryItemIds.length === 0) {
+            messageHelper.ShowErrorMessage('Изберете поне еднa призовка/съобщение.');
+            $(window).scrollTop(0);
+            return;
+        }
+        var filterData = JSON.parse($('#filterJson').val());
+        filterData.NewLawUnitId = $('#NewLawUnitId').val();
+        filterData.NewDeliveryAreaId = $('#NewDeliveryAreaId').val();
+        filterData.NewCourtId = $('#NewCourtId').val();
+        if (filterData.NewCourtId == filterData.CourtId) {
+            if (filterData.NewLawUnitId == "-1" && filterData.NewDeliveryAreaId == "-1") {
+                messageHelper.ShowErrorMessage('Изберете нов призовкар или район.');
+                $(window).scrollTop(0);
+                return;
+            }
+        }
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("SaveChangeLawUnit")",
+            dataType: "json",
+            cache: false,
+            data: { deliveryItemIdsJson: deliveryItemIds, filterData : filterData },
+            success: function (response) {
+                if (response.result) {
+                    messageHelper.ShowSuccessMessage("@Html.Raw(@MessageConstant.Values.SaveOK)");
+                    $("#btnFilter").trigger("click");
+                   // window.location.href = "/";
+                }
+                else
+                {
+                    messageHelper.ShowErrorMessage("@Html.Raw(@MessageConstant.Values.SaveFailed)");
+                }
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+     function getToCourtLawUnitAndArea(toCourtId, deliveryAreaId, lawUnitId) {
+        lawUnitType = $('#NewLawUnitType').val();
+        console.log(lawUnitType);
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("LoadDataLawUnitAndAreaNew", "CaseNotification")',
+            dataType: "json",
+            cache: false,
+            data: { toCourtId: toCourtId, lawUnitType: lawUnitType },
+            success: function (response) {
+                $('#NewDeliveryAreaId').empty().trigger("change");
+                $('#NewDeliveryAreaId').select2({
+                    language: "bg",
+                    data: response.deliveryAreaDdl
+                });
+                var arrSelect = response.deliveryAreaDdl.filter(function (el) {
+                    if (el.id == deliveryAreaId)
+                        return true;
+                    else
+                        return false;
+                });
+                if (arrSelect.length <= 0)
+                    deliveryAreaId = -1;
+                $('#NewDeliveryAreaId').val(deliveryAreaId).trigger('change');
+
+                $('#NewLawUnitId').empty().trigger("change");
+                $('#NewLawUnitId').select2({
+                    language: "bg",
+                    data: response.lawUnitDdl
+                });
+                var arrSelect = response.lawUnitDdl.filter(function (el) {
+                    if (el.id == lawUnitId)
+                        return true;
+                    else
+                        return false;
+                });
+                if (arrSelect.length <= 0)
+                    lawUnitId = -1;
+                $('#NewLawUnitId').val(lawUnitId).trigger('change');
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+    function DeliveryAreaIdChange() {
+        var deliveryAreaId = $("#NewDeliveryAreaId").val();
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("getLawUnitId", "DeliveryArea")",
+            dataType: "json",
+            cache: false,
+            data: { deliveryAreaId: deliveryAreaId },
+            success: function (response) {
+                $("#NewLawUnitId").val(response.lawUnitId).trigger('change');
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    };
+    function printNotificationRaw(id) {
+        window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
+    }
     $( document ).ready(function() {
         $("#showCheckOnRegNum").trigger("change");
-      //  $("#btnFilter").trigger("click");
+        //  $("#btnFilter").trigger("click");
+        $('#NewCourtId').select2({
+            language: "bg"
+        });
+        $('#NewDeliveryAreaId').select2({
+            language: "bg"
+        });
+        $('#NewLawUnitId').select2({
+            language: "bg"
+        });
+        $('#NewCourtId').on('select2:select', function (e) {
+            getToCourtLawUnitAndArea($('#NewCourtId').val(), -1, -1);
+        });
+        $('#NewLawUnitType').change(function (e) {
+            getToCourtLawUnitAndArea($('#NewCourtId').val(), -1, -1);
+        });
+        $('#NewDeliveryAreaId').on('select2:select', function (e) {
+            DeliveryAreaIdChange();
+        });
+        $('#ForId').select2({
+            language: "bg"
+        });
+        $("#ForId").on('select2:select', function (e) {
+            if ($('#btnFilter').attr("disabled") === true) {
+                return;
+            }
+            var filterData = JSON.parse($('#filterJson').val());
+            filterData.ForId = $("#ForId").val();
+            $('#filterJson').val(JSON.stringify(filterData));
+            LoadDataSet();
+        });
     });
 </script>

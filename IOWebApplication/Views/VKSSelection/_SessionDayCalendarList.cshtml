@@ -1,0 +1,21 @@
+﻿@model List<VksSessionDayCalendarVM>
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+
+
+<table width="100%" class="" style="border-collapse:collapse;">
+@foreach (var item in Model)
+{
+    <partial name="_SessionDayCalendar" model="@item" />
+}
+</table>
+
+
+<style>
+    .tbl-day-lawunit td {
+    padding:0 3px;
+
+
+    }
+</style>

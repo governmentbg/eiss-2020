@@ -46,7 +46,8 @@
                         d.caseId = @Model.Id;
                         d.caseSessionId = @(Model.CaseSessionId??0);
                         d.caseSessionActId = @(Model.CaseSessionActId??0);
-                    }
+                    },
+                    initialCall: false
                 },
                 deferLoading: deferLoadingOnTab('#caseNotificationMainTable'),
                 columns: [

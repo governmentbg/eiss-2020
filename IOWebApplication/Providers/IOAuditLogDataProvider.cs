@@ -15,8 +15,13 @@ namespace IOWebApplication.Providers
     public class IOAuditLogDataProvider : AuditDataProvider
     {
         private readonly IConfiguration config;
+        //private readonly IRepository repo;
         private readonly IUserContext userContext;
 
+        //public IOAuditLogDataProvider(IConfiguration _config)
+        //{
+        //    config = _config;
+        //}
         public IOAuditLogDataProvider(IConfiguration _config, IUserContext _userContext)
         {
             config = _config;
@@ -82,6 +87,24 @@ namespace IOWebApplication.Providers
 
         public override void ReplaceEvent(object eventId, AuditEvent auditEvent)
         {
+            //var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            //optionsBuilder.UseNpgsql(config.GetConnectionString("DefaultConnection"));
+
+            //using (var dbContext = new ApplicationDbContext(optionsBuilder.Options))
+            //{
+            //    using (var repo = new Repository(dbContext))
+            //    {
+            //        var evt = repo.GetById<AuditLog>(eventId);
+
+            //        if (evt != null)
+            //        {
+            //            evt.UpdatedDate = DateTime.Now;
+            //            evt.Data = auditEvent.ToJson();
+
+            //            repo.SaveChanges();
+            //        }
+            //    }
+            //}
         }
 
         public override Task ReplaceEventAsync(object eventId, AuditEvent auditEvent)

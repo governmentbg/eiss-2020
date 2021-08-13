@@ -57,11 +57,10 @@ namespace IOWebApplication.Core.Services
                                         .Include(x => x.UserExpired)
                                         .ThenInclude(x => x.LawUnit)
                                         .Where(x => x.DateExpired != null)
-                                        .Where(x => x.SourceType == SourceTypeSelectVM.Document)
                                         .Where(x => filter.DeactivateDateFrom.OrMinDate() <= x.DateExpired && filter.DeactivateDateTo.OrMaxDate() >= x.DateExpired);
                         var tbl = repo.All<Document>().Include(x => x.DocumentType);
 
-                        result = (from f in files
+                        result = (from f in files.Where(x => x.SourceType == SourceTypeSelectVM.Document)
                                   join d in tbl on f.SourceIdNumber equals d.Id
                                   where d.CourtId == userContext.CourtId
                                   select new DeactivateItemVM
@@ -73,7 +72,23 @@ namespace IOWebApplication.Core.Services
                                       DeactivateUserName = f.UserExpired.LawUnit.FullName,
                                       DeactivateDate = f.DateExpired.Value,
                                       DeactivateDescription = f.DescriptionExpired
-                                  }).AsQueryable();
+                                  });
+                        var tblN = repo.All<CaseNotification>();
+                        var notificationFiles = (from f in files.Where(x => x.SourceType == SourceTypeSelectVM.CaseNotificationReturn)
+                                                 join n in tblN on f.SourceIdNumber equals n.Id
+                                                 where n.CourtId == userContext.CourtId
+                                                 select new DeactivateItemVM
+                                                 {
+                                                     SourceType = filter.SourceType,
+                                                     SourceId = f.Id,
+                                                     SourceInfo = $"{f.Title} : {f.FileName}",
+                                                     SourceDate = f.DateUploaded,
+                                                     DeactivateUserName = f.UserExpired.LawUnit.FullName,
+                                                     DeactivateDate = f.DateExpired.Value,
+                                                     DeactivateDescription = f.DescriptionExpired
+                                                 });
+                        result = result.Union(notificationFiles)
+                                       .AsQueryable();
                     }
                     break;
                 case SourceTypeSelectVM.CaseNotification:

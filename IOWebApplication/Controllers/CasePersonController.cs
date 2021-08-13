@@ -206,7 +206,7 @@ namespace IOWebApplication.Controllers
 
         void SetViewbag(int caseId, int? caseSessionId, int caseGroupId, CasePersonVM model)
         {
-            ViewBag.PersonRoleId_ddl = nomService.GetDropDownList<PersonRole>(true, false, false);
+            //ViewBag.PersonRoleId_ddl = nomService.GetDropDownList<PersonRole>(true, false, false);
             ViewBag.PersonRolesForArrested = nomService.GetPersonRoleIdsByGroup(NomenclatureConstants.PersonRoleGroupings.RoleArrested);
 
             ViewBag.PersonMaturityId_ddl = nomService.GetDropDownList<PersonMaturity>();
@@ -741,7 +741,9 @@ namespace IOWebApplication.Controllers
                 if (service.CasePerson_SaveExpiredPlus(model))
                 {
                     SetAuditContextDelete(service, SourceTypeSelectVM.CasePerson, model.Id);
-                    SetSuccessMessage(MessageConstant.Values.CasePersonExpireOK);
+                    var isExistCFP = service.IsExistFastProcess(expireObject.CaseId, expireObject.Id);
+                    var resMess = MessageConstant.Values.CasePersonExpireOK + (isExistCFP ? " За това лице има данни в заповедното производство!" : string.Empty);
+                    SetSuccessMessage(resMess);
                     return Json(new { result = true, redirectUrl = Url.Action("CasePreview", "Case", new { id = expireObject.CaseId }) });
                 }
                 else
@@ -925,6 +927,21 @@ namespace IOWebApplication.Controllers
             SetHelpFile(HelpFileValues.CasePerson);
         }
 
+        [HttpPost]
+        public IActionResult CasePersonInheritance_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var expireObject = service.GetById<CasePersonInheritance>(model.Id);
+            if (service.SaveExpireInfo<CasePersonInheritance>(model))
+            {
+                SetSuccessMessage(MessageConstant.Values.CaseLoadIndexExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("IndexInheritance", "CasePerson", new { casePersonId = expireObject.CaseId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
+
         /// <summary>
         /// Списък с мерки към лице
         /// </summary>
@@ -1004,8 +1021,8 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         private string IsValidCasePersonMeasure(CasePersonMeasureEditVM model)
         {
-            model.MeasureCourtId = NomenclatureExtensions.EmptyToNull(model.MeasureCourtId);
-            model.MeasureInstitutionId = NomenclatureExtensions.EmptyToNull(model.MeasureInstitutionId);
+            model.MeasureCourtId = model.MeasureCourtId.EmptyToNull(0);
+            model.MeasureInstitutionId = model.MeasureInstitutionId.EmptyToNull(0);
 
             if ((model.MeasureCourtId == null) && (model.MeasureInstitutionId == null))
                 return "Изберете съд или институция, определила мярката";

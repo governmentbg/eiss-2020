@@ -26,7 +26,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         public int? MilitaryRangId { get; set; }
 
         [Column("person_maturity_id")]
-        public int? PersonMaturityId { get; set; }
+        public int? PersonMaturityId { get; set; }       
 
         [ForeignKey(nameof(DocumentId))]
         public virtual Document Document { get; set; }

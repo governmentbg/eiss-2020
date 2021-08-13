@@ -14,14 +14,14 @@
 }
 <div class="row">
     <div class="col-md-12 col-lg-12">
-        @using (Html.BeginForm())
-        {
+        <form id="formEdit" asp-action="EisppEvent" method="post">
             @Html.ValidationSummary()
             @Html.HiddenFor(x => x.SourceType)
             @Html.HiddenFor(x => x.SourceId)
             @Html.HiddenFor(x => x.CaseId)
             @Html.HiddenFor(x => x.CaseCodeId)
             @Html.HiddenFor(x => x.CaseTypeId)
+            @Html.HiddenFor(x => x.SaveIfHaveDiff)
             <div class="row">
                 <div class="col-lg-2 col-md-6">
                     <div id="divEISPP">
@@ -93,16 +93,38 @@
                     @Html.EditorFor(x => x.CaseComplaintId, "GenericDropDown")
                 </div>
             </div>
+            <div class="row case-added">
+                <div class="col-lg-10">
+                    @Html.EditorFor(x => x.CaseAddedId, "GenericDropDown")
+                </div>
+            </div>
             <div class="form-group">
                 @if (isGetCaseSaved != true)
                 {
-                    <input type="submit" value="Генерирай" class="btn btn-success" />
+                    <input id="btnSave" type="submit" value="Генерирай" class="btn btn-success" />
                 }
                 @await Html.PartialAsync("_ButtonClose")
             </div>
-        }
+        </form>
     </div>
 </div>
+@{
+    @if (Model.EisppPersonRegIXDiff?.Count > 0)
+    {
+        <div id="divEisppPersonRegIXDiff" style="display:none">
+            @for (int i = 0; i < Model.EisppPersonRegIXDiff.Count; i++)
+            {
+                @await Html.PartialAsync("_EisppPersonRegIXDiff", Model.EisppPersonRegIXDiff[i])
+            }
+            <div class="row">
+                <div class="col-lg-12">
+                    <input type="button" value="Потвърди" onclick="submitEvent()" class="btn btn-success" />
+                    <input type="button" value="Отказ" onclick=" HideModal()" class="btn btn-danger" />
+                </div>
+            </div>
+        </div>
+    }
+}
 
 <script>
     var onePersonEvent = JSON.parse('@Html.Raw(@ViewBag.OnePersonEvent_json)');
@@ -169,6 +191,13 @@
             $('#PersonOldMeasureId').attr("disabled", true);
         }
 
+        if (eventTypeId == @EISPPConstants.EventType.CaseUnion) {
+            $('.case-added').show();
+            $('#CaseAddedId').attr("disabled", false);
+        } else {
+            $('.case-added').hide();
+            $('#CaseAddedId').attr("disabled", true);
+        }
         $.ajax({
             type: "POST",
             url: '@Url.Action("GetCaseSessionActForEvent", "EISPP")',
@@ -178,6 +207,8 @@
             success: function (response) {
                 fillCombo(response.sessionActDDL, $('#CaseSessionActId'));
                 setComboSelectedOrFirst($('#CaseSessionActId'), sessionActId);
+                if (response.sessionActId != 0)
+                    setComboSelectedOrFirst($('#CaseSessionActId'), response.sessionActId);
                 var isVisible = (eventTypeId != @EISPPConstants.EventType.ComplaintReceived);
                 setRulesRange($('#CaseSessionActId'), response.sessionActRequired, isVisible);
                 GetPersonMeasure();
@@ -274,6 +305,31 @@
             error: log_ajax_err
         });
     }
+    function GetExactCaseType() {
+        let caseId = $('#CaseId').val();
+        let eventType = $('#EventType').val();
+        let connectedCaseId = $('#ConnectedCaseId').val();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetExactCaseType", "EISPP")',
+            dataType: "json",
+            cache: false,
+            data: {
+                caseId: caseId,
+                eventType: eventType,
+                connectedCaseId: connectedCaseId
+            },
+            success: function (response) {
+                fillCombo(response.exactCaseTypeDDL, $('#ExactCaseType'), $('#ExactCaseType').val());
+                if (response.exactCaseType !== "0")
+                   setComboSelectedOrFirst($('#ExactCaseType'), response.exactCaseType);
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
+
     $(document).ready(function () {
         $('#EventType').change(function () {
             ChangeEventType();
@@ -292,5 +348,39 @@
         });
         $('#CasePersonId').change();
         $('#EISPPNumber').prop('readOnly', true);
+        $('#ConnectedCaseId').change(function () {
+            GetExactCaseType();
+        });
+        $('#ConnectedCaseId').change();
+        $(document).on('click', '#btnSave', function (e) {
+            saveClickSubmitDisable(this);
+            e.preventDefault();
+
+            if (!$(this).parents('form:first').valid()) {
+                saveClickSubmitEnable();
+            }
+            return false;
+        });
+        if ($('#divEisppPersonRegIXDiff').length > 0) {
+            $('#SaveIfHaveDiff').val(false);
+            let data = $('#divEisppPersonRegIXDiff').html();
+            ShowModalDialog('Потвърдете генериране на събитие', data, true);
+            setTimeout(function () { $('#btnSave').attr("disabled", false); }, 3000);
+        }
     });
+    function submitEvent() {
+        $('#SaveIfHaveDiff').val(true);
+        $('#formEdit').submit();
+    }
+    function saveClickSubmitDisable(sender) {
+        var disabled = $(sender).is(':disabled') || $(sender).attr('disabled');
+
+        if (!disabled) {
+            $(sender).attr('disabled', 'disabled');
+            $(sender).parents('form:first').trigger('submit');
+        }
+    }
+    function saveClickSubmitEnable() {
+        $('#btnSave').removeAttr("disabled");
+    }
 </script>

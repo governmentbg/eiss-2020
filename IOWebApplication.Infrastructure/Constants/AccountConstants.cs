@@ -41,6 +41,11 @@ namespace IOWebApplication.Infrastructure.Constants
             public const string DeliveryUser = "DEL_USER";
 
             /// <summary>
+            /// 3.5. Ръководство
+            /// </summary>
+            public const string CourtManager = "COURT_MAN";
+
+            /// <summary>
             /// 4. Счетоводство
             /// </summary>
             public const string MoneyAccount = "MONEY";
@@ -49,6 +54,11 @@ namespace IOWebApplication.Infrastructure.Constants
             /// 5. Статистика
             /// </summary>
             public const string Statistic = "STAT";
+
+            /// <summary>
+            /// 5.1 Статистика
+            /// </summary>
+            public const string StatisticRegix = "STAT_REGIX";
 
             /// <summary>
             /// 6. Супервайзор
@@ -111,7 +121,10 @@ namespace IOWebApplication.Infrastructure.Constants
                 public const string CaseNotification = "MODULE_CASE_NOTIFICATION";
 
                 public const string HrAdministration = "HR_ADMINISTRATION";
-            }
+
+                public const string VKSAdministration = "VKS_ADMINISTRATION";
+
+      }
 
             public static bool IsInFeature(ClaimsPrincipal userClaimsPrincipal, string feature)
             {
@@ -135,11 +148,13 @@ namespace IOWebApplication.Infrastructure.Constants
                     case Modules.CaseData:
                         result = userClaimsPrincipal.IsInRole(Roles.CaseInit)
                             || userClaimsPrincipal.IsInRole(Roles.CaseEdit)
-                            || userClaimsPrincipal.IsInRole(Roles.DocumentEdit);
+                            || userClaimsPrincipal.IsInRole(Roles.DocumentEdit)
+                            || userClaimsPrincipal.IsInRole(Roles.CourtManager);
                         break;
                     case Modules.CaseAccessData:
                         result = userClaimsPrincipal.IsInRole(Roles.CaseInit)
-                            || userClaimsPrincipal.IsInRole(Roles.DocumentEdit);
+                            || userClaimsPrincipal.IsInRole(Roles.DocumentEdit)
+                            || userClaimsPrincipal.IsInRole(Roles.CourtManager);
                         break;
                     case Modules.CaseNotification:
                         result = userClaimsPrincipal.IsInRole(Roles.DeliveryUser)
@@ -150,7 +165,11 @@ namespace IOWebApplication.Infrastructure.Constants
                         result = userClaimsPrincipal.IsInRole(Roles.Administrator)
                                 || userClaimsPrincipal.IsInRole(Roles.HrAdmin);
                         break;
-                }
+                   case Modules.VKSAdministration:
+                         result = userClaimsPrincipal.IsInRole(Roles.Administrator)
+                          || userClaimsPrincipal.IsInRole(Roles.CourtManager);
+            break;
+        }
                 if (!result)
                 {
                     result = userClaimsPrincipal.IsInRole(Roles.GlobalAdministrator);

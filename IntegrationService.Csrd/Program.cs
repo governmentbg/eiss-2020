@@ -12,6 +12,8 @@ namespace IntegrationService.Csrd
     class Program
     {
 
+        //public static HttpClientHandler HttpClientHandler_CSRD;
+        //public static HttpClientHandler HttpClientHandler_ISPN;
         static void Main(string[] args)
         {
             BuildHost(args)
@@ -54,6 +56,30 @@ namespace IntegrationService.Csrd
                 }).Build();
         }
 
+        //private static void SetHttpHandlers(IConfiguration config)
+        //{
+        //    var csrdCertificatePath = config.GetValue<string>("CSRD:CertificatePath");
+        //    var csrdCcertificatePassword = config.GetValue<string>("CSRD:CertificatePassword");
+        //    HttpClientHandler_CSRD = new HttpClientHandler();
+        //    if (!string.IsNullOrEmpty(csrdCertificatePath))
+        //    {
+        //        var _cert = new X509Certificate2(csrdCertificatePath, csrdCcertificatePassword);
+        //        HttpClientHandler_CSRD.ClientCertificates.Add(_cert);
+        //        HttpClientHandler_CSRD.ClientCertificateOptions = ClientCertificateOption.Manual;
+        //        HttpClientHandler_CSRD.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+        //    }
+
+        //    var ispnCertificatePath = config.GetValue<string>("ISPN:CertificatePath");
+        //    var ispnCcertificatePassword = config.GetValue<string>("ISPN:CertificatePassword");
+        //    HttpClientHandler_ISPN = new HttpClientHandler();
+        //    if (!string.IsNullOrEmpty(ispnCertificatePath))
+        //    {
+        //        var _cert = new X509Certificate2(ispnCertificatePath, ispnCcertificatePassword);
+        //        HttpClientHandler_ISPN.ClientCertificates.Add(_cert);
+        //        HttpClientHandler_ISPN.ClientCertificateOptions = ClientCertificateOption.Manual;
+        //        HttpClientHandler_ISPN.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
+        //    }
+        //}
 
         /// <summary>
         /// Stupid name, because it is NOT a WebHost, 

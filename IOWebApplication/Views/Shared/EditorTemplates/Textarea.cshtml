@@ -8,6 +8,7 @@
 }
 <div class="form-group">
     <label asp-for="@Model" class="control-label @reqClass"></label>
-    <textarea asp-for="@Model" class="form-control @_class" rows=@_rows></textarea>
+    @Html.TextArea("", Model.Decode(), new { @class = "form-control "+ _class, rows = _rows })
+    @*<textarea asp-for="@Model" class="form-control @_class" rows=@_rows></textarea>*@
     <span asp-validation-for="@Model" class="text-danger"></span>
 </div>

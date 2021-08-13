@@ -22,6 +22,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "№, дата и съдържане на решението предоставен достъп пълен, частичен или отказ")]
         public string Decision { get; set; }
+
+        [Display(Name = "Забележка")]
+        public string DecisionDescription { get; set; }
     }
 
     public class PublicInformationFilterReportVM

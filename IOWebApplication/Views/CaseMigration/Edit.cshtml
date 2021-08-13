@@ -134,6 +134,15 @@
                 console.log(instControl);
                 loadInstitution(instControl, _inst);
             }).trigger('change');
+
+            $('#ReturnCaseId').change(function () {
+                requestGET_Json('@Url.Action("Get_CaseInfo","Ajax")', { caseId: $(this).val() }, function (info) {
+                    if (info) {
+                        var control = $('#SendToCourtId').val(info.courtId).parents('.court-container:first').find('.court-control:first');
+                        loadCourts(control, info.courtId);
+                    }
+                });
+            });
         });
 
         function migActSelect(sender) {

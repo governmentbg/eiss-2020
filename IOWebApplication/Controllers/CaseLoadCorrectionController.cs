@@ -413,6 +413,27 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
+        [HttpPost]
+        public IActionResult CaseLoadCorrection_ExpiredInfo(ExpiredInfoVM model)
+        {
+            var expireObject = service.GetById<CaseLoadCorrection>(model.Id);
+
+            if (service.IsExistCaseLoadIndex(expireObject.CaseId, expireObject.CorrectionDate))
+            {
+                return Json(new { result = false, message = "По това дело има начислена натовареност след датата на коригиращият кофициент." });
+            }
+
+            if (service.SaveExpireInfo<CaseLoadCorrection>(model))
+            {
+                SetSuccessMessage(MessageConstant.Values.CaseLoadIndexExpireOK);
+                return Json(new { result = true, redirectUrl = Url.Action("Index", "CaseLoadCorrection", new { CaseId = expireObject.CaseId }) });
+            }
+            else
+            {
+                return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
+            }
+        }
+
         #endregion
     }
 }

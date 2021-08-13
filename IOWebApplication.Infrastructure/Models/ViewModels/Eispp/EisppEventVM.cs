@@ -70,7 +70,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         public int? CaseComplaintId { get; set; }
 
         /// <summary>
-        /// Свързано дело което се получава
+        /// Причина за изпращане на НД
         /// </summary>
         [Display(Name = " Причина за изпращане на НД")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете причина")]
@@ -107,6 +107,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         [Range(1, int.MaxValue, ErrorMessage = "Изберете Наложена мяркa")]
         public int? PersonMeasureId { get; set; }
 
+        /// <summary>
+        /// Обединено дело
+        /// </summary>
+        [Display(Name = "Обединено дело")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Обединено дело")]
+        public int? CaseAddedId { get; set; }
+
         [Display(Name = "ЕИСПП номер на НП")]
         [Required(ErrorMessage = "Невалиден {0}.")]
         [RegularExpression("[А-Я]{3}[0-9]{8}[В-Г]{1}[А-Я]{2}", ErrorMessage = "Невалиден {0}.")]
@@ -116,5 +123,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         /// Дали редиректа е от делото или от съд
         /// </summary>
         public string Mode { get; set; }
+        
+        public bool SaveIfHaveDiff { get; set; }
+        
+        public List<EisppPersonRegIXVM> EisppPersonRegIXDiff { get; set; }
     }
 }

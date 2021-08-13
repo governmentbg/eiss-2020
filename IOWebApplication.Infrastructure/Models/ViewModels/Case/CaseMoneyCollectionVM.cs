@@ -14,6 +14,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string CaseMoneyCollectionGroupLabel { get; set; }
         public string CaseMoneyCollectionTypeLabel { get; set; }
         public string CaseMoneyCollectionKindLabel { get; set; }
+        public int? CaseMoneyCollectionKindId { get; set; }
+        public int? CaseMoneyCollectionKindOrder { get; set; }
         public string CurrencyLabel { get; set; }
         public string CurrencyCode { get; set; }
         public int CurrencyId { get; set; }

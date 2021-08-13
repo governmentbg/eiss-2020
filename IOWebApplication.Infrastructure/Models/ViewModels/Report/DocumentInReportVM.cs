@@ -24,6 +24,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public string TaskName { get; set; }
         
         public int DocumentNumberValue { get; set; }
+
+        [Display(Name = "Източник на постъпване")]
+        public string DeliveryTypeGroup { get; set; }
+
     }
 
     public class DocumentInFilterReportVM

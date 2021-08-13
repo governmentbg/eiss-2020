@@ -5,8 +5,10 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using IO.LogOperation.Models;
+using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +18,12 @@ namespace IOWebApplication.Controllers
     public class ScanController : BaseController
     {
         private readonly ICdnService cdnService;
+        private readonly IMQEpepService epepService;
 
-        public ScanController(ICdnService _cdnService)
+        public ScanController(ICdnService _cdnService, IMQEpepService _epepService)
         {
             cdnService = _cdnService;
+            epepService = _epepService;
         }
 
         [HttpGet]
@@ -42,8 +46,8 @@ namespace IOWebApplication.Controllers
             if (string.IsNullOrEmpty(model.FileName))
             {
                 model.FileName = $"ScannedDocument{DateTime.Now.ToString("ddMMyyHHmmss")}.pdf";
-            } 
-            else if(!model.FileName.EndsWith(".pdf"))
+            }
+            else if (!model.FileName.EndsWith(".pdf"))
             {
                 model.FileName += ".pdf";
             }
@@ -63,6 +67,7 @@ namespace IOWebApplication.Controllers
             if (response != null && response.Succeded)
             {
                 fileModel.FileId = response.FileId;
+                epepService.AppendFile(fileModel, EpepConstants.ServiceMethod.Add);
                 SaveLogOperation("Scan", "Scan", $"Добавен нов файл {model.FileName}:{model.Title}", OperationTypes.Patch, fileModel.SourceId);
 
                 return Redirect(model.ReturnUrl.AbsoluteUri);
@@ -70,7 +75,7 @@ namespace IOWebApplication.Controllers
             else
             {
                 TempData[MessageConstant.ErrorMessage] = MessageConstant.Values.FileUploadFailed;
-                
+
                 return Redirect(model.ReturnUrl.AbsoluteUri);
             }
         }

@@ -2,6 +2,7 @@
 @using IOWebApplication.Extensions
 @using IOWebApplication.Infrastructure.Models
 @using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Core.Helper
 @{
     int flag = 0;
     EisppDropDownVM ddl;
@@ -18,6 +19,7 @@
             Flags = 0
         };
     }
+
     var add_class = ((string)ViewData["class"] ?? "");
     var reqClass = ViewData.ModelMetadata.GetIOReqClass();
     bool forEdit = ((ddl.Flags & 4) > 0) || (@Model == -1) || (@Model == 0);

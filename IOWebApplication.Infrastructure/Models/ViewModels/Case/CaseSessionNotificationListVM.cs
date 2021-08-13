@@ -14,13 +14,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public int RowNumber { get; set; }
         public int NotificationPersonType { get; set; }
         public int? NotificationListTypeId { get; set; }
-        public string AddressString { get; set; }
-        public DateTime? DateSend { get; set; }
-        public string Remark { get; set; }
         public int PersonType { get; set; }
         public int RoleKindId { get; set; }
         public string RoleKindLabel { get; set; }
         public bool IsDeleted { get; set; }
         public string LinkForPersonString { get; set; }
+        public string AddressString { get; set; }
+        public string Remark { get; set; }
+        public List<CaseSessionNotificationListNotificationVM> Notifications { get; set; }
     }
 }

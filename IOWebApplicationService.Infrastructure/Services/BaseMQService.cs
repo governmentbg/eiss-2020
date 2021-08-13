@@ -1,21 +1,19 @@
-﻿using IO.SignTools.Contracts;
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
+using IOWebApplication.Infrastructure.Models.Integrations.DW;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
 
 namespace IOWebApplicationService.Infrastructure.Services
@@ -121,6 +119,9 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
             else
             {
+
+
+
                 var result = FetchHighPriorityItems(fetchCount);
                 if (result != null)
                     if (result.Any())
@@ -136,7 +137,38 @@ namespace IOWebApplicationService.Infrastructure.Services
                            .ToList();
             }
         }
+        /// <summary>
+        /// Връща чакащите заявки в опашката
+        /// </summary>
+        /// <returns></returns>
+        protected bool ResetMQ_WaitingEisspNoReply()
+        {
+            if (IntegrationTypeId != NomenclatureConstants.IntegrationTypes.EISPP)
+                return false;
+            var dateWrt = DateTime.Now.AddHours(-24);
+            var date2021 = new DateTime(2021, 1, 1);
+            var mqs = repo.All<MQEpep>()
+                          .Where(x => x.IntegrationTypeId == IntegrationTypeId)
+                          .Where(x => x.DateTransfered == null &&
+                                      x.IntegrationStateId == IntegrationStates.WaitingForReply &&
+                                      x.DateWrt < dateWrt &&
+                                      x.DateWrt > date2021 &&
+                                      x.ErrorCount < 5)
+                           .ToList();
 
+            foreach (var item in mqs)
+            {
+                item.IntegrationStateId = IntegrationStates.New;
+                item.DateWrt = DateTime.Now;
+                item.ErrorCount += 1;
+            }
+            if (mqs.Count > 0)
+            {
+                repo.SaveChanges();
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Връща чакащите заявки в опашката
@@ -144,10 +176,13 @@ namespace IOWebApplicationService.Infrastructure.Services
         /// <returns></returns>
         protected bool ResetMQ_Waiting()
         {
+            if (IntegrationTypeId == NomenclatureConstants.IntegrationTypes.EISPP)
+                return ResetMQ_WaitingEisspNoReply();
+
             var mqs = repo.All<MQEpep>()
-                            .Where(x => x.IntegrationTypeId == IntegrationTypeId)
-                           .Where(x => x.DateTransfered == null && IntegrationStates.ReturnToMQStates.Contains(x.IntegrationStateId ?? 0))
-                           .ToList();
+                          .Where(x => x.IntegrationTypeId == IntegrationTypeId)
+                          .Where(x => x.DateTransfered == null && IntegrationStates.ReturnToMQStatesNulls.Contains(x.IntegrationStateId))
+                          .ToList();
 
             foreach (var item in mqs)
             {
@@ -161,30 +196,30 @@ namespace IOWebApplicationService.Infrastructure.Services
             return false;
         }
 
-        protected bool AddIntegrationKey(MQEpep mq, Guid? Id)
+        protected bool AddIntegrationKey(MQEpep mq, Guid? Id, bool autoSaveChanges = true)
         {
             if (Id.HasValue)
             {
-                if (AddIntegrationKey(mq.SourceType, mq.SourceId, Id.ToString()))
+                if (AddIntegrationKey(mq.SourceType, mq.SourceId, Id.ToString(), autoSaveChanges))
                 {
 
                     mq.IntegrationStateId = IntegrationStates.TransferOK;
                     mq.DateTransfered = DateTime.Now;
                     mq.ReturnGuidId = Id.ToString();
                     AppendTimeElapsed(mq);
-                    repo.Update(mq);
+                    //repo.Update(mq);
 
                     switch (mq.SourceType)
                     {
                         case SourceTypeSelectVM.EpepUser:
                             var epepUser = repo.GetById<EpepUser>((int)mq.SourceId);
                             epepUser.EpepId = Id;
-                            repo.Update(epepUser);
+                            //repo.Update(epepUser);
                             break;
                         case SourceTypeSelectVM.EpepUserAssignment:
                             var epepUserAssignment = repo.GetById<EpepUserAssignment>((int)mq.SourceId);
                             epepUserAssignment.EpepId = Id;
-                            repo.Update(epepUserAssignment);
+                            //repo.Update(epepUserAssignment);
                             break;
                         default:
                             break;
@@ -215,7 +250,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             TimeSpan ts = DateTime.Now - startTime.Value;
             model.ErrorDescription = $"Elapsed:{ts.TotalSeconds:N3}s; {model.ErrorDescription}";
         }
-        protected bool AddIntegrationKey(int sourceType, long sourceId, string value)
+        protected bool AddIntegrationKey(int sourceType, long sourceId, string value, bool autoSaveChanges = true)
         {
 
             var model = new IntegrationKey()
@@ -227,7 +262,11 @@ namespace IOWebApplicationService.Infrastructure.Services
                 DateWrt = DateTime.Now
             };
             repo.Add(model);
-            return repo.SaveChanges() > 0;
+            if (autoSaveChanges)
+            {
+                repo.SaveChanges();
+            }
+            return true;
         }
 
         protected bool RemoveIntegrationKeys(MQEpep mq)
@@ -237,7 +276,10 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 .ToList();
 
             repo.DeleteRange(keys);
-            return repo.SaveChanges() > 0;
+            repo.SaveChanges();
+
+            return true;
+
         }
 
         /// <summary>
@@ -248,7 +290,7 @@ namespace IOWebApplicationService.Infrastructure.Services
         {
             var editItem = repo.All<MQEpep>()
                                 .Where(x => x.IntegrationTypeId == mq.IntegrationTypeId && x.SourceId == mq.SourceId && x.SourceType == mq.SourceType)
-                                .Where(x => EpepConstants.IntegrationStates.UnfinishedMQStates.Contains(x.IntegrationStateId ?? 0))
+                                .Where(x => EpepConstants.IntegrationStates.UnfinishedMQStatesNulls.Contains(x.IntegrationStateId))
                                 .Where(x => EpepConstants.Methods.EditMethods.Contains(x.MethodName))
                                 .Where(x => x.Id < mq.Id)
                                 .ToList();
@@ -259,7 +301,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                 {
                     item.IntegrationStateId = EpepConstants.IntegrationStates.DisabledByDelete;
                     item.ErrorDescription = $"Отменено поради заявка за изтриване с id={mq.Id}";
-                    repo.Update(item);
+                    //repo.Update(item);
                 }
                 repo.SaveChanges();
             }
@@ -284,7 +326,6 @@ namespace IOWebApplicationService.Infrastructure.Services
                 mq.DateTransfered = DateTime.Now;
                 mq.IntegrationStateId = IntegrationStates.TransferOK;
                 AppendTimeElapsed(mq);
-                repo.Update(mq);
                 repo.SaveChanges();
             }
             else
@@ -311,9 +352,13 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 mq.ErrorDescription = errorDescription;
             }
-            repo.Update(mq);
+
+            //var updResult = repo.ExecuteProc<UpdateDateTransferedVM>("public.update_mq_error({0},{1},{2},{3})", mq.Id, mq.IntegrationStateId, mq.ErrorCount, mq.ErrorDescription);
+            //repo.Detach(mq);
             repo.SaveChanges();
         }
+
+
         protected string AppendUpdateIntegrationKey(int sourceType, long sourceId)
         {
             string key = getKey(sourceType, sourceId);
@@ -331,9 +376,10 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         protected string getKey(int sourceType, long? sourceId)
         {
+            long _sourceId = sourceId ?? 0;
             return repo.AllReadonly<IntegrationKey>()
                                     .Where(x => x.IntegrationTypeId == IntegrationTypeId
-                                      && x.SourceType == sourceType && x.SourceId == sourceId)
+                                      && x.SourceType == sourceType && x.SourceId == _sourceId)
                                     .OrderBy(x => x.Id)
                                     .Select(x => x.OuterCode)
                                     .FirstOrDefault();
@@ -341,7 +387,13 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         protected Guid getKeyGuid(int sourceType, long? sourceId)
         {
-            string key = getKey(sourceType, sourceId);
+            if (sourceId == null)
+            {
+                return Guid.Empty;
+            }
+            long _sourceId = sourceId ?? 0;
+
+            string key = getKey(sourceType, _sourceId);
             if (!string.IsNullOrEmpty(key))
             {
                 return Guid.Parse(key);
@@ -351,7 +403,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                 return Guid.Empty;
             }
         }
-        protected Guid? getKeyGuidNullable(int sourceType, long? sourceId)
+        protected Guid? getKeyGuidNullable(int sourceType, long sourceId)
         {
             string key = getKey(sourceType, sourceId);
             if (!string.IsNullOrEmpty(key))
@@ -364,22 +416,6 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
         }
 
-        protected bool getParentKey(ref Guid? parentId, int sourceType, long? sourceId)
-        {
-            try
-            {
-                string res = getKey(sourceType, sourceId);
-                if (!string.IsNullOrEmpty(res))
-                {
-                    parentId = Guid.Parse(res);
-                    return true;
-                }
-            }
-            catch
-            {
-            }
-            return false;
-        }
 
         /// <summary>
         /// Връща външен код на номенклатура

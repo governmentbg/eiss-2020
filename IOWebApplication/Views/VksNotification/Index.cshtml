@@ -1,0 +1,189 @@
+﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.VksNotificationPrintFilter
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Constants
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Списък за държавен вестник";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<form id="formFilter" asp-action="Edit" method="post" class="quick-submit">
+    <div class="row">
+        <div class="col-md-2">
+            @Html.EditorFor(x => x.DateFrom, "DateTimeMonthYear")
+        </div>
+        <div class="col-md-2 text-right pb-15">
+            <br />
+            <button type="button" class="btn btn-primary" id="btnFilter" onclick=" LoadVksNotification()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <hr>
+    </div>
+</form>
+<div class="row for-show" style="display:none">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+<div class="row for-show" style="display:none">
+    <div class="col-md-2 submit-for-print" style="margin-top:25px;">
+        <button id="submit_button" onclick="submitForPrint()" class="btn btn-success btn-block">Генериране</button>
+    </div>
+    <div class="col-md-6" style="margin-top:25px;" id="PaperEdition" name="PaperEdition">
+    </div>
+</div>
+<form name="formVksNotificationPrint" id="formVksNotificationPrint" action="@Url.Action("EditTinyMCE")" method="post">
+    <input type="hidden" id="caseSessionIdsJson" name="caseSessionIdsJson" value="">
+    <input type="hidden" id="vksMonth" name="vksMonth" value="">
+</form>
+@section scripts {
+    <script>
+        var dataSet = [];
+
+        $(function () {
+            var table = $('#mainTable').DataTable({
+            data: dataSet,
+                serverSide: false,
+                'order': [[1, 'asc']],
+                "paging": false,
+                "lengthMenu": [[-1], ["Покажи всички"]],
+                dom: '<"row"<"col-sm-6 dataTables_buttons"B><"col-sm-6">>rtp',
+                buttons: {
+                    dom: {
+                        button: {
+                            tag: 'button',
+                            className: 'btn'
+                        },
+                        container: {
+                            className: ''
+                        }
+                    },
+                    buttons: ['io_colvis', 'io_excel', 'io_pdf', 'io_print']
+                },
+                columns: [
+                    {
+                        name: "checkRow",
+                        data: "checkRow",
+                        title: '<input type="checkbox" id="select-all" onclick="selectAll();">',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            if (type === 'display' || type === 'filter') {
+                                let checkVal = (row.checkRow ? " checked" : "");
+                                //  return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '" onchange="checkedRowChange(' + row.id + ')"' + checkVal + '>';
+                                return '<input id = "chk' + row.id + '" type="checkbox" value="' + row.id + '"'  + checkVal + '>';
+                            }
+                            return row.checkRow;
+                        }
+                    },
+                    {
+                        name: 'judicalCompositionLabel',
+                        data: 'judicalCompositionLabel',
+                        title: 'Отделение',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sessionTimeLabel',
+                        data: 'sessionTimeLabel',
+                        title: 'Заседание в',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseLabel',
+                        data: 'caseLabel',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseFromLabel',
+                        data: 'caseFromLabel',
+                        title: 'Обжалвано дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'leftSide',
+                        data: 'leftSide',
+                        title: 'подадена от',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'rightSide',
+                        data: 'rightSide',
+                        title: 'срещу',
+                        sortable: true,
+                        searchable: true
+                    }
+                ]
+            });
+        });
+        function selectAll() {
+            var check = $("#select-all").is(':checked');
+            var rows = $('#mainTable').DataTable().rows({ 'search': 'applied' }).nodes();
+            $('input[type="checkbox"]', rows).prop('checked', check);
+        }
+        function LoadVksNotification() {
+            $('#btnFilter').attr("disabled", true);
+            let DateFrom = $('#DateFrom').val();
+            console.log(DateFrom);
+           $.ajax({
+            type: "POST",
+            url: "@Url.Action("ListData")",
+            dataType: "json",
+               cache: false,
+               data: { DateFrom: DateFrom },
+               success: function (response) {
+                   dataSet = response.data;
+                   $("#select-all").prop('checked', false);
+                   var table = $('#mainTable').DataTable();
+                   table.clear();
+                   table.rows.add(dataSet).draw();
+                   $(".for-show").show();
+                   $("#vksMonth").val(response.vksMonth)
+                   if (response.paperEdition == null) {
+                       $('.submit-for-print').show();
+                       $('#PaperEdition').hide();
+                   } else {
+                       $('.submit-for-print').hide();
+                       $('#PaperEdition').html(response.paperEdition)
+                       $('#PaperEdition').show();
+                   }
+            },
+            complete: function () { },
+            error: log_ajax_err
+           });
+            $('#btnFilter').attr("disabled", false);
+        }
+        function submitForPrint() {
+            caseSessionIdsJson = getMarkedCaseSessionIds();
+            if (caseSessionIdsJson.length === 0) {
+                messageHelper.ShowErrorMessage('Изберете поне едно заседание.');
+                return;
+            }
+            $('#caseSessionIdsJson').val(JSON.stringify(caseSessionIdsJson));
+            $("#formVksNotificationPrint").submit();
+        }
+        function getMarkedCaseSessionIds() {
+            var caseSessionIds = [];
+            $('#mainTable').DataTable().$('input[type="checkbox"]').each(function () {
+                if (this.checked) {
+                    caseSessionIds.push(this.value);
+                }
+            });
+            return caseSessionIds;
+        }
+    </script>
+}

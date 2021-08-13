@@ -2,6 +2,14 @@
 @model EisppTSActualDataVM
 @if (Model != null)
 {
+    @if (!string.IsNullOrEmpty(Model.ErrorMsg))
+    {
+        <div class="text-muted text-bold">@Model.ErrorMsg</div>
+    }
+    @if (!string.IsNullOrEmpty(Model.LastRead))
+    {
+         <div class="text-muted" style="background: yellow;">@Model.LastRead</div>
+    }
     @if (Model.PhazeName != null)
     {
         <fieldset class="is-fieldset">

@@ -136,7 +136,11 @@ namespace IOWebApplication.Infrastructure.Http
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
 
             return await client.SendAsync(request);
+        }
 
+        public void AddBearerAuthorization(string autorizationToken)
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", autorizationToken);
         }
     }
 }

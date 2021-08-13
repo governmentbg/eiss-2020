@@ -111,7 +111,7 @@
             <div class="form-group">
                 @if (access.CanChange)
                 {
-                    <input type="submit" value="Запис" class="btn btn-success" />
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
                 }
                 <a asp-action="Index" asp-route-casePersonId="@Model.CasePersonId" class="btn btn-danger">Назад</a>
                 @if (Model.Id > 0)

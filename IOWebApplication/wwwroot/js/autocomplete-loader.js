@@ -29,6 +29,8 @@
     actLawBaseGet: rootDir + 'Ajax/Get_ActLawBase?id=',
     sourceSearch: rootDir + 'Ajax/Get_Source?query=',
     sourceGet: rootDir + 'Ajax/Get_Source?id=',
+    personRoleSearch: rootDir + 'Ajax/Get_PersonRoles?query=',
+    personRoleGet: rootDir + 'Ajax/Get_PersonRoles?id=',
 };
 
 
@@ -46,7 +48,7 @@ function initAutoCompleteControl(control, url, query, parentControl, paramFunc) 
     $(control).data('isloaded', true);
     $(control).autocomplete({
         minLength: minLength,
-        delay: 155,
+        delay: 250,
         appendTo: document.getElementById($(control).attr('id') + "list"),//'body',
         source: function source(request, response) {
             if (parentControl) {
@@ -190,7 +192,7 @@ function initCaseCode() {
                     caseTypeId = _val.join();
                 } else {
                     caseTypeId = _val;
-                }               
+                }
             }
             //debugger;
             return '&caseTypeId=' + caseTypeId;
@@ -306,11 +308,15 @@ function initDocument() {
         let documentControl = $(e).find('.document-control')[0];
 
         initAutoCompleteControl(documentControl, autocompleteUrls.documentSearch, undefined, undefined, function () {
-            if ($(e).data('courtId')) {
-                return '&courtId=' + $(e).data('courtId');
-            } else {
-                return '';
+
+            let addQ = '';
+            if ($(e).data('courtid')) {
+                addQ = '&courtId=' + $(e).data('courtid');
             }
+            if ($(e).data('docdir')) {
+                addQ += '&docDir=' + $(e).data('docdir');
+            }
+            return addQ;            
         });
 
         let documentVal = $(e).find('.document-val').val();
@@ -547,7 +553,11 @@ function initCaseReasons() {
 
         let _control = $(e).find('.caseReason-control')[0];
 
-        initAutoCompleteControl(_control, autocompleteUrls.caseReasonSearch);
+        initAutoCompleteControl(_control, autocompleteUrls.caseReasonSearch, undefined, undefined, function () {
+            let control = $(e).find('.caseReason-control')[0];
+            let _caseType = $(control).data('casetype');
+            return '&ct=' + _caseType;
+        });
 
         let _val = $(e).find('.caseReason-val').val();
         if (_val && _val !== '0') {
@@ -560,6 +570,29 @@ function loadCaseReasons(control, val) {
     $.get(autocompleteUrls.caseReasonGet + val)
         .done(function (data) {
             $(control).val(data[0].label);
+        }).fail(function (errors) {
+            console.log(errors);
+        });
+}
+
+function initPersonRole() {
+    $('.personrole-container').each(function (i, e) {
+
+        let _control = $(e).find('.personrole-control')[0];
+
+        initAutoCompleteControl(_control, autocompleteUrls.personRoleSearch);
+
+        let val = $(e).find('.personrole-val').val();
+        if (val && val !== '0') {
+            loadPersonRole(_control, val);
+        }
+    });
+}
+
+function loadPersonRole(autoControl, val) {
+    $.get(autocompleteUrls.personRoleGet + val)
+        .done(function (data) {
+            $(autoControl).val(data[0].label);
         }).fail(function (errors) {
             console.log(errors);
         });

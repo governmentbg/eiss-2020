@@ -30,8 +30,11 @@ using IOWebApplication.Infrastructure.Utils;
 using System.Text;
 using IOWebApplication.Infrastructure.Data.Models.EISPP;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Base;
 using static IOWebApplication.Infrastructure.Constants.EISPPConstants;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
+using IOWebApplication.Core.Helper.GlobalConstants;
+using Newtonsoft.Json.Converters;
 
 namespace IOWebApplication.Core.Services
 {
@@ -81,12 +84,31 @@ namespace IOWebApplication.Core.Services
 
         public async Task<EisppTSActualDataVM> GetActualData(string eisppNumber, bool readFromMongoIfFail = true)
         {
+            var errEisppNum = "Невалиден ЕИСПП Номер.";
+            if (eisppNumber?.Length == 14)
+            {
+                eisppNumber = eisppNumber.ToUpper();
+                var checkSum = CheckSum(eisppNumber);
+                if (checkSum == eisppNumber.Substring(12, 2))
+                {
+                    errEisppNum = string.Empty;   
+                }
+            }
+            if (!string.IsNullOrEmpty(errEisppNum))
+            {
+                var actualDataErrNum = new EisppTSActualDataVM()
+                {
+                    ErrorMsg = errEisppNum
+                };
+                return actualDataErrNum;
+            }
+
             string serviceUrl = configuration.GetValue<string>("Eispp:TS_ActualDataURI");
             TSAKTSTSWebServicePortClient client = new TSAKTSTSWebServicePortClient(TSAKTSTSWebServicePortClient.EndpointConfiguration.TSAKTSTSWebServicePortSoap11, serviceUrl);
             client.Endpoint.Binding.SendTimeout = new TimeSpan(0, 2, 0);
             client.Endpoint.Binding.ReceiveTimeout = new TimeSpan(0, 2, 0);
             string eisppCode = repo.GetById<Court>(userContext.CourtId)?.EISPPCode;
-
+            //eisppCode = "2086";
             var request = new execTSAKTSTSRequest()
             {
                 ZQKAKTSTS = new ZQKNPRAKTSTSType()
@@ -109,7 +131,6 @@ namespace IOWebApplication.Core.Services
                 execTSAKTSTSResponse1 response = await client.execTSAKTSTSAsync(request).ConfigureAwait(false);
                 await client.CloseAsync().ConfigureAwait(false);
                 //return Json(response);
-                var actualData = actualData_FromResponse(response.execTSAKTSTSResponse);
                 var xml = XmlUtils.SerializeObject(response);
                 CdnUploadRequest xmlRequest = new CdnUploadRequest()
                 {
@@ -121,22 +142,59 @@ namespace IOWebApplication.Core.Services
                     Title = $"КАРТА ЗА СЪСТОЯНИЕ НА НП: {eisppNumber} към { DateTime.Today.ToString("dd.MM.yyyy") }"
                 };
                 await cdnService.MongoCdn_AppendUpdate(xmlRequest).ConfigureAwait(false);
+                var actualData = actualData_FromResponse(response.execTSAKTSTSResponse);
+                try
+                {
+                    var eisppActualDataLog = new EisppAcutalDataLog()
+                    {
+                        EISSPNumber = eisppNumber,
+                        CourtId = userContext.CourtId,
+                        DateWrt = DateTime.Now,
+                    };
+                    repo.Add(eisppActualDataLog);
+                    repo.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, $"EISPP number {eisppNumber} EisppActualDataLog");
+                    actualData.ErrorMsg = "Възникна грешка EisppActualDataLog.";
+                    if (!readFromMongoIfFail)
+                        return actualData;
+                }
+
                 return actualData;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"EISPP number {eisppNumber}");
+                var eisppActualDataLog = new EisppAcutalDataLog()
+                {
+                    EISSPNumber = eisppNumber,
+                    CourtId = userContext.CourtId,
+                    DateWrt = DateTime.Now,
+                    ErrorDescription = ex.StackTrace,
+                    Response= ex.Message
+                };
+                repo.Add(eisppActualDataLog);
+                repo.SaveChanges();
             }
             if (readFromMongoIfFail)
             {
-                execTSAKTSTSResponse1 response = await GetTSAKTSTSResponse(eisppNumber).ConfigureAwait(false);
+                (var response, var dateUploaded) = await GetTSAKTSTSResponseAndDateWrt(eisppNumber).ConfigureAwait(false);
                 if (response != null)
                 {
                     var actualData = actualData_FromResponse(response.execTSAKTSTSResponse);
+                    actualData.ErrorMsg = "Възникна грешка при обмена на данни.";
+                    actualData.LastRead = $"Последно получени данни за този номер към {dateUploaded:dd.MM.yyyy hh:mm}";
                     return actualData;
                 }
             }
-            return null;
+
+            var actualDataErr = new EisppTSActualDataVM()
+            {
+                ErrorMsg = "Възникна грешка при комуникацията."
+            };
+            return actualDataErr;
         }
 
         private EisppTSActualDataVM actualData_FromResponse(execTSAKTSTSResponse response)
@@ -183,16 +241,19 @@ namespace IOWebApplication.Core.Services
                         if (fzlpne.fzlsid.ToString() == fzl.fzlsid)
                         {
                             var _crime = result.Crimes.FirstOrDefault(c => c.Sid == fzlpne.pnesid.ToString());
-                            if (_crime != null)
+                            if (_crime != null && person != null)
                             {
                                 var personCrime = new EisppTSActualDataPersonCrimeVM()
                                 {
                                     PersonSid = person.Sid,
                                     CrimeSid = _crime.Sid,
                                     CrimeNumber = _crime.CrimeNumber,
-                                    RoleCode = fzlpne.SCQ.scqrlq,
-                                    Role = GetElement("220", fzlpne.SCQ.scqrlq)
                                 };
+                                if (fzlpne.SCQ != null) {
+                                    personCrime.RoleCode = fzlpne.SCQ.scqrlq;
+                                    personCrime.Role = GetElement("220", fzlpne.SCQ.scqrlq);
+                                };
+
                                 person.PersonCrimes.Add(personCrime);
                             }
                         }
@@ -226,6 +287,11 @@ namespace IOWebApplication.Core.Services
             {
                 target.UicTypeId = NomenclatureConstants.UicTypes.LNCh;
                 target.Uic = source.fzllnc;
+                if (string.IsNullOrEmpty(source.fzllnc) && source.fzldtarjd > (new DateTime(1900,1,1)))
+                {
+                    target.UicTypeId = NomenclatureConstants.UicTypes.BirthDate;
+                    target.Uic = source.fzldtarjd.ToString(FormattingConstant.NormalDateFormat);
+                }
             }
             target.FirstName = source.fzlime;
             target.MiddleName = source.fzlprz;
@@ -290,6 +356,14 @@ namespace IOWebApplication.Core.Services
             target.CopyFrom(source);
             target.Person_SourceType = SourceTypeSelectVM.EisppPerson;
             target.Person_SourceCode = source.Sid;
+            if (string.IsNullOrEmpty(target.FirstName) && 
+                string.IsNullOrEmpty(target.MiddleName) &&
+                string.IsNullOrEmpty(target.FamilyName)
+               )
+            {
+                target.SplitPersonNames(source.FullName);
+                target.FullName = target.MakeFullName();
+            }
             foreach (var adr in source.Addresses)
             {
                 target.Addresses.Add(new DocumentPersonAddressVM()
@@ -308,13 +382,7 @@ namespace IOWebApplication.Core.Services
                                 .AsQueryable();
         }
 
-        public EisppTblElement GetByCode(string Code)
-        {
-            return repo.AllReadonly<EisppTblElement>()
-                                .Where(x => x.Code == Code)
-                                .FirstOrDefault();
-        }
-
+  
         public List<SelectListItem> GetDDL_EISPPTblElement(string EisppTblCode, bool addDefaultElement = true, bool addAllElement = false)
         {
             var selectListItems = repo.AllReadonly<EisppTblElement>()
@@ -343,25 +411,41 @@ namespace IOWebApplication.Core.Services
             return selectListItems;
         }
 
-        public List<SelectListItem> GetDDL_ConnectedCases(int caseId, bool addDefaultElement = true)
+        public (List<SelectListItem>, EisppBaseCase[]) GetDDL_ConnectedCases(int caseId, int eventType, bool addDefaultElement = true, bool addInstitutionName = false)
         {
             var aCase = repo.AllReadonly<Case>()
                             .Where(x => x.Id == caseId)
                             .FirstOrDefault();
-            var connectedCases = InitCaseCause(new Dictionary<string, int>(), caseId, aCase?.DocumentId ?? 0);
+            var connectedCases = InitCaseCause(new Dictionary<string, int>(), caseId, aCase?.DocumentId ?? 0, eventType);
             var caseTypes = GetDDL_EISPPTblElement(EisppTableCode.CaseType);
             var selectListItems = connectedCases.Select(x => new SelectListItem()
             {
-                Text = $"{x.ShortNumber} от {x.Year}г. {caseTypes.Where(c => c.Value == x.CaseType.ToString()).FirstOrDefault()?.Text}",
+                Text = $"{caseTypes.Where(c => c.Value == x.CaseType.ToString()).FirstOrDefault()?.Text} № {x.ShortNumber} от {x.Year}г." +
+                       (addInstitutionName? " "+x.InstitutionName: ""),
                 Value = x.ConnectedCaseId
             }).ToList() ?? new List<SelectListItem>();
+            foreach(var item in selectListItems)
+            {
+                if (!string.IsNullOrEmpty(item.Text))
+                {
+                    item.Text = item.Text.First().ToString().ToUpper() + item.Text.Substring(1);
+                }
+            }
             if (addDefaultElement)
             {
                 selectListItems = selectListItems
                     .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
                     .ToList();
             }
-            return selectListItems;
+            return (selectListItems, connectedCases);
+        }
+        public EisppBaseCase GetConnectedCase(int caseId, int eventType, string connectedCaseId)
+        {
+            var aCase = repo.AllReadonly<Case>()
+                            .Where(x => x.Id == caseId)
+                            .FirstOrDefault();
+            var connectedCases = InitCaseCause(new Dictionary<string, int>(), caseId, aCase?.DocumentId ?? 0, eventType);
+            return connectedCases.Where(x => x.ConnectedCaseId == connectedCaseId).FirstOrDefault();
         }
         public List<SelectListItem> GetDDL_CaseMigrations(int caseId)
         {
@@ -380,7 +464,7 @@ namespace IOWebApplication.Core.Services
         }
         
 
-        public EisppDropDownVM GetDDL_EISPPTblElementWithRules(string EisppTblCode, int eventType, string rulePath, bool addDefaultElement = true)
+        public EisppDropDownVM GetDDL_EISPPTblElementWithRules(string EisppTblCode, int eventType, string rulePath)
         {
             (var ruleIds, var flags) = rulesService.GetEisppRuleIds(eventType, rulePath);
             var selectListItemsQ = repo.AllReadonly<EisppTblElement>()
@@ -395,21 +479,18 @@ namespace IOWebApplication.Core.Services
                                            Value = x.Code
                                        }).ToList() ?? new List<SelectListItem>();
 
-            if (addDefaultElement)
-            {
-                selectListItems = selectListItems
-                    .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
-                    .ToList();
-            }
-
+            selectListItems = selectListItems
+             .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
+             .ToList();
+           
             return new EisppDropDownVM()
             {
                 Label = "",
                 Flags = flags,
-                DDList = selectListItems
+                DDList = selectListItems,
             };
         }
-        public EisppDropDownVM GetDDL_EISPPTblElementNomWithRules(int eventType, string rulePath, string nomRulePath, bool addDefaultElement = true)
+        public EisppDropDownVM GetDDL_EISPPTblElementNomWithRules(int eventType, string rulePath, string nomRulePath)
         {
             (var ruleIds, var flags) = rulesService.GetEisppRuleIds(eventType, nomRulePath);
             if (ruleIds.Any())
@@ -419,17 +500,15 @@ namespace IOWebApplication.Core.Services
             else
             {
                 var selectListItems = new List<SelectListItem>();
-                if (addDefaultElement)
-                {
-                    selectListItems = selectListItems
-                        .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
-                        .ToList();
-                }
+
+                selectListItems = selectListItems
+                    .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
+                    .ToList();
                 return new EisppDropDownVM()
                 {
                     Label = "",
                     Flags = 0,
-                    DDList = selectListItems
+                    DDList = selectListItems,
                 };
 
             }
@@ -481,7 +560,7 @@ namespace IOWebApplication.Core.Services
             };
         }
 
-        public EisppDropDownVM GetDDL_FeatureValTblElementWithRules(int eventType, string rulePath, List<SelectListItem> ek_countries, bool addDefaultElement = true)
+        public EisppDropDownVM GetDDL_FeatureValTblElementWithRules(int eventType, string rulePath, List<SelectListItem> ek_countries)
         {
             string nomRulePath = ".sbhvid";
 
@@ -541,7 +620,7 @@ namespace IOWebApplication.Core.Services
                         DDList = selectListItems
                     };
             }
-            return GetDDL_EISPPTblElementNomWithRules(eventType, rulePath, nomRulePath, addDefaultElement);
+            return GetDDL_EISPPTblElementNomWithRules(eventType, rulePath, nomRulePath);
         }
 
         public EisppCaseCode GetEISPPCaseCode(int caseCodeId)
@@ -554,7 +633,7 @@ namespace IOWebApplication.Core.Services
                        .Where(x => x.Code == caseCode)
                        .FirstOrDefault();
         }
-        public List<SelectListItem> GetDDL_EISPPEventType(int caseCodeId, int caseTypeId,bool isExternal, bool addDefaultElement = true)
+        public List<SelectListItem> GetDDL_EISPPEventType(int caseCodeId, bool isExternal, int eventTypeId, bool addDefaultElement = true)
         {
             var caseCodes = "," + GetEISPPCaseCode(caseCodeId)?.EventCodes.Replace(" ", "", StringComparison.InvariantCultureIgnoreCase) + ",";
 
@@ -571,6 +650,7 @@ namespace IOWebApplication.Core.Services
                                                      x.Code == EventType.ChangeCrime.ToString() ||
                                                      x.Code == EventType.ComplaintReceived.ToString() ||
                                                      x.Code == EventType.SendCase.ToString() ||
+                                                     x.Code == eventTypeId.ToString() ||
                                                      (isExternal && x.Code == EventType.CreateOnExternal.ToString())
                                                    )
                                          )
@@ -654,24 +734,7 @@ namespace IOWebApplication.Core.Services
             return selectListItems;
         }
 
-        public IEnumerable<LabelValueVM> Get_EISPPTblElement(string EisppTblCode, string term, string id)
-        {
-            term = term.SafeLower();
-            Expression<Func<EisppTblElement, bool>> filter = x => x.Label.Contains(term ?? x.Label, StringComparison.InvariantCultureIgnoreCase);
-            if (!string.IsNullOrEmpty(id))
-            {
-                filter = x => x.Code == id;
-            }
-            return repo.AllReadonly<EisppTblElement>()
-                            .Where(filter)
-                            .Where(x => x.EisppTblCode == EisppTblCode && x.IsActive)
-                            .OrderBy(x => x.Label)
-                            .Select(x => new LabelValueVM
-                            {
-                                Value = x.Code,
-                                Label = x.Label
-                            }).ToList();
-        }
+      
         public int GetSid(Dictionary<string, int> dictSid, string typeSid, long id, int eisppSid = 0)
         {
             var key = $"{typeSid}{id}";
@@ -724,8 +787,50 @@ namespace IOWebApplication.Core.Services
                 IsForSend = model.IsForSend,
                 EventFromId = eisppEventItem.EventFromId,
                 MQEpepId = eisppEventItem.MQEpepId,
+                EventId = eisppEventItem.Id,
+                IsEdit = !model.IsForSend 
+            };
+            return result;
+        }
+        public EisppEventGSVM GetPackageEventGS(int packageId)
+        {
+            var eisppEventItem = repo.AllReadonly<EisppEventItem>()
+                                    .Include(x => x.MQEpep)
+                                    .Where(x => x.Id == packageId)
+                                    .FirstOrDefault();
+            var model = JsonConvert.DeserializeObject<EisppPackage>(eisppEventItem.RequestData);
+            model.Id = packageId;
+            var result = InitEisppEventGSVM(model.Data.Events[0]);
+            result.IsForSend = model.IsForSend;
+            result.EventFromId = eisppEventItem.EventFromId;
+            result.MQEpepId = eisppEventItem.MQEpepId;
+            result.EventId = eisppEventItem.Id;
+                result.IsEdit = !model.IsForSend || (eisppEventItem.MQEpep != null &&
+                                              eisppEventItem.MQEpep.IntegrationStateId != IntegrationStates.New &&
+                                              eisppEventItem.MQEpep.IntegrationStateId != IntegrationStates.TransferOK &&
+                                              eisppEventItem.MQEpep.IntegrationStateId != IntegrationStates.WaitingForReply);
+            var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
+            result.ModelJson = JsonConvert.SerializeObject(model, dateTimeConverter);
+            return result;
+        }
+        public EisppUnionVM GetPackageUnion(int packageId)
+        {
+            var eisppEventItem = repo.AllReadonly<EisppEventItem>()
+                                    .Where(x => x.Id == packageId)
+                                    .FirstOrDefault();
+            var model = JsonConvert.DeserializeObject<EisppPackage>(eisppEventItem.RequestData);
+            model.Id = packageId;
+
+            CPPersonCrimeSplit(model);
+            var result = new EisppUnionVM()
+            {
+                EisppPackage = model,
+                IsForSend = model.IsForSend,
+                CasePrincipalId = eisppEventItem.CaseId,
+                MQEpepId = eisppEventItem.MQEpepId,
                 EventId = eisppEventItem.Id
             };
+            result.CaseAddedId = result.EventAdded.CaseId; 
             return result;
         }
 
@@ -751,13 +856,13 @@ namespace IOWebApplication.Core.Services
             eisppPackage.PersonOldMeasureId = model.PersonOldMeasureId;
             eisppPackage.IsGeneratedEisppNumber = IsForEisppNum(caseModel);
 
-            var response = await GetTSAKTSTSResponse(caseModel.EISSPNumber).ConfigureAwait(false);
+            (var response, var xml) = await GetTSAKTSTSResponse(caseModel.EISSPNumber).ConfigureAwait(false);
             if (response == null)
             {
                 try
                 {
                     var data = await GetActualData(caseModel.EISSPNumber).ConfigureAwait(false);
-                    response = await GetTSAKTSTSResponse(caseModel.EISSPNumber).ConfigureAwait(false);
+                    (response, xml) = await GetTSAKTSTSResponse(caseModel.EISSPNumber).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -795,56 +900,61 @@ namespace IOWebApplication.Core.Services
                 eisppEvent.EventId += changeSid;
             if (eisppEvent.CriminalProceeding.Id < 0)
                 eisppEvent.CriminalProceeding.Id += changeSid;
-
-            foreach (var person in eisppEvent.CriminalProceeding.Case.Persons)
+            if (eisppEvent.CriminalProceeding.Case.Persons != null)
             {
-                if (person.PersonId < 0)
-                    person.PersonId += changeSid;
-                if (person.Measures != null)
+                foreach (var person in eisppEvent.CriminalProceeding.Case.Persons)
                 {
-                    foreach (var measure in person.Measures)
+                    if (person.PersonId < 0)
+                        person.PersonId += changeSid;
+                    if (person.Measures != null)
                     {
-                        if (measure.MeasureId <= 0)
-                            measure.MeasureId += changeSid;
+                        foreach (var measure in person.Measures)
+                        {
+                            if (measure.MeasureId <= 0)
+                                measure.MeasureId += changeSid;
+                        }
                     }
-                }
-                if (person.PersonCPStatus != null)
-                {
-                    if (person.PersonCPStatus.PersonId <= 0)
-                        person.PersonCPStatus.PersonId += changeSid;
-                }
-                if (person.Addresses != null)
-                {
-                    foreach (var address in person.Addresses)
+                    if (person.PersonCPStatus != null)
                     {
-                        if (address.AddressId < 0)
-                            address.AddressId += changeSid;
+                        if (person.PersonCPStatus.PersonId <= 0)
+                            person.PersonCPStatus.PersonId += changeSid;
+                    }
+                    if (person.Addresses != null)
+                    {
+                        foreach (var address in person.Addresses)
+                        {
+                            if (address.AddressId < 0)
+                                address.AddressId += changeSid;
+                        }
                     }
                 }
             }
-            foreach (var crime in eisppEvent.CriminalProceeding.Case.Crimes)
+            if (eisppEvent.CriminalProceeding.Case.Crimes != null)
             {
-                if (crime.CrimeId < 0)
-                    crime.CrimeId += changeSid;
-                foreach (var personCrime in crime.CPPersonCrimes)
+                foreach (var crime in eisppEvent.CriminalProceeding.Case.Crimes)
                 {
-                    if (personCrime.PersonId < 0)
-                        personCrime.PersonId += changeSid;
-                    if (personCrime.CrimeId < 0)
-                        personCrime.CrimeId += changeSid;
-                    if (personCrime.PersonCrimeId < 0)
-                        personCrime.PersonCrimeId += changeSid;
-                    if (personCrime.CrimeSanction != null)
+                    if (crime.CrimeId < 0)
+                        crime.CrimeId += changeSid;
+                    foreach (var personCrime in crime.CPPersonCrimes)
                     {
-                        if (personCrime.CrimeSanction.CrimeSanctionId < 0)
-                            personCrime.CrimeSanction.CrimeSanctionId += changeSid;
-                    }
-                    if (personCrime.CrimeSubjectStatisticData != null)
-                    {
-                        if (personCrime.CrimeSubjectStatisticData.SubjectStatisticDataId < 0)
-                            personCrime.CrimeSubjectStatisticData.SubjectStatisticDataId += changeSid;
-                    }
+                        if (personCrime.PersonId < 0)
+                            personCrime.PersonId += changeSid;
+                        if (personCrime.CrimeId < 0)
+                            personCrime.CrimeId += changeSid;
+                        if (personCrime.PersonCrimeId < 0)
+                            personCrime.PersonCrimeId += changeSid;
+                        if (personCrime.CrimeSanction != null)
+                        {
+                            if (personCrime.CrimeSanction.CrimeSanctionId < 0)
+                                personCrime.CrimeSanction.CrimeSanctionId += changeSid;
+                        }
+                        if (personCrime.CrimeSubjectStatisticData != null)
+                        {
+                            if (personCrime.CrimeSubjectStatisticData.SubjectStatisticDataId < 0)
+                                personCrime.CrimeSubjectStatisticData.SubjectStatisticDataId += changeSid;
+                        }
 
+                    }
                 }
             }
             if (eisppEvent.CriminalProceeding.Case.ConnectedCases != null)
@@ -886,11 +996,38 @@ namespace IOWebApplication.Core.Services
             return eisppChangeVM;
         }
 
+        public async Task<EisppUnionVM> GenerateUnionPackage(int eventTypeId, int casePrincipalId, int caseAddedId, int caseSessionActId)
+        {
+            var eisppUnionVM = new EisppUnionVM();
+            var eisppEventVM = new EisppEventVM();
+            eisppEventVM.CaseId = casePrincipalId;
+            eisppEventVM.EventType = eventTypeId;
+            eisppEventVM.CaseSessionActId = caseSessionActId;
+            var modelPrincipal = await GeneratePackage(eisppEventVM);
+            eisppEventVM.CaseId = caseAddedId;
+            eisppEventVM.EventType = EISPPConstants.EventType.CaseUnionInner;
+            var modelAdded = await GeneratePackage(eisppEventVM);
+            var model = modelPrincipal;
+            model.Data.Events[0].EventAdded = modelAdded.Data.Events[0];
+            model.Data = new Data(modelPrincipal.Data.Events[0]);
+            model.SourceType = SourceTypeSelectVM.Case;
+            model.SourceId = model.CaseId;
+            model.Data.Events[0].EventAdded.IsAddedEvent = true;
+            ChangeSID(model.Data.Events[0].EventAdded);
+
+
+            eisppUnionVM.EisppPackage = model;
+            eisppUnionVM.CasePrincipalId = casePrincipalId;
+            eisppUnionVM.CaseAddedId = caseAddedId;
+            return eisppUnionVM;
+        }
+
+
         public int GeneratePackageDelete(int eventId)
         {
             var eisppEventItem = repo.AllReadonly<EisppEventItem>()
-                                  .Where(x => x.Id == eventId)
-                                  .FirstOrDefault();
+                                     .Where(x => x.Id == eventId)
+                                     .FirstOrDefault();
             var model = JsonConvert.DeserializeObject<EisppPackage>(eisppEventItem.RequestData);
             model.Id = 0;
             model.Data.Events[0].EventKind = EventKind.OldEvent;
@@ -913,6 +1050,7 @@ namespace IOWebApplication.Core.Services
                 CaseSessionActId = model.CaseSessionActId,
                 CaseComplaintId = model.CaseComplaintId,
             };
+            var dateAct = DateTime.Today;
             if (model.CaseSessionActId > 0)
             {
                 var caseSessionAct = repo.AllReadonly<CaseSessionAct>()
@@ -929,6 +1067,7 @@ namespace IOWebApplication.Core.Services
                         eisppEvent.DocumentType = codeMapping.InnerCode.ToInt();
                 }
                 eisppEvent.EventDate = caseSessionAct.RegDate ?? eisppEvent.EventDate;
+                dateAct = caseSessionAct.RegDate ?? dateAct;
             }
             if (model.CaseComplaintId > 0)
             {
@@ -971,21 +1110,20 @@ namespace IOWebApplication.Core.Services
 
             if (model.EventType == EventType.GetCase)
             {
-                var ConnectedCase = InitCaseCause(dictSid, caseModel.Id, caseModel.DocumentId)
+                var connectedCase = InitCaseCause(dictSid, caseModel.Id, caseModel.DocumentId, model.EventType)
                                     .Where(x => x.ConnectedCaseId == model.ConnectedCaseId)
                                     .FirstOrDefault();
-                eisppEvent.CriminalProceeding = InitCriminalProceedingGetCase(IsGeneratedEisppNumber, caseModel, senderStructure, ConnectedCase.Year, ConnectedCase.ShortNumber);
+                eisppEvent.CriminalProceeding = InitCriminalProceedingGetCase(IsGeneratedEisppNumber, caseModel, connectedCase);
                 (var rules, var flags) = rulesService.GetEisppRuleIds(model.EventType, "DVJDLO.dvjvid");
                 int migrationType = int.Parse(rules[0]);
                 eisppEvent.CaseMigration = new Infrastructure.Models.Integrations.Eispp.CaseMigration()
                 {
                     MigrationDate = eisppEvent.EventDate,
                     MigrationId = GetSid(dictSid, SidType.GetCaseMigration, caseModel.Id),
-                    SendingStructureId = ConnectedCase.StructureId,
+                    SendingStructureId = connectedCase.StructureId,
                     ReceiverStructureId = senderStructure,
                     MigrationType = migrationType,
-                    RegistrationNumber = ConnectedCase.ShortNumber.ToString()
-
+                    RegistrationNumber = connectedCase.ShortNumber
                 };
                 return eisppEvent;
             }
@@ -996,7 +1134,7 @@ namespace IOWebApplication.Core.Services
                                         .Include(x => x.SendToCourt)
                                         .Where(x => x.Id == model.CaseMigrationId)
                                         .FirstOrDefault();
-
+                eisppEvent.EventDate = caseMigration.DateWrt;
                 eisppEvent.CriminalProceeding = InitCriminalProceedingCase(dictSid, caseModel, senderStructure, IsGeneratedEisppNumber);
                 eisppEvent.CriminalProceeding.Case.Status = null;
                 (var rules, var flags) = rulesService.GetEisppRuleIds(model.EventType, "DVJDLO.dvjvid");
@@ -1009,20 +1147,20 @@ namespace IOWebApplication.Core.Services
                     ReceiverStructureId = caseMigration.SendToCourt.EISPPCode.ToInt(),
                     MigrationType = migrationType,
                     RegistrationNumber = caseMigration.OutDocument.DocumentNumber,
-                    Reason= model.ReasonId ?? 0
+                    Reason= model.ReasonId ?? 0,
+                    CaseMigrationId = caseMigration.Id
 
                 };
                 return eisppEvent;
             }
 
-            eisppEvent.CriminalProceeding = InitCriminalProceeding(dictSid, caseModel, model, senderStructure, eisppEvent.EventFeature.FeatureVal, IsGeneratedEisppNumber, response); ;
+            eisppEvent.CriminalProceeding = InitCriminalProceeding(dictSid, caseModel, model, senderStructure, eisppEvent.EventFeature.FeatureVal, IsGeneratedEisppNumber, dateAct, response); 
             return eisppEvent;
         }
 
         public Event InitEventXml(Case caseModel, int eventType, int senderStructure, string egnEik, execTSAKTSTSResponse1 response)
         {
             var dictSid = new Dictionary<string, int>();
-
             Event eisppEvent = new Event()
             {
                 EventDate = caseModel.RegDate,
@@ -1032,21 +1170,37 @@ namespace IOWebApplication.Core.Services
                 EventType = eventType,
                 EventKind = EventKind.OldEvent
             };
-            eisppEvent.CriminalProceeding = InitCriminalProceedingXML(dictSid, caseModel, senderStructure, egnEik, eventType, response);
+            eisppEvent.CriminalProceeding = InitCriminalProceedingXML(dictSid, caseModel, senderStructure, egnEik, eventType, caseModel.RegDate, response);
 
             return eisppEvent;
         }
-        public async Task<execTSAKTSTSResponse1> GetTSAKTSTSResponse(string eisppNumber)
+        public async Task<(execTSAKTSTSResponse1, string)> GetTSAKTSTSResponse(string eisppNumber)
         {
             execTSAKTSTSResponse1 response = null;
             CdnItemVM aFile = cdnService.Select(SourceTypeSelectVM.Integration_EISPP_CardTHN, eisppNumber).FirstOrDefault();
+            var xml = string.Empty;
+            if (aFile != null)
+            {
+                var result = await cdnService.MongoCdn_Download(aFile).ConfigureAwait(false);
+                xml = Encoding.UTF8.GetString(Convert.FromBase64String(result.FileContentBase64));
+                response = XmlUtils.DeserializeXml<execTSAKTSTSResponse1>(xml);
+            }
+            return (response, xml);
+        }
+
+        private async Task<(execTSAKTSTSResponse1, DateTime?)> GetTSAKTSTSResponseAndDateWrt(string eisppNumber)
+        {
+            execTSAKTSTSResponse1 response = null;
+            CdnItemVM aFile = cdnService.Select(SourceTypeSelectVM.Integration_EISPP_CardTHN, eisppNumber).FirstOrDefault();
+            DateTime? dateUploaded = null;
             if (aFile != null)
             {
                 var result = await cdnService.MongoCdn_Download(aFile).ConfigureAwait(false);
                 var xml = Encoding.UTF8.GetString(Convert.FromBase64String(result.FileContentBase64));
+                dateUploaded = result.DateUploaded;
                 response = XmlUtils.DeserializeXml<execTSAKTSTSResponse1>(xml);
             }
-            return response;
+            return (response, dateUploaded);
         }
         public void CPPersonCrimeSplit(EisppPackage eisppPackage)
         {
@@ -1066,17 +1220,24 @@ namespace IOWebApplication.Core.Services
         {
             foreach (var eisppEvent in eisppPackage.Data.Events)
             {
-                var CPPersonCrimes = new List<CPPersonCrime>();
-                if (eisppEvent.CriminalProceeding.Case.Crimes != null)
-                {
-                    foreach (var crime in eisppEvent.CriminalProceeding.Case.Crimes)
-                    {
-                        if (crime.CPPersonCrimes != null)
-                            CPPersonCrimes.AddRange(crime.CPPersonCrimes);
-                    }
-                }
-                eisppEvent.CriminalProceeding.Case.CPPersonCrimes = CPPersonCrimes.ToArray();
+                CPPersonCrimeUnionEvent(eisppEvent);
+                if (eisppEvent.EventAdded != null)
+                    CPPersonCrimeUnionEvent(eisppEvent.EventAdded);
             }
+        }
+
+        private static void CPPersonCrimeUnionEvent(Event eisppEvent)
+        {
+            var CPPersonCrimes = new List<CPPersonCrime>();
+            if (eisppEvent.CriminalProceeding.Case.Crimes != null)
+            {
+                foreach (var crime in eisppEvent.CriminalProceeding.Case.Crimes)
+                {
+                    if (crime.CPPersonCrimes != null)
+                        CPPersonCrimes.AddRange(crime.CPPersonCrimes);
+                }
+            }
+            eisppEvent.CriminalProceeding.Case.CPPersonCrimes = CPPersonCrimes.ToArray();
         }
 
         public CasePersonSentence GetSentence(int? casePersonId, int? caseSessionActId)
@@ -1129,7 +1290,7 @@ namespace IOWebApplication.Core.Services
             {
                 EisppCaseId = GetSid(dictSid, SidType.Case, caseModel.Id),
                 Year = caseModel.RegDate.Year,
-                ShortNumber = caseModel.ShortNumberValue ?? 0,
+                ShortNumber = caseModel.ShortNumber,
                 //edit!!!!!!! новообразувано
                 CaseSetupType = isGeneratedEisppNumber ? 1900001682 : 722,
                 ExactCaseType = getNomValueInt(EisppMapping.CaseTypes, caseModel.CaseTypeId),
@@ -1147,7 +1308,15 @@ namespace IOWebApplication.Core.Services
             };
             return criminalProceeding;
         }
-        private CriminalProceeding InitCriminalProceeding(Dictionary<string, int> dictSid, Case caseModel, EisppEventVM model, int senderStructure,  int featureVal, bool isGeneratedEisppNumber, execTSAKTSTSResponse1 eisppResponse)
+        private CriminalProceeding InitCriminalProceeding(
+            Dictionary<string, int> dictSid, 
+            Case caseModel, 
+            EisppEventVM model, 
+            int senderStructure,  
+            int featureVal,
+            bool isGeneratedEisppNumber, 
+            DateTime dateAct, 
+            execTSAKTSTSResponse1 eisppResponse)
         {
             //NPR
             CriminalProceeding criminalProceeding = InitCriminalProceedingCase(dictSid, caseModel, senderStructure, isGeneratedEisppNumber);
@@ -1155,7 +1324,11 @@ namespace IOWebApplication.Core.Services
             //DLO
             var eisppCase = criminalProceeding.Case;
 
-            criminalProceeding.Case.ConnectedCases = InitCaseCause(dictSid, caseModel.Id, caseModel.DocumentId);
+            criminalProceeding.Case.ConnectedCases = InitCaseCause(dictSid, caseModel.Id, caseModel.DocumentId, model.EventType);
+            if (criminalProceeding.Case.ConnectedCases != null && criminalProceeding.Case.ConnectedCases.Length == 1)
+            {
+                criminalProceeding.Case.ConnectedCaseId = criminalProceeding.Case.ConnectedCases[0].ConnectedCaseId;
+            }
 
             var _persons = new List<EisppPerson>();
             var _entities = new List<LegalEntity>();
@@ -1177,10 +1350,10 @@ namespace IOWebApplication.Core.Services
                 if (item.IsPerson)
                 {
                     var xmlPerson = xmlPersons.Where(x => x.fzlsid == item.Person_SourceCode).FirstOrDefault();
-                    var person = InitEisppPerson(dictSid, item, senderStructure, model.EventType, model.PersonOldMeasureId, model.PersonMeasureId, ref idBlank);
+                    var person = InitEisppPerson(dictSid, item, senderStructure, model.EventType, model.PersonOldMeasureId, model.PersonMeasureId, ref idBlank, dateAct);
                     if (xmlPerson != null)
                     {
-                        InitEisppPersonFromXML(dictSid, person, xmlPerson);
+                        InitEisppPersonFromXML(person, xmlPerson);
                     }
                     person.IsSelectedReadOnly = (model.CasePersonId > 0);
                     _persons.Add(person);
@@ -1200,15 +1373,21 @@ namespace IOWebApplication.Core.Services
             {
                 var crime = InitCrime(dictSid, item, xmlCrimes.ToList());
                 if (isGeneratedEisppNumber)
-                    crime.Addresses = new EisppAddress[1]
+                {
+                    (var adrType, var adrTypeFlags) = rulesService.GetEisppRuleIds(model.EventType, "NPR.DLO.PNE.ADR.adrtip");
+                    if (adrTypeFlags > 0)
                     {
+                        crime.Addresses = new EisppAddress[1]
+                        {
                         new EisppAddress()
                         {
                             AddressId = GetSid(dictSid, SidType.Address, item.Id),
                             AddressType = 635,
                             Country = EISPPConstants.CountryBG
                         }
-                    };
+                        };
+                    }
+                }
                 _crimes.Add(crime);
             }
             foreach (var item in xmlCrimes)
@@ -1234,7 +1413,7 @@ namespace IOWebApplication.Core.Services
                 foreach (var item in caseModel.CasePersonCrimes.Where(x => x.DateExpired == null && x.CasePersonId == person.CasePersonId))
                 {
                     var caseCrime = caseModel.CaseCrimes?.Where(x => x.Id == item.CaseCrimeId).FirstOrDefault();
-                    var personCrime = InitCPPersonCrime(dictSid,caseCrime?.EISSPNumber, item, senderStructure, featureVal);
+                    var personCrime = InitCPPersonCrime(dictSid,caseCrime?.EISSPNumber, item, senderStructure, featureVal, dateAct);
                     personCrime.PersonName = person.FullNameCyr;
                     _CPPersonCrimes.Add(personCrime);
                 }
@@ -1243,7 +1422,7 @@ namespace IOWebApplication.Core.Services
                     if (_CPPersonCrimes.Any(x => x.CaseCrimeId == sentenseCrime.CaseCrimeId))
                         continue;
                     var caseCrime = caseModel.CaseCrimes?.Where(x => x.Id == sentenseCrime.CaseCrimeId).FirstOrDefault();
-                    var personCrime = InitCPPersonCrime(dictSid, caseCrime?.EISSPNumber, sentenseCrime, person.CasePersonId, senderStructure, featureVal);
+                    var personCrime = InitCPPersonCrime(dictSid, model.EventType, caseCrime?.EISSPNumber, sentenseCrime, person.CasePersonId, senderStructure, featureVal, dateAct);
                     personCrime.PersonName = person.FullNameCyr;
                     _CPPersonCrimes.Add(personCrime);
                 }
@@ -1258,7 +1437,7 @@ namespace IOWebApplication.Core.Services
                     var xmlCrime = xmlCrimes?.Where(x => x.pnesid == item.pnesid.ToString()).FirstOrDefault();
                     if (_CPPersonCrimes.Any(x => x.CasePersonId == person.CasePersonId && x.EISPPNumber == xmlCrime.pnenmr) ) 
                         continue;
-                    var personCrime = InitCPPersonCrimeXML(item, person, senderStructure, dictSid, ref statisticDataId);
+                    var personCrime = InitCPPersonCrimeXML(model.EventType, item, person, senderStructure, dictSid, ref statisticDataId);
                     personCrime.PersonName = person.FullNameCyr;
                     _CPPersonCrimes.Add(personCrime);
                 }
@@ -1271,7 +1450,7 @@ namespace IOWebApplication.Core.Services
                 {
                     if (!_CPPersonCrimes.Any(x => x.PersonId == person.PersonId && x.CrimeId == crime.CrimeId))
                     {
-                        var personCrime = InitCPPersonCrimeFromPerson(dictSid, crime, person, senderStructure, featureVal, ref crimeNum);
+                        var personCrime = InitCPPersonCrimeFromPerson(dictSid, crime, person, senderStructure, featureVal, ref crimeNum, dateAct);
                         personCrime.PersonName = person.FullNameCyr;
                         _CPPersonCrimes.Add(personCrime);
                     }
@@ -1288,7 +1467,14 @@ namespace IOWebApplication.Core.Services
 
         }
 
-        private CriminalProceeding InitCriminalProceedingXML(Dictionary<string, int> dictSid, Case caseModel, int senderStructure, string egnEik, int eventType, execTSAKTSTSResponse1 eisppResponse)
+        private CriminalProceeding InitCriminalProceedingXML(
+            Dictionary<string, int> dictSid, 
+            Case caseModel, 
+            int senderStructure, 
+            string egnEik, 
+            int eventType,
+            DateTime dateAct,
+            execTSAKTSTSResponse1 eisppResponse)
         {
             //NPR
             CriminalProceeding criminalProceeding = new CriminalProceeding();
@@ -1301,7 +1487,7 @@ namespace IOWebApplication.Core.Services
             {
                 EisppCaseId = GetSid(dictSid, SidType.Case, caseModel.Id),
                 Year = caseModel.RegDate.Year,
-                ShortNumber = caseModel.ShortNumberValue ?? 0,
+                ShortNumber = caseModel.ShortNumber,
                 ExactCaseType = getNomValueInt(EisppMapping.CaseTypes, caseModel.CaseTypeId),
                 CaseTypeId = caseModel.CaseTypeId,
                 CaseCodeId = caseModel.CaseCodeId ?? 0,
@@ -1330,7 +1516,7 @@ namespace IOWebApplication.Core.Services
                 person.Gender = item.fzlpol.ToInt();
                 person.IsSelected = true;
                 person.IsSelectedReadOnly = true;
-                InitEisppPersonFromXML(dictSid, person, item);
+                InitEisppPersonFromXML(person, item);
                 _persons.Add(person);
             }
             eisppCase.Persons = _persons.ToArray();
@@ -1361,7 +1547,7 @@ namespace IOWebApplication.Core.Services
                 var person = eisppCase.Persons.FirstOrDefault(x => x.PersonSourceId == item.fzlsid);
                 if (person != null)
                 {
-                    var personCrime = InitCPPersonCrimeXML(item, person, senderStructure, dictSid, ref statisticDataId);
+                    var personCrime = InitCPPersonCrimeXML(eventType, item, person, senderStructure, dictSid, ref statisticDataId);
                     personCrime.PersonName = person.FullNameCyr;
                     _CPPersonCrimes.Add(personCrime);
                 }
@@ -1374,7 +1560,7 @@ namespace IOWebApplication.Core.Services
                 {
                     if (!_CPPersonCrimes.Any(x => x.PersonId == person.PersonId && x.CrimeId == crime.CrimeId))
                     {
-                        var personCrime = InitCPPersonCrimeFromPersonXML(dictSid, crime, person, senderStructure, ref crimeNum, person.Punishments, 0, ref punishmentNum);
+                        var personCrime = InitCPPersonCrimeFromPersonXML(dictSid, crime, person, senderStructure, ref crimeNum, person.Punishments, 0, ref punishmentNum, dateAct);
                         personCrime.PersonName = person.FullNameCyr;
                         _CPPersonCrimes.Add(personCrime);
                     }
@@ -1384,7 +1570,7 @@ namespace IOWebApplication.Core.Services
             return criminalProceeding;
         }
 
-        private CriminalProceeding InitCriminalProceedingGetCase(bool IsGeneratedEisppNumber, Case caseModel, int senderStructure,int caseYear, int caseShortNumber)
+        private CriminalProceeding InitCriminalProceedingGetCase(bool IsGeneratedEisppNumber, Case caseModel, EisppBaseCase connectedCase)
         {
             //NPR
             CriminalProceeding criminalProceeding = new CriminalProceeding();
@@ -1394,16 +1580,24 @@ namespace IOWebApplication.Core.Services
 
             //DLO
             EisppCase eisppCase = new EisppCase();
-            eisppCase.Year = caseYear;
-            eisppCase.ShortNumber = caseShortNumber;
             eisppCase.EisppCaseId = -caseModel.Id;
-            eisppCase.StructureId = senderStructure;
             eisppCase.IsGeneratedEisppNumber = IsGeneratedEisppNumber;
+
+            InitCriminalProceedingGetCase_FromConnected(eisppCase, connectedCase);
             criminalProceeding.Case = eisppCase;
-            
+
             return criminalProceeding;
         }
-        private EisppBaseCase[] InitCaseCause(Dictionary<string, int> dictSid, int caseId, long documentId)
+
+        private void InitCriminalProceedingGetCase_FromConnected(EisppCase eisppCase, EisppBaseCase connectedCase)
+        {
+            eisppCase.Year = connectedCase.Year;
+            eisppCase.ShortNumber = connectedCase.ShortNumber;
+            eisppCase.CaseType = connectedCase.CaseType;
+            eisppCase.StructureId = connectedCase.StructureId;
+        }
+
+        private EisppBaseCase[] InitCaseCause(Dictionary<string, int> dictSid, int caseId, long documentId, int eventType)
         {
             var cases = new List<EisppBaseCase>();
             {
@@ -1415,7 +1609,7 @@ namespace IOWebApplication.Core.Services
                 {
                     var caseCause = new EisppBaseCase();
                     caseCause.Year = documentCaseInfo.CaseYear ?? 0;
-                    caseCause.ShortNumber = documentCaseInfo.CaseShortNumber.ToInt();
+                    caseCause.ShortNumber = documentCaseInfo.CaseShortNumber;
                     caseCause.EisppCaseId = GetSid(dictSid, SidType.CaseCause, caseId);
                     var caseFrom = repo.AllReadonly<Case>()
                                        .Where(x => x.Id == documentCaseInfo.CaseId)
@@ -1424,7 +1618,7 @@ namespace IOWebApplication.Core.Services
                     if (caseFrom != null)
                     {
                         caseCause.Year = caseFrom.RegDate.Year;
-                        caseCause.ShortNumber = caseFrom.ShortNumber.ToInt();
+                        caseCause.ShortNumber = caseFrom.ShortNumber;
                         try
                         {
                             caseCause.ExactCaseType = getNomValueInt(EISPPConstants.EisppMapping.CaseTypes, caseFrom.CaseTypeId);
@@ -1475,7 +1669,7 @@ namespace IOWebApplication.Core.Services
             {
                 var caseCause = new EisppBaseCase();
                 caseCause.Year = institutionCase.CaseYear;
-                caseCause.ShortNumber = institutionCase.CaseNumber.ToInt();
+                caseCause.ShortNumber = institutionCase.CaseNumber;
                 caseCause.EisppCaseId = caseCause.EisppCaseId = GetSid(dictSid, SidType.CaseCauseInstitution, institutionCase.Id);
                 caseCause.InstitutionCaseTypeName = institutionCase.InstitutionCaseType.Label;
                 caseCause.InstitutionName = institutionCase.Institution.FullName;
@@ -1504,9 +1698,27 @@ namespace IOWebApplication.Core.Services
                 caseCause.ConnectedCaseId = "I" + institutionCase.Id.ToString("000000000");
                 cases.Add(caseCause);
             }
+            try
+            {
+                foreach (var caseCause in cases)
+                {
+                    // ТоченТип дело в основание
+                    var exactCaseTypeCauseDDL = GetDDL_EISPPTblElementWithRules_DloOsnExactType(
+                        EISPPConstants.EisppTableCode.ExactCaseType, eventType, "NPR.DLO.DLOOSN.dlosig", caseCause.CaseType.ToString(), caseCause.CaseCharacterId
+                    ).DDList.Where(x => x.Value != "0").ToList(); // dlosig
+                    if (exactCaseTypeCauseDDL.Count == 1)
+                    {
+                        caseCause.ExactCaseType = exactCaseTypeCauseDDL.Single().Value.ToInt();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error caseCause ExactCaseType");
+            }
             return cases.ToArray();
         }
-        private EisppPerson InitEisppPerson(Dictionary<string, int> dictSid, CasePerson casePerson, int senderStructure, int eventType, int? oldMeasureId, int? measureId, ref int idBlank)
+        private EisppPerson InitEisppPerson(Dictionary<string, int> dictSid, CasePerson casePerson, int senderStructure, int eventType, int? oldMeasureId, int? measureId, ref int idBlank, DateTime dateAct)
         {
             int eisppID = casePerson.Person_SourceType == SourceTypeSelectVM.EisppPerson ? casePerson.Person_SourceCode.ToInt() : 0;
 
@@ -1584,14 +1796,14 @@ namespace IOWebApplication.Core.Services
                 eisppPerson.Addresses = _addresses.ToArray();
             }
             eisppPerson.Measures = InitProceduralCoercionMeasure(dictSid, casePerson.Id, senderStructure, eventType, oldMeasureId, measureId);
-            eisppPerson.Punishments = InitPunishments(dictSid, casePerson, senderStructure, ref idBlank);
+            eisppPerson.Punishments = InitPunishments(dictSid, casePerson, senderStructure, ref idBlank, dateAct);
 
-            if (eventType == EventType.EarlyRelease)
-                eisppPerson.Punishments = eisppPerson.Punishments.Where(x => x.PunishmentType != PunishmentType.Union).ToArray();
+            (var punishmentTypeIds, var punishmentTypeFlags) = rulesService.GetEisppRuleIds(eventType, "NPR.DLO.FZL.NKZ.nkztip");
+            eisppPerson.Punishments = eisppPerson.Punishments.Where(x => punishmentTypeIds.Any(p => p == x.PunishmentType.ToString())).ToArray();
 
             return eisppPerson;
         }
-        private void InitEisppPersonFromXML(Dictionary<string, int> dictSid, EisppPerson person, sFZLNPRAKTSTSType xmlPerson)
+        private void InitEisppPersonFromXML(EisppPerson person, sFZLNPRAKTSTSType xmlPerson)
         {
             if (person.CitizenshipBg == 0 && person.OtherCitizenship == 0)
             {
@@ -1627,7 +1839,7 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private void AddBlankPunishments(Dictionary<string, int> dictSid, List<Punishment> punishments, int punishmentType, ref int idBlank, int senderStructure)
+        private void AddBlankPunishments(Dictionary<string, int> dictSid, List<Punishment> punishments, int punishmentType, ref int idBlank, int senderStructure, DateTime dateAct)
         {
             if (!punishments.Any(x => x.PunishmentType == punishmentType))
             {
@@ -1636,7 +1848,9 @@ namespace IOWebApplication.Core.Services
                 {
                     PunishmentId = GetSid(dictSid, SidType.Punishment, idBlank),
                     PunishmentType = punishmentType,
-                    StructureId = senderStructure
+                    StructureId = senderStructure,
+                    PunishmentActivityDate = dateAct,
+                    ProbationStartDateVM = dateAct,
                 };
                 punishment.ProbationMeasure = new ProbationMeasure();
                 punishment.ProbationMeasure.MeasureId = GetSid(dictSid, SidType.ProbationMeasure, idBlank);
@@ -1644,14 +1858,14 @@ namespace IOWebApplication.Core.Services
                 punishments.Add(punishment);
             }
         }
-        private Punishment[] InitPunishments(Dictionary<string, int> dictSid, CasePerson casePerson, int senderStructure, ref int idBlank)
+        private Punishment[] InitPunishments(Dictionary<string, int> dictSid, CasePerson casePerson, int senderStructure, ref int idBlank, DateTime dateAct)
         {
-            var punishmentUnion = InitPunishmentsForType(dictSid, PunishmentType.Union, casePerson, senderStructure, ref idBlank);
-            var punishmentForExecution = InitPunishmentsForType(dictSid, PunishmentType.ForExecution, casePerson, senderStructure, ref idBlank);
+            var punishmentUnion = InitPunishmentsForType(dictSid, PunishmentType.Union, casePerson, senderStructure, ref idBlank, dateAct);
+            var punishmentForExecution = InitPunishmentsForType(dictSid, PunishmentType.ForExecution, casePerson, senderStructure, ref idBlank, dateAct);
             punishmentUnion.AddRange(punishmentForExecution);
             return punishmentUnion.OrderBy(x => x.CasePersonSentencePunishmentId).ThenBy(x => x.PunishmentType).ToArray();
         }
-        private List<Punishment> InitPunishmentsForType(Dictionary<string, int> dictSid, int punishmentType, CasePerson casePerson, int senderStructure, ref int idBlank)
+        private List<Punishment> InitPunishmentsForType(Dictionary<string, int> dictSid, int punishmentType, CasePerson casePerson, int senderStructure, ref int idBlank, DateTime dateAct)
         {
             List<Punishment> result = new List<Punishment>();
             var sentenses = repo.AllReadonly<CasePersonSentencePunishment>()
@@ -1669,7 +1883,7 @@ namespace IOWebApplication.Core.Services
                 int punishmentActivity = 0;
                 if (sentenseModel.CasePersonSentence?.PunishmentActivityId > 0)
                 {
-                    punishmentActivity = repo.AllReadonly<PunishmentActivity>()
+                    punishmentActivity = repo.AllReadonly<Infrastructure.Data.Models.Nomenclatures.PunishmentActivity>()
                                              .Where(x => x.Id == sentenseModel.CasePersonSentence.PunishmentActivityId)
                                              .Select(x => x.Code)
                                              .FirstOrDefault()
@@ -1685,9 +1899,13 @@ namespace IOWebApplication.Core.Services
                     ServingType = sentenseModel.SentenceType.IsEffective == true ? ServingType.Efective : ServingType.Probation,
                     StructureId = senderStructure,
                     IsSelected = true,
-                    PunishmentActivityDateVM = sentenseModel.CasePersonSentence?.PunishmentActivityDate,
+                    PunishmentActivityDateVM = sentenseModel.CasePersonSentence?.PunishmentActivityDate ?? dateAct,
+                    ProbationStartDateVM = sentenseModel.CasePersonSentence?.PunishmentActivityDate ?? dateAct,
                     PunishmentActivity =  punishmentActivity,
                 };
+                if (punishment.PunishmentType == EISPPConstants.PunishmentType.Union && punishment.PunishmentActivity == EISPPConstants.PunishmentActivity.Cumulated)
+                    punishment.PunishmentActivity = EISPPConstants.PunishmentActivity.Imposed;
+
                 if (sentenseModel.SentenceType.HasPeriod == true)
                 {
                     punishment.PunishmentYears = sentenseModel.SentenseYears;
@@ -1704,11 +1922,14 @@ namespace IOWebApplication.Core.Services
                 if (sentenseModel.SentenceType.HasProbation == true)
                 {
                     punishment.ProbationMeasure.ValidFrom = sentenseModel.DateFrom;
-                    punishment.ProbationMeasure.ValidTill = sentenseModel.DateTo ?? sentenseModel.DateFrom;
+                    punishment.ProbationMeasure.ValidTillVM = sentenseModel.DateTo;
                     if (sentenseModel.SentenceType.HasMoney == true)
                     {
                         punishment.ProbationMeasure.MeasureAmount = (double)sentenseModel.SentenseMoney; // ?????
                     }
+                    punishment.ProbationMeasure.Years = sentenseModel.ProbationYears ?? 0;
+                    punishment.ProbationMeasure.Months = sentenseModel.ProbationMonths ?? 0;
+                    punishment.ProbationMeasure.Days = sentenseModel.ProbationDays ?? 0;
                 }
                 punishment.InitProbationMeasure();
 
@@ -1718,7 +1939,7 @@ namespace IOWebApplication.Core.Services
                 }
                 result.Add(punishment);
             }
-            AddBlankPunishments(dictSid, result, punishmentType, ref idBlank, senderStructure);
+            AddBlankPunishments(dictSid, result, punishmentType, ref idBlank, senderStructure, dateAct);
             return result;
         }
         private LegalEntity InitLegalEntity(CasePerson casePerson)
@@ -1872,7 +2093,7 @@ namespace IOWebApplication.Core.Services
             return personCrime;
         }
 
-        private CPPersonCrime InitCPPersonCrime(Dictionary<string, int> dictSid, string eisppNumber, CasePersonCrime personCrimeModel, int senderStructure, int featureVal)
+        private CPPersonCrime InitCPPersonCrime(Dictionary<string, int> dictSid, string eisppNumber, CasePersonCrime personCrimeModel, int senderStructure, int featureVal,DateTime dateAct)
         {
             CPPersonCrime personCrime = new CPPersonCrime();
             personCrime.PersonCrimeId = GetSid(dictSid, SidType.PersonCrime, personCrimeModel.Id);
@@ -1886,7 +2107,8 @@ namespace IOWebApplication.Core.Services
                 CrimeSanctionId = GetSid(dictSid, SidType.CrimeSanction, personCrimeModel.Id),
                 Role = getNomValueInt(EisppMapping.PersonInCrimeRole, personCrimeModel.PersonRoleInCrimeId),
                 SanctionType = SanctionType.ConnectToCrime,
-                StructureId = senderStructure
+                StructureId = senderStructure,
+                SanctionDate = dateAct
             };
             if (featureVal == EISPPConstants.SentenceResultType.Innocence)
                 personCrime.CrimeSanction.SanctionType = SanctionType.Innocence;
@@ -1899,7 +2121,7 @@ namespace IOWebApplication.Core.Services
             personCrime.IsSelected = true;
             return personCrime;
         }
-        private CPPersonCrime InitCPPersonCrime(Dictionary<string, int> dictSid, string eisppNumber, CasePersonSentencePunishmentCrime model, int casePersonId, int senderStructure, int featureVal)
+        private CPPersonCrime InitCPPersonCrime(Dictionary<string, int> dictSid,int eventType, string eisppNumber, CasePersonSentencePunishmentCrime model, int casePersonId, int senderStructure, int featureVal, DateTime dateAct)
         {
             CPPersonCrime personCrime = new CPPersonCrime();
             long modelId = model.Id + 100000000000;
@@ -1914,7 +2136,8 @@ namespace IOWebApplication.Core.Services
                 CrimeSanctionId = GetSid(dictSid, SidType.CrimeSanction, modelId),
                 Role = getNomValueInt(EisppMapping.PersonInCrimeRole, model.PersonRoleInCrimeId),
                 SanctionType = SanctionType.ConnectToCrime,
-                StructureId = senderStructure
+                StructureId = senderStructure,
+                SanctionDate = dateAct
             };
             if (featureVal == EISPPConstants.SentenceResultType.Innocence)
                 personCrime.CrimeSanction.SanctionType = SanctionType.Innocence;
@@ -1929,7 +2152,7 @@ namespace IOWebApplication.Core.Services
         }
 
 
-        private CPPersonCrime InitCPPersonCrimeXML(NPRFZLPNEType personCrimeXML, EisppPerson person, int senderStructure, Dictionary<string, int> dictSid, ref int statisticDataId)
+        private CPPersonCrime InitCPPersonCrimeXML(int eventType, NPRFZLPNEType personCrimeXML, EisppPerson person, int senderStructure, Dictionary<string, int> dictSid, ref int statisticDataId)
         {
             CPPersonCrime personCrime = new CPPersonCrime();
             personCrime.PersonCrimeId = personCrimeXML.fzlpnesid.ToInt();
@@ -1937,13 +2160,20 @@ namespace IOWebApplication.Core.Services
             personCrime.CrimeId = personCrimeXML.pnesid;
             personCrime.CrimeSanction = new CrimeSanction()
             {
-                CrimeSanctionId = personCrimeXML.SCQ.scqsid.ToInt(),
-                Role = personCrimeXML.SCQ.scqrlq.ToInt(),
-                SanctionType = personCrimeXML.SCQ.scqvid.ToInt(),
-                SanctionDate = personCrimeXML.SCQ.scqdta,
-                SanctionReason = personCrimeXML.SCQ.scqosn.ToInt(),
                 StructureId = senderStructure //personCrimeXML.SCQ.scqstr.ToInt()
             };
+            if (personCrimeXML.SCQ == null)
+            {
+                personCrime.CrimeSanction.CrimeSanctionId = GetSid(dictSid, SidType.CrimeSanction, personCrime.PersonCrimeId);
+            }
+            else
+            {
+                personCrime.CrimeSanction.CrimeSanctionId = personCrimeXML.SCQ.scqsid.ToInt();
+                personCrime.CrimeSanction.Role = personCrimeXML.SCQ.scqrlq.ToInt();
+                personCrime.CrimeSanction.SanctionType = personCrimeXML.SCQ.scqvid.ToInt();
+                personCrime.CrimeSanction.SanctionDate = personCrimeXML.SCQ.scqdta;
+                personCrime.CrimeSanction.SanctionReason = personCrimeXML.SCQ.scqosn.ToInt();
+            }
             if (personCrimeXML.SBC != null)
             {
                 personCrime.CrimeSubjectStatisticData = new CrimeSubjectStatisticData()
@@ -1961,7 +2191,14 @@ namespace IOWebApplication.Core.Services
             personCrime.IsSelected = true;
             return personCrime;
         }
-        private CPPersonCrime InitCPPersonCrimeFromPerson(Dictionary<string, int> dictSid, Crime crime, EisppPerson person, int senderStructure,int featureVal, ref int crimeNum)
+        private CPPersonCrime InitCPPersonCrimeFromPerson(
+            Dictionary<string, int> dictSid, 
+            Crime crime, 
+            EisppPerson person, 
+            int senderStructure,
+            int featureVal, 
+            ref int crimeNum,
+            DateTime dateAct)
         {
             CPPersonCrime personCrime = new CPPersonCrime();
             crimeNum++;
@@ -1971,7 +2208,8 @@ namespace IOWebApplication.Core.Services
             personCrime.CrimeSanction = new CrimeSanction()
             {
                 CrimeSanctionId = GetSid(dictSid, SidType.CrimeSanction, crimeNum),
-                StructureId = senderStructure //personCrimeXML.SCQ.scqstr.ToInt()
+                StructureId = senderStructure, //personCrimeXML.SCQ.scqstr.ToInt()
+                SanctionDate = dateAct
             };
             personCrime.CrimeSubjectStatisticData = new CrimeSubjectStatisticData()
             {
@@ -1981,9 +2219,17 @@ namespace IOWebApplication.Core.Services
                 personCrime.CrimeSanction.SanctionType = SanctionType.Innocence;
             return personCrime;
         }
-        private CPPersonCrime InitCPPersonCrimeFromPersonXML(Dictionary<string, int> dictSid, Crime crime, EisppPerson person, int senderStructure, ref int crimeNum, Punishment[] punishments, int featureVal, ref int punishmentNum)
+        private CPPersonCrime InitCPPersonCrimeFromPersonXML(
+            Dictionary<string, int> dictSid, 
+            Crime crime, EisppPerson person, 
+            int senderStructure, 
+            ref int crimeNum, 
+            Punishment[] punishments, 
+            int featureVal, 
+            ref int punishmentNum,
+            DateTime dateAct)
         {
-            var personCrime = InitCPPersonCrimeFromPerson(dictSid, crime, person, senderStructure, featureVal, ref crimeNum);
+            var personCrime = InitCPPersonCrimeFromPerson(dictSid, crime, person, senderStructure, featureVal, ref crimeNum, dateAct);
             var crimePunishments = new List<CrimePunishment>();
             foreach (var punishment in punishments)
             {
@@ -2212,6 +2458,10 @@ namespace IOWebApplication.Core.Services
                        .Where(x => x.EisppTblCode == EisppTableCode.EventType);
             var eventListFrom = repo.AllReadonly<EisppEventItem>()
                       .Where(x => x.CaseId == filter.CaseId);
+            var eventList2 = repo.AllReadonly<EisppEventItem>()
+                                    .Where(x => x.CaseId == filter.CaseId &&
+                                                x.DateExpired == null &&
+                                                x.MQEpep.IntegrationStateId == IntegrationStates.TransferOK);
 
             var eventList = repo.AllReadonly<EisppEventItem>()
                                 .Where(x => x.DateExpired == null &&
@@ -2273,7 +2523,9 @@ namespace IOWebApplication.Core.Services
                                               : string.Join(Environment.NewLine,
                                                     eventListFrom.Where(f => x.Id == f.EventFromId)
                                                        .Select(f => (f.EventTypeRules == EventType.DeleteEvent ? "Коригирано " : x.EventTypeRules == EventType.DeleteEvent ? "Изтрито " : "") +
-                                                            $" с {f.Id} / " + (f.EventDate > zeroDate ? $"{f.EventDate:dd.MM.yyyy}" : "")))
+                                                            $" с {f.Id} / " + (f.EventDate > zeroDate ? $"{f.EventDate:dd.MM.yyyy}" : ""))),
+                CanExpireError = x.MQEpep.IntegrationStateId == IntegrationStates.ReplyContainsError && 
+                                 eventList2.Any(e2 => e2.EventType == x.EventType) 
             });
         }
         public List<SelectListItem> GetLinkTypeDDL(bool addDefaultElement = true)
@@ -2433,7 +2685,19 @@ namespace IOWebApplication.Core.Services
             }
 
         }
-
+        public bool CanExpireError(int eventId, int caseId)
+        {
+            var eventList2 = repo.AllReadonly<EisppEventItem>()
+                                 .Where(x => x.CaseId == caseId &&
+                                             x.DateExpired == null &&
+                                             x.MQEpep.IntegrationStateId == IntegrationStates.TransferOK);
+            return repo.AllReadonly<EisppEventItem>()
+                           .Where(x => x.Id == eventId && 
+                                       x.MQEpep.IntegrationStateId == IntegrationStates.ReplyContainsError &&
+                                       eventList2.Any(e2 => e2.EventType == x.EventType) 
+                                  )
+                           .Any();
+        }
         private EisppEventItem GetEisppEvent(int id)
         {
             return repo.AllReadonly<EisppEventItem>()
@@ -2566,11 +2830,12 @@ namespace IOWebApplication.Core.Services
             var prefixNum = GetPrefixNum(senderStructure);
             if (prefixNum == null)
                 return false;
-            int yearEispp = caseCurrent.RegDate.Year - 1800;
+            int yearEispp = DateTime.Now.Year - 1800;
             int counter = int.Parse(counterService.Counter_GetCaseEisppNumber(caseCurrent.CourtId));
             string eisppNum = $"{prefixNum}{yearEispp}{counter:00000}Г";
             eisppNum += CheckSum(eisppNum);
             caseCurrent.EISSPNumber = eisppNum;
+            caseCurrent.IsGeneratedEisppNumber = true;
             return true;
         }
         public bool MakeEisppNumberPNE(CaseCrime caseCrime, int courtId)
@@ -2582,11 +2847,12 @@ namespace IOWebApplication.Core.Services
             var prefixNum = GetPrefixNum(senderStructure);
             if (prefixNum == null)
                 return false;
-            int yearEispp = caseCrime.DateFrom.Year - 1800;
+            int yearEispp = DateTime.Now.Year - 1800;
             int counter = int.Parse(counterService.Counter_GetCrimeEisppNumber(courtId));
             string eisppNum = $"{prefixNum}{yearEispp}{counter:00000}Б";
             eisppNum += CheckSum(eisppNum);
             caseCrime.EISSPNumber = eisppNum;
+            caseCrime.IsGeneratedEisppNumber = true;
             return true;
         }
         public string GetEisppNumber(int caseId)
@@ -2601,7 +2867,7 @@ namespace IOWebApplication.Core.Services
             var caseCrimes = repo.AllReadonly<CaseCrime>()
                                  .Where(x => x.CaseId == caseId)
                                  .ToList();
-            var eisppResponse = await GetTSAKTSTSResponse(eisppNumber).ConfigureAwait(false);
+            (var eisppResponse, var xml) = await GetTSAKTSTSResponse(eisppNumber).ConfigureAwait(false);
             var result = new List<SelectListItem>();
             var xmlCrimes = eisppResponse?.execTSAKTSTSResponse?.sNPRAKTSTS?.sPNE ?? Array.Empty<PNEType>();
             xmlCrimes = xmlCrimes.Where(x => !caseCrimes.Any(c => c.EISSPNumber == x.pnenmr)).ToArray();
@@ -2644,6 +2910,7 @@ namespace IOWebApplication.Core.Services
             var eisppEvents = repo.AllReadonly<EisppEventItem>()
                                   .Where(x => x.CaseId == caseId &&
                                          x.DateExpired == null &&
+                                         x.EventFromId == null &&
                                          x.MQEpep.IntegrationStateId == IntegrationStates.TransferOK);
             foreach(var eisppEvent in eisppEvents)
             {
@@ -2705,5 +2972,232 @@ namespace IOWebApplication.Core.Services
                             .FirstOrDefault();
             return (aCase?.Document?.DocumentTypeId == InitDocumentType.IskaneExternal);
         }
+        public List<SelectListItem> CaseAddedDDL(int caseId)
+        {
+            var result = repo.AllReadonly<Infrastructure.Data.Models.Cases.CaseMigration>()
+                              .Where(x => x.InitialCaseId == caseId &&
+                                          x.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.CaseUnion &&
+                                          x.DateExpired == null &&
+                                          x.CaseId != caseId)
+                             .Select(x => new SelectListItem()
+                             {
+                                 Text = $"{x.Case.RegNumber} / {x.Case.RegDate:dd.MM.yyyy}",
+                                 Value = x.CaseId.ToString()
+                             }).ToList() ?? new List<SelectListItem>();
+
+            result = result
+                .Prepend(new SelectListItem() { Text = "Избери", Value = "-1" })
+                .ToList();
+            return result;
+        }
+        public EisppEventGSVM InitEisppEventGSVM(Event eisppEvent)
+        {
+            int? caseMigrationId = eisppEvent.CaseMigration?.CaseMigrationId;
+            if (eisppEvent.EventType == EventType.SendCase &&
+                eisppEvent.CaseMigration?.CaseMigrationId <= 0 &&
+                eisppEvent.CaseMigration != null)
+            {
+                var caseMigrations = repo.AllReadonly<Infrastructure.Data.Models.Cases.CaseMigration>()
+                                        .Include(x => x.OutDocument)
+                                        .Where(x => x.CaseId == eisppEvent.CaseId &&
+                                                    x.CaseMigrationType.MigrationDirection == NomenclatureConstants.CaseMigrationDirections.Outgoing)
+                                        .ToList();
+                caseMigrationId = caseMigrations.FirstOrDefault(x => x.OutDocument.DocumentNumber == eisppEvent.CaseMigration.RegistrationNumber)?.Id;
+            }
+            var aCase = repo.AllReadonly<Case>()
+                            .Include(x => x.CaseType)
+                            .Where(x => x.Id == eisppEvent.CaseId)
+                            .FirstOrDefault();
+            var modelGS = new EisppEventGSVM()
+            {
+                EventType = eisppEvent.EventType,
+                ShortNumber = aCase?.ShortNumberValue ?? 0,
+                Year = aCase?.RegDate.Year ?? 0,
+                CaseType = aCase?.CaseType?.Code,
+                CaseId = eisppEvent.CaseId,
+                CaseMigrationId = caseMigrationId,
+                CaseSessionActId = eisppEvent.CaseSessionActId,
+                ConnectedCaseId = eisppEvent.ConnectedCaseId,
+                EISPPNumber = eisppEvent.CriminalProceeding.EisppNumber,
+                ExactCaseType = eisppEvent.CriminalProceeding.Case.ExactCaseType,
+                ReasonId = eisppEvent.CaseMigration?.Reason
+            };
+            return modelGS;
+        }
+        public void EisppEventGSVM_To_Event(EisppEventGSVM model, Event eisppEvent)
+        {
+            if (eisppEvent.EventType == EventType.SendCase)
+            {
+                var caseMigrations = repo.AllReadonly<Infrastructure.Data.Models.Cases.CaseMigration>()
+                                         .Where(x => x.CaseId == eisppEvent.CaseId &&
+                                                    x.CaseMigrationType.MigrationDirection == NomenclatureConstants.CaseMigrationDirections.Outgoing)
+                                        .ToList();
+                var caseMigration = caseMigrations.FirstOrDefault(x => x.Id == model.CaseMigrationId);
+                eisppEvent.CaseMigration.CaseMigrationId = model.CaseMigrationId ??0;
+                eisppEvent.CaseMigration.Reason = model.ReasonId ?? 0;
+            } else
+            {
+                var aCase = repo.AllReadonly<Case>()
+                           .Include(x => x.CaseType)
+                           .Where(x => x.Id == eisppEvent.CaseId)
+                           .FirstOrDefault();
+                var connectedCases = InitCaseCause(new Dictionary<string, int>(), eisppEvent.CaseId, aCase?.DocumentId ?? 0, eisppEvent.EventType);
+                var connectedCase = connectedCases.Where(x => x.ConnectedCaseId == model.ConnectedCaseId)
+                                                  .FirstOrDefault();
+                eisppEvent.ConnectedCaseId = model.ConnectedCaseId;
+                InitCriminalProceedingGetCase_FromConnected(eisppEvent.CriminalProceeding.Case, connectedCase);
+                eisppEvent.CriminalProceeding.Case.ExactCaseType = model.ExactCaseType ?? 0;
+                eisppEvent.CaseMigration.MigrationDate = eisppEvent.EventDate;
+                eisppEvent.CaseMigration.SendingStructureId = connectedCase.StructureId;
+                eisppEvent.CaseMigration.RegistrationNumber = connectedCase.ShortNumber;
+            }
+            eisppEvent.CaseSessionActId = model.CaseSessionActId;
+        }
+        public bool HaveEventCreateCase(int caseId)
+        {
+            var EisppNumber = repo.AllReadonly<Case>()
+                             .Where(x => x.Id == caseId)
+                             .Select(x => x.EISSPNumber)
+                             .FirstOrDefault() ?? "";
+            var count = repo.AllReadonly<EisppEventItem>()
+                             .Where(x => x.CaseId == caseId && 
+                                         (x.MQEpep.IntegrationStateId == IntegrationStates.TransferOK || 
+                                          EF.Functions.ILike(x.MQEpep.ErrorDescription ?? "", $"%вече е регистрирано в системата по НП с ЕИСПП номер%{EisppNumber}%по което се опитвате да го регистрирате%")
+                                         ) &&
+                                         x.EventType == EISPPConstants.EventType.CreateCase)
+                             .Count();
+            return count > 0;
+        }
+        public async Task<List<EisppCrimePersonVM>> GetCrimePersonDiff(EisppPackage package)
+        {
+            bool isOnePersonEvent = GetDDL_EISPPTblElement(EisppTableCode.OnePersonEvent).Any(x => x.Value == package.EventTypeId.ToString());
+
+            execTSAKTSTSResponse1 eisppResponse = null;
+            string  EISSPNumber = package.Data.Events[0].CriminalProceeding.EisppNumber;
+            try
+            {
+                var data = await GetActualData(EISSPNumber).ConfigureAwait(false);
+                (eisppResponse, _) = await GetTSAKTSTSResponse(EISSPNumber).ConfigureAwait(false);
+            }
+            catch
+            {
+
+            }
+            var result = new List<EisppCrimePersonVM>();
+            if (eisppResponse == null)
+                return result;
+            var eisppEvent = package.Data.Events[0];
+            if (eisppEvent.CriminalProceeding.Case.Persons != null)
+            {
+                foreach (var person in eisppEvent.CriminalProceeding.Case.Persons)
+                {
+                    if (!person.IsSelected)
+                        continue;
+                    if (eisppEvent.CriminalProceeding.Case.Crimes == null)
+                        continue;
+                    foreach (var crime in eisppEvent.CriminalProceeding.Case.Crimes)
+                    {
+                        if (crime.CPPersonCrimes == null)
+                            continue;
+                        foreach (var personCrime in crime.CPPersonCrimes)
+                        {
+                            if (!personCrime.IsSelected)
+                                continue;
+                            if (person.PersonId != personCrime.PersonId)
+                                continue;
+                            var eisppCrimePerson = new EisppCrimePersonVM()
+                            {
+                                PneNumber = crime.EisppNumber,
+                                Uic = person.CitizenshipBg > 0 ? person.Egn : person.Lnch,
+                                PersonName = person.FullNameCyr,
+                                HavePKG = true
+                            };
+                            result.Add(eisppCrimePerson);
+                        }
+                    }
+                }
+            }
+        
+
+            var xmlPersons = eisppResponse?.execTSAKTSTSResponse?.sNPRAKTSTS?.sFZL ?? Array.Empty<sFZLNPRAKTSTSType>();
+            var xmlCrimes = eisppResponse?.execTSAKTSTSResponse?.sNPRAKTSTS?.sPNE ?? Array.Empty<PNEType>();
+            var xmlPersonCrimes = eisppResponse?.execTSAKTSTSResponse?.sNPRAKTSTS?.sNPRFZLPNE ?? Array.Empty<NPRFZLPNEType>();
+            foreach (var xmlPerson in xmlPersons)
+            {
+                foreach (var xmlPersonCrime in xmlPersonCrimes.Where(x => x.fzlsid.ToString() == xmlPerson.fzlsid))
+                {
+                    var xmlCrime = xmlCrimes.Where(x => x.pnesid == xmlPersonCrime.pnesid.ToString()).FirstOrDefault();
+                    if (xmlCrime == null)
+                        continue;
+                    var uic = !string.IsNullOrEmpty(xmlPerson.fzlegn) ? xmlPerson.fzlegn: xmlPerson.fzllnc;
+                    var eisppCrimePersonTo = result.Where(x => x.Uic == uic && x.PneNumber == xmlCrime.pnenmr).FirstOrDefault();
+                    if (eisppCrimePersonTo != null)
+                    {
+                        eisppCrimePersonTo.HaveTS = true;
+                    } else
+                    {
+                        if (!isOnePersonEvent || result.Any(x => x.Uic == uic))
+                        {
+                            eisppCrimePersonTo = new EisppCrimePersonVM()
+                            {
+                                PneNumber = xmlCrime.pnenmr,
+                                Uic = !string.IsNullOrEmpty(xmlPerson.fzlegn) ? xmlPerson.fzlegn : xmlPerson.fzllnc,
+                                PersonName = xmlPerson.fzlimecyr,
+                                HaveTS = true
+                            };
+                            result.Add(eisppCrimePersonTo);
+                        }
+                    }
+                }
+            }
+            result = result.Where(x => !x.HavePKG || !x.HaveTS).ToList();
+            foreach (var item in result)
+            {
+                if (item.HavePKG)
+                {
+                    item.Difference = "Връзката лице престъпление липсва в технологичната справка";
+                }
+                else
+                {
+                    item.Difference = "Връзката лице престъпление липсва в събитието";
+                }
+            }
+            return result;
+        }
+
+        public List<EisppPersonRegIXVM> GetPersonRegIXDiff(EisppPackage package)
+        {
+            var result = new List<EisppPersonRegIXVM>();
+            var eisppEvent = package.Data.Events[0];
+            if (eisppEvent.CriminalProceeding.Case.Persons != null)
+            {
+                foreach (var person in eisppEvent.CriminalProceeding.Case.Persons)
+                {
+                    if (string.IsNullOrEmpty(person.Egn) || person.Egn == UnknownPersonEGN.ToString())
+                        continue;
+                    var fullName = person.FirstName ?? "";
+                    if (!string.IsNullOrEmpty(person.SecondName))
+                    {
+                        if (!string.IsNullOrEmpty(fullName))
+                            fullName += " ";
+                        fullName += person.SecondName;
+                    }
+                    if (!string.IsNullOrEmpty(person.LastName))
+                    {
+                        if (!string.IsNullOrEmpty(fullName))
+                            fullName += " ";
+                        fullName += person.LastName;
+                    }
+                    var item = new EisppPersonRegIXVM()
+                    {
+                        Uic = person.Egn,
+                        PersonName = fullName
+                    };
+                    result.Add(item);
+                }
+            }
+            return result;
+        }
+        
     }
 }

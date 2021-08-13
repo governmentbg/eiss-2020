@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Статистика";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<form id="formFilter"  asp-action="StatisticsSave" method="post">
+    <div class="alert alert-info alert-dismissible">
+        <h4><i class="icon fa fa-info"></i> Информация!</h4>
+        @ViewBag.messageMonth
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="submit" class="btn btn-primary single-click-submit">
+                Генериране
+                <i class="fa fa-save" title="Генериране"></i>
+            </button>
+        </div>
+    </div>
+</form>

@@ -12,5 +12,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("link_template")]
         [Display(Name = "Изписване на връзката")]
         public string LinkTemplate { get; set; }
+        
+        [Column("link_template_vks")]
+        [Display(Name = "Изписване на връзката за ВКС")]
+        public string LinkTemplateVks { get; set; }
     }
 }

@@ -15,6 +15,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int Iteration { get; set; }
         public string IterationText { get; set; }
         public int DurationMonths { get; set; }
+        public string DurationMonthsText { get; set; }
         public bool ModelEdit { get; set; }
     }
 }

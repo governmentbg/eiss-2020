@@ -66,5 +66,6 @@ namespace IOWebApplication.Core.Contracts
         bool Counter_GetDocumentResolutionCounter(DocumentResolution model);
         string Counter_GetCaseEisppNumber(int courtId);
         string Counter_GetCrimeEisppNumber(int courtId);
+        bool Counter_GetNotificationCounter(DocumentNotification model, int courtId);
     }
 }

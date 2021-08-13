@@ -5,7 +5,7 @@
 @inject IUserContext userContext
 
 @{
-    ViewData["Title"] = "Регистър по чл. 39, т. 13 от ПАС";
+    ViewData["Title"] = "РЕГИСТЪР на актовете, с които преписката е върната";
 }
 
 @section breadcrumb{
@@ -31,10 +31,24 @@
 
     <div class="row">
         <div class="col-md-6 text-left pb-15">
-            <button type="submit" class="btn btn-primary">
-                Експорт в Excel
-                <i class="fa fa-file-excel-o" title="Търсене"></i>
-            </button>
+            @if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.ReqBooks))
+            {
+                <button type="button" onclick="ExcelData()" class="btn btn-primary">
+                    Експорт в Excel
+                    <i class="fa fa-file-excel-o" title="Търсене"></i>
+                </button>
+                <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
+                    Експорт в Excel стар
+                    <i class="fa fa-file-excel-o" title="Търсене"></i>
+                </button>
+            }
+            else
+            {
+                <button type="button" onclick="ExcelDataPrev()" class="btn btn-primary">
+                    Експорт в Excel
+                    <i class="fa fa-file-excel-o" title="Търсене"></i>
+                </button>
+            }
         </div>
     </div>
 </form>
@@ -47,6 +61,17 @@
     $('#CaseGroupId').change(function () {
         requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
     });
+
+    function ExcelData() {
+        $('#formFilter').attr('action', '@Url.Action("CaseMigrationReturnReport")');
+        $("#formFilter").submit();
+    }
+
+    function ExcelDataPrev() {
+        $('#formFilter').attr('action', '@Url.Action("CaseMigrationReturnReportPrev")');
+        $("#formFilter").submit();
+    }
+
 </script>
 
 @section scripts {

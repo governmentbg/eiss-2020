@@ -300,6 +300,10 @@ a.dashboars-panel {
     width: 900px;
 }
 
+.ui-dialog.historyContainer{
+    z-index:1900;
+}
+
 .visibility_hidden input {
     visibility: hidden;
     border: none;
@@ -734,6 +738,12 @@ input.form-control, select.form-control {
 .select2-selection__arrow {
     height: 34px !important;
 }
+span.select2-selection__choice__remove{
+    color:#fff !important;
+}
+.select2-selection__choice {
+    background-color: #3c8dbc !important;
+}
 /*Print classes*/
 table.bordered {
     border-collapse: collapse;
@@ -1040,4 +1050,37 @@ col200 {
 .eispp-checkbox {
     width: 20px;
     height: 20px;
+}
+
+@media print {
+    html, body {
+        border: 1px solid white;
+        height: 99%;
+        page-break-after: avoid;
+        page-break-before: avoid;
+    }
+}
+
+.notification-table {
+    width: 100%;
+}
+.table.dataTable .notification-table tr td {
+    border: 0 !important;
+    border-top: 1px solid #3c8dbc !important;
+    padding-right: 5px !important;
+}
+
+.table.dataTable .notification-table tr:first-child td {
+    border: 0 !important;
+}
+
+.notification-td1 {
+    width: 40%;
+}
+.notification-td2 {
+    width: 40%;
+}
+.notification-td3 {
+    width: 20%;
+    align: "center";
 }

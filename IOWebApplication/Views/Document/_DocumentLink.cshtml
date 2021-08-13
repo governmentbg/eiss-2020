@@ -15,3 +15,4 @@
     <div id="@containerId"></div>
     <a href="#" class="add-item btn btn-xs btn-success" data-container="@containerId" data-url="@Url.Action("NewItem_DocumentLink")" data-index="@Model.DocumentLinks.Count()"><i class="fa fa-plus"></i> Добави свързан документ</a>
 </div>
+<partial name="_DocumentLinkToOther" model="@Model" />

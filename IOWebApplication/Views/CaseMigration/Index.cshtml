@@ -104,14 +104,28 @@
                         data: 'sentFromName',
                         title: 'Изпратено от',
                         sortable: false,
-                        searchable: false
+                        searchable: false,
+                         render: function (a, b, item, d) {
+                            if (item.migrationDirection == @(NomenclatureConstants.CaseMigrationDirections.Incoming) && !item.sendToCortId) {
+                                return item.sentToName;
+                            } else {
+                                return item.sentFromName;
+                            }
+                        }
                     },
                     {
                         name: 'sentToName',
                         data: 'sentToName',
                         title: 'Изпратено към',
                         sortable: false,
-                        searchable: false
+                        searchable: false,
+                        render: function (a, b, item, d) {
+                            if (item.migrationDirection == @(NomenclatureConstants.CaseMigrationDirections.Incoming) && !item.sendToCortId) {
+                                return item.sentFromName;
+                            } else {
+                                return item.sentToName;
+                            }
+                        }
                     },
                     {
                         name: 'dateWrt',

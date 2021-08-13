@@ -70,13 +70,25 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("law_unit_substitution_id")]
         public int? LawUnitSubstitutionId { get; set; }
 
-    [Column("case_selection_protokol_id")]
-    public int? CaseSelectionProtokolId { get; set; }
+        [Column("case_selection_protokol_id")]
+        public int? CaseSelectionProtokolId { get; set; }
 
-    [ForeignKey(nameof(CaseSelectionProtokolId))]
-    public virtual CaseSelectionProtokol CaseSelectionProtokol { get; set; }
+        /// <summary>
+        /// Само за ВКС, при избор на състав от графика: Датата на новото заседание или датата на насрочване за първото
+        /// </summary>
+        [Column("from_case_session_id")]
+        public int? FromCaseSessionId { get; set; }
 
-    [ForeignKey(nameof(CourtId))]
+        /// <summary>
+        /// Само за ВКС, при избор на състав от графика: Прекратява предходно валидните по делото, избрани с FromCaseSessionId до датата на ToCaseSession следващото заседание
+        /// </summary>
+        [Column("to_case_session_id")]
+        public int? ToCaseSessionId { get; set; }
+
+        [ForeignKey(nameof(CaseSelectionProtokolId))]
+        public virtual CaseSelectionProtokol CaseSelectionProtokol { get; set; }
+
+        [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
         [ForeignKey(nameof(CaseId))]
@@ -105,6 +117,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CourtGroupId))]
         public virtual CourtGroup CourtGroup { get; set; }
+
+        [ForeignKey(nameof(FromCaseSessionId))]
+        public virtual CaseSession FromCaseSession { get; set; }
+
+        [ForeignKey(nameof(ToCaseSessionId))]
+        public virtual CaseSession ToCaseSession { get; set; }
 
         public virtual ICollection<CaseLawUnitReplace> LawUnitReplaces { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Data.Models.UserContext
@@ -194,6 +196,28 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
 
         }
 
+        public int LawUnitTypeId
+        {
+            get
+            {
+                //TODO
+                int lawUnitTypeId = 0;
+                if (User != null && User.Claims != null && User.Claims.Count() > 0)
+                {
+                    var subClaim = User.Claims
+                        .FirstOrDefault(c => c.Type == CustomClaimType.LawUnitTypeId);
+
+                    if (subClaim != null)
+                    {
+                        lawUnitTypeId = int.Parse(subClaim.Value);
+                    }
+                }
+
+
+                return lawUnitTypeId;
+            }
+
+        }
         public int[] CourtInstances
         {
             get
@@ -340,6 +364,34 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
             return result;
         }
 
+        public bool IsSystemInFeature(string feature)
+        {
+            var claimValue = ClaimValue(CustomClaimType.SystemFeatures) ?? "";
+            return claimValue.Contains("#" + feature + "$");
+        }
+
+        public string GenHash(object id, object parent = null)
+        {
+            var parentText = (parent != null) ? parent.ToString() : "n-a";
+            var passwordAsBytes = Encoding.UTF8.GetBytes($"{DateTime.Now.Year}-{id}-{parentText}-{this.UserId}-{this.CourtTypeId}");
+            var saltBytes = Encoding.UTF8.GetBytes($"{this.CourtId}-{this.LawUnitId}-{id}");
+            List<byte> passwordWithSaltBytes = new List<byte>();
+            passwordWithSaltBytes.AddRange(passwordAsBytes);
+            passwordWithSaltBytes.AddRange(saltBytes);
+            byte[] digestBytes = System.Security.Cryptography.SHA256.Create().ComputeHash(passwordWithSaltBytes.ToArray());
+            return Convert.ToBase64String(digestBytes).ToLower();
+        }
+
+        public bool CheckHash(string hash, object id, object parent = null)
+        {
+            return hash == GenHash(id, parent);
+        }
+
+        public bool CheckHash(BlankEditVM blankModel)
+        {
+            return CheckHash(blankModel.SessionName, blankModel.SourceId, blankModel.SourceType);
+        }
+
         public string CertificateNumber
         {
             get
@@ -358,6 +410,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
                 return certNo;
             }
         }
+
+
     }
 }
 

@@ -1,4 +1,5 @@
-﻿using NPOI.HSSF.UserModel;
+﻿using IOWebApplication.Infrastructure.Extensions.HTML;
+using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -293,7 +294,7 @@ namespace IOWebApplication.Core.Services
                 }
                 else
                 {
-                    valueText = value.ToString();
+                    valueText = value.ToString().Decode();
                 }
             }
             return valueText;

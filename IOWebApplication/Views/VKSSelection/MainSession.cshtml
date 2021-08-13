@@ -1,0 +1,61 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model VksMainSessionAddVM
+
+@{
+    ViewData["Title"] = "Ненасрочени дела";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+
+
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <form asp-action="MainSession" method="post">
+        <div class="col-md-3">
+
+
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+
+            @Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")
+
+
+
+
+
+        </div>
+
+
+        <div class="col-md-1" >
+            
+            <div class="form-group">
+                <label  class="control-label">&nbsp;</label>
+                <input type="submit" value="Зареди" class="btn btn-success form-control" />
+            </div>
+    
+
+        </div>
+        </form>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        @if (Model.VksSelectionCalendar!=null)
+        {
+            <partial name="_SessionDayCalendarList_By_month" model="@Model.VksSelectionCalendar" />
+        }
+    </div>
+</div>
+
+

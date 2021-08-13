@@ -1,5 +1,4 @@
-﻿using Audit.Mvc;
-using IO.LogOperation.Models;
+﻿using IO.LogOperation.Models;
 using IO.LogOperation.Service;
 using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
@@ -10,9 +9,7 @@ using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models;
-using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +18,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
+using System.Web;
 
 namespace IOWebApplication.Controllers
 {
@@ -84,7 +82,18 @@ namespace IOWebApplication.Controllers
         {
             base.OnActionExecuting(filterContext);
 
+            try
+            {
+                if (filterContext.ActionArguments.Values != null)
+                {
+                    foreach (var obj in filterContext.ActionArguments.Values.Where(v => v != null && v.GetType()?.IsClass == true))
+                    {
 
+                        encodeStringProperties(obj);
+                    }
+                }
+            }
+            catch { }
 
             /*
              *      Управление на активния елемент на менюто
@@ -133,6 +142,79 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        private void encodeStringProperties(object obj)
+        {
+            if (obj == null)
+            {
+                return;
+            }
+            Type objType = obj.GetType();
+            var objProperties = objType.GetProperties();
+            foreach (var memberInfo in objProperties)
+            {
+                if (!memberInfo.CanWrite)
+                {
+                    continue;
+                }
+                var memName = memberInfo.Name;
+                var isString = memberInfo.PropertyType.FullName.ToLower().Contains("string");
+                if (isString)
+                {
+                    bool forEncode = true;
+                    if (memName.ToLower().Contains("url") ||
+                        memName.ToLower().Contains("html") ||
+                        memName.ToLower().Contains("json"))
+                    {
+                        forEncode = false;
+                    }
+                    else
+                    {
+                        var attribs = memberInfo.GetCustomAttributes(true);
+                        foreach (var attr in attribs)
+                        {
+                            if (attr.GetType().FullName == typeof(AllowHtmlAttribute).FullName)
+                            {
+                                forEncode = false;
+                            }
+                        }
+                    }
+                    if (forEncode)
+                    {
+                        var stringValue = memberInfo.GetValue(obj);
+                        var stringValueEncoded = HttpUtility.HtmlEncode(stringValue);
+                        memberInfo.SetValue(obj, stringValueEncoded);
+                    }
+                }
+                else
+                {
+                    if (memberInfo.PropertyType.FullName.StartsWith("System"))
+                    {
+                        continue;
+                    }
+                    Type propertyType = memberInfo.GetType();
+                    if (!propertyType.IsSubclassOf(typeof(System.ValueType)))
+                    {
+                        if (memberInfo.PropertyType.IsClass && propertyType.GetProperties().Any())
+                        {
+                            if (!memberInfo.PropertyType.IsGenericType &&
+                                !memberInfo.PropertyType.IsGenericTypeDefinition &&
+                                !memberInfo.PropertyType.IsAbstract &&
+                                !memberInfo.PropertyType.IsArray)
+                            {
+                                try
+                                {
+                                    encodeStringProperties(memberInfo.GetValue(obj));
+                                }
+                                catch { }
+                            }
+
+                        }
+                    }
+                }
+
+            }
+        }
+
         #region Лог на операциите
 
         public IActionResult Redirect_Denied(string message = null)
@@ -146,6 +228,11 @@ namespace IOWebApplication.Controllers
         public void SetAuditContextDelete(IBaseService service, int sourceType, long? sourceId)
         {
             CheckAccess(service, sourceType, sourceId, AuditConstants.Operations.Delete);
+            var _context = CurrentContext;
+            if (_context.IsRead)
+            {
+                AddAuditInfo(AuditConstants.Operations.Delete, _context.Info.BaseObject, _context.Info.ObjectInfo, sourceType);
+            }
         }
         public bool CheckAccess(IBaseService service, int sourceType, long? sourceId, string operation = "", object parentId = null)
         {
@@ -210,7 +297,7 @@ namespace IOWebApplication.Controllers
 
         #endregion
 
-        protected void AddAuditInfo(string operation, string baseInfo, string addInfo = null)
+        protected void AddAuditInfo(string operation, string baseInfo, string addInfo = null, int sourceType = 0)
         {
             var auditService = (IAuditLogService)HttpContext.RequestServices.GetService(typeof(IAuditLogService));
             var auditLog = new Infrastructure.Data.Models.Audit.AuditLog()
@@ -221,6 +308,10 @@ namespace IOWebApplication.Controllers
                 ObjectInfo = addInfo,
                 UserId = userContext.UserId
             };
+            if (sourceType > 0)
+            {
+                auditLog.ObjectType = SourceTypeSelectVM.GetSourceTypeName(sourceType);
+            }
             auditService.SaveLog(auditLog);
         }
 
@@ -258,7 +349,12 @@ namespace IOWebApplication.Controllers
                         var _context = CurrentContext;
                         if (_context.IsRead && _context.LastController == this.ControllerName)
                         {
+
                             auditLog.Operation = _context.Info.Operation;
+                            if (Request?.Method == "GET")
+                            {
+                                auditLog.Operation = AuditConstants.Operations.View;
+                            }
                             auditLog.ObjectType = _context.Info.ObjectType;
                             auditLog.BaseObject = _context.Info.BaseObject;
                             auditLog.ObjectInfo = _context.Info.ObjectInfo;
@@ -305,6 +401,10 @@ namespace IOWebApplication.Controllers
         {
             TempData[MessageConstant.ErrorMessage] = message;
         }
+        public void SetWarningMessage(string message)
+        {
+            TempData[MessageConstant.WarningMessage] = message;
+        }
 
         public void SetHelpFile(string helpFile)
         {
@@ -322,6 +422,8 @@ namespace IOWebApplication.Controllers
             {
                 case SourceTypeSelectVM.DocumentDecision:
                     return RedirectToAction("EditDocumentDecision", "Document", new { id = sourceId });
+                case SourceTypeSelectVM.DocumentNotification:
+                    return RedirectToAction("Edit", "DocumentNotification", new { id = sourceId });
                 case SourceTypeSelectVM.Case:
                     return RedirectToAction("CasePreview", "Case", new { id = sourceId });
                 case SourceTypeSelectVM.CaseSessionAct:
@@ -340,6 +442,8 @@ namespace IOWebApplication.Controllers
                     return RedirectToAction("EditExecList", "Money", new { id = sourceId });
                 case SourceTypeSelectVM.CasePersonSentence:
                     return RedirectToAction("Edit", "CasePersonSentence", new { id = sourceId });
+                case SourceTypeSelectVM.CaseLawyerHelp:
+                    return RedirectToAction("Edit", "CaseLawyerHelp", new { id = sourceId });
                 default:
                     return RedirectToAction("Index", "Home");
             }

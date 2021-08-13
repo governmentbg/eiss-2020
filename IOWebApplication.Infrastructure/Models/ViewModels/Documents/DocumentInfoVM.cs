@@ -12,6 +12,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public bool IsSecret { get; set; }
         public bool IsRestriction { get; set; }
         public DateTime? DocumentDate { get; set; }
+        public string Description { get; set; }
+        public int? CourtId { get; set; }
+        public string CourtLabel { get; set; }
+        public string DocumentTemplateLabel { get; set; }
+        public string DocumentPersonLabel { get; set; }
         public virtual ICollection<DocumentResolutionListVM> DocumentResolutions { get; set; }
     }
 }

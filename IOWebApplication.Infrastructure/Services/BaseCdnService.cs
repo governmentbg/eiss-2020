@@ -18,19 +18,33 @@ namespace IOWebApplication.Infrastructure.Services
     /// </summary>
     public class BaseCdnService : IBaseCdnService
     {
-        protected readonly IGridFSBucket gridFsBucket;
+        protected IGridFSBucket gridFsBucket;
+        protected readonly string fileDbName;
+        protected readonly IMongoClient mongoClient;
+
         protected readonly IRepository repo;
         public BaseCdnService(
             IConfiguration _config,
             IRepository _repo,
-            IMongoClient mongoClient
+            IMongoClient _mongoClient
             )
         {
             repo = _repo;
-            string fileDbName = _config.GetValue<string>("FileDbName");
+            fileDbName = _config.GetValue<string>("FileDbName");
+            mongoClient = _mongoClient;
+        }
+
+        protected void initMongo()
+        {
+            if (gridFsBucket != null)
+            {
+                return;
+            }
+
             var database = mongoClient.GetDatabase(fileDbName);
             gridFsBucket = new GridFSBucket(database);
         }
+
         public IEnumerable<CdnItemVM> Select(int sourceType, string sourceId, string fileId = null)
         {
             int[] sourceTypes = new List<int>(){
@@ -56,7 +70,8 @@ namespace IOWebApplication.Infrastructure.Services
                                     UserUploaded = x.UserUploaded,
                                     DateUploaded = x.DateUploaded,
                                     DateExpired = x.DateExpired,
-                                    FileSize = x.FileSize
+                                    FileSize = x.FileSize,
+                                    SignituresCount = x.SignituresCount ?? 0
                                 }).OrderBy(x => x.DateUploaded);
             }
             else
@@ -74,13 +89,15 @@ namespace IOWebApplication.Infrastructure.Services
                                     UserUploaded = x.UserUploaded,
                                     DateUploaded = x.DateUploaded,
                                     DateExpired = x.DateExpired,
-                                    FileSize = x.FileSize
+                                    FileSize = x.FileSize,
+                                    SignituresCount = x.SignituresCount ?? 0
                                 }).OrderBy(x => x.DateUploaded);
 
             }
         }
         public async virtual Task<CdnDownloadResult> GetFileById(string fileId)
         {
+            initMongo();
             using (var file = await gridFsBucket.OpenDownloadStreamAsync(ObjectId.Parse(fileId)))
             {
                 byte[] fileContent = new byte[(int)file.Length];
@@ -132,6 +149,7 @@ namespace IOWebApplication.Infrastructure.Services
 
             try
             {
+                initMongo();
                 string mongoFileId = (await gridFsBucket.UploadFromBytesAsync(request.FileName, request.FileContent, options)).ToString();
 
                 if (!string.IsNullOrEmpty(mongoFileId))
@@ -152,6 +170,7 @@ namespace IOWebApplication.Infrastructure.Services
 
         public async Task<bool> MongoCdn_DeleteFile(string id)
         {
+            initMongo();
             await gridFsBucket.DeleteAsync(ObjectId.Parse(id));
 
             return DeleteMongoFileData(id);
@@ -183,6 +202,7 @@ namespace IOWebApplication.Infrastructure.Services
                     Title = file.Title,
                     FileSize = file.FileContent.Length,
                     FileName = file.FileName,
+                    SignituresCount = file.SignituresCount,
                     UserUploaded = file.UserUploaded,
                     DateUploaded = DateTime.Now
                 };
@@ -192,10 +212,10 @@ namespace IOWebApplication.Infrastructure.Services
                     mongoFile.SourceIdNumber = parsedId;
                 }
 
-                if (file.SignersCount > 0)
-                {
-                    mongoFile.SignersCount = file.SignersCount;
-                }
+                //if (file.SignersCount > 0)
+                //{
+                //    mongoFile.SignersCount = file.SignersCount;
+                //}
 
                 repo.Add(mongoFile);
                 repo.SaveChanges();

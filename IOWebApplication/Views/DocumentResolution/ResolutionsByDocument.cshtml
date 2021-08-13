@@ -47,7 +47,22 @@
                         data: 'regNumber',
                         title: 'Номер',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        hidden: true
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Рег. номер',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            if (row.regNumber) {
+                                return "<div class='cdn-listview' style='margin-left:5px;'><a href='#' class='cdn-loader' data-sourceType='" + @SourceTypeSelectVM.DocumentResolutionPdf + "' data-sourceId='" + row.id + "'>" + row.regNumber + "</a></div>";
+                            } else {
+                                return "";
+                            }
+                        }
                     },
                     {
                         name: 'regDate',
@@ -86,8 +101,20 @@
                     }
                 ]
             });
-
-
+            table.columns(1).visible(false);
+            $(document).on('click', 'div.cdn-listview a.cdn-loader', function () {
+                    let url = '@Url.Action("FileListView","Files")';
+                    if ($(this).data('url')) {
+                        url = $(this).data('url');
+                    }
+                    let lnk = $(this);
+                    requestContent(url,
+                        { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                        function (html) {
+                            $(lnk).parent().html(html);
+                        });
+                    return false;
+                });
         });
 </script>
 

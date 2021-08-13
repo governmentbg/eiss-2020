@@ -8,6 +8,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
     public class HtmlTemplateCreateVM
     {
         public int Id { get; set; }
+        [AllowHtml]
         public string Text { get; set; }
         public string Style { get; set; }
         public int PageOrientation { get; set; }

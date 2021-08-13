@@ -212,7 +212,7 @@
                 }}
             oldJudgeRoleId = roleId;
         }).trigger('change');
-           
+
         $(document).on('change', '.lawUnitState', function () {
             let span = $(this).parents('div.row:first').find('.list-lawunit-name');
             if ($(this).val() == 2) {
@@ -224,6 +224,13 @@
             }
             ManageButtonLawUnitByCaseGroup();
         });
+
+             $('#CourtDutyId').change(function () {
+                 if($(this).is(':visible')){
+                     loadUnitsByDuty();
+
+                 }
+             });
         });
         function ManagelawUnitListFieldset(tabId) {
                 var roleId = $('#JudgeRoleId').val();
@@ -305,7 +312,7 @@
         }
         function loadUnitsByDuty() {
             requestContent('@Url.Action("LawUnits_LoadByDuty")',
-                { courtDutyId: $('#CourtDutyId').val(), caseId:'@Model.CaseId' }
+                { courtDutyId: $('#CourtDutyId').val(), caseId: '@Model.CaseId', judgeRoleId: $('#JudgeRoleId').val() }
                 , showLoadedUnits);
 
         }

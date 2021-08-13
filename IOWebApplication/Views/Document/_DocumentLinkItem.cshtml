@@ -17,8 +17,8 @@
             <div class="col-lg-5">
                 @Html.EditorFor(x => x.CourtId, "SelectCourt", new { onChange = "courtSelectDocLink(this);" })
             </div>
-            <div class="col-lg-3">
-                @Html.EditorFor(x => x.DocumentDirectionId, "DropDown", null, new { Ddl = (IEnumerable<SelectListItem>)ViewBag.DocumentDirectionDDL })
+            <div class="col-lg-3 doc-link-direction">
+                @Html.EditorFor(x => x.DocumentDirectionId, "DropDown", null, new { Ddl = (IEnumerable<SelectListItem>)ViewBag.DocumentDirectionDDL, @class = "link-doc-dir" })
             </div>
             <div class="col-lg-2 legacy-document-edit" @if (!Model.IsLegacyDocument) { <text> style="display:none;" </text> }>
                 @Html.EditorFor(x => x.PrevDocumentNumber)

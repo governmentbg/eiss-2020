@@ -102,6 +102,17 @@ namespace IOWebApplication.Core.Contracts
         IEnumerable<LabelValueVM> GetStreet(string ekatte, string query, int? streetType = null);
 
         /// <summary>
+        /// Връща List SelectListItem от value=Code,text=Label на BaseCommonNomenclature
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="addDefaultElement"></param>
+        /// <param name="addAllElement"></param>
+        /// <param name="orderByNumber"></param>
+        /// <returns></returns>
+        List<SelectListItem> GetDropDownListFromCode<T>(bool addDefaultElement = true, bool addAllElement = false, bool orderByNumber = true) where T : class, ICommonNomenclature;
+
+
+        /// <summary>
         /// Информация за autocomplete контрола за Street
         /// </summary>
         /// <param name="code">Код на улица</param>
@@ -178,6 +189,8 @@ namespace IOWebApplication.Core.Contracts
 
         void SetFullAddress(Address model);
 
+        string GetFullAddress(Address model, bool setContactData, bool munAreaNameFirst, bool vksCase);
+
         List<SelectListItem> GetDDL_LoadGroupLink(int courtTypeId, int caseTypeId, int caseCodeId = NomenclatureConstants.NullVal);
 
         List<HtmlTemplateDdlVM> GetDDL_HtmlTemplate(int notificationTypeId, int caseId, bool addDefaultElement = true);
@@ -223,6 +236,7 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDDL_MoneyCollectionKind(int moneyCollectionGroupId, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDismisalTypes_SelectForDropDownList(int dismisalKindId);
         List<SelectListItem> GetDDL_SpecialityForFilter(int? lawUnitTypeId = null);
+        List<SelectListItem> GetDDL_VksSessionLawunitChange();
 
         bool CaseCodeGroup_Check(string alias, int caseCodeId);
         List<SelectListItem> GetDDL_MoneyFeeType(int documentGroupId);
@@ -238,13 +252,14 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDDL_ActComplainIndexByCourtType(bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_ActResult(bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_ActResult(int CaseFromId, int CaseSessionActComplainId, bool addDefaultElement = true, bool addAllElement = false);
+        List<SelectListItem> GetDDL_ActResultOtherCase(string CaseRegNumberOtherSystem, int CaseSessionActComplainId, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_ExecListLawBase(int caseGroupId, bool addDefaultElement = true, bool addAllElement = false);
         int[] GetPersonRoleIdsByGroup(int personRoleGroup);
         List<SelectListItem> GetDDL_DocumentGroupByDirection(int documentDirectionId);
 
         List<SelectListItem> GetDDL_CaseState(bool InitialOnly, bool HideInitialStates);
         List<SelectListItem> GetDDL_CaseSessionState(bool InitialOnly);
-        List<SelectListItem> GetDDL_CaseSessionActState(bool InitialOnly, bool HideInitialStates);
+        List<SelectListItem> GetDDL_CaseSessionActState(bool InitialOnly, bool HideInitialStates,bool actIsDeclared);
         List<SelectListItem> GetDDL_JudgeRoleManualRoles(bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_ByCourtTypeInstanceList(int[] courtTypeInstanceList, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_SessionState(bool InitialOnly);
@@ -276,9 +291,13 @@ namespace IOWebApplication.Core.Contracts
         List<SelectListItem> GetDDL_IsFinalAct(bool addDefaultElement = true);
         CaseRegNumberVM DecodeCaseRegNumber(string regNumber);
         IEnumerable<LabelValueVM> Get_ActLawBase(string query, int id);
+        IEnumerable<LabelValueVM> Get_PersonRoles(string query, int? id);
         List<SelectListItem> GetDDL_ObligationJuryReportPersonType();
 
         int[] GetHtmlTemplateForCasePerson();
+
+        int[] GetHtmlTemplateForFromToDate();
+
         List<SelectListItem> GetDDL_MoneyCountryReceiver();
         HierarchicalNomenclatureDisplayModel GetEkatteEispp(string query);
         HierarchicalNomenclatureDisplayItem GetEkatteByEisppCodeCategory(string eisppCode);
@@ -289,5 +308,8 @@ namespace IOWebApplication.Core.Contracts
         LawBaseEditVM LawBase_GetById(int id);
         IEnumerable<SelectListItem> GetDDL_LawBase(int CaseId, bool addDefaultElement = true, bool addAllElement = false);
         bool IsExistsNameLawBase(string Label);
+        List<HtmlTemplateDdlVM> GetDDL_HtmlTemplateAll(int notificationTypeId, bool addDefaultElement = true);
+        IEnumerable<LabelValueVM> Get_EISPPTblElement(string EisppTblCode, string term, string id);
+        EisppTblElement GetByCode_EISPPTblElement(string Code);
     }
 }

@@ -19,11 +19,8 @@
 
   <ItemGroup>
     <Compile Remove="Data\Migrations\**" />
-    <Compile Remove="Models\NewFolder\**" />
     <EmbeddedResource Remove="Data\Migrations\**" />
-    <EmbeddedResource Remove="Models\NewFolder\**" />
     <None Remove="Data\Migrations\**" />
-    <None Remove="Models\NewFolder\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,7 +28,7 @@
     <PackageReference Include="Audit.NET.PostgreSql" Version="14.2.1" />
     <PackageReference Include="AutoMapper" Version="8.1.1" />
     <PackageReference Include="IO.LogOperation" Version="1.0.5" />
-    <PackageReference Include="IO.SignTools" Version="1.0.22" />
+    <PackageReference Include="IO.SignTools" Version="1.0.29" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
@@ -46,6 +43,7 @@
     </PackageReference>
     <PackageReference Include="MongoDB.Driver.Core" Version="2.10.4" />
     <PackageReference Include="MongoDB.Driver.GridFS" Version="2.10.4" />
+    <PackageReference Include="NEST" Version="7.13.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.1" />

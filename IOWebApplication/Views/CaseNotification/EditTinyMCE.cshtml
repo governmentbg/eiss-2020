@@ -11,13 +11,12 @@
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
-
+<style>
+    table.mce-item-table, .mce-item-table td, .mce-item-table th, .mce-item-table caption {
+        border: none;
+    }
+</style>
 <form id="formEditTinyMCE" method="post" action="@Url.Action("EditTinyMCE", "CaseNotification")">
-    <style>
-        table.mce-item-table, .mce-item-table td, .mce-item-table th, .mce-item-table caption {
-            border: none;
-        }
-    </style>
     @Html.HiddenFor(x => x.Style)
     @Html.HiddenFor(x => x.Id)
     @Html.HiddenFor(x => x.SourceId)
@@ -31,8 +30,8 @@
     <div>
         @if (access.CanChange)
         {
-            <button onclick="saveTinyMCE()" class="btn btn-success">Запис</button>
-            <button onclick="previewPDF()" class="btn btn-def"><i class="fa fa-file-pdf-o"></i>Преглед</button>
+            <button type="submit" class="btn btn-success">Запис</button>
+            <button type="submit" formaction="@Url.Action("DraftTinyMCE", "CaseNotification")" class="btn btn-def"><i class="fa fa-file-pdf-o"></i>Преглед</button>
         }
         @await Html.PartialAsync("_ButtonClose")
     </div>
@@ -52,16 +51,9 @@
             visual_table_class : "table",
             table_default_attributes: { border : 0},
             content_css: [
-                '@Url.Action("Preview", "HtmlTemplate", new { id = Model.Id})/style.css'
+                '@Url.Action("Preview", "HtmlTemplate", new { id = Model.Id})/style.css',
+                '/css/tinymce-generic-styles.css'
             ]
         });
-        function previewPDF() {
-             $('#formEditTinyMCE').attr('action', '@Url.Action("DraftTinyMCE", "CaseNotification")');
-             $("#formEditTinyMCE").submit();
-        }
-        function saveTinyMCE() {
-             $('#formEditTinyMCE').attr('action', '@Url.Action("EditTinyMCE", "CaseNotification")');
-             $("#formEditTinyMCE").submit();
-        }
     </script>
 }

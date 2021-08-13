@@ -43,8 +43,8 @@ namespace IOWebApplicationService.Services
 
 
             services.AddScoped<IDWDocumentService, DWDocumentService>();
-      services.AddScoped<IDWErrorLogService, DWErrorLogService>();
-      services.AddScoped<IDWSessionService, DWSessionService>();
+            services.AddScoped<IDWErrorLogService, DWErrorLogService>();
+            services.AddScoped<IDWSessionService, DWSessionService>();
             services.AddScoped<IDWSessionActService, DWSessionActService>();
             services.AddScoped<IEmailSender, EmailSender>();
             services.AddScoped<IEMailMessageService, EMailMessageService>();

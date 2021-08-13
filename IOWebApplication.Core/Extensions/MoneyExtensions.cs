@@ -248,6 +248,16 @@ namespace IOWebApplication.Core.Extensions
             return NumberToString(money, "евро", "евро", "евроцент", "евроцентове", ROD.MYGKI, ROD.GENSKI);
         }
 
+        public static string MoneyToStringCHF(decimal money)
+        {
+            return NumberToString(money, "швейцарски франк", "швейцарски франка", "рапен", "рапена", ROD.MYGKI, ROD.GENSKI);
+        }
+
+        public static string MoneyToStringGBP(decimal money)
+        {
+            return NumberToString(money, "британски паунд", "британски паунда", "пенс", "пенса", ROD.MYGKI, ROD.GENSKI);
+        }
+
         public static string MoneyToString(decimal money, int currencyId)
         {
             switch (currencyId)
@@ -260,6 +270,12 @@ namespace IOWebApplication.Core.Extensions
                     break;
                 case NomenclatureConstants.Currency.USD:
                     return MoneyToStringUSD(money);
+                    break;
+                case NomenclatureConstants.Currency.CHF:
+                    return MoneyToStringCHF(money);
+                    break;
+                case NomenclatureConstants.Currency.GBP:
+                    return MoneyToStringGBP(money);
                     break;
                 default:
                     return MoneyToString(money);

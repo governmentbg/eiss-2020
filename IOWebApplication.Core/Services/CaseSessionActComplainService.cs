@@ -494,9 +494,9 @@ namespace IOWebApplication.Core.Services
                        .Select(x => new CaseSessionActComplainResultVM()
                        {
                            Id = x.Id,
-                           CaseName = x.CaseSessionAct.Case.Court.Label + " - " + x.CaseSessionAct.Case.RegNumber + "/" + x.CaseSessionAct.Case.RegDate.ToString("dd.MM.yyyy"),
-                           CaseSessionActName = x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy"),
-                           CaseSessionActId = x.CaseSessionActId,
+                           CaseName = (x.CaseSessionActId != null ? x.CaseSessionAct.Case.Court.Label + " - " + x.CaseSessionAct.Case.RegNumber + "/" + x.CaseSessionAct.Case.RegDate.ToString("dd.MM.yyyy") : x.ComplainCourt.Label + " - дело: " + x.CaseRegNumberOtherSystem + "/" + x.CaseYearOtherSystem),
+                           CaseSessionActName = (x.CaseSessionActId != null ? x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : x.CaseSessionActOtherSystem),
+                           CaseSessionActId = x.CaseSessionActId ?? 0,
                            ActResultLabel = x.ActResult.Label,
                            DateResult = x.DateResult
                        })
@@ -525,7 +525,7 @@ namespace IOWebApplication.Core.Services
                            Id = x.Id,
                            CaseName = x.ComplainCase.Court.Label + " - " + x.ComplainCase.RegNumber + "/" + x.ComplainCase.RegDate.ToString("dd.MM.yyyy"),
                            CaseSessionActName = x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy"),
-                           CaseSessionActId = x.CaseSessionActId,
+                           CaseSessionActId = x.CaseSessionActId ?? 0,
                            ActResultLabel = x.ActResult.Label,
                            DateResult = x.DateResult
                        })
@@ -550,7 +550,12 @@ namespace IOWebApplication.Core.Services
                 CaseSessionActId = model.CaseSessionActId,
                 ActResultId = model.ActResultId,
                 Description = model.Description,
-                DateResult = model.DateResult
+                DateResult = model.DateResult,
+                CaseSessionActOtherSystem = model.CaseSessionActOtherSystem,
+                CaseYearOtherSystem = model.CaseYearOtherSystem,
+                CaseShortNumberOtherSystem = model.CaseShortNumberOtherSystem,
+                CaseRegNumberOtherSystem = model.CaseRegNumberOtherSystem,
+                DateFromLifeCycle = model.DateFromLifeCycle
             };
         }
 
@@ -572,7 +577,13 @@ namespace IOWebApplication.Core.Services
                 CaseSessionActId = model.CaseSessionActId,
                 ActResultId = model.ActResultId,
                 Description = model.Description,
-                DateResult = model.DateResult
+                DateResult = model.DateResult,
+                CaseRegNumberOtherSystem = model.CaseRegNumberOtherSystem,
+                CaseSessionActOtherSystem = model.CaseSessionActOtherSystem,
+                CaseShortNumberOtherSystem = model.CaseShortNumberOtherSystem,
+                CaseYearOtherSystem = model.CaseYearOtherSystem,
+                CaseOtherSystem = (model.CaseSessionActId == null),
+                DateFromLifeCycle = model.DateFromLifeCycle
             };
         }
 
@@ -595,7 +606,9 @@ namespace IOWebApplication.Core.Services
         {
             try
             {
-                model.ComplainCourtId = repo.GetById<Case>(model.ComplainCaseId).CourtId;
+                if (!model.CaseOtherSystem)
+                    model.ComplainCourtId = repo.GetById<Case>(model.ComplainCaseId).CourtId;
+
                 var modelSave = FillCaseSessionActComplainResult(model);
 
                 if (modelSave.Id > 0)
@@ -610,6 +623,11 @@ namespace IOWebApplication.Core.Services
                     saved.CaseSessionActId = modelSave.CaseSessionActId;
                     saved.ActResultId = modelSave.ActResultId;
                     saved.Description = modelSave.Description;
+                    saved.CaseRegNumberOtherSystem = modelSave.CaseRegNumberOtherSystem;
+                    saved.CaseSessionActOtherSystem = modelSave.CaseSessionActOtherSystem;
+                    saved.CaseShortNumberOtherSystem = modelSave.CaseShortNumberOtherSystem;
+                    saved.CaseYearOtherSystem = modelSave.CaseYearOtherSystem;
+                    saved.DateFromLifeCycle = model.DateFromLifeCycle;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     repo.Update(saved);
@@ -628,6 +646,7 @@ namespace IOWebApplication.Core.Services
                         var caseSessionActComplainSave = FillCaseSessionActComplainResult(model);
                         caseSessionActComplainSave.Id = 0;
                         caseSessionActComplainSave.CaseSessionActComplainId = int.Parse(caseSessionActComplain.Value);
+                        caseSessionActComplainSave.DateFromLifeCycle = null;
                         caseSessionActComplainSave.DateWrt = DateTime.Now;
                         caseSessionActComplainSave.UserId = userContext.UserId;
                         repo.Add<CaseSessionActComplainResult>(caseSessionActComplainSave);
@@ -640,8 +659,17 @@ namespace IOWebApplication.Core.Services
 
                 if (model.IsStartNewLifecycle)
                 {
-                    var caseSessionAct = repo.GetById<CaseSessionAct>(model.ActResultId);
-                    var dateAccept = caseMigrationService.GetDateTimeAcceptCaseAfterComplain(model.CaseId, caseSessionAct.CaseId ?? 0);
+                    DateTime? dateAccept = null;
+                    if (!model.CaseOtherSystem)
+                    {
+                        var caseSessionAct = repo.GetById<CaseSessionAct>(model.CaseSessionActId);
+                        dateAccept = caseMigrationService.GetDateTimeAcceptCaseAfterComplain(model.CaseId, caseSessionAct.CaseId ?? 0);
+                    }
+                    else
+                    {
+                        dateAccept = model.DateFromLifeCycle;
+                    }
+
                     caseLifecycleService.CaseLifecycle_NewIntervalSave(model.CaseId, dateAccept ?? DateTime.Now);
                 }
 

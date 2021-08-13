@@ -10,6 +10,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 
         public string DocumentName { get; set; }
 
+        [AllowHtml]
         public string DocumentContent { get; set; }
 
         public string CancelUrl { get; set; }
@@ -17,6 +18,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 
         public IEnumerable<DepersonalizationHistoryItem> DepersonalizationHistory { get; set; }
 
+        [AllowHtml]
         public string DepersonalizationNewItems { get; set; }
 
         public DepersonalizationModel()

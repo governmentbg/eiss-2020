@@ -48,6 +48,7 @@ namespace IOWebApplication.Infrastructure.Services
         {
             string fileId = request.FileId;
             string title = String.Empty;
+
             var fileItem = Select(request.SourceType, request.SourceId, request.FileId).FirstOrDefault();
             if (fileItem == null)
             {
@@ -58,12 +59,15 @@ namespace IOWebApplication.Infrastructure.Services
 
             CdnDownloadResult downloadInfo = await GetFileById(fileItem, postProcess);
             downloadInfo.FileTitle = title;
+            downloadInfo.SignituresCount = fileItem.SignituresCount;
+            downloadInfo.DateUploaded = fileItem.DateUploaded;
 
             return downloadInfo;
         }
 
         private async Task<CdnDownloadResult> GetFileById(CdnItemVM fileItem, CdnFileSelect.PostProcess postProcess = CdnFileSelect.PostProcess.None)
         {
+            initMongo();
             using (var file = await gridFsBucket.OpenDownloadStreamAsync(ObjectId.Parse(fileItem.FileId)))
             {
                 byte[] fileContent = new byte[(int)file.Length];
@@ -121,7 +125,7 @@ namespace IOWebApplication.Infrastructure.Services
                 return SignTools.FlattenSignature(ms, additionalText).flattenPdf;
             }
         }
-       
+
 
         public async Task<string> LoadHtmlFileTemplate(CdnFileSelect request)
         {

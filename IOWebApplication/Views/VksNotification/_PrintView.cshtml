@@ -1,0 +1,17 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@model List<VksNotificationPrintListVM>
+@{ 
+    var monthLabel = (string)ViewBag.MonthLabel;
+}
+<div class="vks-container">
+    <div class="columns">
+        <div style="margin-bottom:15px;">
+            Върховният касационен съд, гражданска и търговска колегия, на основание чл. 289 от ГПК съобщава на интересуващите се страни, че в открито съдебно заседание през месец @(monthLabel) година ще се разгледат посочените по-долу дела по отделения и дати, както следва:
+        </div>
+        @foreach (var item in Model)
+        {
+            @await Html.PartialAsync("_PrintItem", item)
+        }
+    </div>
+</div>
+

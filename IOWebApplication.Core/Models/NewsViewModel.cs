@@ -15,6 +15,7 @@ namespace IOWebApplication.Core.Models
 
         [Required(ErrorMessage = "Полето {0} е задължително")]
         [Display(Name = "Съдържание")]
+        [AllowHtml]
         public string Content { get; set; }
 
         [Display(Name = "Публикувана на")]

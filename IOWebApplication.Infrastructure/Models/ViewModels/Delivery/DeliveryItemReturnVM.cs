@@ -39,6 +39,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         [Required(ErrorMessage = "Въведете дата на връщане")]
         public DateTime? ReturnDate { get; set; }
         public int? CaseNotificationId { get; set; }
+        public int? DocumentNotificationId { get; set; }
         public bool IsForReturn { get; set; }
         public int? NotificationDeliveryGroupId { get; set; }
     }

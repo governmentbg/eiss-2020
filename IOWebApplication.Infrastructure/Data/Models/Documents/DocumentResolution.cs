@@ -4,6 +4,7 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -44,12 +45,22 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Column("declared_date")]
         public DateTime? DeclaredDate { get; set; }
 
+        [Column("judge_decision_count")]
+        public int? JudgeDecisionCount { get; set; }
+
         [Column("judge_decision_lawunit_id")]
         [Display(Name = "Съдия")]
         public int JudgeDecisionLawunitId { get; set; }
 
         [Column("judge_decision_user_id")]
         public string JudgeDecisionUserId { get; set; }
+
+        [Column("judge_decision_lawunit2_id")]
+        [Display(Name = "Съдия")]
+        public int? JudgeDecisionLawunit2Id { get; set; }
+
+        [Column("judge_decision_user2_id")]
+        public string JudgeDecisionUser2Id { get; set; }
 
         [Column("user_decision_id")]
         [Display(Name = "Изготвил")]
@@ -74,8 +85,22 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
 
+        [Column("task_user_id")]
+        [Display(Name = "Изпълнител")]
+        public string TaskUserId { get; set; }
+
+
+        /// <summary>
+        /// Потребител, създал бланката на акта
+        /// </summary>
+        [Column("act_creator_user_id")]
+        public string ActCreatorUserId { get; set; }
+
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
+
+        [ForeignKey(nameof(TaskUserId))]
+        public virtual ApplicationUser TaskUser { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -86,16 +111,28 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [ForeignKey(nameof(ResolutionTypeId))]
         public virtual ResolutionType ResolutionType { get; set; }
 
+
         [ForeignKey(nameof(JudgeDecisionLawunitId))]
         public virtual LawUnit JudgeDecisionLawunit { get; set; }
 
         [ForeignKey(nameof(JudgeDecisionUserId))]
         public virtual ApplicationUser JudgeDecisionUser { get; set; }
 
+        [ForeignKey(nameof(JudgeDecisionLawunit2Id))]
+        public virtual LawUnit JudgeDecisionLawunit2 { get; set; }
+
+        [ForeignKey(nameof(JudgeDecisionUser2Id))]
+        public virtual ApplicationUser JudgeDecisionUser2 { get; set; }
+
         [ForeignKey(nameof(UserDecisionId))]
         public virtual ApplicationUser UserDecision { get; set; }
 
+        [ForeignKey(nameof(ActCreatorUserId))]
+        public virtual ApplicationUser ActCreatorUser { get; set; }
+
         [ForeignKey(nameof(ResolutionStateId))]
         public virtual ResolutionState ResolutionState { get; set; }
+
+        public virtual ICollection<DocumentResolutionCase> Cases { get; set; }
     }
 }

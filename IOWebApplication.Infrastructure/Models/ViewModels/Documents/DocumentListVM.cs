@@ -16,6 +16,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public string CaseNumber { get; set; }
         public int? CaseId { get; set; }
         public bool? IsCaseRejected { get; set; }
+        public string RejectedStateName { get; set; }
         public int DocumentNumberValue { get; set; }
         public string Description { get; set; }
     }

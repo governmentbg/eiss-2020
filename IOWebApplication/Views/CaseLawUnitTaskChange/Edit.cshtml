@@ -61,7 +61,7 @@
     });
 
     function caseSelect() {
-        requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#CaseId').val() }, '#CaseSessionActId', '0', function (e) { $(e).trigger('change'); });
+        requestCombo('@Url.Action("GetDDL_CaseSessionActs", "Ajax")', { caseId: $('#CaseId').val(), declaredOnly:false }, '#CaseSessionActId', '0', function (e) { $(e).trigger('change'); });
     }
 
 </script>

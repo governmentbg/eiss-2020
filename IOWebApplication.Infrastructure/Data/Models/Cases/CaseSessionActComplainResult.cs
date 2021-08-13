@@ -24,7 +24,6 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public int? ComplainCourtId { get; set; }
 
         [Column("complain_case_id")]
-        [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}.")]
         [Display(Name = "Дело")]
         public int? ComplainCaseId { get; set; }
 
@@ -38,14 +37,33 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public int CaseId { get; set; }
 
         [Column("case_session_act_id")]
-        [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}.")]
         [Display(Name = "Акт")]
-        public int CaseSessionActId { get; set; }
+        public int? CaseSessionActId { get; set; }
 
         [Column("act_result_id")]
         [Display(Name = "Резултат от обжалване")]
         [Range(1, int.MaxValue, ErrorMessage = "Изберете {0}.")]
         public int? ActResultId { get; set; }
+
+        [Display(Name = "Номер дело")]
+        [Column("case_reg_number_other_system")]
+        public string CaseRegNumberOtherSystem { get; set; }
+
+        [Column("case_year_other_system")]
+        [Display(Name = "Година дело")]
+        public int? CaseYearOtherSystem { get; set; }
+
+        [Column("case_short_number_other_system")]
+        [Display(Name = "Код на дело")]
+        public string CaseShortNumberOtherSystem { get; set; }
+
+        [Column("case_session_act_other_system")]
+        [Display(Name = "Акт")]
+        public string CaseSessionActOtherSystem { get; set; }
+
+        [Column("date_from_life_cycle")]
+        [Display(Name = "Начална дата на интервал")]
+        public DateTime? DateFromLifeCycle { get; set; }
 
         [Column("description")]
         [Display(Name = "Описание")]

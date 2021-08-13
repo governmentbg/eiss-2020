@@ -27,11 +27,11 @@
                     <i class="fa fa-user"></i>
                     Печат на всичко
                 </a>
-                <a asp-controller="CaseNotification" asp-action="GenerateList" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-warning btn-sm m-b-5">
+                <a asp-controller="CaseNotification" asp-action="EditTinyMCE" asp-route-sourceId="@Model.CaseSessionId" asp-route-sourceType="@SourceTypeSelectVM.CaseSessionNotificationList" class="btn btn-warning btn-sm m-b-5">
                     <i class="fa fa-check"></i>
                     Генериране
                 </a>
-                 <div class="cdn-files" data-genurl="@Url.Action("GetFileList", "CaseNotification")" data-url="@Url.Action("GetFileList", "CaseNotification")" 
+                <div class="cdn-files" data-genurl="@Url.Action("GetFileList", "CaseNotification")" data-url="@Url.Action("GetFileList", "CaseNotification")"
                      data-label="Списък за призоваване"
                      data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationList" data-sourceid="@Model.CaseSessionId"
                      data-editmode="none">
@@ -50,11 +50,11 @@
                     <i class="fa fa-user"></i>
                     Печат на всичко
                 </a>
-                <a asp-controller="CaseNotification" asp-action="GenerateList" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListMessage" class="btn btn-warning btn-sm m-b-5">
+                <a asp-controller="CaseNotification" asp-action="EditTinyMCE" asp-route-sourceId="@Model.CaseSessionId" asp-route-sourceType="@SourceTypeSelectVM.CaseSessionNotificationListMessage" class="btn btn-warning btn-sm m-b-5">
                     <i class="fa fa-check"></i>
                     Генериране
                 </a>
-                <div class="cdn-files"  data-genurl="@Url.Action("GetFileList", "CaseNotification")" 
+                <div class="cdn-files" data-genurl="@Url.Action("GetFileList", "CaseNotification")"
                      data-label="Списък за съобщаване"
                      data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListMessage" data-sourceid="@Model.CaseSessionId"
                      data-editmode="none">
@@ -73,14 +73,14 @@
                     <i class="fa fa-user"></i>
                     Печат на всичко
                 </a>
-                <a asp-controller="CaseNotification" asp-action="GenerateList" asp-route-caseSessionId="@Model.CaseSessionId" asp-route-notificationListTypeId="@SourceTypeSelectVM.CaseSessionNotificationListNotification" class="btn btn-warning btn-sm m-b-5">
+                <a asp-controller="CaseNotification" asp-action="EditTinyMCE" asp-route-sourceId="@Model.CaseSessionId" asp-route-sourceType="@SourceTypeSelectVM.CaseSessionNotificationListNotification" class="btn btn-warning btn-sm m-b-5">
                     <i class="fa fa-check"></i>
                     Генериране
                 </a>
-                 <div class="cdn-files" data-genurl="@Url.Action("GetFileList", "CaseNotification")" 
-                         data-label="Списък за уведомяване"
-                         data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListNotification" data-sourceid="@Model.CaseSessionId"
-                         data-editmode="none">
+                <div class="cdn-files" data-genurl="@Url.Action("GetFileList", "CaseNotification")"
+                     data-label="Списък за уведомяване"
+                     data-sourcetype="@SourceTypeSelectVM.CaseSessionNotificationListNotification" data-sourceid="@Model.CaseSessionId"
+                     data-editmode="none">
                 </div>
             </div>
         </div>
@@ -104,7 +104,8 @@
                     data: function (d) {
                         d.caseSessionId = @Model.CaseSessionId;
                         d.NotificationListTypeId = $("#NotificationListTypeId").val();
-                    }
+                    },
+                    initialCall: false
                 },
                 deferLoading: deferLoadingOnTab('#caseNotificationListMainTable'),
                 columns: [
@@ -130,30 +131,14 @@
                         searchable: true
                     },
                     {
-                        name: 'addressString',
-                        data: 'addressString',
-                        title: 'Адрес',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'remark',
-                        data: 'remark',
-                        title: 'Забележка',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'dateSend',
-                        data: 'dateSend',
-                        title: 'Дата изпращане',
-                        sortable: true,
-                        searchable: true,
-                        "render": function (value) {
-                            if (value)
-                                return moment(value).format("DD.MM.YYYY");
-                            else
-                                return "";
+                        name: 'ndotificationTable',
+                        data: 'id',
+                        title: TemplateToHtml('#caseNotificationTableHeader'),
+                        sortable: false,
+                        searchable: false,
+                        className: "col-md-6",
+                        "render": function (value, type, row) {
+                            return  TemplateToHtml('#caseNotificationTable', row);
                         }
                     },
                     {
@@ -248,3 +233,23 @@
 </script>
 
 
+<script id="caseNotificationTable" type="text/x-handlebars-template">
+    <table class="notification-table">
+        {{#each notifications}}
+        <tr>
+            <td class="notification-td1">{{addressString}}</td>
+            <td class="notification-td2">{{remark}}</td>
+            <td class="notification-td3">{{dateSend}}</td>
+        </tr>
+        {{/each}}
+    </table>
+</script>
+<script id="caseNotificationTableHeader" type="text/x-handlebars-template">
+    <table class="notification-table">
+        <tr>
+            <th class="notification-td1">Адрес</th>
+            <th class="notification-td2">Забележка</th>
+            <th class="notification-td3">Дата на изпращане</th>
+        </tr>
+    </table>
+</script>

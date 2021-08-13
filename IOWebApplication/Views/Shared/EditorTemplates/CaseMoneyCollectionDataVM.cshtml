@@ -1,0 +1,51 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseMoneyCollectionDataVM
+
+<div data-index="@Model.CaseMoneyCollectionKindId" class="item-template money-kind-item">
+    <div class="row">
+        <div class="col-lg-12">
+            @Html.HiddenFor(x => x.CaseMoneyCollectionKindId)
+            <fieldset class="is-fieldset fsKindContainer">
+                <legend class="legend_1">
+                    <label>
+                        <input type="checkbox" asp-for="CaseMoneyCollectionKindBool" class="cboxKindToggle" />
+                        &nbsp;
+                        @Model.CaseMoneyCollectionKindText
+                    </label>
+                </legend>
+                <!--Суми-->
+                <div class="divKindContainer" @if (!Model.CaseMoneyCollectionKindBool) { <text> style="display: none;" </text> }>
+                    <div class="row">
+                        <!--За парично вземане-->
+                        <div id="InitialAmount_Div" class="col-lg-3">@Html.EditorFor(x => x.InitialAmount, "Decimal")</div>
+                        <div id="PretendedAmount_Div" class="col-lg-3">@Html.EditorFor(x => x.PretendedAmount, "Decimal")</div>
+                        <div id="RespectedAmount_Div" class="col-lg-3">@Html.EditorFor(x => x.RespectedAmount, "Decimal")</div>
+                    </div>
+
+                    <div class="row" id="DateTimeDiv">
+                        <!--От дата до дата-->
+                        <div class="col-lg-3">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.MoneyCollectionEndDateTypeId, "DropDown", null, new { Ddl = ViewBag.MoneyCollectionEndDateTypes })</div>
+                        <div class="col-lg-3 divDateTo" @if (Model.MoneyCollectionEndDateTypeId != NomenclatureConstants.MoneyCollectionEndDateType.WithDate) { <text> style="display: none;" </text> }>
+                            @Html.EditorFor(x => x.DateTo, "DateTime")
+                        </div>
+                        <!--Законова лихва-->
+                    </div>
+
+                    <div class="cml-join-distribution-container">
+                        <div class="row">
+                            <div class="col-lg-3">@Html.EditorFor(x => x.JointDistribution, "Boolean")</div>
+                        </div>
+
+                        <fieldset class="is-fieldset cpl-container">
+                            <legend class="legend_1">Разпределение на вземането</legend>
+                            @Html.EditorFor(x => x.IsFraction, "Boolean")
+                            @Html.EditorFor(x => x.CasePersonListDataDecimals)
+                        </fieldset>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</div>

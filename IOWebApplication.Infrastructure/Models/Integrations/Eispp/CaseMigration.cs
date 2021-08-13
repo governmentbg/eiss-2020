@@ -74,5 +74,8 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         {
             return MigrationDate != defaultDate;
         }
+        [XmlIgnore]
+        public int CaseMigrationId { get; set; }
+
     }
 }

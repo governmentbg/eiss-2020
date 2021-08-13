@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.ServiceModel;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -61,6 +62,54 @@ namespace IOWebApplication.Infrastructure.Extensions
             }
 
             return value.Split(',').Select(x => int.Parse(x)).ToArray();
+        }
+
+        public static string TrimSpaces(this string model)
+        {
+            if (model == null)
+            {
+                return null;
+            }
+            var regex = new Regex("[ ]{2,}", RegexOptions.None);
+            return regex.Replace(model, " ");
+        }
+
+        /// <summary>
+        /// Съкращава имена до първа гласна буква
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="appendDot"></param>
+        /// <returns></returns>
+        public static string ToShortNameCyrlillic(this string name, bool appendDot = false)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return name;
+            }
+            char[] vowelLetters = { 'А', 'Ъ', 'О', 'У', 'Е', 'И', 'Я', 'а', 'ъ', 'о', 'у', 'е', 'и', 'я' };
+            char letterInVowel;
+            string shortName = "";
+            for (int i = 0; i < name.Length; i++)
+            {
+                letterInVowel = vowelLetters
+                .FirstOrDefault(l => l == name[i]);
+
+                if (letterInVowel != '\0' && i != 0)
+                {
+                    if (appendDot)
+                    {
+                        return $"{shortName}.";
+                    }
+                    else
+                    {
+                        return $"{shortName}";
+                    }
+
+                }
+
+                shortName += name[i];
+            }
+            return name;
         }
     }
 }

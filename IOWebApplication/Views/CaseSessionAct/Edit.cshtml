@@ -92,6 +92,7 @@
                         @Html.HiddenFor(x => x.RegDate)
                         @Html.HiddenFor(x => x.RegNumber)
                         @Html.HiddenFor(x => x.ActDeclaredDate)
+                        @Html.HiddenFor(x => x.DateWrt)
 
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div id="saveContainer">
@@ -163,7 +164,14 @@
                                 {
                                     @Html.HiddenFor(x => x.SecretaryUserId)
                                     <div class="row">
-                                        <div class="col-lg-6 disable-controls">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
+                                        @if (manualSecretaryUser)
+                                        {
+                                            <div class="col-lg-6">@Html.DisplayFor(x => x.SecretaryUserId, "objVal", new { value = ViewBag.SecretaryUserName })</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="col-lg-6  disable-controls">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
+                                        }
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActStateId, "GenericDropDown")</div>
                                     </div>
                                 }
@@ -190,11 +198,18 @@
                                 }
                                 <div class="row">
                                     <div class="col-lg-6">
-                                        @Html.EditorFor(x => x.IsFinalDoc, "Boolean")
+                                        @if (hasEditFinishDoc)
+                                        {
+                                            @Html.EditorFor(x => x.IsFinalDoc, "Boolean")
+                                        }
+                                        else
+                                        {
+                                            @Html.EditorFor(x => x.IsFinalDoc, "BooleanDisabled")
+                                        }
                                     </div>
                                     <div class="col-lg-6">
                                         <div class="row" id="divComplainResult">
-                                            @if (canAccessFile)
+                                            @if (canAccessFile || (Model.Id == 0))
                                             {
                                                 <div class="col-lg-12">@Html.EditorFor(x => x.ActComplainResultId, "GenericDropDown")</div>
                                             }
@@ -240,7 +255,7 @@
                                 }
 
                             </fieldset>
-                            @if (hasMotives)
+                            @if (hasMotives && access.CanChange)
                             {
                                 <fieldset class="is-fieldset">
                                     <legend class="legend_1">Мотиви</legend>
@@ -277,10 +292,10 @@
                         <div class="form-group">
                             @if (access.CanChange)
                             {
-                                <input id="btnMainSubmit" type="submit" value="Запис" class="btn btn-success single-click-submit m-b-5" />
+                                <input id="btnMainSubmit" type="submit" value="Запис" class="btn btn-success single-click-submit" />
                             }
                             &nbsp;
-                            <a href="@Url.Action("Preview","CaseSession",new { id=Model.CaseSessionId})#tabSessionAct" class="btn btn-danger m-b-5">Назад</a>
+                            <a href="@Url.Action("Preview","CaseSession",new { id=Model.CaseSessionId})#tabSessionAct" class="btn btn-danger">Назад</a>
                             @if (Model.Id > 0)
                             {
                                 <span>&nbsp;</span>
@@ -289,22 +304,31 @@
                                     if (!hasDefacedAct)
                                     {
 
-
-                                        <a href="#" id="btnBlank" style="display:none;" onclick="editActBlank(); return false;" class="btn btn-primary m-b-5">Изготвяне на акт</a>
-                                        <a href="#" id="btnBlankComplete" style="display:none;" onclick="editActBlankComplete(); return false;" class="btn btn-warning m-b-5">Корекция на акт</a>
+                                        if (Model.ActDeclaredDate != null)
+                                        {
+                                            <a href="#" id="btnBlank" style="display:none;" onclick="editActBlank(); return false;" class="btn btn-warning">Корекция на акт</a>
+                                        }
+                                        else
+                                        {
+                                            <a href="#" id="btnBlank" style="display:none;" onclick="editActBlank(); return false;" class="btn btn-primary">Изготвяне на акт</a>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.RegNumber))
+                                        {
+                                            <a href="#" id="btnBlankComplete" style="display:none;" onclick="editActBlankComplete(); return false;" class="btn btn-warning">Корекция на акт</a>
+                                        }
                                     }
                                 }
-                                @if (hasDefacedBlank && !hasDefacedAct && canAccessFile)
+                                @if (access.CanChange && hasDefacedBlank && !hasDefacedAct && canAccessFile)
                                 {
                                     <span>&nbsp;</span>
-                                    <a asp-action="DepersonalizeAct" asp-route-id="@Model.Id" class="btn btn-primary m-b-5">Обезличаване на акт</a>
+                                    <a asp-action="DepersonalizeAct" asp-route-id="@Model.Id" class="btn btn-primary">Обезличаване на акт</a>
                                 }
                                 else
                                 {
-                                    if (hasDefacedBlank && access.CanChangeFull)
+                                    if (hasDefacedAct && access.CanChangeFull)
                                     {
                                         <span>&nbsp;</span>
-                                        <a onclick="confirmDelete(this,'act'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile",new { actId=Model.Id,sourceType=SourceTypeSelectVM.CaseSessionActDepersonalized})" class="btn btn-danger m-b-5" title="Премахване на обезличения акт"><i class="fa fa-remove"></i></a>
+                                        <a onclick="confirmDelete(this,'act'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile",new { actId=Model.Id,sourceType=SourceTypeSelectVM.CaseSessionActDepersonalized})" class="btn btn-danger" title="Премахване на обезличения акт"><i class="fa fa-remove"></i></a>
                                     }
                                 }
 
@@ -346,29 +370,41 @@
                 {
                     <div class="col-lg-6">
                         <div class="cdn-files" data-label="Съдебен акт / протокол" data-sourcetype="@SourceTypeSelectVM.CaseSessionAct" data-sourceid="@Model.Id" data-editmode="none"></div>
-                        <div class="cdn-files" data-label="Документи към съдебен акт / протокол" data-sourcetype="@SourceTypeSelectVM.CaseSessionActManualUpload" data-sourceid="@Model.Id" data-editmode="edit"></div>
-                        <fieldset class="is-fieldset">
-                            <legend class="legend_1">
-                                Действия
-                            </legend>
-                            @if (showNoResultButton)
-                            {
-                                <a href="@Url.Action("AddResult","CaseSession",new { caseSessionId = Model.CaseSessionId, CallFromActId = Model.Id })" class="btn btn-sm btn-default" title="Отваря форма за въвеждане на резултат от проведено заседание.">Добави резултат</a>
-                            }
-                            @if (canRegisterAct)
-                            {
-                                <a href="@Url.Action("RegisterAct",new { id=Model.Id})" class="btn btn-sm btn-primary" title="Регистрира акта с номер и дата.">Регистриране</a>
-                            }
-                            @if (Model.ActDeclaredDate == null)
-                            {
-                                <a href="#" onclick="sendForSignCheck(this); return false;" class="btn btn-sm btn-success" title="Създава документа на акта и задачите за подпис на състава по заседанието">Изпращане за подпис</a>
-                            }
-                            @if (ViewBag.nextActLabel != null && ViewBag.nextActUrl != null)
-                            {
-                                <a href="@Html.Raw(ViewBag.nextActUrl)" class="btn btn-sm btn-warning">@ViewBag.nextActLabel</a>
-                            }
-                            <partial name="WorkTaskMyNew" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.CaseSessionAct,Model.Id) { TaskRequired=true})" />
-                        </fieldset>
+
+                        <div class="cdn-files" data-label="Документи към съдебен акт / протокол" data-sourcetype="@SourceTypeSelectVM.CaseSessionActManualUpload" data-sourceid="@Model.Id" data-editmode="@(access.CanChange ? "edit" : "none")"></div>
+
+                        @if (access.CanChange)
+                        {
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">
+                                    Действия
+                                </legend>
+                                @if (showNoResultButton)
+                                {
+                                    <a href="@Url.Action("AddResult", "CaseSession", new { caseSessionId = Model.CaseSessionId, CallFromActId = Model.Id })" class="btn btn-sm btn-default" title="Отваря форма за въвеждане на резултат от проведено заседание.">Добави резултат</a>
+                                }
+                                @if (canRegisterAct)
+                                {
+                                    <a href="@Url.Action("RegisterAct", new { id = Model.Id })" class="btn btn-sm btn-primary" title="Регистрира акта с номер и дата.">Регистриране</a>
+                                }
+                                @if (Model.ActDeclaredDate == null)
+                                {
+                                    <a href="#" onclick="sendForSignCheck(this); return false;" class="btn btn-sm btn-success" title="Създава документа на акта и задачите за подпис на състава по заседанието">Изпращане за подпис</a>
+                                }
+                                else
+                                {
+                                    if (hasMotives && Model.ActMotivesDeclaredDate == null)
+                                    {
+                                        <a href="#" onclick="sendForSignMotivesCheck(this); return false;" class="btn btn-sm btn-success" title="Създава документа за мотивите към акта и задачите за подпис на състава по заседанието">Изпращане на мотиви за подпис</a>
+                                    }
+                                }
+                                @if (ViewBag.nextActLabel != null && ViewBag.nextActUrl != null)
+                                {
+                                    <a href="@Html.Raw(ViewBag.nextActUrl)" class="btn btn-sm btn-warning">@ViewBag.nextActLabel</a>
+                                }
+                                <partial name="WorkTaskMyNew" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.CaseSessionAct, Model.Id) { TaskRequired = true })" />
+                            </fieldset>
+                        }
                     </div>
                 }
             </div>
@@ -394,20 +430,11 @@
             SH_ComplainIndex();
             SH_ActResult();
             SH_ActTerm();
-            ED_FinishDoc();
             $('#btnBlank').hide();
             $('#btnBlankComplete').hide();
-            //Акт се изготвя само ако не е избрана специална бланка с Model.ActKindId
-            @if ((Model.ActKindId ?? 0) <= 0) {
-                <text>$('#btnBlank').show();</text>
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(Model.RegNumber))
-                {
-                <text>$('#btnBlankComplete').show();</text>
-                }
-            }
+            SH_BlankButtons('');
+
+
             initLawUnit();
             initUserAutoComplete();
 
@@ -422,6 +449,21 @@
             SH_ComplainIndex();
         });
 
+        function SH_BlankButtons(processMode) {
+            let _actKind = @(Model.ActKindId ?? 0);
+
+             //Акт се изготвя само ако не е избрана специална бланка с Model.ActKindId или е Обезпечителна заповед
+            if (_actKind <= 0 || processMode == 'blank_body_only') {
+                $('#btnBlank').show();
+                $('#btnBlankComplete').hide();
+            } else {
+                if (_actKind > 0) {
+                    $('#btnBlank').hide();
+                    $('#btnBlankComplete').show();
+                }
+            }
+        }
+
         function editActBlank() {
              let editUrl = "@Url.Action("Blank",new { id=Model.Id})";
             @if (hasActPdf)
@@ -429,7 +471,7 @@
                 <text>
                     swalConfirm('Има генериран файл на съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! След промяна на съдържанието на съдебния акт/протокол е необходимо да създадете нова задача за подписване, за да се генерира нов файл на съдебния акт/протокол със същия номер.', function () {
                             document.location.href = editUrl;
-                        });
+                        },null,@(Model.ActDeclaredDate != null ? "true" : "false"));
                 </text>
             }else {
                 <text>document.location.href = editUrl;</text>
@@ -449,7 +491,6 @@
             }else {
                 <text>document.location.href = editUrl;</text>
             }
-
         }
 
         function sendForSignCheck(sender) {
@@ -462,7 +503,6 @@
             {
                 <text>
                     swalConfirm('Вече има регистриран съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за съдебния акт/протокол със същия номер и ще се създадат нови задачи за подпис.', function () {
-                        //$(sender).
                         document.location.href = editUrl;
                     }, function () {
                             $(sender).removeAttr('disabled');
@@ -470,21 +510,34 @@
                 </text>
             }else {
                 <text>
-
             setTimeout(function () {
                 document.location.href = editUrl;
             },200);
             </text>
             }
-
         }
 
-        function ED_FinishDoc() {
-            if ('@hasEditFinishDoc' == 'True') {
-                $('#IsFinalDoc').attr("disabled", false);
+        function sendForSignMotivesCheck(sender) {
+            if ($(sender).attr('disabled')) {
+                return;
             }
-            else {
-                $('#IsFinalDoc').attr("disabled", true);
+            $(sender).attr('disabled', 'disabled');
+             let editUrl = "@Url.Action("SentForSignMotives", new { actId=Model.Id})";
+            @if (ViewBag.hasMotives == true)
+            {
+                <text>
+                    swalConfirm('Вече създаден документ за мотиви, който е в процес на подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за мотиви и ще се създадат нови задачи за подпис.', function () {
+                        document.location.href = editUrl;
+                    }, function () {
+                            $(sender).removeAttr('disabled');
+                    });
+                </text>
+            }else {
+                <text>
+            setTimeout(function () {
+                document.location.href = editUrl;
+            },200);
+            </text>
             }
         }
 
@@ -539,7 +592,6 @@
                     SH_ActTerm();
                     $('select#ActKindId').trigger('change');
                 });
-                debugger;
                 let showSignJudge = '@NomenclatureConstants.ActType.HasSignJudge.ToJSstring()';
                 if (showSignJudge.indexOf('|' + $(this).val() + '|') >= 0) {
                     $('#divSignJudge').show();
@@ -549,7 +601,6 @@
                 @if(Model.Id == 0)
                 {
                     <text>
-                //debugger;
                 let defFinalActs = JSON.parse('@NomenclatureConstants.ActType.FinalByDefaultStr');
                 let isFinal = false;
                 for (var i = 0; i < defFinalActs.length; i++) {
@@ -562,6 +613,7 @@
                 } else {
                     $('#IsFinalDoc').prop("checked", false);
                 }
+                SH_ComplainResult();
                 </text>
                 }
             }).trigger('change');
@@ -575,17 +627,13 @@
             $('select#ActKindId').change(function () {
                 requestGET_Json('@Url.Action("Get_ActKindInfo")', { actKindId: $(this).val() }, function (data) {
                     if (data) {
-                        //debugger;
                         if (data.mustSelectRelatedAct == true) {
                             $('#divRelatedAct').show();
                         } else {
                             $('#divRelatedAct').hide();
                         }
-                        if (data.processType == 'blank_body_only') {
-                            $('#btnBlank').show();
-                        } else {
-                            $('#btnBlank').hide();
-                        }
+
+                        SH_BlankButtons(data.processType);
                     } else {
                         $('#divRelatedAct').hide();
                     }

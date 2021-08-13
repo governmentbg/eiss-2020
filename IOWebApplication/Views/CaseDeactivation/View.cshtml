@@ -25,6 +25,10 @@
             @if (Model.DeclaredDate == null)
             {
                 <a asp-action="SendForSign" asp-route-id="@Model.Id" class="btn btn-success">Подписване</a>
+
+                <div class="pull-right">
+                    @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на протокол за анулиране на дело", ExpireSubmitUrl = Url.Action("ExpiredInfo") })
+                </div>
             }
         </div>
     </div>

@@ -49,6 +49,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Кредитор")]
         public int? CasePersonId { get; set; }
 
+        [Display(Name = "Да се вижда в изпълнителния лист")]
+        public bool? VisibleEL { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 

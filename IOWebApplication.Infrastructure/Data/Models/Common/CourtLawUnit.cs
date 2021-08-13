@@ -1,4 +1,6 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Common;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -10,7 +12,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
     /// Лица към съдилища
     /// </summary>
     [Table("common_court_lawunit")]
-    public class CourtLawUnit
+    public class CourtLawUnit: IExpiredInfo
     {
         [Key]
         [Column("id")]
@@ -51,6 +53,20 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("description")]
         [Display(Name = "Забележка")]
         public string Description { get; set; }
+
+        [Column("date_expired")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateExpired { get; set; }
+
+        [Column("user_expired_id")]
+        public string UserExpiredId { get; set; }
+
+        [Column("description_expired")]
+        [Display(Name = "Причина за анулиране")]
+        public string DescriptionExpired { get; set; }
+
+        [ForeignKey(nameof(UserExpiredId))]
+        public virtual ApplicationUser UserExpired { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

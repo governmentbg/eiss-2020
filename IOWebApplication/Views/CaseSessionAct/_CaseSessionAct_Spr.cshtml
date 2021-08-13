@@ -2,6 +2,10 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @using IOWebApplication.Infrastructure.Constants
 
+@Html.HiddenFor(m => m.CaseGroupIds_text)
+@Html.HiddenFor(m => m.CaseTypeIds_text)
+@Html.HiddenFor(m => m.ActTypeIds_text)
+
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
@@ -10,12 +14,18 @@
 </div>
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeIds, "GenericDropDownMultiple")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
 </div>
 <div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.IsFinalDoc, "Boolean")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupIds, "GenericDropDownMultiple")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeIds, "GenericDropDownMultiple")</div>
 </div>
 
 <div class="row">
@@ -54,7 +64,10 @@
                             JudgeReporterId: $('#JudgeReporterId').val(),
                             IsFinalDoc: $("#IsFinalDoc").is(":checked"),
                             RegNumber: $('#RegNumber').val(),
-                            ActTypeId: $('#ActTypeId').val(),
+                            ActTypeIds_text: $('#ActTypeIds_text').val(),
+                            CourtDepartmentId: $('#CourtDepartmentId').val(),
+                            CaseGroupIds_text: $('#CaseGroupIds_text').val(),
+                            CaseTypeIds_text: $('#CaseTypeIds_text').val()
                         };
                     }
                 },
@@ -75,6 +88,13 @@
                         name: 'judgeReport',
                         data: 'judgeReport',
                         title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'departmentOtdelenieText',
+                        data: 'departmentOtdelenieText',
+                        title: 'Отделение/Състав',
                         sortable: true,
                         searchable: true
                     },
@@ -143,6 +163,40 @@
 </script>
 
 <script>
+    $(document).ready(function () {
+        $('#CaseGroupIds').select2({
+        });
+        $('#CaseTypeIds').select2({
+        });
+        $('#ActTypeIds').select2({
+        });
+    });
+
+    $('#CaseGroupIds').change(function () {
+        var str = '';
+        if ($('#CaseGroupIds').val() !== null && $('#CaseGroupIds').val().length > 0) {
+            str = $('#CaseGroupIds').val().join(',');
+        }
+        $('#CaseGroupIds_text').val(str);
+        requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: str }, '#CaseTypeIds', @(Model.CaseTypeIds ?? "0"), function () { $('#CaseTypeIds').trigger('change') });
+    });
+
+    $('#CaseTypeIds').change(function () {
+        var str = '';
+        if ($('#CaseTypeIds').val() !== null && $('#CaseTypeIds').val().length > 0) {
+            str = $('#CaseTypeIds').val().join(',');
+        }
+        $('#CaseTypeIds_text').val(str);
+    });
+
+    $('#ActTypeIds').change(function () {
+        var str = '';
+        if ($('#ActTypeIds').val() !== null && $('#ActTypeIds').val().length > 0) {
+            str = $('#ActTypeIds').val().join(',');
+        }
+        $('#ActTypeIds_text').val(str);
+    });
+
     $(function () {
         initActLawBaseAutoComplete();
         initLawUnit();

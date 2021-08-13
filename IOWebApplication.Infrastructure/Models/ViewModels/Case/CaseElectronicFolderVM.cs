@@ -1,5 +1,6 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using IOWebApplication.Infrastructure.Models.ViewModels.Money;
 using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
@@ -12,6 +13,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
     public class CaseElectronicFolderVM
     {
         public int Id { get; set; }
+        public int CourtId { get; set; }
         public bool IsOnlyFiles { get; set; }
         public string CourtLabel { get; set; }
         public string CaseGroupLabel { get; set; }
@@ -47,5 +49,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public virtual ICollection<RegixListVM> RegixReports { get; set; }
         public virtual ICollection<ExpenseOrderVM> ExpenseOrders { get; set; }
         public virtual ICollection<DocumentDecisionCaseListVM> DocumentDecisionCaseLists { get; set; }
+        public virtual ICollection<DocumentInfoVM> DocumentsOtherFromSameCourt { get; set; }
+        public virtual ICollection<DocumentInfoVM> DocumentsOtherFromDifferentCourt { get; set; }
+        public virtual ICollection<WorkTaskReportVM> WorkTaskReports { get; set; }
+        public virtual ICollection<DocumentResolutionListVM> DocumentResolutionCase { get; set; }
     }
 }

@@ -38,6 +38,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [Column("content")]
         [Display(Name = "Особено мнение")]
+        [AllowHtml]
         public string Content { get; set; }
 
         [ForeignKey(nameof(CourtId))]

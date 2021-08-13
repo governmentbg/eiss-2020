@@ -13,7 +13,10 @@
     {
         <a href="#" onclick="cmCreateMovement(); return false;" class="btn btn-sm btn-success" style="position:relative;left:15px"><i class="fa fa-plus"></i> Ново движение</a>
     }
-    <a href="@Url.Action("Index_SprFromCaeId", "CaseMovement")?CaseId=@Model.SourceType" class="btn btn-warning btn-sm" style="position: absolute; right:15px" title="Справка"><i class="fa fa-map-marker"></i><span class="hidden-sm hidden-xs"> Справка</span></a>
+    @if (access.CanAccess)
+    {
+        <a href="@Url.Action("Index_SprFromCaeId", "CaseMovement")?CaseId=@Model.SourceType" class="btn btn-warning btn-sm" style="position: absolute; right:15px" title="Справка"><i class="fa fa-map-marker"></i><span class="hidden-sm hidden-xs"> Справка</span></a>
+    }
 </div>
 
 <script>

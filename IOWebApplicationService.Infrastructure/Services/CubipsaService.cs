@@ -65,9 +65,34 @@ namespace IOWebApplicationService.Infrastructure.Services
 
             try
             {
-                var actModel = await initModel((int)mq.SourceId);
-                await serviceClient.SendActAsync(actModel);
-                //serviceClient.DeleteAct(actModel);
+
+                switch (mq.MethodName)
+                {
+                    case EpepConstants.Methods.Add:
+                    case EpepConstants.Methods.Update:
+                        {
+                            var actModel = await initModel((int)mq.SourceId);
+                            await serviceClient.SendActAsync(actModel);
+                        }
+                        break;
+                    case EpepConstants.Methods.Delete:
+                        {
+                            var actModel = await initModel((int)mq.SourceId);
+                            await serviceClient.DeleteActAsync(actModel);
+                        }
+                        break;
+                    case "correctYear":
+                        {
+                            var actModel = await initModel((int)mq.SourceId, true);
+                            await serviceClient.DeleteActAsync(actModel);
+                            var actModelCorrent = await initModel((int)mq.SourceId);
+                            await serviceClient.SendActAsync(actModelCorrent);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
 
                 UpdateMQ(mq, true);
             }
@@ -77,7 +102,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
         }
 
-        private async Task<Act> initModel(int id)
+        private async Task<Act> initModel(int id, bool correctMode = false)
         {
             var actInfo = repo.AllReadonly<CaseSessionAct>()
                                 .Include(x => x.CaseSession)
@@ -133,8 +158,12 @@ namespace IOWebApplicationService.Infrastructure.Services
                 MotiveDate = actInfo.MotiveDate,
                 Number = int.Parse(actInfo.ActNumber),
                 EcliCode = actInfo.EcliCode,
-                Year = actInfo.ActYear
+                Year = actInfo.CaseYear
             };
+            if (correctMode)
+            {
+                model.Year = actInfo.ActYear;
+            }
             //Липсва мапинг за изходящите документи в ЕПЕП!!!!!
             if (false && migrationInfo != null && migrationInfo.OutDocumentId != null)
             {

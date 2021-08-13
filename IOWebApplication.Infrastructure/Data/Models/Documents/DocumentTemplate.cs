@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
@@ -13,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
     /// Създаване на изходящи документи
     /// </summary>
     [Table("document_template")]
-    public class DocumentTemplate : UserDateWRT
+    public class DocumentTemplate : UserDateWRT, IExpiredInfo
     {
         [Key]
         [Column("id")]
@@ -74,6 +75,27 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Display(Name = "Адрес")]
         public int? CasePersonAddressId { get; set; }
 
+        [Column("date_expired")]
+        [Display(Name = "Дата на анулиране")]
+        public DateTime? DateExpired { get; set; }
+
+        [Column("user_expired_id")]
+        public string UserExpiredId { get; set; }
+
+        [Column("description_expired")]
+        [Display(Name = "Причина за анулиране")]
+        public string DescriptionExpired { get; set; }
+
+        [Column("date_from")]
+        [Display(Name = "От дата")]
+        public DateTime? DateFrom { get; set; }
+
+        [Column("date_to")]
+        [Display(Name = "До дата")]
+        public DateTime? DateTo { get; set; }
+
+        [ForeignKey(nameof(UserExpiredId))]
+        public virtual ApplicationUser UserExpired { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

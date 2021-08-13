@@ -1,7 +1,7 @@
 ﻿@model CaseSessionVM
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @using IOWebApplication.Infrastructure.Constants
-
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
 
@@ -26,6 +26,7 @@
     <div class="col-md-8">
         <form id="frmCaseSessionEdit" asp-action="Edit" method="post">
             @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DateWrt)
             @Html.HiddenFor(x => x.CaseId)
             @Html.HiddenFor(x => x.CourtId)
 
@@ -38,12 +39,19 @@
                         <div class="col-lg-6 col-md-12">
                             <div class="row">
                                 <div class="col-lg-9 col-md-8 col-xs-8">@Html.EditorFor(x => x.CourtHallId, "GenericDropDown")</div>
-                                <div class="col-lg-3 col-md-4 col-xs-4 bottom-right"><a id="link" href="#" target="_blank" class="btn btn-def btn-sm btn-block"><i class="fa fa-calendar"></i> Заетост</a></div>
+                                @if (access.CanChange)
+                                {
+                                    <div class="col-lg-3 col-md-4 col-xs-4 bottom-right"><a id="link" href="#" target="_blank" class="btn btn-def btn-sm btn-block"><i class="fa fa-calendar"></i> Заетост</a></div>
+                                }
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-lg-6">@Html.EditorFor(x => x.SessionStateId, "GenericDropDown")</div>
+                        @if (ViewBag.VksLawunitChange_ddl != null)
+                        {
+                            <div class="col-lg-6">@Html.EditorFor(x => x.VksLawunitChange, "GenericDropDown")</div>
+                        }
                     </div>
 
                     <div class="row">
@@ -72,6 +80,12 @@
                     else
                     {
                         <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                    }
+                    @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+                    {
+                        <a asp-controller="VksSelection" asp-action="RedirectVksSelection" asp-route-id="@Model.CaseId" target="_blank" class="btn btn-success">График ВКС</a>
+                        <a href="@Url.Action("MainSessionByLawUnit","VKSSelection", new { caseId = Model.CaseId })" class="btn btn-def " target="_blank" title="Календар"><i class="fa fa-lock"></i><span class="hidden-sm hidden-xs"> Календар</span></a>
+
                     }
 
                     @if (Model.Id > 0)
@@ -189,6 +203,29 @@
                 , function (data) {
                     if (data.result != '') {
                         swalConfirm(data.result, function () {
+                            SubmitCaseSessionEditIsExistSessionWithoutAct();
+                        }, function () {
+                            $('#subButton').removeAttr("disabled");
+                        });
+                    } else {
+                        SubmitCaseSessionEditIsExistSessionWithoutAct();
+                    }
+                });
+        }
+        else {
+            SubmitCaseSessionEditIsExistSessionWithoutAct();
+        };
+    }
+
+    function SubmitCaseSessionEditIsExistSessionWithoutAct() {
+        var modelId = @Model.Id;
+        var caseId = @Model.CaseId;
+        if (modelId < 1) {
+            postContent('@Url.Action("IsExistLastSessionWithoutAct", "CaseSession")'
+                , { CaseId: caseId, SessionId: modelId }
+                , function (data) {
+                    if (data.result == true) {
+                        swalConfirm("Има насрочено/проведено заседание без акт", function () {
                             SubmitCaseSessionEditFinal();
                         }, function () {
                             $('#subButton').removeAttr("disabled");

@@ -1,0 +1,43 @@
+﻿@model VksSelectionCalendarVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+@{Layout = null;}
+
+<table width="660">
+    <tr>
+        <td colspan="2">
+
+            <center>
+                <h2>
+                    График на съдебните заседания на @Model.CourtDepartmentName на принципа на случайното<br />
+                    разпределение по електронен път и еднаквото участие на съдиите в съдебни<br />
+                    заседания<br />
+                    м. @Model.MonthList[0].SelectionMonthString.ToLower() -  м. @Model.MonthList[Model.MonthList.Count() - 1].SelectionMonthString.ToLower() @Model.SelectionYear г.
+                </h2>
+            </center>
+
+
+
+            <center>
+                <partial name="_ProtocolMonthList" model="@Model.MonthList" />
+            </center>
+
+
+        </td>
+
+    </tr>
+  
+
+    <tr>
+        <td width="30%"></td>
+        <td align="left"><br /><br /><br />Председател на  @Model.CourtDepartmentName: </td>
+    </tr>
+    <tr>
+        <td width="30%"></td>
+        <td align="center">( @Model.SignJudgeName )</td>
+    </tr>
+</table>
+
+
+

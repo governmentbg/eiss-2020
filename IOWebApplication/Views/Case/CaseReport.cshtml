@@ -17,7 +17,8 @@
 }
 <form id="formFilter" method="post">
     @Html.HiddenFor(x => x.ActIsFinalDocHidden)
-    
+    @Html.HiddenFor(x => x.VisibleOtherSystemHidden)
+
     <div class="filter-form">
         <fieldset class="is-fieldset">
             <legend class="casereport-legend">Дела</legend>
@@ -32,7 +33,7 @@
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
-                    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
                 </div>
                 <div class="row">
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
@@ -75,14 +76,24 @@
             <legend class="casereport-legend">Свързани дела</legend>
             <div class="legendbody">
                 <div class="row" id="linkCaseInfo">
-                    <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt")</div>
-                    <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_RegNumber)</div>
-                    <div class="col-lg-3">@Html.EditorFor(x => x.LinkDelo_Description)</div>
+                    <div id="linkDelo">
+                        <div class="col-lg-3"> @Html.EditorFor(x => x.LinkDelo_CourtId, "SelectCourt")</div>
+                        <div class="col-lg-2">@Html.EditorFor(x => x.LinkDelo_RegNumber)</div>
+                        <div class="col-lg-2">@Html.EditorFor(x => x.LinkDelo_Description)</div>
+                    </div>
+                    <div class="col-lg-2">@Html.EditorFor(x => x.EisppNumber)</div>
+
                     @if (hasRegNumberOtherSystem)
                     {
-                        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+                        <div class="col-lg-2">@Html.EditorFor(x => x.VisibleOtherSystem, "Boolean")</div>
+                        <div id="otherSystemDelo">
+                            <div class="col-lg-3"> @Html.EditorFor(x => x.CourtOtherSystem, "SelectCourt")</div>
+                            <div class="col-lg-2">@Html.EditorFor(m => m.YearOtherSystem, "DateTimeYear")</div>
+                            <div class="col-lg-2">@Html.EditorFor(x => x.RegNumberOtherSystem)</div>
+                        </div>
                     }
                 </div>
+
                 <div class="row">
                     <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionTypeId, "GenericDropDown")</div>
                     <div class="col-lg-3">@Html.EditorFor(x => x.Institution_InstitutionId, "GenericDropDown")</div>
@@ -151,6 +162,7 @@
         }
 
         $("#ActIsFinalDocHidden").val($("#ActIsFinalDoc").is(":checked"));
+        $("#VisibleOtherSystemHidden").val($("#VisibleOtherSystem").is(":checked"));
         $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
 
         if ($.fn.dataTable.isDataTable('#mainTable')) {
@@ -257,6 +269,7 @@
         $(".legendbody").hide();
         $('#CaseGroupId').trigger('change');
         $('#Institution_InstitutionTypeId').trigger('change');
+        SH_OtherSystem();
     });
 
     $('#CaseGroupId').change(function () {
@@ -271,6 +284,22 @@
         let courtId = $('#LinkDelo_CourtId').val();
         var courtData = $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court');
         $('#LinkDelo_CaseId').parents("#linkCaseInfo:first").find('.case-container:first').data('court', courtId);
+    }
+
+    $('#VisibleOtherSystem').change(function () {
+        SH_OtherSystem();
+    });
+
+    function SH_OtherSystem() {
+        var visibleOS = $("#VisibleOtherSystem").is(":checked");
+        if (visibleOS) {
+            $("#linkDelo").hide();
+            $("#otherSystemDelo").show();
+        }
+        else {
+            $("#linkDelo").show();
+            $("#otherSystemDelo").hide();
+        }
     }
 </script>
 
@@ -290,5 +319,5 @@
         initCourts();
         initLawUnit();
         initActLawBaseAutoComplete();
-   </script>
+    </script>
 }

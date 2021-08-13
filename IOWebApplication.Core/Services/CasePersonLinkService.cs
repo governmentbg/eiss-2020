@@ -120,13 +120,14 @@ namespace IOWebApplication.Core.Services
                                .Replace("{RoleX}", roleX)
                                .Replace("{Y}", personY)
                                .Replace("{RoleY}", roleY);
-
+            model.LabelWithoutSecondRel = model.Label;
             model.LabelWithoutFirstPerson = model.LinkTemplate
                                                  .Replace("{X}", string.Empty)
                                                  .Replace("{RoleX}", string.Empty)
                                                  .Replace("{Y}", personY)
                                                  .Replace("{RoleY}", roleY);
             model.LabelWithoutFirstPerson = model.LabelWithoutFirstPerson.Replace("()", "<br>");
+            
             if (model.LinkDirectionSecondId > 0)
                 model.Label += model.SecondLinkTemplate
                                .Replace("{Z}", model.PersonSecondRelName)
@@ -189,7 +190,9 @@ namespace IOWebApplication.Core.Services
                     PersonRelRole = x.CasePersonRel.PersonRole.Label ?? "",
                     PersonSecondRelRole = x.CasePersonSecondRel.PersonRole.Label ?? "",
                     LinkTemplate = x.LinkDirection.LinkTemplate,
+                    LinkTemplateVks = x.LinkDirection.LinkTemplateVks,
                     SecondLinkTemplate = x.LinkDirectionSecond.LinkTemplate,
+                    SecondLinkTemplateVks = x.LinkDirectionSecond.LinkTemplateVks,
                     Label = "",
                     LabelWithoutFirstPerson = ""
                 }).ToList();
@@ -222,7 +225,8 @@ namespace IOWebApplication.Core.Services
         private List<CaseNotificationLinkVM> FilterPresentByList(List<CaseNotificationLinkVM> linkList, int casePersonId)
         {
             return linkList.Where(x => (!x.isXFirst && x.PersonId == casePersonId) ||
-                                       (x.isXFirst && x.PersonRelId == casePersonId)
+                                       (x.isXFirst && x.PersonRelId == casePersonId) ||
+                                       (x.PersonSecondRelId == casePersonId)
                                      ).ToList();
         }
 

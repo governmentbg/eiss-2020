@@ -1,7 +1,9 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace IOWebApplication.Core.Extensions
@@ -59,5 +61,14 @@ namespace IOWebApplication.Core.Extensions
         }
 
         #endregion
+
+        /// <summary>
+        /// Проверка за валиден отвод - или няма статус или е Уважено искането за отвод
+        /// </summary>
+        /// <returns></returns>
+        public static Expression<Func<CaseLawUnitDismisal, bool>> ConfirmedDismissalsOnly() 
+        {
+            return x => (x.DismissalStateId ?? NomenclatureConstants.DismissalStates.Confirmed) == NomenclatureConstants.DismissalStates.Confirmed;
+        }
     }
 }

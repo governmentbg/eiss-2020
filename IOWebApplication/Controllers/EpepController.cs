@@ -9,6 +9,8 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+using IOWebApplicationService.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -43,21 +45,55 @@ namespace IOWebApplication.Controllers
         }
 
         //[AllowAnonymous]
-        //public async Task<IActionResult> recoverdata()
+        //public async Task<IActionResult> GetUserRegistration(string id)
         //{
         //    epepClient = await connector.Connect();
-        //    return Content(service.RecoverData(epepClient));
+        //    return Json(await epepClient.GetUserRegistrationInfoByUsernameAsync(id));
         //}
+
+        //[AllowAnonymous]
+        //public async Task<IActionResult> GetPersonRegistrationById(string id)
+        //{
+        //    epepClient = await connector.Connect();
+        //    return Json(await epepClient.GetPersonRegistrationByIdAsync(Guid.Parse(id)));
+        //}
+
+        //[AllowAnonymous]
+        //public async Task<IActionResult> getcaseinfo(string id)
+        //{
+        //    epepClient = await connector.Connect();
+        //    try
+        //    {
+        //        return Json(epepClient.GetSideIdentifiersByCaseId(Guid.Parse(id)));
+        //    }catch(Exception ex)
+        //    {
+        //        return null;
+        //    }
+        //}
+
+        //[AllowAnonymous]
+        //public async Task<IActionResult> recoverdata()
+        //{
+        //    // epepClient = await connector.Connect();
+        //    return Content(service.RecoverData(null));
+        //}
+
+        public IActionResult SendActPreparators(int id)
+        {
+            service.SendActPreparators(id);
+            return Content("Заявката за актуализиране на участници по акта е добавена успешно.");
+        }
 
         public IActionResult EpepUser()
         {
             SetHelpFile(HelpFileValues.Nom7);
+            ViewBag.EpepUserTypeId_ddl = nomService.GetDropDownList<EpepUserType>();
             return View();
         }
         [HttpPost]
-        public IActionResult EpepUser_ListData(IDataTablesRequest request, int? userType)
+        public IActionResult EpepUser_ListData(IDataTablesRequest request, EpepUserFilterVM filter)
         {
-            var data = service.EpepUser_Select(userType, request.Search?.Value);
+            var data = service.EpepUser_Select(filter);
             return request.GetResponse(data);
         }
 
@@ -68,6 +104,12 @@ namespace IOWebApplication.Controllers
             SetViewBag_EpepUser(model);
             return View(nameof(EpepUser_Edit), model);
         }
+        public async Task<IActionResult> EpepUser_AddFromEmail(string email)
+        {
+            var model = await EpepUser_LoadDataByEmail(email);
+            SetViewBag_EpepUser(model);
+            return View(nameof(EpepUser_Edit), model);
+        }
         public IActionResult EpepUser_Edit(int id)
         {
             var model = service.GetById<EpepUser>(id);
@@ -75,12 +117,16 @@ namespace IOWebApplication.Controllers
             return View(nameof(EpepUser_Edit), model);
         }
         [HttpPost]
-        public IActionResult EpepUser_Edit(EpepUser model)
+        public async Task<IActionResult> EpepUser_Edit(EpepUser model)
         {
             var error = service.EpepUser_Validate(model);
             if (!string.IsNullOrEmpty(error))
             {
                 ModelState.AddModelError("", error);
+            }
+            if (model.Id == 0)
+            {
+                await Epep_Validation(model);
             }
             if (!ModelState.IsValid)
             {
@@ -100,7 +146,107 @@ namespace IOWebApplication.Controllers
                 SetViewBag_EpepUser(model);
                 return View(nameof(EpepUser_Edit), model);
             }
+        }
+        private async Task Epep_Validation(EpepUser model)
+        {
+            try
+            {
+                epepClient = await connector.Connect();
+                var regInfo = await epepClient.GetUserRegistrationInfoByUsernameAsync(model.Email.ToLower());
+                if (regInfo.IsRegistered)
+                {
+                    if (!regInfo.LawyerRegistrationId.IsEmpty())
+                    {
+                        if (model.EpepUserTypeId == EpepConstants.UserTypes.Lawyer)
+                        {
+                            return;
+                        }
+                        ModelState.AddModelError("", "Съществува създаден потребител на адвокат в ЕПЕП с тази електронна поща.");
+                    }
+                    if (!regInfo.PersonRegistrationId.IsEmpty())
+                    {
+                        if (model.EpepUserTypeId == EpepConstants.UserTypes.Person)
+                        {
+                            return;
+                        }
+                        ModelState.AddModelError("", "Съществува създаден потребител на частно лице в ЕПЕП с тази електронна поща.");
+                    }
+                    ViewBag.hasEpepUserOtherType = true;
+                }
+            }
+            catch (Exception ex)
+            {
 
+            }
+            finally
+            {
+                if (epepClient != null && epepClient.State == CommunicationState.Opened)
+                {
+                    await epepClient.CloseAsync();
+                }
+            }
+        }
+
+        private async Task<EpepUser> EpepUser_LoadDataByEmail(string email)
+        {
+            EpepUser model = new EpepUser();
+            try
+            {
+                epepClient = await connector.Connect();
+                var regInfo = await epepClient.GetUserRegistrationInfoByUsernameAsync(email.ToLower());
+                if (regInfo.IsRegistered)
+                {
+                    if (!regInfo.LawyerRegistrationId.IsEmpty())
+                    {
+                        var epepLawyer = await epepClient.GetLawyerRegistrationByIdAsync(regInfo.LawyerRegistrationId.Value);
+                        if (epepLawyer != null)
+                        {
+                            model.EpepUserTypeId = EpepConstants.UserTypes.Lawyer;
+                            model.BirthDate = epepLawyer.BirthDate;
+                            model.Email = epepLawyer.Email;
+                            var lawyers = await epepClient.GetAllLawyersAsync();
+                            var regLawyer = lawyers.Where(x => x.LawyerId == epepLawyer.LawyerId).FirstOrDefault();
+                            if (regLawyer != null)
+                            {
+                                model.LawyerNumber = regLawyer.Number;
+
+                                var lawunit = service.GetLawyerByNumber(model.LawyerNumber);
+                                if (lawunit != null)
+                                {
+                                    model.LawyerLawUnitId = lawunit.Id;
+                                    model.FullName = lawunit.FullName;
+                                }
+                                else
+                                {
+                                    ModelState.AddModelError(nameof(model.LawyerLawUnitId), $"Ненамерен адвокат {regLawyer.Name} с номер {regLawyer.Number}.");
+                                }
+                            }
+                        }
+                    }
+                    if (!regInfo.PersonRegistrationId.IsEmpty())
+                    {
+                        var epepPerson = await epepClient.GetPersonRegistrationByIdAsync(regInfo.PersonRegistrationId.Value);
+                        if (epepPerson != null)
+                        {
+                            model.EpepUserTypeId = EpepConstants.UserTypes.Person;
+                            model.Uic = epepPerson.EGN;
+                            model.FullName = epepPerson.Name;
+                            model.BirthDate = epepPerson.BirthDate;
+                            model.Address = epepPerson.Address;
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex) { }
+            finally
+            {
+                if (epepClient != null && epepClient.State == CommunicationState.Opened)
+                {
+                    await epepClient.CloseAsync();
+                }
+            }
+            return model;
         }
 
         private void SetViewBag_EpepUser(EpepUser model)
@@ -114,6 +260,7 @@ namespace IOWebApplication.Controllers
                 }
             };
             ViewBag.documentInfo = service.EpepUser_DocumentInfo(model.DocumentId);
+            ViewBag.epepUserType = service.GetById<EpepUserType>(model.EpepUserTypeId).Label;
             SetHelpFile(HelpFileValues.Nom7);
         }
 
@@ -138,13 +285,24 @@ namespace IOWebApplication.Controllers
         public IActionResult EpepUserAssignment_Edit(int id)
         {
             var model = service.GetById<EpepUserAssignment>(id);
+
             SetViewBag_EpepUserAssignment(model);
             return View(nameof(EpepUserAssignment_Edit), model);
         }
         [HttpPost]
         public IActionResult EpepUserAssignment_Edit(EpepUserAssignment model)
         {
-
+            model.CourtId = userContext.CourtId;
+            var _case = service.GetById<IOWebApplication.Infrastructure.Data.Models.Cases.Case>(model.CaseId);
+            if (_case.CourtId != userContext.CourtId)
+            {
+                ModelState.AddModelError("CaseId", "Нямате достъп до избраното дело.");
+            }
+            string validation = service.EpepUserAssignment_Validate(model);
+            if (!string.IsNullOrEmpty(validation))
+            {
+                ModelState.AddModelError("", validation);
+            }
             if (!ModelState.IsValid)
             {
                 SetViewBag_EpepUserAssignment(model);
@@ -181,6 +339,7 @@ namespace IOWebApplication.Controllers
                 }
              }
             };
+            ViewBag.canChange = model.CourtId == userContext.CourtId;
             SetHelpFile(HelpFileValues.Nom7);
         }
         public IActionResult Get_CasePerson(int caseId)
@@ -217,15 +376,7 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        //public IActionResult ReturnAllErrors()
-        //{
-        //    if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
-        //    {
-        //        return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
-        //    }
-        //    var updatedCount = service.ReturnAllErrorsInMQ();
-        //    return Content($"Върнати заявки в опашката {updatedCount} бр.");
-        //}
+
 
         public async Task<IActionResult> GetRegInfo(string id, string infoType)
         {
@@ -272,6 +423,22 @@ namespace IOWebApplication.Controllers
                 await epepClient.CloseAsync();
             }
             return Content("Invalid operation");
+        }
+
+        public IActionResult RecoverRequest(int st, int si)
+        {
+            bool result = false;
+            switch (st)
+            {
+                case SourceTypeSelectVM.CaseNotification:
+                    var model = service.GetById<Infrastructure.Data.Models.Cases.CaseNotification>(si);
+                    result = service.AppendCaseNotification(model, EpepConstants.ServiceMethod.Add);
+                    break;
+                default:
+                    break;
+            }
+
+            return Json(result);
         }
 
         public async Task<IActionResult> RemoveObject(string id, string infoType)
@@ -333,275 +500,6 @@ namespace IOWebApplication.Controllers
             ViewBag.resetUrl = Url.Action(nameof(MqInfo), new { integrationType, sourceType, sourceId, returnToMQ = true });
             return PartialView("_MqInfo", model);
         }
-
-
-        /*
-        public IActionResult ManageData()
-        {
-            if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
-            {
-                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
-            }
-
-            var model = new EpepManageDataVM();
-            SetViewBagManage();
-            return View(model);
-        }
-
-        [HttpPost]
-        public IActionResult ManageData(EpepManageDataVM model)
-        {
-            //if (!model.CheckCode())
-            //{
-            //    ModelState.AddModelError(nameof(EpepManageDataVM.SecurityCode), "Грешен код");
-            //}
-
-            epepClient = connector.Connect().Result;
-
-            Guid _id = Guid.Empty;
-            try
-            {
-                _id = Guid.Parse(model.ObjectId);
-            }
-            catch
-            {
-                ModelState.AddModelError(nameof(EpepManageDataVM.ObjectId), "Невалиден идентификатор");
-            }
-            var intKey = service.IntegrationKey_GetByOuterKey(NomenclatureConstants.IntegrationTypes.EPEP, model.ObjectId);
-            if (intKey != null)
-            {
-                ModelState.AddModelError(nameof(EpepManageDataVM.ObjectId), "Идентификатора се използва. Невъзможно изтриването.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                model.SecurityCode = string.Empty;
-                SetViewBagManage();
-                return View(model);
-            }
-            bool submitOk = false;
-            try
-            {
-                switch (model.DataType)
-                {
-                    case SourceTypeSelectVM.Case:
-                        submitOk = epepClient.DeleteCase(_id);
-                        break;
-                    case SourceTypeSelectVM.CaseSelectionProtokol:
-                        submitOk = epepClient.DeleteAssignment(_id);
-                        break;
-                    case SourceTypeSelectVM.CaseSession:
-                        submitOk = epepClient.DeleteHearing(_id);
-                        break;
-                    case SourceTypeSelectVM.CaseSessionAct:
-                        submitOk = epepClient.DeleteAct(_id);
-                        break;
-                    case SourceTypeSelectVM.CaseSessionActPreparator:
-                        submitOk = epepClient.DeleteActPreparator(_id);
-                        break;
-                    case SourceTypeSelectVM.CasePerson:
-                        submitOk = epepClient.DeleteSide(_id);
-                        break;
-                    default:
-                        break;
-                }
-
-                if (submitOk)
-                {
-                    model.ResponseMessage = "Данните са премахнати успешно.";
-                }
-                else
-                {
-                    model.ResponseMessage = "Проблем при премахването на данни.";
-                }
-            }
-            catch (Exception ex)
-            {
-                model.ResponseMessage = ex.Message;
-            }
-            SetViewBagManage();
-            return View(model);
-        }
-
-        public IActionResult CorrectIK(int sourceType)
-        {
-            epepClient = connector.Connect().Result;
-
-            var model = service.IntegrationKey_SelectToCorrect(sourceType);
-            int totalCount = model.Count();
-            int removedCount = 0;
-            foreach (var itemToCorrect in model)
-            {
-
-                bool submitOk = false;
-                try
-                {
-                    Guid _id = Guid.Parse(itemToCorrect.OuterCode);
-                    switch (sourceType)
-                    {
-                        case SourceTypeSelectVM.Document:
-                            if (itemToCorrect.DateTransferedDW.Value.Month == 1)
-                            {
-                                submitOk = epepClient.DeleteIncomingDocument(_id);
-                            }
-                            else
-                            {
-                                submitOk = epepClient.DeleteOutgoingDocument(_id);
-                            }
-                            //submitOk = epepClient.DeleteOutgoingDocument(_id);
-                            break;
-                        case SourceTypeSelectVM.CaseSession:
-                            submitOk = epepClient.DeleteHearing(_id);
-                            break;
-                        case SourceTypeSelectVM.CaseSessionAct:
-                            submitOk = epepClient.DeleteAct(_id);
-                            break;
-                        case SourceTypeSelectVM.CaseSessionActPreparator:
-                            submitOk = epepClient.DeleteActPreparator(_id);
-                            break;
-                        case SourceTypeSelectVM.CasePerson:
-                            submitOk = epepClient.DeleteSide(_id);
-                            break;
-                        case SourceTypeSelectVM.CaseLawUnit:
-                            submitOk = epepClient.DeleteReporter(_id);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (submitOk)
-                    {
-                        service.IntegrationKey_Correct(itemToCorrect, false);
-                        removedCount++;
-                    }
-
-                }
-                catch (FaultException fex)
-                {
-                    try
-                    {
-                        var errorElement = XElement.Parse(fex.CreateMessageFault().GetReaderAtDetailContents().ReadOuterXml());
-                        var errorDictionary = errorElement.Elements().ToDictionary(key => key.Name.LocalName, val => val.Value);
-                        var errorDetails = string.Join(";", errorDictionary).ToLower();
-                        if (errorDetails.Contains("съществува"))
-                        {
-                            service.IntegrationKey_Correct(itemToCorrect, false);
-                            removedCount++;
-                        }
-                        else
-                        {
-                            service.IntegrationKey_Correct(itemToCorrect, true);
-                        }
-
-                    }
-                    catch
-                    {
-                        service.IntegrationKey_Correct(itemToCorrect, true);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    service.IntegrationKey_Correct(itemToCorrect, true);
-                }
-
-
-            }
-
-            if (epepClient != null)
-            {
-                epepClient.CloseAsync();
-            }
-
-            return Content($"Коригирани {removedCount} бр. от {totalCount} бр.");
-        }
-
-        private void SetViewBagManage()
-        {
-            int[] managebleDataTypes = {
-                SourceTypeSelectVM.Case,
-                SourceTypeSelectVM.CaseSelectionProtokol,
-                SourceTypeSelectVM.CasePerson,
-                SourceTypeSelectVM.CaseSession,
-                SourceTypeSelectVM.CaseSessionAct,
-                SourceTypeSelectVM.CaseSessionActPreparator
-            };
-            List<SelectListItem> dataTypes = new List<SelectListItem>();
-            foreach (var item in managebleDataTypes)
-            {
-                dataTypes.Add(new SelectListItem(SourceTypeSelectVM.GetSourceTypeName(item), item.ToString()));
-            }
-            dataTypes.Prepend(new SelectListItem("Изберете", "-1"));
-            ViewBag.DataType_ddl = dataTypes;
-        }
-
-        */
-
-        //[HttpPost]
-        //public async Task<IActionResult> Lawyers_ListData(IDataTablesRequest request)
-        //{
-
-        //    epepClient = connector.Connect().Result;
-        //    if (epepClient != null)
-        //    {
-        //        var data = epepClient.GetAllLawyersAsync().Result
-        //                            .Where(x => x.Name.Contains(request.Search?.Value ?? x.Name, StringComparison.InvariantCultureIgnoreCase))
-        //                            .OrderBy(x => x.Name)
-        //                            .AsQueryable();
-
-        //        await epepClient.CloseAsync();
-        //        return request.GetResponse(data);
-        //    }
-        //    return null;
-        //}
-
-        //public async Task<IActionResult> ImportLawyers()
-        //{
-        //    epepClient = connector.Connect().Result;
-        //    if (epepClient != null)
-        //    {
-        //        var dataLawyers = epepClient.GetAllLawyersAsync().Result;
-
-        //        foreach (var lawyer in dataLawyers)
-        //        {
-        //            var model = new LawUnit()
-        //            {
-        //                LawUnitTypeId = NomenclatureConstants.LawUnitTypes.Lawyer,
-        //                FirstName = lawyer.Name,
-        //                FullName = lawyer.Name,
-        //                Code = lawyer.Number,
-        //                Department = lawyer.College,
-        //                UicTypeId = NomenclatureConstants.UicTypes.LNCh,
-        //                LatinName = lawyer.LawyerId.ToString()
-        //            };
-        //            model.DateFrom = new DateTime(2020, 04, 16);
-        //            model.UserId = userContext.UserId;
-        //            db.LawUnits.Add(model);
-        //        }
-        //        db.SaveChanges();
-        //        await epepClient.CloseAsync();
-
-        //    }
-        //    return null;
-        //}
-
-        //public async Task<IActionResult> PersonReg()
-        //{
-        //    var epep = new PersonRegistration()
-        //    {
-        //        EGN = "7706010002",
-        //        BirthDate = new DateTime(1977, 6, 1),
-        //        Name = "Константин Борисов",
-        //        Email = "cborisoff@mail.bg",
-        //        Address = "София",
-        //        Description = "Тестов епеп потребител 1"
-        //    };
-
-        //    epepClient = connector.Connect().Result;
-        //    var result = epepClient.InsertPersonRegistration(epep);
-        //    await epepClient.CloseAsync();
-        //    return Content(result.ToString());
-        //}
-
 
 
 

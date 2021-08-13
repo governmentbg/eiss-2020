@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -46,6 +47,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Солидарно разпределение")]
         public bool? JointDistribution { get; set; }
 
+        [Column("is_fraction")]
+        [Display(Name = "Дроб")]
+        public bool? IsFraction { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
@@ -57,5 +62,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CurrencyId))]
         public virtual Currency Currency { get; set; }
+
+        public virtual ICollection<CaseMoneyExpensePerson> CaseMoneyExpensePeople { get; set; }
     }
 }

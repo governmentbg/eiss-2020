@@ -8,6 +8,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     public class CaseSessionVM
     {
         public int Id { get; set; }
+        public DateTime DateWrt { get; set; }
         public int? CourtId { get; set; }
         public int CaseId { get; set; }
 
@@ -60,7 +61,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int? NotificationListTypeId { get; set; }
         [Display(Name = "Съдия докладчик")]
         public string JudgeReporterLabel { get; set; }
-        
+
         [Display(Name = "Състав")]
         public string JudgeCompositionLabel { get; set; }
 
@@ -73,12 +74,24 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Подлежи на обжалване")]
         public bool? ActCanAppeal { get; set; }
 
+        [Display(Name = "Финализиращ акт")]
+        public bool? IsFinalDoc { get; set; }
+
         public int? ActSaveId { get; set; }
         public string ActSaveType { get; set; }
 
         public int? CaseSessionOldId { get; set; }
         [Display(Name = "Номер")]
         public int? NumberRow { get; set; }
+
+        [Display(Name = "Отделение/Състав")]
+        public string DepartmentOtdelenieText { get; set; }
+
+        [Display(Name = "Резултат/степен на уважаване на иска")]
+        public int? ActComplainResultId { get; set; }
+
+        [Display(Name = "Промяна на състава по делото")]
+        public int? VksLawunitChange { get; set; }
 
         public virtual List<CheckListVM> CaseLawUnitByCase { get; set; }
         public virtual List<CheckListVM> CaseSessions { get; set; }

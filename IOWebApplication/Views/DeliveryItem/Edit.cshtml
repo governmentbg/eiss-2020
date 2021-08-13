@@ -7,6 +7,7 @@
     var filterJson = ViewBag.filterJson;
     List<BreadcrumbsVM> breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    int filterType = (int)ViewBag.filterType;
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
@@ -46,6 +47,18 @@
             </div>
 
             <div class="row">
+                @if (filterType == @IOWebApplication.Infrastructure.Constants.NomenclatureConstants.DeliveryItemFilterType.FromOther)
+                {
+                    <div class="col-md-6 text-left pb-15">
+                        <div class="form-group">
+                            <br />
+                            <a onclick="GetDeliveryAreaIdEditFromIndex()" class="btn btn-success">
+                                <i class="fa fa-address-book"></i>
+                                Райониране
+                            </a>
+                        </div>
+                    </div>
+                }
                 <div class="col-md-6">
                     @Html.EditorFor(x => x.CourtId, "GenericDropDown")
                 </div>
@@ -70,6 +83,7 @@
                     <span>&nbsp;</span>
                 </div>
             </div>
+        </div>
 </form>
 </div>
 <form name="formPostFilter" id="formPostFilter" action="@Url.Action("Index")" method="post">
@@ -138,6 +152,27 @@
                 error: log_ajax_err
             });
         }
+        function GetDeliveryAreaIdEditFromIndex()
+        {
+            var deliveryItemId = $('#Id').val();
+            $.ajax({
+                method: "POST",
+                url: '@Url.Action("GetDeliveryAreaIdEditFromIndex")',
+                dataType: "json",
+                cache: false,
+                data: { deliveryItemId: deliveryItemId},
+                success: function (response) {
+                    if ($("#CourtId").val() == response.toCourtId) {
+                        console.log(response);
+                        $("#DeliveryAreaId").val(response.deliveryAreaId).trigger('change');
+                        $("#LawUnitId").val(response.lawUnitId).trigger('change');
+                    }
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+
         $(document).ready(function () {
             $('#CourtId').select2({
                 language: "bg"

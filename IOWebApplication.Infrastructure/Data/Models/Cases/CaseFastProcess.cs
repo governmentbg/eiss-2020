@@ -39,6 +39,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Уважено")]
         public bool? IsRespectedAmount { get; set; }
 
+        [Display(Name = "С включено разпореждане за незабавно изпълнение")]
+        public bool? VisibleOrder { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 

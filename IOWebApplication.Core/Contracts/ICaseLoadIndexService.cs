@@ -17,7 +17,7 @@ namespace IOWebApplication.Core.Contracts
     public interface ICaseLoadIndexService : IBaseService
     {
         IQueryable<CaseLoadIndexVM> CaseLoadIndex_Select(int CaseId, int? CaseSessionId);
-        IQueryable<CaseLoadIndexSprVM> CaseLoadIndexSpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId);
+        IQueryable<CaseLoadIndexSprVM> CaseLoadIndexSpr_Select(CaseLoadIndexFilterVM model);
         bool CaseLoadIndex_SaveData(CaseLoadIndex model);
         bool CaseLoadIndexAutomationElementGroupeND_SaveData(int CaseSessionId);
         /// <summary>
@@ -58,7 +58,7 @@ namespace IOWebApplication.Core.Contracts
         bool CourtLawUnitActivity_SaveData(CourtLawUnitActivity model);
         bool IsExistCourtLawUnitActivity(int LawUnitId, int JudgeLoadActivityId, int ModelId, DateTime ActivityDate);
         bool IsExistCourtLawUnitActivityNew(int LawUnitId, int JudgeLoadActivityId, int ModelId, DateTime ActivityDate, DateTime DateTo);
-        IQueryable<LawUnitLoadSprVM> CourtLawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId);
+        IQueryable<LawUnitLoadSprVM> CourtLawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId, int JudgeLoadActivityId);
         IQueryable<LawUnitLoadSprVM> LawUnitActivitySpr_Select(DateTime DateFrom, DateTime DateTo, int? LawUnitId);
         bool ElementTypeRule_Expired(ExpiredInfoVM model);
         bool ElementTypeStop_Expired(ExpiredInfoVM model);
@@ -67,5 +67,9 @@ namespace IOWebApplication.Core.Contracts
         string RecalcCaseLoadIndexByCase(int CaseId);
         string RecalcAllCourtLawUnitActivity();
         bool IsCaseExistSessionAct(int CaseId);
+        bool EditSessionAndRecalcCase(int CaseId, int SessionId);
+        bool EditActAndRecalcCase(int CaseId, int ActId);
+        bool EditSessionResultAndRecalcCase(int CaseId, int ResultId);
+        bool CaseLoadIndex_ExpiredInfo(ExpiredInfoVM model);
     }
 }

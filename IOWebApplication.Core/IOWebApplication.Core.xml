@@ -163,6 +163,14 @@
             </summary>
             <param name="courtId"></param>
         </member>
+        <member name="M:IOWebApplication.Core.Contracts.ICommonService.Read_LawUnitOtdelenieSystav(System.Int32,System.Nullable{System.DateTime},System.Nullable{System.Int32})">
+            <summary>
+            CourtDepartmentVM.Label - Състав;CourtDepartmentVM.ParentLabel - Отделение
+            </summary>
+            <param name="lawunit_id"></param>
+            <param name="dtNow"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Core.Contracts.ICounterService.Counter_GetDocumentCounter(IOWebApplication.Infrastructure.Data.Models.Documents.Document)">
             <summary>
             Номериране на документи
@@ -241,12 +249,19 @@
             <param name="model"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Contracts.IDeliveryAreaAddressService.DeliveryAreaAddressFind(IOWebApplication.Infrastructure.Data.Models.Common.Address)">
+        <member name="M:IOWebApplication.Core.Contracts.IDeliveryAreaAddressService.DeliveryAreaAddressFind(IOWebApplication.Infrastructure.Data.Models.Common.Address,System.Int32)">
             <summary>
             Намира район за адрес
             Първо търси DeliveryAreaAddress с въведени Улица квартал
             След това по населено място
             </summary>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Contracts.IDocumentService.GetCompliantDocumentsByCaseId(System.Int32)">
+            <summary>
+            всички съпровождащи документи по свързано дело
+            </summary>
+            <param name="caseId"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Contracts.IFileService.UploadPdfFileForMedicalDocument(System.Int64,System.Int32,System.String,System.Byte[])">
@@ -284,6 +299,32 @@
             <param name="sourceType">Type of the attached file</param>
             <param name="fileName">Name of the uploaded file</param>
             <param name="fileContent">Content of the uploaded file</param>
+        </member>
+        <member name="M:IOWebApplication.Core.Contracts.IMQEpepService.AppendActsFromSession(System.Int32)">
+            <summary>
+            Подава всички подписани актове по време на заседанието на услугата за интеграция: ЕПЕП, ЦУБИПСА, ЕПРО
+            </summary>
+            <param name="sessionId">Id на заседание</param>
+        </member>
+        <member name="M:IOWebApplication.Core.Contracts.IMQEpepService.EPRO_AppendDismissal(System.Int32,System.Int32)">
+            <summary>
+            Добавя заявка за регистриране на отвод в ЕПРО
+            </summary>
+            <param name="caseDismissalId"></param>
+            <param name="dismissalTypeId"></param>
+        </member>
+        <member name="M:IOWebApplication.Core.Contracts.IMQEpepService.EPRO_AppendReplace(System.Int32,System.Int32)">
+            <summary>
+            Добавя заявка за нов съдия към отвод
+            </summary>
+            <param name="caseSelectionProtocolId"></param>
+            <param name="caseDismissalId"></param>
+        </member>
+        <member name="M:IOWebApplication.Core.Contracts.IMQEpepService.EPRO_AppendActFile(IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionAct)">
+            <summary>
+            Добавя заявка за обезличен акт към отвод
+            </summary>
+            <param name="actModel"></param>
         </member>
         <member name="T:IOWebApplication.Core.Contracts.INomenclatureService">
             <summary>
@@ -368,6 +409,16 @@
             Информация за autocomplete контрола за Street
             </summary>
             <param name="query">Част от име на обект</param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Contracts.INomenclatureService.GetDropDownListFromCode``1(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Връща List SelectListItem от value=Code,text=Label на BaseCommonNomenclature
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="addDefaultElement"></param>
+            <param name="addAllElement"></param>
+            <param name="orderByNumber"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Contracts.INomenclatureService.GetStreetByCode(System.String,System.String,System.Nullable{System.Int32})">
@@ -489,12 +540,19 @@
             <param name="model">Обект CaseSessionAct с изчетен ActType</param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Core.Extensions.CaseExtensions.ConfirmedDismissalsOnly">
+            <summary>
+            Проверка за валиден отвод - или няма статус или е Уважено искането за отвод
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Core.Extensions.CommonExtensions.CopyFrom(IOWebApplication.Infrastructure.Data.Models.Base.NamesBase,IOWebApplication.Infrastructure.Data.Models.Base.NamesBase,System.Boolean)">
             <summary>
             Копира имената и идентификатора от друга инстанция
             </summary>
             <param name="model"></param>
             <param name="source"></param>
+            <param name="copySourceData"></param>
         </member>
         <member name="M:IOWebApplication.Core.Helper.ArrayToClaimsClaimAction.#ctor(System.String,System.String,System.String)">
             <summary>
@@ -570,6 +628,11 @@
         <member name="F:IOWebApplication.Core.Helper.GlobalConstants.MessageConstant.No">
             <summary>
             Не (за Display Template-ите)
+            </summary>
+        </member>
+        <member name="M:IOWebApplication.Core.Helper.TransactionScopeBuilder.CreateReadCommitted">
+            <summary>
+            Creates a transactionscope with ReadCommitted Isolation
             </summary>
         </member>
         <member name="M:IOWebApplication.Core.Helper.Utils.Validation.IsEGN(System.String,System.Boolean)">
@@ -817,6 +880,14 @@
             Location of signing
             </summary>
         </member>
+        <member name="M:IOWebApplication.Core.Services.ApiDocumentService.FillBankAccount(IOWebApplication.Infrastructure.Data.ApiModels.FastProcess.FastProcessBankAccountModel[],IOWebApplication.Infrastructure.Data.Models.Cases.Case)">
+            <summary>
+            Попълва моделите за банкови сметки
+            </summary>
+            <param name="models"></param>
+            <param name="modelCase"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Core.Services.BaseIntegrationService.getNomValue(System.String,System.Object)">
             <summary>
             Връща външен код на номенклатура
@@ -842,7 +913,7 @@
             <param name="end"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseArchiveService.CaseForArchive_Select(System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CaseArchiveService.CaseForArchive_Select(System.Int32,IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseForArchiveFilterVM)">
             <summary>
             Извличане на данни за дела за архивиране
             </summary>
@@ -1685,7 +1756,7 @@
             <param name="ActivityDate"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseLoadIndexService.CaseLoadIndexSpr_Select(System.DateTime,System.DateTime,System.Nullable{System.Int32})">
+        <member name="M:IOWebApplication.Core.Services.CaseLoadIndexService.CaseLoadIndexSpr_Select(IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseLoadIndexFilterVM)">
             <summary>
             Натовареност по дела: основни и допълнителни дейности
             </summary>
@@ -1694,7 +1765,7 @@
             <param name="LawUnitId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseLoadIndexService.CourtLawUnitActivitySpr_Select(System.DateTime,System.DateTime,System.Nullable{System.Int32})">
+        <member name="M:IOWebApplication.Core.Services.CaseLoadIndexService.CourtLawUnitActivitySpr_Select(System.DateTime,System.DateTime,System.Nullable{System.Int32},System.Int32)">
             <summary>
             Натоварване на съдии извън дело
             </summary>
@@ -3077,12 +3148,13 @@
             <param name="query"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseService.GetDDL_SessionActsByCase(System.Int32,System.Boolean)">
+        <member name="M:IOWebApplication.Core.Services.CaseService.GetDDL_SessionActsByCase(System.Int32,System.Boolean,System.Boolean)">
             <summary>
             Данни за актове по дело за комбо
             </summary>
             <param name="caseId"></param>
             <param name="addDefaultElement"></param>
+            <param name="declaredOnly"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.CaseService.CaseElectronicFolder_Select(System.Int32)">
@@ -3465,12 +3537,13 @@
             <param name="taskId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.GetCaseLawUnitsByAct(System.Int32,System.Int32)">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.GetCaseLawUnitsByAct(System.Int32,System.Int32,System.Boolean)">
             <summary>
             Извличане на състав от акт
             </summary>
             <param name="caseSessionActId"></param>
             <param name="caseSessionId"></param>
+            <param name="forMotives"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.CaseSessionActService.SendForSign_Init(System.Int32,System.Int64)">
@@ -3602,6 +3675,13 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.CaseSessionActDivorce_SaveExpired(IOWebApplication.Infrastructure.Models.ViewModels.Common.ExpiredInfoVM)">
+            <summary>
+            Премахване на съобщение за граждански брак
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Core.Services.CaseSessionActService.GetDropDownList_CaseSessionAct(System.Int32,System.Boolean,System.Boolean)">
             <summary>
             Извличане на актове за комбо
@@ -3680,7 +3760,7 @@
             <param name="caseId"></param>
             <returns></returns>
         </member>
-        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.CaseSessionActSpr_Select(System.Int32,IOWebApplication.Infrastructure.Models.ViewModels.CaseSessionActFilterVM)">
+        <member name="M:IOWebApplication.Core.Services.CaseSessionActService.CaseSessionActSpr_Select(System.Int32,IOWebApplication.Infrastructure.Models.ViewModels.CaseSessionActFilterVM,System.Boolean)">
             <summary>
             извличане на данни за Справка съдебни актове и протоколи
             </summary>
@@ -3999,6 +4079,12 @@
             <param name="model"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Core.Services.CaseSessionService.completeAllTasks_ForSession(System.Int32)">
+            <summary>
+            Приключва всички задачи за Насрочване по делото
+            </summary>
+            <param name="caseId"></param>
+        </member>
         <member name="M:IOWebApplication.Core.Services.CaseSessionService.CaseSessionById(System.Int32)">
             <summary>
             Изчитане на заседание по ИД
@@ -4184,6 +4270,27 @@
             <param name="CaseSessionId"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Core.Services.CaseSessionService.updateCaseLawUnitByDateVKS(IOWebApplication.Infrastructure.Data.Models.Cases.CaseSession)">
+             <summary>
+            ВКС!!! Актуализира състава на делото в зависимост от избраната дата на заседанието за дела на ВКС  
+             </summary>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.CaseSessionService.vksSelectJudgesByDate(System.Int32,System.DateTime)">
+            <summary>
+            ВКС!!! Изтегля списък на всички съдии за избрана дата на заседание по отделение
+            </summary>
+            <param name="courtDepartmentId"></param>
+            <param name="sessionDate"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.CaseSessionService.vksSelectJudgesByReporterDate(System.Int32,System.DateTime)">
+            <summary>
+            ВСК!!! Изтегля списък на останали съдии от графика, в който участва СД на подадената дата
+            </summary>
+            <param name="judgeReporterId"></param>
+            <param name="sessionDate"></param>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Core.Services.CommonService.WorkingDay_GetList(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Int32)">
             <summary>
             Връща
@@ -4244,6 +4351,14 @@
             Запис на банкова сметка към обект
             </summary>
             <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.CommonService.Read_LawUnitOtdelenieSystav(System.Int32,System.Nullable{System.DateTime},System.Nullable{System.Int32})">
+            <summary>
+            CourtDepartmentVM.Label - Състав;CourtDepartmentVM.ParentLabel - Отделение
+            </summary>
+            <param name="lawunit_id"></param>
+            <param name="dtNow"></param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.CourtDepartmentService.CourtDepartment_Select(System.Int32,System.String)">
@@ -4380,11 +4495,97 @@
             <param name="courtId"></param>
             <returns></returns>
         </member>
+        <member name="M:IOWebApplication.Core.Services.CourtLoadPeriodService.UpdateChangedProcentAverageCases(System.Int32,System.Int32,System.Decimal)">
+            <summary>
+            Коригира среднодневните на база смяна на процента на анатоварване в групата
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:IOWebApplication.Core.Services.DeliveryAreaAddressService.EkStreetForSelect_Select(System.String,System.Int32)">
             <summary>
             Всички улици/квартали, които не са влезнали в район - да може да се изберат към район
             </summary>
             <param name="cityId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.DocumentPersonLink_Select(System.Int64)">
+            <summary>
+            Извличане на данни за Връзки по страни, може и втори представляващ
+            </summary>
+            <param name="documentId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.DocumentPersonLink_SaveData(IOWebApplication.Infrastructure.Data.Models.Documents.DocumentPersonLink)">
+            <summary>
+            Запис на Връзки по страни, може и втори представляващ
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.GetLinkForPerson(System.Int64,System.Int32,System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Извличане на Връзки по страни, може и втори представляващ по лице
+            </summary>
+            <param name="documentPersonId"></param>
+            <param name="notificationTypeId"></param>
+            <param name="oldLinks"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.SetLabelFromTemplate(IOWebApplication.Infrastructure.Data.Models.Documents.DocumentNotificationLinkVM)">
+            <summary>
+            Извличане на стринг за уведомления за Връзки по страни, може и втори представляващ
+            </summary>
+            <param name="model"></param>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.DocumentPerson_SelectForDropDownList(System.Int64)">
+            <summary>
+            Извличане на данни за лица по дело/заседание за чекбокс
+            </summary>
+            <param name="documentId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.RelationalPersonDDL(System.Int64,System.Int32,System.String)">
+            <summary>
+            Извличане на данни за Ред на представляване
+            </summary>
+            <param name="documentId"></param>
+            <param name="linkDirectionId"></param>
+            <param name="defaultElementText"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.isPersonXFirst(System.String)">
+            <summary>
+            Метод за попълване на бланки
+            </summary>
+            <param name="linkTemplate"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.SeccondRelationalPersonDDL(System.Int64,System.String)">
+            <summary>
+            Извличане на данни за Ред на представляване
+            </summary>
+            <param name="caseId"></param>
+            <param name="defaultElementText"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.IsForPersonZ(System.String)">
+            <summary>
+            Метод за попълване на бланки
+            </summary>
+            <param name="linkTemplate"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.LinkDirectionForPersonDDL(System.Int64)">
+            <summary>
+            Извличане на данни за Възможенo участие на роля във връзка между страни за комбо
+            </summary>
+            <param name="casePersonId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.DocumentPersonLinkService.SecondLinkDirectionDDL">
+            <summary>
+            Извличане на данни за Ред на представляване
+            </summary>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.DocumentService.document_InitNewCase(IOWebApplication.Infrastructure.Models.ViewModels.DocumentVM,IOWebApplication.Infrastructure.Data.Models.Documents.Document)">
@@ -4496,6 +4697,13 @@
             <param name="alias"></param>
             <param name="keyValuePairs"></param>
             <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.HtmlTemplateService.HtmlTemplate_SaveDataTiny(IOWebApplication.Infrastructure.Models.ViewModels.TinyMCEVM)">
+             <summary>
+            Запис на балнка от TinyMCE
+             </summary>
+             <param name="model"></param>
+             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.MoneyService.Obligation_Select(System.Int32,System.Int64,System.Int32,System.Int32)">
             <summary>
@@ -5231,7 +5439,8 @@
             <param name="excelReportCaseCodeRows"></param>
             <param name="colIndex"></param>
             <param name="reportType">1 - продължаващи под същия номер, 2 - свършени до 3 месеца вкл., 3 - свършени от 3 до 6 месеца,
-            4 - прекратено по спогодба, 5 - прекратено по други причини, 6 - решени по същество с присъда,
+            4 - прекратено по спогодба, 5 - прекратено по други причини Всички прекратени без по спогодба, 
+            6 - решени по същество с присъда,
             7 - прекр. и спор. – Общо, 8 - в т.ч. свърш.споразум.- чл.381-384, 9 - От св.дела б.п.по чл. 356 НПК – решени,
             10 - От св.дела б.п.по чл. 356 НПК – прекратени и споразумения, 11 - Свършени ВЧНД</param>
             <returns></returns>
@@ -5319,7 +5528,7 @@
             2 - Постановени решения по чл. 235, ал. 5 от ГПК, след проведено открито съдебно заседание,
             3 - Постановени присъди, 4 - Постановени решения по НАХД, 
             5 - Финализиращи решения постановени в открити заседания, 6 - Постановени присъди,
-            7 - Постановени Решения за АНД</param>
+            7 - Постановени Решения за АНД, 8 - Постановени решения по чл. 235, ал. 5 от ГПК, след проведено открито съдебно заседание</param>
             <returns></returns>
         </member>
         <member name="M:IOWebApplication.Core.Services.StatisticsReportService.CasePersonCaseCode_Select(System.Int32,System.Int32,System.DateTime,System.DateTime,System.Collections.Generic.List{IOWebApplication.Infrastructure.Models.ViewModels.Report.StatisticsExcelReportCaseCodeRowVM},System.Int32,System.Int32,System.Int32)">
@@ -5456,6 +5665,41 @@
             <param name="reportType">1 - всички Проведени заседания</param>
             <param name="colIndex"></param>
             <param name="caseTypesRows"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.VksNotificationService.SetVksLabelFromTemplate(IOWebApplication.Infrastructure.Models.ViewModels.Case.CaseNotificationLinkVM)">
+            <summary>
+            Извличане на стринг за уведомления за Връзки по страни, може и втори представляващ
+            </summary>
+            <param name="model"></param>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.VKSSelectionService.GenerateSelectionMonthStaff(IOWebApplication.Infrastructure.Data.Models.VKS.VksSelection,System.Int32)">
+            <summary>
+            Генерира съставите за един Месец
+            </summary>
+            <param name="selection"></param>
+            <param name="month"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.VKSSelectionService.SelectionLawUnitsUpdate(IOWebApplication.Infrastructure.Data.Models.VKS.VksSelection)">
+            <summary>
+            Актуализира Съдиите от отделението с актуалните в момента
+            </summary>
+            <param name="selection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.VKSSelectionService.AddUnknownLawUnits(IOWebApplication.Infrastructure.Data.Models.VKS.VksSelection)">
+            <summary>
+            Добавя неизвестен с пореден наомер
+            </summary>
+            <param name="selection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:IOWebApplication.Core.Services.VKSSelectionService.DeleteLastUnknownLawUnits(System.Int32)">
+            <summary>
+            Изтрива Неизвестен с най-голям номер без значение, кой неизвестен е избран
+            </summary>
+            <param name="id"></param>
             <returns></returns>
         </member>
     </members>

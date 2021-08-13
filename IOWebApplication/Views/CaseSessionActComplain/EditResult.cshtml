@@ -39,8 +39,16 @@
                     <div class="col-lg-6">
                         <fieldset class="is-fieldset">
                             <legend class="legend_1"> Основни данни</legend>
-                            <div class="col-lg-12">@Html.EditorFor(x => x.ComplainCaseId, "GenericDropDown")</div>
-                            <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.CaseOtherSystem, "Boolean")</div>
+                            <div id="OtherSystem">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseRegNumberOtherSystem)</div>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionActOtherSystem)</div>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.DateFromLifeCycle, "DateTime")</div>
+                            </div>
+                            <div id="SameSystem">
+                                <div class="col-lg-12">@Html.EditorFor(x => x.ComplainCaseId, "GenericDropDown")</div>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+                            </div>
                             <div class="col-lg-12">@Html.EditorFor(x => x.ActResultId, "GenericDropDown")</div>
                             <div class="col-lg-12">@Html.EditorFor(x => x.DateResult, "DateTime")</div>
                             <div id="divStartNewLifecycle" class="col-lg-12">@Html.EditorFor(x => x.IsStartNewLifecycle, "Boolean")</div>
@@ -80,6 +88,8 @@
     $(document).ready(function () {
         ComplainCaseIdChange();
         SH_StartNewLifecycle();
+        SH_OtherSameSystem();
+        CaseRegNumberOtherSystemChange();
     });
 
     $('#ComplainCaseId').change(function () {
@@ -87,8 +97,11 @@
     });
 
     function ComplainCaseIdChange() {
-        requestCombo('@Url.Action("GetDDL_CaseSessionAct", "CaseSessionAct")', { caseId: $('#ComplainCaseId').val() }, '#CaseSessionActId', @Model.CaseSessionActId, function () { $('#CaseSessionActId').trigger('change') });
-        requestCombo('@Url.Action("GetDDL_ActResult", "CaseSessionActComplain")', { CaseFromId: $('#ComplainCaseId').val(), CaseSessionActComplainId : @Model.CaseSessionActComplainId }, '#ActResultId', @(Model.ActResultId ?? 0), function () { $('#ActResultId').trigger('change') });
+        var caseOtherSystem = $("#CaseOtherSystem").is(":checked");
+        if (!caseOtherSystem) {
+            requestCombo('@Url.Action("GetDDL_CaseSessionAct", "CaseSessionAct")', { caseId: $('#ComplainCaseId').val() }, '#CaseSessionActId', '@Model.CaseSessionActId', function () { $('#CaseSessionActId').trigger('change') });
+            requestCombo('@Url.Action("GetDDL_ActResult", "CaseSessionActComplain")', { CaseFromId: $('#ComplainCaseId').val(), CaseSessionActComplainId: @Model.CaseSessionActComplainId }, '#ActResultId', @(Model.ActResultId ?? 0), function () { $('#ActResultId').trigger('change') });
+        }
     }
 
     function SH_StartNewLifecycle() {
@@ -97,6 +110,32 @@
         }
         else {
             $("#divStartNewLifecycle").hide();
+        }
+    }
+
+    $('#CaseOtherSystem').change(function () {
+        SH_OtherSameSystem();
+    });
+
+    $('#CaseRegNumberOtherSystem').change(function () {
+        CaseRegNumberOtherSystemChange();
+    });
+
+    function CaseRegNumberOtherSystemChange() {
+        var caseOtherSystem = $("#CaseOtherSystem").is(":checked");
+        if (caseOtherSystem)
+            requestCombo('@Url.Action("GetDDL_ActResultOtherCase", "CaseSessionActComplain")', { CaseRegNumberOtherSystem: $('#CaseRegNumberOtherSystem').val(), CaseSessionActComplainId : @Model.CaseSessionActComplainId }, '#ActResultId', @(Model.ActResultId ?? 0), function () { $('#ActResultId').trigger('change') });
+    }
+
+    function SH_OtherSameSystem() {
+        var caseOtherSystem = $("#CaseOtherSystem").is(":checked");
+        if (caseOtherSystem) {
+            $("#OtherSystem").show();
+            $("#SameSystem").hide();
+        }
+        else {
+            $("#OtherSystem").hide();
+            $("#SameSystem").show();
         }
     }
 </script>

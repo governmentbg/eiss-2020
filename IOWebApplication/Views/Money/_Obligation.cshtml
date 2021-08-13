@@ -37,32 +37,32 @@
             </div>
         }
     </div>
-}
 
-<div class="row">
-    <div class="col-md-6 text-left pb-15">
-        <button type="button" class="btn btn-primary" id="btnGetCheck" onclick="MakePay()" value="Плащане" title="Плащане">
-            Плащане
-            <i class="fa fa-paypal" title="Плащане"></i>
-        </button>
-        @if (Model.CaseSessionActId > 0)
-        {
-
-            <button type="button" class="btn btn-primary" id="btnExecList" onclick="MakeExecList()" value="Изпълнителен лист" title="Изпълнителен лист">
-                Изпълнителен лист
-                <i class="fa fa-paypal" title="Изпълнителен лист"></i>
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary" id="btnGetCheck" onclick="MakePay()" value="Плащане" title="Плащане">
+                Плащане
+                <i class="fa fa-paypal" title="Плащане"></i>
             </button>
-        }
-        @if (Model.CaseSessionId > 0)
-        {
+            @if (Model.CaseSessionActId > 0)
+            {
 
-            <button type="button" class="btn btn-primary" id="btnOrder" onclick="MakeExpenseOrder()" value="Разходен ордер" title="Разходен ордер">
-                Разходен ордер
-                <i class="fa fa-paypal" title="Разходен ордер"></i>
-            </button>
-        }
+                <button type="button" class="btn btn-primary" id="btnExecList" onclick="MakeExecList()" value="Изпълнителен лист" title="Изпълнителен лист">
+                    Изпълнителен лист
+                    <i class="fa fa-paypal" title="Изпълнителен лист"></i>
+                </button>
+            }
+            @if (Model.CaseSessionId > 0)
+            {
+
+                <button type="button" class="btn btn-primary" id="btnOrder" onclick="MakeExpenseOrder()" value="Разходен ордер" title="Разходен ордер">
+                    Разходен ордер
+                    <i class="fa fa-paypal" title="Разходен ордер"></i>
+                </button>
+            }
+        </div>
     </div>
-</div>
+}
 
 <div class="row">
     <div class="col-md-12">
@@ -86,7 +86,8 @@
                         d.caseSessionActId = @(Model.CaseSessionActId??0);
                         d.documentId = @(Model.DocumentId??0);
                         d.caseSessionId = @(Model.CaseSessionId??0);
-                    }
+                    },
+                    initialCall: false
                 },
                 deferLoading: deferLoadingOnTab('#mainTableObligation'),
                 columns: [
@@ -247,7 +248,10 @@
 </script>
 
 <script id="templateEditObligation" type="text/x-handlebars-template">
-    <a href="@Url.Action("EditObligation", "Money")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("EditObligation", "Money")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
 </script>
 
 <script>

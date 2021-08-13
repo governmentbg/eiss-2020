@@ -28,6 +28,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Лице")]
         public int CasePersonId { get; set; }
 
+        [Column("amount_numerator")]
+        [Display(Name = "Числител")]
+        public decimal? AmountNumerator { get; set; }
+
+        [Column("amount_denominator")]
+        [Display(Name = "Знаменател")]
+        public decimal? AmountDenominator { get; set; }
+
         [Column("person_amount")]
         [Display(Name = "Сума")]
         public decimal PersonAmount { get; set; }

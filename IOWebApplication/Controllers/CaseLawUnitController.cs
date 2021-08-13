@@ -7,6 +7,7 @@ using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -22,18 +23,21 @@ namespace IOWebApplication.Controllers
         private readonly ICaseSessionActService actService;
         private readonly ICaseSessionService sessionService;
         private readonly ICommonService commonService;
+        private readonly IDocumentService docService;
 
         public CaseLawUnitController(ICaseLawUnitService _service,
                                      INomenclatureService _nomService,
                                      ICaseSessionActService _actService,
                                      ICaseSessionService _sessionService,
-                                     ICommonService _commonService)
+                                     ICommonService _commonService,
+                                     IDocumentService _docService)
         {
             service = _service;
             nomService = _nomService;
             actService = _actService;
             sessionService = _sessionService;
             commonService = _commonService;
+            docService = _docService;
         }
 
         /// <summary>
@@ -168,7 +172,7 @@ namespace IOWebApplication.Controllers
             {
                 return Redirect_Denied();
             }
-            SetViewbag(lawUnitId);
+            // SetViewbag(lawUnitId);
             var model = service.CaseLawUnitDismisal_GetByCaseLawUnitId(lawUnitId);
 
             if (model == null)
@@ -176,7 +180,7 @@ namespace IOWebApplication.Controllers
                 return RedirectToAction(nameof(Add), new { lawUnitId = lawUnitId, });
             }
             else
-                return RedirectToAction(nameof(EditDismisal), new { id = model.Id });
+                return RedirectToAction(nameof(ViewDismisal), new { id = model.Id });
         }
 
         private bool IsExistResultOtvod(int CaseSessionActId)
@@ -219,12 +223,13 @@ namespace IOWebApplication.Controllers
             {
                 return Redirect_Denied();
             }
-            
+
             var model = service.GetById<CaseLawUnitDismisal>(id);
             if (model == null)
             {
                 throw new NotFoundException("Търсеният от Вас отвод не е намерен и/или нямате достъп до него.");
             }
+            model.DismissalStateId = model.DismissalStateId ?? NomenclatureConstants.DismissalStates.Confirmed;
             SetViewbag(model.CaseLawUnitId);
             return View(nameof(EditDismisal), model);
         }
@@ -248,6 +253,10 @@ namespace IOWebApplication.Controllers
             {
                 ViewBag.DismisalKind = NomenclatureConstants.LawUnitTypes.Jury;
             }
+
+            ViewBag.DocumentId_ddl = docService.GetCompliantDocumentsByCaseId(caseLawUnit.CaseId);
+            ViewBag.DismissalStateId_ddl = nomService.GetDropDownList<DismissalState>(false);
+            ViewBag.hasEproReq = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EproDismissal);
             SetHelpFile(HelpFileValues.CaseLawunit);
         }
 
@@ -271,17 +280,20 @@ namespace IOWebApplication.Controllers
             if ((model.Description ?? string.Empty) == string.Empty)
                 return "Няма въведен мотив";
 
+            if (model.DismisalDate > DateTime.Now)
+                return "Не може да избирате бъдеща дата";
+
             if (model.Id < 1)
             {
                 if (model.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod || model.DismisalTypeId == NomenclatureConstants.DismisalType.SamoOtvod)
                 {
-                    if ((model.CaseSessionActId??-1) < 0)
+                    if ((model.CaseSessionActId ?? -1) < 0)
                         return "Няма избран акт";
                     else
                     {
                         var sessionAct = actService.GetById<CaseSessionAct>(model.CaseSessionActId);
 
-                        if (!((sessionAct.ActStateId == NomenclatureConstants.SessionActState.Enforced)|| (sessionAct.ActStateId == NomenclatureConstants.SessionActState.ComingIntoForce)))
+                        if (!((sessionAct.ActStateId == NomenclatureConstants.SessionActState.Enforced) || (sessionAct.ActStateId == NomenclatureConstants.SessionActState.ComingIntoForce)))
                             return "Актът трябва да е постановен или влязъл в сила ";
 
                         if (sessionAct.RegNumber == string.Empty)
@@ -305,8 +317,6 @@ namespace IOWebApplication.Controllers
                     {
                         return $"Избраният акт е с дата({lastDate.ToString("dd.MM.yyyy")}) по-късна от дaтата на отвеждането";
                     }
-
-
                 }
                 if (model.DismisalTypeId == NomenclatureConstants.DismisalType.Prerazpredelqne)
                 {
@@ -319,6 +329,22 @@ namespace IOWebApplication.Controllers
                     }
 
 
+                }
+            }
+
+            if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EproDismissal))
+            {
+                if (model.DismisalTypeId == NomenclatureConstants.DismisalType.Otvod)
+                {
+                    if ((model.DocumentId ?? 0) <= 0)
+                    {
+                        return "Изберете 'Документ, с който се иска отвода'.";
+                    }
+
+                    if ((model.DocumentPersonId ?? 0) <= 0)
+                    {
+                        return "Изберете 'Вносител на искането'.";
+                    }
                 }
             }
             return string.Empty;
@@ -452,6 +478,22 @@ namespace IOWebApplication.Controllers
                 return "Няма избрана роля";
             }
 
+            if (model.Id < 1)
+            {
+                if (service.IsExistManualLawUnitByCase(model.CaseId, model.LawUnitId, DateTime.Now))
+                {
+                    return "Този потребител вече е добавен";
+                }
+            }
+
+            if (model.DateTo != null)
+            {
+                if (service.IsExistIsExistManualLawUnitInConductedSession(model.CaseId, model.DateTo ?? DateTime.Now, model.LawUnitId))
+                {
+                    return "Има проведено заседание в което участва този потребител и не може да се въведе дато до по-малка от началото на това заседание.";
+                }
+            }
+
             return string.Empty;
         }
 
@@ -506,6 +548,8 @@ namespace IOWebApplication.Controllers
         public IActionResult CaseLawUnitChangeDepRol(int caseId, int? caseSessionId = null)
         {
             var model = service.GetCaseLawUnitChangeDepRol(caseId, caseSessionId);
+            //Ако не няма избран състав - да покаже Без избран състав
+            model.DepartmentId = model.DepartmentId ?? -1;
             SetViewbagCaseLawUnitChangeDepRol(model.CaseId, model.CaseSessionId);
 
             if (!ViewBag.hasLawUnit && !ViewBag.hasDepartment)

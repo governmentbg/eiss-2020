@@ -44,7 +44,10 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.LawUnit)
                 .Include(x => x.CourtOrganization)
                 .Include(x => x.LawUnitPosition)
-                .Where(x => x.CourtId == courtId && x.PeriodTypeId == periodType && x.LawUnit.LawUnitTypeId == lawUnitType)
+                .Where(x => x.CourtId == courtId &&
+                            x.DateExpired == null &&
+                            x.PeriodTypeId == periodType &&
+                            x.LawUnit.LawUnitTypeId == lawUnitType)
                 .Select(x => new CourtLawUnitVM()
                 {
                     Id = x.Id,
@@ -69,7 +72,8 @@ namespace IOWebApplication.Core.Services
                        .ThenInclude(x => x.LawUnitType)
                        .Where(x => (x.LawUnitId == LawUnitId) &&
                                    (PeriodTypeId > 0 ? x.PeriodTypeId == PeriodTypeId : true) &&
-                                   (x.DateFrom >= DateFrom && x.DateFrom <= DateTo))
+                                   (x.DateFrom >= DateFrom && x.DateFrom <= DateTo) &&
+                                   x.DateExpired == null)
                        .Select(x => new CourtLawUnitVM()
                        {
                            Id = x.Id,
@@ -101,11 +105,11 @@ namespace IOWebApplication.Core.Services
                 else
                     periods.Add(model.PeriodTypeId);
                 var exists = repo.AllReadonly<CourtLawUnit>()
-                                .Where(x => x.Id != model.Id && x.CourtId == model.CourtId && periods.Contains(x.PeriodTypeId) &&
-                                x.LawUnitId == model.LawUnitId &&
-                                ((x.DateTo ?? dateNow).Date >= model.DateFrom.Date && (x.DateTo ?? dateNow).Date <= (model.DateTo ?? dateNow).Date ||
-                                  (model.DateTo ?? dateNow).Date >= x.DateFrom.Date && (model.DateTo ?? dateNow).Date <= (x.DateTo ?? dateNow).Date)
-                                 ).Any();
+                                 .Where(x => x.Id != model.Id && x.CourtId == model.CourtId && periods.Contains(x.PeriodTypeId) &&
+                                             x.LawUnitId == model.LawUnitId && x.DateExpired == null &&
+                                             ((x.DateTo ?? dateNow).Date >= model.DateFrom.Date && (x.DateTo ?? dateNow).Date <= (model.DateTo ?? dateNow).Date ||
+                                             (model.DateTo ?? dateNow).Date >= x.DateFrom.Date && (model.DateTo ?? dateNow).Date <= (x.DateTo ?? dateNow).Date))
+                                 .Any();
 
                 if (exists == true)
                 {
@@ -154,15 +158,17 @@ namespace IOWebApplication.Core.Services
         {
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
             return repo.AllReadonly<CourtLawUnitGroup>()
-           .Include(x => x.CourtGroup)
-           .Where(x => x.CourtId == courtId && x.LawUnitId == lawUnitId && (x.DateTo ?? dateTomorrow).Date > DateTime.Now)
-           .Select(x => new MultiSelectTransferPercentVM()
-           {
-               Id = x.CourtGroupId,
-               Order = x.CourtGroup.OrderNumber,
-               Text = x.CourtGroup.Label,
-               Percent = x.LoadIndex
-           }).AsQueryable();
+                       .Include(x => x.CourtGroup)
+                       .Where(x => x.CourtId == courtId &&
+                                   x.LawUnitId == lawUnitId &&
+                                   (x.DateTo ?? dateTomorrow).Date > DateTime.Now)
+                       .Select(x => new MultiSelectTransferPercentVM()
+                       {
+                           Id = x.CourtGroupId,
+                           Order = x.CourtGroup.OrderNumber,
+                           Text = x.CourtGroup.Label,
+                           Percent = x.LoadIndex
+                       }).AsQueryable();
         }
 
         public bool CourtLawUnitGroup_SaveData(int courtId, int lawUnitId, List<MultiSelectTransferPercentVM> codeGroups)
@@ -179,7 +185,7 @@ namespace IOWebApplication.Core.Services
                     x.CourtId = courtId;
                     return true;
                 }
-            );
+           ,true);
         }
 
         //public IQueryable<CompartmentVM> Compartment_Select(int courtId, int lawUnitId)
@@ -229,12 +235,14 @@ namespace IOWebApplication.Core.Services
                                    .Where(c => c.CourtId == forCourtId &&
                                           NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId) &&
                                           c.DateFrom <= dateSelect &&
-                                          (c.DateTo ?? enddatenull) >= dateSelect);
+                                          (c.DateTo ?? enddatenull) >= dateSelect &&
+                                          c.DateExpired == null);
             var courtLawUnitIllHoliday = repo.AllReadonly<CourtLawUnit>()
                                    .Where(c => c.CourtId == forCourtId &&
                                           (c.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill || c.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday) &&
                                           c.DateFrom <= dateSelect &&
-                                          (c.DateTo ?? enddatenull) >= dateSelect);
+                                          (c.DateTo ?? enddatenull) >= dateSelect &&
+                                          c.DateExpired == null);
 
             var result = repo.AllReadonly<LawUnit>()
                              .Where(x => x.LawUnitTypeId == lawUnitType &&
@@ -348,7 +356,7 @@ namespace IOWebApplication.Core.Services
                                 .Include(x => x.LawUnit)
                                 .Include(x => x.LawUnitPosition)
                                 .Include(x => x.CourtOrganization)
-                                .Where(x => x.CourtId == courtId)
+                                .Where(x => x.CourtId == courtId && x.DateExpired == null)
                                 .Where(x => x.LawUnitId == lawUnitId && dateNow >= x.DateFrom && dateNow <= (x.DateTo ?? dateEnd))
                                 .FirstOrDefault();
         }
@@ -360,7 +368,7 @@ namespace IOWebApplication.Core.Services
 
             return repo.AllReadonly<CourtLawUnit>()
                                 .Include(x => x.LawUnitPosition)
-                                .Where(x => x.CourtId == courtId)
+                                .Where(x => x.CourtId == courtId && x.DateExpired == null)
                                 .Where(x => x.LawUnitId == lawUnitId && dateNow >= x.DateFrom && dateNow <= (x.DateTo ?? dateEnd))
                                 .Select(x => x.LawUnitPosition.Label)
                                 .DefaultIfEmpty("")
@@ -392,7 +400,7 @@ namespace IOWebApplication.Core.Services
 
             var lawUnitsIncourt = repo.AllReadonly<CourtLawUnit>()
                                         .Include(x => x.LawUnit)
-                                        .Where(x => x.CourtId == courtId)
+                                        .Where(x => x.CourtId == courtId && x.DateExpired == null)
                                         .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge)
                                         .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                         .Where(x => dateNow >= x.DateFrom && dateNow <= (x.DateTo ?? dateEnd))
@@ -429,24 +437,40 @@ namespace IOWebApplication.Core.Services
             return hasChange;
         }
 
-        public SaveResultVM CourtLawUnitOrder_ActualizeForCase(int caseId)
+
+        public SaveResultVM CourtDepartmentUnitOrder_ActualizeForCase(int caseId)
         {
-            var lawunitOrder = CourtLawUnitOrder_Select(userContext.CourtId).ToList();
+            var dtNow = DateTime.Now;
+
+            var caseLawunits = repo.AllReadonly<CaseLawUnit>()
+                                  .Where(x => x.CaseId == caseId)
+                                  .Where(x => x.CaseSessionId == null)
+                                  .Where(x => x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow)
+                                  .Select(x =>
+                                             new
+                                             {
+                                                 x.Id,
+                                                 x.JudgeDepartmentRoleId,
+                                                 x.LawUnitId
+                                             }).ToList();
+            int[] caseJudges = caseLawunits.Select(lu => lu.LawUnitId).ToArray();
+
+            var lawunitOrder = CourtLawUnitOrder_Select(userContext.CourtId)
+                                .Where(x => caseJudges.Contains(x.LawUnitId))
+                                .Select(x => new
+                                {
+                                    x.LawUnitId,
+                                    x.OrderNumber
+                                })
+                                .ToList();
 
             if (!lawunitOrder.Any())
             {
                 return new SaveResultVM(false);
             }
 
-            var dtNow = DateTime.Now;
-            var lawunitsSelect = repo.AllReadonly<CaseLawUnit>()
-                                  .Where(x => x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow)
-                                  .Where(x => x.CaseId == caseId);
-
-            var caseLawunits = lawunitsSelect.Where(x => x.CaseSessionId == null).ToList();
-
-            var casePredsedatelId = caseLawunits.Where(x => x.JudgeDepartmentRoleId == NomenclatureConstants.JudgeDepartmentRole.Predsedatel)
-                                                .Select(x => x.LawUnitId).FirstOrDefault();
+            var casePredsedatels = caseLawunits.Where(x => x.JudgeDepartmentRoleId == NomenclatureConstants.JudgeDepartmentRole.Predsedatel)
+                                                .Select(x => x.LawUnitId).ToList();
 
             var newPredsedatel = (from o in lawunitOrder
                                   from c in caseLawunits
@@ -463,9 +487,9 @@ namespace IOWebApplication.Core.Services
                 return new SaveResultVM(false);
             }
 
-            if ((newPredsedatel.LawUnitId == 0) || (casePredsedatelId == newPredsedatel.LawUnitId))
+            if ((newPredsedatel.LawUnitId == 0) || (casePredsedatels.Count == 1 && casePredsedatels.FirstOrDefault() == newPredsedatel.LawUnitId))
             {
-                return new SaveResultVM(false);
+                return new SaveResultVM(false, "Няма промяна в предстедателя на състава.");
             }
 
             if (
@@ -560,6 +584,10 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
+
+        
+
+        
 
 
     }

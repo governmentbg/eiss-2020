@@ -46,6 +46,9 @@ namespace IntegrationService.Csrd.Services
             services.AddScoped<IISPNCaseService, ISPNCaseService>();
             services.AddScoped<IISPNCaseService, ISPNCaseService>();
             services.AddScoped<ICsrdService, CsrdService>();
+            services.AddScoped<IEproService, EproService>();
+            services.AddScoped<IElasticService, ElasticService>();
+            services.AddScoped<IElasticIndexService, ElasticIndexService>();
             services.AddScoped<IEisppConnectionService, EisppConnectionService>();
             services.AddScoped<IEisppCommunicationService, EisppCommunicationService>();
             services.AddScoped<IEisppRulesService, EisppRulesService>();
@@ -55,6 +58,9 @@ namespace IntegrationService.Csrd.Services
             services.AddSingleton<IEisppTHS, EisppTimedHostedService>();
             services.AddSingleton<IeCaseService, IeCaseServiceClient>();
             services.AddSingleton<IIspnTHS, IspnTimedHostedService>();
+            services.AddSingleton<IEproTHS, EproTimedHostedService>();
+            services.AddSingleton<IElasticTHS, ElasticTimedHostedService>();
+            services.AddSingleton<EproCryptoHelper, EproCryptoHelper>();
 
             services.Configure<FormOptions>(options =>
                   {
@@ -89,28 +95,6 @@ namespace IntegrationService.Csrd.Services
         /// <param name="Configuration">Настройки на приложението</param>
         public static void ConfigureHttpClients(this IServiceCollection services, IConfiguration config)
         {
-
-            //services.AddHttpClient();
-
-            //services.AddSingleton<ICsrdHttpRequester>(x =>
-            //{
-            //    var model = new CsrdHttpRequester();
-            //    model.requester = new HttpRequester(
-            //        config.GetValue<string>("CSRD:CertificatePath"),
-            //        config.GetValue<string>("CSRD:CertificatePassword"),
-            //        false);
-            //    return model;
-            //});
-
-            //services.AddSingleton<IISPNHttpRequester>(x =>
-            //{
-            //    var model = new ISPNHttpRequester();
-            //    model.requester = new HttpRequester(
-            //        config.GetValue<string>("ISPN:CertificatePath"),
-            //        config.GetValue<string>("ISPN:CertificatePassword"),
-            //        true);
-            //    return model;
-            //});
 
             //CSRD Client
             services.AddHttpClient("csrdHttpClient", client =>
@@ -156,24 +140,12 @@ namespace IntegrationService.Csrd.Services
                 return result;
             });
 
-            ////EPEP Client
-            //services.AddHttpClient<IeCaseServiceClient>("epepHttpClient", client =>
-            // {
-            //     var endPoint = config.GetValue<string>("EPEP:Endpoint");
-            //     client.BaseAddress = new Uri(endPoint);
-            // }).ConfigurePrimaryHttpMessageHandler(() =>
-            // {
-            //     var certificatePath = config.GetValue<string>("EPEP:CertificatePath");
-            //     var certificatePassword = config.GetValue<string>("EPEP:CertificatePassword");
-            //     HttpClientHandler result = new HttpClientHandler();
-            //     if (!string.IsNullOrEmpty(certificatePath))
-            //     {
-            //         var _cert = new X509Certificate2(certificatePath, certificatePassword);
-            //         result.ClientCertificates.Add(_cert);
-            //     }
-            //     result.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; };
-            //     return result;
-            // });
+            //EPRO Client
+            services.AddHttpClient("eproHttpClient", client =>
+            {
+                client.BaseAddress = new Uri(config.GetValue<string>("EPRO:URI"));
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            });
         }
 
     }

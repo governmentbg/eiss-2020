@@ -40,26 +40,37 @@
     </div>
     <div class="row">
         <div class="col-md-2">
+            @Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")
+        </div>
+        <div class="col-md-2">
             @Html.EditorFor(x => x.RegNumber)
         </div>
         <div class="col-md-2">
             @Html.EditorFor(x => x.CaseRegNumber)
         </div>
 
-        @if (Model.FilterType != NomenclatureConstants.DeliveryItemFilterType.Inner)
+        @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.Inner)
         {
-            @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.FromOther)
-            {
-                <div class="col-md-4">
-                    @Html.EditorFor(x => x.FromCourtId, "GenericDropDown")
-                </div>
-            }
-            @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.ToOther)
-            {
-                <div class="col-md-4">
-                    @Html.EditorFor(x => x.CourtId, "GenericDropDown")
-                </div>
-            }
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+            </div>
+
+        }
+        @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.FromOther)
+        {
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.FromCourtId, "GenericDropDown")
+            </div>
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+            </div>
+
+        }
+        @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.ToOther)
+        {
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.CourtId, "GenericDropDown")
+            </div>
         }
     </div>
 
@@ -118,8 +129,23 @@
                     data: 'regNumber',
                     title: 'Рег. номер',
                     width: 100,
+                    "render": function (item, type, row, meta) {
+                        if (row.caseNotificationId > 0) {
+                            return '<a style="cursor: pointer;" data-toggle="tooltip" onclick="printNotificationRaw(' + row.caseNotificationId + ')" title="Печат">' + row.regNumber + '</a>';
+                        } else {
+                            return row.regNumber;
+                        }
+                    },
                     sortable: true,
                     searchable: true
+                },
+                {
+                    name: 'notificationType',
+                    data: 'notificationType',
+                    title: 'Тип на документа',
+                    width: 100,
+                    sortable: true,
+                    searchable: false
                 },
                 {
                     name: 'caseInfo',
@@ -318,6 +344,9 @@
         $('#FromCourtId').select2({
             language: "bg"
         });
+        $('#LawUnitId').select2({
+            language: "bg"
+        });
         if ($('#NoAutoLoad').val() != 'Y')
             LoadDeliveryItems();
         if ("@Model.FilterType" == "@NomenclatureConstants.DeliveryItemFilterType.ToOther") {
@@ -352,6 +381,9 @@
             }
         }
         return filterMsg;
+    }
+    function printNotificationRaw(id) {
+        window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
     }
 </script>
 

@@ -1,9 +1,12 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.EISPP;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using System;
@@ -186,6 +189,10 @@ namespace IOWebApplication.Core.Services
         }
         private void ApplyRulesInData(int structureId, string rulesPath, string nodeToExit, XmlReader reader, XmlWriter writer, int eventType, bool isDeleteEvent)
         {
+            if (rulesPath.Contains(".SBE.SBE"))
+            {
+                eventType = EISPPConstants.EventType.CaseUnionInner;
+            }
             string elementToSkip = "";
             while (reader.Read())
             {
@@ -242,6 +249,7 @@ namespace IOWebApplication.Core.Services
         private bool IsNodeForSkip(string rulesPath, int eventType) {
             if (rulesPath == "VHD" || rulesPath == "VHD.SBE" || rulesPath == "KST" || rulesPath == "VHD.SBE.NPR.DLO.PNE.ADR")
                 return false;
+            rulesPath = rulesPath.Replace("VHD.SBE.SBE.", "", StringComparison.InvariantCultureIgnoreCase);
             rulesPath = rulesPath.Replace("VHD.SBE.", "", StringComparison.InvariantCultureIgnoreCase);
 
             (var ruleIDs, var flags) = GetEisppRuleIds(eventType, rulesPath);
@@ -261,7 +269,8 @@ namespace IOWebApplication.Core.Services
                 return attrName;
             if (rulesPath == "KST")
                 return  "." + attrName;
-            return rulesPath.Replace("VHD.SBE.", "", StringComparison.InvariantCultureIgnoreCase)+ "." + attrName;
+            rulesPath = rulesPath.Replace("VHD.SBE.SBE.", "", StringComparison.InvariantCultureIgnoreCase);
+            return rulesPath.Replace("VHD.SBE.", "", StringComparison.InvariantCultureIgnoreCase) + "." + attrName;
         }
         private bool IsAttribForSkip(string rulesPath, string attrName, string attrVal, int eventType, bool isDeleteEvent)
         {
@@ -333,48 +342,59 @@ namespace IOWebApplication.Core.Services
         {
             foreach (var eisppEvent in model.Data.Events)
             {
-                if (eisppEvent.CriminalProceeding.Case.ConnectedCases != null)
+                SetIsSelectedAndClearEvent(eisppEvent);
+                if (eisppEvent.EventAdded != null)
+                    SetIsSelectedAndClearEvent(eisppEvent.EventAdded);
+            }
+        }
+
+        private void SetIsSelectedAndClearEvent(Event eisppEvent)
+        {
+            if (eisppEvent.CriminalProceeding.Case.ConnectedCases != null)
+            {
+                eisppEvent.CriminalProceeding.Case.ConnectedCases = eisppEvent.CriminalProceeding.Case.ConnectedCases
+                                                                                   .Where(x => x.ConnectedCaseId == eisppEvent.CriminalProceeding.Case.ConnectedCaseId)
+                                                                                   .ToArray();
+            }
+            if (eisppEvent.CriminalProceeding.Case.Persons != null)
+            {
+                eisppEvent.CriminalProceeding.Case.Persons = eisppEvent.CriminalProceeding.Case.Persons.Where(x => x.IsSelected).ToArray();
+                foreach (var person in eisppEvent.CriminalProceeding.Case.Persons)
                 {
-                    eisppEvent.CriminalProceeding.Case.ConnectedCases = eisppEvent.CriminalProceeding.Case.ConnectedCases
-                                                                                       .Where(x => x.ConnectedCaseId == eisppEvent.CriminalProceeding.Case.ConnectedCaseId)
-                                                                                       .ToArray();
-                }
-                if (eisppEvent.CriminalProceeding.Case.Persons != null)
-                {
-                    eisppEvent.CriminalProceeding.Case.Persons = eisppEvent.CriminalProceeding.Case.Persons.Where(x => x.IsSelected).ToArray();
-                    foreach (var person in eisppEvent.CriminalProceeding.Case.Persons)
+                    if (person.Measures != null)
+                        person.Measures = person.Measures.Where(x => x.IsSelected).ToArray();
+                    if (person.Punishments != null)
                     {
-                        if (person.Measures != null)
-                            person.Measures = person.Measures.Where(x => x.IsSelected).ToArray();
-                        if (person.Punishments != null) 
+                        person.Punishments = person.Punishments
+                                                   .Where(x => x.PunishmentKind < 90000 &&
+                                                              x.IsSelected)
+                                                   .ToArray();
+                        foreach (var punishment in person.Punishments)
                         {
-                            person.Punishments = person.Punishments
-                                                       .Where(x => x.PunishmentKind < 90000 && 
-                                                                  x.IsSelected)
-                                                       .ToArray();
-                            foreach (var punishment in person.Punishments)
-                            {
-                                ClearPunishmentUnnecessaryField(punishment);
-                            }
+                            ClearPunishmentUnnecessaryField(punishment);
                         }
                     }
                 }
-                if (eisppEvent.CriminalProceeding.Case.CPPersonCrimes != null) 
+            }
+            if (eisppEvent.CriminalProceeding.Case.CPPersonCrimes != null)
+            {
+                eisppEvent.CriminalProceeding.Case.CPPersonCrimes = eisppEvent.CriminalProceeding.Case.CPPersonCrimes.Where(x => x.IsSelected).ToArray();
+                foreach (var cpPersonCrimes in eisppEvent.CriminalProceeding.Case.CPPersonCrimes)
                 {
-                    eisppEvent.CriminalProceeding.Case.CPPersonCrimes = eisppEvent.CriminalProceeding.Case.CPPersonCrimes.Where(x => x.IsSelected).ToArray();
-                    foreach(var cpPersonCrimes in eisppEvent.CriminalProceeding.Case.CPPersonCrimes)
+                    if (cpPersonCrimes.CrimeSanction?.CrimePunishments != null)
+                        cpPersonCrimes.CrimeSanction.CrimePunishments = cpPersonCrimes.CrimeSanction.CrimePunishments.Where(x => x.IsSelected && x.PunishmentKind < 90000).ToArray();
+                }
+                if (eisppEvent.CriminalProceeding.Case.Crimes != null)
+                {
+                    foreach (var crime in eisppEvent.CriminalProceeding.Case.Crimes)
                     {
-                        if (cpPersonCrimes.CrimeSanction?.CrimePunishments != null)
-                            cpPersonCrimes.CrimeSanction.CrimePunishments = cpPersonCrimes.CrimeSanction.CrimePunishments.Where(x => x.IsSelected && x.PunishmentKind < 90000).ToArray();
+                        crime.HavePerson = eisppEvent.CriminalProceeding.Case.CPPersonCrimes.Any(x => x.CrimeId == crime.CrimeId);
                     }
-                    foreach(var crime in eisppEvent.CriminalProceeding.Case.Crimes)
-                    {
-                        crime.IsSelected = eisppEvent.CriminalProceeding.Case.CPPersonCrimes.Any(x => x.CrimeId == crime.CrimeId);
-                    }
-                    eisppEvent.CriminalProceeding.Case.Crimes = eisppEvent.CriminalProceeding.Case.Crimes.Where(x => x.IsSelected).ToArray();
+                    eisppEvent.CriminalProceeding.Case.Crimes = eisppEvent.CriminalProceeding.Case.Crimes.Where(x => x.HavePerson).ToArray();
                 }
             }
         }
+
         public string GetPunishmentKindMode(int punishmentKind)
         {
             return repo.AllReadonly<CodeMapping>()
@@ -517,6 +537,12 @@ namespace IOWebApplication.Core.Services
                 }
             }
         }
-
+        public string MaxRuleFlag(string rulesPath, int eventType)
+        {
+            return repo.AllReadonly<EisppRules>()
+                        .Where(x => x.EventType == eventType &&
+                                    EF.Functions.ILike(x.ItemName, rulesPath.ToPaternSearch()))
+                        .Max(x => x.Flag);
+        }
     }
 }

@@ -1,7 +1,8 @@
 ﻿@model IEnumerable<CaseSelectionProtokolLawUnitVM>
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @using IOWebApplication.Infrastructure.Constants
-
+@{ var lu = Model.OrderBy(x => x.LawUnitFullName).ToList();}
+@{ var lu1 = Model.OrderBy(x => x.LawUnitFullName);}
 @if (Model != null)
 {
     @if (Model.Count() > 0)
@@ -23,11 +24,11 @@
                 <label>Забележка</label>
             </div>
         </div>}
-    @for (int i = 0; i < Model.Count(); i++)
+    @for (int i = 0; i < lu.Count(); i++)
     {
-        Model.ElementAt(i).Index = Model.ElementAt(i).LawUnitId;
-        ViewData.TemplateInfo.HtmlFieldPrefix = Model.ElementAt(i).GetPath;
-        <partial name="_LawUnitsItem" model="@Model.ElementAt(i)" />
+        lu.ElementAt(i).Index = lu.ElementAt(i).LawUnitId;
+        ViewData.TemplateInfo.HtmlFieldPrefix = lu.ElementAt(i).GetPath;
+        <partial name="_LawUnitsItem" model="lu.ElementAt(i)" />
         ViewData.TemplateInfo.HtmlFieldPrefix = string.Empty;
     }
 }

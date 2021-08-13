@@ -1,0 +1,33 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model List<VksSessionDayCalendarVM>
+
+@{
+    ViewData["Title"] = "Календар";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-12">
+
+
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        @if (Model!=null)
+        {
+            <partial name="_SessionDayCalendarList" model="@Model" />
+        }
+    </div>
+</div>
+
+

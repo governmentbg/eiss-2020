@@ -94,7 +94,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CaseSessionActComplainId))]
         public virtual CaseSessionActComplain CaseSessionActComplain { get; set; }
-
+        
+        [ForeignKey(nameof(NotificationIspnReasonId))]
+        public virtual NotificationIspnReason NotificationIspnReason { get; set; }
         [NotMapped]
         [Display(Name = "Дата на връчване")]
         public DateTime? DeliveryDateVM { get { return DeliveryDate; } }
@@ -417,5 +419,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Range(1, int.MaxValue, ErrorMessage = "Изберете Подател нa съпровождащ документ")]
         public int? DocumentSenderPersonId { get; set; }
 
+        [Column("money_obligation_id")]
+        [Display(Name = "Сума държавна такса")]
+        public int? MoneyObligationId { get; set; }
+
+        [Column("institution_document_id")]
+        [Display(Name = "Дела на други институции или съдебни инстанции")]
+        public string InstitutionDocumentId { get; set; }
+
+        [Display(Name = "Oснованиe за покана")]
+        [Range(1, int.MaxValue, ErrorMessage = "Изберете Oснованиe за покана")]
+        [Column("notification_ispn_reason_id")]
+        public int? NotificationIspnReasonId { get; set; }
     }       
 }

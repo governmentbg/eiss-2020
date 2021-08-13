@@ -12,5 +12,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string TaxAmountString { get; set; }
         public string CurrencyLabel { get; set; }
         public string CurrencyCode { get; set; }
+        public bool? VisibleOrder { get; set; }
+        public string VisibleOrderText { get; set; }
     }
 }

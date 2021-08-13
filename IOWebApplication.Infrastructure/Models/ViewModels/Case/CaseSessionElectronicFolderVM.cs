@@ -7,6 +7,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
     public class CaseSessionElectronicFolderVM
     {
         public int Id { get; set; }
+        public int CourtId { get; set; }
         public bool IsOnlyFiles { get; set; }
         public string SessionTypeLabel { get; set; }
         public string CourtHallName { get; set; }

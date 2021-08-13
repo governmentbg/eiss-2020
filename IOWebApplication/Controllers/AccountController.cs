@@ -72,9 +72,9 @@ namespace IOWebApplication.Controllers
 
         [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request)
+        public IActionResult ListData(IDataTablesRequest request, UserFilterVM filter)
         {
-            var data = commonService.Users_Select(userContext.CourtId, null, null, true);
+            var data = commonService.Users_Select(filter, true);
 
             return request.GetResponse(data);
         }
@@ -424,7 +424,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult SearchUser(string query)
         {
-            var model = commonService.Users_Select(userContext.CourtId, query.SafeLower(), null)
+            var model = commonService.Users_Select(new UserFilterVM() { FullName = query })
                             .Select(x => new LabelValueVM
                             {
                                 Value = x.Id,
@@ -435,7 +435,7 @@ namespace IOWebApplication.Controllers
         [HttpGet]
         public IActionResult GetUser(string id)
         {
-            var model = commonService.Users_Select(userContext.CourtId, null, id)
+            var model = commonService.Users_Select(new UserFilterVM() { UserId = id })
                             .Select(x => new LabelValueVM
                             {
                                 Value = x.Id,
@@ -464,8 +464,13 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> SelectCourt(SelectCourtVM model)
+        public async Task<IActionResult> SelectCourt(SelectCourtVM model)
         {
+            var avaliablesCourts = commonService.CourtSelect_ByUser(userContext.UserId).Select(x => x.Value).ToArray();
+            if (!avaliablesCourts.Contains(model.CourtId.ToString()))
+            {
+                return Json(new { result = false, message = "Непозволена операция." });
+            }
             var user = await userManager.FindByIdAsync(userContext.UserId);
             user.CourtId = model.CourtId;
             await userManager.UpdateAsync(user);
@@ -577,12 +582,12 @@ namespace IOWebApplication.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //[Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
-        //public IActionResult manage()
-        //{
-        //    var result = roleManager.CreateAsync(new ApplicationRole() { Name = "HR_ADMIN" }).Result;
+        [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
+        public IActionResult manage()
+        {
+            var result = roleManager.CreateAsync(new ApplicationRole() { Name = AccountConstants.Roles.CourtManager }).Result;
 
-        //    return Json(result);
-        //}
+            return Json(result);
+        }
     }
 }

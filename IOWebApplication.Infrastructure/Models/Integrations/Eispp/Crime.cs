@@ -211,6 +211,6 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 
 		[XmlIgnore]
 		[Display(Name = "Престъпление")]
-		public bool IsSelected { get; set; }
+		public bool HavePerson { get; set; }
 	}
 }

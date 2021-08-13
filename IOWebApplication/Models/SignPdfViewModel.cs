@@ -1,4 +1,6 @@
-﻿namespace IOWebApplication.Models
+﻿using System;
+
+namespace IOWebApplication.Models
 {
     /// <summary>
     /// Information needed for signing PDF document
@@ -25,6 +27,7 @@
         /// </summary>
         public string FileName { get; set; }
         public string FileTitle { get; set; }
+        public string FileId { get; set; }
 
         /// <summary>
         /// URL to be redirected after signing
@@ -52,7 +55,10 @@
         /// </summary>
         public int SourceType { get; set; }
 
+        public int? SignituresCount { get; set; }
+
         public string SignerName { get; set; }
         public string SignerUic { get; set; }
+        public string ErrorMessage { get; set; }
     }
 }

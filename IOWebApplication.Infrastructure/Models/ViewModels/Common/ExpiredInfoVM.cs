@@ -24,5 +24,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string DialogTitle { get; set; }
         public string ReturnUrl { get; set; }
         public bool OtherBool { get; set; }
+        public int? OtherId { get; set; }
     }
 }

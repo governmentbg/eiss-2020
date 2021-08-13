@@ -25,8 +25,8 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		[Display(Name = "Начало изпитателeн срок")]
 		[XmlAttribute("iptsrkdta", DataType = "date")]
 		public DateTime ProbationStartDate { get; set; }
-		[XmlIgnore]
-		[Display(Name = "Дата процесуалната санкция")]
+		[XmlIgnore] 
+		 [Display(Name = "Начало изпитателeн срок")] // Дата процесуалната санкция
 		public DateTime? ProbationStartDateVM
 		{
 			get

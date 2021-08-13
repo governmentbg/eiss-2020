@@ -1,8 +1,7 @@
 ﻿@model EisppChangeVM
 @using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
 @{
-    ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
-    bool isPostBack = (bool?)ViewBag.isPostBack == true;
+    ViewData["Title"] = "Изпращане на събитие към ЕИСПП/Ново състояние";
     var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
 }
 
@@ -25,9 +24,10 @@
             @Html.HiddenFor(x => x.IsForSend)
             @Html.HiddenFor(x => x.MQEpepId)
             @Html.HiddenFor(x => x.EventId)
+            @Html.HiddenFor(x => x.IsEdit)
             @Html.HiddenFor(x => x.EventFromId)
             <div class="form-group">
-                @if (Model.MQEpepId == null)
+                @if (Model.IsEdit)
                 {
                     <input type="submit" value="Потвърди" class="btn btn-success" />
                 }
@@ -39,6 +39,10 @@
 <form id="formEventChange" asp-action="EisppChange" method="post">
     @Html.HiddenFor(x => x.ModelJson)
     @Html.HiddenFor(x => x.IsForSend)
+    @Html.HiddenFor(x => x.MQEpepId)
+    @Html.HiddenFor(x => x.EventId)
+    @Html.HiddenFor(x => x.IsEdit)
+    @Html.HiddenFor(x => x.EventFromId)
 </form>
 @await Html.PartialAsync("_EisppScript")
 <script>

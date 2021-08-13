@@ -27,5 +27,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public DateTime? OutDocumentDate { get; set; }
         public bool? IsReturned { get; set; }
         public string CaseStateName { get; set; }
+        public int CaseStateId { get; set; }
+        public string InitDocumentNumber { get; set; }
+        public DateTime InitDocumentDate { get; set; }
+        public string InitDocumentType { get; set; }
     }
 }

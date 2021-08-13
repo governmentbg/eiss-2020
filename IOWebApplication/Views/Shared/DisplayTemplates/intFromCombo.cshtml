@@ -1,0 +1,26 @@
+﻿@model int?
+
+@{
+    var fieldName = ViewData.TemplateInfo.HtmlFieldPrefix.Replace(".", "_") + "_ddl";
+
+    var modelValue = "";
+    if (ViewData[fieldName] != null)
+    {
+        var ddl = (List<SelectListItem>)ViewData[fieldName];
+        modelValue = ddl?.Where(x => x.Value == Model?.ToString()).Select(x => x.Text).FirstOrDefault();
+    }
+}
+<div class="form-group">
+    @if (ViewData["label"] != null)
+    {
+        <label class="control-label">@ViewData["label"]</label>
+    }
+    else
+    {
+        <label asp-for="@Model" class="control-label"></label>
+    }
+    <div>
+        @Html.Raw(modelValue)
+        @Html.HiddenFor(x => x)
+    </div>
+</div>

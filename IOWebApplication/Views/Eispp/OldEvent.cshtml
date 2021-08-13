@@ -1,7 +1,7 @@
 ﻿@model EisppChangeVM
 @using IOWebApplication.Infrastructure.Models.ViewModels.Eispp
 @{
-    ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
+    ViewData["Title"] = "Изпращане на събитие към ЕИСПП/Преглед старо състояние";
     bool isPostBack = (bool?)ViewBag.isPostBack == true;
 }
 
@@ -20,6 +20,7 @@
             @Html.HiddenFor(x => x.EventId)
             @Html.HiddenFor(x => x.EventFromId)
             @Html.HiddenFor(x => x.MQEpepId)
+            @Html.HiddenFor(x => x.IsEdit)
             <div class="form-group">
                 <input type="submit" onclick="" value="Назад" class="btn btn-danger" />
             </div>

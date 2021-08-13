@@ -1,6 +1,5 @@
 ﻿using Integration.Epep;
 using IO.LogOperation.Models;
-using IO.SignTools.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -17,7 +16,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
@@ -60,9 +58,11 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         protected override IEnumerable<MQEpep> FetchHighPriorityItems(int fetchCount)
         {
+            //return null;
             int[] highPriorityAddSourceTypes = { SourceTypeSelectVM.EpepUser };
             int[] highPriorityDeleteSourceTypes = { SourceTypeSelectVM.CaseSessionActDepersonalized, SourceTypeSelectVM.CaseSessionActMotiveDepersonalized };
-            IEnumerable<MQEpep> select = repo.All<MQEpep>()
+            
+            var select = repo.All<MQEpep>()
                          .Where(x => x.IntegrationTypeId == IntegrationTypeId)
                          .Where(x => x.DateTransfered == null && x.IntegrationStateId == IntegrationStates.New);
 
@@ -78,36 +78,38 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         protected override async Task SendMQ(MQEpep mq)
         {
+            DateTime lastDate = DateTime.Now;
+
             this.startTime = DateTime.Now;
             switch (mq.TargetClassName)
             {
                 //Регистрация на лица
                 case nameof(PersonRegistration):
-                    Send_PersonRegistration(mq);
+                    await Send_PersonRegistration(mq);
                     break;
                 //Връзки лица по дела за лице
                 case nameof(PersonAssignment):
-                    Send_PersonAssignment(mq);
+                    await Send_PersonAssignment(mq);
                     break;
 
                 //Регистрация на адвокат
                 case nameof(LawyerRegistration):
-                    Send_LawyerRegistration(mq);
+                    await Send_LawyerRegistration(mq);
                     break;
                 //Връзки лица по дела за адвокат
                 case nameof(LawyerAssignment):
-                    Send_LawyerAssignment(mq);
+                    await Send_LawyerAssignment(mq);
                     break;
 
                 //Входящи и изходящи доументи и файловете към тях
                 case nameof(IncomingDocument):
-                    Send_IncomingDocument(mq);
+                    await Send_IncomingDocument(mq);
                     break;
                 case nameof(IncomingDocumentFile):
                     await Send_IncomingDocumentFile(mq);
                     break;
                 case nameof(OutgoingDocument):
-                    Send_OutgoingDocument(mq);
+                    await Send_OutgoingDocument(mq);
                     break;
                 case nameof(OutgoingDocumentFile):
                     await Send_OutgoingDocumentFile(mq);
@@ -115,7 +117,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
                 //Протоколи за разпределяне и файловете към тях
                 case nameof(Assignment):
-                    Send_Assignment(mq);
+                    await Send_Assignment(mq);
                     break;
                 case nameof(AssignmentFile):
                     await Send_AssignmentFile(mq);
@@ -123,31 +125,31 @@ namespace IOWebApplicationService.Infrastructure.Services
 
                 //Дела
                 case nameof(Integration.Epep.Case):
-                    Send_Case(mq);
+                    await Send_Case(mq);
                     break;
 
                 //Страни по делото
                 case nameof(Integration.Epep.Side):
-                    Send_Side(mq);
+                    await Send_Side(mq);
                     break;
 
                 //Съдия-докладчик
                 case nameof(Integration.Epep.Reporter):
-                    Send_Reporter(mq);
+                    await Send_Reporter(mq);
                     break;
 
                 //Заседания
                 case nameof(Hearing):
-                    Send_Hearing(mq);
+                    await Send_Hearing(mq);
                     break;
                 //Състав по Заседания
                 case nameof(HearingParticipant):
-                    Send_HearingParticipant(mq);
+                    await Send_HearingParticipant(mq);
                     break;
 
                 //Призовки
                 case nameof(Summon):
-                    Send_Summon(mq);
+                    await Send_Summon(mq);
                     break;
                 //Призовки - файлове
                 case nameof(SummonFile):
@@ -156,7 +158,11 @@ namespace IOWebApplicationService.Infrastructure.Services
 
                 //Актове
                 case nameof(Act):
-                    Send_Act(mq);
+                    await Send_Act(mq);
+                    break;
+                //Актове - Съдии
+                case nameof(ActPreparator):
+                    await send_ActPreparator((int)mq.SourceId, mq);
                     break;
                 //Актове - необезличен файл
                 case nameof(PrivateActFile):
@@ -176,15 +182,16 @@ namespace IOWebApplicationService.Infrastructure.Services
                     break;
                 //Обжалване на акт
                 case nameof(Appeal):
-                    Send_Appeal(mq);
+                    await Send_Appeal(mq);
                     break;
                 default:
                     break;
-
             }
+            //var elapsed = DateTime.Now - lastDate;
+            //logger.LogWarning($"mq {mq.TargetClassName} {mq.MethodName} {mq.Id} {elapsed.TotalMilliseconds}");
         }
 
-        private void Send_PersonRegistration(MQEpep mq)
+        private async Task Send_PersonRegistration(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<PersonRegistration>(Encoding.UTF8.GetString(mq.Content));
             epep.PersonRegistrationId = getKeyGuidNullable(SourceTypeSelectVM.EpepUser, mq.SourceId);
@@ -197,10 +204,9 @@ namespace IOWebApplicationService.Infrastructure.Services
                 case EpepConstants.Methods.Add:
                     try
                     {
-                        var existingReg = serviceClient.SelectPersonRegistration(epep.EGN);
+                        var existingReg = await serviceClient.SelectPersonRegistrationAsync(epep.EGN);
                         if (existingReg != null && !existingReg.PersonRegistrationId.IsEmpty())
                         {
-                            AddIntegrationKey(mq, existingReg.PersonRegistrationId);
 
                             //актуализиране данните за потребителя от съществуващите в ЕПЕП
                             var epepModel = repo.GetById<EpepUser>((int)mq.SourceId);
@@ -214,15 +220,15 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 correctionLog += "<br/>";
                                 correctionLog += $"Въведено: {epepModel.FullName}; Актуално: {existingReg.Name}";
                                 correctionLog += "<br/>";
-                                correctionLog += $"Въведено: {epepModel.BirthDate:dd.Mm.yyyy}; Актуално: {existingReg.BirthDate:dd.Mm.yyyy}";
+                                correctionLog += $"Въведено: {epepModel.BirthDate:dd.MM.yyyy}; Актуално: {existingReg.BirthDate:dd.MM.yyyy}";
                                 saveLogOperForEpepUser(epepModel.Id, correctionLog);
                                 epepModel.Email = existingReg.Email;
                                 epepModel.FullName = existingReg.Name;
                                 epepModel.BirthDate = existingReg.BirthDate;
-                                repo.Update(epepModel);
-                                repo.SaveChanges();
+                                //repo.SaveChanges();
                             }
 
+                            AddIntegrationKey(mq, existingReg.PersonRegistrationId, false);
                             return;
                         }
                     }
@@ -231,7 +237,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
                     }
 
-                    AddIntegrationKey(mq, serviceClient.InsertPersonRegistration(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertPersonRegistrationAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.PersonRegistrationId == Guid.Empty)
@@ -239,7 +245,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdatePersonRegistration(epep));
+                    UpdateMQ(mq, await serviceClient.UpdatePersonRegistrationAsync(epep));
                     break;
             }
 
@@ -261,7 +267,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             repo.SaveChanges();
         }
 
-        private void Send_PersonAssignment(MQEpep mq)
+        private async Task Send_PersonAssignment(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<PersonAssignment>(Encoding.UTF8.GetString(mq.Content));
             epep.PersonAssignmentId = getKeyGuidNullable(SourceTypeSelectVM.EpepUserAssignment, mq.SourceId);
@@ -288,10 +294,10 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertPersonAssignment(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertPersonAssignmentAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
-                    UpdateMQ(mq, serviceClient.UpdatePersonAssignment(epep));
+                    UpdateMQ(mq, await serviceClient.UpdatePersonAssignmentAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (!epep.PersonAssignmentId.HasValue)
@@ -299,13 +305,13 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeletePersonAssignment(epep.PersonAssignmentId.Value));
+                    UpdateMQ(mq, await serviceClient.DeletePersonAssignmentAsync(epep.PersonAssignmentId.Value));
                     break;
             }
 
         }
 
-        private void Send_LawyerRegistration(MQEpep mq)
+        private async Task Send_LawyerRegistration(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<LawyerRegistration>(Encoding.UTF8.GetString(mq.Content));
             epep.LawyerRegistrationId = getKeyGuidNullable(SourceTypeSelectVM.EpepUser, mq.SourceId);
@@ -313,7 +319,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             var epepUser = repo.GetById<EpepUser>((int)mq.SourceId);
             try
             {
-                var lawyerInfoFromEpep = serviceClient.GetLawyerByNumber(epepUser.LawyerNumber);
+                var lawyerInfoFromEpep = await serviceClient.GetLawyerByNumberAsync(epepUser.LawyerNumber);
                 if (lawyerInfoFromEpep != null)
                 {
                     epep.LawyerId = lawyerInfoFromEpep.LawyerId ?? Guid.Empty;
@@ -335,12 +341,12 @@ namespace IOWebApplicationService.Infrastructure.Services
 
                     try
                     {
-                        var lawyerIdentifiers = serviceClient.GetLawyerRegistrationIdentifiersByLawyerId(epep.LawyerId);
+                        var lawyerIdentifiers = await serviceClient.GetLawyerRegistrationIdentifiersByLawyerIdAsync(epep.LawyerId);
                         if (lawyerIdentifiers.Any())
                         {
                             //Вече има регистрация в ЕПЕП
-                            AddIntegrationKey(mq, lawyerIdentifiers.Last());
-                            var existingReg = serviceClient.GetLawyerRegistrationById(lawyerIdentifiers.Last());
+                            AddIntegrationKey(mq, lawyerIdentifiers.Last(), false);
+                            var existingReg = await serviceClient.GetLawyerRegistrationByIdAsync(lawyerIdentifiers.Last());
                             //актуализиране данните за потребителя от съществуващите в ЕПЕП
                             var epepModel = repo.GetById<EpepUser>((int)mq.SourceId);
                             if (epepModel.Email != existingReg.Email
@@ -350,11 +356,10 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 correctionLog += "<br/>";
                                 correctionLog += $"Въведено: {epepModel.Email}; Актуално: {existingReg.Email}";
                                 correctionLog += "<br/>";
-                                correctionLog += $"Въведено: {epepModel.BirthDate:dd.Mm.yyyy}; Актуално: {existingReg.BirthDate:dd.Mm.yyyy}";
+                                correctionLog += $"Въведено: {epepModel.BirthDate:dd.MM.yyyy}; Актуално: {existingReg.BirthDate:dd.MM.yyyy}";
                                 saveLogOperForEpepUser(epepModel.Id, correctionLog);
                                 epepModel.Email = existingReg.Email;
                                 epepModel.BirthDate = existingReg.BirthDate;
-                                repo.Update(epepModel);
                                 repo.SaveChanges();
                             }
                             return;
@@ -365,7 +370,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
                     }
 
-                    AddIntegrationKey(mq, serviceClient.InsertLawyerRegistration(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertLawyerRegistrationAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.LawyerRegistrationId == Guid.Empty)
@@ -373,13 +378,13 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateLawyerRegistration(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateLawyerRegistrationAsync(epep));
                     break;
             }
 
         }
 
-        private void Send_LawyerAssignment(MQEpep mq)
+        private async Task Send_LawyerAssignment(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<LawyerAssignment>(Encoding.UTF8.GetString(mq.Content));
             epep.LawyerAssignmentId = getKeyGuidNullable(SourceTypeSelectVM.EpepUserAssignment, mq.SourceId);
@@ -406,10 +411,10 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertLawyerAssignment(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertLawyerAssignmentAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
-                    UpdateMQ(mq, serviceClient.UpdateLawyerAssignment(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateLawyerAssignmentAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (!epep.LawyerAssignmentId.HasValue)
@@ -417,13 +422,13 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteLawyerAssignment(epep.LawyerAssignmentId.Value));
+                    UpdateMQ(mq, await serviceClient.DeleteLawyerAssignmentAsync(epep.LawyerAssignmentId.Value));
                     break;
             }
 
         }
 
-        private void Send_IncomingDocument(MQEpep mq)
+        private async Task Send_IncomingDocument(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<IncomingDocument>(Encoding.UTF8.GetString(mq.Content));
             if (string.IsNullOrEmpty(epep.IncomingDocumentTypeCode))
@@ -444,13 +449,24 @@ namespace IOWebApplicationService.Infrastructure.Services
 
             if (doc != null)
             {
-                if (doc.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument && doc.caseId > 0)
+                switch (doc.DocumentKindId)
                 {
-                    epep.CaseId = getKeyGuid(SourceTypeSelectVM.Case, doc.caseId);
-                    if (epep.CaseId.IsEmpty())
-                    {
-                        SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
-                    }
+                    case DocumentConstants.DocumentKind.InitialDocument:
+                        //На иницииращите документи не подаваме свързано дело, защото грешно излизат в първия съд
+                        epep.CaseId = null;
+                        break;
+                    case DocumentConstants.DocumentKind.CompliantDocument:
+                        if (doc.caseId > 0)
+                        {
+                            epep.CaseId = getKeyGuid(SourceTypeSelectVM.Case, doc.caseId);
+                            if (epep.CaseId.IsEmpty())
+                            {
+                                SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
+                            }
+                        }
+                        break;
+                    default:
+                        break;
                 }
                 epep.IncomingDocumentTypeCode = GetNomValue(EpepConstants.Nomenclatures.IncommingDocumentTypes, doc.DocumentTypeId);
             }
@@ -459,6 +475,11 @@ namespace IOWebApplicationService.Infrastructure.Services
             if (mq.MethodName == EpepConstants.Methods.Add && !epep.IncomingDocumentId.IsEmpty())
             {
                 mq.MethodName = EpepConstants.Methods.Update;
+            }
+            if (mq.MethodName != EpepConstants.Methods.Add && epep.IncomingDocumentId.IsEmpty())
+            {
+                SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
+                return;
             }
             if (epep.Person != null)
             {
@@ -469,14 +490,26 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 case EpepConstants.Methods.Add:
                     epep.IncomingDocumentId = null;
-                    AddIntegrationKey(mq, serviceClient.InsertIncomingDocument(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertIncomingDocumentAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
-                    UpdateMQ(mq, serviceClient.UpdateIncomingDocument(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateIncomingDocumentAsync(epep));
+                    break;
+                case EpepConstants.Methods.Delete:
+                    try
+                    {
+                        var _docFileGuid = await serviceClient.GetIncomingDocumentFileIdentifierByIncomingDocumentIdAsync(epep.IncomingDocumentId.Value);
+                        if (!_docFileGuid.IsEmpty())
+                        {
+                            await serviceClient.DeleteIncomingDocumentFileAsync(_docFileGuid.Value);
+                        }
+                    }
+                    catch (Exception ex) { }
+                    UpdateMQ(mq, await serviceClient.DeleteIncomingDocumentAsync(epep.IncomingDocumentId.Value));
                     break;
             }
         }
-        private void Send_OutgoingDocument(MQEpep mq)
+        private async Task Send_OutgoingDocument(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<OutgoingDocument>(Encoding.UTF8.GetString(mq.Content));
             if (string.IsNullOrEmpty(epep.OutgoingDocumentTypeCode))
@@ -495,15 +528,30 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 mq.MethodName = EpepConstants.Methods.Update;
             }
-
+            if (mq.MethodName != EpepConstants.Methods.Add && epep.OutgoingDocumentId.IsEmpty())
+            {
+                SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
+                return;
+            }
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertOutgoingDocument(epep));
-
+                    AddIntegrationKey(mq, await serviceClient.InsertOutgoingDocumentAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
-                    UpdateMQ(mq, serviceClient.UpdateOutgoingDocument(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateOutgoingDocumentAsync(epep));
+                    break;
+                case EpepConstants.Methods.Delete:
+                    try
+                    {
+                        var _docFileGuid = await serviceClient.GetOutgoingDocumentFileIdentifierByOutgoingDocumentIdAsync(epep.OutgoingDocumentId.Value);
+                        if (!_docFileGuid.IsEmpty())
+                        {
+                            await serviceClient.DeleteOutgoingDocumentFileAsync(_docFileGuid.Value);
+                        }
+                    }
+                    catch (Exception ex) { }
+                    UpdateMQ(mq, await serviceClient.DeleteOutgoingDocumentAsync(epep.OutgoingDocumentId.Value));
                     break;
             }
 
@@ -537,6 +585,12 @@ namespace IOWebApplicationService.Infrastructure.Services
                 mq.MethodName = EpepConstants.Methods.Update;
             }
 
+            if (mq.MethodName != EpepConstants.Methods.Add && epep.IncomingDocumentFileId.IsEmpty())
+            {
+                SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
+                return;
+            }
+
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
@@ -544,10 +598,13 @@ namespace IOWebApplicationService.Infrastructure.Services
                     {
                         epep.IncomingDocumentFileId = null;
                     }
-                    AddIntegrationKey(mq, serviceClient.InsertIncomingDocumentFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertIncomingDocumentFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
-                    UpdateMQ(mq, serviceClient.UpdateIncomingDocumentFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateIncomingDocumentFileAsync(epep));
+                    break;
+                case EpepConstants.Methods.Delete:
+                    UpdateMQ(mq, await serviceClient.DeleteIncomingDocumentFileAsync(epep.IncomingDocumentId));
                     break;
             }
 
@@ -580,6 +637,11 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 mq.MethodName = EpepConstants.Methods.Update;
             }
+            if (mq.MethodName != EpepConstants.Methods.Add && epep.OutgoingDocumentFileId.IsEmpty())
+            {
+                SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
+                return;
+            }
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
@@ -587,16 +649,19 @@ namespace IOWebApplicationService.Infrastructure.Services
                     {
                         epep.OutgoingDocumentFileId = null;
                     }
-                    AddIntegrationKey(mq, serviceClient.InsertOutgoingDocumentFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertOutgoingDocumentFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
-                    UpdateMQ(mq, serviceClient.UpdateOutgoingDocumentFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateOutgoingDocumentFileAsync(epep));
+                    break;
+                case EpepConstants.Methods.Delete:
+                    UpdateMQ(mq, await serviceClient.DeleteOutgoingDocumentFileAsync(epep.OutgoingDocumentId));
                     break;
             }
 
         }
 
-        private void Send_Assignment(MQEpep mq)
+        private async Task Send_Assignment(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Assignment>(Encoding.UTF8.GetString(mq.Content));
             var info = repo.AllReadonly<CaseSelectionProtokol>()
@@ -634,7 +699,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertAssignment(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertAssignmentAsync(epep), false);
                     break;
             }
 
@@ -664,16 +729,16 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertAssignmentFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertAssignmentFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
-                    UpdateMQ(mq, serviceClient.UpdateAssignmentFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateAssignmentFileAsync(epep));
                     break;
             }
 
         }
 
-        private void Send_Case(MQEpep mq)
+        private async Task Send_Case(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Integration.Epep.Case>(Encoding.UTF8.GetString(mq.Content));
 
@@ -695,35 +760,8 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 case EpepConstants.Methods.Add:
                     Guid? caseId;
-                    caseId = serviceClient.InsertCase(epep);
-                    AddIntegrationKey(mq, caseId);
-                    //try
-                    //{
-                    //    caseId = serviceClient.InsertCase(epep);
-                    //    AddIntegrationKey(mq, caseId);
-                    //}
-                    //catch (FaultException fex)
-                    //{
-                    //    var _error = fex.GetMessageFault() ?? "";
-                    //    if (_error.ToLower().Contains("неидентифицирана"))
-                    //    {
-                    //        var doc = repo.AllReadonly<IOWebApplication.Infrastructure.Data.Models.Cases.Case>()
-                    //                        .Include(x => x.Document)
-                    //                        .Where(x => x.Id == mq.SourceId)
-                    //                        .Select(x => x.Document)
-                    //                        .FirstOrDefault();
-
-                    //        try
-                    //        {
-                    //            caseId = serviceClient.GetCaseId(doc.DocumentNumberValue.Value, doc.DocumentDate.Year, epep.CourtCode);
-                    //            if (caseId.HasValue)
-                    //            {
-                    //                AddIntegrationKey(mq, caseId);
-                    //            }
-                    //        }
-                    //        catch { }
-                    //    }
-                    //}
+                    caseId = await serviceClient.InsertCaseAsync(epep);
+                    AddIntegrationKey(mq, caseId, false);
 
                     break;
                 case EpepConstants.Methods.Update:
@@ -732,7 +770,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateCase(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateCaseAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.CaseId == Guid.Empty)
@@ -742,59 +780,59 @@ namespace IOWebApplicationService.Infrastructure.Services
                     }
                     try
                     {
-                        var identifiers = serviceClient.GetAssignmentIdentifiersByCaseId(epep.CaseId.Value);
+                        var identifiers = await serviceClient.GetAssignmentIdentifiersByCaseIdAsync(epep.CaseId.Value);
                         foreach (var item in identifiers)
                         {
-                            serviceClient.DeleteAssignment(item);
+                            await serviceClient.DeleteAssignmentAsync(item);
                         }
                     }
                     catch (Exception ex) { }
 
                     try
                     {
-                        var identifiers = serviceClient.GetSideIdentifiersByCaseId(epep.CaseId.Value);
+                        var identifiers = await serviceClient.GetSideIdentifiersByCaseIdAsync(epep.CaseId.Value);
                         foreach (var item in identifiers)
                         {
-                            serviceClient.DeleteSide(item);
+                            await serviceClient.DeleteSideAsync(item);
                         }
                     }
                     catch { }
                     try
                     {
-                        var identifiers = serviceClient.GetHearingIdentifiersByCaseId(epep.CaseId.Value);
+                        var identifiers = await serviceClient.GetHearingIdentifiersByCaseIdAsync(epep.CaseId.Value);
                         foreach (var item in identifiers)
                         {
                             try
                             {
-                                var identifiersP = serviceClient.GetHearingParticipantIdentifiersByHearingId(item);
+                                var identifiersP = await serviceClient.GetHearingParticipantIdentifiersByHearingIdAsync(item);
                                 foreach (var itemP in identifiersP)
                                 {
-                                    serviceClient.DeleteHearingParticipant(itemP);
+                                    await serviceClient.DeleteHearingParticipantAsync(itemP);
                                 }
                             }
                             catch { }
-                            serviceClient.DeleteHearing(item);
+                            await serviceClient.DeleteHearingAsync(item);
                         }
                     }
                     catch { }
 
                     try
                     {
-                        var identifiers = serviceClient.GetReporterIdentifiersByCaseId(epep.CaseId.Value);
+                        var identifiers = await serviceClient.GetReporterIdentifiersByCaseIdAsync(epep.CaseId.Value);
                         foreach (var item in identifiers)
                         {
-                            serviceClient.DeleteReporter(item);
+                            await serviceClient.DeleteReporterAsync(item);
                         }
                     }
                     catch { }
 
-                    UpdateMQ(mq, serviceClient.DeleteCase(epep.CaseId.Value));
+                    UpdateMQ(mq, await serviceClient.DeleteCaseAsync(epep.CaseId.Value));
                     break;
             }
 
         }
 
-        private void Send_Side(MQEpep mq)
+        private async Task Send_Side(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Integration.Epep.Side>(Encoding.UTF8.GetString(mq.Content));
 
@@ -809,11 +847,10 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 mq.MethodName = EpepConstants.Methods.Update;
             }
-
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertSide(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertSideAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.SideId.IsEmpty())
@@ -821,7 +858,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateSide(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateSideAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.SideId.IsEmpty())
@@ -829,12 +866,12 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteSide(epep.SideId.Value));
+                    UpdateMQ(mq, await serviceClient.DeleteSideAsync(epep.SideId.Value));
                     break;
             }
 
         }
-        private void Send_Reporter(MQEpep mq)
+        private async Task Send_Reporter(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Integration.Epep.Reporter>(Encoding.UTF8.GetString(mq.Content));
 
@@ -853,7 +890,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertReporter(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertReporterAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.ReporterId.IsEmpty())
@@ -861,7 +898,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateReporter(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateReporterAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.ReporterId.IsEmpty())
@@ -869,13 +906,13 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteReporter(epep.ReporterId ?? Guid.Empty));
+                    UpdateMQ(mq, await serviceClient.DeleteReporterAsync(epep.ReporterId ?? Guid.Empty));
                     break;
             }
 
         }
 
-        private void Send_Hearing(MQEpep mq)
+        private async Task Send_Hearing(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Integration.Epep.Hearing>(Encoding.UTF8.GetString(mq.Content));
 
@@ -891,14 +928,15 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 mq.MethodName = EpepConstants.Methods.Update;
             }
+
             var caseSession = repo.AllReadonly<CaseSession>().Where(x => x.Id == (int)mq.SourceId).FirstOrDefault();
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertHearing(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertHearingAsync(epep), false);
                     if (caseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
                     {
-                        send_HearingParticipants(caseSession);
+                        await send_HearingParticipants(caseSession);
                     }
                     break;
                 case EpepConstants.Methods.Update:
@@ -907,12 +945,12 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    var res = serviceClient.UpdateHearing(epep);
+                    var res = await serviceClient.UpdateHearingAsync(epep);
                     UpdateMQ(mq, res);
 
                     if (caseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
                     {
-                        send_HearingParticipants(caseSession);
+                        await send_HearingParticipants(caseSession);
                     }
                     break;
                 case EpepConstants.Methods.Delete:
@@ -921,12 +959,21 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteHearing(epep.HearingId.Value));
+                    try
+                    {
+                        var _hp = await serviceClient.GetHearingParticipantIdentifiersByHearingIdAsync(epep.HearingId.Value);
+                        foreach (var item in _hp)
+                        {
+                            await serviceClient.DeleteHearingParticipantAsync(item);
+                        }
+                    }
+                    catch (Exception ex) { }
+                    UpdateMQ(mq, await serviceClient.DeleteHearingAsync(epep.HearingId.Value));
                     break;
             }
 
         }
-        private void send_HearingParticipants(CaseSession caseSession)
+        private async Task send_HearingParticipants(CaseSession caseSession)
         {
             var caseLawUnits = repo.AllReadonly<CaseLawUnit>()
                                         .Include(x => x.JudgeDepartmentRole)
@@ -953,10 +1000,10 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
             try
             {
-                var participantsIds = serviceClient.GetHearingParticipantIdentifiersByHearingId(HearingId);
+                var participantsIds = await serviceClient.GetHearingParticipantIdentifiersByHearingIdAsync(HearingId);
                 foreach (var item in participantsIds)
                 {
-                    serviceClient.DeleteHearingParticipant(item);
+                    await serviceClient.DeleteHearingParticipantAsync(item);
                 }
             }
             catch (Exception ex) { }
@@ -983,35 +1030,24 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 JudgeName = lawUnit.FullName,
                                 Role = lawUnit.JudgeDepartmentRole
                             };
-                            var returnGuid = serviceClient.InsertHearingParticipant(epep);
+                            var returnGuid = await serviceClient.InsertHearingParticipantAsync(epep);
                             if (returnGuid.HasValue)
                             {
-                                AddIntegrationKey(SourceTypeSelectVM.CaseLawUnit, lawUnit.Id, returnGuid.Value.ToString());
+                                AddIntegrationKey(SourceTypeSelectVM.CaseLawUnit, lawUnit.Id, returnGuid.Value.ToString(), false);
                             }
                         }
                         break;
-                    //case Methods.Update:
-                    //    {
-                    //        HearingParticipant epep = new HearingParticipant()
-                    //        {
-                    //            HearingId = HearingId,
-                    //            HearingParticipantId = luID,
-                    //            JudgeName = lawUnit.FullName,
-                    //            Role = lawUnit.JudgeRole
-                    //        };
-                    //        serviceClient.UpdateHearingParticipant(epep);
-                    //    }
-                    //    break;
+
                     case Methods.Delete:
                         {
-                            serviceClient.DeleteHearingParticipant(luID.Value);
+                            await serviceClient.DeleteHearingParticipantAsync(luID.Value);
                         }
                         break;
                 }
             }
         }
 
-        private void Send_HearingParticipant(MQEpep mq)
+        private async Task Send_HearingParticipant(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<HearingParticipant>(Encoding.UTF8.GetString(mq.Content));
 
@@ -1030,7 +1066,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertHearingParticipant(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertHearingParticipantAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.HearingParticipantId.IsEmpty())
@@ -1038,7 +1074,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateHearingParticipant(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateHearingParticipantAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.HearingParticipantId.IsEmpty())
@@ -1046,12 +1082,12 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteHearingParticipant(epep.HearingParticipantId.Value));
+                    UpdateMQ(mq, await serviceClient.DeleteHearingParticipantAsync(epep.HearingParticipantId.Value));
                     break;
             }
 
         }
-        private void Send_Summon(MQEpep mq)
+        private async Task Send_Summon(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Summon>(Encoding.UTF8.GetString(mq.Content));
 
@@ -1100,7 +1136,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertSummon(epep, epepUser));
+                    AddIntegrationKey(mq, await serviceClient.InsertSummonAsync(epep, epepUser), false);
 
                     if (mq.IntegrationStateId == IntegrationStates.TransferOK)
                     {
@@ -1117,7 +1153,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateSummon(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateSummonAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.SummonId.IsEmpty())
@@ -1125,7 +1161,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteSummon(epep.SummonId.Value));
+                    UpdateMQ(mq, await serviceClient.DeleteSummonAsync(epep.SummonId.Value));
                     break;
             }
 
@@ -1172,7 +1208,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertSummonFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertSummonFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.SummonFileId.IsEmpty())
@@ -1180,7 +1216,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateSummonFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateSummonFileAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.SummonId == Guid.Empty)
@@ -1188,12 +1224,12 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteSummonFile(epep.SummonId));
+                    UpdateMQ(mq, await serviceClient.DeleteSummonFileAsync(epep.SummonId));
                     break;
             }
 
         }
-        private void Send_Act(MQEpep mq)
+        private async Task Send_Act(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Act>(Encoding.UTF8.GetString(mq.Content));
             if (epep.CaseId == Guid.Empty)
@@ -1212,7 +1248,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             {
                 mq.MethodName = EpepConstants.Methods.Update;
             }
-            epep.HearingId = getKeyGuidNullable(SourceTypeSelectVM.CaseSession, mq.ParentSourceId);
+            epep.HearingId = getKeyGuidNullable(SourceTypeSelectVM.CaseSession, mq.ParentSourceId ?? 0);
             if (epep.HearingId.IsEmpty())
             {
                 SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError, "Изчаква код на заседание");
@@ -1223,8 +1259,8 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertAct(epep));
-                    send_ActPreparator((int)mq.SourceId);
+                    AddIntegrationKey(mq, await serviceClient.InsertActAsync(epep), true);
+                    await send_ActPreparator((int)mq.SourceId);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.ActId == Guid.Empty)
@@ -1232,8 +1268,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateAct(epep));
-                    send_ActPreparator((int)mq.SourceId);
+                    UpdateMQ(mq, await serviceClient.UpdateActAsync(epep));
+                    await send_ActPreparator((int)mq.SourceId);
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.ActId == Guid.Empty)
@@ -1241,12 +1277,90 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteAct(epep.ActId.Value));
+                    UpdateMQ(mq, await serviceClient.DeleteActAsync(epep.ActId.Value));
                     break;
             }
 
         }
-        private void send_ActPreparator(int actId)
+        private async Task send_ActPreparator(int actId, MQEpep mq = null)
+        {
+            var EpepActId = getKeyGuid(SourceTypeSelectVM.CaseSessionAct, actId);
+            if (EpepActId == Guid.Empty)
+            {
+                if (mq != null)
+                {
+                    SetErrorToMQ(mq, EpepConstants.IntegrationStates.WaitForParentIdError, "Изчаква id на акт.");
+                }
+                return;
+            }
+            var act = repo.GetById<CaseSessionAct>(actId);
+            var sessionLawUnits = repo.AllReadonly<CaseLawUnit>()
+                                    .Include(x => x.JudgeDepartmentRole)
+                                    .Include(x => x.LawUnit)
+                                    .Where(x => x.CaseId == act.CaseId && x.CaseSessionId == act.CaseSessionId)
+                                    .Where(x => NomenclatureConstants.JudgeRole.JudgeRolesListMain.Contains(x.JudgeRoleId))
+                                    .Where(x => (x.DateTo ?? DateTime.MaxValue) >= act.RegDate)
+                                    .OrderBy(x => x.JudgeRoleId)
+                                    .ThenBy(x => x.DateFrom)
+                                    .Select(x => new
+                                    {
+                                        Id = x.Id,
+                                        FullName = x.LawUnit.FullName,
+                                        JudgeRoleId = x.JudgeRoleId,
+                                        JudgeRole = x.JudgeDepartmentRole.Label
+                                    }).ToList();
+
+            var preparatorsKey = getKey(SourceTypeSelectVM.CaseSessionActPreparatorByAct, actId);
+            if (!string.IsNullOrEmpty(preparatorsKey))
+            {
+                try
+                {
+                    var pIds = await serviceClient.GetActPreparatorIdentifiersByActIdAsync(EpepActId);
+                    if (pIds.Count() == sessionLawUnits.Count())
+                    {
+                        //Има същите бройки хора
+                        if (mq != null)
+                            UpdateMQ(mq, true);
+
+                        return;
+                    }
+                    foreach (var item in pIds)
+                    {
+                        await serviceClient.DeleteActPreparatorAsync(item);
+                    }
+                }
+                catch { }
+            }
+
+            preparatorsKey = null;
+            foreach (var lawUnit in sessionLawUnits)
+            {
+                ActPreparator epep = new ActPreparator()
+                {
+                    ActId = EpepActId,
+                    JudgeName = lawUnit.FullName,
+                    //Ако не се изпрати точно този стринг ЕПЕП не го визуализира като Съдия докладчик в списъка на актовете по делото и заседанието
+                    Role = (lawUnit.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter) ? "Съдия докладчик" : lawUnit.JudgeRole
+                };
+
+                var _pKey = await serviceClient.InsertActPreparatorAsync(epep);
+
+                if (_pKey.HasValue)
+                {
+                    preparatorsKey = _pKey.Value.ToString() + ",";
+                }
+            }
+            if (!string.IsNullOrEmpty(preparatorsKey))
+            {
+                AddIntegrationKey(SourceTypeSelectVM.CaseSessionActPreparatorByAct, actId, preparatorsKey, false);
+                if (mq != null)
+                    UpdateMQ(mq, true);
+            }
+        }
+
+
+
+        private async Task send_ActPreparatorOld(int actId)
         {
             var ActId = getKeyGuid(SourceTypeSelectVM.CaseSessionAct, actId);
             if (ActId == Guid.Empty)
@@ -1293,14 +1407,14 @@ namespace IOWebApplicationService.Infrastructure.Services
                 switch (apMethod)
                 {
                     case Methods.Add:
-                        var apId = serviceClient.InsertActPreparator(epep);
+                        var apId = await serviceClient.InsertActPreparatorAsync(epep);
                         if (!apId.IsEmpty())
                         {
-                            AddIntegrationKey(SourceTypeSelectVM.CaseSessionActPreparator, lawUnit.Id, apId.Value.ToString());
+                            AddIntegrationKey(SourceTypeSelectVM.CaseSessionActPreparator, lawUnit.Id, apId.Value.ToString(), false);
                         }
                         break;
                     case Methods.Update:
-                        serviceClient.UpdateActPreparator(epep);
+                        await serviceClient.UpdateActPreparatorAsync(epep);
                         break;
                 }
             }
@@ -1337,7 +1451,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertPrivateActFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertPrivateActFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.PrivateActFileId == Guid.Empty)
@@ -1345,7 +1459,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdatePrivateActFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdatePrivateActFileAsync(epep));
                     break;
 
             }
@@ -1381,7 +1495,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertPublicActFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertPublicActFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.PublicActFileId == Guid.Empty)
@@ -1389,7 +1503,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdatePublicActFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdatePublicActFileAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     RemoveUnfinishedTasksBeforeDelete(mq);
@@ -1398,7 +1512,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         UpdateMQ(mq, true);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeletePublicActFile(epep.ActId));
+                    UpdateMQ(mq, await serviceClient.DeletePublicActFileAsync(epep.ActId));
                     RemoveIntegrationKeys(mq);
                     break;
             }
@@ -1435,7 +1549,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertPrivateMotiveFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertPrivateMotiveFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.PrivateMotiveFileId == Guid.Empty)
@@ -1443,7 +1557,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdatePrivateMotiveFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdatePrivateMotiveFileAsync(epep));
                     break;
             }
         }
@@ -1480,7 +1594,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertPublicMotiveFile(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertPublicMotiveFileAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.PublicMotiveFileId == Guid.Empty)
@@ -1488,7 +1602,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdatePublicMotiveFile(epep));
+                    UpdateMQ(mq, await serviceClient.UpdatePublicMotiveFileAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     RemoveUnfinishedTasksBeforeDelete(mq);
@@ -1498,14 +1612,14 @@ namespace IOWebApplicationService.Infrastructure.Services
                         return;
                     }
 
-                    UpdateMQ(mq, serviceClient.DeletePublicMotiveFile(epep.ActId));
+                    UpdateMQ(mq, await serviceClient.DeletePublicMotiveFileAsync(epep.ActId));
                     RemoveIntegrationKeys(mq);
                     break;
             }
 
         }
 
-        private void Send_Appeal(MQEpep mq)
+        private async Task Send_Appeal(MQEpep mq)
         {
             var epep = JsonConvert.DeserializeObject<Appeal>(Encoding.UTF8.GetString(mq.Content));
             epep.ActId = getKeyGuid(SourceTypeSelectVM.CaseSessionAct, mq.ParentSourceId);
@@ -1529,7 +1643,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
-                    AddIntegrationKey(mq, serviceClient.InsertAppeal(epep));
+                    AddIntegrationKey(mq, await serviceClient.InsertAppealAsync(epep), false);
                     break;
                 case EpepConstants.Methods.Update:
                     if (epep.ActId == Guid.Empty)
@@ -1537,7 +1651,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.UpdateAppeal(epep));
+                    UpdateMQ(mq, await serviceClient.UpdateAppealAsync(epep));
                     break;
                 case EpepConstants.Methods.Delete:
                     if (epep.AppealId.IsEmpty())
@@ -1545,7 +1659,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                         SetErrorToMQ(mq, IntegrationStates.WaitForParentIdError);
                         return;
                     }
-                    UpdateMQ(mq, serviceClient.DeleteAppeal(epep.AppealId.Value));
+                    UpdateMQ(mq, await serviceClient.DeleteAppealAsync(epep.AppealId.Value));
                     break;
             }
 
@@ -1555,7 +1669,7 @@ namespace IOWebApplicationService.Infrastructure.Services
         {
             var dtNow = DateTime.Now;
             //Да не проверява непрекъснато за призовки, а само на всеки три часа
-            if (dtNow.Hour % 3 == 0)
+            if (dtNow.Hour % 3 == 0 && dtNow.Minute < 10)
             {
                 return;
             }
@@ -1566,32 +1680,45 @@ namespace IOWebApplicationService.Infrastructure.Services
                                         .Where(x => x.DeliveryDate == null && x.ReturnDate == null)
                                         .Where(x => x.DateSend != null)
                                         .Where(x => x.DateExpired == null)
+                                        .OrderBy(x => x.Id)
                                         .Take(fetchCount)
                                         .ToList();
 
             foreach (var epepNotification in epepNotifications)
             {
-                //Взема кода към ЕПЕП на призовката, ако има
-                var epepKey = getKeyGuid(SourceTypeSelectVM.CaseNotification, epepNotification.Id);
-
-                if (epepKey == Guid.Empty)
+                try
                 {
-                    continue;
+                    //Взема кода към ЕПЕП на призовката, ако има
+                    var epepKey = getKeyGuid(SourceTypeSelectVM.CaseNotification, epepNotification.Id);
+
+                    if (epepKey == Guid.Empty)
+                    {
+                        continue;
+                    }
+
+                    //Взема датата на връчване от портала
+                    var deliveryDate = await serviceClient.GetSummonsServedTimestampAsync(epepKey);
+                    if (deliveryDate > epepNotification.DateSend)
+                    {
+                        //успешно призоваване
+                        epepNotification.NotificationStateId = NomenclatureConstants.NotificationState.Delivered;
+                        epepNotification.DeliveryDate = deliveryDate;
+                        epepNotification.ReturnDate = deliveryDate;
+                        //                        repo.Update(epepNotification);
+                        repo.SaveChanges();
+
+                        //Маркира призовката като прочетена
+                        await serviceClient.MarkSummonAsReadAsync(epepKey, DateTime.Now);
+                    }
                 }
-
-                //Взема датата на връчване от портала
-                var deliveryDate = await serviceClient.GetSummonsServedTimestampAsync(epepKey);
-                if (deliveryDate > epepNotification.DateSend)
+                catch (FaultException fex)
                 {
-                    //успешно призоваване
-                    epepNotification.NotificationStateId = NomenclatureConstants.NotificationState.Delivered;
-                    epepNotification.DeliveryDate = deliveryDate;
-                    epepNotification.ReturnDate = deliveryDate;
-                    repo.Update(epepNotification);
-                    repo.SaveChanges();
-
-                    //Маркира призовката като прочетена
-                    await serviceClient.MarkSummonAsReadAsync(epepKey, DateTime.Now);
+                    var _error = fex.Message;
+                    //SetErrorToMQ(mq, IntegrationStates.DataContentError, _error);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, $"Error managing summon. CaseNotificationId = {epepNotification.Id}");
                 }
             }
 
@@ -1624,8 +1751,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                 try
                 {
                     Guid? caseId;
-                    caseId = serviceClient.InsertCase(epep);
-                    AddIntegrationKey(mq, caseId);
+                    caseId = await serviceClient.InsertCaseAsync(epep);
+                    AddIntegrationKey(mq, caseId, false);
                 }
                 catch (FaultException fex)
                 {

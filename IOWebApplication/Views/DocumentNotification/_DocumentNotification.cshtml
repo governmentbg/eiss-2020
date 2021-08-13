@@ -1,0 +1,144 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants;
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    var documentId = ViewBag.documentId;
+    var documentResolutionId = ViewBag.documentResolutionId;
+
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="DocumentPersonLink"
+               asp-action="Index"
+               asp-route-documentId="@documentId"
+               asp-route-documentResolutionId="@documentResolutionId"
+               class="btn btn-def btn-sm m-b-5">
+                <i class="fa fa-user-plus"></i>
+                Връзки свързани лица
+            </a>
+            <a asp-controller="DocumentNotification"
+               asp-action="Add"
+               asp-route-documentId="@documentId"
+               asp-route-documentResolutionId="@documentResolutionId"
+               asp-route-notificationTypeId="@NomenclatureConstants.NotificationType.Message"
+               class="btn btn-success btn-sm m-b-5">
+                <i class="fa fa-plus"></i>
+                Добави съобщение
+            </a>
+            <a asp-controller="DocumentNotification"
+               asp-action="Add"
+               asp-route-documentId="@documentId"
+               asp-route-documentResolutionId="@documentResolutionId"
+               asp-route-notificationTypeId="@NomenclatureConstants.NotificationType.Notification"
+               class="btn btn-success btn-sm m-b-5">
+                <i class="fa fa-plus"></i>
+                Добави уведомление
+            </a>
+        </div>
+    </div>
+}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="documentNotificationMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#documentNotificationMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListData", "DocumentNotification")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.documentId = @documentId;
+                        d.documentResolutionId = "@documentResolutionId";
+                    }
+                },
+                deferLoading: deferLoadingOnTab('#caseNotificationMainTable'),
+                columns: [
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Регистрационен номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function(data){
+                                    return moment(data).format("DD.MM.YYYY");
+                                }
+                    },
+                    {
+                        name: 'notificationTypeLabel',
+                        data: 'notificationTypeLabel',
+                        title: 'Вид известие',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'personName',
+                        data: 'personName',
+                        title: 'Призован',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'notificationStateLabel',
+                        data: 'notificationStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'htmlTemplateLabel',
+                        data: 'htmlTemplateLabel',
+                        title: 'Бланка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#documentNotificationTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+         function printNotificationRaw(id) {
+             window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
+         }
+</script>
+
+<script id="documentNotificationTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("Edit", "DocumentNotification")/{{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="printNotificationRaw({{this}})" class="btn btn-def btn-sm m-b-5" title="Печат"><i class="fa fa-print"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("Edit", "DocumentNotification")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+

@@ -1,12 +1,10 @@
 ﻿using IO.LogOperation.Models;
-using IO.SignTools.Contracts;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -29,6 +27,7 @@ namespace IOWebApplication.Controllers
     {
         private readonly ICdnService cdnService;
         private readonly ICaseSessionActService actService;
+        private readonly IDocumentResolutionService drService;
         private readonly ICaseSessionActCoordinationService coordinationService;
         private readonly IMQEpepService epepService;
         private readonly ICaseSessionFastDocumentService caseSessionFastDocumentService;
@@ -45,12 +44,14 @@ namespace IOWebApplication.Controllers
             ICaseSessionFastDocumentService _caseSessionFastDocumentService,
             IDocumentService _documentService,
             IDocumentTemplateService _documentTemplateService,
+            IDocumentResolutionService _drService,
             IConfiguration _config,
             ILogger<FilesController> _logger)
         {
             cdnService = _cdnService;
             epepService = _epepService;
             actService = _actService;
+            drService = _drService;
             coordinationService = _coordinationService;
             caseSessionFastDocumentService = _caseSessionFastDocumentService;
             documentService = _documentService;
@@ -91,6 +92,9 @@ namespace IOWebApplication.Controllers
                     break;
                 case SourceTypeSelectVM.DocumentDecision:
                     model = fileList_DocumentDecision(sourceID);
+                    break;
+                case SourceTypeSelectVM.DocumentResolutionPdf:
+                    model = fileList_DocumentResolution(sourceID);
                     break;
                 case SourceTypeSelectVM.CaseSessionDoc:
                     model = fileList_CaseSessionDoc(sourceID);
@@ -135,7 +139,9 @@ namespace IOWebApplication.Controllers
             //Файл към акт/протокол
             var model = cdnService.Select(SourceTypeSelectVM.Document, sourceID).ToList();
             var pdfFiles = cdnService.Select(SourceTypeSelectVM.DocumentPdf, sourceID).ToList().SetCanDelete(false).ToList();
+            var apiFiles = cdnService.Select(SourceTypeSelectVM.DocumentFileFromAPI, sourceID).ToList().SetCanDelete(false).ToList();
             model.AddRange(pdfFiles);
+            model.AddRange(apiFiles);
 
             //Ако доумента има свързан DocumentTemplate, да вземе и всички файлове за обекта, за който е DocumentTemplate
             var documentTemplate = documentTemplateService.DocumentTemplate_SelectByDocumentId(long.Parse(sourceID));
@@ -172,24 +178,38 @@ namespace IOWebApplication.Controllers
 
             int[] privateSourceTypes = new List<int>() {
                 SourceTypeSelectVM.CaseSessionActPdf,
-                SourceTypeSelectVM.CaseSessionActMotivePdf,
+                SourceTypeSelectVM.CaseSessionActMotivePdf
             }.ToArray();
 
             var result = new List<CdnItemVM>();
 
-            if (actService.CheckActBlankAccess(int.Parse(sourceID)).canAccess)
+            if (actService.CheckActPrivateFileAccess(int.Parse(sourceID)))
             {
                 result.AddRange(cdnService.Select(privateSourceTypes, sourceID).ToList().SetCanDelete(false).ToList());
             }
             result.AddRange(cdnService.Select(publicSourceTypes, sourceID).ToList().SetCanDelete(false).ToList());
 
-            var coordinations = coordinationService.CaseSessionActCoordination_Select(int.Parse(sourceID))
-                        .Where(x => (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.AcceptWithOpinion) || (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.DontAccept)).ToList();
-            foreach (var coordination in coordinations)
+            if (actService.CheckActPrivateFileAccess(int.Parse(sourceID)))
             {
-                var coordinationFiles = cdnService.Select(SourceTypeSelectVM.CaseSessionActCoordinationPdf, coordination.Id.ToString()).ToList().SetCanDelete(false);
-                //Добавя файловете към особените мнения
-                result.AddRange(coordinationFiles);
+                var coordinations = coordinationService.CaseSessionActCoordination_Select(int.Parse(sourceID))
+                        .Where(x => (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.AcceptWithOpinion) || (x.ActCoordinationTypeId == NomenclatureConstants.ActCoordinationTypes.DontAccept)).ToList();
+                foreach (var coordination in coordinations)
+                {
+                    var coordinationFiles = cdnService.Select(SourceTypeSelectVM.CaseSessionActCoordinationPdf, coordination.Id.ToString()).ToList().SetCanDelete(false);
+                    //Добавя файловете към особените мнения
+                    result.AddRange(coordinationFiles);
+                }
+            }
+            return result;
+        }
+
+        private List<CdnItemVM> fileList_DocumentResolution(string sourceID)
+        {
+            var result = new List<CdnItemVM>();
+
+            if (drService.CheckActBlankAccess(false, int.Parse(sourceID)).canAccess)
+            {
+                result.AddRange(cdnService.Select(SourceTypeSelectVM.DocumentResolutionPdf, sourceID).ToList().SetCanDelete(false).ToList());
             }
             return result;
         }
@@ -312,8 +332,25 @@ namespace IOWebApplication.Controllers
                 model.Id = fileInfo.MongoFileId;
                 if (epepService.SaveExpireInfo<MongoFile>(model))
                 {
-                    LogFileOperation(fileInfo.SourceType, fileInfo.SourceId, $"Премахване на файл {fileInfo.FileName}:{fileInfo.Title}", OperationTypes.Patch);
+                    if (fileInfo.SourceType == SourceTypeSelectVM.Document)
+                    {
+                        epepService.AppendFile(new CdnUploadRequest()
+                        {
+                            FileId = fileInfo.FileId,
+                            SourceType = fileInfo.SourceType,
+                            SourceId = fileInfo.SourceId
+                        }, EpepConstants.ServiceMethod.Delete);
 
+                        var fileDeleteInfo = $"Премахване на файл {fileInfo.FileName}";
+                        var baseInfo = "";
+                        var _context = CurrentContext;
+                        if (_context.IsRead)
+                        {
+                            baseInfo = _context.Info.BaseObject;
+                        }
+                        AddAuditInfo(AuditConstants.Operations.Delete, baseInfo, $"{fileDeleteInfo} - {model.DescriptionExpired}");
+                        LogFileOperation(fileInfo.SourceType, fileInfo.SourceId, fileDeleteInfo, OperationTypes.Patch);
+                    }
                     return Json(new { result = true, fileContainer = model.FileContainerName });
                 }
                 else
@@ -347,6 +384,12 @@ namespace IOWebApplication.Controllers
                 var fileInfo = cdnService.Select(0, null, cdnFileId).FirstOrDefault();
                 if (epepService.SaveExpireInfo<MongoFile>(new ExpiredInfoVM() { Id = fileInfo.MongoFileId }))
                 {
+                    epepService.AppendFile(new CdnUploadRequest()
+                    {
+                        FileId = fileInfo.FileId,
+                        SourceType = fileInfo.SourceType,
+                        SourceId = fileInfo.SourceId
+                    }, EpepConstants.ServiceMethod.Delete);
                     LogFileOperation(fileInfo.SourceType, fileInfo.SourceId, $"Премахване на файл {fileInfo.FileName}:{fileInfo.Title}", OperationTypes.Patch);
 
                     return Content("ok");
@@ -394,6 +437,25 @@ namespace IOWebApplication.Controllers
             var model = await cdnService.MongoCdn_Download(new CdnFileSelect() { SourceType = st, SourceId = si });
 
             return File(Convert.FromBase64String(model.FileContentBase64), model.ContentType, model.FileName);
+        }
+
+        [AllowAnonymous]
+        public async Task<FileResult> PreviewST(int st, string si)
+        {
+            var model = await cdnService.MongoCdn_Download(new CdnFileSelect() { SourceType = st, SourceId = si }, CdnFileSelect.PostProcess.Flatten);
+
+            var contentDispositionHeader = new ContentDisposition
+            {
+                Inline = true,
+                FileName = HttpUtility.UrlPathEncode(model.FileName).Replace(",", "%2C")
+            };
+
+            Response.Headers.Add("Content-Disposition", contentDispositionHeader.ToString());
+
+            byte[] fileBytes = Convert.FromBase64String(model.FileContentBase64);
+
+
+            return File(fileBytes, model.ContentType);
         }
 
         public PartialViewResult FileListView(int sourceType, string sourceID)

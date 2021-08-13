@@ -16,6 +16,7 @@ using NPOI.SS.Formula.Functions;
 using IOWebApplication.Infrastructure.Extensions;
 using Remotion.Linq.Clauses;
 using System.Transactions;
+using IOWebApplication.Core.Helper;
 
 namespace IOWebApplication.Core.Services
 {
@@ -23,12 +24,14 @@ namespace IOWebApplication.Core.Services
     {
         private readonly ICaseDeadlineService caseDeadlineService;
         private readonly IMoneyService moneyService;
+        private readonly IMQEpepService mqService;
 
         public CaseSessionMeetingService(
             ILogger<CaseSessionMeetingService> _logger,
             IUserContext _userContext,
             IRepository _repo,
             ICaseDeadlineService _caseDeadlineService,
+            IMQEpepService _mqService,
             IMoneyService _moneyService)
         {
             logger = _logger;
@@ -36,6 +39,7 @@ namespace IOWebApplication.Core.Services
             userContext = _userContext;
             caseDeadlineService = _caseDeadlineService;
             moneyService = _moneyService;
+            mqService = _mqService;
         }
 
         /// <summary>
@@ -80,7 +84,7 @@ namespace IOWebApplication.Core.Services
             {
                 model.CourtHallId = model.CourtHallId.EmptyToNull();
                 var modelSave = FillCaseSessionMeeting(model);
-                using (TransactionScope ts = new TransactionScope())
+                using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
                 {
                     if (model.Id > 0)
                     {
@@ -131,10 +135,21 @@ namespace IOWebApplication.Core.Services
                         if (model.SessionStateId != null)
                         {
                             var caseSessionUpdate = repo.GetById<CaseSession>(model.CaseSessionId);
+                            var savedSessionState = caseSessionUpdate.SessionStateId;
                             caseSessionUpdate.SessionStateId = model.SessionStateId ?? 0;
                             caseSessionUpdate.DateWrt = DateTime.Now;
                             caseSessionUpdate.UserId = userContext.UserId;
                             repo.Update(caseSessionUpdate);
+                            mqService.AppendCaseSession(caseSessionUpdate, EpepConstants.ServiceMethod.Update);
+
+                            //CBorisoff,29.07.2021
+                            //когато заседанието е насрочено и се промени на проведено 
+                            //се изпращат всички постановени актове в него към външните системи
+                            if (savedSessionState == NomenclatureConstants.SessionState.Nasrocheno
+                                && model.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
+                            {
+                                mqService.AppendActsFromSession(model.CaseSessionId);
+                            }
                         }
                     }
 
@@ -367,6 +382,8 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<CheckListVM> GetCheckListCaseSessionMeetingUser(int caseSessionId, int CaseSessionMeetingId = 0)
         {
+            var caseSession = repo.GetById<CaseSession>(caseSessionId);
+
             var CaseSessionMeetingUsers = repo.AllReadonly<CaseSessionMeetingUser>()
                                               .Include(x => x.SecretaryUser)
                                               .ThenInclude(x => x.LawUnit)
@@ -376,7 +393,8 @@ namespace IOWebApplication.Core.Services
             var CaselawUnits = repo.AllReadonly<CaseLawUnit>()
                                    .Include(x => x.LawUnit)
                                    .Where(x => x.CaseSessionId == caseSessionId &&
-                                               x.JudgeRoleId == NomenclatureConstants.JudgeRole.Secretary)
+                                               x.JudgeRoleId == NomenclatureConstants.JudgeRole.Secretary &&
+                                               ((x.DateTo ?? caseSession.DateFrom.AddYears(100)) >= caseSession.DateFrom))
                                    .ToList();
 
             var result = new List<CheckListVM>();

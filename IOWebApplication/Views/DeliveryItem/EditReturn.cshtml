@@ -29,6 +29,7 @@
         @Html.ValidationSummary()
         @Html.HiddenFor(x => x.Id)
         @Html.HiddenFor(x => x.CaseNotificationId)
+        @Html.HiddenFor(x => x.DocumentNotificationId)
         @Html.HiddenFor(x => x.NotificationStateId)
         @Html.HiddenFor(x => x.IsForReturn)
         @Html.HiddenFor(x => filterJson)
@@ -78,11 +79,11 @@
             </div>
             <div class="row">
                 <div class="col-md-6">@Html.EditorFor(x => x.ReturnDate, "DateTimeWithTime")</div>
-                <div class="col-md-6">
-                    <div name="returnFiles" id="returnFiles" class="cdn-files" data-sourcetype="@SourceTypeSelectVM.CaseNotificationReturn" data-sourceid="@notificationId" data-editmode="@cndEditMode" data-defaulttitle="@defaultTitle"></div>
-                    @*<input type="file" name="returnFiles" id="returnFiles" accept="application/pdf, image/jpeg, image/png" />*@
-                    @Html.ValidationMessage("returnFiles", null, new { @class = "text-danger" })
-                </div>
+            </div>
+            <div>
+                <div name="returnFiles" id="returnFiles" class="cdn-files" data-sourcetype="@SourceTypeSelectVM.CaseNotificationReturn" data-sourceid="@notificationId" data-editmode="@cndEditMode" data-defaulttitle="@defaultTitle"></div>
+                @*<input type="file" name="returnFiles" id="returnFiles" accept="application/pdf, image/jpeg, image/png" />*@
+                @Html.ValidationMessage("returnFiles", null, new { @class = "text-danger" })
             </div>
             <div class="row">
                 <div class="col-md-12">@Html.EditorFor(x => x.ReturnInfo, "Textarea")</div>

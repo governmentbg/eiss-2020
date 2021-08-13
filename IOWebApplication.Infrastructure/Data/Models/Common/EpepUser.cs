@@ -68,6 +68,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("document_decision_id")]
         public long? DocumentDecisionId { get; set; }
 
+        
+
         //===============================================================
 
         [Column("date_expired")]

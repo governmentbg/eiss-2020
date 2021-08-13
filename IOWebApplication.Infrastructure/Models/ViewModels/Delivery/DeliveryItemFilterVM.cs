@@ -44,6 +44,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         [Display(Name = "Номер на дело")]
         public string CaseRegNumber { get; set; }
         public string NoAutoLoad { get; set; }
+        [Display(Name = "Тип на документа")]
+        public int NotificationTypeId { get; set; }
+        [Display(Name = "Призовкар")]
+        public int LawUnitId { get; set; }
         public string getDeliveryTypeName()
         {
             switch (FilterType)

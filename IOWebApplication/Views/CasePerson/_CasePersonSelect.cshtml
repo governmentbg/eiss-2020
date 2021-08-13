@@ -30,11 +30,12 @@
     }
 
     function LoadCasePersonTable() {
-        requestCombo('@Url.Action("GetDDL_Case_CaseSession_ForPersonCopy", "CasePerson")', { caseId: @Model.Id, caseSessionId: @(Model.CaseSessionId) }, '#CaseSession', -1, function () { $('#CaseSession').trigger('change') });
+        requestCombo('@Url.Action("GetDDL_Case_CaseSession_ForPersonCopy", "CasePerson")', { caseId: '@Model.Id', caseSessionId: '@Model.CaseSessionId' }, '#CaseSession', -1, function () { $('#CaseSession').trigger('change') });
     }
 
     $("#CaseSession").change(function () {
         var caseSessionId = $("#CaseSession").val();
+        debugger;
         $.ajax({
             dataType: "html",
             cache: false,

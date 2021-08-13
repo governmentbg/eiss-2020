@@ -15,17 +15,24 @@
 
 @if (Model.Report.Id > 0)
 {
-    <div>
-        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+<div>
+    <partial name="_Header" model="@Model.Report.HeaderFooter" />
 
-        @Html.DisplayFor(x => x.EmploymentContractsFilter.IdentityFilter, "objInline", new { label = "Справка за: " + eikTypeName + " " })
+    @Html.DisplayFor(x => x.EmploymentContractsFilter.IdentityFilter, "objInline", new { label = "Справка за: " + eikTypeName + " " })
+    <b>
+        Статус на данните:
+    </b>
+    @contractsFilterTypeName
+    <br />
+    <br />
+    @if (Model.EmploymentContractsResponse.Count == 0)
+    {
         <b>
-            Статус на данните:
+            Няма данни
         </b>
-        @contractsFilterTypeName
-        <br />
-        <br />
-
+    }
+    else
+    {
         @foreach (var cl in Model.EmploymentContractsResponse)
         {
             <center>
@@ -48,7 +55,9 @@
             <br />
             <br />
         }
-        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
-    </div>
+    }
+
+    <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+</div>
 }
 

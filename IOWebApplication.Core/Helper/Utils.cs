@@ -327,7 +327,7 @@ namespace IOWebApplication.Core.Helper
             {
 
                 case 1: return "Януари";
-                case 2: return "февруари";
+                case 2: return "Февруари";
                 case 3: return "Март";
                 case 4: return "Април";
                 case 5: return "Май";

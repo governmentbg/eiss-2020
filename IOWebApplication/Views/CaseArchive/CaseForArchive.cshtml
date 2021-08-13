@@ -1,4 +1,7 @@
-﻿@{
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseForArchiveFilterVM
+
+@{
     ViewData["Title"] = "Съдебни дела за архивиране";
 }
 
@@ -8,6 +11,21 @@
         <li class="active">@ViewData["Title"]</li>
     </ol>
 }
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.CaseNumber)</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
 
 <div class="row">
     <div class="col-lg-12 col-md-12">
@@ -24,6 +42,11 @@
                     "type": "POST",
                     "datatype": "json",
                     "data": function (d) {
+                        d.model = {
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            CaseNumber: $("#CaseNumber").val(),
+                        };
                     }
                 },
                 columns: [
@@ -62,6 +85,13 @@
                         searchable: true
                     },
                     {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Шифър',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
                         name: 'caseStateLabel',
                         data: 'caseStateLabel',
                         title: 'Статус',
@@ -95,5 +125,15 @@
         {{#if id}}
         <a href="@Url.Action("CasePreview","Case")/{{id}}" target="_blank" title="Преглед дело">{{regNumber}}</a>
         {{/if}}
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#CaseGroupId').trigger('change');
+        });
+
+        $('#CaseGroupId').change(function () {
+            requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId);
+        });
     </script>
 }

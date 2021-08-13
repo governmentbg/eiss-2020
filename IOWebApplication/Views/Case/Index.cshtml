@@ -13,6 +13,8 @@
     </ol>
 }
 <div class="filter-form">
+    @Html.HiddenFor(m => m.CaseGroupIds_text)
+    @Html.HiddenFor(m => m.CaseTypeIds_text)
     <div class="row">
         <div class="col-lg-3">
             @Html.EditorFor(m => m.DateFrom, "DateTime")
@@ -23,12 +25,14 @@
         <div class="col-lg-3">
             @Html.EditorFor(m => m.CaseYear, "DateTimeYear")
         </div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
     </div>
     <div class="row">
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupIds, "GenericDropDownMultiple")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeIds, "GenericDropDownMultiple")</div>
+        @*<div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+            <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>*@
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeIds_text" })</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
     </div>
     <div class="row">
@@ -68,11 +72,31 @@
         localStorage.removeItem('activeTabCase');
 
         $(document).ready(function () {
-            $('#CaseGroupId').trigger('change');
+            $('#CaseGroupIds').select2({
+            });
+            $('#CaseTypeIds').select2({
+            });
         });
 
         $('#CaseGroupId').change(function () {
             requestCombo('@Url.Action("GetDDL_CaseType","Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+        });
+
+        $('#CaseGroupIds').change(function () {
+            var str = '';
+            if ($('#CaseGroupIds').val() !== null && $('#CaseGroupIds').val().length > 0) {
+                str = $('#CaseGroupIds').val().join(',');
+            }
+            $('#CaseGroupIds_text').val(str);
+            requestCombo('@Url.Action("GetDDL_CaseTypes", "Ajax")', { caseGroupIds: str }, '#CaseTypeIds', @(Model.CaseTypeIds ?? "0"), function () { $('#CaseTypeIds').trigger('change') });
+        });
+
+        $('#CaseTypeIds').change(function () {
+            var str = '';
+            if ($('#CaseTypeIds').val() !== null && $('#CaseTypeIds').val().length > 0) {
+                str = $('#CaseTypeIds').val().join(',');
+            }
+            $('#CaseTypeIds_text').val(str);
         });
 
     </script>
@@ -98,9 +122,9 @@
                         d.model = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
-                            CaseGroupId: $("#CaseGroupId").val(),
+                            //CaseGroupId: $("#CaseGroupId").val(),
                             CaseStateId: $("#CaseStateId").val(),
-                            CaseTypeId: $("#CaseTypeId").val(),
+                            //CaseTypeId: $("#CaseTypeId").val(),
                             CaseCodeId: $("#CaseCodeId").val(),
                             RegNumber: $("#RegNumber").val(),
                             CaseYear: $("#CaseYear").val(),
@@ -108,7 +132,9 @@
                             JudgeReporterId: $("#JudgeReporterId").val(),
                             CaseClassificationId: $("#CaseClassificationId").val(),
                             CourtDepartmentId: $("#CourtDepartmentId").val(),
-                            CourtDepartmentOtdelenieId: $("#CourtDepartmentOtdelenieId").val()
+                            CourtDepartmentOtdelenieId: $("#CourtDepartmentOtdelenieId").val(),
+                            CaseGroupIds_text: $('#CaseGroupIds_text').val(),
+                            CaseTypeIds_text: $('#CaseTypeIds_text').val()
                         };
                     }
                 },
@@ -147,6 +173,13 @@
                         name: 'judgeReport',
                         data: 'judgeReport',
                         title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'departmentOtdelenieText',
+                        data: 'departmentOtdelenieText',
+                        title: 'Отделение/Състав',
                         sortable: true,
                         searchable: true
                     },

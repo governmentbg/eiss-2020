@@ -1,0 +1,47 @@
+﻿@model CheckListWithDdlVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Extensions
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var ddl = (List<SelectListItem>)(ViewData["Check_ddl"] ?? new List<SelectListItem>());
+    var add_class = ((string)ViewData["class"] ?? "");
+    var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+}
+
+
+<div class="checklist-item">
+    <input asp-for="Value" type="hidden" />
+    <input asp-for="Label" type="hidden" />
+    <input asp-for="Warrning" type="hidden" />
+  
+    @if (string.IsNullOrEmpty(Model.Warrning))
+    {<div class="row">
+            <div class="col-lg-6">
+                <label><input asp-for="Checked" type="checkbox">&nbsp;&nbsp;@Model.Label</label>
+            </div>
+            <div class="col-lg-6">
+                <div class="form-group">
+                    <label asp-for="@Model" class="control-label @reqClass"></label>
+                    @Html.DropDownListFor(model => model.DdlValue, ddl.SetSelected(Model.DdlValue), new { @class = "form-control " + add_class })
+                    <span asp-validation-for="@Model.DdlValue" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <label><input asp-for="Checked" type="checkbox">&nbsp;&nbsp;@Model.Label <i class="fa fa-exclamation-triangle text-red"></i><font color="red">@Model.Warrning</font></label>
+            </div>
+            <div class="col-lg-6">
+                <div class="form-group">
+                    <label asp-for="@Model" class="control-label @reqClass"></label>
+                    @Html.DropDownListFor(model => model.DdlValue, ddl.SetSelected(Model.DdlValue), new { @class = "form-control " + add_class })
+                    <span asp-validation-for="@Model.DdlValue" class="text-danger"></span>
+                </div>
+            </div>
+
+        </div>
+    }
+    </div>

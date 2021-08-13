@@ -194,7 +194,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult TestFindAdr(DeliveryAreaAddressTestVM model)
         {
-            model = service.DeliveryAreaAddressFindTest(model);
+            model = service.DeliveryAreaAddressFindTest(model, userContext.CourtId);
             SetViewBagPersonAddress();
             ModelState.Clear();
             return View(nameof(TestFindAdr), model);

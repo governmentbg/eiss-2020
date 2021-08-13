@@ -1,0 +1,62 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+namespace IOWebApplication.Infrastructure.Migrations
+{
+    public partial class AddColumnsCaseLoadElementTypeStop : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<DateTime>(
+                name: "date_expired",
+                table: "nom_case_load_element_type_stop",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "description_expired",
+                table: "nom_case_load_element_type_stop",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "user_expired_id",
+                table: "nom_case_load_element_type_stop",
+                nullable: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_nom_case_load_element_type_stop_user_expired_id",
+                table: "nom_case_load_element_type_stop",
+                column: "user_expired_id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_nom_case_load_element_type_stop_identity_users_user_expired~",
+                table: "nom_case_load_element_type_stop",
+                column: "user_expired_id",
+                principalTable: "identity_users",
+                principalColumn: "id",
+                onDelete: ReferentialAction.Restrict);
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropForeignKey(
+                name: "FK_nom_case_load_element_type_stop_identity_users_user_expired~",
+                table: "nom_case_load_element_type_stop");
+
+            migrationBuilder.DropIndex(
+                name: "IX_nom_case_load_element_type_stop_user_expired_id",
+                table: "nom_case_load_element_type_stop");
+
+            migrationBuilder.DropColumn(
+                name: "date_expired",
+                table: "nom_case_load_element_type_stop");
+
+            migrationBuilder.DropColumn(
+                name: "description_expired",
+                table: "nom_case_load_element_type_stop");
+
+            migrationBuilder.DropColumn(
+                name: "user_expired_id",
+                table: "nom_case_load_element_type_stop");
+        }
+    }
+}

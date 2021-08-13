@@ -71,9 +71,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CasePersonInheritance = 37;
         public const int CasePersonMeasure = 38;
         public const int CasePersonDocument = 39;
+        public const int CaseLawyerHelp = 46;
+        public const int CaseLawyerHelpPerson = 47;
         public const int CaseSessionNotificationList = 301;
         public const int CaseSessionNotificationListMessage = 315;
         public const int CaseSessionNotificationListNotification = 316;
+        public const int CaseSessionNotificationListNotificationDP = 317;
         public const int CaseSessionNotificationListPerson = 306;
         public const int CaseSessionNotificationListLawUnit = 307;
         public const int CaseSessionNotificationListPersonLawUnit = 308;
@@ -105,6 +108,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CaseNotificationPrint = 602;
         public const int CaseSessionNotification = 603;
         public const int CaseSessionActNotification = 604;
+        public const int DocumentNotificationPrint = 605;
+        public const int DocumentNotification = 606;
+        public const int TestSignPDF = 666;
         public const int CaseSessionAct = 7;
         public const int CaseSessionActAllFiles = 7999;
         public const int CaseSessionActAutomatic = 72;
@@ -115,6 +121,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int CaseSessionActDepersonalizedBlank = 703;
         public const int CaseSessionActDepersonalized = 704;
         public const int CaseSessionActPreparator = 770;
+        public const int CaseSessionActPreparatorByAct = 777;
         public const int CaseSessionActLawBase = 705;
         public const int CaseSessionActComplain = 706;
         public const int CaseSessionActComplainResult = 707;
@@ -150,10 +157,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public const int EpepUser = 11001;
         public const int EpepUserAssignment = 11002;
         public const int Files = 20000;
+        public const int DocumentFiles = 20001;
         public const int MobileApp = 19000;
         public const int Integration_ISPN = 10050;
+        public const int WebApiPerson = 30100;
+        public const int DocumentFileFromAPI = 40000;
 
-        public static string GetSourceTypeName(int sourceType)
+        public const int VksSelectionProtocol =50100;
+
+    public static string GetSourceTypeName(int sourceType)
         {
             switch (sourceType)
             {
@@ -202,6 +214,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
                 case CaseSessionActDivorce: return "Прекратяване на граждански брак";
                 case ExecList: return "Изпълнителен лист";
                 case ExecListBlank: return "Изпълнителен лист";
+                case CaseLawyerHelp: return "Правна помощ";
                 case CaseLoadIndex: return "Натовареност по дело";
                 case CaseLoadCorrection: return "Коригиращи коефициенти по дело";
                 case Payment: return "Плащане";
@@ -286,6 +299,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
             selectListItems.Add(new SelectListItem() { Text = GetSourceTypeName(CasePersonBulletin), Value = CasePersonBulletin.ToString() });
             selectListItems.Add(new SelectListItem() { Text = GetSourceTypeName(CasePersonSentence), Value = CasePersonSentence.ToString() });
             selectListItems.Add(new SelectListItem() { Text = GetSourceTypeName(ExchangeDoc), Value = ExchangeDoc.ToString() });
+            selectListItems.Add(new SelectListItem() { Text = GetSourceTypeName(CaseLawyerHelp), Value = CaseLawyerHelp.ToString() });
 
             return selectListItems;
         }

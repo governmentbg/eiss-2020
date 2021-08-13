@@ -4,6 +4,10 @@
 @using IOWebApplication.Infrastructure.Constants
 @using IOWebApplication.Infrastructure.Extensions
 @using IOWebApplication.Core.Helper.GlobalConstants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
+@{
+    bool IsCurrentCourt = Model.CourtId == userContext.CourtId;
+}
 <ul class="timeline">
 
     <!-- timeline time label -->
@@ -147,11 +151,11 @@
                     </div>
                 </div>
 
-                @if (Model.DocumentResolutions.Count() > 0)
+                @if (Model.DocumentResolutions.Where(x => x.ResolutionTypeId != DocumentConstants.ResolutionTypes.ResolutionForScheduling).Count() > 0)
                 {
                     <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Разпореждания:</b>
                     <br />
-                    @foreach (var doc in Model.DocumentResolutions)
+                    @foreach (var doc in Model.DocumentResolutions.Where(x => x.ResolutionTypeId != DocumentConstants.ResolutionTypes.ResolutionForScheduling))
                     {
                         <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
                             @{
@@ -177,6 +181,76 @@
             </div>
         </div>
     </li>
+
+    @if (Model.DocumentsOtherFromSameCourt.Count() > 0 || Model.DocumentsOtherFromDifferentCourt.Count() > 0)
+    {
+        <li data-for="@Model.RegNumber">
+            <!-- timeline icon -->
+            <i class="fa fa-sign-in bg-yellow"></i>
+            <div class="timeline-item">
+                <span class="time"><i class="fa fa-play"></i> @(Model.DocumentsOtherFromSameCourt.Count() + Model.DocumentsOtherFromDifferentCourt.Count())бр.</span>
+
+                <h3 class="timeline-header"><a href="#">Други иницииращи документи</a></h3>
+
+                <div class="timeline-body hidden">
+                    @if (Model.DocumentsOtherFromSameCourt.Count() > 0)
+                    {
+                        <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Текущ съд:</b>
+                        <br />
+                        @foreach (var documentInfoVM in Model.DocumentsOtherFromSameCourt)
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var _row = documentInfoVM.Title;
+                                }
+                                <div>
+                                    @Html.Raw("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class='fa fa-file-text'></i> " + _row)
+                                </div>
+
+                                <div style="display:flex">
+                                    <div>
+                                        <a href="@Url.Action("View", "Document")?id=@documentInfoVM.Id" class="btn btn-dropbox btn-xs" title="Документ"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Документ</span></a>
+                                    </div>
+                                    <div class="cdn-listview" style="margin-left:5px;">
+                                        <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.Document" data-sourceId="@documentInfoVM.Id">Файлове</a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        }
+                    }
+
+                    @if (Model.DocumentsOtherFromDifferentCourt.Count() > 0)
+                    {
+                        <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Други съдилища:</b>
+                        <br />
+                        @foreach (var documentInfoVM in Model.DocumentsOtherFromDifferentCourt)
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var _row = documentInfoVM.CourtLabel + " " + documentInfoVM.Title;
+                                }
+                                <div>
+                                    @Html.Raw("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class='fa fa-file-text'></i> " + _row)
+                                </div>
+
+                                <div style="display:flex">
+                                    @if (!Model.IsOnlyFiles && IsCurrentCourt)
+                                    {
+                                        <a href="@Url.Action("Edit", "Document")?id=@Model.Id" class="btn btn-dropbox btn-xs" title="Документ"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Документ</span></a>
+                                    }
+
+                                    <div class="cdn-listview" style="margin-left:5px;">
+                                        <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.Document" data-sourceId="@documentInfoVM.Id">Файлове</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </li>
+    }
 
     <!-- timeline item -->
     <li data-for="@Model.RegNumber">
@@ -546,7 +620,8 @@
                         {
                             <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
                                 @{
-                                    var _row = "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
+                                    var _row = (!string.IsNullOrEmpty(caseMigration.CaseRegNumber)) ? "Дело: " + caseMigration.CaseRegNumber + "/" + caseMigration.CaseRegDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName :
+                                                                                                      caseMigration.CaseStateName + " : " + caseMigration.InitDocumentType + " " + caseMigration.InitDocumentNumber + "/" + caseMigration.InitDocumentDate.ToString("dd.MM.yyyy") + " - " + caseMigration.CaseCourtName;
                                 }
                                 <div>
                                     @Html.Raw("<i class='fa fa-balance-scale'></i> " + _row)
@@ -578,7 +653,7 @@
                                 </div>
 
                                 <div style="margin-left:5px;">
-                                    
+
                                 </div>
                             </div>
                         }
@@ -599,7 +674,13 @@
         <!-- timeline icon -->
         <i class="fa fa-file-archive-o bg-orange"></i>
         <div class="timeline-item">
-            <span class="time"><i class="fa fa-file-archive-o"></i> @Model.CaseSessionFinalActs.Where(x => !string.IsNullOrEmpty(x.RegNumber)).Count()бр.</span>
+            <span class="time">
+                <i class="fa fa-file-archive-o"></i> @(Model.CaseSessionFinalActs.Where(x => !string.IsNullOrEmpty(x.RegNumber)).Count() +
+                                                                      Model.DocumentResolutions.Where(x => x.ResolutionTypeId == DocumentConstants.ResolutionTypes.ResolutionForScheduling).Count() +
+                                                                      Model.DocumentResolutionCase.Count() +
+                                                                      Model.CaseInDocuments.SelectMany(x => x.DocumentResolutions).Count() +
+                                                                      Model.CaseOutDocuments.SelectMany(x => x.DocumentResolutions).Count())бр.
+            </span>
 
             <h3 class="timeline-header"><a href="#">Актове по дело</a></h3>
 
@@ -625,7 +706,11 @@
                             </div>
                         }
                     }
-                    @if (Model.CaseSessionFinalActs.Where(x => !x.IsFinalDoc).Count() > 0)
+                    @if ((Model.CaseSessionFinalActs.Where(x => !x.IsFinalDoc).Count() +
+                    Model.DocumentResolutions.Where(x => x.ResolutionTypeId == DocumentConstants.ResolutionTypes.ResolutionForScheduling).Count() +
+                    Model.DocumentResolutionCase.Count() +
+                    Model.CaseInDocuments.SelectMany(x => x.DocumentResolutions).Count() +
+                    Model.CaseOutDocuments.SelectMany(x => x.DocumentResolutions).Count()) > 0)
                     {
                         <b> - Актове по дело:</b>
                         <br />
@@ -643,6 +728,72 @@
                                     <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.CaseSessionActAllFiles" data-sourceId="@caseSessionAct.Id"> Файлове</a>
                                 </div>
                             </div>
+                        }
+                        @foreach (var doc in Model.DocumentResolutions.Where(x => x.ResolutionTypeId == DocumentConstants.ResolutionTypes.ResolutionForScheduling))
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var _row = doc.Label;
+                                }
+                                <div>
+                                    @Html.Raw("<i class='fa fa-file-text'></i> " + _row)
+                                </div>
+
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceId="@doc.Id">Файлове</a>
+                                </div>
+                            </div>
+                        }
+                        @foreach (var doc in Model.DocumentResolutionCase)
+                        {
+                            <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                @{
+                                    var _row = doc.Label;
+                                }
+                                <div>
+                                    @Html.Raw("<i class='fa fa-file-text'></i> " + _row)
+                                </div>
+
+                                <div class="cdn-listview" style="margin-left:5px;">
+                                    <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceId="@doc.Id">Файлове</a>
+                                </div>
+                            </div>
+                        }
+                        @foreach (var caseInDoc in Model.CaseInDocuments)
+                        {
+                            @foreach (var document in caseInDoc.DocumentResolutions)
+                            {
+                                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                    @{
+                                        var _row = document.Label;
+                                    }
+                                    <div>
+                                        @Html.Raw("<i class='fa fa-file-text'></i> " + _row)
+                                    </div>
+
+                                    <div class="cdn-listview" style="margin-left:5px;">
+                                        <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceId="@document.Id">Файлове</a>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        @foreach (var caseOutDoc in Model.CaseOutDocuments)
+                        {
+                            @foreach (var document in caseOutDoc.DocumentResolutions)
+                            {
+                                <div style="display: flex; align-items: center; justify-content:space-between; margin-bottom: 5px;">
+                                    @{
+                                        var _row = document.Label;
+                                    }
+                                    <div>
+                                        @Html.Raw("<i class='fa fa-file-text'></i> " + _row)
+                                    </div>
+
+                                    <div class="cdn-listview" style="margin-left:5px;">
+                                        <a href="#" class="btn btn-primary btn-xs" data-sourceType="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceId="@document.Id">Файлове</a>
+                                    </div>
+                                </div>
+                            }
                         }
                     }
                 </div>

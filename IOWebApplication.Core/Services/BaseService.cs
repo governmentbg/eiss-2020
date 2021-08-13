@@ -218,7 +218,7 @@ namespace IOWebApplication.Core.Services
             var dateActualToEndDate = dateActualTo.AddDays(1);
             var result = repo.AllReadonly<CourtLawUnit>()
                                  .Include(x => x.LawUnit)
-                                 .Where(x => x.CourtId == courtId)
+                                 .Where(x => x.CourtId == courtId && x.DateExpired == null)
                                  .Where(x => x.LawUnit.LawUnitTypeId == lawUnitTypeId)
                                  .Where(x => x.DateFrom <= dateActualTo && (x.DateTo ?? dateActualToEndDate) >= dateActualTo)
                                  .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
@@ -258,13 +258,50 @@ namespace IOWebApplication.Core.Services
                         }
                         else
                         {
+                            if (parentId != null)
+                            {
+                                setAccessRightsForDocument(model, (long)parentId);
+                            }
+                            else
+                            {
+                                setAccessRightsForDocument(model, null);
+                            }
+                        }
+                    }
+                    break;
+                case SourceTypeSelectVM.DocumentNotification:
+                    {
+                        if (sourceId > 0)
+                        {
+                            var info = repo.AllReadonly<DocumentNotification>()
+                                            .Include(x => x.DocumentResolution)
+                                            .Where(x => x.Id == sourceId.Value)
+                                            .Select(x => new
+                                            {
+                                                notificationId = x.Id,
+                                                documentResolutionId = x.DocumentResolutionId,
+                                                documentId = x.DocumentResolution.DocumentId
+                                            }).FirstOrDefault();
+                            if (info != null)
+                                setAccessRightsForDocument(model, info.documentId);
+                        }
+                        else
+                        {
                             setAccessRightsForDocument(model, null);
                         }
                     }
                     break;
                 case SourceTypeSelectVM.DocumentDecision:
                     {
-                        setAccessRightsForDocument(model, null);
+                        if (sourceId > 0)
+                        {
+                            var info = repo.AllReadonly<DocumentDecision>().Where(x => x.Id == sourceId.Value).FirstOrDefault();
+                            setAccessRightsForDocument(model, info.DocumentId);
+                        }
+                        else
+                        {
+                            setAccessRightsForDocument(model, parentId);
+                        }
                     }
                     break;
                 case SourceTypeSelectVM.DocumentObligation:
@@ -391,10 +428,21 @@ namespace IOWebApplication.Core.Services
                     break;
                 case SourceTypeSelectVM.CaseSessionActCoordination:
                     {
-                        if (sourceId != null)
+                        if (parentId != null)
                         {
-                            var info = caseInfo_GetCaseSessionAct((int)sourceId);
+                            var info = caseInfo_GetCaseSessionAct((int)parentId);
                             setAccessRightsForCase(model, info.CaseId, $"Съгласуване на акт {info.Info}");
+                            if (sourceId > 0
+                                && model.CanAccess
+                                && !model.CanChange
+                                && userContext.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
+                            {
+                                model.CanChange = repo.AllReadonly<CaseSessionActCoordination>()
+                                                        .Include(x => x.CaseLawUnit)
+                                                        .Where(x => x.Id == sourceId)
+                                                        .Select(x => x.CaseLawUnit.LawUnitId)
+                                                        .FirstOrDefault() == userContext.LawUnitId;
+                            }
                         }
                     }
                     break;
@@ -496,6 +544,35 @@ namespace IOWebApplication.Core.Services
                         {
                             //parentId  е Id на дело
                             setAccessRightsForCase(model, (int)parentId, "Регистрация на натовареност към дело");
+                        }
+                    }
+                    break;
+                case SourceTypeSelectVM.CaseLawyerHelp:
+                    {
+                        if (sourceId != null)
+                        {
+                            var info = caseInfo_GetCaseLawyerHelp((int)sourceId);
+                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                        }
+                        else
+                        {
+                            //parentId  е Id на дело
+                            setAccessRightsForCase(model, (int)parentId, "Регистрация на искане за правна помощ");
+                        }
+                    }
+                    break;
+                case SourceTypeSelectVM.CaseLawyerHelpPerson:
+                    {
+                        if (sourceId != null)
+                        {
+                            var info = caseInfo_GetCaseLawyerHelpPerson((int)sourceId);
+                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                        }
+                        else
+                        {
+                            //parentId  е Id на заседание
+                            var info = caseInfo_GetCaseLawyerHelp((int)parentId);
+                            setAccessRightsForCase(model, info.CaseId, $"Искане за правна помощ: {info.Info}");
                         }
                     }
                     break;
@@ -1302,8 +1379,8 @@ namespace IOWebApplication.Core.Services
 
             var result = new CaseInfoVM()
             {
-                CaseId = ((caseSessionNotificationLists.Count > 0) ? (caseSessionNotificationLists.FirstOrDefault()).CaseId ?? 0 : repo.GetById<CaseSession>(CaseSessionId).CaseId),
-                Info = string.Join(",", caseSessionNotificationLists.Select(a => a.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit ? a.CaseLawUnit.LawUnit.FullName + " " + a.CaseLawUnit.JudgeRole.Label : a.CasePerson.FullName + " " + a.CasePerson.PersonRole.Label))
+                CaseId = ((caseSessionNotificationLists.Count > 0) ? (caseSessionNotificationLists.FirstOrDefault()).CaseId ?? 0 : repo.GetById<CaseSession>(CaseSessionId).CaseId)
+                //Info = string.Join(",", caseSessionNotificationLists.Select(a => a.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit ? a.CaseLawUnit.LawUnit.FullName + " " + a.CaseLawUnit.JudgeRole.Label : a.CasePerson.FullName + " " + a.CasePerson.PersonRole.Label))
             };
 
             return result;
@@ -1611,6 +1688,28 @@ namespace IOWebApplication.Core.Services
                        }).FirstOrDefault() ?? new CaseInfoVM();
         }
 
+        private CaseInfoVM caseInfo_GetCaseLawyerHelp(int id)
+        {
+            return repo.AllReadonly<CaseLawyerHelp>()
+                       .Where(x => x.Id == id)
+                       .Select(x => new CaseInfoVM()
+                       {
+                           CaseId = x.CaseId,
+                           Info = x.LawyerHelpBase.Label + " " + x.LawyerHelpType.Label + (!string.IsNullOrEmpty(x.Description) ? " " + x.Description : string.Empty)
+                       }).FirstOrDefault() ?? new CaseInfoVM();
+        }
+
+        private CaseInfoVM caseInfo_GetCaseLawyerHelpPerson(int id)
+        {
+            return repo.AllReadonly<CaseLawyerHelpPerson>()
+                       .Where(x => x.Id == id)
+                       .Select(x => new CaseInfoVM()
+                       {
+                           CaseId = x.CaseLawyerHelp.CaseId,
+                           Info = "Правна помощ за: " + x.CasePerson.FullName + (x.AssignedLawyerId != null ? " назначен адвокат: " + x.AssignedLawyer.FullName : string.Empty)
+                       }).FirstOrDefault() ?? new CaseInfoVM();
+        }
+
         private CaseInfoVM caseInfo_GetCaseMovement(int id)
         {
             return repo.AllReadonly<CaseMovement>()
@@ -1769,8 +1868,10 @@ namespace IOWebApplication.Core.Services
         {
             //Да има Роля Деловодство 
             model.CanAccess = userContext.IsUserInRole(AccountConstants.Roles.DocumentEdit)
-                            //или разпределител
-                            || userContext.IsUserInRole(AccountConstants.Roles.CaseInit);
+                            //или 3.1. Разпределение на дела
+                            || userContext.IsUserInRole(AccountConstants.Roles.CaseInit)
+                            //или 3.5. Ръководство
+                            || userContext.IsUserInRole(AccountConstants.Roles.CourtManager);
 
             if (id != null)
             {
@@ -1816,7 +1917,7 @@ namespace IOWebApplication.Core.Services
                         model.CanAccess = info.OtherCourtsJudgeLawUnits.Contains(userContext.LawUnitId)
                             || userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator)
                             //Ако делото има движение към или от текущия съд
-                            || ((info.OtherCourts.Contains(userContext.CourtId) || info.ToCourts.Contains(userContext.CourtId)) && userContext.IsUserInFeature(AccountConstants.Features.Modules.CaseAccessData));
+                            || (info.AllMigrationCourts.Contains(userContext.CourtId) && userContext.IsUserInFeature(AccountConstants.Features.Modules.CaseAccessData));
                         model.CanChange = false;
                         model.CanChangeFull = false;
 
@@ -1826,12 +1927,22 @@ namespace IOWebApplication.Core.Services
                             model.CanAccess = false;
                         }
                     }
+
+                    if (!model.CanAccess && userContext.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
+                    {
+                        model.CanAccess = repo.AllReadonly<CaseLawUnit>()
+                                                .Where(x => x.CaseId == caseId && x.LawUnitId == userContext.LawUnitId)
+                                                .Any();
+                        model.CanChange = false;
+                    }
                 }
             }
             else
             {
                 model.CanAccess |= userContext.IsUserInRole(AccountConstants.Roles.CaseEdit);
             }
+
+
         }
 
 
@@ -1862,7 +1973,7 @@ namespace IOWebApplication.Core.Services
                                         InitMigrations = x.CaseMigrations.Select(m => m.InitialCaseId).Distinct().ToArray(),
                                         OtherCourts = x.CaseMigrations.Select(m => m.CourtId ?? 0).Distinct().ToArray(),
                                         ToCourts = x.CaseMigrations.Select(m => m.SendToCourtId ?? 0).Distinct().ToArray(),
-                                        IsRestrictedAccess = (x.CaseClassifications != null) ? x.CaseClassifications.Any(c => NomenclatureConstants.CaseClassifications.RestictedAccess.Contains(c.ClassificationId)) : false
+                                        IsRestrictedAccess = (x.CaseClassifications != null) ? x.CaseClassifications.Any(c => c.DateTo == null && NomenclatureConstants.CaseClassifications.RestictedAccess.Contains(c.ClassificationId)) : false
                                     }).FirstOrDefault();
 
 
@@ -1881,6 +1992,13 @@ namespace IOWebApplication.Core.Services
                                                           .Where(c => c.DateFrom <= DateTime.Now && (c.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
                                                           .Where(c => NomenclatureConstants.JudgeRole.JudgeAndManualRoles.Contains(c.JudgeRoleId))
                                                           .Select(c => c.LawUnitId).ToArray();
+
+                    result.AllMigrationCourts = repo.AllReadonly<CaseMigration>()
+                                                          .Include(x => x.CaseMigrationType)
+                                                          .Where(x => result.InitMigrations.Contains(x.InitialCaseId))
+                                                          .Where(x => x.CaseMigrationType.MigrationDirection == NomenclatureConstants.CaseMigrationDirections.Outgoing)
+                                                          .Select(x => x.SendToCourtId ?? 0)
+                                                          .ToArray();
                 }
                 else
                 {
@@ -1906,41 +2024,57 @@ namespace IOWebApplication.Core.Services
             model.CanChangeFull = userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
         }
 
-        protected IQueryable<LawUnit> SelectLawUnit_ByType(int courtId, int lawUnitType, DateTime? dtNow = null, bool currentlyAppointed = true)
+        protected IQueryable<LawUnit> SelectLawUnit_ByType(int courtId, int lawUnitType, DateTime? dtNow = null, string selectMode = NomenclatureConstants.LawUnitSelectMode.Current)
         {
             int[] lawUnitTypes = new List<int>
             {
                 lawUnitType
             }.ToArray();
 
-            return SelectLawUnit_ByTypes(courtId, lawUnitTypes, dtNow, currentlyAppointed);
+            return SelectLawUnit_ByTypes(courtId, lawUnitTypes, dtNow, selectMode);
         }
-        protected IQueryable<LawUnit> SelectLawUnit_ByTypes(int courtId, int[] lawUnitTypes, DateTime? dtNow = null, bool currentlyAppointed = true)
+        protected IQueryable<LawUnit> SelectLawUnit_ByTypes(int courtId, int[] lawUnitTypes, DateTime? dtNow = null, string selectMode = NomenclatureConstants.LawUnitSelectMode.Current)
         {
             dtNow = dtNow ?? DateTime.Now;
             if (courtId == 0)
             {
                 courtId = userContext.CourtId;
             }
-            Expression<Func<LawUnit, bool>> courtSearch = x => true;
+            Expression<Func<LawUnit, bool>> courtSearch = x => lawUnitTypes.Contains(x.LawUnitTypeId); ;
             if (courtId > 0)
             {
-                courtSearch = x => x.Courts.Any() ? x.Courts.Any(c =>
+                switch (selectMode)
+                {
+                    case NomenclatureConstants.LawUnitSelectMode.Current:
+                        courtSearch = x => x.Courts.Any(c =>
                           c.CourtId == courtId
                        && NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtended.Contains(c.PeriodTypeId)
                        && lawUnitTypes.Contains(c.LawUnitTypeId ?? x.LawUnitTypeId)
-                       && c.DateFrom <= dtNow && (((c.DateTo ?? DateTime.MaxValue) >= dtNow) || (!currentlyAppointed))) : lawUnitTypes.Contains(x.LawUnitTypeId);
-            }
-            else
-            {
-                courtSearch = x => lawUnitTypes.Contains(x.LawUnitTypeId);
+                       && c.DateFrom <= dtNow && (((c.DateTo ?? DateTime.MaxValue) >= dtNow)));
+                        break;
+
+                    case NomenclatureConstants.LawUnitSelectMode.CurrentWithHistory:
+                        courtSearch = x => x.Courts.Any(c =>
+                          c.CourtId == courtId
+                       && NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtended.Contains(c.PeriodTypeId)
+                       && lawUnitTypes.Contains(c.LawUnitTypeId ?? x.LawUnitTypeId)
+                       && c.DateFrom <= dtNow);
+                        break;
+                    case NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS:
+                        courtSearch = x => x.Courts.Any(c =>
+                          c.CourtId == courtId
+                       && NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtendedNoVas.Contains(c.PeriodTypeId)
+                       && lawUnitTypes.Contains(c.LawUnitTypeId ?? x.LawUnitTypeId)
+                       && c.DateFrom <= dtNow);
+                        break;
+                }
             }
 
 
             return repo.AllReadonly<LawUnit>()
                     .Include(x => x.Courts)
                     .Where(courtSearch)
-                    .Where(x => x.DateFrom <= dtNow && ((x.DateTo ?? DateTime.MaxValue) >= dtNow || !currentlyAppointed))
+                    .Where(x => x.DateFrom <= dtNow && ((x.DateTo ?? DateTime.MaxValue) >= dtNow))
                     .AsQueryable();
         }
 
@@ -1949,5 +2083,23 @@ namespace IOWebApplication.Core.Services
             return repo.GetById<SystemParam>(paramName);
         }
 
+        public string SystemParam_SelectValue(string paramName)
+        {
+            return repo.AllReadonly<SystemParam>()
+                            .Where(x => x.ParamName == paramName)
+                            .Select(x => x.ParamValue)
+                            .FirstOrDefault();
+        }
+
+        public int[] SystemParam_SelectIntValues(string paramName)
+        {
+            string txtValue = SystemParam_SelectValue(paramName);
+            if (string.IsNullOrEmpty(txtValue))
+            {
+                return new List<int>().ToArray();
+            }
+
+            return txtValue.Split(',').Select(x => int.Parse(x)).ToArray();
+        }
     }
 }

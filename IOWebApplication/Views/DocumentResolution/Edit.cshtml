@@ -1,6 +1,7 @@
 ﻿@model DocumentResolution
 @using IOWebApplication.Infrastructure.Data.Models.Documents
-
+@using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @{
     if (Model.Id > 0)
     {
@@ -10,7 +11,7 @@
     {
         ViewData["Title"] = "Добавяне на разпореждане към документ";
     }
-
+    bool hasActFile = (bool)ViewBag.hasActFile;
 }
 
 @section breadcrumb{
@@ -25,8 +26,16 @@
         <li class="active"><a href="#tabMainActData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
         @if (Model.Id > 0)
         {
-            <li class=""><a href="#tabWorkTask" data-toggle="tab"><i class="fa fa-exclamation"></i> Задачи</a></li>
-            <li class=""><a href="#tabDocTemplates" data-toggle="tab"><i class="fa fa-book"></i> Свързани документи</a></li>
+            if (Model.ResolutionTypeId == DocumentConstants.ResolutionTypes.ResolutionForSelection)
+            {
+                <li class=""><a href="#tabCases" data-toggle="tab"><i class="fa fa-user"></i> Дела</a></li>
+            }
+            <li class=""><a href="#tabDRWorkTask" data-toggle="tab"><i class="fa fa-exclamation"></i> Задачи</a></li>
+            @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+            {
+                <li class=""><a href="#tabDRNotifications" data-toggle="tab"><i class="fa fa-book"></i> Съобщения и известия</a></li>
+            }
+            <li class=""><a href="#tabDRDocTemplates" data-toggle="tab"><i class="fa fa-book"></i> Свързани документи</a></li>
         }
     </ul>
 
@@ -40,17 +49,39 @@
                 {
                     <div class="col-md-6">
                         <div class="cdn-files" data-label="Разпореждане" data-sourcetype="@SourceTypeSelectVM.DocumentResolutionPdf" data-sourceid="@Model.Id" data-editmode="none"></div>
+
+                        @if (Model.DeclaredDate == null)
+                        {
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">
+                                    Действия
+                                </legend>
+                                <a href="#" onclick="sendForSignCheck(this); return false;" class="btn btn-sm btn-success" title="Създава документа на акта и задачите за подпис на състава по заседанието">Изпращане за подпис</a>
+                                <partial name="WorkTaskMyNew" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.DocumentResolution,Model.Id) )" />
+                            </fieldset>
+                        }
                     </div>
                 }
             </div>
         </div>
-
-        <div class="tab-pane" id="tabWorkTask">
-            <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.DocumentResolution,Model.Id) { TaskRequired=true})" />
-        </div>
-        <div class="tab-pane" id="tabDocTemplates">
-            <partial name="~/Views/DocumentTemplate/_DocumentTemplate.cshtml" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.DocumentResolution, SourceId = Model.Id })" />
-        </div>
+        @if (Model.Id > 0)
+        {
+            <div class="tab-pane" id="tabCases">
+                <partial name="_Cases" model="@Model.Id" />
+            </div>
+            <div class="tab-pane" id="tabDRWorkTask">
+                <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.DocumentResolution, Model.Id) { TaskRequired = true })" />
+            </div>
+            <div class="tab-pane" id="tabDRDocTemplates">
+                <partial name="~/Views/DocumentTemplate/_DocumentTemplate.cshtml" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.DocumentResolution, SourceId = Model.Id })" />
+            </div>
+            @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
+            {
+                <div class="tab-pane" id="tabDRNotifications">
+                    <partial name="~/Views/DocumentNotification/_DocumentNotification.cshtml" />
+                </div>
+            }
+        }
     </div>
 </div>
 
@@ -61,7 +92,26 @@
         $(document).ready(function () {
             initUserAutoComplete();
             initLawUnit();
+            $('#JudgeDecisionCount:checked').trigger('change');
+            $('#ResolutionTypeId').change(function () {
+                if ($(this).val() == '@DocumentConstants.ResolutionTypes.ResolutionForSelection') {
+                    $('#divTaskUser').show();
+                } else {
+                    $('#divTaskUser').hide();
+                }
+            }).trigger('change');
+            InitDocumentResolutionTab();
         });
+
+        function judgeCountChange(sender) {
+            if ($(sender).is(':checked')) {
+                if ($(sender).val() == '2') {
+                    $('#secondJudge').show();
+                } else {
+                    $('#secondJudge').hide();
+                }
+            }
+        }
 
         function editActBlank() {
              let editUrl = "@Url.Action("Blank",new { id=Model.Id})";
@@ -76,6 +126,49 @@
                 <text>document.location.href = editUrl;</text>
             }
 
+        }
+
+        function sendForSignCheck(sender) {
+            if ($(sender).attr('disabled')) {
+                return;
+            }
+            $(sender).attr('disabled', 'disabled');
+             let editUrl = "@Url.Action("SentForSignQuick", new { id=Model.Id})";
+            @if (hasActFile)
+            {
+                <text>
+                    swalConfirm('Вече има изготвен акт, който е в процес на подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за акта със същия номер и ще се създаде нова задача за подпис.', function () {
+                        document.location.href = editUrl;
+                    }, function () {
+                            $(sender).removeAttr('disabled');
+                    });
+                </text>
+            }else {
+                <text>
+            setTimeout(function () {
+                document.location.href = editUrl;
+            },200);
+            </text>
+            }
+        }
+        function InitDocumentResolutionTab() {
+            $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+                localStorage.setItem('activeTabResolution', $(e.target).attr('href'));
+            });
+            //var activeTab = localStorage.getItem('activeTabResolution');
+            //if (activeTab) {
+            //    $('a[href="' + activeTab + '"]').tab('show');
+            //}
+
+            var url = document.location.toString();
+            if (url.match('#')) {
+                $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+            }
+
+            //// Change hash for page-reload
+            //$('.nav-tabs a').on('shown.bs.tab', function (e) {
+            //    window.location.hash = e.target.hash;
+            //})
         }
     </script>
 }

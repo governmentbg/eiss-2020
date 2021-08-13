@@ -23,6 +23,7 @@ namespace IOWebApplication.Core.Contracts
         WorkTask Select_ById(long id);
         WorkTaskEditVM Get_ById(long id);
         bool ValidateSourceCourt(int sourceType, long sourceId);
+        int? GetSourceCourtId(int sourceType, long sourceId);
 
         bool UpdateTask(WorkTaskEditVM model);
         bool CreateTask(WorkTaskEditVM model);
@@ -48,6 +49,6 @@ namespace IOWebApplication.Core.Contracts
         LawUnit GetLawUnitByTaskId(long id);
         bool ExpireAllUnfinishedTasks(int sourceType, long sourceId);
         bool ExpireTasks(long[] taskIds, string description);
-        bool RerouteTasks(long[] taskIds, string newUserId, string description);
+        bool RerouteTasks(long[] taskIds, WorkTaskManageVM model);
     }
 }

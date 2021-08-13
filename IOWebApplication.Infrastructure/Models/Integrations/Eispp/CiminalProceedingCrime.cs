@@ -29,7 +29,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         public int Status { get; set; }
         
         [XmlIgnore]
-        [Display(Name = "Статус на НП за престъпление")]
+        [Display(Name = "Дата Статус на НП за престъпление")]
         public DateTime? StatusDateVM
         {
             get

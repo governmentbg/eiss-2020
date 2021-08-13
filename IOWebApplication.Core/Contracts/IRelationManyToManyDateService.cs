@@ -22,7 +22,7 @@ namespace IOWebApplication.Core.Contracts
                                 Expression<Func<T, DateTime?>> dateFromProp,
                                 Expression<Func<T, DateTime?>> dateToProp,
                                 Expression<Func<T, int>> percentProp,
-                                Func<T, bool> setNew) 
+                                Func<T, bool> setNew, bool IsLawunit) 
             where T : class, new();
     }
 }

@@ -23,5 +23,6 @@ namespace IOWebApplication.Core.Contracts
         bool CaseLoadCorrection_SaveData(CaseLoadCorrection model);
         decimal GetCaseLoadCorrection(int CaseId);
         decimal GetCaseLoadCorrectionToDate(int CaseId, DateTime dateTime);
+        bool IsExistCaseLoadIndex(int CaseId, DateTime dateTime);
     }
 }

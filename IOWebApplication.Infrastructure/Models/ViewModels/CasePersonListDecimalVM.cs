@@ -12,5 +12,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public decimal ValueOne { get; set; }
         public string LabelTwo { get; set; }
         public decimal ValueTwo { get; set; }
+        public int AmountNumerator { get; set; }
+        public int AmountDenominator { get; set; }
     }
 }

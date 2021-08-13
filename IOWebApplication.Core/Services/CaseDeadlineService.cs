@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
@@ -51,7 +52,8 @@ namespace IOWebApplication.Core.Services
         public void DeadLineOnCase(Case caseModel)
         {
             DeadLineCompanyCase(caseModel);
-            DeadLineDeclaredForResolveComplete(caseModel);
+            // Вече е при постановяване на протокол или решение
+            //DeadLineDeclaredForResolveComplete(caseModel);
         }
         public void DeadLineOnSession(CaseSession session)
         {
@@ -345,6 +347,30 @@ namespace IOWebApplication.Core.Services
                 var deadlines = repo.AllReadonly<CaseDeadline>()
                                    .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
                                                x.CaseId == aCase.Id &&
+                                               x.DeadlineTypeId == NomenclatureConstants.DeadlineType.DeclaredForResolve &&
+                                               x.DateComplete == null &&
+                                               x.DateExpired == null)
+                                   .ToList();
+                foreach (var deadline in deadlines)
+                {
+                    deadline.DateComplete = DateTime.Now;
+                    result.Add(deadline);
+                }
+            }
+            foreach (var deadlineComplete in result)
+            {
+                repo.Update(deadlineComplete);
+                ExpireWorkNotifications(deadlineComplete);
+            }
+        }
+        public void DeadLineDeclaredForResolveComplete(CaseSessionAct caseSessionAct)
+        {
+            var result = new List<CaseDeadline>();
+            if (caseSessionAct.ActTypeId == NomenclatureConstants.ActType.Protokol || caseSessionAct.ActTypeId == NomenclatureConstants.ActType.Answer)
+            {
+                var deadlines = repo.AllReadonly<CaseDeadline>()
+                                   .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
+                                               x.CaseId == caseSessionAct.CaseId &&
                                                x.DeadlineTypeId == NomenclatureConstants.DeadlineType.DeclaredForResolve &&
                                                x.DateComplete == null &&
                                                x.DateExpired == null)
@@ -812,7 +838,7 @@ namespace IOWebApplication.Core.Services
             if (filter.LawUnitId > 0)
                 deadlines = deadlines.Where(x => x.Case.CaseLawUnits.Any(l => l.LawUnitId == filter.LawUnitId && l.CaseSessionId == null && l.DateTo == null && l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter));
             if (!string.IsNullOrEmpty(filter.RegNumber))
-                deadlines = deadlines.Where(x => x.Case.RegNumber.EndsWith(filter.RegNumber));
+                deadlines = deadlines.Where(x => EF.Functions.ILike(x.Case.RegNumber,filter.RegNumber.ToCasePaternSearch()));
             if (filter.DeadlineTypeId > 0)
                 deadlines = deadlines.Where(x => x.DeadlineTypeId == filter.DeadlineTypeId);
             return deadlines.Select(x => new CaseDeadLineVM()

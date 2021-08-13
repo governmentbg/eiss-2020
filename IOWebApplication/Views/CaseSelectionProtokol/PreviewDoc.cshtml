@@ -133,7 +133,7 @@
                                 <td align="center"> <b>Брой дела в съда</b></td>
                             </tr>
 
-                            @foreach (var item in Model.LawUnits)
+                            @foreach (var item in Model.LawUnits.OrderBy(x => x.LawUnitFullName) )
                             {
                                 <tr>
                                     <td> @item.LawUnitFullName</td>

@@ -11,6 +11,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string CaseGroupLabel { get; set; }
         public string ParentLabel { get; set; }
         public string DepartmentTypeLabel { get; set; }
+        public int DepartmentTypeId { get; set; }
         public string Label { get; set; }
         public string Description { get; set; }
         public int? MasterId { get; set; }

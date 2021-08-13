@@ -35,7 +35,7 @@
 }
 <div class="row">
     <div class="col-lg-12">
-        @using (Html.BeginForm())
+        @using (Html.BeginForm(FormMethod.Post, new { onsubmit = "storeContent();", enctype = "multipart/form-data" }))
         {
             @Html.HiddenFor(x => x.SourceType)
             @Html.HiddenFor(x => x.SourceId)
@@ -100,15 +100,21 @@
                     <!-- /.box-body -->
                 </div>
             }
+            @Html.HiddenFor(x => x.SessionName)
             <div class="form-group">
                 <input type="submit" value="Запис" class="btn btn-success" />
                 &nbsp;
                 <a href="@Html.Raw(Model.ReturnUrl)" class="btn btn-danger">Назад</a>
 
                 <div class="pull-right">
+                    @if (!string.IsNullOrEmpty(Model.RelatedDocumentPreviewUrl))
+                    {
+                        <a href="@Html.Raw(Model.RelatedDocumentPreviewUrl)" class="btn btn-info" target="_blank">Свързан документ</a>
+                        <text>&nbsp;&nbsp;&nbsp;</text>
+                    }
                     @if (Model.HasResetButton)
                     {
-                        <input type="button" onclick="submitWithReset(this); return false;" value="Обнови от данните" class="btn btn-danger"  />
+                        <input type="button" onclick="submitWithReset(this); return false;" value="Обнови от данните" class="btn btn-danger" />
                         <text>&nbsp;&nbsp;&nbsp;</text>
                     }
                     @if (Model.HasPreviewButton)
@@ -127,6 +133,10 @@
         {
             <text>setTimeout(shrinkEditor, 200);</text>
         }
+        @if (!string.IsNullOrEmpty(Model.AutoSaveKey))
+        {
+            <text>initAutoSave('@Model.AutoSaveKey');</text>
+        }
     });
     function shrinkEditor() {
         tinymce.activeEditor.getContainer().style.height = '400px';
@@ -138,4 +148,40 @@
             $(mainForm).trigger('submit');
         });
     }
+
+    let autosaveKey = '@Model.AutoSaveKey';
+
+    function initAutoSave() {
+
+        let cashed = storageHelper.load(autosaveKey);
+        if (cashed && cashed != '' && cashed != $('#HtmlContent').val()) {
+            swalConfirm('Съществува незаписано копие на документа! Желаете ли да го заредите?',
+                function () {
+                   // debugger;
+                    tinymce.editors[0].setContent(cashed);
+                    startAutoSave();
+                },
+                function () {
+                    startAutoSave();
+                }
+            )
+        } else {
+            startAutoSave();
+        }
+    }
+
+    function startAutoSave() {
+        setInterval(function () {
+            storeContent();
+        }, 10000);
+    }
+
+    function storeContent() {
+        if (autosaveKey != '' && autosaveKey.length > 0) {
+            let _html = tinymce.editors[0].getContent();
+            storageHelper.save(autosaveKey, _html);
+        }
+    }
+
+    window.onbeforeunload = function () { storeContent(); }
 </script>

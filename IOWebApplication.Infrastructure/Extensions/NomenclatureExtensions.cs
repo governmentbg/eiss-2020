@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Extensions.HTML;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
@@ -41,6 +42,53 @@ namespace IOWebApplication.Infrastructure.Extensions
                     Text = x.Label,
                     Value = x.Id.ToString()
                 }).ToList() ?? new List<SelectListItem>();
+            
+            if (addDefaultElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Избери", Value = "-1" })
+                    .ToList();
+            }
+
+            if (addAllElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Всички", Value = "-2" })
+                    .ToList();
+            }
+
+            return result.Decode();
+        }
+
+        public static List<SelectListItem> Decode(this List<SelectListItem> model)
+        {
+            foreach (var item in model)
+            {
+                item.Text = item.Text.Decode();
+            }
+            return model;
+        }
+
+        public static List<SelectListItem> ToSelectListFromCode(this IQueryable<ICommonNomenclature> model, bool addDefaultElement = false, bool addAllElement = false, bool orderByNumber = true)
+        {
+            DateTime today = DateTime.Today;
+
+            Expression<Func<ICommonNomenclature, object>> order = x => x.OrderNumber;
+            if (!orderByNumber)
+            {
+                order = x => x.Label;
+            }
+
+            var result = model
+                .Where(x => x.IsActive)
+                .Where(x => x.DateStart <= today)
+                .Where(x => (x.DateEnd ?? today) >= today)
+                .OrderBy(order)
+                .Select(x => new SelectListItem()
+                {
+                    Text = x.Label,
+                    Value = x.Code
+                }).ToList() ?? new List<SelectListItem>();
 
             if (addDefaultElement)
             {
@@ -56,7 +104,7 @@ namespace IOWebApplication.Infrastructure.Extensions
                     .ToList();
             }
 
-            return result;
+            return result.Decode();
         }
 
         public static List<SelectListItem> SingleOrChoose(this List<SelectListItem> model)
@@ -113,7 +161,7 @@ namespace IOWebApplication.Infrastructure.Extensions
                     .ToList();
             }
 
-            return result;
+            return result.Decode();
         }
 
         /// <summary>
@@ -150,7 +198,7 @@ namespace IOWebApplication.Infrastructure.Extensions
                     .ToList();
             }
 
-            return result;
+            return result.Decode();
         }
 
         public static List<SelectListItem> ToSelectList<TSource, TValue, TText>(
@@ -247,6 +295,10 @@ namespace IOWebApplication.Infrastructure.Extensions
         {
             return date1.ToString("yyyyMMddHHmm") == date2.ToString("yyyyMMddHHmm");
         }
+        //public static DateTime ForceEndDate(this DateTime model)
+        //{
+        //    return model.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+        //}
 
         /// <summary>
         /// Връща датата ако не е null с час 23:59, независимо от часа в нея
@@ -542,6 +594,77 @@ namespace IOWebApplication.Infrastructure.Extensions
                 result = result.Substring(0, result.Length - 1);
             }
             return result;
+        }
+
+        public static string DayName(this DateTime? model)
+        {
+            if (model.HasValue)
+            {
+                string datestring = model.Value.Day.ToString();
+                switch (model.Value.DayOfWeek)
+                {
+                    case DayOfWeek.Friday:
+                        datestring = datestring + " (петък)";
+                        break;
+                    case DayOfWeek.Monday:
+                        datestring = datestring + " (понед.)";
+                        break;
+                    case DayOfWeek.Saturday:
+                        datestring = datestring + " (събота)";
+                        break;
+                    case DayOfWeek.Sunday:
+                        datestring = datestring + " (неделя)";
+                        break;
+                    case DayOfWeek.Thursday:
+                        datestring = datestring + " (четвъртък)";
+                        break;
+                    case DayOfWeek.Tuesday:
+                        datestring = datestring + " (вторник)";
+                        break;
+                    case DayOfWeek.Wednesday:
+                        datestring = datestring + " (сряда)";
+                        break;
+                    default:
+                        break;
+                }
+                return datestring;
+            }
+            return "";
+        }
+        public static string DayNameOnly(this DateTime? model)
+        {
+            if (model.HasValue)
+            {
+                string datestring = "";
+                switch (model.Value.DayOfWeek)
+                {
+                    case DayOfWeek.Friday:
+                        datestring = datestring + "петък";
+                        break;
+                    case DayOfWeek.Monday:
+                        datestring = datestring + "понедeлник";
+                        break;
+                    case DayOfWeek.Saturday:
+                        datestring = datestring + "събота";
+                        break;
+                    case DayOfWeek.Sunday:
+                        datestring = datestring + "неделя";
+                        break;
+                    case DayOfWeek.Thursday:
+                        datestring = datestring + "четвъртък";
+                        break;
+                    case DayOfWeek.Tuesday:
+                        datestring = datestring + "вторник";
+                        break;
+                    case DayOfWeek.Wednesday:
+                        datestring = datestring + "сряда";
+                        break;
+                    default:
+                        break;
+                }
+                return datestring;
+            }
+            return "";
         }
     }
 }

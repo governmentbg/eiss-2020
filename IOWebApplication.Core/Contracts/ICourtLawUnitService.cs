@@ -66,7 +66,8 @@ namespace IOWebApplication.Core.Contracts
 
         IQueryable<CourtLawUnitVM> CourtLawUnitOrder_Select(int courtId);
         bool CourtLawUnitOrder_Actualize(int courtId);
-        SaveResultVM CourtLawUnitOrder_ActualizeForCase(int caseId);
+
+        SaveResultVM CourtDepartmentUnitOrder_ActualizeForCase(int caseId);
 
         /// <summary>
         /// Информация за заместване на съдии
@@ -87,6 +88,6 @@ namespace IOWebApplication.Core.Contracts
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        bool CourtLawUnitSubstitution_SaveData(CourtLawUnitSubstitution model);
+        bool CourtLawUnitSubstitution_SaveData(CourtLawUnitSubstitution model);        
     }
 }

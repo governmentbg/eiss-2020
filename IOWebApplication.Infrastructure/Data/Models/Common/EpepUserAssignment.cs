@@ -37,6 +37,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("epep_id")]
         public Guid? EpepId { get; set; }
 
+        [Column("can_summon")]
+        [Display(Name = "Разрешено призоваване чрез ЕПЕП")]
+        public bool? CanSummon { get; set; }
+
         //===============================================================
 
         [Column("date_expired")]

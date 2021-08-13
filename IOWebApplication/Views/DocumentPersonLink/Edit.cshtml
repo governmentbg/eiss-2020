@@ -1,0 +1,89 @@
+﻿@model DocumentPersonLink
+@using IOWebApplication.Infrastructure.Data.Models.Documents
+@using IOWebApplication.Extensions
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = access.CanChange ? "Редакция" : "Преглед";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+    var breadcrumbs = (List<BreadcrumbsVM>)ViewBag.breadcrumbs;
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            @Html.ValidationSummary()
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DocumentId)
+            @Html.HiddenFor(x => x.DocumentResolutionId)
+            @Html.HiddenFor(x => x.CourtId)
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @Html.EditorFor(x => x.DocumentPersonId, "GenericDropDownLong")
+                @Html.EditorFor(x => x.LinkDirectionId, "GenericDropDown")
+                @Html.EditorFor(x => x.DocumentPersonRelId, "GenericDropDownLong")
+                @Html.EditorFor(x => x.LinkDirectionSecondId, "GenericDropDown")
+                @Html.EditorFor(x => x.DocumentPersonSecondRelId, "GenericDropDownLong")
+
+                @Html.EditorFor(x => x.DateFrom)
+                @Html.EditorFor(x => x.DateTo)
+            </div>
+
+            <div class="form-group">
+                @if (access.CanChange)
+                {
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                }
+                @await Html.PartialAsync("_ButtonClose")
+                <div class="pull-right">
+                    @if (Model.DateExpired == null && access.CanChangeFull)
+                    {
+                        @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, ReturnUrl = breadcrumbs.ReturnUrlFromLast(), DialogTitle = "Премахване на връзка", ExpireSubmitUrl = Url.Action("CasPersonLink_ExpiredInfo") })
+                        <span>&nbsp;</span>
+                    }
+                    @if (Model.Id > 0)
+                    {
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+        $(document).ready(function () {
+            $('#DocumentPersonId').trigger('change');
+        });
+
+    $('#DocumentPersonId').change(function () {
+        var personId = $(this).val();
+        if (personId > 0) {
+            requestGET_Json('@Url.Action("FilterLinkDirection", "DocumentPersonLink")', { documentPersonId: personId }, function (model) {
+                fillCombo(model.ddlLinkDirection, '#LinkDirectionId',@Model.LinkDirectionId);
+            });
+        }
+    });
+    $('#LinkDirectionId').change(function () {
+        var linkId = $(this).val();
+        var documentId = $("#DocumentId").val();
+        if (linkId > 0) {
+            requestGET_Json('@Url.Action("FilterRelationalPerson", "DocumentPersonLink")', { documentId: documentId, linkDirectionId: linkId }, function (model) {
+                fillCombo(model.ddlPersonRel, '#DocumentPersonRelId',@Model.DocumentPersonRelId);
+            });
+        }
+    });
+</script>

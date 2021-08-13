@@ -16,6 +16,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [IORequired]
         public int CourtId { get; set; }
 
+        public string CourtName { get; set; }
+
         [Display(Name = "Избор дело")]
         public int? CaseId { get; set; }
 

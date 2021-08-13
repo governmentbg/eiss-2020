@@ -1,17 +1,26 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 @model SourceTypeSelectVM
+@inject IWorkTaskService wtService;
+@{
+    var canEdit = wtService.ValidateSourceCourt(Model.SourceType, Model.SourceId);
+}
 <div>
     <div id="wtContainer">
     </div>
-    <a href="#" data-modal-title="Нова задача"
-       data-modal-url="@Url.Action("CreateTask","WorkTask",new {sourceType=Model.SourceType,sourceId=Model.SourceId })"
-       class="modal-loader btn btn-sm btn-success">
-        <i class="fa fa-plus"></i> Нова задача
-    </a>
+    @if (canEdit)
+    {
+        <a href="#" data-modal-title="Нова задача"
+           data-modal-url="@Url.Action("CreateTask","WorkTask",new {sourceType=Model.SourceType,sourceId=Model.SourceId })"
+           class="modal-loader btn btn-sm btn-success">
+            <i class="fa fa-plus"></i> Нова задача
+        </a>
+    }
 </div>
 <script>
     $(function () {
-        wtLoadData();
+        if (@Model.SourceId > 0) {
+            wtLoadData();
+        }
     });
     function wtLoadData() {
         requestGET_Json('@Url.Action("Select","WorkTask")'
@@ -31,8 +40,11 @@
             });
     }
 
-    function wtAcceptTask(id) {
-        //swalConfirm('Потвърди приемането на задачата!', function () {
+    function wtAcceptTask(sender, id) {
+        if ($(sender).attr('disabled')) {
+            return;
+        }
+        $(sender).attr('disabled', 'disabled');
             postContent('@Url.Action("AcceptTask","WorkTask")'
             , {id:id}
             , function (data) {
@@ -41,9 +53,9 @@
                     messageHelper.ShowSuccessMessage('Задачата е приета успешно.');
                 } else {
                     messageHelper.ShowErrorMessage('Грешка при приемане на задача.');
+                    $(sender).removeAttr('disabled');
                 }
             });
-        //});
     }
     function wtCompleteTask(id) {
         requestContent('@Url.Action("CompleteTask","WorkTask")'
@@ -54,15 +66,6 @@
     }
     function wtDoTask(sender) {
         window.location.href = $(sender).data('url');
-
-
-        //var wtConfirmText = 'Премини към изпълнение на задачата!';
-        //if ($(sender).data('warning')) {
-        //    wtConfirmText = $(sender).data('warning');
-        //}
-        //swalConfirm(wtConfirmText, function () {
-        //    window.location.href = $(sender).data('url');
-        //});
     }
 </script>
 <script id="workTaskTemplate" type="text/x-handlebars-template">
@@ -127,7 +130,7 @@
                 {{/if}}
                 {{#if canAccept}}
                 <br />
-                <a href="#" class="btn btn-xs btn-def" onclick="wtAcceptTask('{{id}}');"><i class="glyphicon glyphicon-ok"></i> Приемане</a>
+                <a href="#" class="btn btn-xs btn-def" onclick="wtAcceptTask(this,'{{id}}');"><i class="glyphicon glyphicon-ok"></i> Приемане</a>
                 &nbsp;
                 &nbsp;
                 {{/if}}

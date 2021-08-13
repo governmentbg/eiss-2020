@@ -120,8 +120,8 @@ namespace IOWebApplication.Core.Services
             currentCourtLoadPeriodLawUnit.CourtLoadPeriodId = courtLoadPeriodId;
             currentCourtLoadPeriodLawUnit.LawUnitId = lawUnitId;
             currentCourtLoadPeriodLawUnit.SelectionDate = DateTime.Now.Date;
-            
-            currentCourtLoadPeriodLawUnit.IsAvailable = true; 
+
+            currentCourtLoadPeriodLawUnit.IsAvailable = true;
             currentCourtLoadPeriodLawUnit.DayCases = 0;
             currentCourtLoadPeriodLawUnit.TotalDayCases = 0;
             currentCourtLoadPeriodLawUnit.LoadIndex = curentLawUnit.LoadIndex;
@@ -161,14 +161,28 @@ namespace IOWebApplication.Core.Services
             currentCourtLoadPeriodLawUnit.AverageCases = 0;
             //Когато този потребител се включва на по късен етап и получава  приравнителни средно дневни
             if (courtLoadPeriodLawUnit.ToList().Count == 0 && courtLoadPeriodLawUnitTotal.Where(x => x.SelectionDate < DateTime.Now.Date).ToList().Count > 0)
-            {
+            {     //Празен ред за деня
+              repo.Add<CourtLoadPeriodLawUnit>(currentCourtLoadPeriodLawUnit);
+              repo.SaveChanges();
+              //Изравнителен ред с по-ранна дата за да не се заличава при отсъствие
+              CourtLoadPeriodLawUnit averageCourtLoadPeriodLawUnit = new CourtLoadPeriodLawUnit();
+              averageCourtLoadPeriodLawUnit.CourtLoadPeriodId = courtLoadPeriodId;
+              averageCourtLoadPeriodLawUnit.LawUnitId = lawUnitId;
+              averageCourtLoadPeriodLawUnit.SelectionDate = repo.All<CourtLoadPeriodLawUnit>()
+                                            .Where(x => x.CourtLoadPeriodId == courtLoadPeriodId)
+                                            .Where(x => x.LawUnitId == lawUnitId).Select(x => x.SelectionDate).Min().AddDays(-1);
+              averageCourtLoadPeriodLawUnit.IsAvailable = false;
+              averageCourtLoadPeriodLawUnit.DayCases = 0;
+              averageCourtLoadPeriodLawUnit.TotalDayCases = 0;
+              averageCourtLoadPeriodLawUnit.LoadIndex = curentLawUnit.LoadIndex;
+              averageCourtLoadPeriodLawUnit.AverageCases = 0;
 
               foreach (var row in courtLoadPeriodLawUnitTotal.Where(x => x.SelectionDate != DateTime.Now.Date).ToList())
               {
-                currentCourtLoadPeriodLawUnit.AverageCases = currentCourtLoadPeriodLawUnit.AverageCases + row.AverageCases;
-                currentCourtLoadPeriodLawUnit.TotalDayCases = currentCourtLoadPeriodLawUnit.TotalDayCases + row.AverageCases;
+                averageCourtLoadPeriodLawUnit.AverageCases = averageCourtLoadPeriodLawUnit.AverageCases + row.AverageCases;
+                averageCourtLoadPeriodLawUnit.TotalDayCases = averageCourtLoadPeriodLawUnit.TotalDayCases + row.AverageCases;
               }
-              repo.Add<CourtLoadPeriodLawUnit>(currentCourtLoadPeriodLawUnit);
+              repo.Add<CourtLoadPeriodLawUnit>(averageCourtLoadPeriodLawUnit);
               repo.SaveChanges();
             }
             else
@@ -424,9 +438,9 @@ namespace IOWebApplication.Core.Services
       //2020.01.08 Optimisation
       List<int> LawUnitsArray = caseSelectionProtocol.LawUnits.Select(x => x.LawUnitId).ToList();
       LawUnitsArray.Add(0);
-      
+
       // foreach (var lawUnit in caseSelectionProtocol.LawUnits.Where(x => NomenclatureConstants.SelectionProtokolLawUnitState.ActiveState.Contains(x.StateId)))
-      var courtLoadPeriodLawunitsList = repo.AllReadonly<CourtLoadPeriodLawUnit>().Where(x => LawUnitsArray.Contains(x.LawUnitId??0))
+      var courtLoadPeriodLawunitsList = repo.AllReadonly<CourtLoadPeriodLawUnit>().Where(x => LawUnitsArray.Contains(x.LawUnitId ?? 0))
                                                                            .Where(x => x.CourtLoadPeriodId == courtLoadPeriod.Id).ToList();
       //Optimisacia2020.01.09 s
       int totalPeriodDays = courtLoadPeriodLawunitsList
@@ -436,7 +450,7 @@ namespace IOWebApplication.Core.Services
 
       foreach (var lawUnit in caseSelectionProtocol.LawUnits)
       {
-       // CalculateLawUnitDataInGroup(lawUnit, courtLoadPeriod.Id);
+        // CalculateLawUnitDataInGroup(lawUnit, courtLoadPeriod.Id);
         CalculateLawUnitDataInGroup(lawUnit, courtLoadPeriod.Id, courtLoadPeriodLawunitsList);
         //2020.01.08 Optimisation
         totalKoef = totalKoef + lawUnit.Koef;
@@ -456,27 +470,27 @@ namespace IOWebApplication.Core.Services
         //                      .Where(x => x.LawUnitId == lawUnit.LawUnitId)
         //                      .Where(x => x.AverageCases == 0)
         //                      .Count();
-         int lawUnitPeriodDays = courtLoadPeriodLawunitsList
-                              .Where(x => x.LawUnitId == lawUnit.LawUnitId)
-                              .Where(x => x.AverageCases == 0)
-                              .Count();
+        int lawUnitPeriodDays = courtLoadPeriodLawunitsList
+                             .Where(x => x.LawUnitId == lawUnit.LawUnitId)
+                             .Where(x => x.AverageCases == 0)
+                             .Count();
         //2020.01.08 Optimisation 1
         if (lawUnitPeriodDays == 0)
         { lawUnitPeriodDays = 1; }
-        if (lawUnit.LoadIndex==0)
+        if (lawUnit.LoadIndex == 0)
         {
           lawUnit.LoadIndex = 100;
         }
-        lawUnit.CasesCountIfWorkAllPeriodInGroup = (decimal)totalPeriodDays/(decimal)lawUnitPeriodDays * 100M /(decimal)lawUnit.LoadIndex * lawUnit.CaseCount;
+        lawUnit.CasesCountIfWorkAllPeriodInGroup = (decimal)totalPeriodDays / (decimal)lawUnitPeriodDays * 100M / (decimal)lawUnit.LoadIndex * lawUnit.CaseCount;
         lawUnit.ExcludeByBigDeviation = false;
       }
 
       return caseSelectionProtocol;
     }
-   
+
 
     //Изчислява коефициентите за всеки един съдия в рамките на група или дежурство
-    public void CalculateLawUnitDataInGroup(CaseSelectionProtokolLawUnitVM caseSelectionProtokolLawUnit, int courtLoadPeriodId,List<CourtLoadPeriodLawUnit> courtLoadPeriodLawunitsList)
+    public void CalculateLawUnitDataInGroup(CaseSelectionProtokolLawUnitVM caseSelectionProtokolLawUnit, int courtLoadPeriodId, List<CourtLoadPeriodLawUnit> courtLoadPeriodLawunitsList)
 
     {
       //var courtLoadPeriodLawunits = repo.AllReadonly<CourtLoadPeriodLawUnit>().Where(x => x.LawUnitId == caseSelectionProtokolLawUnit.LawUnitId)
@@ -490,7 +504,7 @@ namespace IOWebApplication.Core.Services
       //  caseSelectionProtokolLawUnit.CaseCount = caseSelectionProtokolLawUnit.CaseCount + (int)courtLoadPeriodLawunit.DayCases;
       //}
       caseSelectionProtokolLawUnit.TotalCaseCount = courtLoadPeriodLawunits.Sum(x => x.TotalDayCases);
-      caseSelectionProtokolLawUnit.CaseCount = courtLoadPeriodLawunits.Sum(x =>(int) x.DayCases);
+      caseSelectionProtokolLawUnit.CaseCount = courtLoadPeriodLawunits.Sum(x => (int)x.DayCases);
       //Optimisacia2020.01.09 e
       if (caseSelectionProtokolLawUnit.TotalCaseCount > 0)
       {
@@ -536,7 +550,7 @@ namespace IOWebApplication.Core.Services
         {
           courtLoadPeriodLawUnit.TotalDayCases = courtLoadPeriodLawUnit.TotalDayCases + 1;
           courtLoadPeriodLawUnit.DayCases = courtLoadPeriodLawUnit.DayCases + 1;
-          courtLoadPeriodLawUnit.AverageCases = courtLoadPeriodLawUnit.TotalDayCases / (courtLoadPeriodLawUnits.Count() - 1);
+          courtLoadPeriodLawUnit.AverageCases = courtLoadPeriodLawUnit.TotalDayCases / (courtLoadPeriodLawUnits.Where(x => x.IsAvailable && x.LawUnitId != null).Count());
           totalAverage = courtLoadPeriodLawUnit.AverageCases;
         }
       }
@@ -682,7 +696,7 @@ namespace IOWebApplication.Core.Services
         {
           courtLoadPeriodLawUnit.DayCases = courtLoadPeriodLawUnit.DayCases - 1;
           courtLoadPeriodLawUnit.TotalDayCases = courtLoadPeriodLawUnit.TotalDayCases - 1;
-          courtLoadPeriodLawUnit.AverageCases = courtLoadPeriodLawUnit.DayCases / (courtLoadPeriodLawUnits.Count() - 1);
+          courtLoadPeriodLawUnit.AverageCases = courtLoadPeriodLawUnit.DayCases / (courtLoadPeriodLawUnits.Where(x => x.IsAvailable && x.LawUnitId != null).Count());
           totalAverage = courtLoadPeriodLawUnit.AverageCases;
         }
       }
@@ -717,6 +731,103 @@ namespace IOWebApplication.Core.Services
       }
       repo.SaveChanges();
 
+    }
+
+
+
+    /// <summary>
+    /// Коригира среднодневните на база смяна на процента на анатоварване в групата
+    /// </summary>
+    /// <returns></returns>
+    public CourtLoadPeriodLawUnit UpdateChangedProcentAverageCases(int lawunitId, int courtGroupId, decimal newPercent)
+    {
+      CourtLoadPeriodLawUnit result = null;
+      try
+      {
+
+
+        var lastPreviousPervcent = repo.AllReadonly<CourtLawUnitGroup>()
+                                      .Where(x => x.LawUnitId == lawunitId)
+                                       .Where(x => x.CourtGroupId == courtGroupId)
+                                       .OrderByDescending(x => x.DateFrom)
+                                       .FirstOrDefault();
+        //Ако се добавя за първи път в тази група
+        if (lastPreviousPervcent == null)
+        {
+          return result;
+        }
+        DateTime dtNow = DateTime.Now;
+        var lawunitsPeriodList = repo.AllReadonly<CourtLoadPeriodLawUnit>()
+                                    .Where(x => x.LawUnitId == lawunitId || x.LawUnitId == null)
+                                    .Where(x=>x.CourtLoadPeriod.CourtGroupId==courtGroupId&& x.CourtLoadPeriod.CourtDutyId==null)
+                                    .Where(x => (x.CourtLoadPeriod.CourtLoadResetPeriod.DateTo ?? dtNow) >= dtNow)
+                                     .Where(x => x.CourtLoadPeriod.CourtLoadResetPeriod.DateFrom < dtNow).ToList();
+
+        //Ако няма записи за разпределения в групата
+        if (!lawunitsPeriodList.Where(x => x.LawUnitId == lawunitId).Any())
+        {
+          return result;
+        }
+        //Ако е бил в групата  но е изключен за даден период
+        if (lastPreviousPervcent.DateTo != null)
+
+        { 
+          //Средно-днвени за времето на отсъствие
+          decimal absent_average_cases = lawunitsPeriodList.Where(x => x.LawUnitId == null)
+                                                           .Where(x => x.SelectionDate >= (lastPreviousPervcent.DateTo ?? dtNow).Date)
+                                                            .Where(x => x.SelectionDate <= dtNow.Date).Sum(x => x.AverageCases) * lastPreviousPervcent.LoadIndex / 100;
+
+          decimal real_cases = lawunitsPeriodList.Where(x => x.LawUnitId == lawunitId)
+
+                                                            .Where(x => x.SelectionDate <= dtNow.Date).Sum(x => x.DayCases);
+
+          decimal average_cases = lawunitsPeriodList.Where(x => x.LawUnitId == lawunitId)
+
+                                                          .Where(x => x.SelectionDate <= dtNow.Date).Sum(x => x.AverageCases);
+
+          result = new CourtLoadPeriodLawUnit();
+          result.CourtLoadPeriodId = lawunitsPeriodList.FirstOrDefault().CourtLoadPeriodId;
+          result.LawUnitId = lawunitId;
+          result.SelectionDate = lawunitsPeriodList.Where(x => x.LawUnitId == lawunitId).Select(x => x.SelectionDate).Min().AddDays(-1);
+          result.IsAvailable = false;
+          result.DayCases = 0;
+          result.AverageCases = ((absent_average_cases + real_cases + average_cases) / lastPreviousPervcent.LoadIndex * newPercent) - real_cases- average_cases;
+          result.TotalDayCases = result.AverageCases;
+          result.LoadIndex = newPercent;
+       
+
+          return result;
+        }
+        //Ако е бил в групата и сменя процента
+        if (lastPreviousPervcent.DateTo == null)
+
+        {
+          decimal real_cases = lawunitsPeriodList.Where(x => x.LawUnitId == lawunitId)
+
+                                                       .Where(x => x.SelectionDate <= dtNow.Date).Sum(x => x.DayCases);
+
+          decimal average_cases = lawunitsPeriodList.Where(x => x.LawUnitId == lawunitId)
+
+                                                          .Where(x => x.SelectionDate <= dtNow.Date).Sum(x => x.AverageCases);
+
+          result = new CourtLoadPeriodLawUnit();
+          result.CourtLoadPeriodId = lawunitsPeriodList.FirstOrDefault().CourtLoadPeriodId;
+          result.LawUnitId = lawunitId;
+          result.SelectionDate = lawunitsPeriodList.Where(x => x.LawUnitId == lawunitId).Select(x => x.SelectionDate).Min().AddDays(-1);
+          result.IsAvailable = false;
+          result.DayCases = 0;
+          result.AverageCases = (( real_cases + average_cases) / lastPreviousPervcent.LoadIndex * newPercent) - real_cases- average_cases;
+          result.TotalDayCases = result.AverageCases;
+          result.LoadIndex = newPercent;
+          return result;
+        }
+      }
+      catch (Exception)
+      {
+
+       
+      }
+      return result;
     }
 
   }

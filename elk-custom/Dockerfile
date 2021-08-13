@@ -1,5 +1,4 @@
 FROM sebp/elk:661
-MAINTAINER "Vladimir Vitkov <v.vitkov@is-bg.net>"
 
 # install ES plugins
 ENV ES_HOME /opt/elasticsearch

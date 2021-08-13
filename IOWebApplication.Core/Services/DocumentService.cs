@@ -30,7 +30,6 @@ namespace IOWebApplication.Core.Services
     {
         private readonly ICounterService counterService;
         private readonly INomenclatureService nomenclatureService;
-        private readonly ICommonService commonService;
         private readonly ICaseClassificationService caseClassificationService;
         private readonly IWorkTaskService workTaskService;
         private readonly IMQEpepService epepService;
@@ -43,7 +42,6 @@ namespace IOWebApplication.Core.Services
             ILogger<DocumentService> _logger,
             ICounterService _counterService,
             INomenclatureService _nomenclatureService,
-            ICommonService _commonService,
             ICaseClassificationService _caseClassificationService,
             IWorkTaskService _workTaskService,
             IMQEpepService _epepService,
@@ -57,7 +55,6 @@ namespace IOWebApplication.Core.Services
             logger = _logger;
             counterService = _counterService;
             nomenclatureService = _nomenclatureService;
-            commonService = _commonService;
             caseClassificationService = _caseClassificationService;
             workTaskService = _workTaskService;
             epepService = _epepService;
@@ -121,12 +118,20 @@ namespace IOWebApplication.Core.Services
             if (!string.IsNullOrEmpty(model.LinkDelo_Description))
             {
                 var stringFind = model.LinkDelo_Description.ToUpper();
-                linkDescriptionWhere = x => x.DocumentCaseInfo.Where(a => a.Description.ToUpper().Contains(stringFind)).Any();
+                linkDescriptionWhere = x => x.DocumentCaseInfo.Where(a => EF.Functions.ILike(a.Description, model.LinkDelo_Description.ToPaternSearch())).Any();
             }
 
             Expression<Func<Document, bool>> regNumOtherSystem = x => true;
             if (!string.IsNullOrEmpty(model.RegNumberOtherSystem))
-                regNumOtherSystem = x => x.DocumentCaseInfo.Where(a => (a.CaseRegNumber.EndsWith(model.RegNumberOtherSystem.ToShortCaseNumber())) && (a.IsLegacyCase ?? false)).Any();
+                regNumOtherSystem = x => x.DocumentCaseInfo.Where(a => (EF.Functions.ILike(a.CaseRegNumber, model.RegNumberOtherSystem.ToCasePaternSearch())) && (a.IsLegacyCase ?? false)).Any();
+
+            Expression<Func<Document, bool>> yearOtherSystem = x => true;
+            if (model.YearOtherSystem > 0)
+                yearOtherSystem = x => x.DocumentCaseInfo.Where(a => (a.CaseYear == model.YearOtherSystem) && (a.IsLegacyCase ?? false)).Any();
+
+            Expression<Func<Document, bool>> courtOtherSystem = x => true;
+            if (model.CourtOtherSystem > 0)
+                courtOtherSystem = x => x.DocumentCaseInfo.Where(a => (a.CourtId == model.CourtOtherSystem) && (a.IsLegacyCase ?? false)).Any();
 
             List<long> documentIds = new List<long>();
             Expression<Func<Document, bool>> caseRegNumberWhere = x => true;
@@ -134,18 +139,23 @@ namespace IOWebApplication.Core.Services
             {
                 documentIds.AddRange(repo.AllReadonly<Case>()
                      .Where(x => x.RegNumber != null)
-                     .Where(x => x.RegNumber.EndsWith(model.CaseRegNumber.ToShortCaseNumber(),
-                                                     StringComparison.InvariantCultureIgnoreCase))
+                     .Where(x => EF.Functions.ILike(x.RegNumber, model.CaseRegNumber.ToCasePaternSearch()))
                      .Select(x => x.DocumentId));
 
                 documentIds.AddRange(repo.AllReadonly<DocumentCaseInfo>()
                      .Where(x => x.CaseId != null)
-                     .Where(x => x.Case.RegNumber.EndsWith(model.CaseRegNumber.ToShortCaseNumber(),
-                                                     StringComparison.InvariantCultureIgnoreCase))
+                     .Where(x => EF.Functions.ILike(x.Case.RegNumber, model.CaseRegNumber.ToCasePaternSearch()))
                      .Select(x => x.DocumentId));
 
                 caseRegNumberWhere = x => documentIds.Contains(x.Id);
             }
+
+            Expression<Func<Document, bool>> caseEisppNumberWhere = x => true;
+            if (!string.IsNullOrEmpty(model.CaseEisppNumber))
+            {
+                caseEisppNumberWhere = x => x.Cases.Any(c => EF.Functions.ILike(c.EISSPNumber, model.CaseEisppNumber.ToPaternSearch()));
+            }
+
             //caseRegNumberWhere = x => x.Cases.Any() ? x.Cases.Where(a => a.RegNumber != null && 
             //                                     a.RegNumber.EndsWith(model.CaseRegNumber.ToShortCaseNumber(),
             //                                     StringComparison.InvariantCultureIgnoreCase)).Any() :
@@ -158,6 +168,18 @@ namespace IOWebApplication.Core.Services
             {
                 descriptionWhere = x => EF.Functions.ILike(x.Description, model.Description.ToPaternSearch());
             }
+
+            Expression<Func<Document, bool>> instCaseWhere = x => true;
+            if (model.InstitutionId > 0 || model.InstitutionCaseYear > 0 || !string.IsNullOrEmpty(model.InstitutionCaseNumber))
+            {
+                instCaseWhere = x => x.DocumentInstitutionCaseInfo.Any(
+                    i => i.Institution.InstitutionTypeId == (model.InstitutionTypeId ?? i.Institution.InstitutionTypeId)
+                         && i.InstitutionId == (model.InstitutionId ?? i.InstitutionId)
+                         && EF.Functions.ILike(i.CaseNumber, model.InstitutionCaseNumber.ToPaternSearch())
+                         && i.CaseYear == (model.InstitutionCaseYear ?? i.CaseYear));
+
+            }
+
             int _court = userContext.CourtId;
             var result = repo.AllReadonly<Document>()
                              .Include(x => x.DocumentPersons)
@@ -168,8 +190,11 @@ namespace IOWebApplication.Core.Services
                              .Include(x => x.User)
                              .ThenInclude(x => x.LawUnit)
                              .Include(x => x.Cases)
+                             .ThenInclude(x => x.CaseState)
                              .Include(x => x.DocumentCaseInfo)
                              .ThenInclude(x => x.Case)
+                             .Include(x => x.DocumentInstitutionCaseInfo)
+                             .ThenInclude(x => x.Institution)
                              .Where(x => x.CourtId == _court)
                              .Where(courtOrgSearch)
                              .Where(x => x.DocumentDirectionId == (model.DocumentDirectionId ?? x.DocumentDirectionId))
@@ -186,8 +211,12 @@ namespace IOWebApplication.Core.Services
                              .Where(linkCaseIdWhere)
                              .Where(linkDescriptionWhere)
                              .Where(regNumOtherSystem)
+                             .Where(yearOtherSystem)
+                             .Where(courtOtherSystem)
                              .Where(caseRegNumberWhere)
+                             .Where(caseEisppNumberWhere)
                              .Where(descriptionWhere)
+                             .Where(instCaseWhere)
                              .Select(x => new DocumentListVM
                              {
                                  Id = x.Id,
@@ -205,7 +234,8 @@ namespace IOWebApplication.Core.Services
                                  }),
                                  CaseId = (x.Cases.Any()) ? x.Cases.Select(c => c.Id).FirstOrDefault() : x.DocumentCaseInfo.Select(dt => dt.CaseId ?? 0).FirstOrDefault(),
                                  CaseNumber = (x.Cases.Any()) ? x.Cases.Select(c => c.RegNumber).FirstOrDefault() : x.DocumentCaseInfo.Select(dt => (dt.Case != null) ? dt.Case.RegNumber : "").FirstOrDefault(),
-                                 IsCaseRejected = x.Cases.Any() ? x.Cases.Select(c => c.CaseStateId).FirstOrDefault() == NomenclatureConstants.CaseState.Rejected : false,
+                                 IsCaseRejected = x.Cases.Any() ? NomenclatureConstants.CaseState.UnregisteredManageble.Contains(x.Cases.Select(c => c.CaseStateId).FirstOrDefault()) : false,
+                                 RejectedStateName = x.Cases.Select(c => c.CaseState.Label).FirstOrDefault(),
                                  DocumentNumberValue = x.DocumentNumberValue ?? 0,
                                  Description = x.Description
                              }).AsQueryable();
@@ -329,6 +359,7 @@ namespace IOWebApplication.Core.Services
                             .ThenInclude(x => x.Institution)
                             .Include(x => x.DocumentLinks)
                             .Include(x => x.Cases)
+                            .ThenInclude(x => x.CaseState)
                             .Include(x => x.DocumentResolutions)
                             .Where(x => x.Id == id)
                             .FirstOrDefaultAsync().ConfigureAwait(false);
@@ -366,7 +397,8 @@ namespace IOWebApplication.Core.Services
                 ActualDocumentDate = document.ActualDocumentDate,
                 MultiRegistationId = document.MultiRegistationId,
                 HasDocumentResolutions = document.DocumentResolutions.AsQueryable()
-                                            .Where(FilterExpireInfo<DocumentResolution>(false)).Any()
+                                            .Where(FilterExpireInfo<DocumentResolution>(false)).Any(),
+                DateExpired = document.DateExpired
             };
             if (!string.IsNullOrEmpty(model.MultiRegistationId))
             {
@@ -396,7 +428,9 @@ namespace IOWebApplication.Core.Services
                     Id = docPerson.Id,
                     MilitaryRangId = docPerson.MilitaryRangId,
                     PersonRoleId = docPerson.PersonRoleId,
-                    PersonMaturityId = docPerson.PersonMaturityId
+                    PersonMaturityId = docPerson.PersonMaturityId,
+                    IsDeceased = docPerson.IsDeceased,
+                    DateDeceased = docPerson.DateDeceased,
                 };
                 person.CopyFrom(docPerson);
 
@@ -432,6 +466,10 @@ namespace IOWebApplication.Core.Services
 
                     HasLawAct = savedCaseInfo.SessionActId > 0
                 };
+                if (model.DocumentCaseInfo.CourtId > 0)
+                {
+                    model.DocumentCaseInfo.CourtName = repo.GetPropById<Court, string>(x => x.Id == model.DocumentCaseInfo.CourtId, x => x.Label);
+                }
             }
             if (document.DocumentInstitutionCaseInfo.Count > 0)
             {
@@ -476,9 +514,26 @@ namespace IOWebApplication.Core.Services
                 model.CaseCodeId = _case.CaseCodeId;
                 model.EISSPNumber = _case.EISSPNumber;
                 model.ProcessPriorityId = _case.ProcessPriorityId;
+                model.CaseIsRejected = NomenclatureConstants.CaseState.UnregisteredManageble.Contains(_case.CaseStateId);
+                model.CaseRejectStateName = _case.CaseState.Label;
                 model.CaseRegisterNumber = _case.RegNumber;
                 model.CaseClassifications = caseClassificationService.FillCheckListVMs(_case.Id, 0);
             }
+
+            model.DocumentLinkToOther = repo.AllReadonly<DocumentLink>()
+                                            .Include(x => x.Document)
+                                            .Include(x => x.Document.Court)
+                                            .Include(x => x.Document.DocumentType)
+                                            .Where(x => x.PrevDocumentId == model.Id)
+                                            .Select(x => new DocumentLinkToOtherVM
+                                            {
+                                                DocumentId = x.Document.Id,
+                                                CourtName = x.Document.Court.Label,
+                                                DocumentTypeName = x.Document.DocumentType.Label,
+                                                DocumentNumber = x.Document.DocumentNumber,
+                                                DocumentDate = x.Document.DocumentDate
+                                            })
+                                            .ToList();
             return model;
         }
 
@@ -526,11 +581,11 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
-                return await document_InsertDataMulti(model).ConfigureAwait(true);
+                return document_InsertDataMulti(model);
             }
         }
 
-        private async Task<bool> document_InsertDataMulti(DocumentVM model)
+        private bool document_InsertDataMulti(DocumentVM model)
         {
             model.MultiRegistationId = null;
             // model.MultiDocumentCounter = 5;
@@ -549,7 +604,7 @@ namespace IOWebApplication.Core.Services
                     model.DocumentNumberValue = counterResult.Value;
                     model.DocumentNumber = counterResult.GetStringValue();
                     model.DocumentDate = dtDocDate;
-                    result &= await document_InsertData(model).ConfigureAwait(true);
+                    result &= document_InsertData(model);
                     if (firstDocumentId == 0)
                     {
                         firstDocumentId = model.Id;
@@ -560,99 +615,116 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
-                result = await document_InsertData(model).ConfigureAwait(true);
+                result = document_InsertData(model);
             }
             return result;
         }
 
-        private async Task<bool> document_InsertData(DocumentVM model)
+        private bool document_InsertData(DocumentVM model)
         {
-            var document = new Document()
-            {
-                CourtId = userContext.CourtId,
-                CourtOrganizationId = model.CourtOrganizationId,
-                DocumentDirectionId = model.DocumentDirectionId,
-                DocumentGroupId = model.DocumentGroupId,
-                DocumentTypeId = model.DocumentTypeId.Value,
-                DeliveryGroupId = model.DeliveryGroupId,
-                DeliveryTypeId = model.DeliveryTypeId,
-                PostOfficeDate = model.PostOfficeDate,
-                IsRestictedAccess = model.IsRestictedAccess,
-                IsSecret = model.IsSecret,
-                IsOldNumber = model.IsOldNumber,
-                MultiRegistationId = model.MultiRegistationId.EmptyToNull(),
-                Description = model.Description,
-                DateWrt = DateTime.Now,
-                UserId = userContext.UserId
-            };
-            //Запис на лица и адреси
-            document_SavePersons(model, document);
-            document_SaveCaseInfo(model, document);
-            document_SaveInstitutionCaseInfo(model, document);
-            document_SaveDocumentLink(model, document);
-            document_UpdateRegix(model, document);
-            if (model.CaseTypeId > 0)
-            {
-                document_InitNewCase(model, document);
-            }
             try
             {
-                bool isOkNumber = false;
-                //TODO: евентуално timestamp....
-                document.ActualDocumentDate = DateTime.Now;
-                if (document.IsOldNumber == true)
+                using (var ts = TransactionScopeBuilder.CreateReadCommitted())
                 {
-                    isOkNumber = true;
-                    document.DocumentNumber = model.OldDocumentNumber;
-                    document.DocumentDate = model.OldDocumentDate.Value;
-                    try
+                    var document = new Document()
                     {
-                        document.DocumentNumberValue = int.Parse(document.DocumentNumber);
+                        CourtId = userContext.CourtId,
+                        CourtOrganizationId = model.CourtOrganizationId,
+                        DocumentDirectionId = model.DocumentDirectionId,
+                        DocumentGroupId = model.DocumentGroupId,
+                        DocumentTypeId = model.DocumentTypeId.Value,
+                        DeliveryGroupId = model.DeliveryGroupId,
+                        DeliveryTypeId = model.DeliveryTypeId,
+                        PostOfficeDate = model.PostOfficeDate,
+                        IsRestictedAccess = model.IsRestictedAccess,
+                        IsSecret = model.IsSecret,
+                        IsOldNumber = model.IsOldNumber,
+                        MultiRegistationId = model.MultiRegistationId.EmptyToNull(),
+                        Description = model.Description,
+                        DateExpired = model.DateExpired
+                    };
+                    //Импорт на данни от web API
+                    if (model.DeliveryGroupId == DocumentConstants.DeliveryGroups.WebPortal)
+                    {
+                        if (model.CourtId > 0)
+                        {
+                            document.CourtId = model.CourtId;
+                        }
                     }
-                    catch (Exception ee)
+                    SetUserDateWRT(document);
+                    //Запис на лица и адреси
+                    document_SavePersons(model, document);
+                    document_SaveCaseInfo(model, document);
+                    document_SaveInstitutionCaseInfo(model, document);
+                    document_SaveDocumentLink(model, document);
+                    document_UpdateRegix(model, document);
+                    if (model.CaseTypeId > 0)
                     {
+                        document_InitNewCase(model, document);
+                    }
 
-                    }
-                }
-                else
-                {
-                    if (model.MultiDocumentCounter > 1)
+                    bool isOkNumber = false;
+                    //TODO: евентуално timestamp....
+                    document.ActualDocumentDate = DateTime.Now;
+                    if (document.IsOldNumber == true)
                     {
                         isOkNumber = true;
-                        document.DocumentNumber = model.DocumentNumber;
-                        document.DocumentNumberValue = model.DocumentNumberValue;
-                        document.DocumentDate = model.DocumentDate;
-                        document.ActualDocumentDate = document.DocumentDate;
+                        document.DocumentNumber = model.OldDocumentNumber;
+                        document.DocumentDate = model.OldDocumentDate.Value;
+                        try
+                        {
+                            document.DocumentNumberValue = int.Parse(document.DocumentNumber);
+                        }
+                        catch (Exception ee)
+                        {
+
+                        }
                     }
                     else
                     {
-                        isOkNumber = counterService.Counter_GetDocumentCounter(document);
+                        if (model.MultiDocumentCounter > 1)
+                        {
+                            isOkNumber = true;
+                            document.DocumentNumber = model.DocumentNumber;
+                            document.DocumentNumberValue = model.DocumentNumberValue;
+                            document.DocumentDate = model.DocumentDate;
+                            document.ActualDocumentDate = document.DocumentDate;
+                        }
+                        else
+                        {
+                            isOkNumber = counterService.Counter_GetDocumentCounter(document);
+                        }
                     }
-                }
-                //Регистриране на номер
-                if (isOkNumber)
-                {
-                    repo.Add<Document>(document);
-                    await repo.SaveChangesAsync().ConfigureAwait(true);
-                    model.Id = document.Id;
-
-                    epepService.AppendDocument(document, EpepConstants.ServiceMethod.Add);
-                    deadlineService.DeadLineCompanyCaseStartOnDocument(document);
-
-                    repo.SaveChanges();
-
-                    if ((document.DocumentDirectionId == DocumentConstants.DocumentDirection.Incoming) &&
-                        (document.DocumentGroupId == NomenclatureConstants.DocumentGroup.DocumentForComplain_AccompanyingDocument))
+                    //Регистриране на номер
+                    if (isOkNumber)
                     {
-                        caseSessionActComplainService.CaseSessionActComplain_CreateFromDocument(document.Id);
-                    }
+                        repo.Add<Document>(document);
+                        repo.SaveChanges();
+                        model.Id = document.Id;
 
-                    return true;
+                        epepService.AppendDocument(document, EpepConstants.ServiceMethod.Add);
+                        deadlineService.DeadLineCompanyCaseStartOnDocument(document);
+
+                        repo.SaveChanges();
+
+                        if ((document.DocumentDirectionId == DocumentConstants.DocumentDirection.Incoming) &&
+                            (document.DocumentGroupId == NomenclatureConstants.DocumentGroup.DocumentForComplain_AccompanyingDocument))
+                        {
+                            caseSessionActComplainService.CaseSessionActComplain_CreateFromDocument(document.Id);
+                        }
+
+
+                    }
+                    ts.Complete();
                 }
+                return true;
             }
             catch (Exception ex)
             {
+
                 logger.LogError(ex, $"Грешка при регистрация на документ Id={ model.Id }");
+                model.Id = 0;
+                model.DocumentNumber = null;
             }
             return false;
         }
@@ -674,13 +746,13 @@ namespace IOWebApplication.Core.Services
             document_SaveCaseInfo(model, document);
             document_SaveInstitutionCaseInfo(model, document);
             document_SaveDocumentLink(model, document);
-
+            SetUserDateWRT(document);
             repo.Update<Document>(document);
             deadlineService.DeadLineCompanyCaseStartOnDocument(document);
             try
             {
                 await repo.SaveChangesAsync().ConfigureAwait(true);
-
+                epepService.AppendDocument(document, EpepConstants.ServiceMethod.Update);
                 return true;
             }
             catch (Exception ex)
@@ -755,7 +827,9 @@ namespace IOWebApplication.Core.Services
                     {
                         PersonRoleId = person.PersonRoleId,
                         PersonMaturityId = person.PersonMaturityId,
-                        MilitaryRangId = person.MilitaryRangId
+                        MilitaryRangId = person.MilitaryRangId,
+                        IsDeceased = person.IsDeceased,
+                        DateDeceased = person.DateDeceased
                     };
                     newElement.CopyFrom(person);
                     PersonNamesBase_SaveData(newElement);
@@ -971,14 +1045,20 @@ namespace IOWebApplication.Core.Services
                         .ToSelectList(x => x.Id, x => x.Label);
         }
 
-        public IEnumerable<LabelValueVM> GetDocument(int courtId, string documentNumber)
+        public IEnumerable<LabelValueVM> GetDocument(int courtId, string documentNumber, int docDirection)
         {
             documentNumber = documentNumber?.ToLower();
+            Expression<Func<Document, bool>> whereDir = x => true;
+            if (docDirection > 0)
+            {
+                whereDir = x => x.DocumentDirectionId == docDirection;
+            }
 
             var result = repo.AllReadonly<Document>()
                             .Include(x => x.DocumentType)
                             .Where(x => x.CourtId == courtId)
-                            .Where(x => x.DocumentNumber.ToLower() == documentNumber)
+                            .Where(x => x.DocumentNumber == documentNumber)
+                            .Where(whereDir)
                             .OrderBy(x => x.DocumentDate)
                             .Select(x => new LabelValueVM
                             {
@@ -1535,86 +1615,96 @@ namespace IOWebApplication.Core.Services
             model.DateFrom = NomenclatureExtensions.ForceStartDate(model.DateFrom);
             model.DateTo = NomenclatureExtensions.ForceEndDate(model.DateTo);
 
-            var documentCaseInfos = repo.AllReadonly<DocumentCaseInfo>()
-                                        .Include(x => x.Document)
-                                        .ThenInclude(x => x.DocumentType)
-                                        .Include(x => x.Document)
-                                        .ThenInclude(x => x.DocumentGroup)
-                                        .Include(x => x.Case)
-                                        .ThenInclude(x => x.CaseGroup)
-                                        .Include(x => x.Case)
-                                        .ThenInclude(x => x.CaseType)
-                                        .Include(x => x.Case)
-                                        .ThenInclude(x => x.CaseCode)
-                                        .Include(x => x.Case)
-                                        .ThenInclude(x => x.Document)
-                                        .ThenInclude(x => x.DocumentType)
-                                        .Where(x => (x.CourtId == userContext.CourtId) &&
-                                                    (x.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument) &&
-                                                    (x.Document.DocumentDate >= model.DateFrom && x.Document.DocumentDate <= model.DateTo) &&
-                                                    (model.DocumentGroupId > 0 ? x.Document.DocumentGroupId == model.DocumentGroupId : true) &&
-                                                    (model.DocumentTypeId > 0 ? x.Document.DocumentTypeId == model.DocumentTypeId : true) &&
-                                                    (model.CaseGroupId > 0 ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
-                                                    (model.CaseTypeId > 0 ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
-                                                    (model.CaseCodeId > 0 ? x.Case.CaseCodeId == model.CaseCodeId : true))
-                                        .ToList();
-
             var caseInfoSprVMs = new List<DocumentCaseInfoSprVM>();
 
-            foreach (var document in documentCaseInfos)
+            if ((model.DocumentGroupId == -1 && model.SessionDocTypeId == -1) ||
+                (model.DocumentGroupId > -1))
             {
-                var doc = repo.AllReadonly<CaseSessionDoc>()
-                              .Include(d => d.CaseSession)
-                              .ThenInclude(d => d.SessionType)
-                              .Where(d => d.DocumentId == document.DocumentId &&
-                                          d.DateExpired == null)
-                              .FirstOrDefault();
+                var documentCaseInfos = repo.AllReadonly<DocumentCaseInfo>()
+                                            .Include(x => x.Document)
+                                            .ThenInclude(x => x.DocumentType)
+                                            .Include(x => x.Document)
+                                            .ThenInclude(x => x.DocumentGroup)
+                                            .Include(x => x.Case)
+                                            .ThenInclude(x => x.CaseGroup)
+                                            .Include(x => x.Case)
+                                            .ThenInclude(x => x.CaseType)
+                                            .Include(x => x.Case)
+                                            .ThenInclude(x => x.CaseCode)
+                                            .Include(x => x.Case)
+                                            .ThenInclude(x => x.Document)
+                                            .ThenInclude(x => x.DocumentType)
+                                            .Where(x => (x.CourtId == userContext.CourtId) &&
+                                                        (x.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument) &&
+                                                        (x.Document.DocumentDate >= model.DateFrom && x.Document.DocumentDate <= model.DateTo) &&
+                                                        (model.DocumentGroupId > 0 ? x.Document.DocumentGroupId == model.DocumentGroupId : true) &&
+                                                        (model.DocumentTypeId > 0 ? x.Document.DocumentTypeId == model.DocumentTypeId : true) &&
+                                                        (model.CaseGroupId > 0 ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
+                                                        (model.CaseTypeId > 0 ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
+                                                        (model.CaseCodeId > 0 ? x.Case.CaseCodeId == model.CaseCodeId : true))
+                                            .ToList();
 
-                var caseInfoSprVM = new DocumentCaseInfoSprVM
+                foreach (var document in documentCaseInfos)
                 {
-                    DocumentNumberYear = document.Document.DocumentNumber + "/" + document.Document.DocumentDate.Date.Year + "г.",
-                    DocumentDate = document.Document.DocumentDate,
-                    DocumentTypeLabel = document.Document.DocumentType.Label,
-                    CaseInfo = (document.Case != null) ? document.Case.CaseType.Code + " " + document.Case.RegNumber : string.Empty,
-                    CaseId = (document.Case != null) ? document.Case.Id : (int?)null,
-                    IsCase = (document.Case != null),
-                    CaseCodeLabel = (document.Case != null) ? document.Case.CaseCode.Code + " " + document.Case.CaseCode.Label : string.Empty,
-                    CaseDocumentInfo = (document.Case != null) ? document.Case.Document.DocumentType.Label + " " + document.Case.Document.DocumentNumber + "/" + document.Case.Document.DocumentDate.Date.Year + "г." : string.Empty,
-                    CaseSessionInfo = (doc != null) ? ((doc.CaseSession != null) ? (doc.CaseSession.SessionType.Label + " " + doc.CaseSession.DateFrom.ToString("dd.MM.yyyy")) : string.Empty) : string.Empty
+                    var doc = repo.AllReadonly<CaseSessionDoc>()
+                                  .Include(d => d.CaseSession)
+                                  .ThenInclude(d => d.SessionType)
+                                  .Where(d => d.DocumentId == document.DocumentId &&
+                                              d.DateExpired == null)
+                                  .FirstOrDefault();
+
+                    var caseInfoSprVM = new DocumentCaseInfoSprVM
+                    {
+                        DocumentNumberYear = document.Document.DocumentNumber + "/" + document.Document.DocumentDate.Date.Year + "г.",
+                        DocumentDate = document.Document.DocumentDate,
+                        DocumentTypeLabel = document.Document.DocumentType.Label,
+                        CaseInfo = (document.Case != null) ? document.Case.CaseType.Code + " " + document.Case.RegNumber : string.Empty,
+                        CaseId = (document.Case != null) ? document.Case.Id : (int?)null,
+                        IsCase = (document.Case != null),
+                        CaseCodeLabel = (document.Case != null) ? document.Case.CaseCode.Code + " " + document.Case.CaseCode.Label : string.Empty,
+                        CaseDocumentInfo = (document.Case != null) ? document.Case.Document.DocumentType.Label + " " + document.Case.Document.DocumentNumber + "/" + document.Case.Document.DocumentDate.Date.Year + "г." : string.Empty,
+                        CaseSessionInfo = (doc != null) ? ((doc.CaseSession != null) ? (doc.CaseSession.SessionType.Label + " " + doc.CaseSession.DateFrom.ToString("dd.MM.yyyy")) : string.Empty) : string.Empty
+                    };
+
+                    caseInfoSprVMs.Add(caseInfoSprVM);
                 };
+            }
 
-                caseInfoSprVMs.Add(caseInfoSprVM);
-            };
+            if ((model.DocumentGroupId == -1 && model.SessionDocTypeId == -1) ||
+                (model.SessionDocTypeId > -1))
+            {
+                var caseSessionFastDocuments = repo.AllReadonly<CaseSessionFastDocument>()
+                                                   .Include(x => x.SessionDocType)
+                                                   .Include(x => x.CaseSession)
+                                                   .ThenInclude(x => x.SessionType)
+                                                   .Include(x => x.Case)
+                                                   .ThenInclude(x => x.CaseGroup)
+                                                   .Include(x => x.Case)
+                                                   .ThenInclude(x => x.CaseType)
+                                                   .Include(x => x.Case)
+                                                   .ThenInclude(x => x.CaseCode)
+                                                   .Where(x => (x.CourtId == userContext.CourtId) &&
+                                                               (x.CaseSession.DateFrom >= model.DateFrom && x.CaseSession.DateFrom <= model.DateTo) &&
+                                                               (model.SessionDocTypeId > 0 ? x.SessionDocTypeId == model.SessionDocTypeId : true) &&
+                                                               (model.CaseGroupId > 0 ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
+                                                               (model.CaseTypeId > 0 ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
+                                                               (model.CaseCodeId > 0 ? x.Case.CaseCodeId == model.CaseCodeId : true))
+                                                   .Select(x => new DocumentCaseInfoSprVM
+                                                   {
+                                                       DocumentNumberYear = x.CaseSession.DateFrom.Year.ToString() + "г.",
+                                                       DocumentDate = x.CaseSession.DateFrom,
+                                                       DocumentTypeLabel = x.SessionDocType.Label,
+                                                       CaseId = x.Case.Id,
+                                                       IsCase = true,
+                                                       CaseInfo = x.Case.CaseType.Code + " " + x.Case.RegNumber,
+                                                       CaseCodeLabel = x.Case.CaseCode.Code + " " + x.Case.CaseCode.Label,
+                                                       CaseDocumentInfo = x.Case.Document.DocumentType.Label + " " + x.Case.Document.DocumentNumber + "/" + x.Case.Document.DocumentDate.Date.Year + "г.",
+                                                       CaseSessionInfo = x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy")
+                                                   }).ToList();
 
-            var caseSessionFastDocuments = repo.AllReadonly<CaseSessionFastDocument>()
-                                               .Include(x => x.SessionDocType)
-                                               .Include(x => x.CaseSession)
-                                               .ThenInclude(x => x.SessionType)
-                                               .Include(x => x.Case)
-                                               .ThenInclude(x => x.CaseGroup)
-                                               .Include(x => x.Case)
-                                               .ThenInclude(x => x.CaseType)
-                                               .Include(x => x.Case)
-                                               .ThenInclude(x => x.CaseCode)
-                                               .Where(x => (x.CourtId == userContext.CourtId) &&
-                                                           (x.CaseSession.DateFrom >= model.DateFrom && x.CaseSession.DateFrom <= model.DateTo) &&
-                                                           (model.CaseGroupId > 0 ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
-                                                           (model.CaseTypeId > 0 ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
-                                                           (model.CaseCodeId > 0 ? x.Case.CaseCodeId == model.CaseCodeId : true))
-                                               .Select(x => new DocumentCaseInfoSprVM
-                                               {
-                                                   DocumentNumberYear = x.CaseSession.DateFrom.Year.ToString() + "г.",
-                                                   DocumentDate = x.CaseSession.DateFrom,
-                                                   DocumentTypeLabel = x.SessionDocType.Label,
-                                                   CaseId = x.Case.Id,
-                                                   IsCase = true,
-                                                   CaseInfo = x.Case.CaseType.Code + " " + x.Case.RegNumber,
-                                                   CaseCodeLabel = x.Case.CaseCode.Code + " " + x.Case.CaseCode.Label,
-                                                   CaseDocumentInfo = x.Case.Document.DocumentType.Label + " " + x.Case.Document.DocumentNumber + "/" + x.Case.Document.DocumentDate.Date.Year + "г.",
-                                                   CaseSessionInfo = x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy")
-                                               }).ToList();
+                caseInfoSprVMs.AddRange(caseSessionFastDocuments);
+            }
 
-            caseInfoSprVMs.AddRange(caseSessionFastDocuments);
             return caseInfoSprVMs.AsQueryable();
         }
 
@@ -1713,6 +1803,8 @@ namespace IOWebApplication.Core.Services
                     }
 
                     repo.SaveChanges();
+
+                    epepService.AppendDocument(saved, EpepConstants.ServiceMethod.Delete);
                     return true;
                 }
                 else
@@ -1940,6 +2032,95 @@ namespace IOWebApplication.Core.Services
             }
 
             return result;
+        }
+
+        public IQueryable<DocumentInfoVM> DocumentsOtherFromSameCourtByCaseId_Select(int CaseId)
+        {
+            var listCaseIdByCaseInfo = repo.AllReadonly<Case>()
+                                           .Include(x => x.Document)
+                                           .ThenInclude(x => x.DocumentCaseInfo)
+                                           .Where(x => x.Id == CaseId)
+                                           .SelectMany(x => x.Document.DocumentCaseInfo.Where(b => (b.CaseId ?? 0) > 0).Select(b => b.CaseId))
+                                           .ToList();
+
+            var caseCase = repo.GetById<Case>(CaseId);
+
+            if (listCaseIdByCaseInfo == null)
+                return (new List<DocumentInfoVM>()).AsQueryable();
+
+            if (!listCaseIdByCaseInfo.Any())
+                return (new List<DocumentInfoVM>()).AsQueryable();
+
+            int _court = userContext.CourtId;
+            return repo.AllReadonly<DocumentCaseInfo>()
+                       .Where(x => x.Document.CourtId == _court &&
+                                   listCaseIdByCaseInfo.Contains(x.CaseId) &&
+                                   x.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.InitialDocument &&
+                                   x.Document.DateExpired == null &&
+                                   x.Document.Id != caseCase.DocumentId)
+                       .Select(x => new DocumentInfoVM
+                       {
+                           Id = x.Document.Id,
+                           Title = $"Вх.№ {x.Document.DocumentNumber}/{x.Document.DocumentDate:dd.MM.yyyy} {x.Document.DocumentType.Label}",
+                           DirectionId = x.Document.DocumentDirectionId,
+                           IsSecret = (x.Document.IsSecret ?? false),
+                           IsRestriction = x.Document.IsRestictedAccess,
+                           DocumentResolutions = x.Document.DocumentResolutions.Where(c => c.DateExpired == null && c.ResolutionStateId == NomenclatureConstants.ResolutionStates.Enforced).Select(c => new DocumentResolutionListVM() { Id = c.Id, ResolutionTypeLabel = c.ResolutionType.Label, Label = c.ResolutionType.Label + " " + c.RegNumber + "/" + (c.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy"), RegDate = c.RegDate, RegNumber = c.RegNumber }).ToList(),
+                           DocumentDate = x.Document.DocumentDate
+                       }).AsQueryable();
+        }
+
+        public IQueryable<DocumentInfoVM> DocumentsOtherFromDifferentCourtByCaseId_Select(int CaseId)
+        {
+            int _court = userContext.CourtId;
+            return repo.AllReadonly<DocumentCaseInfo>()
+                       .Where(x => x.Document.CourtId != _court &&
+                                   x.CaseId == CaseId &&
+                                   x.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.InitialDocument &&
+                                   x.Document.DateExpired == null)
+                       .Select(x => new DocumentInfoVM
+                       {
+                           Id = x.Document.Id,
+                           Title = $"Вх.№ {x.Document.DocumentNumber}/{x.Document.DocumentDate:dd.MM.yyyy} {x.Document.DocumentType.Label}",
+                           DirectionId = x.Document.DocumentDirectionId,
+                           IsSecret = (x.Document.IsSecret ?? false),
+                           IsRestriction = x.Document.IsRestictedAccess,
+                           DocumentResolutions = x.Document.DocumentResolutions.Where(c => c.DateExpired == null && c.ResolutionStateId == NomenclatureConstants.ResolutionStates.Enforced).Select(c => new DocumentResolutionListVM() { Id = c.Id, ResolutionTypeLabel = c.ResolutionType.Label, Label = c.ResolutionType.Label + " " + c.RegNumber + "/" + (c.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy"), RegDate = c.RegDate, RegNumber = c.RegNumber }).ToList(),
+                           DocumentDate = x.Document.DocumentDate,
+                           CourtId = x.Document.CourtId,
+                           CourtLabel = x.Document.Court.Label
+                       }).AsQueryable();
+        }
+
+        public List<SelectListItem> GetCompliantDocumentsByCaseId(int caseId)
+        {
+            return repo.AllReadonly<DocumentCaseInfo>()
+                             .Include(x => x.Document)
+                             .ThenInclude(x => x.DocumentType)
+                             .Where(x => x.CaseId == caseId)
+                             .Where(x => x.Document.DateExpired == null && x.Document.CourtId == userContext.CourtId)
+                             .Where(x => x.Document.DocumentDirectionId == DocumentConstants.DocumentDirection.Incoming)
+                             .Select(x => x.Document)
+                             .OrderByDescending(x => x.Id)
+                             .Select(x => new SelectListItem
+                             {
+                                 Value = x.Id.ToString(),
+                                 Text = $"{x.DocumentType.Label} {x.DocumentNumber}/{x.DocumentDate:dd.MM.yyyy}"
+                             }).ToList();
+
+        }
+
+        public List<SelectListItem> GetDocumentPersonsByDocumentId(long documentId)
+        {
+            return repo.AllReadonly<DocumentPerson>()
+                            .Include(x => x.PersonRole)
+                            .Where(x => x.DocumentId == documentId)
+                            .OrderBy(x => x.FullName)
+                            .Select(x => new SelectListItem
+                            {
+                                Value = x.Id.ToString(),
+                                Text = $"{x.FullName} - {x.PersonRole.Label}"
+                            }).ToList();
         }
     }
 }

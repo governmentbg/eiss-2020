@@ -11,8 +11,8 @@ using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.UserContext;
 using IOWebApplication.Infrastructure.Http;
 using IOWebApplication.Infrastructure.Services;
-using IOWebApplication.Providers;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -45,7 +45,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 var factory = x.GetRequiredService<IUrlHelperFactory>();
                 return factory.GetUrlHelper(actionContext);
             });
-
+            services.Configure<FormOptions>(options =>
+            {
+                options.ValueCountLimit = int.MaxValue;
+                options.ValueLengthLimit = int.MaxValue;
+                options.MultipartBodyLengthLimit = long.MaxValue; // <-- !!! long.MaxValue
+                options.MultipartBoundaryLengthLimit = int.MaxValue;
+                options.MultipartHeadersCountLimit = int.MaxValue;
+                options.MultipartHeadersLengthLimit = int.MaxValue;
+            });
             services.AddScoped<IIOSignToolsService, IOSignToolsService>();
             services.AddScoped<ICommonService, CommonService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
@@ -75,10 +83,10 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<ICaseSessionFastDocumentService, CaseSessionFastDocumentService>();
             services.AddScoped<IWorkTaskService, WorkTaskService>();
             services.AddScoped<ICaseLoadIndexService, CaseLoadIndexService>();
+            services.AddScoped<ICaseLawyerHelpService, CaseLawyerHelpService>();
             services.AddScoped<ICasePersonSentenceService, CasePersonSentenceService>();
             services.AddScoped<ICaseLoadCorrectionService, CaseLoadCorrectionService>();
             services.AddScoped<ICaseSessionActComplainService, CaseSessionActComplainService>();
-
             services.AddScoped<ICaseSessionActService, CaseSessionActService>();
             services.AddScoped<ICasePersonLinkService, CasePersonLinkService>();
             services.AddScoped<ICaseNotificationService, CaseNotificationService>();
@@ -109,6 +117,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IRegixReportService, RegixReportService>();
             services.AddScoped<ICaseFastProcessService, CaseFastProcessService>();
             services.AddScoped<IEisppService, EisppService>();
+            services.AddScoped<IEisppImportService, EisppImportService>();
             services.AddScoped<IEisppRulesService, EisppRulesService>();
             services.AddScoped<IWorkNotificationService, WorkNotificationService>();
             services.AddScoped<ICourtArchiveService, CourtArchiveService>();
@@ -120,6 +129,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IEpepConnectionService, EpepConnectionService>();
             services.AddScoped<IExcelReportService, ExcelReportService>();
             services.AddScoped<IMigrationDataService, MigrationDataService>();
+            //services.AddScoped<IOAuditLogDataProvider, IOAuditLogDataProvider>();
             services.AddScoped<ITempFileHandler, TempFileHandler>();
             services.AddScoped<ICaseLawUnitTaskChangeService, CaseLawUnitTaskChangeService>();
             services.AddScoped<IDocumentResolutionService, DocumentResolutionService>();
@@ -127,8 +137,13 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<ICaseDeactivationService, CaseDeactivationService>();
             services.AddScoped<IDeactivateItemService, DeactivateItemService>();
             services.AddScoped<IStatisticsReportService, StatisticsReportService>();
-
+            services.AddScoped<IVKSSelectionService, VKSSelectionService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
+            services.AddScoped<IApiDocumentService, ApiDocumentService>();
+            services.AddScoped<IDocumentPersonLinkService, DocumentPersonLinkService>();
+            services.AddScoped<IDocumentNotificationService, DocumentNotificationService>();
+            services.AddScoped<IVksNotificationService, VksNotificationService>();
+            services.AddScoped<IElasticService, ElasticService>();
         }
 
         /// <summary>
@@ -148,6 +163,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 new MongoClient(Configuration.GetConnectionString("MongoDbConnection"))
             );
 
+            //Настройки на Одит лога
+            //Audit.Core.Configuration.Setup()
+            //.UsePostgreSql(config => config
+            //    .ConnectionString(Configuration.GetConnectionString("DefaultConnection"))
+            //    .Schema("audit_log")
+            //    .TableName("audit_log")
+            //    .IdColumnName("id")
+            //    .DataColumn("data", DataType.JSONB)
+            //    .LastUpdatedColumnName("updated_date"));            
         }
     }
 }

@@ -7,10 +7,10 @@
     <input asp-for="Warrning" type="hidden" />
     @if (string.IsNullOrEmpty(Model.Warrning))
     {
-        <label><input asp-for="Checked" type="checkbox">&nbsp;&nbsp;@Model.Label</label>
+        <label><input asp-for="Checked" type="checkbox">&nbsp;&nbsp;@Model.Label.Decode()</label>
     }
     else
     {
-        <label><input asp-for="Checked" type="checkbox">&nbsp;&nbsp;@Model.Label <i class="fa fa-exclamation-triangle text-red"></i><font color="red">@Model.Warrning</font></label>
+        <label><input asp-for="Checked" type="checkbox">&nbsp;&nbsp;@Model.Label.Decode() <i class="fa fa-exclamation-triangle text-red"></i><font color="red">@Model.Warrning</font></label>
     }
 </div>

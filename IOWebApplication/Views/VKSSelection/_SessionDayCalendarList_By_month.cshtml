@@ -1,0 +1,52 @@
+﻿@model List<VksSessionDayCalendarVM>
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+
+
+<table width="100%" class="" style="border-collapse:collapse;">
+
+    @foreach (var Year in Model.OrderBy(x => x.SelectionYear).Select(x => x.SelectionYear).Distinct().ToArray())
+    {
+        <tr>
+            <td>
+                <h2>@Year Година</h2>
+            </td>
+        </tr>
+
+
+        @foreach (var month in Model.Where(y => y.SelectionYear == Year).OrderBy(y => y.SelectionMonth).Select(y => y.SelectionMonth).Distinct().ToArray())
+
+        {
+            <tr>
+                <td>
+
+                    <h3>@Model.Where(z => z.SelectionMonth == month).Where(z => z.SelectionYear == Year).FirstOrDefault().SelectionMonthString</h3>
+                </td>
+            </tr>
+
+            @foreach (var item in Model.Where(k => k.SelectionYear == Year).Where(k => k.SelectionMonth == month).ToList())
+            {
+                <partial name="_SessionDayCalendar" model="@item" />
+            }
+        }
+
+
+
+
+
+
+
+
+    }
+
+</table>
+
+
+<style>
+    .tbl-day-lawunit td {
+    padding:0 3px;
+
+
+    }
+</style>

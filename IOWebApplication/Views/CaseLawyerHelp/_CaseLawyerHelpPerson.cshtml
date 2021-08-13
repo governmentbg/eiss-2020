@@ -1,0 +1,90 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+<div id="myDiv">
+    @if (access.CanChange)
+    {
+        <div class="row">
+            <div class="col-md-12 text-right pb-15">
+                <a asp-controller="CaseLawyerHelp" asp-action="AddCaseLawyerHelpPerson" asp-route-caseLawyerHelpId="@Model.Id" class="btn btn-success btn-sm">
+                    <i class="fa fa-plus"></i>
+                    Добави лице
+                </a>
+                <a asp-controller="CaseLawyerHelp" asp-action="EditMultiCaseLawyerHelpPerson" asp-route-id="@Model.Id" class="btn btn-info btn-sm">
+                    <i class="fa fa-graduation-cap"></i>
+                    Данни за служебен защитник на всички лица
+                </a>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <table id="caseLawyerHelpMainTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseLawyerHelpMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseLawyerHelpPerson", "CaseLawyerHelp")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseLawyerHelpId = @Model.Id;
+                    }
+
+                },
+                dom: 'rt',
+                columns: [
+                    {
+                        name: 'casePersonText',
+                        data: 'casePersonText',
+                        title: 'Лице, за което се иска правна помощ',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'assignedLawyerText',
+                        data: 'assignedLawyerText',
+                        title: 'Назначен адвокат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#caseLawyerHelpTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+</script>
+
+<script id="caseLawyerHelpTemplateEdit" type="text/x-handlebars-template">
+    @if (access.CanChange)
+    {
+        <a href="@Url.Action("EditCaseLawyerHelpPerson", "CaseLawyerHelp")?id={{this}}" class="btn btn-info btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+    else
+    {
+        <a href="@Url.Action("EditCaseLawyerHelpPerson", "CaseLawyerHelp")?id={{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    }
+</script>
+
+

@@ -32,6 +32,7 @@ namespace IOWebApplication.Core.Contracts
         string IsBusyLawUnit(DateTime DateFrom, int DateTo_Minutes, int ModelId, int CaseId);
         IQueryable<CaseSessionSprVM> CaseSessionReportMaturity_Select(int courtId, CaseFilterReport model);
         List<SelectListItem> GetDDL_CaseSessionForCopy(int CaseSessionId);
+        List<SelectListItem> GetDropDownList_CaseSessionByCase(int CaseId, DateTime? DateFrom);
         IQueryable<CaseSprVM> CaseSessionWithActProject_Select(int courtId, CaseFilterReport model);
         bool IsCanExpired(int CaseSessionId);
         bool IsLastConductedSession(int CaseSessionId);
@@ -42,5 +43,7 @@ namespace IOWebApplication.Core.Contracts
         bool IsExistCaseSession(int CaseId);
         List<CheckListVM> GetCheckListCaseSession(int caseId);
         CaseSessionResultEditVM GetSessionResultEditVMById(int Id);
+        bool IsExistSessionWithoutAct(int CaseId, int SessionId, int SessionTypeId);
+        bool IsExistLastSessionWithoutAct(int CaseId, int SessionId);
     }
 }

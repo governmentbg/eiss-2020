@@ -96,5 +96,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Съдия-докладчик")]
         public string JudgeReport { get; set; }
+
+        [Display(Name = "Отделение/Състав")]
+        public string DepartmentOtdelenieText { get; set; }
     }
 }

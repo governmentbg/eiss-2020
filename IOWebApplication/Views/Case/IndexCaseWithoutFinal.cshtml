@@ -86,9 +86,21 @@
                         name: 'caseRegNum',
                         data: 'caseRegNum',
                         title: 'Номер/Година',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
                         sortable: true,
                         searchable: true
                     },
+                    //{
+                    //    name: 'caseRegNum',
+                    //    data: 'caseRegNum',
+                    //    title: 'Номер/Година',
+                    //    sortable: true,
+                    //    searchable: true
+                    //},
                     {
                         name: 'judgeReport',
                         data: 'judgeReport',

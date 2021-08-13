@@ -54,6 +54,13 @@ namespace IOWebApplication.Controllers
         public IActionResult Edit(CaseSessionDoc model)
         {
             SetViewbag(model.CaseSessionId);
+
+            var _session = service.GetById<CaseSession>(model.CaseSessionId);
+            if (_session.DateExpired != null)
+            {
+                ModelState.AddModelError("", "Заседанието е изтрито. Проверете данните по делото.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(nameof(Edit), model);
@@ -138,7 +145,7 @@ namespace IOWebApplication.Controllers
                 CheckListViewVM checkListView = service.CheckListViewVM_Fill(model.ObjectId);
                 if (checkListView.checkListVMs.Count < 1)
                 {
-                    SetSuccessMessage(MessageConstant.Values.SaveOK + " Няма документи за добавяне." );
+                    SetSuccessMessage(MessageConstant.Values.SaveOK + " Няма документи за добавяне.");
                     return RedirectToAction("Preview", "CaseSession", new { id = model.ObjectId });
                 }
                 else

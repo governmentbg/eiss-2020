@@ -17,6 +17,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public long SourceId { get; set; }
         public long? SubSourceId { get; set; }
 
+        public string UserCreatedId { get; set; }
+
         [Display(Name = "Вид задача")]
         [Required(ErrorMessage = "Изберете {0}.")]
         public int TaskTypeId { get; set; }

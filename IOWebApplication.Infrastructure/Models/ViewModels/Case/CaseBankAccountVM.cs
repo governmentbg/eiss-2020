@@ -14,5 +14,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string BankName { get; set; }
         public string Description { get; set; }
         public bool IsBankAccount { get; set; }
+        public bool? VisibleEL { get; set; }
     }
 }

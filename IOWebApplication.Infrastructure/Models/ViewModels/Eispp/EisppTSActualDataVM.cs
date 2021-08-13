@@ -11,6 +11,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         public string ProcessName { get; set; }
         public string ProcessDate { get; set; }
 
+        public string ErrorMsg { get; set; }
+        public string LastRead { get; set; }
+
         public IList<EisppTSActualDataPersonVM> Persons { get; set; }
         public IList<EisppTSActualDataCrimeVM> Crimes { get; set; }
         public IList<EisppTSActualDataCaseVM> Cases { get; set; }

@@ -7,6 +7,7 @@
     @Html.HiddenFor(x => x.ExpireSubmitUrl)
     @Html.HiddenFor(x => x.ReturnUrl)
     @Html.HiddenFor(x => x.OtherBool, "Boolean")
+    @Html.HiddenFor(x => x.OtherId, "Int32Nullable")
     @Html.EditorFor(x => x.DescriptionExpired, "Textarea")
     <div class="form-group">
         <input type="submit" id="btnExpireObjectSubmit" onclick="validationCheck();" value="Премахване" class="btn btn-danger submit" />
@@ -24,7 +25,7 @@
                 } else {
                     if (data.responseJSON.redirectUrl.indexOf("()") !== -1) {
                         let funcName = data.responseJSON.redirectUrl.replace("()", "");
-                        console.log(funcName);
+                        //console.log(funcName);
                         if (typeof window[funcName] == "function") {
                             window[funcName]();
                         }
@@ -37,7 +38,7 @@
                 $('#btnExpireObjectSubmit').removeAttr('disabled');
             }
         }, function (error) {
-            console.log(error);
+            //console.log(error);
             $('#modalMessageContainer').html('Проблем при запис.');
             $('#btnExpireObjectSubmit').removeAttr('disabled');
         }, function () {

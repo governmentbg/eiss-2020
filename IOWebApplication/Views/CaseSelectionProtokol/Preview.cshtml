@@ -122,7 +122,7 @@
                             }
                         </tr>
 
-                        @foreach (var item in Model.LawUnits.Where(x => x.StateId != NomenclatureConstants.SelectionProtokolLawUnitState.Exclude))
+                        @foreach (var item in Model.LawUnits.Where(x => x.StateId != NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.LawUnitFullName))
                         {
                             string trclass = "";
 
@@ -202,7 +202,7 @@
                                 <th colspan="2"><b>Причини</b></th>
                             </tr>
 
-                            @foreach (var item in Model.LawUnits.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude))
+                            @foreach (var item in Model.LawUnits.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.LawUnitFullName))
                             {
                                 <tr>
                                     <td> @item.LawUnitFullName</td>

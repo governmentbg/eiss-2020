@@ -5,28 +5,44 @@
     var visibleValueTwo = true;
     if (ViewData["visibleValueTwo"] != null)
     {
+
         visibleValueTwo = (bool)ViewData["visibleValueTwo"];
     }
+
+    var fractionTitle = "Въведете отношение като рационална дроб от вида 1/2 или 3/8";
 }
 
-<div class="row">
+<div class="row ">
     <div class="form-group">
         <input asp-for="Id" type="hidden" />
         <input asp-for="Label" type="hidden" />
         <input asp-for="LabelOne" type="hidden" />
         <input asp-for="LabelTwo" type="hidden" />
-        <div class="col-sm-6 text-right">
+        <div class="col-sm-5 text-right">
             <label style="margin-top:32px">@Model.Label</label>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-3 cpl-fraction-edits">
+            <table border="0">
+                <tr>
+                    <td colspan="3"><label title="@fractionTitle">Отношение</label></td>
+                </tr>
+                <tr>
+                    <td><input asp-for="AmountNumerator" class="form-control" title="@fractionTitle"></td>
+                    <td>&nbsp;/&nbsp;</td>
+                    <td><input asp-for="AmountDenominator" class="form-control" title="@fractionTitle"></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="col-sm-2">
             <label>@Model.LabelOne</label>
-            <input asp-for="ValueOne" class="form-control form-control-decimal">
+            <input asp-for="ValueOne" id="ValueOne" class="form-control form-control-decimal cpl-decimal-edit">
         </div>
         @if (visibleValueTwo)
         {
-            <div class="col-sm-3">
+            <div class="col-sm-2">
                 <label>@Model.LabelTwo</label>
-                <input asp-for="ValueTwo" class="form-control form-control-decimal">
+                <input asp-for="ValueTwo" id="ValueTwo" class="form-control form-control-decimal cpl-decimal-edit">
             </div>
         }
     </div>

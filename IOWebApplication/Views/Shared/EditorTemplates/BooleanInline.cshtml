@@ -1,0 +1,11 @@
+﻿@model bool?
+@{ 
+    bool value = Model ?? false;
+}
+<div class="form-group">
+    <label asp-for="@Model" class="control-label">
+        @Html.CheckBox("",value) @Html.DisplayNameFor(model => model)
+    </label>
+   <br />
+    <span asp-validation-for="@Model" class="text-danger"></span>
+</div>

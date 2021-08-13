@@ -19,13 +19,13 @@ namespace IOWebApplication.Core.Contracts
         bool Case_SaveData(CaseEditVM model);
         CaseVM Case_GetById(long id);
         CaseMigrationVM Case_GetPriorCase(long documentId);
-        CaseMigrationVM Case_GetPriorCaseEISPP(long documentId,string eisppNumber);
+        CaseMigrationVM Case_GetPriorCaseEISPP(long documentId, string eisppNumber);
         bool TestHistory(int id);
         CaseEditVM Case_SelectForEdit(int id);
         bool CheckCaseOldNumber(int CaseGroupId, string oldNumber, DateTime oldDate);
         IQueryable<CaseFolderItemVM> Case_SelectFolder(int id);
         IEnumerable<LabelValueVM> GetCasesByCourt(int courtId, int? caseId, string query);
-        IEnumerable<SelectListItem> GetDDL_SessionActsByCase(int caseId, bool addDefaultElement = false);
+        IEnumerable<SelectListItem> GetDDL_SessionActsByCase(int caseId, bool addDefaultElement = false, bool declaredOnly = true);
         CaseElectronicFolderVM CaseElectronicFolder_Select(int CaseId);
         CaseProceedingsVM CaseProceedings_Select(int CaseId);
         bool SaveDataDepersonalizationHistory(int CaseId, IEnumerable<DepersonalizationHistoryItem> model, int actId, bool saveDepersonalizeUser);

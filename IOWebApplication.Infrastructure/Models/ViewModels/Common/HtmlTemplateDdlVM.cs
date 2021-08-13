@@ -15,5 +15,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public bool? HaveExpertReport { get; set; }
         public bool? HaveMultiActComplain { get; set; }
         public bool? HaveDocumentSenderPerson { get; set; }
+        public bool? HaveInstitutionDocument { get; set; }
+        public bool? HaveMoneyObligation { get; set; }
+        public bool? HaveNotificationIspnReason { get; set; }
     }
 }

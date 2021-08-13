@@ -9,6 +9,7 @@
 
     <div class="row set-counter-val">
         @Html.HiddenFor(x => Model[i].Id)
+        @Html.HiddenFor(x => Model[i].OldValue)
         <div class="col-lg-4 counter-label">
             @Model[i].CounterTypeName
         </div>

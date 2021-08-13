@@ -14,6 +14,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public int[] OtherCourtsJudgeLawUnits { get; set; }
         public int[] OtherCourts { get; set; }
         public int[] ToCourts { get; set; }
+        public int[] AllMigrationCourts { get; set; }
         public int[] InitMigrations { get; set; }
         public int LastInMigrationCaseId { get; set; }
         public bool IsRestrictedAccess { get; set; }

@@ -1,0 +1,37 @@
+﻿@model VksSelectionOneMonthListVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+
+
+<table  class="no-border protokol-table" >
+    <tr>
+        <td   colspan="2">
+            <b>
+                Месец @Model.SelectionMonthString
+
+            </b>
+        </td>
+    </tr>
+
+    @for (int _session = 0; _session < Model.MonthSessions.Count; _session++)
+    {
+        var sessionItem = Model.MonthSessions[_session];
+
+
+        <tr>
+
+            <td  valign="top">@sessionItem.SessionDate.DayName()</td>
+            <td>@Html.Raw(@sessionItem.SelectionStaffShortNames)</td>
+
+        </tr>
+        <tr>
+
+            <td ></td>
+            <td></td>
+
+        </tr>
+    }
+</table>
+
+

@@ -14,8 +14,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}", ApplyFormatInEditMode = true)]
         public DateTime DocumentDate { get; set; }
 
+        [Display(Name = "Дата и час на изпращане")]
+        [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy HH:mm}", ApplyFormatInEditMode = true)]
+        public DateTime DocumentDateHour { get; set; }
+
         [Display(Name = "Описание на изпращания документ; адресат")]
         public string Description { get; set; }
+
+        [Display(Name = "Адресат")]
+        public string PersonNames { get; set; }
 
         [Display(Name = "Начин на изпращане")]
         public string DeliveryGroupName { get; set; }

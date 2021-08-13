@@ -3,7 +3,7 @@
 @using IOWebApplication.Infrastructure.Models.ViewModels.Common
 @using IOWebApplication.Infrastructure.Constants
 @using IOWebApplication.Core.Helper.GlobalConstants
-
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @{
     if (Model.Id > 0)
     {
@@ -15,6 +15,7 @@
     }
 
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool IsCurrentCourt = Model.CourtId == userContext.CourtId;
 }
 
 @section breadcrumb{
@@ -44,7 +45,11 @@
                         @*<li class=""><a href="#tabNotification" data-toggle="tab"><i class="fa fa-bell"></i> Уведомления</a></li>*@
                         @*<li class=""><a href="#tabMoney" data-toggle="tab"><i class="fa fa-money"></i> Суми по дело</a></li>*@
                         <li class=""><a href="#tabEvidence" data-toggle="tab" data-filename="@HelpFileValues.CaseEvidence"><i class="fa fa-archive"></i> Доказателства</a></li>
-                        <li class=""><a href="#tabHronologia" data-toggle="tab"><i class="fa fa-line-chart"></i> Хронология</a></li>
+                        @if (access.CanChange)
+                        {
+                            <li class=""><a href="#tabHronologia" data-toggle="tab"><i class="fa fa-line-chart"></i> Хронология</a></li>
+                        }
+                        <li class=""><a href="#tabWorkTask" data-toggle="tab" data-filename="@HelpFileValues.Casetasks"><i class="fa fa-exclamation"></i> Задачи</a></li>
                     </ul>
 
                     <div class="tab-content">
@@ -133,24 +138,34 @@
                                 <div class="col-lg-6">
                                     <fieldset class="is-fieldset">
                                         <legend class="legend_1">Действия</legend>
-                                        <a href="@Url.Action("Index", "CaseMovement")?CaseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Местоположение на дело"><i class="fa fa-map-marker"></i><span class="hidden-sm hidden-xs"> Местоположение</span></a>
-                                        <a href="@Url.Action("Index", "CaseMigration",new { caseId = Model.Id})" class="btn btn-def btn-sm m-b-5" title="Движение на делото"><i class="fa fa-exchange"></i><span class="hidden-sm hidden-xs"> Движение</span></a>
-                                        <a href="@Url.Action("Index", "DocumentTemplate",new { sourceType=SourceTypeSelectVM.Case,sourceId=Model.Id})" class="btn btn-def btn-sm m-b-5" title="Изходящи документи по делото"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Изх.док.</span></a>
-                                        <a href="@Url.Action("CaseTimeLinePreview", "Case")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Ел.папка</span></a>
-                                        <a href="@Url.Action("IndexDocumentInstitutionCaseInfoList", "Document")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Дела др. институции"><i class="fa fa-folder"></i><span class="hidden-sm hidden-xs"> Дела др. институции</span></a>
-                                        @if (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
+                                        @if (IsCurrentCourt)
                                         {
-                                            <a href="@Url.Action("IndexCaseCrime", "CasePersonSentence")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Престъпления"><i class="fa fa-bug"></i><span class="hidden-sm hidden-xs"> Престъпления</span></a>
-                                            <a href="@Url.Action("Index", "Eispp",new {caseId=Model.Id})" class="btn btn-def btn-sm m-b-5" title="ЕИСПП събития"><i class="fa fa-paper-plane-o"></i><span class="hidden-sm hidden-xs"> ЕИСПП</span></a>
+                                            <a href="@Url.Action("Index", "CaseMovement")?CaseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Местоположение на дело"><i class="fa fa-map-marker"></i><span class="hidden-sm hidden-xs"> Местоположение</span></a>
+                                            <a href="@Url.Action("Index", "CaseMigration", new { caseId = Model.Id })" class="btn btn-def btn-sm m-b-5" title="Движение на делото"><i class="fa fa-exchange"></i><span class="hidden-sm hidden-xs"> Движение</span></a>
+                                            <a href="@Url.Action("Index", "DocumentTemplate", new { sourceType = SourceTypeSelectVM.Case, sourceId = Model.Id })" class="btn btn-def btn-sm m-b-5" title="Изходящи документи по делото"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"> Изх.док.</span></a>
+                                        }
+                                        <a href="@Url.Action("CaseTimeLinePreview", "Case")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"> Ел.папка</span></a>
+                                        @if (IsCurrentCourt)
+                                        {
+                                            <a href="@Url.Action("IndexDocumentInstitutionCaseInfoList", "Document")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Дела др. институции"><i class="fa fa-folder"></i><span class="hidden-sm hidden-xs"> Дела др. институции</span></a>
+                                            <a href="@Url.Action("Index", "CaseLawyerHelp")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Искане за правна помощ"><i class="fa fa-graduation-cap"></i><span class="hidden-sm hidden-xs"> Искане за правна помощ</span></a>
+                                            @if (Model.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo && access.CanChange)
+                                            {
+                                                <a href="@Url.Action("IndexCaseCrime", "CasePersonSentence")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Престъпления"><i class="fa fa-bug"></i><span class="hidden-sm hidden-xs"> Престъпления</span></a>
+                                                <a href="@Url.Action("Index", "Eispp", new { caseId = Model.Id })" class="btn btn-def btn-sm m-b-5" title="ЕИСПП събития"><i class="fa fa-paper-plane-o"></i><span class="hidden-sm hidden-xs"> ЕИСПП</span></a>
+                                            }
                                         }
                                     </fieldset>
-                                    <fieldset class="is-fieldset">
-                                        <legend class="legend_1">Натовареност и срокове</legend>
-                                        <a href="@Url.Action("Index", "CaseLoadIndex")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Натовареност"><i class="fa fa-cubes"></i><span class="hidden-sm hidden-xs"> Натовареност</span></a>
-                                        <a href="@Url.Action("Index", "CaseLoadCorrection")?CaseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Коригиращи коефициенти"><i class="fa fa-plus-square-o"></i><span class="hidden-sm hidden-xs"> Коригиращи коефициенти</span></a>
-                                        <a href="@Url.Action("Index", "CaseLifecycle")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Интервали"><i class="fa fa-clock-o"></i><span class="hidden-sm hidden-xs"> Интервали</span></a>
-                                        <a href="@Url.Action("IndexCase", "CaseDeadLine")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Срокове"><i class="fa fa-bell-o"></i><span class="hidden-sm hidden-xs"> Срокове</span></a>
-                                    </fieldset>
+                                    @if (IsCurrentCourt)
+                                    {
+                                        <fieldset class="is-fieldset">
+                                            <legend class="legend_1">Натовареност и срокове</legend>
+                                            <a href="@Url.Action("Index", "CaseLoadIndex")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Натовареност"><i class="fa fa-cubes"></i><span class="hidden-sm hidden-xs"> Натовареност</span></a>
+                                            <a href="@Url.Action("Index", "CaseLoadCorrection")?CaseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Коригиращи коефициенти"><i class="fa fa-plus-square-o"></i><span class="hidden-sm hidden-xs"> Коригиращи коефициенти</span></a>
+                                            <a href="@Url.Action("Index", "CaseLifecycle")?id=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Интервали"><i class="fa fa-clock-o"></i><span class="hidden-sm hidden-xs"> Интервали</span></a>
+                                            <a href="@Url.Action("IndexCase", "CaseDeadLine")?caseId=@Model.Id" class="btn btn-def btn-sm m-b-5" title="Срокове"><i class="fa fa-bell-o"></i><span class="hidden-sm hidden-xs"> Срокове</span></a>
+                                        </fieldset>
+                                    }
                                     <div id="caseClassification" class="case-info">
                                         <fieldset class="is-fieldset">
                                             <legend>Индикатори</legend>
@@ -242,8 +257,12 @@
                             <partial name="../CaseEvidence/_CaseEvidence.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
                         </div>
 
-                        <div class="tab-pane" id="tabHronologia">
+                        <div class="tab-pane dt-lazy-loading" id="tabHronologia">
                             <partial name="../Case/_CaseHronologia.cshtml" model="@new CaseMainDataVM { Id = Model.Id} " />
+                        </div>
+
+                        <div class="tab-pane" id="tabWorkTask">
+                            <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.Case, Model.Id))" />
                         </div>
                     </div>
                 </div>

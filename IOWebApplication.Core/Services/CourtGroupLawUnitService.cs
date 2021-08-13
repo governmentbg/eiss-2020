@@ -74,7 +74,7 @@ namespace IOWebApplication.Core.Services
                     x.CourtId = courtId;
                     return true; 
                 }
-            );
+           ,false );
         }
         public IQueryable<CourtLawUnitLoadVM> CourtGroup_LawUnitsHistory_Select(int courtGroupId)
         {

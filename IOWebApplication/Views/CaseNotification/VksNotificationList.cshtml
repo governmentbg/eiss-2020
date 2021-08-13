@@ -1,0 +1,18 @@
+﻿@model VksNotificationListVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@await Html.PartialAsync("_VksNotificationList", Model)
+
+@section scripts {
+    <script>
+        
+
+         $(document).ready(function () {
+             $('.case-person-link-id').change(function (el) {
+                 VksCasePersonLinkIdChange(el);
+             });
+             $('.notification-list-type-id').change(function (el) {
+                 VksNotificationTypeIdChange(el);
+             });
+        });
+    </script>
+}

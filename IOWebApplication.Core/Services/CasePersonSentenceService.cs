@@ -23,14 +23,13 @@ namespace IOWebApplication.Core.Services
 {
     public class CasePersonSentenceService : BaseService, ICasePersonSentenceService
     {
-        private readonly IEisppService eisppService;
         private readonly INomenclatureService nomenclatureService;
-
+        private readonly IEisppService eisppService;
         public CasePersonSentenceService(
         ILogger<CasePersonSentenceService> _logger,
         IRepository _repo,
-        IEisppService _eisppService,
         INomenclatureService _nomenclatureService,
+        IEisppService _eisppService,
         AutoMapper.IMapper _mapper,
         IUserContext _userContext)
         {
@@ -38,8 +37,8 @@ namespace IOWebApplication.Core.Services
             repo = _repo;
             mapper = _mapper;
             userContext = _userContext;
-            eisppService = _eisppService;
             nomenclatureService = _nomenclatureService;
+            eisppService = _eisppService;
         }
 
         /// <summary>
@@ -371,7 +370,7 @@ namespace IOWebApplication.Core.Services
                     if (saved.CrimeCode != model.CrimeCode)
                     {
                         saved.CrimeCode = model.CrimeCode;
-                        saved.CrimeName = eisppService.GetByCode(model.CrimeCode).Label;
+                        saved.CrimeName = nomenclatureService.GetByCode_EISPPTblElement(model.CrimeCode).Label;
                     }
 
                     saved.StartDateType = model.StartDateType;
@@ -399,7 +398,7 @@ namespace IOWebApplication.Core.Services
                             eisppService.MakeEisppNumberPNE(model, caseModel.CourtId);
                         }
                     }
-                    model.CrimeName = eisppService.GetByCode(model.CrimeCode).Label;
+                    model.CrimeName = nomenclatureService.GetByCode_EISPPTblElement(model.CrimeCode).Label;
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
                     repo.Add<CaseCrime>(model);
@@ -553,17 +552,18 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public async Task<bool> CasePersonCrimeFillFromEispp_SaveData(int caseId, string pnenmr)
         {
+            var xml = string.Empty;
             try
             {
                 var casePeople = repo.AllReadonly<CasePerson>()
                                      .Where(x => x.CaseId == caseId &&
-                                                 x.CaseSessionId == null &&
-                                                 x.Person_SourceType == SourceTypeSelectVM.EisppPerson)
+                                                 x.CaseSessionId == null)
                                      .ToList();
                 var caseModel = repo.AllReadonly<Case>()
                                     .Where(x => x.Id == caseId)
                                     .FirstOrDefault();
-                var eisppModel = await eisppService.GetTSAKTSTSResponse(caseModel.EISSPNumber).ConfigureAwait(false);
+                (var eisppModel, var xmlResponse) = await eisppService.GetTSAKTSTSResponse(caseModel.EISSPNumber).ConfigureAwait(false);
+                xml = xmlResponse;
                 var pne = eisppModel.execTSAKTSTSResponse.sNPRAKTSTS.sPNE.FirstOrDefault(x => x.pnenmr == pnenmr);
                 var caseCrime = new CaseCrime()
                 {
@@ -572,13 +572,15 @@ namespace IOWebApplication.Core.Services
                     EISSId = pne.pnesid,
                     EISSPNumber = pne.pnenmr,
                     CrimeCode = pne.PNESTA.pnekcq,
-                    CrimeName = eisppService.GetByCode(pne.PNESTA.pnekcq).Label,
+                    CrimeName = nomenclatureService.GetByCode_EISPPTblElement(pne.PNESTA?.pnekcq)?.Label,
                     DateFrom = pne.pnedtaotd,
                     StartDateType = pne.pneotdtip.ToInt(),
                     DateTo = pne.pnedtadod != Crime.defaultDate ? (DateTime?)pne.pnedtadod : null,
                     Status = pne.PNESTA?.pnests.ToInt(),
                     StatusDate = pne.PNESTA?.pnestsdta != Crime.defaultDate ? (DateTime?)pne.PNESTA?.pnestsdta : null,
-                    CompletitionDegree = pne.PNESTA?.pnestpdvs.ToInt() 
+                    CompletitionDegree = pne.PNESTA?.pnestpdvs.ToInt(), 
+                    DateWrt = DateTime.Now,
+                    UserId = userContext.UserId
                 };
 
                 caseCrime.CasePersonCrimes = new List<CasePersonCrime>();
@@ -604,12 +606,13 @@ namespace IOWebApplication.Core.Services
                                     CaseId = caseId,
                                     CasePersonId = person.Id,
                                     CaseCrimeId = caseCrime.Id,
-                                    PersonRoleInCrimeId = nomenclatureService.GetInnerCodeFromCodeMapping(NomenclatureConstants.CodeMappingAlias.CasePersonCrimeRole, fzlpne.SCQ.scqrlq),
+                                    PersonRoleInCrimeId = nomenclatureService.GetInnerCodeFromCodeMapping(NomenclatureConstants.CodeMappingAlias.CasePersonCrimeRole, fzlpne.SCQ?.scqrlq),
                                     RecidiveTypeId = nomenclatureService.GetInnerCodeFromCodeMapping(EISPPConstants.EisppMapping.Relaps, fzlpne.SBC?.sbcrcd),
                                 };
                                 if (personCrime.RecidiveTypeId <= 0)
                                     personCrime.RecidiveTypeId = NomenclatureConstants.RecidiveTypes.None;
-
+                                if (personCrime.PersonRoleInCrimeId <= 0)
+                                    personCrime.PersonRoleInCrimeId = NomenclatureConstants.PersonRoleInCrime.Unknown;
                                 caseCrime.CasePersonCrimes.Add(personCrime);
                             }
                         }
@@ -622,7 +625,8 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Престъпление от ЕИСПП Id={ caseId }");
+                logger.LogError(ex, $"Грешка при запис на Престъпление от ЕИСПП Id={ caseId } {pnenmr} "+xml);
+
                 return false;
             }
         }

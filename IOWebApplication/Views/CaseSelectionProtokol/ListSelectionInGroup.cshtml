@@ -1,0 +1,82 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseSelectionProtokolCaseInGroups")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+
+                        d.court_id= @(ViewBag.Id);
+
+                    }
+                },
+                filter: false,
+
+                columns: [
+                    {
+                        name: 'courtGroupName',
+                        data: 'courtGroupName',
+                        title: 'Група',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'lawunitFullName',
+                        data: 'lawunitFullName',
+                        title: 'Име',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'totalCases',
+                        data: 'totalCases',
+                        title: 'Общо',
+                        sortable: true,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'realCases',
+                        data: 'realCases',
+                        title: 'Реални',
+                        sortable: false,
+                        searchable: false
+                    }
+                    ,
+                    {
+                        name: 'averageCases',
+                        data: 'averageCases',
+                        title: 'Среднодневни',
+                        sortable: false,
+                        searchable: false
+                    }
+                    
+                   
+                   
+
+
+                ]
+            });
+            table.order([0, 'desc']);
+
+        });
+
+
+    </script>
+
+}

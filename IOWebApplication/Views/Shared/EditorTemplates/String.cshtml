@@ -13,6 +13,7 @@
     }
 
     var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+    var add_class = ((string)ViewData["class"] ?? "");
 }
 
 <div class="form-group @groupClass">
@@ -24,7 +25,7 @@
     {
         <label asp-for="@Model" class="control-label @reqClass"></label>
     }
-
-    <input asp-for="@Model" class="form-control" />
+    @Html.TextBox("", Model.Decode(), new { @class = "form-control " + add_class })
+    @*<input asp-for="@Model" class="form-control" value="@value" />*@
     <span asp-validation-for="@Model" class="text-danger"></span>
 </div>

@@ -64,7 +64,8 @@
                 data: function (d) {
                     d.caseId = @Model.Id;
                     d.caseSessionId = @(Model.CaseSessionId??0);
-                }
+                },
+                initialCall: false
 
             },
             deferLoading: deferLoadingOnTab('#caseLawUnitMainTable'),

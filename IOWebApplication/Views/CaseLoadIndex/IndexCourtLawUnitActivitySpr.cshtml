@@ -19,7 +19,10 @@
     <div class="col-lg-3">
         @Html.EditorFor(m => m.DateTo, "DateTime")
     </div>
+</div>
+<div class="row">
     <div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1" })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeLoadActivityId, "GenericDropDown")</div>
 </div>
 
 <div class="row">
@@ -52,6 +55,7 @@
                         d.DateFrom = $("#DateFrom").val();
                         d.DateTo = $("#DateTo").val();
                         d.LawUnitId = $("#LawUnitId").val();
+                        d.JudgeLoadActivityId = $("#JudgeLoadActivityId").val();
                     }
 
                 },

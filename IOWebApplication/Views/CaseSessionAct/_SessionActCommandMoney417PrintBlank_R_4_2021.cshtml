@@ -1,0 +1,244 @@
+﻿@model CaseSessionActCommandVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@{
+    Layout = null;
+}
+
+<style>
+    div.just {
+        text-align: justify;
+        text-justify: inter-word;
+    }
+</style>
+
+<div style="font-family: 'Times New Roman'">
+    <center>
+        <b>ЗАПОВЕД № @Model.CaseSessionActPrint.ActRegNumber</b><br />
+        <b>ЗА ИЗПЪЛНЕНИЕ НА ПАРИЧНО ЗАДЪЛЖЕНИЕ</b><br />
+        <b>ВЪЗ ОСНОВА НА ДОКУМЕНТ</b><br />
+        <b>по чл. 417 ГПК</b><br />
+        @Model.CaseSessionActPrint.CourtCity на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") г.<br />
+    </center>
+    <div class="just">
+        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName в проведеното на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") г. в закрито разпоредително заседание по @Model.CaseSessionActPrint.CaseTypeName № @Model.CaseSessionActPrint.CaseRegNumber/@Model.CaseSessionActPrint.CaseRegYear г., по описа на съда за @Model.CaseSessionActPrint.CaseRegYear г.@(string.IsNullOrEmpty(Model.CaseSessionActPrint.DepartmentName) ? string.Empty : " " + Model.CaseSessionActPrint.DepartmentName), докладвано от @Model.CaseSessionActPrint.JudgeReporter – районен съдия, като разгледа подаденото заявление за издаване на заповед за изпълнение по реда на чл. 417 и 418 ГПК и след като прецени@(!string.IsNullOrEmpty(Model.CaseSessionActPrint.RelatedActTypeName) ? " с " + Model.CaseSessionActPrint.RelatedActTypeName + " № " + Model.CaseSessionActPrint.RelatedActNumber + "/" + Model.CaseSessionActPrint.RelatedActYear + " г." : string.Empty), че са налице предпоставките за уважаване на искането за допускане на незабавно изпълнение и на основание чл. 418 ГПК<br />
+    </div>
+    <center>
+        <b>РАЗПОРЕЖДА:</b><br />
+    </center>
+    <br />
+
+    @Html.Raw("<div class='just'>")
+    @Html.Raw(Model.CaseSessionActPrint.LeftRightSide_410_417 + "<br />")
+    @Html.Raw("</div>")
+    <br />
+    <br />
+
+    @Html.Raw("<div class='just'>")
+    @Html.Raw(Model.CaseFastProcessView.SummTotal + "<br />")
+    @Html.Raw("</div>")
+    <br />
+    <br />
+
+    @if (!Model.CaseFastProcessView.JointDistribution)
+    {
+        @if (Model.CaseFastProcessView.PersonSum.Count > 0)
+        {
+            @Html.Raw("Сумите се разделят както следва:" + " <br />");
+            @foreach (var caseMoney in Model.CaseFastProcessView.PersonSum)
+            {
+                @Html.Raw("<div class='just'>")
+                @Html.Raw(caseMoney.MoneyText + " <br />");
+                @Html.Raw("</div>")
+            }
+        }
+    }
+
+    @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+    {
+        @*@foreach (var caseMoneyCollectionTotal in caseMoneyClaim.CaseMoneyCollectionTotalSums.OrderBy(x => x.CurrencyId))
+            {
+                @Html.Raw("сумата " + caseMoneyCollectionTotal.TotalSum.ToString("### ### ##0.00") + " /" + caseMoneyCollectionTotal.TotalSumText + "/" + "<br />");
+            }
+
+            foreach (var caseMoneyCollection in caseMoneyClaim.CaseMoneyCollections.Where(x => x.IsMoney && ((x.RespectedAmount > 0) || (x.PretendedAmount == 0 && x.RespectedAmount == 0))))
+            {
+                @Html.Raw("<div class='just'>")
+                @Html.Raw("за " + caseMoneyCollection.CaseMoneyCollectionTypeLabel + (caseMoneyCollection.RespectedAmount > 0 ? " в размер на " + caseMoneyCollection.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollection.CurrencyCode + " /" + caseMoneyCollection.RespectedAmountString + "/ " : string.Empty) + " от " + caseMoneyCollection.DateFrom?.ToString("dd.MM.yyyy") + " г. " + caseMoneyCollection.DateToLabel + ((caseMoneyCollection.JointDistributionBool && (Model.CaseSessionActPrint.RightSide.Count() > 1)) ? " солидарно" : string.Empty) + (!string.IsNullOrEmpty(caseMoneyCollection.Description) ? " " + caseMoneyCollection.Description : string.Empty) + " <br />");
+                @Html.Raw("</div>")
+
+                @if (!caseMoneyCollection.JointDistributionBool)
+                {
+                    @if (caseMoneyCollection.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0).ToList().Count > 0)
+                    {
+                        @Html.Raw("Разделно на:" + "<br />");
+                        foreach (var caseMoneyCollectionPerson in caseMoneyCollection.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0))
+                        {
+                            @Html.Raw(caseMoneyCollectionPerson.CasePersonLabel + " в размер на " + caseMoneyCollectionPerson.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionPerson.CurrencyCode + " /" + caseMoneyCollectionPerson.RespectedAmountString + "/ " + "<br />");
+                        }
+                    }
+                }
+
+                foreach (var caseMoneyCollectionExtra in caseMoneyCollection.CaseMoneyCollectionExtras.Where(x => ((x.RespectedAmount > 0) || (x.PretendedAmount == 0 && x.RespectedAmount == 0))))
+                {
+                    @Html.Raw("<div class='just'>")
+                    @Html.Raw("с/със " + (caseMoneyCollectionExtra.RespectedAmount > 0 ? caseMoneyCollectionExtra.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionExtra.CurrencyCode + " /" + caseMoneyCollectionExtra.RespectedAmountString + "/ " : string.Empty) + caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + " от " + caseMoneyCollectionExtra.DateFrom?.ToString("dd.MM.yyyy") + " г. " + caseMoneyCollectionExtra.DateToLabel + ((caseMoneyCollectionExtra.JointDistributionBool && (Model.CaseSessionActPrint.RightSide.Count() > 1)) ? " солидарно" : string.Empty) + (!string.IsNullOrEmpty(caseMoneyCollectionExtra.Description) ? " " + caseMoneyCollectionExtra.Description : string.Empty) + " <br />");
+                    @Html.Raw("</div>")
+
+                    @if (!caseMoneyCollectionExtra.JointDistributionBool)
+                    {
+                        @if (caseMoneyCollectionExtra.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0).ToList().Count > 0)
+                        {
+                            @Html.Raw("Разделно на:" + "<br />");
+                            foreach (var caseMoneyCollectionPerson in caseMoneyCollectionExtra.MoneyCollectionPersons.Where(x => x.RespectedAmount > 0))
+                            {
+                                @Html.Raw(caseMoneyCollectionPerson.CasePersonLabel + " в размер на " + caseMoneyCollectionPerson.RespectedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionPerson.CurrencyCode + " /" + caseMoneyCollectionPerson.RespectedAmountString + "/ " + "<br />");
+                            }
+                        }
+                    }
+                }
+            }*@
+
+        if (!string.IsNullOrEmpty(caseMoneyClaim.Motive))
+        {
+            @Html.Raw("<br />");
+            @Html.Raw("<div class='just'>")
+            @Html.Raw(caseMoneyClaim.Motive + "<br />");
+            @Html.Raw("</div>")
+        }
+
+        if (!string.IsNullOrEmpty(caseMoneyClaim.PartyNames))
+        {
+            @Html.Raw("<br />");
+            @Html.Raw("<div class='just'>")
+            @Html.Raw(caseMoneyClaim.PartyNames + "<br />");
+            @Html.Raw("</div>")
+        }
+    }
+    <br />
+
+    @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+    {
+        foreach (var caseMoneyCollection in caseMoneyClaim.CaseMoneyCollections.Where(x => x.IsItem))
+        {
+            @Html.Raw("и да върне:<br />");
+            @Html.Raw(caseMoneyCollection.Description + " на стойност " + caseMoneyCollection.PretendedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollection.CurrencyCode + " /" + caseMoneyCollection.PretendedAmountString + "/ " + "<br />");
+            foreach (var caseMoneyCollectionExtra in caseMoneyCollection.CaseMoneyCollectionExtras)
+            {
+                @Html.Raw("с/със " + caseMoneyCollectionExtra.PretendedAmount.ToString("### ### ##0.00") + " " + caseMoneyCollectionExtra.CurrencyCode + " /" + caseMoneyCollectionExtra.PretendedAmountString + "/ " + caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + " от " + caseMoneyCollectionExtra.DateFrom?.ToString("dd.MM.yyyy") + " г. до " + caseMoneyCollectionExtra.DateTo?.ToString("dd.MM.yyyy") + " г.<br />");
+            }
+        }
+    }
+    @*@if (Model.CaseFastProcessView.CaseMoneyExpenses.Count > 0)
+        {
+            @Html.Raw("както и сумите:<br />");
+            foreach (var caseMoneyExpense in Model.CaseFastProcessView.CaseMoneyExpenses)
+            {
+                @Html.Raw("&nbsp;&nbsp; - " + caseMoneyExpense.Amount.ToString("### ### ##0.00") + " " + caseMoneyExpense.CurrencyCode + " /" + caseMoneyExpense.AmountString + "/ " + caseMoneyExpense.CaseMoneyExpenseTypeLabel + (!string.IsNullOrEmpty(caseMoneyExpense.Description) ? " " + caseMoneyExpense.Description : string.Empty) + "<br />");
+                @if (!caseMoneyExpense.JointDistributionBool)
+                {
+                    @if (caseMoneyExpense.MoneyExpensePeople.Where(x => x.PersonAmount > 0).ToList().Count > 0)
+                    {
+                        @Html.Raw("&nbsp;&nbsp;&nbsp; Разделно на:" + "<br />");
+                        foreach (var caseMoneyExpensePerson in caseMoneyExpense.MoneyExpensePeople.Where(x => x.PersonAmount > 0))
+                        {
+                            @Html.Raw("&nbsp;&nbsp;&nbsp; " + caseMoneyExpensePerson.CasePersonLabel + " в размер на " + caseMoneyExpensePerson.PersonAmount.ToString("### ### ##0.00") + " " + caseMoneyExpensePerson.CurrencyCode + " /" + caseMoneyExpensePerson.PersonAmountString + "/ " + "<br />");
+                        }
+                    }
+                }
+            }
+            @Html.Raw("разноски по делото.<br />");
+        }*@
+    Вземането произтича от следните обстоятелства:<br />
+    @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+    {
+        if (caseMoneyClaim.CaseMoneyCollections.Any(x => x.IsMoney || x.IsItem))
+        {
+            @Html.Raw("<div class='just'>")
+            @Html.Raw("&nbsp;&nbsp;" + (caseMoneyClaim.CaseMoneyClaimTypeLabel == string.Empty ? " - " + caseMoneyClaim.CaseMoneyClaimGroupLabel : string.Empty) + ((caseMoneyClaim.CaseMoneyClaimTypeLabel != string.Empty) ? " - " + caseMoneyClaim.CaseMoneyClaimTypeLabel : string.Empty) + (!string.IsNullOrEmpty(caseMoneyClaim.Description) ? " " + caseMoneyClaim.Description : string.Empty) + (!string.IsNullOrEmpty(caseMoneyClaim.ClaimNumber) ? " Номер: " + caseMoneyClaim.ClaimNumber : string.Empty) + (caseMoneyClaim.ClaimDate != null ? "/" + (caseMoneyClaim.ClaimDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty) + " <br />");
+            @Html.Raw("</div>")
+        }
+    }
+    Присъдената сума може да бъде:<br />
+    @foreach (var caseBankAccount in Model.CaseFastProcessView.CaseBankAccounts.OrderBy(x => x.CaseBankAccountTypeId))
+    {
+        if (caseBankAccount.CaseBankAccountTypeId == 1)
+        {
+            @Html.Raw("&nbsp;&nbsp; - внесена по следната банкова сметка на заявителя/кредитора IBAN: " + caseBankAccount.LabelIBAN + " BIC: " + caseBankAccount.LabelBIC + " " + caseBankAccount.BankName + (!string.IsNullOrEmpty(caseBankAccount.Description) ? " " + caseBankAccount.Description : string.Empty) + "<br />");
+        }
+        else
+        {
+            @Html.Raw("&nbsp;&nbsp; - платена по следния начин: " + caseBankAccount.Description + "<br />");
+        }
+    }
+    <br />
+    @if (Model.CaseFastProcessView.CaseMoneyClaims.Any(x => x.CaseMoneyCollections.Any(c => c.IsMoney && ((c.RespectedAmount < 0.001m && c.PretendedAmount > 0) || (c.CaseMoneyCollectionExtras.Any(e => e.RespectedAmount < 0.001m && e.PretendedAmount > 0))))))
+    {
+        @Html.Raw("Неуважени суми: <br />");
+        @foreach (var caseMoneyClaim in Model.CaseFastProcessView.CaseMoneyClaims)
+        {
+            foreach (var caseMoneyCollection in caseMoneyClaim.CaseMoneyCollections.Where(x => x.IsMoney))
+            {
+                @if ((caseMoneyCollection.RespectedAmount < (decimal)0.001 && caseMoneyCollection.PretendedAmount > 0))
+                {
+                    @Html.Raw("<div class='just'>")
+                    @Html.Raw(caseMoneyCollection.CaseMoneyCollectionTypeLabel + (!string.IsNullOrEmpty(caseMoneyCollection.Description) ? " " + caseMoneyCollection.Description : string.Empty) + "<br />");
+                    @Html.Raw("</div>")
+                }
+
+                foreach (var caseMoneyCollectionExtra in caseMoneyCollection.CaseMoneyCollectionExtras.Where(x => x.RespectedAmount < (decimal)0.001 && x.PretendedAmount > 0))
+                {
+                    @Html.Raw(caseMoneyCollectionExtra.CaseMoneyCollectionKindLabel + (!string.IsNullOrEmpty(caseMoneyCollectionExtra.Description) ? " " + caseMoneyCollectionExtra.Description : string.Empty) + "<br />");
+                }
+            }
+        }
+    }
+    @*else
+        {
+            @Html.Raw("Неуважени суми: няма <br />");
+        }*@
+    <br />
+
+    @if (!string.IsNullOrEmpty(Model.CaseFastProcessView.FastProcessVM.Description))
+    {
+        @Html.Raw(Model.CaseFastProcessView.FastProcessVM.Description)
+        <br />
+        <br />
+    }
+
+    @if (Model.CaseFastProcessView.FastProcessVM.VisibleOrder ?? true)
+    {
+        <br />
+        @Html.Raw("II.ДОПУСКА НЕЗАБАВНО ИЗПЪЛНЕНИЕ НА НАСТОЯЩАТА ЗАПОВЕД НА ОСН. ЧЛ. 418, АЛ. 1 ГПК");
+        @Html.Raw("III.ДА СЕ ИЗДАДЕ НА ЗАЯВИТЕЛЯ ИЗПЪЛНИТЕЛЕН ЛИСТ ВЪЗ ОСНОВА НА НАСТОЯЩАТАТА ЗАПОВЕД, КАТО ВЪРХУ НЕЯ И ВЪРХУ ДОКУМЕНТА ПО ЧЛ. 417 ГПК СЕ НАПРАВИ ОТБЕЛЯЗВАНЕ ПО ЧЛ. 406, АЛ. 3 ГПК");
+        @Html.Raw("IV.ДА СЕ ИЗДАДЕ НА ЗАЯВИТЕЛЯ ЗАВЕРЕН ПРЕПИС/ И / ОТ НАСТОЯЩАТА ЗАПОВЕД СПОРЕД БРОЯ НА ОТВЕТНИЦИТЕ С ОТБЕЛЯЗВАНЕ ЗА ИЗДАДЕН ИЗПЪЛНИТЕЛЕН ЛИСТ СЪОБРАЗНО ЧЛ. 418, АЛ 5 ГПК.");
+        @Html.Raw("V.ПОЛУЧАВАНЕТО НА ПРЕПИСИТЕ ОТ ЗАПОВЕДТА И ИЗПЪЛНИТЕЛНИЯ ЛИСТ ДА СЕ УДОСТОВЕРЯВА ПИСМЕНО С ДАТА И ПОДПИС НА ЗАЯВИТЕЛЯ И НА ДЕЛОВОДИТЕЛЯ ВЪРХУ ОРИГИНАЛА НА ЗАПОВЕДТА.");
+        <br />
+        <br />
+    }
+
+    <center>
+        <b>ВАЖНА ИНФОРМАЦИЯ ЗА ДЛЪЖНИКА</b>
+    </center>
+    <br />
+    Предоставя Ви се възможност в едномесечен срок:<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 1.Да подадете в съда писмено възражение по образец, приложен към заповедта, че не дължите изпълнение на вземането по издадената заповед за изпълнение. В случай че възражението е неоснователно, може да понесете разноски в по - висок размер от посочения в заповедта.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 2.Да платите сумата, посочена в настоящата заповед, и да подадете в съда писмено възражение по образец, приложен към заповедта, че сте изпълнили изцяло или частично задължението си. Към това възражение се прилагат доказателства за изпълнението на задължението с препис за заявителя.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 3.Ако възражението бъде подадено в едномесечния срок, кредиторът може да предяви с иск вземането си срещу Вас.Ако иск не бъде предявен, заповедта няма да влезе в сила и ще бъде обезсилена.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 4.Заповедта подлежи на незабавно изпълнение и въз основа на нея е издаден изпълнителен лист срещу Вас.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 5.Подаването на писмено възражение до съда не спира изпълнението на заповедта. Изпълнението се спира, само ако заповедта е издадена въз основа на запис на заповед, менителница или приравнена на тях друга ценна книга на заповед, както и облигация или купони по нея.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 6.Принудителното изпълнение се спира, ако представите надлежно обезпечение пред съда по реда на чл. 180 и 181 от Закона за задълженията и договорите. Ако сте потребител, обезпечението е в размер до една трета от вземането.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 7.Съдът може да спре изпълнението и без да е необходимо обезпечение, ако в срока за възражение представите писмени доказателства, че:<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -вземането не се дължи;<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -вземането се основава на неравноправна клауза в договор, сключен с потребител;<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -неправилно е изчислен размерът на вземането по договор, сключен с потребител.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 8.Настоящата заповед е издадена въз основа на представен от кредитора документ, който е редовен от външна страна и удостоверява присъденото вземане.Копие от този документ е приложен към заповедта.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 9.Разпореждането за незабавно изпълнение подлежи на обжалване пред @Model.CaseSessionActPrint.CourtParent в едномесечен срок от връчването на заповедта. Частната жалба срещу разпореждането за незабавно изпълнение се подава заедно с възражението срещу издадената заповед.<br />
+    &nbsp; &nbsp; &nbsp; &nbsp; 10.Заповедта подлежи на обжалване пред @Model.CaseSessionActPrint.CourtParent само в частта за разноските в едномесечен срок от връчването.<br />
+    <br />
+    <br />
+    <div align="right">
+        Районен съдия: ...............................................<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.CaseSessionActPrint.JudgeReporter )
+    </div>
+</div>
+

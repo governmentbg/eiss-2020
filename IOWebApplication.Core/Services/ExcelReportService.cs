@@ -609,5 +609,10 @@ namespace IOWebApplication.Core.Services
                 }
             }
         }
+
+        public void StatisticsGenerate(DateTime date)
+        {
+            statisticsService.Statistics_DeleteSaveData(new DateTime(date.Year, 1, 1), date, 0);
+        }
     }
 }

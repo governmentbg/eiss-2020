@@ -1,0 +1,31 @@
+﻿@model DocumentVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@if (Model.DocumentLinkToOther?.Any() == true)
+{
+    <div>
+        @foreach (var otherDoc in Model.DocumentLinkToOther)
+        {
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Свързан към документ</legend>
+                <div class="row">
+                    <div class="col-lg-3">
+                        @Html.DisplayFor(x => otherDoc.CourtName, "obj")
+                    </div>
+                    <div class="col-lg-4">
+                        @Html.DisplayFor(x => otherDoc.DocumentTypeName, "obj")
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="form-group">
+                            @Html.LabelFor(x => otherDoc.DocumentNumber, null, "control-label")
+                            <br />
+                            <a href="@Url.Action("View",new { id = otherDoc.DocumentId})" title="Преглед на документ" target="_blank">@otherDoc.DocumentNumber</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        @Html.DisplayFor(x => otherDoc.DocumentDate, "obj")
+                    </div>
+                </div>
+            </fieldset>
+        }
+    </div>
+}

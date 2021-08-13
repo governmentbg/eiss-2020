@@ -91,6 +91,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Солидарно разпределение")]
         public bool JointDistribution { get; set; }
 
+        [Column("is_fraction")]
+        [Display(Name = "Дроб")]
+        public bool? IsFraction { get; set; }
+
         [Column("money_collection_end_date_type_id")]
         [Display(Name = "Вид крайна дата")]
         public int? MoneyCollectionEndDateTypeId { get; set; }
@@ -123,5 +127,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual MoneyCollectionEndDateType MoneyCollectionEndDateType { get; set; }
 
         public virtual ICollection<CaseMoneyCollectionPerson> CaseMoneyCollectionPersons { get; set; }
+        public virtual ICollection<CaseMoneyCollection> CaseMoneyCollections { get; set; }
+
+        [NotMapped]
+        public string ApiModelId { get; set; }
+
+        public CaseMoneyCollection()
+        {
+            CaseMoneyCollections = new HashSet<CaseMoneyCollection>();
+        }
     }
 }

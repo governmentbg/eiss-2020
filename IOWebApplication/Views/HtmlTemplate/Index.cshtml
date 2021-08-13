@@ -56,9 +56,6 @@
 <form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
     <input type="hidden" id="filterJson" name="filterJson" value="">
 </form>
-<form name="formPostEditCreate" id="formPostEditCreate" action="@Url.Action("EditHtmlTemplateCreate")" method="post">
-    <input type="hidden" id="filterJson" name="filterJson" value="">
-</form>
 @section scripts {
     <script>
         $(function () {
@@ -132,8 +129,12 @@
             $('#mainTable').DataTable().ajax.reload();
         }
         function EditHtmlTemplate(id) {
-             $('#formPostEdit').attr('action', '@Url.Action("Edit")/'+ id);
-             $("#formPostEdit").submit();
+            $('#formPostEdit').attr('action', '@Url.Action("Edit")/'+ id);
+            $("#formPostEdit").submit();
+        }
+        function EditHtmlTinyMCE(id) {
+            $('#formPostEdit').attr('action', '@Url.Action("EditTinyMCE")?sourceId='+ id);
+            $("#formPostEdit").submit();
         }
         function IndexLinkHtmlTemplate(id) {
             $('#formPostEdit').attr('action', '@Url.Action("IndexLink")/' + id);
@@ -144,20 +145,17 @@
             $("#formPostEdit").submit();
         }
         function EditHtmlTemplateCreate(id) {
-            $('#formPostEditCreate').attr('action', '@Url.Action("EditHtmlTemplateCreate")/'+ id);
-            $("#formPostEditCreate").submit();
+            $('#formPostEdit').attr('action', '@Url.Action("EditHtmlTemplateCreate")/' + id);
+            $("#formPostEdit").submit();
         }
 
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
-        <a href="@Url.Action("Edit")/{{id}}" onclick="EditHtmlTemplate({{id}})" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
-        {{#if isCreate}}
-        <a onclick="EditHtmlTemplateCreate({{id}})" class="btn btn-warning btn-sm" title="Редакция на бланка"><i class="fa fa-pencil"></i><span class="hidden-sm hidden-xs"></span></a>
-        {{/if}}
-        <a href="@Url.Action("IndexLink")/{{id}}" onclick="IndexLinkHtmlTemplate({{id}})" class="btn btn-dropbox btn-sm" title="Връзки по вид съд/дело"><i class="fa fa-external-link"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="EditHtmlTemplate({{id}})" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="EditHtmlTinyMCE({{id}})" class="btn btn-warning btn-sm" title="Редакция на бланка"><i class="fa fa-pencil"></i><span class="hidden-sm hidden-xs"></span></a>
+        <a onclick="IndexLinkHtmlTemplate({{id}})" class="btn btn-dropbox btn-sm" title="Връзки по вид съд/дело"><i class="fa fa-external-link"></i><span class="hidden-sm hidden-xs"></span></a>
         <a onclick="IndexParamHtmlTemplate({{id}})" class="btn btn-google btn-sm" title="Параметри в бланка"><i class="fa fa-paragraph"></i><span class="hidden-sm hidden-xs"></span></a>
-        <a href="@Url.Action("Preview")/{{id}}" class="btn btn-file btn-sm" title="Преглед на бланка"><i class="fa fa-file-o"></i><span class="hidden-sm hidden-xs"> Преглед TinyMCE</span></a>
         <a onclick="printTemplateRaw({{id}})" class="btn btn-file btn-sm" title="Преглед на бланка"><i class="fa fa-file-o"></i><span class="hidden-sm hidden-xs"> Преглед Html</span></a>
         <a href="@Url.Action("HtmlTemplate_GetNotSetParam")/{{id}}" class="btn btn-file btn-sm" title="Непопълнени параметри"><i class="fa fa-paragraph"></i><span class="hidden-sm hidden-xs"></span></a>
     </script>

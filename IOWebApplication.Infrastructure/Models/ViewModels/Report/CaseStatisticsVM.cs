@@ -52,18 +52,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         public string FromCourtData { get; set; }
 
-        public int FromCourtId
+        public string FromCourtId
         {
             get
             {
-                int result = 0;
+                string result = "";
                 if (string.IsNullOrEmpty(FromCourtData) == false)
                 {
                     string[] name = FromCourtData.Split(",,");
                     if (name.Length == 3)
                     {
-                        if (int.TryParse(name[0], out result) == false)
-                            result = 0;
+                        result = name[0];
                     }
                 }
                 return result;
@@ -277,6 +276,26 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public bool IsTrue { get; set; }
     }
 
+    public class StatisticsExcelReportIspnReasonVM
+    {
+        public int CourtTypeId { get; set; }
+
+        public int SheetIndex { get; set; }
+
+        public string ActIspnReasonIds { get; set; }
+
+
+        public List<int> ActIspnReason
+        {
+            get
+            {
+                return ActIspnReasonIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+
+
+        public int Col { get; set; }
+    }
     public class StatisticsNomDataVM
     {
         public List<StatisticsExcelReportIndexVM> excelReportIndexCols { get; set; }
@@ -288,5 +307,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public List<StatisticsExcelReportCaseTypeRowVM> excelReportCaseTypeRows { get; set; }
 
         public List<StatisticsExcelReportCaseTypeColVM> excelReportCaseTypeCols { get; set; }
+
+        public List<StatisticsExcelReportIspnReasonVM> excelReportIspnReasons { get; set; }
     }
 }

@@ -16,6 +16,7 @@ using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using System.Text;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 
 namespace IOWebApplication.Core.Services
 {
@@ -163,11 +164,17 @@ namespace IOWebApplication.Core.Services
                     saved.HaveActComplainFree = model.HaveActComplainFree;
                     saved.HaveMultiActComplain = model.HaveMultiActComplain;
                     saved.HaveExpertReport = model.HaveExpertReport;
+                    saved.HaveNotificationIspnReason = model.HaveNotificationIspnReason;
                     saved.XlsTitleRow = model.XlsTitleRow;
                     saved.XlsDataRow = model.XlsDataRow;
                     saved.XlsRecapRow = model.XlsRecapRow;
                     saved.HaveCasePerson = model.HaveCasePerson;
                     saved.HaveDocumentSenderPerson = model.HaveDocumentSenderPerson;
+                    saved.HaveMoneyObligation = model.HaveMoneyObligation;
+                    saved.HaveInstitutionDocument = model.HaveInstitutionDocument;
+                    saved.HaveFromToDate = model.HaveFromToDate;
+                    saved.DateFrom = model.DateFrom;
+                    saved.DateTo = model.DateTo;
 
                     FillDataFile(saved, files);
                     repo.Update(saved);
@@ -416,7 +423,13 @@ namespace IOWebApplication.Core.Services
         {
             string htmlString = string.Empty;
 
-            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Alias.ToUpper() == alias.ToUpper()).DefaultIfEmpty(null).FirstOrDefault();
+            var dateTimeNow = DateTime.Now;
+            var dateTimeAddOneYear = DateTime.Now.AddYears(1);
+            var html = repo.AllReadonly<HtmlTemplate>()
+                           .Where(x => x.Alias.ToUpper() == alias.ToUpper() &&
+                                       (x.DateFrom <= dateTimeNow && dateTimeNow <= (x.DateTo ?? dateTimeAddOneYear)))
+                           .DefaultIfEmpty(null)
+                           .FirstOrDefault();
 
             if (html == null)
                 return htmlString;
@@ -646,5 +659,27 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
+        /// <summary>
+        ///Запис на балнка от TinyMCE
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public bool HtmlTemplate_SaveDataTiny(TinyMCEVM model)
+        {
+            try
+            {
+                HtmlTemplate saved = repo.GetById<HtmlTemplate>(model.SourceId);
+                saved.DateUploaded = DateTime.Now;
+                saved.Content = Encoding.UTF8.GetBytes(model.Text);
+                repo.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Проблем при запис на бланка {model.SourceId}");
+                return false;
+            }
+        }
+
     }
 }

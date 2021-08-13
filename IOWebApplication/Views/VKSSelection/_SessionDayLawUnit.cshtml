@@ -1,0 +1,97 @@
+﻿@model VksSessionDayLawUnit
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+@{
+    var sessionDate = (DateTime?)ViewData["vks_sessionDate"];
+
+}
+
+<table class="tbl-day-lawunit">
+    <tr><td colspan="4"><b>@Model.LawUnitName</b></td></tr>
+
+    @if (Model.CaseList.Where(x => x.HasSession).Count() > 0)
+    {
+
+        <tr>
+            <td>
+                Дело
+            </td>
+            <td>
+                ФС
+            </td>
+            <td>
+                ПС
+            </td>
+            <td align="center">
+                Час
+            </td>
+
+        </tr>
+    }
+
+    @foreach (var item in Model.CaseList.OrderBy(x => x.CaseSessionDate).Where(x => x.HasSession).OrderBy(x=>x.SessionTypeString))
+    {
+
+
+        <tr>
+            <td align="center"> <b>@item.SessionTypeString</b> <a href="@Url.Action("CasePreview","Case")/@item.CaseId#tabSession">@item.CaseNumber</a>
+
+<td align="right">@item.FS</td>
+            <td align="right">@item.PS</td>
+            <td>
+                &nbsp
+                @if (@item.CaseSessionDate != null)
+                {
+                    @((@item.CaseSessionDate??DateTime.Now).ToString("HH:mm"));
+
+                }
+
+            </td>
+
+        </tr>
+    }
+
+
+
+
+    @if (Model.CaseList.OrderBy(x => x.CaseSessionDate).Where(x => !x.HasSession).Count() > 0)
+    {
+        <tr><td colspan="4" style="color:red">Ненасрочени дела</td></tr>
+        <tr>
+            <td>
+                Дело
+            </td>
+            <td>
+                ФС
+            </td>
+            <td>
+                ПС
+            </td>
+            <td>
+            </td>
+
+        </tr>
+    }
+
+    @foreach (var item in Model.CaseList.Where(x => !x.HasSession))
+    {
+
+
+        <tr>
+            <td align="center"><a href="@Url.Action("Add","CaseSession",new { caseId = item.CaseId,sessionDate = sessionDate.Value.ToString("dd.MM.yyyy") })"> @item.CaseNumber</a>
+
+            <td align="right">@item.FS</td>
+            <td align="right">@item.PS</td>
+            <td>
+            </td>
+
+        </tr>
+    }
+
+
+
+</table>
+
+
+

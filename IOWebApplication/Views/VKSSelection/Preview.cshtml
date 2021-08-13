@@ -1,0 +1,110 @@
+﻿@model VksSelectionCalendarVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Extensions
+@{
+  //ViewData["Title"] = "Разпределение за " + @Model.SelectionYear + " година " + @Model.PeriodNoString + " на състави: " + @Model.CourtDepartmentName;
+  ViewData["Title"] = @ViewBag.Title;
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        @if (ViewBag.PeriodNo > 0)
+        {
+            <li><a href="@Url.Action("Index","VksSelection")">Периоди ВКС</a></li>
+        }
+        else
+        {
+            <li><a href="@Url.Action("IndexTO","VksSelection")">Периоди ВКС</a></li>
+        }
+    </ol>
+}
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs" id="caseTab">
+        <li class=""><a href="@Url.Action("LawUnits")/@Model.Id"><i class="fa fa-users"></i> Състав</a></li>
+        <li class="active"><a href="@Url.Action("Preview")"><i class="fa fa-user"></i> Разпределение</a></li>
+
+        @if (ViewBag.PeriodNo > 0)
+        {
+            <li class=""><a href="@Url.Action("ProtocolList")/@Model.Id"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+        }
+
+    </ul>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-12 text-right pb-15">
+                @if (ViewBag.HasSignedProtocol == false && ViewBag.PeriodNo > 0 && ViewBag.CanEdit)
+                {
+                    <a href="@Url.Action("GenerateSelectionStaff")/@Model.Id" class="btn btn-success" title="Генериране на ново разпределение на състави">Ново разпределение</a>
+
+                }
+
+
+                </div>
+        </div>
+        <br />
+
+        <center>
+
+        </center>
+        @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frmCheckList" }))
+        {
+            <table width="100%" class="bordered protokol-table">
+                <tr>
+                    <td colspan="3">
+                        <b>
+                            @Html.HiddenFor(x => x.Id)
+                  
+                            @ViewBag.Title
+
+                        </b>
+                    </td>
+                </tr>
+                @for (int _month = 0; _month < Model.MonthList.Count; _month++)
+                {
+                    var monthItem = Model.MonthList[_month];
+                    <tr>
+                        <td colspan="3"><b>@monthItem.SelectionMonthString</b></td>
+
+                    </tr>
+                    <tr>
+                        <td><b>Заседание<b></td>
+                        <td><b>Състав<b></td>
+                        <td><b>Дата<b></td>
+
+                    </tr>
+                    @for (int _session = 0; _session < monthItem.MonthSessions.Count; _session++)
+                    {
+                        var sessionItem = monthItem.MonthSessions[_session];
+
+                        @Html.HiddenFor(x => x.MonthList[_month].MonthSessions[_session].Id)
+                        <tr>
+
+                            <td>@sessionItem.SelectionDay</td>
+                            <td>@Html.Raw(@sessionItem.SelectionStaff)</td>
+
+                            <td>@Html.EditorFor(x => x.MonthList[_month].MonthSessions[_session].SessionDate, "DateTimeClear") @*@Model.MonthList[_month].MonthSessions[_session].SessionDate.DayName()*@</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td colspan="3"><span>&nbsp;</span></td>
+
+                    </tr>
+                }
+            </table>
+            <br />
+            <br />
+            <br />
+            @if (ViewBag.CanEdit)
+            {
+    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+            }
+            
+            @*<a href="@Url.Action("Index")" class="btn btn-danger">Назад</a>*@
+
+        }
+    </div>
+

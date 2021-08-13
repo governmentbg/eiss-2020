@@ -1,0 +1,475 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Segoe UI";
+			panose-1: 2 11 5 2 4 2 4 2 2 3;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Heading 4 ЕИСС";
+			mso-style-link: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoAcetate, li.MsoAcetate, div.MsoAcetate {
+			mso-style-link: "Balloon Text Char";
+			margin: 0in;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 71.45pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading4Char {
+			mso-style-name: "Heading 4 Char\,Heading 4 ЕИСС Char";
+			mso-style-link: "Heading 4\,Heading 4 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.BalloonTextChar {
+			mso-style-name: "Balloon Text Char";
+			mso-style-link: "Balloon Text";
+			font-family: "Segoe UI",sans-serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0in;
+		}
+
+		ul {
+			margin-bottom: 0in;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h4 align=left style='margin-left:71.45pt;text-align:left;text-indent:-.5in'>
+			<i>
+				<span style='font-size:11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>
+					8.1.4.6<span style='font:7.0pt "Times New Roman"'>
+						&nbsp;&nbsp;&nbsp;
+					</span>
+				</span>
+			</i><i>
+				<span style='font-size:11.0pt;line-height:115%;font-family:
+"Calibri Light",sans-serif;color:#2E74B5'>
+					Таб Призоваване чрез Държавен вестник
+					(приложимо за ВКС)
+				</span>
+			</i>
+		</h4>
+
+		<p class=MsoNormal style='margin-left:53.45pt;text-indent:0in'> </p>
+
+		<p class=MsoNormal>
+			След насрочване на откритото съдебно заседание се преминава
+			към изготвяне на призовки, придружителни писма и списък на лицата за
+			призоваване.
+		</p>
+
+		<p class=MsoNormal>
+			Функционалността остава непроменена при изготвяне на
+			индивидуални призовки по наказателни дела или индивидуални съобщения и
+			уведомления по граждански и търговски дела. За призоваване чрез ежемесечно
+			публикуване в „Държавен вестник“ за граждански и търговски дела е добавен таб „Призоваване
+			чрез ДВ“, допълнителен функционален екран в заседанията.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			<b>Призоваване чрез </b><b>
+				<span style='line-height:115%;color:black'>ежемесечно публикуване </span>в „Държавен
+				вестник“
+			</b>
+		</p>
+
+		<p class=MsoNormal>Осъществява се по следния начин:</p>
+
+		<p class=MsoListParagraphCxSpFirst>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Избира се съответното гражданско или търговско дело;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>През Таб Заседания се избира съответното насрочено заседание или се
+			насрочва такова;
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Посредством бутон Преглед <img width=34 height=25 id="Picture 143392"
+										 src="notificationstatenewspaper_files/image001.jpg"> се достъпва заседанието;
+		</p>
+
+		<p class=MsoListParagraphCxSpLast>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Избира се Таб Призоваване чрез ДВ
+		</p>
+
+		<p class=MsoNormal>
+			<img width=389 height=97 id="Picture 143768"
+				 src="notificationstatenewspaper_files/image002.jpg">
+		</p>
+
+		<p class=MsoListParagraph>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Отваря се следния прозорец
+		</p>
+
+		<p class=MsoNormal>
+			<img width=527 height=217 id="Picture 143783"
+				 src="notificationstatenewspaper_files/image003.jpg">
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле статус – по подразбиране е зареден статус <i>„Призован“</i>, но
+			посредством падащо меню има възможност за избор и на: <i>
+				Призован в отложено
+				заседание;
+			</i>
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Връзки – в поето се зарежда връзката адвокат-лице, в случай че
+			същата е генерирана предварително;
+		</p>
+
+		<p class=MsoListParagraphCxSpLast>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Поле Адрес – полето не е задължително. В случай че има въведен повече от
+			един адрес на лице по дело, има опция за избор посредством падащо меню, като по
+			подразбиране се зарежда адреса – маркиран като „адрес за известие“.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0in'>
+			С насрочването на
+			заседанието, данните за призоваване чрез Държавен вестник се генерират и
+			прехвърлят в списъка за призоваване автоматично. При необходимост от редакция
+			по отношение на статус „Връзки“ и „Адрес“, системата позволява това да бъде
+			направено за всяко от лицата, като промените се запазват чрез избор на бутон
+			Запис <img width=50 height=23 id="Picture 143794"
+					src="notificationstatenewspaper_files/image004.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:0in'>
+			<b>
+				Генериране на
+				Списък за Държавен вестник
+			</b>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0in'>
+			Генерирането става през
+			меню Управление -&gt; Уведомяване -&gt; Призоваване чрез Държавен вестник.
+		</p>
+
+		<p class=MsoNormal style='text-indent:0in'>
+			Отваря се следния
+			прозорец:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=353 height=182 id="Picture 143810"
+				 src="notificationstatenewspaper_files/image005.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
+			-      В
+			поле „За месец“ следва да се избере съответния месец, за който да се генерира
+			списък;
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
+			-      Избира
+			се бутон Филтриране <img width=86 height=21 id="Picture 141464"
+							src="notificationstatenewspaper_files/image006.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
+			-      На
+			екрана се отваря списък с насрочените дела за съответния месец.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt'>
+			<img width=605 height=183 id="Picture 141391"
+				 src="notificationstatenewspaper_files/image007.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Маркиране се чек бокса за делата, които да бъдат включени в
+			публикацията и се избира бутон Генериране <img width=131 height=23
+													 id="Picture 141459" src="notificationstatenewspaper_files/image008.jpg"> . След
+			избора на бутона се зарежда екран Преглед, в който се извежда структурирана
+			информация за публикацията в Държавен вестник, с възможност за редакция при
+			необходимост:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=549 height=314 id="Picture 141465"
+				 src="notificationstatenewspaper_files/image009.jpg">
+		</p>
+
+		<p class=MsoNormal>След преглед на информация се избира бутон Запис.</p>
+
+		<p class=MsoNormal>Отваря се екран Печат списък за Държавен вестник</p>
+
+		<p class=MsoNormal style='margin-left:35.45pt'>
+			<img width=605 height=77
+				 id="Picture 141472" src="notificationstatenewspaper_files/image010.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Полето „за месец“ е попълнено автоматично, с данни за
+			месеца, за който е генерирана публикацията за Държавен вестник.
+		</p>
+
+		<p class=MsoNormal>
+			Забележка: Възможно е повторно генериране на публикацията за
+			съответния месец, през екран Призоваване чрез Държавен вестник, като се запазва
+			само файлът с последно генерираната публикация. Прегенерирането на публикация
+			за даден месец е възможно до вписване на данни в поле „Издание на Държавен
+			вестник“.
+		</p>
+
+		<p class=MsoNormal><b>Печат списък за Държавен вестник</b></p>
+
+		<p class=MsoNormal>
+			През екран Печат списък за Държавен вестник могат да се
+			прегледат вече генерирани в системата публикации за съответния месец.
+		</p>
+
+		<p class=MsoNormal>
+			В поле Издание на държавен вестник се попълва броя и
+			годината, в която е обявена публикацията в „Държавен вестник“ и се избира бутон
+			Запис, с което се разнасят данните за редовно призоваване за всички включени в
+			публикацията страни.
+		</p>
+
+		<p class=MsoNormal>
+			Данните са достъпни по всяко дело, през конкретното заседание
+			и не подлежат на редакция.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=215 id="Picture 141672"
+				 src="notificationstatenewspaper_files/image011.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			<b>Важно</b>: В случай че се насрочи заседание за даден
+			месец, за който вече има генерирана публикация и въведени данни за Издание на
+			Държавен вестник (номер, година) системата не позволява да се генерира нов
+			файл.
+		</p>
+
+		<p class=MsoNormal>
+			В таб Призоваване чрез ДВ в такова заседание се визуализира
+			се следната информация:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=69 id="Picture 141677"
+				 src="notificationstatenewspaper_files/image012.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			В описаната ситуация системата не позволява да се добавят
+			данните за страните по това заседание в публикацията за ДВ и не позволява да се
+			генерира и нов Списък за Държавен вестник през меню Управление!
+		</p>
+
+		<p class=MsoNormal>
+			В този случай призоваването на лицата става чрез позната
+			функционалност през Таб Списък за призоваване.
+		</p>
+
+		<p class=MsoNormal>
+			<i>
+				<span style='font-size:11.0pt;line-height:115%;
+font-family:"Calibri Light",sans-serif;color:#2E74B5'>{</span>
+			</i><i>
+				<span lang=EN-US style='font-size:11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>notificationstatenewspaper</span>
+			</i><i>
+				<span style='font-size:
+11.0pt;line-height:115%;font-family:"Calibri Light",sans-serif;color:#2E74B5'>}</span>
+			</i>
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

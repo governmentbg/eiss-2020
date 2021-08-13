@@ -72,6 +72,33 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary>
             public const int PostOffice = 1;
 
+            /// <summary>
+            /// През ЕПЕП
+            /// </summary>
+            public const int WebPortal = 5;
+
+        }
+
+        public class Types
+        {
+            public const int VKS_MolbaOtmyana47ZMTA = 318;
+            public static int[] DocumentsNoNeedCaseInfo = { VKS_MolbaOtmyana47ZMTA };
+        }
+
+        public class ResolutionTypes
+        {
+            public const int Resolution = 1;
+            
+            /// <summary>
+            /// Разпореждане за преразпределение
+            /// </summary>
+            public const int ResolutionForSelection = 2;
+
+            /// <summary>
+            /// Разпореждане за насрочване
+            /// </summary>
+            public const int ResolutionForScheduling = 3;
+
         }
     }
 }

@@ -24,6 +24,11 @@ namespace IOWebApplication.Infrastructure.Data.Common
 
         public int TrackerCount => Context.ChangeTracker.Entries().Count();
 
+        public void PropUnmodified<T>(Expression<Func<T>> selectProp) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
         public void RefreshDbContext(string connectionString)
         {
             if (Context != null)

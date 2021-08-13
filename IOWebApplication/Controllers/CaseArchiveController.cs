@@ -39,8 +39,11 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult CaseForArchive()
         {
+            ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            var model = new CaseForArchiveFilterVM();
+
             SetHelpFile(HelpFileValues.Archive1);
-            return View();
+            return View(model);
         }
 
         /// <summary>
@@ -49,9 +52,9 @@ namespace IOWebApplication.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataCaseForArchive(IDataTablesRequest request)
+        public IActionResult ListDataCaseForArchive(IDataTablesRequest request, CaseForArchiveFilterVM model)
         {
-            var data = service.CaseForArchive_Select(userContext.CourtId);
+            var data = service.CaseForArchive_Select(userContext.CourtId, model);
             return request.GetResponse(data);
         }
 

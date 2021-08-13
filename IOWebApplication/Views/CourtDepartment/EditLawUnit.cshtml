@@ -31,17 +31,17 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                
+
                 <div class="row">
-                    <div class="col-lg-6">@Html.EditorFor(m => m.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1" })</div>
+                    <div class="col-lg-6">@Html.EditorFor(m => m.LawUnitId, "LawUnit", null, new { selectMode = IOWebApplication.Infrastructure.Constants.NomenclatureConstants.LawUnitSelectMode.Current, lawUnitTypes = "1" })</div>
                 </div>
                 <div class="row">
                     <div class="col-lg-6">@Html.EditorFor(x => x.JudgeDepartmentRoleId, "GenericDropDown")</div>
                 </div>
                 @*<div class="row">
-                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
-                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
-                </div>*@
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
+                    </div>*@
             </div>
 
             <div class="form-group">

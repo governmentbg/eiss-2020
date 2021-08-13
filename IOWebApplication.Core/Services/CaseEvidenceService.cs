@@ -45,7 +45,7 @@ namespace IOWebApplication.Core.Services
         {
             Expression<Func<CaseEvidence, bool>> caseRegnumberSearch = x => true;
             if (!string.IsNullOrEmpty(CaseRegNumber))
-                caseRegnumberSearch = x => x.Case.RegNumber.ToLower().EndsWith(CaseRegNumber.ToShortCaseNumber().ToLower());
+                caseRegnumberSearch = x => EF.Functions.ILike(x.Case.RegNumber,CaseRegNumber.ToCasePaternSearch());
 
             return repo.AllReadonly<CaseEvidence>()
                        .Include(x => x.Case)
@@ -322,9 +322,12 @@ namespace IOWebApplication.Core.Services
         {
             var caseEvidenceSprs = CaseEvidenceSpr(courtId, model).OrderBy(x => x.DateAccept).ToList();
 
+            var dateTimeNow = DateTime.Now;
+            var dateTimeAddOneYear = DateTime.Now.AddYears(1);
             var htmlTemplate = repo.AllReadonly<HtmlTemplate>()
-                        .Where(x => x.Alias.ToUpper() == "Evidence".ToUpper())
-                        .FirstOrDefault();
+                                   .Where(x => x.Alias.ToUpper() == "Evidence".ToUpper() &&
+                                               (x.DateFrom <= dateTimeNow && dateTimeNow <= (x.DateTo ?? dateTimeAddOneYear)))
+                                   .FirstOrDefault();
             NPoiExcelService excelService = new NPoiExcelService(htmlTemplate.Content, 0);
             excelService.rowIndex = (htmlTemplate.XlsDataRow ?? 0) - 1;
 
