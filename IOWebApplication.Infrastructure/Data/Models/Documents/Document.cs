@@ -15,14 +15,20 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
     /// Деловодни документи
     /// </summary>
     [Table("document")]
-    public class Document : UserDateWRT, IExpiredInfo
+    public class Document : UserDateWRT, IExpiredInfo, IHaveLongId
     {
         [Key]
         [Column("id")]
         public long Id { get; set; }
 
+        [Column("document_request_type_id")]
+        public int? DocumentRequestTypeId { get; set; }
+
         [Column("court_id")]
         public int CourtId { get; set; }
+
+        [Column("created_court_id")]
+        public int? CreatedCourtId { get; set; }
 
         [Column("court_organization_id")]
         public int? CourtOrganizationId { get; set; }
@@ -49,6 +55,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
 
         [Column("document_date")]
         public DateTime DocumentDate { get; set; }
+
+        [Column("document_declared_date")]
+        public DateTime? DocumentDeclaredDate { get; set; }
 
         [Column("actual_document_date")]
         public DateTime? ActualDocumentDate { get; set; }
@@ -94,14 +103,29 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Column("multi_registration_id")]
         public string MultiRegistationId { get; set; }
 
+        [Column("register_user_id")]
+        public string RegisterUserId { get; set; }
+
+        [Column("electronic_document_id")]
+        public long? ElectronicDocumentId { get; set; }
+
+        [Column("assignment_document_id")]
+        public long? AssignmentDocumentId { get; set; }
+
         [ForeignKey(nameof(CourtOrganizationId))]
         public virtual CourtOrganization CourtOrganization { get; set; }
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
 
+        [ForeignKey(nameof(RegisterUserId))]
+        public virtual ApplicationUser RegisterUser { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
+
+        [ForeignKey(nameof(CreatedCourtId))]
+        public virtual Court CreatedCourt { get; set; }
 
         [ForeignKey(nameof(DocumentDirectionId))]
         public virtual DocumentDirection DocumentDirection { get; set; }
@@ -118,6 +142,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [ForeignKey(nameof(DeliveryTypeId))]
         public virtual DeliveryType DeliveryType { get; set; }
 
+        [ForeignKey(nameof(DocumentRequestTypeId))]
+        public virtual DocumentRequestType DocumentRequestType { get; set; }
+
         public virtual ICollection<DocumentPerson> DocumentPersons { get; set; }
         public virtual ICollection<DocumentCaseInfo> DocumentCaseInfo { get; set; }
         public virtual ICollection<DocumentInstitutionCaseInfo> DocumentInstitutionCaseInfo { get; set; }
@@ -130,6 +157,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
 
         public virtual ICollection<RegixReport> RegixReports { get; set; }
 
+        [ForeignKey(nameof(ElectronicDocumentId))]
+        public virtual ElectronicDocument ElectronicDocument { get; set; }
+
+        [ForeignKey(nameof(AssignmentDocumentId))]
+        public virtual Document AssignmentDocument { get; set; }
+
+        [InverseProperty(nameof(Document.AssignmentDocument))]
+        public virtual ICollection<Document> AssignedDocuments { get; set; }
+
         public Document()
         {
             DocumentPersons = new HashSet<DocumentPerson>();
@@ -138,6 +174,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
             DocumentLinks = new HashSet<DocumentLink>();
             DocumentResolutions = new HashSet<DocumentResolution>();
             RegixReports = new HashSet<RegixReport>();
+            AssignedDocuments = new HashSet<Document>();
         }
     }
 }

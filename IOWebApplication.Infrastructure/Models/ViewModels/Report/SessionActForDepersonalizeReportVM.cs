@@ -15,8 +15,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Номер на дело")]
         public string CaseRegNumber { get; set; }
+        public DateTime CaseRegDate { get; set; }
 
-        public int CaseId { get; set; }
+        [Display(Name = "Шифри по точен вид дело")]
+        public string CaseCodeLabel { get; set; }
+
+        public int? CaseId { get; set; }
 
         public int SessionActId { get; set; }
 
@@ -27,10 +31,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public string SessionActNumber { get; set; }
 
         [Display(Name = "Дата")]
-        public DateTime SessionActDate { get; set; }
+        public DateTime? SessionActDate { get; set; }
 
         [Display(Name = "Заседание")]
         public string SessionTypeName { get; set; }
+
+        public string ActStateLabel { get; set; }
     }
 
     /// <summary>
@@ -67,5 +73,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Вид акт")]
         public string ActTypeIds { get; set; }
         public string ActTypeIds_text { get; set; }
+
+        [Display(Name = "Шифър")]
+        public int CaseCodeId { get; set; }
+
+        [Display(Name = "Шифър")]
+        public string[] CaseCodeIds { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿@model PaymentVM
 @using IOWebApplication.Infrastructure.Models.ViewModels.Money
 @using IOWebApplication.Infrastructure.Constants
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 
 @{
     var actionName = "EditPayment";
@@ -26,6 +27,7 @@
         ViewData["Title"] = "Добавяне на авансово плащане";
     }
     string bankAccountJson = @ViewBag.BankAccountJson;
+    bool moneyAccount = userContext.IsUserInRole(AccountConstants.Roles.MoneyAccount);
 }
 @section breadcrumb{
     <ol class="breadcrumb">
@@ -44,6 +46,7 @@
             @Html.HiddenFor(x => x.PosPaymentResultId)
             @Html.HiddenFor(x => x.ObligationIds)
             @Html.HiddenFor(x => x.ForPopUp)
+            @Html.HiddenFor(x => x.DocumentId)
             @Html.Hidden("bankAccountJson", bankAccountJson)
 
             @if (Model.Id > 0)
@@ -58,10 +61,23 @@
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
                 @Html.EditorFor(x => x.PaymentTypeId, "GenericDropDown")
+
+                <div class="row" id="checkOfflinePos">
+                    <div class="col-lg-12">
+                        @Html.CheckBoxFor(x => x.OfflinePos)
+                        @Html.LabelFor(x => x.OfflinePos)
+                    </div>
+                </div>
+
                 @Html.EditorFor(x => x.PaidDate)
                 @Html.EditorFor(x => x.Amount)
                 @Html.EditorFor(x => x.Description)
                 @Html.EditorFor(x => x.CourtBankAccountId, "GenericDropDown")
+
+                @if (Model.DocumentId > 0)
+                {
+                    @Html.EditorFor(x => x.DocumentPersonId, "GenericDropDownString")
+                }
                 @Html.EditorFor(x => x.SenderName)
 
                 <div id="bankData">
@@ -109,6 +125,13 @@
                 $('#bankData').hide();
                 $('#PaidDate').enable(false);
             }
+
+            if (typeId == '@NomenclatureConstants.PaymentType.Pos' && '@moneyAccount') {
+                $('#checkOfflinePos').show();
+            }
+            else {
+                $('#checkOfflinePos').hide();
+            }
         });
 
         $('#PaymentTypeId').trigger('change');
@@ -118,8 +141,18 @@
             $('#saveContainer').find('#PaymentTypeId').enable(false);
             $('#saveContainer').find('#PaidDate').enable(false);
             $('#saveContainer').find('#CourtBankAccountId').enable(false);
+            $('#saveContainer').find('#OfflinePos').enable(false);
             $("#Amount").attr("readonly", true);
         }
+
+        $('#DocumentPersonId').change(function () {
+            var personId = $(this).val();
+            if (personId != "" && personId != "-1")
+            {
+                $('#SenderName').val($('#DocumentPersonId').val());
+            }
+        });
+
     });
 
     $(function () {

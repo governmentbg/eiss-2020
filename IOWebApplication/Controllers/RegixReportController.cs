@@ -1,5 +1,6 @@
 ﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -12,7 +13,6 @@ using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
 using Microsoft.AspNetCore.Mvc;
 using Rotativa.Extensions;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
@@ -37,12 +37,18 @@ namespace IOWebApplication.Controllers
             cdnService = _cdnService;
         }
 
-        public IActionResult Index()
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
+        public async Task<IActionResult> Index()
         {
             //var test1 = service.GetStateOfPlay("1645824597854");
             //var test2 = service.FetchNomenclatures();
-            var model = new RegixReportListFilterVM();
-            var result = service.RegixReportList_Select(userContext.CourtId, model).ToList();
+            //var model = new RegixReportListFilterVM();
+            //var result = service.RegixReportList_Select(userContext.CourtId, model).ToList();
+
+            var request = new RegixCriminalRecordsReportVM();
+            //request.Filter.IdentifierFilter = "9108130649";
+            request.Filter.IdentifierTypeFilter = 0;
+            await service.CriminalRecordsReport_SaveData(request);
             return View();
         }
 
@@ -82,6 +88,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult PersonData(int? id)
         {
             RegixPersonDataVM model = null;
@@ -108,13 +115,16 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> PersonData(RegixPersonDataVM model)
         {
+            if (Utils.Validation.IsEGN(model.PersonDataFilter.EgnFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
             {
                 return View(nameof(PersonData), model);
             }
             var currentId = model.Report.Id;
-            if (service.PersonData_SaveData(model))
+            if (await service.PersonData_SaveData(model))
             {
                 await RegixReportSaveFile(NomenclatureConstants.RegixType.PersonData, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -142,6 +152,7 @@ namespace IOWebApplication.Controllers
         /// <param name="addressTypeId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult PersonAddress(int addressTypeId, int? id)
         {
             SetViewBagPersonAddress(addressTypeId);
@@ -174,6 +185,9 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> PersonAddress(RegixPersonAddressVM model)
         {
+            if (Utils.Validation.IsEGN(model.PersonAddressFilter.EgnFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
             SetViewBagPersonAddress(model.AddressTypeId);
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
@@ -181,7 +195,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(PersonAddress), model);
             }
             var currentId = model.Report.Id;
-            if (service.PersonAddress_SaveData(model))
+            if (await service.PersonAddress_SaveData(model))
             {
                 await RegixReportSaveFile(model.AddressTypeId, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -209,8 +223,16 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult EmploymentContracts(int? id)
         {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.EmploymentContractsEnabled))
+            {
+                return NotFoundError("Търсеният от Вас ресурс не е намерен и/или нямате достъп до него.");
+            }
+
+
+
             SetViewBagEmploymentContracts();
             RegixEmploymentContractsVM model = null;
             if ((id ?? 0) > 0)
@@ -220,6 +242,7 @@ namespace IOWebApplication.Controllers
             else
             {
                 model = new RegixEmploymentContractsVM();
+                model.EmploymentContractsFilter.EikTypeId = 1;
                 SetRegixReportMainData(model.Report);
             }
             model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
@@ -237,6 +260,9 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> EmploymentContracts(RegixEmploymentContractsVM model)
         {
+            if (model.EmploymentContractsFilter.EikTypeId == 1 && Utils.Validation.IsEGN(model.EmploymentContractsFilter.IdentityFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
             SetViewBagEmploymentContracts();
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
@@ -244,7 +270,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(EmploymentContracts), model);
             }
             var currentId = model.Report.Id;
-            if (service.EmploymentContracts_SaveData(model))
+            if (await service.EmploymentContracts_SaveData(model))
             {
                 await RegixReportSaveFile(NomenclatureConstants.RegixType.EmploymentContracts, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -271,6 +297,7 @@ namespace IOWebApplication.Controllers
         /// <param name="compensationTypeId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult CompensationByPaymentPeriod(int compensationTypeId, int? id)
         {
             SetViewBagCompensationByPaymentPeriod();
@@ -308,6 +335,9 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> CompensationByPaymentPeriod(RegixCompensationByPaymentPeriodVM model)
         {
+            if (model.CompensationByPaymentPeriodFilter.IdentifierTypeFilter == 0 && Utils.Validation.IsEGN(model.CompensationByPaymentPeriodFilter.IdentifierFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
             SetViewBagCompensationByPaymentPeriod();
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
@@ -315,7 +345,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(CompensationByPaymentPeriod), model);
             }
             var currentId = model.Report.Id;
-            if (service.CompensationByPaymentPeriod_SaveData(model))
+            if (await service.CompensationByPaymentPeriod_SaveData(model))
             {
                 await RegixReportSaveFile(model.CompensationTypeId, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -341,6 +371,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult PensionIncomeAmountReport(int? id)
         {
             SetViewBagPensionIncomeAmountReport();
@@ -371,6 +402,9 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> PensionIncomeAmountReport(RegixPensionIncomeAmountVM model)
         {
+            if (model.PensionIncomeAmountFilter.IdentifierTypeFilter == 0 && Utils.Validation.IsEGN(model.PensionIncomeAmountFilter.IdentifierFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
             SetViewBagPensionIncomeAmountReport();
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
@@ -378,7 +412,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(PensionIncomeAmountReport), model);
             }
             var currentId = model.Report.Id;
-            if (service.PensionIncomeAmountReport_SaveData(model))
+            if (await service.PensionIncomeAmountReport_SaveData(model))
             {
                 await RegixReportSaveFile(NomenclatureConstants.RegixType.PensionIncomeAmount, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -399,6 +433,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult PersonalIdentityV2(int? id)
         {
             RegixPersonalIdentityV2VM model = null;
@@ -425,13 +460,16 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> PersonalIdentityV2(RegixPersonalIdentityV2VM model)
         {
+            if (Utils.Validation.IsEGN(model.PersonalIdentityV2Filter.EGN) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
             {
                 return View(nameof(PersonalIdentityV2), model);
             }
             var currentId = model.Report.Id;
-            if (service.PersonalIdentityV2_SaveData(model))
+            if (await service.PersonalIdentityV2_SaveData(model))
             {
                 await RegixReportSaveFile(NomenclatureConstants.RegixType.PersonalIdentityV2, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -452,6 +490,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult ActualStateV3(int? id)
         {
             RegixActualStateV3VM model = null;
@@ -488,13 +527,16 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> ActualStateV3(RegixActualStateV3VM model)
         {
+            if (Utils.Validation.IsEIK(model.ActualStateV3Filter.UIC) == false)
+                ModelState.AddModelError("", "Невалиден ЕИК");
+
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
             {
                 return View(nameof(ActualStateV3), model);
             }
             var currentId = model.Report.Id;
-            if (service.ActualStateV3_SaveData(model))
+            if (await service.ActualStateV3_SaveData(model))
             {
                 await RegixReportSaveFile(NomenclatureConstants.RegixType.ActualStateV3, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -515,12 +557,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult StateOfPlay(int? id)
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
+        public async Task<IActionResult> StateOfPlay(int? id)
         {
             RegixStateOfPlayVM model = null;
             if ((id ?? 0) > 0)
             {
-                model = service.GetStateOfPlayById(id ?? 0);
+                model = await service.GetStateOfPlayById(id ?? 0);
             }
             else
             {
@@ -547,7 +590,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(StateOfPlay), model);
             }
             var currentId = model.Report.Id;
-            if (service.StateOfPlay_SaveData(model))
+            if (await service.StateOfPlay_SaveData(model))
             {
                 await RegixReportSaveFile(NomenclatureConstants.RegixType.StateOfPlay, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -573,19 +616,19 @@ namespace IOWebApplication.Controllers
         /// <param name="regixReasonGuid"></param>
         /// <param name="regixRequestTypeId"></param>
         /// <returns></returns>
-        public JsonResult PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
+        public async Task<JsonResult> PersonSearch(int uicType, string uic, long? regixReasonDocumentId, int? regixReasonCaseId, string regixReasonDescription, string regixReasonGuid, int? regixRequestTypeId)
         {
             AddAuditInfo("Преглед", $"Проверка за лице по идентификатор {uic}", "Проверка в НБД за имена на ФЛ и в ТР за наименование на ЮЛ");
-            return Json(service.PersonSearch(uicType, uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId));
+            return Json(await service.PersonSearch(uicType, uic, regixReasonDocumentId, regixReasonCaseId, regixReasonDescription, regixReasonGuid, regixRequestTypeId));
         }
 
         #region PersonDataAddress
         /// <summary>
         /// Справка за Лице + адреси
         /// </summary>
-        /// <param name="addressTypeId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult PersonDataAddress(int? id)
         {
             RegixPersonDataAddressVM model = null;
@@ -613,13 +656,16 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> PersonDataAddress(RegixPersonDataAddressVM model)
         {
+            if (Utils.Validation.IsEGN(model.PersonAddressFilter.EgnFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
             ValidateReason(model.Report);
             if (!ModelState.IsValid)
             {
                 return View(nameof(PersonDataAddress), model);
             }
             var currentId = model.Report.Id;
-            if (service.PersonDataAddress_SaveData(model))
+            if (await service.PersonDataAddress_SaveData(model))
             {
                 await RegixReportSaveFile(NomenclatureConstants.RegixType.PersonDataAddress, model.Report.Id);
                 this.SaveLogOperation(currentId == 0, model.Report.Id);
@@ -651,6 +697,7 @@ namespace IOWebApplication.Controllers
         /// Справка външни регистри
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult RegixReportList()
         {
             ViewBag.RegixTypeId_ddl = nomService.GetDropDownList<RegixType>();
@@ -714,12 +761,20 @@ namespace IOWebApplication.Controllers
                     html = await this.RenderPartialViewAsync("~/Views/RegixReport/", "_ActualStateV3Response.cshtml", modelActualStateV3, true);
                     break;
                 case NomenclatureConstants.RegixType.StateOfPlay:
-                    RegixStateOfPlayVM modelState = service.GetStateOfPlayById(id);
+                    RegixStateOfPlayVM modelState = await service.GetStateOfPlayById(id);
                     html = await this.RenderPartialViewAsync("~/Views/RegixReport/", "_StateOfPlayResponse.cshtml", modelState, true);
                     break;
                 case NomenclatureConstants.RegixType.PersonDataAddress:
                     RegixPersonDataAddressVM modelPersonDataAddress = service.GetPersonDataAddressById(id);
                     html = await this.RenderPartialViewAsync("~/Views/RegixReport/", "_PersonDataAddressResponse.cshtml", modelPersonDataAddress, true);
+                    break;
+                case NomenclatureConstants.RegixType.RelationsSearch:
+                    RegixRelationsSearchVM modelRelationsSearch = service.GetRelationsSearchById(id);
+                    html = await this.RenderPartialViewAsync("~/Views/RegixReport/", "_RelationsSearchResponse.cshtml", modelRelationsSearch, true);
+                    break;
+                case NomenclatureConstants.RegixType.CriminalRecordsReport:
+                    RegixCriminalRecordsReportVM modelCriminalReportSearch = service.GetCriminalRecordsReportById(id);
+                    html = await this.RenderPartialViewAsync("~/Views/RegixReport/", "_CriminalRecordsReportResponse.cshtml", modelCriminalReportSearch, true);
                     break;
                 default:
                     break;
@@ -758,5 +813,127 @@ namespace IOWebApplication.Controllers
 
             return File(Convert.FromBase64String(model.FileContentBase64), model.ContentType, model.FileName);
         }
+
+        #region RelationsSearch
+        /// <summary>
+        /// Справка родствени връзки
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
+        public IActionResult RelationsSearch(int? id)
+        {
+            RegixRelationsSearchVM model = null;
+            if ((id ?? 0) > 0)
+            {
+                model = service.GetRelationsSearchById(id ?? 0);
+            }
+            else
+            {
+                model = new RegixRelationsSearchVM();
+                SetRegixReportMainData(model.Report);
+            }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
+
+            //SetHelpFile(HelpFileValues.Inquiry5);
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Извличане на Справка трудови договори
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> RelationsSearch(RegixRelationsSearchVM model)
+        {
+            if (Utils.Validation.IsEGN(model.RelationsSearchFilter.IdentifierFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
+            ValidateReason(model.Report);
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(RelationsSearch), model);
+            }
+            var currentId = model.Report.Id;
+            if (await service.RelationsSearch_SaveData(model))
+            {
+                await RegixReportSaveFile(NomenclatureConstants.RegixType.RelationsSearch, model.Report.Id);
+                this.SaveLogOperation(currentId == 0, model.Report.Id);
+                SetSuccessMessage("Четенето премина успешно");
+                return RedirectToAction(nameof(RelationsSearch), new { id = model.Report.Id });
+            }
+            else
+            {
+                SetErrorMessage("Проблем при четене на данните");
+            }
+            return View(nameof(RelationsSearch), model);
+        }
+        #endregion
+
+        #region CriminalRecordsReport
+        public void SetViewBagCriminalRecordsReport()
+        {
+            ViewBag.Filter_IdentifierTypeFilter_ddl = commService.GetEnumSelectList<IdentifierTypeCriminalRecordsReportVM>();
+        }
+
+        /// <summary>
+        /// Справка за съдимост
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
+        public IActionResult CriminalRecordsReport(int? id)
+        {
+            SetViewBagCriminalRecordsReport();
+            RegixCriminalRecordsReportVM model = null;
+            if ((id ?? 0) > 0)
+            {
+                model = service.GetCriminalRecordsReportById(id ?? 0);
+            }
+            else
+            {
+                model = new RegixCriminalRecordsReportVM();
+                SetRegixReportMainData(model.Report);
+            }
+            model.Report.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromReport;
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Извличане на данни Справка за съдимост
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> CriminalRecordsReport(RegixCriminalRecordsReportVM model)
+        {
+            if (model.Filter.IdentifierTypeFilter == 0 && Utils.Validation.IsEGN(model.Filter.IdentifierFilter) == false)
+                ModelState.AddModelError("", "Невалидно ЕГН");
+
+            SetViewBagCriminalRecordsReport();
+            ValidateReason(model.Report);
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(CriminalRecordsReport), model);
+            }
+            var currentId = model.Report.Id;
+            if (await service.CriminalRecordsReport_SaveData(model))
+            {
+                await RegixReportSaveFile(NomenclatureConstants.RegixType.CriminalRecordsReport, model.Report.Id);
+                this.SaveLogOperation(currentId == 0, model.Report.Id);
+                SetSuccessMessage("Четенето премина успешно");
+                return RedirectToAction(nameof(CriminalRecordsReport), new { id = model.Report.Id });
+            }
+            else
+            {
+                SetErrorMessage("Проблем при четене на данните");
+            }
+            return View(nameof(CriminalRecordsReport), model);
+        }
+        #endregion
+
     }
 }

@@ -1,15 +1,23 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Identity
+@inject IOWebApplication.Infrastructure.Contracts.IDBUserContext dbUserContext;
 
 <link href="~/lib/fullcalendar/fullcalendar.min.css" rel="stylesheet" />
 <link href="~/lib/fullcalendar/fullcalendar.print.css" rel="stylesheet" media="print" />
 <script src="~/lib/fullcalendar/lib/moment.min.js"></script>
 <script src="~/lib/fullcalendar/fullcalendar.min.js"></script>
 <script src="~/lib/fullcalendar/bg.js"></script>
+<script type="text/javascript">
+    var userSettings = JSON.parse('@Html.Raw((await dbUserContext.Settings()).AsText())');
+</script>
 <div class="box box-success">
     <div class="box-header with-border ">
         <h3 class="box-title">Календар на моите събития</h3>
     </div>
     <div class="box-body">
+        <div>
+            <label><input type="radio" id="case_mode" name="case_mode" value="0" checked="checked" />&nbsp;Покажи всички</label>&nbsp;&nbsp;&nbsp;
+            <label><input type="radio" id="case_mode" name="case_mode" value="2" />&nbsp;Покажи ЗП</label>
+        </div>
         <div id="calendar" class="calendar-person"></div>
     </div>
 </div>
@@ -17,46 +25,57 @@
 <script>
 
     $(function () {
-       $('#calendar').fullCalendar({
-            header: {
-                left: 'prev,next',
-                center: 'title',
-               right: 'month,listWeek,agendaDay'
-            },
-            editable: false,
-            eventLimit: true, // allow "more" link when too many events
-           timezone: "local",
-           defaultView: userSettings.CalendarStyle,
-            weekNumbers: false,
-            eventRender: function (eventObj, $el) {
-                $el.popover({
-                    title: eventObj.pop_title,
-                    content: eventObj.pop_content,
-                    trigger: 'hover',
-                    placement: 'top',
-                    container: 'body'
-                });
-            },
-            events: {
-                url: '@Url.Action("Calendar_GetByPerson", "Ajax")',
-                error: function () {
-                    $('#script-warning').show();
-                }
-           },
-           viewRender: (function () {
-               var lastViewName;
-               return function (view) {
-                   var view = $('#calendar').fullCalendar('getView');
-                   //console.log(view);
-                   //alert('The new title of the view is ' + view.type);
-                   if (view.type != userSettings.CalendarStyle)
-                   updateUserSetting('@UserSettingsModel.Set.CalendarStyle', view.type);
-
-               }
-           })(),
-
+        $('input[name="case_mode"]').click(function(){
+                $('#calendar').fullCalendar('destroy');
+                $('#calendar').empty();
+                buildCalendar();
         });
+        $('#case_mode:checked').trigger('click');
     });
+    function buildCalendar(){
+            $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: 'month,listWeek,agendaDay'
+                },
+                editable: false,
+                eventLimit: true, // allow "more" link when too many events
+                timezone: "local",
+                defaultView: userSettings.CalendarStyle,
+                weekNumbers: false,
+                eventRender: function (eventObj, $el) {
+                    $el.popover({
+                        title: eventObj.pop_title,
+                        content: eventObj.pop_content,
+                        trigger: 'hover',
+                        placement: 'top',
+                        container: 'body'
+                    });
+                },
+                events: {
+                    url: '@Url.Action("Calendar_GetByPerson", "Ajax")',
+                    data:{
+                        caseMode: $('#case_mode:checked').val()
+                    },
+                    error: function () {
+                        $('#script-warning').show();
+                    }
+                },
+                viewRender: (function () {
+                    var lastViewName;
+                    return function (view) {
+                        var view = $('#calendar').fullCalendar('getView');
+                        //console.log(view);
+                        //alert('The new title of the view is ' + view.type);
+                        if (view.type != userSettings.CalendarStyle)
+                            updateUserSetting('@UserSettingsModel.Set.CalendarStyle', view.type);
+
+                    }
+                })(),
+
+         });
+     }
 </script>
 <style>
     .fc-widget-content .fc-sat, .fc-widget-content .fc-sun {
@@ -66,5 +85,9 @@
 
     .fc-widget-content .fc-other-month {
         background-color: #fcfcfc;
+    }
+
+    a[href="#hide"] .fc-time {
+        display: none;
     }
 </style>

@@ -1,0 +1,28 @@
+﻿@model IEnumerable<CoordinationDepersonalizeVM>
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+@if (Model.Any())
+{
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Обезличаване на особено мнение</legend>
+        <div class="pull-right">
+
+
+            @foreach (var coordination in Model)
+            {
+
+                @if (coordination.HasPublicFile && access.CanChangeFull)
+                {
+                    <a onclick="confirmDelete(this,'coordination'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile",new { sourceId=coordination.Id,sourceType=SourceTypeSelectVM.CaseSessionActCoordinationDepersonalizedPdf})" class="btn btn-sm btn-danger" title="Премахване на обезличено особено мнение на @coordination.JudgeName"><i class="fa fa-remove"></i></a>
+                }
+                else
+                {
+                    <a asp-action="DepersonalizeCoordination" asp-route-id="@coordination.Id" class="btn btn-sm btn-default">@coordination.JudgeName, @coordination.JudgeRole</a>
+                }
+                <text>&nbsp;</text>
+            }
+        </div>
+    </fieldset>
+}

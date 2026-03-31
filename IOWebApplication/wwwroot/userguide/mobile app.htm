@@ -1,0 +1,683 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h1 {
+			mso-style-link: "Heading 1 Char";
+			margin-top: 12.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 16.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+			font-weight: normal;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			font-size: 9.0pt;
+			font-family: "Times New Roman",serif;
+			color: #44546A;
+			font-style: italic;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 57.6pt;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading1Char {
+			mso-style-name: "Heading 1 Char";
+			mso-style-link: "Heading 1";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2E74B5;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F4D78;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 8.0pt;
+			line-height: 107%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 2.0cm 42.55pt 2.0cm 99.25pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG>
+
+	<div class=WordSection1>
+
+		<h3 style='margin-left:71.45pt;text-indent:-36.0pt'>
+			9.1.1<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Мобилно приложение
+		</h3>
+
+		<h1 style='text-indent:35.4pt'>
+			<b>
+				<span style='font-size:12.0pt;line-height:
+115%;font-family:"Times New Roman",serif;color:windowtext'>
+					1. Минимални
+					изисквания към устройствата
+				</span>
+			</b>
+		</h1>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>
+			Мобилното приложение на ЕИСС може да работи на мобилни устройства тип
+			смартфон или таблет. За оптимална работа на мобилното приложение за призовкари
+			на ЕИСС, Вашето устройство трябва да покрива следните минимални технически
+			изисквания.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>
+			• Свободно място за инсталиране на мобилното приложение и поддръжка на
+			5000 призовки – 1GB;
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>• Камера – 8MP;                                                                              </p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>• Памет – 2GB. </p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>• Операционна система Android версия 7.0.</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>
+			<b>
+				Не е необходимо устройството да е снабдено със СИМ карта.<a name="_Toc86331507"></a>
+			</b>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'><b>&nbsp;</b></p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>
+			<b>
+				2. Инсталиране на мобилно приложение за призовкар и сдвояване на
+				устройства
+			</b>
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			От меню „Управление“, подменю
+			„Уведомяване“, секция „Мобилно приложение“, се изтегля APK файл за мобилното
+			приложение за призовкар.
+		</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				<img width=543 height=400
+					 id="Picture 143990" src="mobile%20app_files/image001.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<span style='line-height:115%'>
+				Файлът
+				се инсталира на мобилното устройство и се изпълняват следващите стъпки:
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				<img width=533 height=677
+					 id="Picture 143993" src="mobile%20app_files/image002.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:6.0pt;margin-right:0cm;margin-bottom:6.0pt;
+margin-left:0cm;text-indent:35.4pt;page-break-after:avoid'>
+			<span style='line-height:115%'>
+				След инсталирането на мобилното приложение се влиза в
+				Меню „Администриране“, подменю „Номенклатури“, секция „Потребители“ в ЕИСС:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-left:28.8pt;text-indent:6.65pt'>
+			<span style='font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+				<img width=554
+					 height=507 id="Picture 143988" src="mobile%20app_files/image003.png">
+			</span><span style='line-height:115%'>
+				Избира се потребител с роля „Призовкар“ и се избира
+				бутон „Сдвояване на мобилно устройство“
+			</span><span style='line-height:115%'>
+				<img width=29 height=30 id="Picture 143989" src="mobile%20app_files/image004.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			Избира се бутон „Добави“, след което на екрана в ЕИСС се
+			визуализира генерирания QR код за сдвояване на мобилното устройство с
+			потребителския профил на призовкаря в ЕИСС.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=359 height=238
+				 src="mobile%20app_files/image005.png" align=left hspace=12 alt=7><span style='font-family:"Calibri Light",sans-serif;color:#2E74B5'>
+				<br clear=all>
+			</span>
+		</p>
+
+		<h2>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif;
+color:windowtext'>
+				От екрана на инсталираното приложение на мобилното устройство
+				се избира бутон „Прочети баркода“ и се изпълняват последователно стъпки
+				показани по-долу:
+			</span>
+		</h2>
+
+		<p class=MsoNormal>
+			<span style='font-family:"Calibri Light",sans-serif;
+color:#2E74B5'>
+				<img width=558 height=324 id="Picture 143998"
+					 src="mobile%20app_files/image006.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				След сдвояване на
+				устройството се задава парола за достъп до мобилното приложение, която се
+				използва при синхронизиране на данни между ЕИСС и мобилното устройство.
+			</span>
+		</p>
+
+		<p class=MsoNormalCxSpMiddle>
+			<b>
+				Важно: За да се осъществи сдвояването на
+				мобилното устройство с профила в ЕИСС, то трябва да е свързано с мрежата на
+				съда (
+			</b><b><span lang=EN-US>Wi-fi)</span></b><b>.</b>
+		</p>
+
+		<p class=MsoNormalCxSpMiddle>
+			Сдвояването на мобилното устройство е еднократно. <a name="_Toc86331508"></a>
+		</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>&nbsp;</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>&nbsp;</p>
+
+		<p class=MsoNormal style='text-indent:21.6pt'>
+			<b>
+				3. Изтегляне на
+				призовки/съобщения/уведомления за връчване от призовкар
+			</b>
+		</p>
+
+		<p class=MsoNormal style='text-indent:18.0pt'>
+			Изтегляне на призовки от ЕИСС към
+			мобилното приложение – Условия за изтегляне на призовки:
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:10.0pt;margin-left:36.0pt'>
+			<span style='font-family:Wingdings'>
+				&uuml;<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>
+			</span><i>
+				<u>
+					За да се
+					осъществи трансфер на данни от ЕИСС към мобилното приложение,  <b>
+						мобилното
+						устройство трябва да е свързано с мрежата на съда
+					</b> (
+				</u>
+			</i><i>
+				<u>
+					<span lang=EN-US>Wi-fi)</span>.
+				</u>
+			</i>
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:10.0pt;margin-left:36.0pt'>
+			<span style='font-family:Wingdings'>
+				&uuml;<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>
+			</span><i>
+				<u>
+					За да се
+					трансферират призовки от ЕИСС към мобилното приложение, те трябва да са в
+					статус „За връчване“ или да е отразено посещение. Не се трансферират призовки в
+					краен статус (Връчена/Невръчена).
+				</u>
+			</i>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>3.1       Смяна на статуса на призовките</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>
+			3.1.1    От Меню „Управление“, модул „Уведомяване“, подмодул „Към
+			призовкар съд за разнасяне“ се сменя статуса на призовката.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>
+			3.1.2    От филтъра за статус се избира статус на призовките (Изготвен,
+			Изпратено, Получен). След като се избере един от тези статуси се натиска бутон
+			„Филтриране“.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>
+			3.1.3    От филтър „За връчване от“ се избира призовкаря, на чиито
+			призовки ще се сменя статуса.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt;line-height:
+normal'>Визуализира се списък на всички призовки в избрания статус.</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				<img width=561 height=248
+					 id="Picture 143999" src="mobile%20app_files/image007.png">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След като сме изпълнят описаните
+			стъпки трябва да се маркират избраните призовки и да се избере бутон „За
+			връчване“.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=571 height=251 id="Picture 141318"
+				 src="mobile%20app_files/image008.png" alt=5>
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След като статуса на призовките е
+			сменен те вече могат да се трансферират в мобилното приложение.
+		</p>
+
+		<h2>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif;
+color:windowtext'>
+				3.2 Избира се бутон „Синхронизиране“ и след това се задава
+				периода, за който ще се трансферират призовките, след което се избира бутон
+				„Приеми“.
+			</span>
+		</h2>
+
+		<p class=MsoNormal>
+			Визуализират се приетите призовки, изтеглят се както
+			създадените в текущия съд призовки, така и тези, които са изготвени в друг съд,
+			но ще се разнесат от призовкаря на текущия съд.
+		</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				<img width=564 height=360
+					 id="Picture 141327" src="mobile%20app_files/image009.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			На екрана в мобилното приложение
+			на съответната призовка се визуализира икона  <img width=43 height=33
+														 id="Picture 141357" src="mobile%20app_files/image010.png">, която показва преди
+			колко дни е отразено предходното посещение на адреса.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			До иконата за брой дни се
+			извежда  и икона <img width=58 height=25 id="Picture 141362"
+						 src="mobile%20app_files/image011.png">, която показва кое по ред е последното
+			посещение за връчване на конкретната призовка.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След усп<b>ешн</b>о изтегляне на
+			призовките/съобщенията/уведомленията за връчване, Призовкарят може да излезе от
+			мрежата на съда и да премине към разнасянето на книжата.
+		</p>
+
+		<h1>
+			<a name="_Toc86331509">
+				<b>
+					<span style='font-size:12.0pt;line-height:115%;
+font-family:"Times New Roman",serif;color:windowtext'>
+						4. Отразяване на
+						посещение
+					</span>
+				</b>
+			</a>
+		</h1>
+
+		<h2>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif;
+color:windowtext'>
+				Когато Призовкарят е на адрес избира бутон
+				„Призовки/съобщения“ и може да премине към отразяване на резултата от
+				посещението.
+			</span>
+		</h2>
+
+		<h2>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif;
+color:windowtext'>
+				Избира конкретната призовка, след което се визуализира екран
+				за отразяване на посещението.
+			</span>
+		</h2>
+
+		<h2>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif;
+color:windowtext'>
+				Попълват се статуса и данните за уведомяване и се избира
+				бутон „Запис“.
+			</span>
+		</h2>
+
+		<p class=MsoNormal>
+			<img width=585 height=332 id="Picture 141364"
+				 src="mobile%20app_files/image012.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			<img width=605 height=346
+				 src="mobile%20app_files/image013.jpg" align=right hspace=12>
+		</p>
+
+		<h1>
+			<a name="_Toc86331510">
+				<b>
+					<span style='font-size:12.0pt;line-height:115%;
+font-family:"Times New Roman",serif;color:windowtext'>
+						5.Трансфер на данните от
+						резултата от посещението отразени в мобилното приложение към ЕИСС
+					</span>
+				</b>
+			</a>
+		</h1>
+
+		<h2>
+			<span lang=EN-US style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif;
+color:windowtext'>5.1 </span><span style='font-size:12.0pt;line-height:115%;
+font-family:"Times New Roman",serif;color:windowtext'>
+				След като приключи
+				разнасянето на книжата и Призовкарят се върне в съда той отново трябва да
+				избере бутон „Синхронизиране“.
+			</span>
+		</h2>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Приложението показва, колко
+			призовки са разнесени и могат да се изпратят към ЕИСС.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След трансфера приложението се
+			връща на екрана за приемане на призовки.
+		</p>
+
+		<h2>
+			<span style='font-size:12.0pt;line-height:115%;font-family:"Times New Roman",serif;
+color:windowtext'>5.2 Избира се бутон „Изпрати“ </span>
+		</h2>
+
+		<p class=MsoNormal>
+			<img width=555 height=353 id="Picture 141435"
+				 src="mobile%20app_files/image014.jpg">
+		</p>
+
+		<p class=MsoListParagraph align=left style='margin-top:0cm;margin-right:0cm;
+margin-bottom:10.0pt;margin-left:36.0pt;text-align:left'>
+			<span style='font-family:Wingdings'>
+				&Oslash;<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;
+				</span>
+			</span>Преди трансфера
+		</p>
+
+		<p class=MsoNormal>
+			<img width=554 height=232 id="Picture 141436"
+				 src="mobile%20app_files/image015.jpg" alt=2>
+		</p>
+
+		<p class=MsoNormal>
+			<img width=557 height=221 id="Picture 141440"
+				 src="mobile%20app_files/image016.jpg">
+		</p>
+
+		<p class=MsoListParagraph align=left style='margin-top:0cm;margin-right:0cm;
+margin-bottom:10.0pt;margin-left:36.0pt;text-align:left'>
+			<span style='font-family:Wingdings'>
+				&Oslash;<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;
+				</span>
+			</span>След трансфера:
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След трансфера статуса на
+			призовките в системата и резултата от посещението се променя съгласно данните
+			от мобилното приложение.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Статусът се променя след всяко
+			отразено посещение.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=563 height=206 id="Picture 141488"
+				 src="mobile%20app_files/image017.jpg" alt=1>
+		</p>
+
+		<p class=MsoNormal>
+			<img width=551 height=225 id="Picture 141695"
+				 src="mobile%20app_files/image018.png" alt=4>
+		</p>
+
+		<p class=MsoNormal>
+			<img width=549 height=219 id="Picture 141729"
+				 src="mobile%20app_files/image019.png" alt=3>
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След, приключване на трансфера,
+			може да се премине към повторно изтегляне на призовки. От ЕИСС към мобилното
+			приложение ще се трансферират само не връчените призовки.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Процесът се повтаря докато има
+			призовки за разнасяне.
+		</p>
+
+		<p class=MsoNormal>&nbsp;</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

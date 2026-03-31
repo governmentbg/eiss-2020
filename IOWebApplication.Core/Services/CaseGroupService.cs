@@ -68,7 +68,6 @@ namespace IOWebApplication.Core.Services
                     //Insert
                     int maxOrderNumber = repo.AllReadonly<CaseGroup>()
                         .Select(x => x.OrderNumber)
-                        .DefaultIfEmpty(0)
                         .Max();
 
                     model.OrderNumber = maxOrderNumber + 1;
@@ -81,7 +80,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CaseGroup Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CaseGroup Id={model.Id}");
                 return false;
             }
         }
@@ -134,7 +133,6 @@ namespace IOWebApplication.Core.Services
                     int maxOrderNumber = repo.AllReadonly<CaseType>()
                         .Where(x => x.CaseGroupId == model.CaseGroupId)
                         .Select(x => x.OrderNumber)
-                        .DefaultIfEmpty(0)
                         .Max();
 
                     model.OrderNumber = maxOrderNumber + 1;
@@ -147,7 +145,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CaseType Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CaseType Id={model.Id}");
                 return false;
             }
         }
@@ -159,29 +157,25 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseCodeVM> CaseCode_Select(int caseTypeId)
         {
-            Expression<Func<CaseTypeCode, bool>> caseTypeWhere = x => true;
+            Expression<Func<CaseCode, bool>> caseTypeWhere = x => true;
             if (caseTypeId > 0)
             {
-                caseTypeWhere = x => x.CaseTypeId == caseTypeId;
+                caseTypeWhere = x => x.TypeCodes.Any(t => t.CaseTypeId == caseTypeId);
             }
 
-            return repo.AllReadonly<CaseTypeCode>()
-                       .Include(x => x.CaseCode)
+            return repo.AllReadonly<CaseCode>()
                        .Where(caseTypeWhere)
                        .Select(x => new CaseCodeVM()
                        {
-                           Id = x.CaseCode.Id,
-                           OrderNumber = x.CaseCode.OrderNumber,
-                           Label = x.CaseCode.Label,
-                           Code = x.CaseCode.Code,
-                           IsActive = x.CaseCode.IsActive,
-                           DateStart = x.CaseCode.DateStart,
-                           DateEnd = x.CaseCode.DateEnd,
-                           LawBaseDescription = x.CaseCode.LawBaseDescription
-                       })
-                       .GroupBy(x => x.Id)
-                       .Select(g => g.FirstOrDefault())
-                       .AsQueryable();
+                           Id = x.Id,
+                           OrderNumber = x.OrderNumber,
+                           Label = x.Label,
+                           Code = x.Code,
+                           IsActive = x.IsActive,
+                           DateStart = x.DateStart,
+                           DateEnd = x.DateEnd,
+                           LawBaseDescription = x.LawBaseDescription
+                       });
         }
 
         /// <summary>
@@ -209,7 +203,13 @@ namespace IOWebApplication.Core.Services
                     //Изтриване на caseTypeCode за това ид
                     var caseTypeCodes = repo.AllReadonly<CaseTypeCode>().Where(x => x.CaseCodeId == model.Id).ToList();
                     repo.DeleteRange(caseTypeCodes);
-
+                    foreach (var item in types)
+                    {
+                        CaseTypeCode newCaseTypeCode = new CaseTypeCode();
+                        newCaseTypeCode.CaseTypeId = item;
+                        newCaseTypeCode.CaseCodeId = model.Id;
+                        repo.Add<CaseTypeCode>(newCaseTypeCode);
+                    }
                     repo.Update(saved);
                 }
                 else
@@ -217,22 +217,18 @@ namespace IOWebApplication.Core.Services
                     //Insert
                     int maxOrderNumber = repo.AllReadonly<CaseCode>()
                         .Select(x => x.OrderNumber)
-                        .DefaultIfEmpty(0)
                         .Max();
 
                     model.OrderNumber = maxOrderNumber + 1;
 
-
+                    //записва код към типове
+                    foreach (var item in types)
+                    {
+                        CaseTypeCode newCaseTypeCode = new CaseTypeCode();
+                        newCaseTypeCode.CaseTypeId = item;
+                        model.TypeCodes.Add(newCaseTypeCode);
+                    }
                     repo.Add<CaseCode>(model);
-                }
-
-                //записва код към типове
-                foreach (var item in types)
-                {
-                    CaseTypeCode newCaseTypeCode = new CaseTypeCode();
-                    newCaseTypeCode.CaseTypeId = item;
-                    newCaseTypeCode.CaseCodeId = model.Id;
-                    repo.Add<CaseTypeCode>(newCaseTypeCode);
                 }
 
                 repo.SaveChanges();
@@ -241,7 +237,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CaseCode Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CaseCode Id={model.Id}");
                 return false;
             }
         }
@@ -265,7 +261,7 @@ namespace IOWebApplication.Core.Services
            .Select(x => new MultiSelectTransferVM()
            {
                Id = x.CaseTypeId,
-               Order = x.CaseType.OrderNumber,
+               OrderInt = x.CaseType.OrderNumber,
                Text = x.CaseType.Label
            })
            .GroupBy(x => x.Id)
@@ -280,29 +276,27 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseTypeUnitVM> CaseTypeUnit_Select(int caseTypeId)
         {
+            Expression<Func<CaseTypeUnit, bool>> caseTypeIdWhere = x => x.CaseTypeId == caseTypeId;
+
             return repo.AllReadonly<CaseTypeUnit>()
-                        .Include(x => x.CaseTypeUnitCounts)
-                        .ThenInclude(x => x.JudgeRole)
-                        //.Include(x => x.CaseTypeUnitCounts.Select(r => r.JudgeRole))
-                        .Where(x => x.CaseTypeId == caseTypeId)
-                        .OrderBy(x => x.OrderNumber)
-                        .Select(x => new CaseTypeUnitVM()
-                        {
-                            Id = x.Id,
-                            OrderNumber = x.OrderNumber,
-                            Label = x.Label,
-                            IsActiveLabel = (x.IsActive) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No,
-                            DateStart = x.DateStart,
-                            Counts = x.CaseTypeUnitCounts.Where(r => r.PersonCount > 0)
-                                                    .OrderBy(r => r.JudgeRole.OrderNumber)
-                                                    .Select(u =>
-                                                    new ListNumberVM
-                                                    {
-                                                        Label = u.JudgeRole.Label,
-                                                        Value = u.PersonCount
-                                                    }
-                                                    )
-                        }).AsQueryable();
+                       .Where(caseTypeIdWhere)
+                       .OrderBy(x => x.OrderNumber)
+                       .Select(x => new CaseTypeUnitVM()
+                       {
+                           Id = x.Id,
+                           OrderNumber = x.OrderNumber,
+                           Label = x.Label,
+                           IsActiveLabel = (x.IsActive) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No,
+                           DateStart = x.DateStart,
+                           Counts = x.CaseTypeUnitCounts.Where(r => r.PersonCount > 0)
+                                                        .OrderBy(r => r.JudgeRole.OrderNumber)
+                                                        .Select(u => new ListNumberVM
+                                                        {
+                                                            Label = u.JudgeRole.Label,
+                                                            Value = u.PersonCount
+                                                        })
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -368,7 +362,7 @@ namespace IOWebApplication.Core.Services
 
             foreach (var listNumber in listNumbers)
             {
-                listNumber.Value = caseTypeUnits.Where(x => x.JudgeRoleId == listNumber.Id).Select(x => x.PersonCount).DefaultIfEmpty(0).FirstOrDefault();
+                listNumber.Value = caseTypeUnits.Where(x => x.JudgeRoleId == listNumber.Id).Select(x => x.PersonCount).FirstOrDefault();
             }
         }
 
@@ -433,7 +427,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на интервал по дело Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на интервал по дело Id={model.Id}");
                 return false;
             }
         }

@@ -47,9 +47,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public int? SentenceTypeId { get; set; }
 
         //--------Пари-------------------------
+        
         [Column("sentence_money")]
-        [Display(Name = "Размер, лв")]
+        [Display(Name = "Размер")]
         public decimal SentenseMoney { get; set; }
+
+        [Column("sentence_money_bgn")]
+        [Display(Name = "Размер, лв")]
+        public decimal SentenseMoneyBGN { get; set; }
+
         //--------Време-------------------------
         [Column("sentence_days")]
         [Display(Name = "Дни")]

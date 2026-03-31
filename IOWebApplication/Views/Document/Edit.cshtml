@@ -1,7 +1,9 @@
 ﻿@model DocumentVM
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @using IOWebApplication.Infrastructure.Constants
-@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
+@using IOWebApplication.Core.Helper.GlobalConstants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
     Model.CanChange = access.CanChange;
@@ -21,13 +23,19 @@
 
     ViewBag.MenuItemValue = "Doc1";
     string DeliveryGroupLabel = string.Empty;
+    string helpFile = "";
     switch (Model.DocumentDirectionId)
     {
         case DocumentConstants.DocumentDirection.Incoming:
             DeliveryGroupLabel = "Начин на получаване";
+            helpFile = HelpFileValues.IncommingDocuments;
             break;
         case DocumentConstants.DocumentDirection.OutGoing:
             DeliveryGroupLabel = "Начин на изпращане";
+            helpFile = HelpFileValues.OutgoingDocuments;
+            break;
+        case DocumentConstants.DocumentDirection.Internal:
+            helpFile = HelpFileValues.InternalDocuments;
             break;
     }
 
@@ -35,39 +43,76 @@
 
     //Req4
     bool hasApiRequest = (bool)ViewBag.hasApiRequest;
+
+    bool canConvertToCompliantDoc = Model.DocumentKindId == DocumentConstants.DocumentKind.InAdministrationDocument
+                && userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
+
+    ElectronicDocumentInfoVM elDocInfo = (ElectronicDocumentInfoVM)ViewBag.elDocInfo;
+
+    ViewData["ShowWaitingElectronicDocs"] = true;
+    ViewData["ShowMenuCounts"] = true;
+
+    int mqObjectId = 0;
+    if (Model.CourtId == NomenclatureConstants.Courts.RandomAssignment && Model.RequestTypeId > 0)
+    {
+        mqObjectId = Model.CourtId;
+    }
+    bool isFPglobal = Model.CourtId == NomenclatureConstants.Courts.RandomAssignment && Model.RequestTypeId > 0;
 }
-@section breadcrumb{
+@if (Model.CourtId == NomenclatureConstants.Courts.RandomAssignment && Model.Id > 0)
+{
+    @section titleInfo {
+    @await Component.InvokeAsync(nameof(IOWebApplication.Components.DocumentWarningComponent), new { documentId = Model.Id, warningType = "hasDocumentRequest" })
+    }
+}
+
+@section breadcrumb {
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
-        <li><a href="@Url.Action("Index","Document")">Съдебна регистратура</a></li>
+        @if (isFPglobal)
+        {
+
+            <li><a href="@Url.Action("GlobalAssignment","Document")">Съдебна регистратура</a></li>
+        }
+        else
+        {
+            <li><a href="@Url.Action("Index","Document")">Съдебна регистратура</a></li>
+        }
     </ol>
 }
 
 <div class="row">
     <div class="col-md-12">
-        <form asp-action="Edit" method="post">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
             @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.TemplateId)
+            @Html.HiddenFor(x => x.RequestTypeId)
+            @Html.HiddenFor(x => x.RequestTypeCode)
             @Html.HiddenFor(x => x.DocumentNumber)
             @Html.HiddenFor(x => x.DocumentDate)
-            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.ElectronicDocumentId)
             @Html.HiddenFor(x => x.DocumentDirectionId)
             @Html.HiddenFor(x => x.PriorDocumentId)
             @Html.HiddenFor(x => x.MultiRegistationId)
             @Html.HiddenFor(x => x.HasDocumentResolutions)
+            @Html.HiddenFor(x => x.AssignmentDocumentId)
+            @Html.HiddenFor(x => x.AssignmentDocumentCourt)
+            @Html.HiddenFor(x => x.AssignmentDocumentNumber)
+            @Html.HiddenFor(x => x.AssignmentDocumentDate)
             @Html.ValidationSummary()
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
 
                 <div class="nav-tabs-custom" id="mainTabs">
                     <ul class="nav nav-tabs">
-                        <li class="active"><a href="#tabMainData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
-                        <li class=""><a href="#tabPerson" data-toggle="tab"><i class="fa fa-user"></i> Свързани лица</a></li>
-                        <li class=""><a href="#tabDocuments" data-toggle="tab"><i class="fa fa-file-text"></i> Свързани документи</a></li>
-                        <li class="" id="litabInstitutionCaseInfo"><a href="#tabInstitutionCaseInfo" data-toggle="tab"><i class="fa fa-balance-scale"></i> Свързани дела на външни институции</a></li>
+                        <li class="active"><a href="#tabMainData" data-toggle="tab" data-filename="@helpFile"><i class="fa fa-database"></i> Основни данни</a></li>
+                        <li class=""><a href="#tabPerson" data-toggle="tab" data-filename="@helpFile"><i class="fa fa-user"></i> Свързани лица</a></li>
+                        <li class=""><a href="#tabDocuments" data-toggle="tab" data-filename="@helpFile"><i class="fa fa-file-text"></i> Свързани документи</a></li>
+                        <li class="" id="litabInstitutionCaseInfo"><a href="#tabInstitutionCaseInfo" data-toggle="tab" data-filename="@helpFile"><i class="fa fa-balance-scale"></i> Свързани дела на външни институции</a></li>
                         @if (Model.Id > 0)
                         {
-                            <li class=""><a href="#tabWorkTask" data-toggle="tab"><i class="fa fa-exclamation"></i> Задачи</a></li>
+                            <li class=""><a href="#tabWorkTask" data-toggle="tab" data-filename="@HelpFileValues.Refusal"><i class="fa fa-exclamation"></i> Задачи</a></li>
                         }
                     </ul>
                     <div class="tab-content">
@@ -99,11 +144,11 @@
                                             <label>
                                                 @if (Model.Id > 0)
                                                 {
-                                                    @Html.RadioButtonFor(x => x.DocumentKindId, dKind.Value, new { disabled = "disabled", onchange = "documentKindChange(this);" })
+                                                    @Html.RadioButtonFor(x => x.DocumentKindId, dKind.Value, new { @id = $"DocumentKindId_{dKind.Value}", disabled = "disabled", onchange = "documentKindChange(this);" })
                                                 }
                                                 else
                                                 {
-                                                    @Html.RadioButtonFor(x => x.DocumentKindId, dKind.Value, new { onchange = "documentKindChange(this);" })
+                                                    @Html.RadioButtonFor(x => x.DocumentKindId, dKind.Value, new { @id = $"DocumentKindId_{dKind.Value}", onchange = "documentKindChange(this);" })
                                                 }
                                                 @dKind.Text
                                             </label>
@@ -249,30 +294,58 @@
                             <div id="selectCase" class="case-info" style="display:none;">
                                 <fieldset class="is-fieldset">
                                     <legend class="legend_1">Свързано дело</legend>
-                                    @{ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.DocumentCaseInfo); }
+                                    @{
+                                        ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.DocumentCaseInfo);
+                                    }
 
                                     <partial name="_DocumentCaseInfoVM" model="@Model.DocumentCaseInfo" />
-                                    @{ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty; }
+                                    @{
+                                        ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+                                    }
                                 </fieldset>
                             </div>
 
-                            @if (Model.Id > 0)
-
-                            {
-                                //var cndEditMode = "append";
-                                //if (access.CanChangeFull)
-                                //{
-                                //    cndEditMode = "all";
-                                //}
-                                //Файлове може да се изтривати след образуване на дело
-                                var cndEditMode = "all";
-                                <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.Document" data-sourceid="@Model.Id" data-editmode="@cndEditMode"></div>
-                            }
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    @if (Model.Id > 0)
+                                    {
+                                        var cndEditMode = "all";
+                                        if (userContext.CourtId != Model.CourtId && Model.CourtId != NomenclatureConstants.Courts.RandomAssignment)
+                                        {
+                                            cndEditMode = "none";
+                                        }
+                                        <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.Document" data-sourceid="@Model.Id" data-editmode="@cndEditMode" data-filegroup="@Model.RequestTypeCode"></div>
+                                    }
+                                    else
+                                    {
+                                        if (Model.ElectronicDocumentId > 0)
+                                        {
+                                            <div class="cdn-files" data-sourcetype="@SourceTypeSelectVM.ElectronicDocument" data-sourceid="@Model.ElectronicDocumentId" data-editmode="none"></div>
+                                        }
+                                    }
+                                </div>
+                                @if (elDocInfo != null)
+                                {
+                                    <div class="col-lg-6">
+                                        <partial name="_ElectronicDocumentInfo" model="@elDocInfo" />
+                                    </div>
+                                }
+                                @if (Model.AssignmentDocumentId > 0)
+                                {
+                                    <div class="col-lg-6">
+                                        <partial name="_AssignmentDocumentInfo" model="@Model" />
+                                    </div>
+                                }
+                            </div>
                             <div>
-                                @{ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.RegixRequestReason); }
+                                @{
+                                    ViewData.TemplateInfo.HtmlFieldPrefix = nameof(Model.RegixRequestReason);
+                                }
 
                                 <partial name="../RegixReport/_RegixRequestReason" model="@Model.RegixRequestReason" />
-                                @{ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty; }
+                                @{
+                                    ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+                                }
                             </div>
                         </div>
                         <div class="tab-pane" id="tabPerson">
@@ -305,13 +378,26 @@
                 {
                     <a asp-action="Correction" asp-route-id="@Model.Id" class="btn btn-warning">Редакция</a>
                 }
-                <a asp-action="Index" class="btn btn-danger">Назад</a>
+                @if (Model.CourtId == NomenclatureConstants.Courts.RandomAssignment)
+                {
+                    <a asp-action="GlobalAssignment" class="btn btn-danger">Назад</a>
+                }
+                else
+                {
+                    <a asp-action="Index" class="btn btn-danger">Назад</a>
+                }
 
                 @if (Model.Id > 0)
                 {
                     if (Model.DocumentDirectionId != DocumentConstants.DocumentDirection.OutGoing)
                     {
                         <a href="@Url.Action("Obligation", "Money")?documentId=@Model.Id" class="btn btn-def" title="Суми към документа"><i class="fa fa-paypal"></i><span class="hidden-sm hidden-xs"> Суми към документа</span></a>
+                    }
+                    if (Model.RequestTypeId > 0
+                    && Model.DocumentDirectionId == DocumentConstants.DocumentDirection.Incoming
+                    && Model.CourtId == NomenclatureConstants.Courts.RandomAssignment)
+                    {
+                        <a href="@Url.Action("Index", "DocumentRequest",new {id = Model.Id })" class="btn btn-warning" title="Въвеждане обстоятелства по заявлението"><i class="fa fa-envelope-o"></i><span class="hidden-sm hidden-xs"> Заявление</span></a>
                     }
                     @if (Model.HasDocumentResolutions)
                     {
@@ -322,12 +408,16 @@
                         <a href="#" onclick="showApiRequest(); return false;" class="btn btn-warning" title="Преглед на данните подадени през портал">Заявка</a>
                     }
                     <div class="pull-right">
+                        @if (canConvertToCompliantDoc)
+                        {
+                            <a asp-action="ConvertToCompliant" asp-route-id="@Model.Id" class="btn btn-default">Съпровождащ</a>
+                        }
                         @if (access.CanChangeFull)
                         {
                             @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { LongId = Model.Id, DialogTitle = "Премахване на документ", ExpireSubmitUrl = Url.Action("Document_ExpiredInfo") })
                             <span>&nbsp;</span>
                         }
-                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.Document, SourceId = Model.Id })" />
+                        <partial name="MqInfo" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.Document,Model.Id,mqObjectId))" />
                         <span>&nbsp;</span>
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), Action = "edit" })
                     </div>
@@ -340,339 +430,434 @@
 @section scripts {
     <script>
         function documentKindChange(sender) {
-            if ($(sender).is(':checked')) {
-                $('#DocumentGroupId').html('');
-                $('#DocumentTypeId').html('');
-                changeRegistryDocKind();
-                //setTimeout(function () {  }, 50);
-            }
-            $('#EISSPNumber').change(function () {
-                if ($('#EISSPNumber').val())
-                    $('#EISSPNumber').val($('#EISSPNumber').val().toUpperCase());
-            })
+        if ($(sender).is(':checked')) {
+        $('#DocumentGroupId').html('');
+        $('#DocumentTypeId').html('');
+        changeRegistryDocKind();
+        //setTimeout(function () {  }, 50);
+        }
+        $('#EISSPNumber').change(function () {
+        if ($('#EISSPNumber').val())
+        $('#EISSPNumber').val($('#EISSPNumber').val().toUpperCase());
+        })
         }
         function changeRegistryDocKind() {
-            let docKindId = $('input[name="DocumentKindId"]:checked').val();
+        let docKindId = $('input[name="DocumentKindId"]:checked').val();
 
-            let courtOrgId = $('#CourtOrganizationId').val();
-            $('#CaseTypeId').html('');
+        let courtOrgId = $('#CourtOrganizationId').val();
+        $('#CaseTypeId').html('');
 
-            requestCombo('@Url.Action("GetDDL_DocumentGroupByCourt", "Ajax")',
-                {
-                    documentKindId: docKindId,
-                    courtOrganizationId: courtOrgId
-                }, '#DocumentGroupId', '@(Model.DocumentGroupId)', function () {
-                    $('#DocumentGroupId').trigger('change');
-                });
-            let noInstCase = ['3', '4', '5'];
-            if (noInstCase.includes(docKindId)) {
-                $('#litabInstitutionCaseInfo').hide();
-            } else {
-                $('#litabInstitutionCaseInfo').show()
-            }
-            switch (docKindId) {
-                case '@DocumentConstants.DocumentKind.InitialDocument':
-                    {
-                        if ('@Model.HasCaseInfo.ToString().ToLower()' == 'false') {
-                            $('#HasCaseInfo').prop('checked', false).trigger('change');
-                        }
-                        $('#newCase').show();
-                        if ($('#HasCaseInfo').is(':checked')) {
-                            $('#selectCase').show();
-                        }
-                        break;
-                    }
-                 case '@DocumentConstants.DocumentKind.CompliantDocument':
-                case '@DocumentConstants.DocumentKind.OutCompliantDocument': {
-                    $('#newCase').hide();
-                    $('#selectCase').show();
-                    $('#HasCaseInfo').prop('checked', true).trigger('change');
-                }
-                    break;
-                default:
-                    console.log('default click ');
-                    $('.case-info').hide();
-                    $('#HasCaseInfo').prop('checked', false);
-                    break;
-            }
+        requestCombo('@Url.Action("GetDDL_DocumentGroupByCourt", "Ajax")',
+        {
+        documentKindId: docKindId,
+        courtOrganizationId: courtOrgId
+        }, '#DocumentGroupId', '@(Model.DocumentGroupId)', function () {
+        $('#DocumentGroupId').trigger('change');
+        });
+        let noInstCase = ['3', '4', '5'];
+        if (noInstCase.includes(docKindId)) {
+        $('#litabInstitutionCaseInfo').hide();
+        } else {
+        $('#litabInstitutionCaseInfo').show()
+        }
+        switch (docKindId) {
+        case '@DocumentConstants.DocumentKind.InitialDocument':
+        {
+        if ('@Model.HasCaseInfo.ToString().ToLower()' == 'false') {
+        $('#HasCaseInfo').prop('checked', false).trigger('change');
+        }
+        $('#newCase').show();
+        if ($('#HasCaseInfo').is(':checked')) {
+        $('#selectCase').show();
+        }
+        break;
+        }
+        case '@DocumentConstants.DocumentKind.CompliantDocument':
+        case '@DocumentConstants.DocumentKind.OutCompliantDocument':
+        {
+        $('#newCase').hide();
+        $('#selectCase').show();
+        $('#HasCaseInfo').prop('checked', true).trigger('change');
+        @if (Model.Id == 0)
+        {
+            <text>
+                                                                                let caseInfoCourt = $('#DocumentCaseInfo_CourtId').val();
+                                                                                if (!caseInfoCourt || caseInfoCourt == '' || caseInfoCourt == '0') {
+                                                                                $('#DocumentCaseInfo_CourtId').val('@userContext.CourtId');
+                                                                                loadCourts($('.eiss-case-select').find('.court-control')[0], '@userContext.CourtId')
+                                                                                }
+            </text>
+        }
+        }
+        break;
+        default:
+        console.log('default click ');
+        $('.case-info').hide();
+        $('#HasCaseInfo').prop('checked', false);
+        break;
+        }
         }
 
         function initCaseInfo() {
-            $('.case-info').hide();
+        $('.case-info').hide();
 
 
-            $('#HasCaseInfo').change(function () {
-                if ($(this).is(':checked')) {
-                    $('#selectCase').show();
-                } else {
-                    $('#selectCase').hide();
-                }
-            });
-            $('#DocumentCaseInfo_HasLawAct').change(function () {
-                if ($(this).is(':checked')) {
-                    $('.lawact-select').show();
-                } else {
-                    $('.lawact-select').hide();
-                }
-            }).trigger('change');
+        $('#HasCaseInfo').change(function () {
+        if ($(this).is(':checked')) {
+        $('#selectCase').show();
+        } else {
+        $('#selectCase').hide();
+        }
+        });
+        $('#DocumentCaseInfo_HasLawAct').change(function () {
+        if ($(this).is(':checked')) {
+        $('.lawact-select').show();
+        } else {
+        $('.lawact-select').hide();
+        $('.lawact-select').val('-1');
+        }
+        }).trigger('change');
         }
         $(function () {
-            $.ajax({
-                // your ajax code
-                beforeSend: function () {
-                    $('#tabMainData').find('input')
-                    $('.loader').show()
-                },
-                complete: function () {
-                    $('.loader').hide();
-                }
-            });
-            initCaseInfo();
-            $('#CourtOrganizationId').change(function () {
-                changeRegistryDocKind();
-            });
-            $('#DocumentGroupId').change(function () {
-
-                requestCombo('@Url.Action("GetDDL_DocumentTypeByCourt", "Ajax")', {
-                    documentGroupId: $(this).val(),
-                    courtOrganizationId: $('#CourtOrganizationId').val()
-                }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function () { $('#DocumentTypeId').trigger('change') });
-            });
-            $('#DocumentTypeId').change(function () {
-                requestCombo('@Url.Action("GetDDL_CaseTypeByDocType", "Ajax")',
-                    {
-                        documentTypeId: $(this).val(),
-                        courtOrganizationId: $('#CourtOrganizationId').val()
-                    }
-                    , '#CaseTypeId', '@(Model.CaseTypeId)', function () { $('#CaseTypeId').trigger('change') });
-            });
-            $('#DeliveryGroupId').change(function () {
-                requestCombo('@Url.Action("GetDDL_DeliveryType", "Ajax")', { deliveryGroupId: $(this).val() }, '#DeliveryTypeId', @(Model.DeliveryTypeId ?? 0), function () {
-                    $('#DeliveryTypeId').trigger('change');
-                    if ($('#DeliveryTypeId').find('option').length == 1) {
-                        $('#DeliveryTypeId').parent().hide();
-                    } else {
-                        $('#DeliveryTypeId').parent().show();
-                    }
-                });
-                if ($(this).val() == '@DocumentConstants.DeliveryGroups.PostOffice' && $('#DocumentDirectionId').val() == '@DocumentConstants.DocumentDirection.Incoming') {
-                    $('#postOfficeDateContainer').show();
-                } else {
-                    $('#postOfficeDateContainer').hide();
-                }
-            }).trigger('change');
-
-            $('#divEISPP').hide();
-            $('#btnSelectFromEispp').hide();
-            $('#CaseTypeId').change(function () {
-                if ($(this).val() == null) {
-                    return;
-                }
-                var caseCode = '@Model.CaseCodeId';
-                if ($(this).val() != '@Model.CaseTypeId') {
-                    caseCode = '0';
-                }
-                loadCaseCode('#CaseCodeId_casecode', caseCode);
-                initCaseCodeValue = '0';
-
-                //divEISPP
-                requestGET_Json("@Url.Action("Get_CaseType", "Ajax")", { caseTypeId: $(this).val() }, function (cType) {
-                    if (cType != undefined && cType != null) {
-                        //legacyCaseNumberInit(cType.caseInstanceId);
-                        if (cType && cType.caseGroupId == '@NomenclatureConstants.CaseGroups.NakazatelnoDelo') {
-                            $('#divEISPP').show();
-                            $('#btnSelectFromEispp').show();
-                        } else {
-                            $('#divEISPP').hide();
-                            $('#btnSelectFromEispp').hide();
-                        }
-                    }
-                });
-            });
-            $(document).on('click', 'legend.address-legend span', function () {
-                $(this).parent().parent().find('.address-body').toggle();
-            });
-            initDynamicForms(function () {
-                //Callback after add new dynamic item
-                initEkatte();
-                initDocument();
-            });
-            initEkatte();
-            initCaseCode();
-            initCourts();
-            initCase();
-            initDocument();
-            $('.search-institution').click(function () {
-                requestContent('@Url.Action("SearchEntity", "Ajax")', { callback: 'selectEntityDocumentPerson' }, function (modalData) {
-                    ShowModalDialog('Избор на институция', modalData);
-                });
-            });
-
-            @if (Model.Id > 0 && !Model.CanChange){<text>$('.dynamic-form .remove-item,.dynamic-form .add-item').remove();</text>}
-
-            $('a.tab-validation-error:first').tab("show").trigger('click');
-            $('input#IsOldNumber').change(function () {
-                if ($(this).is(':checked')) {
-                    $('#divOldNumber').show();
-                } else {
-                    $('#divOldNumber').hide();
-                }
-            }).trigger('change');
-
-            
-
-            $(document).on('change', '.document-link-item .doc-link-direction .link-doc-dir', function (e) {
-                var docLinkContainer = $(this).parents('.document-link-item:first');
-                $(docLinkContainer).find('.document-container:first').data('docdir', $(this).val());
-            });
-
-            $(document).on('change', '.document-link-item .legacy-document-check input[type="checkbox"]', function (e) {
-
-                var docLinkContainer = $(this).parents('.document-link-item:first');
-                if ($(this).is(':checked')) {
-                    $(docLinkContainer).find('.legacy-document-edit').show();
-                    $(docLinkContainer).find('.document-link-edit').hide();
-                } else {
-                    $(docLinkContainer).find('.legacy-document-edit').hide();
-                    $(docLinkContainer).find('.document-link-edit').show();
-                }
-            });
-
-            $('input#IsMultiNumber').change(function () {
-                if ($(this).is(':checked')) {
-                    $('#divMultiNumber').show();
-                    $('input#IsOldNumber').removeAttr('checked').trigger('change');
-                    $('div#divCheckIsOldNumber').hide();
-                    $('input#OldDocumentNumber').val('');
-                    $('input#OldDocumentDate').val('');
-                } else {
-                    $('#divMultiNumber').hide();
-                    $('div#divCheckIsOldNumber').show();
-                }
-            }).trigger('change');
-
-            var url = document.location.toString();
-            if (url.match('#')) {
-                $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
-            }
-
-            // Change hash for page-reload
-            $('.nav-tabs a').on('shown.bs.tab', function (e) {
-                window.location.hash = e.target.hash;
-            })
-
-            $(document).on('change', '.address-body .address-type', function () {
-                let spanTitle = $(this).parents('.item-template:first').find('span.address-title:first');
-                if ($(this).val() != '-1') {
-                    $(spanTitle).text($(this).find('option:selected').text());
-                } else {
-                    $(spanTitle).text('Адрес');
-                }
-            });
-            $('.address-body .address-type').trigger('change');
-            $('input[name="DocumentKindId"]:checked').trigger('change');
+        $.ajax({
+        // your ajax code
+        beforeSend: function () {
+        $('#tabMainData').find('input')
+        $('.loader').show()
+        },
+        complete: function () {
+        $('.loader').hide();
+        }
         });
+        initCaseInfo();
+        $('#CourtOrganizationId').change(function () {
+        changeRegistryDocKind();
+        });
+        $('#DocumentGroupId').change(function () {
+
+        requestCombo('@Url.Action("GetDDL_DocumentTypeByCourt", "Ajax")', {
+        documentGroupId: $(this).val(),
+        addDefaultElement: true,
+        courtOrganizationId: $('#CourtOrganizationId').val()
+        }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function () { $('#DocumentTypeId').trigger('change') });
+        });
+        $('#DocumentTypeId').change(function () {
+        if (!$(this).val()) {
+        return;
+        }
+        requestCombo('@Url.Action("GetDDL_CaseTypeByDocType", "Ajax")',
+        {
+        documentTypeId: $(this).val(),
+        courtOrganizationId: $('#CourtOrganizationId').val()
+        }
+        , '#CaseTypeId', '@(Model.CaseTypeId)', function () { $('#CaseTypeId').trigger('change') });
+        disableControlsForRequest();
+        });
+        $('#DeliveryGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_DeliveryType", "Ajax")', { deliveryGroupId: $(this).val() }, '#DeliveryTypeId', @(Model.DeliveryTypeId ?? 0), function () {
+        $('#DeliveryTypeId').trigger('change');
+        if ($('#DeliveryTypeId').find('option').length == 1) {
+        $('#DeliveryTypeId').parent().hide();
+        } else {
+        $('#DeliveryTypeId').parent().show();
+        }
+        });
+        if ($(this).val() == '@DocumentConstants.DeliveryGroups.PostOffice' && $('#DocumentDirectionId').val() == '@DocumentConstants.DocumentDirection.Incoming') {
+        $('#postOfficeDateContainer').show();
+        } else {
+        $('#postOfficeDateContainer').hide();
+        }
+        }).trigger('change');
+
+        $('#divEISPP').hide();
+        $('#btnSelectFromEispp').hide();
+        $('#CaseTypeId').change(function () {
+        if ($(this).val() == null) {
+        return;
+        }
+        if ($(this).val() == '-1') {
+        return;
+        }
+        var caseCode = '@Model.CaseCodeId';
+        if ($(this).val() != '@Model.CaseTypeId') {
+        caseCode = '0';
+        }
+        loadCaseCode('#CaseCodeId_casecode', caseCode);
+        initCaseCodeValue = '0';
+
+        //divEISPP
+        requestGET_Json("@Url.Action("Get_CaseType", "Ajax")", { caseTypeId: $(this).val() }, function (cType) {
+        if (cType != undefined && cType != null) {
+        //legacyCaseNumberInit(cType.caseInstanceId);
+        if (cType && cType.caseGroupId == '@NomenclatureConstants.CaseGroups.NakazatelnoDelo') {
+        $('#divEISPP').show();
+        $('#btnSelectFromEispp').show();
+        } else {
+        $('#divEISPP').hide();
+        $('#btnSelectFromEispp').hide();
+        }
+        }
+        });
+        });
+        $(document).on('click', 'legend.address-legend span', function () {
+        $(this).parent().parent().find('.address-body').toggle();
+        });
+        initDynamicForms(function () {
+        //Callback after add new dynamic item
+        initEkatte();
+        initDocument();
+        });
+        initEkatte();
+        initCaseCode();
+        initCourts();
+        initCase();
+        initDocument();
+        documentPersonInit();
+
+        $('.search-institution').click(function () {
+        requestContent('@Url.Action("SearchEntity", "Ajax")', { callback: 'selectEntityDocumentPerson' }, function (modalData) {
+        ShowModalDialog('Избор на институция', modalData);
+        });
+        });
+
+        @if (Model.Id > 0 && !Model.CanChange)
+        {
+            <text>$('.dynamic-form .remove-item,.dynamic-form .add-item').remove(); </text>
+        }
+
+        $('a.tab-validation-error:first').tab("show").trigger('click');
+        $('input#IsOldNumber').change(function () {
+        if ($(this).is(':checked')) {
+        $('#divOldNumber').show();
+        } else {
+        $('#divOldNumber').hide();
+        }
+        }).trigger('change');
+
+
+
+        $(document).on('change', '.document-link-item .doc-link-direction .link-doc-dir', function (e) {
+        var docLinkContainer = $(this).parents('.document-link-item:first');
+        $(docLinkContainer).find('.document-container:first').data('docdir', $(this).val());
+        });
+
+        $(document).on('change', '.document-link-item .legacy-document-check input[type="checkbox"]', function (e) {
+
+        var docLinkContainer = $(this).parents('.document-link-item:first');
+        if ($(this).is(':checked')) {
+        $(docLinkContainer).find('.legacy-document-edit').show();
+        $(docLinkContainer).find('.document-link-edit').hide();
+        } else {
+        $(docLinkContainer).find('.legacy-document-edit').hide();
+        $(docLinkContainer).find('.document-link-edit').show();
+        }
+        });
+
+        $('input#IsMultiNumber').change(function () {
+        if ($(this).is(':checked')) {
+        $('#divMultiNumber').show();
+        $('input#IsOldNumber').removeAttr('checked').trigger('change');
+        $('div#divCheckIsOldNumber').hide();
+        $('input#OldDocumentNumber').val('');
+        $('input#OldDocumentDate').val('');
+        } else {
+        $('#divMultiNumber').hide();
+        $('div#divCheckIsOldNumber').show();
+        }
+        }).trigger('change');
+
+        var url = document.location.toString();
+        if (url.match('#')) {
+        $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+        ChangeUserGuide($('.nav-tabs a[href="#' + url.split('#')[1] + '"]'));
+        }
+
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
+        window.location.hash = e.target.hash;
+        })
+
+        $(document).on('change', '.address-body .address-type', function () {
+        let spanTitle = $(this).parents('.item-template:first').find('span.address-title:first');
+        if ($(this).val() != '-1') {
+        $(spanTitle).text($(this).find('option:selected').text());
+        } else {
+        $(spanTitle).text('Адрес');
+        }
+        });
+        $('.address-body .address-type').trigger('change');
+        $('input[name="DocumentKindId"]:checked').trigger('change');
+        $(document).on('change', '.document-person-item select[name$="UicTypeId"]', function () {
+        let personContainer = $(this).parents('.document-person-item:first');
+        let uicTypeId = $(this).val();
+        $(personContainer).find('div[id$="divPersonMaturity"]').show();
+        $(personContainer).find('div[id$="divMilitaryRang"]').show();
+        if (uicTypeId == '@NomenclatureConstants.UicTypes.Bulstat' || uicTypeId == '@NomenclatureConstants.UicTypes.EIK') {
+        $(personContainer).find('div[id$="divPersonMaturity"]').hide();
+        $(personContainer).find('div[id$="divMilitaryRang"]').hide();
+        }
+        });
+        $(document).on('blur', '.document-person-item input[name$="Uic"]', function () {
+        let personContainer = $(this).parents('.document-person-item:first');
+        let uic = $(this).val();
+        let uicTypeId = $(personContainer).find('select[name$="UicTypeId"]').val();
+        if (uicTypeId == '@NomenclatureConstants.UicTypes.EGN') {
+        var personMaturity = GetPersonMaturity(uic);
+        if (personMaturity != "-1") {
+        $(personContainer).find('select[name$="PersonMaturityId"]').val(personMaturity);
+        }
+        }
+        });
+        });
+        function documentPersonInit() {
+        initPersonControl();
+        initPersonRole();
+        //ChangeUicType();
+        initDatePicker();
+        }
         function courtSelectDocLink(sender) {
-            var courtSelected = $(sender).find('.court-val').val();
-            $(sender).parents('.document-link-item').find('.document-container').data('courtid', courtSelected);
+        var courtSelected = $(sender).find('.court-val').val();
+        $(sender).parents('.document-link-item').find('.document-container').data('courtid', courtSelected);
 
         }
         function autoCloseOthers(sender) {
-           $(sender).parents('.document-person-item:first').find('.address-body').hide();
+        $(sender).parents('.document-person-item:first').find('.address-body').hide();
         }
-        function selectEntityDocumentPerson(sourceType,sourceId) {
-            let addItemButton = $('.document-persons .add-doc-person:first')[0];
-            requestContent('@Url.Action("NewItem_DocumentPerson_Institution")', { index: $(addItemButton).data('index'),sourceType:sourceType, sourceId:sourceId}, function (html) {
-                var index = $(addItemButton).data('index') + 1;
-                $(addItemButton).data('index', index);
-                var container = $(document.getElementById($(addItemButton).data('container')));
-                $(html).hide().appendTo(container).slideDown();
-                HideModal();
-            });
-            return false;
+        function selectEntityDocumentPerson(sourceType, sourceId) {
+        let addItemButton = $('.document-persons .add-doc-person:first')[0];
+        requestContent('@Url.Action("NewItem_DocumentPerson_Institution")', { index: $(addItemButton).data('index'), sourceType: sourceType, sourceId: sourceId }, function (html) {
+        var index = $(addItemButton).data('index') + 1;
+        $(addItemButton).data('index', index);
+        var container = $(document.getElementById($(addItemButton).data('container')));
+        $(html).hide().appendTo(container).slideDown();
+        HideModal();
+        });
+        return false;
         }
         function courtSelect() {
-            let courtId = $('#DocumentCaseInfo_CourtId').val();
-            $('#DocumentCaseInfo_CourtId').parents('.documentCaseInfo:first').find('.case-container:first').data('court', courtId);
-            if (@(Model.DocumentCaseInfo.CaseId ?? 0) > 0) {
-                loadCase('#DocumentCaseInfo_CaseId_case', '@Model.DocumentCaseInfo.CaseId');
-            }
+        let courtId = $('#DocumentCaseInfo_CourtId').val();
+        $('#DocumentCaseInfo_CourtId').parents('.documentCaseInfo:first').find('.case-container:first').data('court', courtId);
+        if (@(Model.DocumentCaseInfo.CaseId ?? 0) > 0) {
+        loadCase('#DocumentCaseInfo_CaseId_case', '@Model.DocumentCaseInfo.CaseId');
+        }
         }
 
 
         function selectPersonData() {
-            let eisppNumber = $('#EISSPNumber').val();
-            let priorCaseId = $('#DocumentCaseInfo_CaseId').val();
-            let priorDocumentId = $('#PriorDocumentId').val();
-            if (eisppNumber || (priorCaseId && parseInt(priorCaseId) > 0) || priorDocumentId > 0){
-                requestContent('@Url.Action("DocumentPersons_SelectData")', { eisppNumber: eisppNumber, priorCaseId: priorCaseId, priorDocumentId: priorDocumentId }, function (html) {
-                    ShowModalDialog('Избиране на лица и адреси към документа', html, true);
-                });
-            } else {
-                alert('Избора на лица и адреси работи по ЕИСПП номер и/или по данни от свързано дело.');
-            }
+        let eisppNumber = $('#EISSPNumber').val();
+        let priorCaseId = $('#DocumentCaseInfo_CaseId').val();
+        let priorDocumentId = $('#PriorDocumentId').val();
+        if (eisppNumber || (priorCaseId && parseInt(priorCaseId) > 0) || priorDocumentId > 0) {
+        requestContent('@Url.Action("DocumentPersons_SelectData")', { eisppNumber: eisppNumber, priorCaseId: priorCaseId, priorDocumentId: priorDocumentId }, function (html) {
+        ShowModalDialog('Избиране на лица и адреси към документа', html, true);
+        });
+        } else {
+        alert('Избора на лица и адреси работи по ЕИСПП номер и/или по данни от свързано дело.');
+        }
         }
         function loadSelectedPersonData(model) {
-            let addPersonButton = $('.add-doc-person:first');
-            let index = $(addPersonButton).data('index');
-            postContent('@Url.Action("DocumentPersons_SelectData")', { model: model, index:index}, function (html) {
-                let container = $(addPersonButton).data('container');
-                $('#' + container).append(html);
-                initEkatte();
-                HideModal();
-                $(addPersonButton).data('index', index + model.persons.length);
-            });
+        let addPersonButton = $('.add-doc-person:first');
+        let index = $(addPersonButton).data('index');
+        postContentMultiPart('@Url.Action("DocumentPersons_SelectData")', { model: model, index: index }, function (html) {
+        let container = document.getElementById($(addPersonButton).data('container'));
+        container.innerHTML += html;
+        //$('#' + container).append(html);
+        initPersonControl();
+        initPersonRole();
+        initEkatte();
+        HideModal();
+        $(addPersonButton).data('index', index + model.persons.length);
+        });
         }
         function selectAddress(sender) {
-            let personContainer = $(sender).parents('.document-person-item:first').attr('id');
-            requestContent('@Url.Action("DocumentPersonAddress_Search")', { containerId: personContainer }, function (html) {
-                ShowModalDialog('Адреси към лице', html, true);
-            });
+        let personContainer = $(sender).parents('.document-person-item:first').attr('id');
+        requestContent('@Url.Action("DocumentPersonAddress_Search")', { containerId: personContainer }, function (html) {
+        ShowModalDialog('Адреси към лице', html, true);
+        });
         }
 
         function checkDocumentSubmit(sender) {
-            $(sender).attr('disabled', 'disabled');
-            if ($('input#IsMultiNumber').is(':checked')) {
-                //debugger;
-                var multiCounter = 0;
-                try {
-                    multiCounter = parseInt($('#MultiDocumentCounter').val());
-                    if (multiCounter <= 0) {
-                        messageHelper.ShowErrorMessage('Невалидна стойност в поле "Брой документи"');
-                        return false;
-                    }
-                } catch (ex) {
-                    messageHelper.ShowErrorMessage('Невалидна стойност в поле "Брой документи"');
-                    return false;
-                }
-                let maxMultiCounter = 300;
-                let maxMultiCounterNoAsk = 50;
-                if (multiCounter > maxMultiCounter) {
-                    messageHelper.ShowErrorMessage('Максималната стойност в поле "Брой документи" е ' + maxMultiCounter.toString());
-                    return false;
-                }
-                if (multiCounter > maxMultiCounterNoAsk) {
-                    swalConfirm('Потвърдете множественото регистрирането на ' + multiCounter.toString() + ' документа!'
-                        , function () {
-                            $(sender).removeAttr('disabled').parents('form:first').trigger('submit');
-                        }
-                        , function () {
-                            $(sender).removeAttr('disabled');
-                        }
-                    );
-                } else {
-                    $(sender).removeAttr('disabled');
-                }
-            } else {
-                $(sender).removeAttr('disabled');
-            }
+        $(sender).attr('disabled', 'disabled');
+        if ($('input#IsMultiNumber').is(':checked')) {
+        //debugger;
+        var multiCounter = 0;
+        try {
+        multiCounter = parseInt($('#MultiDocumentCounter').val());
+        if (multiCounter <= 0) {
+        messageHelper.ShowErrorMessage('Невалидна стойност в поле "Брой документи"');
+        return false;
+        }
+        } catch (ex) {
+        messageHelper.ShowErrorMessage('Невалидна стойност в поле "Брой документи"');
+        return false;
+        }
+        let maxMultiCounter = 300;
+        let maxMultiCounterNoAsk = 50;
+        if (multiCounter > maxMultiCounter) {
+        messageHelper.ShowErrorMessage('Максималната стойност в поле "Брой документи" е ' + maxMultiCounter.toString());
+        return false;
+        }
+        if (multiCounter > maxMultiCounterNoAsk) {
+        swalConfirm('Потвърдете множественото регистрирането на ' + multiCounter.toString() + ' документа!'
+        , function () {
+        $(sender).removeAttr('disabled').parents('form:first').trigger('submit');
+        }
+        , function () {
+        $(sender).removeAttr('disabled');
+        }
+        );
+        } else {
+        $(sender).removeAttr('disabled');
+        }
+        } else {
+        $(sender).removeAttr('disabled');
+        }
         }
 
         function showApiRequest() {
-             requestContent('@Url.Action("ApiRequest")', { id: @(Model.Id) }, function (modalData) {
-                    ShowModalDialog('Преглед на заявка от портал', modalData,true);
-                });
+        requestContent('@Url.Action("ApiRequest")', { id: @(Model.Id) }, function (modalData) {
+        ShowModalDialog('Преглед на заявка от портал', modalData, true);
+        });
+        }
+
+        $(function () {
+        $('.nav-tabs li a').click(function (e) {
+        ChangeUserGuide($(this));
+        });
+        });
+
+        function ChangeUserGuide(tab) {
+        var fileName = tab.data('filename');
+        if (fileName != undefined) {
+        var newurl = '@Url.Content($"~/userguide/")' + fileName + ".htm";
+        $("#horizontalUserguideId").attr('href', newurl);
+        }
+        }
+
+
+
+        function disableControlsForRequest(){
+        @if (Model.RequestTypeId > 0)
+        {
+            <text>
+
+                                                                            $('input:radio[name="DocumentKindId"]').each(function(i,e){
+                                                                                if(!$(e).is(':checked')){
+                                                                                    $(e).attr('disabled','disabled')
+                                                                                }
+                                                                            });
+
+                                                                            $('#DocumentGroupId').attr('readonly','readonly');
+                                                                            $('#DocumentTypeId').attr('readonly','readonly');
+                                                                                if($('input:radio[name="DocumentKindId"]').val() == @(DocumentConstants.DocumentKind.InitialDocument)){
+                                                                            $('#CaseTypeId').attr('readonly','readonly');
+                                                                            $('#CaseCodeId_casecode').attr('readonly','readonly');
+                                                                            $('.casecode-container .auto-cmpt-search').remove();
+                                                                                }
+            </text>
+        }
         }
     </script>
     <partial name="_CdnScript" />
+
 }

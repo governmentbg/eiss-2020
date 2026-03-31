@@ -4,89 +4,129 @@ using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
-using IOWebApplication.Infrastructure.Models.Integrations.DW;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Money;
+using IOWebApplicationService.Infrastructure.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Linq.Expressions;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
 
 namespace IOWebApplicationService.Infrastructure.Services
 {
-    public class BaseMQService
+    public class BaseMQService : IBaseMQService
     {
-        protected int? mqID = null;
+        protected long? mqID = null;
         protected int fetchCount = 0;
         protected IRepository repo;
         protected int IntegrationTypeId;
         protected ICdnService cdnService;
         protected ILogger<BaseMQService> logger;
         protected DateTime? startTime;
+        protected long currentMqId;
+        protected long fromMqID = 0;
+        protected bool batchSave = false;
 
 
         /// <summary>
         /// The метода за изпращане на чакащите заявки към ЕПЕП
         /// </summary>
-        public async Task<bool> PushMQWithFetch(int fetchCount)
+        public async Task<int> PushMQWithFetch(int fetchCount)
         {
-            this.fetchCount = fetchCount;
-            ResetMQ_Waiting();
+            await InitMQ();
 
-            var model = FetchNotSent(fetchCount, mqID);
+            this.fetchCount = fetchCount;
+            await ResetMQ_Waiting();
+
+            var model = await FetchNotSent(fetchCount, mqID);
 
             if (!model.Any() && IntegrationTypeId != NomenclatureConstants.IntegrationTypes.EISPP)
             {
-                return false;
+                return 0;
             }
             if (!(await InitChanel()))
             {
-                return false;
+                return 0;
             }
+            bool forSave = false;
 
             foreach (var mq in model)
             {
                 try
                 {
-                    //logger.LogCritical($"mqId = {mq.Id}");
                     await SendMQ(mq);
+                    forSave = true;
                 }
                 catch (FaultException fex)
                 {
-                    var _error = fex.GetMessageFault();
+                    string _error = fex.GetMessageFault();
+                    if (string.IsNullOrEmpty(_error) && fex.Reason != null)
+                    {
+                        _error = fex.Reason.ToString();
+                    }
                     SetErrorToMQ(mq, IntegrationStates.DataContentError, _error);
+                    if (batchSave)
+                    {
+                        await repo.SaveChangesAsync();
+                    }
+                    forSave = false;
                 }
                 catch (Exception ex)
                 {
                     if (logger != null)
                     {
-                        logger.LogError(ex, ex.Message);
+                        logger.LogError(ex, $"MQ:{mq.Id};ST:{mq.SourceType};{ex.Message}");
                     }
-                    SetErrorToMQ(mq, IntegrationStates.TransferError, $"Exception: {ex.Message}");
+                    SetErrorToMQ(mq, IntegrationStates.TransferError, $"; Time: {DateTime.Now:dd.MM HH:mm:ss}; Exception: {ex.Message};{ex.InnerException?.Message}");
+                    if (batchSave)
+                    {
+                        await repo.SaveChangesAsync();
+                    }
+                    forSave = false;
+                    await Reconnect();
                 }
-            };
+            }
+            ;
+            if (batchSave && forSave)
+            {
+                await repo.SaveChangesAsync();
+            }
 
             await CloseChanel();
 
-            return true;
+            return model.Count();
         }
 
-        protected virtual async Task<bool> InitChanel() { return false; }
-        protected virtual async Task CloseChanel() { }
-        protected virtual async Task SendMQ(MQEpep mq) { }
+        protected virtual Task<bool> InitChanel() => Task.FromResult(false);
+        public virtual Task<bool> FetchResult() => Task.FromResult(false);
+        protected virtual async Task CloseChanel() => await Task.Yield();
+        protected virtual async Task SendMQ(MQEpep mq) => await Task.Yield();
+        protected virtual async Task InitMQ() => await Task.Yield();
+        protected virtual async Task Reconnect() => await Task.Yield();
+
+        public void RefreshDataContext(ref int savedCount, int maxCount, string connStr)
+        {
+            if (savedCount > maxCount)
+            {
+                repo.RefreshDbContext(connStr);
+                savedCount = 0;
+            }
+        }
 
         /// <summary>
         /// Извлича задачите с висок приоритет и ги изпълнява преди останалите
         /// </summary>
         /// <param name="fetchCount"></param>
         /// <returns></returns>
-        protected virtual IEnumerable<MQEpep> FetchHighPriorityItems(int fetchCount)
+        protected virtual async Task<IEnumerable<MQEpep>> FetchHighPriorityItems(int fetchCount)
         {
-            return null;
+            return await Task.FromResult(new List<MQEpep>());
         }
         #region Общи методи за свързване и управление на заявките 
 
@@ -107,54 +147,61 @@ namespace IOWebApplicationService.Infrastructure.Services
                             .FirstOrDefault();
         }
 
-        protected IEnumerable<MQEpep> FetchNotSent(int fetchCount, long? mqId = null)
+        protected async Task<IEnumerable<MQEpep>> FetchNotSent(int fetchCount, long? mqId = null)
         {
             if (mqId > 0)
             {
-                return repo.All<MQEpep>()
+                return await repo.All<MQEpep>()
                            .Where(x => x.IntegrationTypeId == IntegrationTypeId)
                            .Where(x => x.DateTransfered == null)
                            .Where(x => x.Id == mqId)
-                           .ToList();
+                           .ToListAsync();
             }
             else
             {
-
-
-
-                var result = FetchHighPriorityItems(fetchCount);
-                if (result != null)
+                List<MQEpep> result = new List<MQEpep>();
+                var priorityItems = await FetchHighPriorityItems(fetchCount);
+                if (priorityItems != null)
                     if (result.Any())
                     {
-                        return result;
+                        result.AddRange(priorityItems);
                     }
 
-                return repo.All<MQEpep>()
+                Expression<Func<MQEpep, bool>> whereFromId = x => true;
+                if (fromMqID > 0)
+                {
+                    whereFromId = x => x.Id > fromMqID;
+                }
+
+                result.AddRange(await repo.All<MQEpep>()
                            .Where(x => x.IntegrationTypeId == IntegrationTypeId)
                            .Where(x => x.DateTransfered == null && x.IntegrationStateId == IntegrationStates.New)
+                           .Where(whereFromId)
                            .OrderBy(x => x.Id)
                            .Take(fetchCount)
-                           .ToList();
+                           .ToListAsync());
+
+                return result;
             }
         }
         /// <summary>
         /// Връща чакащите заявки в опашката
         /// </summary>
         /// <returns></returns>
-        protected bool ResetMQ_WaitingEisspNoReply()
+        private async Task<bool> ResetMQ_WaitingEisspNoReply()
         {
             if (IntegrationTypeId != NomenclatureConstants.IntegrationTypes.EISPP)
                 return false;
             var dateWrt = DateTime.Now.AddHours(-24);
             var date2021 = new DateTime(2021, 1, 1);
-            var mqs = repo.All<MQEpep>()
+            var mqs = await repo.All<MQEpep>()
                           .Where(x => x.IntegrationTypeId == IntegrationTypeId)
                           .Where(x => x.DateTransfered == null &&
                                       x.IntegrationStateId == IntegrationStates.WaitingForReply &&
                                       x.DateWrt < dateWrt &&
                                       x.DateWrt > date2021 &&
                                       x.ErrorCount < 5)
-                           .ToList();
+                           .ToListAsync();
 
             foreach (var item in mqs)
             {
@@ -164,7 +211,7 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
             if (mqs.Count > 0)
             {
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
                 return true;
             }
             return false;
@@ -174,25 +221,54 @@ namespace IOWebApplicationService.Infrastructure.Services
         /// Връща чакащите заявки в опашката
         /// </summary>
         /// <returns></returns>
-        protected bool ResetMQ_Waiting()
+        private async Task<bool> ResetMQ_Waiting()
         {
-            if (IntegrationTypeId == NomenclatureConstants.IntegrationTypes.EISPP)
-                return ResetMQ_WaitingEisspNoReply();
-
-            var mqs = repo.All<MQEpep>()
-                          .Where(x => x.IntegrationTypeId == IntegrationTypeId)
-                          .Where(x => x.DateTransfered == null && IntegrationStates.ReturnToMQStatesNulls.Contains(x.IntegrationStateId))
-                          .ToList();
-
-            foreach (var item in mqs)
+            try
             {
-                item.IntegrationStateId = IntegrationStates.New;
+                if (IntegrationTypeId == NomenclatureConstants.IntegrationTypes.EISPP)
+                    return await ResetMQ_WaitingEisspNoReply();
+
+                int firstPassErrors = (int)Math.Round((decimal)IntegrationMaxErrorCount / 4, 0);
+
+                //Връща всички грешни заявки с до 5 опита
+                var mqs = await repo.All<MQEpep>()
+                              .Where(x => x.IntegrationTypeId == IntegrationTypeId)
+                              .Where(x => x.DateTransfered == null && IntegrationStates.ReturnToMQStatesNulls.Contains(x.IntegrationStateId))
+                              .Where(x => x.ErrorCount <= firstPassErrors)
+                              .OrderBy(x => x.Id)
+                              .Take(fetchCount)
+                              .ToListAsync();
+
+                DateTime dtDefaultLastError = DateTime.Now.AddHours(-10);
+                DateTime dtCheckSecondChance = DateTime.Now.AddHours(-1);
+                //Връща всички грешни заявки над 5 опита, за които е пробвано преди 1 час
+                var mqsSecondChange = await repo.All<MQEpep>()
+                              .Where(x => x.IntegrationTypeId == IntegrationTypeId)
+                              .Where(x => x.DateTransfered == null && IntegrationStates.ReturnToMQStatesNulls.Contains(x.IntegrationStateId))
+                              .Where(x => x.ErrorCount > firstPassErrors)
+                              .Where(x => (x.LastDateError ?? dtDefaultLastError) < dtCheckSecondChance)
+                              .OrderBy(x => x.Id)
+                              .Take(fetchCount)
+                              .ToListAsync();
+
+                mqs.AddRange(mqsSecondChange);
+
+                foreach (var item in mqs)
+                {
+                    item.IntegrationStateId = IntegrationStates.New;
+                }
+                if (mqs.Count > 0)
+                {
+                    await repo.SaveChangesAsync();
+                    return true;
+                }
             }
-            if (mqs.Count > 0)
+            catch (Exception ex)
             {
-                repo.SaveChanges();
-                return true;
+                logger.LogError(ex, $"IOWebApplicationService.ResetMQ_Waiting - Връща чакащите заявки в опашката");
+                return false;
             }
+
             return false;
         }
 
@@ -224,7 +300,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                         default:
                             break;
                     }
-                    repo.SaveChanges();
+                    if (!batchSave)
+                        repo.SaveChanges();
 
                     return true;
                 }
@@ -264,7 +341,8 @@ namespace IOWebApplicationService.Infrastructure.Services
             repo.Add(model);
             if (autoSaveChanges)
             {
-                repo.SaveChanges();
+                if (!batchSave)
+                    repo.SaveChanges();
             }
             return true;
         }
@@ -276,10 +354,37 @@ namespace IOWebApplicationService.Infrastructure.Services
                                 .ToList();
 
             repo.DeleteRange(keys);
-            repo.SaveChanges();
+            if (!batchSave)
+                repo.SaveChanges();
 
             return true;
 
+        }
+
+        protected bool RemoveIntegrationKeys(string outerCode, int? sourceType = null, long? sourceId = null)
+        {
+            Expression<Func<IntegrationKey, bool>> whereKey = x => x.OuterCode == outerCode;
+            if (sourceType > 0 && sourceId > 0)
+            {
+                whereKey = x => x.SourceId == sourceId && x.SourceType == sourceType;
+            }
+            var keys = repo.All<IntegrationKey>()
+                               .Where(x => x.IntegrationTypeId == this.IntegrationTypeId)
+                               .Where(whereKey)
+                               .ToList();
+
+            if (keys.Any())
+            {
+                repo.DeleteRange(keys);
+                if (!batchSave)
+                    repo.SaveChanges();
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -303,7 +408,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                     item.ErrorDescription = $"Отменено поради заявка за изтриване с id={mq.Id}";
                     //repo.Update(item);
                 }
-                repo.SaveChanges();
+                if (!batchSave)
+                    repo.SaveChanges();
             }
         }
 
@@ -326,7 +432,8 @@ namespace IOWebApplicationService.Infrastructure.Services
                 mq.DateTransfered = DateTime.Now;
                 mq.IntegrationStateId = IntegrationStates.TransferOK;
                 AppendTimeElapsed(mq);
-                repo.SaveChanges();
+                if (!batchSave)
+                    repo.SaveChanges();
             }
             else
             {
@@ -336,15 +443,28 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         public void SetErrorToMQ(MQEpep mq, int integrationState, string errorDescription = null)
         {
+            mq.LastDateError = DateTime.Now;
             if (IntegrationStates.ReturnToMQStates.Contains(integrationState))
             {
-                if (mq.ErrorCount < IntegrationMaxErrorCount)
+
+                var incErrorCount = true;
+                //if (mq.IntegrationTypeId == NomenclatureConstants.IntegrationTypes.EPEP && !string.IsNullOrEmpty(errorDescription))
+                //{
+                //    if (errorDescription.Contains("Request Entity Too Large", StringComparison.InvariantCultureIgnoreCase) ||
+                //        errorDescription.Contains("Unknown error -1", StringComparison.InvariantCultureIgnoreCase))
+                //        incErrorCount = false;
+                //}
+
+                if (incErrorCount)
                 {
-                    mq.ErrorCount = (mq.ErrorCount ?? 0) + 1;
-                }
-                else
-                {
-                    integrationState = IntegrationStates.TransferErrorLimitExceeded;
+                    if (mq.ErrorCount < IntegrationMaxErrorCount)
+                    {
+                        mq.ErrorCount = (mq.ErrorCount ?? 0) + 1;
+                    }
+                    else
+                    {
+                        integrationState = IntegrationStates.TransferErrorLimitExceeded;
+                    }
                 }
             }
             mq.IntegrationStateId = integrationState;
@@ -355,11 +475,37 @@ namespace IOWebApplicationService.Infrastructure.Services
 
             //var updResult = repo.ExecuteProc<UpdateDateTransferedVM>("public.update_mq_error({0},{1},{2},{3})", mq.Id, mq.IntegrationStateId, mq.ErrorCount, mq.ErrorDescription);
             //repo.Detach(mq);
-            repo.SaveChanges();
+            if (!batchSave)
+                repo.SaveChanges();
         }
 
 
-        protected string AppendUpdateIntegrationKey(int sourceType, long sourceId)
+        protected string AppendUpdateIntegrationKey(int sourceType, long sourceId, string newKey)
+        {
+            string key = getKey(sourceType, sourceId);
+            if (string.IsNullOrEmpty(key))
+            {
+                if (AddIntegrationKey(sourceType, sourceId, newKey))
+                {
+                    return newKey;
+                }
+                return null;
+            }
+            else
+            {
+                if (key != newKey)
+                {
+                    RemoveIntegrationKeys(null, sourceType, sourceId);
+                    if (AddIntegrationKey(sourceType, sourceId, newKey))
+                    {
+                        return newKey;
+                    }
+                }
+            }
+            return key;
+        }
+
+        protected string AppendUpdateIntegrationKeyGuid(int sourceType, long sourceId)
         {
             string key = getKey(sourceType, sourceId);
             if (string.IsNullOrEmpty(key))
@@ -382,6 +528,17 @@ namespace IOWebApplicationService.Infrastructure.Services
                                       && x.SourceType == sourceType && x.SourceId == _sourceId)
                                     .OrderBy(x => x.Id)
                                     .Select(x => x.OuterCode)
+                                    .FirstOrDefault();
+        }
+
+        protected long getSourceIdByOuterCode(int sourceType, string outerCode)
+        {
+            outerCode = outerCode?.ToLower();
+            return repo.AllReadonly<IntegrationKey>()
+                                    .Where(x => x.IntegrationTypeId == IntegrationTypeId
+                                      && x.SourceType == sourceType && x.OuterCode == outerCode)
+                                    .OrderBy(x => x.Id)
+                                    .Select(x => x.SourceId)
                                     .FirstOrDefault();
         }
 
@@ -423,7 +580,7 @@ namespace IOWebApplicationService.Infrastructure.Services
         /// <param name="nomenclatureAlias">alias на номенклатура от nom_code_mapping</param>
         /// <param name="value">вътрешно ID на номенклатура</param>
         /// <returns>Връща външен код на номенклатура ако го намери или дава Exception ако не го</returns>
-        protected virtual string GetNomValue(string nomenclatureAlias, object value)
+        protected string GetNomValue(string nomenclatureAlias, object value, bool errorOnMissing = true)
         {
             string innerCode = value?.ToString();
             var result = repo.AllReadonly<CodeMapping>()
@@ -431,9 +588,12 @@ namespace IOWebApplicationService.Infrastructure.Services
                             .Select(x => x.OuterCode)
                             .FirstOrDefault();
 
-            if (result == null)
+            if (errorOnMissing)
             {
-                throw new Exception($"Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
+                if (result == null)
+                {
+                    throw new Exception($"Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
+                }
             }
             return result;
         }
@@ -446,10 +606,123 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
             return 0;
         }
+        protected int GetNomIdByOuterCodeInt(string nomenclatureAlias, string outerCode)
+        {
+            var result = repo.AllReadonly<CodeMapping>()
+                            .Where(x => x.Alias == nomenclatureAlias && x.OuterCode == outerCode)
+                            .Select(x => x.InnerCode)
+                            .FirstOrDefault();
+            if (!string.IsNullOrEmpty(result))
+            {
+                try
+                {
+                    return int.Parse(result);
+                }
+                catch (Exception ex) { }
+            }
 
+            return 0;
+        }
 
         #endregion
+        private DbEuroConfigVM _dbEuroConfig { get; set; }
 
+        /// <summary>
+        /// Настройка за евро зона с директно четене от базата
+        /// </summary>
+        protected DbEuroConfigVM DbEuroConfig
+        {
+            get
+            {
+                if (_dbEuroConfig != null)
+                {
+                    return _dbEuroConfig;
+                }
+
+                string[] euroDataParamNames = new string[] { NomenclatureConstants.SystemParamName.InterimPeriodEuroStart, NomenclatureConstants.SystemParamName.InterimPeriodEuroEnd,
+                                                         NomenclatureConstants.SystemParamName.EuroExchangeRate };
+                var euroParams = repo.AllReadonly<SystemParam>()
+                                           .Where(x => euroDataParamNames.Contains(x.ParamName))
+                                           .Select(x => new
+                                           {
+                                               x.ParamName,
+                                               x.ParamValue
+                                           })
+                                           .ToList();
+                DbEuroConfigVM result = new DbEuroConfigVM();
+                decimal euroRate = NomenclatureExtensions.ParseDecimal(euroParams.Where(x => x.ParamName == NomenclatureConstants.SystemParamName.EuroExchangeRate).Select(x => x.ParamValue).DefaultIfEmpty("").FirstOrDefault());
+                result.EuroExchangeRate = euroRate;
+                DateTime date = DateTime.Now.AddYears(1);
+
+                try
+                {
+                    var dateStr = euroParams.Where(x => x.ParamName == NomenclatureConstants.SystemParamName.InterimPeriodEuroStart).Select(x => x.ParamValue).DefaultIfEmpty("").FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(dateStr) == false)
+                    {
+                        if (DateTime.TryParseExact(dateStr, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out date))
+                        {
+                            result.InterimPeriodEuroStart = date;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    result.InterimPeriodEuroStart = DateTime.MaxValue;
+                }
+                try
+                {
+                    var dateStr = euroParams.Where(x => x.ParamName == NomenclatureConstants.SystemParamName.InterimPeriodEuroEnd).Select(x => x.ParamValue).DefaultIfEmpty("").FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(dateStr) == false)
+                    {
+                        if (DateTime.TryParseExact(dateStr, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out date))
+                        {
+                            result.InterimPeriodEuroEnd = date;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    result.InterimPeriodEuroEnd = DateTime.MaxValue;
+                }
+
+                _dbEuroConfig = result;
+                return result;
+            }
+        }
+
+        string formatSyncDateTS = "yyyy-MM-dd@HH:mm:ss:fff";
+
+        /// <summary>
+        /// Взема DateTime от common.integration_keys
+        /// </summary>
+        /// <param name="syndDateSourceType"></param>
+        /// <returns></returns>
+        protected DateTime getDateTimeFromKey(int syndDateSourceType, DateTime? defaultFromDate = null)
+        {
+
+            DateTime dtMinDate = defaultFromDate ?? new DateTime(1900, 1, 1);
+            var lastSyncDateTxt = getKey(syndDateSourceType, 1);
+            if (string.IsNullOrEmpty(lastSyncDateTxt))
+            {
+                return dtMinDate;
+            }
+
+            DateTime lastSyncDate = IOWebApplication.Core.Helper.Utils.SafeParseDate(lastSyncDateTxt, formatSyncDateTS) ?? dtMinDate;
+
+            return lastSyncDate;
+        }
+
+        /// <summary>
+        /// Записва ключ DateTime в common.integration_keys
+        /// </summary>
+        /// <param name="syndDateSourceType"></param>
+        /// <param name="lastSyncDate"></param>
+        protected void setDateTimeToKey(int syndDateSourceType, DateTime lastSyncDate)
+        {
+            AppendUpdateIntegrationKey(syndDateSourceType, 1, lastSyncDate.ToString(formatSyncDateTS));
+        }
     }
 }
 

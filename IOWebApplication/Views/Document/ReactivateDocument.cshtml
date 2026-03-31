@@ -1,9 +1,12 @@
 ﻿@model DocumentReactivateVM
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Models.ViewModels.Documents
+@inject IUserContext userContext
 @{
     ViewData["Title"] = "Възстановяване на премахнат документ";
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -11,12 +14,16 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <form asp-action="ReactivateDocument" method="post">
             <div class="row">
-                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentDirectionId, "GenericDropDown")</div>
-                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentNumber)</div>
-                <div class="col-lg-4">@Html.EditorFor(x => x.DocumentDate, "DateTime")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.DocumentDirectionId, "GenericDropDown")</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.DocumentNumber)</div>
+                <div class="col-lg-3">@Html.EditorFor(x => x.DocumentDate, "DateTime")</div>
+                @if (userContext.CourtTypeId == NomenclatureConstants.CourtType.RegionalCourt)
+                {
+                    <div class="col-lg-3">@Html.EditorFor(x => x.IsCRdocument, "Boolean")</div>
+                }
             </div>
             <div class="row">
                 <div class="col-md-6 text-left pb-15">

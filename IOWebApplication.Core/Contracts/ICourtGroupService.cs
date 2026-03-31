@@ -11,7 +11,7 @@ namespace IOWebApplication.Core.Contracts
 {
     public interface ICourtGroupService : IBaseService
     {
-        IQueryable<CourtGroupVM> CourtGroup_Select(int courtId, int caseGroupId);
+        IQueryable<CourtGroupVM> CourtGroup_Select(int courtId, int caseGroupId, int groupKind  );
         CourtGroupVM GetCourtGroupVMById(int Id);
         bool CourtGroup_SaveData(CourtGroup model);
 

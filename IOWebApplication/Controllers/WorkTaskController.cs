@@ -8,9 +8,11 @@ using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using static IOWebApplication.Infrastructure.Constants.AccountConstants;
 
 namespace IOWebApplication.Controllers
@@ -32,7 +34,7 @@ namespace IOWebApplication.Controllers
             organizationService = _organizationService;
             workTaskService = _workTaskService;
         }
-
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult Index(DateTime? dateFrom, DateTime? dateTo, int? userMode, string userId, int? taskTypeId, int? taskStateId, string sourceDescription)
         {
             WorkTaskFilterVM model = new WorkTaskFilterVM()
@@ -53,6 +55,8 @@ namespace IOWebApplication.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        [DisableAudit]
         public IActionResult Index_LoadData(IDataTablesRequest request, WorkTaskFilterVM model)
         {
             model.TaskTypeId = model.TaskTypeId.EmptyToNull();
@@ -61,8 +65,9 @@ namespace IOWebApplication.Controllers
             model.UserId = model.UserId.EmptyToNull("0");
             var data = workTaskService.Select(model);
 
-            return request.GetResponse(data.AsQueryable());
+            return request.GetResponse(data);
         }
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult IndexAll(DateTime? dateFrom, DateTime? dateTo, string createdBy, string assignedTo, int? taskTypeId, int? taskStateId, string sourceDescription)
         {
             WorkTaskFilterVM model = new WorkTaskFilterVM()
@@ -79,6 +84,8 @@ namespace IOWebApplication.Controllers
             ViewBag.TaskStateId_ddl = nomenclatureService.GetDropDownList<TaskState>();
             return View(model);
         }
+        [HttpPost]
+        [DisableAudit]
         public IActionResult IndexAll_LoadData(IDataTablesRequest request, WorkTaskFilterVM model)
         {
             model.TaskTypeId = model.TaskTypeId.EmptyToNull();
@@ -88,9 +95,9 @@ namespace IOWebApplication.Controllers
             model.AssignedTo = model.AssignedTo.EmptyToNull().EmptyToNull("0");
             var data = workTaskService.SelectAll(model);
 
-            return request.GetResponse(data.AsQueryable());
+            return request.GetResponse(data);
         }
-
+        [DisableAudit]
         public IActionResult ExpireTasks(string taskIds)
         {
             var model = new WorkTaskManageVM()
@@ -100,7 +107,7 @@ namespace IOWebApplication.Controllers
             };
             return PartialView("ManageTasks", model);
         }
-
+        [DisableAudit]
         [HttpPost]
         public IActionResult ExpireTasks(WorkTaskManageVM model)
         {
@@ -108,9 +115,11 @@ namespace IOWebApplication.Controllers
             if (workTaskService.ExpireTasks(taskIds, model.Description))
             {
                 SetSuccessMessage("Задачите са успешно отменени.");
+                AddAuditInfo(AuditConstants.Operations.Patch, $"Отменяне на задачи {taskIds.Length}бр.", model.Description, SourceTypeSelectVM.WorkTask);
             }
             return RedirectToAction(nameof(IndexAll));
         }
+        [DisableAudit]
         public IActionResult RerouteTasks(string taskIds)
         {
             var model = new WorkTaskManageVM()
@@ -123,46 +132,51 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult RerouteTasks(WorkTaskManageVM model)
+        public async Task<IActionResult> RerouteTasks(WorkTaskManageVM model)
         {
             long[] taskIds = model.TaskIds.Split(',').Select(x => long.Parse(x)).ToArray();
-            if (workTaskService.RerouteTasks(taskIds, model))
+            if (await workTaskService.RerouteTasks(taskIds, model))
             {
                 SetSuccessMessage("Задачите са успешно пренасочени.");
+                AddAuditInfo(AuditConstants.Operations.Patch, $"Пренасочване на задачи {taskIds.Length}бр.", model.Description, SourceTypeSelectVM.WorkTask);
             }
             return RedirectToAction(nameof(IndexAll));
         }
 
+        [DisableAudit]
         public IActionResult MyTasksComponent(string view = "MyTasks")
         {
             return ViewComponent("MyTasksComponent", new { view });
         }
 
         [DisableAudit]
-        public JsonResult Select(int sourceType, long sourceId)
+        public async Task<JsonResult> Select(int sourceType, long sourceId)
         {
-            var model = workTaskService.Select(sourceType, sourceId);
+            var model = await workTaskService.Select(sourceType, sourceId);
 
             return Json(model);
         }
         [DisableAudit]
-        public JsonResult SelectMyNewTasks(int sourceType, long sourceId)
+        public async Task<JsonResult> SelectMyNewTasks(int sourceType, long sourceId)
         {
-            var model = workTaskService.Select(sourceType, sourceId)
+            var model = (await workTaskService.Select(sourceType, sourceId))
                 .Where(x => x.UserId == userContext.UserId &&
                         WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId));
 
             return Json(model);
         }
 
+        [DisableAudit]
         public ContentResult GetTaskObjectUrl(int sourceType, long sourceId)
         {
             return Content(workTaskService.GetTaskObjectUrl(sourceType, sourceId));
         }
+        [DisableAudit]
         public ContentResult GetTaskParentObjectUrl(int sourceType, long sourceId)
         {
             return Content(workTaskService.GetTaskParentObjectUrl(sourceType, sourceId));
         }
+        [DisableAudit]
         public IActionResult CreateTask(int sourceType, long sourceId)
         {
             var model = workTaskService.InitTask(sourceType, sourceId);
@@ -174,29 +188,46 @@ namespace IOWebApplication.Controllers
             }
             ViewBag.TaskTypeId_ddl = taskTypes;
             //ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
-            ViewBag.SelfTasks = JsonConvert.SerializeObject(workTaskService.GetSelfTask());
-            ViewBag.TaskInfo = JsonConvert.SerializeObject(nomenclatureService.GetList<TaskType>());
+            ViewBag.SelfTasks = JsonTextSerializer.Serialize(workTaskService.GetSelfTask());
+            ViewBag.TaskInfo = JsonTextSerializer.Serialize(nomenclatureService.GetList<TaskType>());
             return PartialView("EditTask", model);
         }
+        [DisableAudit]
         [HttpPost]
-        public JsonResult CreateTask(WorkTaskEditVM model)
+        public async Task<JsonResult> CreateTask(WorkTaskEditVM model)
         {
             string validationError = ValidateTaskModel(model);
             if (!string.IsNullOrEmpty(validationError))
             {
                 return Json(new { result = false, message = validationError });
             }
-            return Json(new { result = workTaskService.CreateTask(model), message = "Задачата е създадена успешно." });
+            var valResult = await workTaskService.ValidateBeforeCreate(model);
+            if (valResult.Result)
+            {
+                bool saveResult = await workTaskService.CreateTask(model);
+                if (saveResult)
+                {
+                    AddAuditInfo(AuditConstants.Operations.Append, model.SourceDescription, model.TaskTypeName, SourceTypeSelectVM.WorkTask);
+                }
+
+                return Json(new { result = saveResult, message = "Задачата е създадена успешно." });
+            }
+            else
+            {
+                return Json(new { result = false, message = valResult.ErrorMessage });
+            }
         }
+        [DisableAudit]
         public IActionResult UpdateTask(long id)
         {
             var model = workTaskService.Get_ById(id);
             ViewBag.TaskTypeId_ddl = workTaskService.GetDDL_TaskTypes(model.SourceType, model.SourceId);
             //ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
-            ViewBag.SelfTasks = JsonConvert.SerializeObject(workTaskService.GetSelfTask());
-            ViewBag.TaskInfo = JsonConvert.SerializeObject(nomenclatureService.GetList<TaskType>());
+            ViewBag.SelfTasks = JsonTextSerializer.Serialize(workTaskService.GetSelfTask());
+            ViewBag.TaskInfo = JsonTextSerializer.Serialize(nomenclatureService.GetList<TaskType>());
             return PartialView("EditTask", model);
         }
+        [DisableAudit]
         [HttpPost]
         public JsonResult UpdateTask(WorkTaskEditVM model)
         {
@@ -205,7 +236,12 @@ namespace IOWebApplication.Controllers
             {
                 return Json(new { result = false, message = validationError });
             }
-            return Json(new { result = workTaskService.UpdateTask(model), message = "Задачата е редактирана успешно." });
+            bool saveResult = workTaskService.UpdateTask(model);
+            if (saveResult)
+            {
+                AddAuditInfo(AuditConstants.Operations.Update, model.SourceDescription, model.TaskTypeName, SourceTypeSelectVM.WorkTask);
+            }
+            return Json(new { result = saveResult, message = "Задачата е редактирана успешно." });
         }
 
 
@@ -224,7 +260,7 @@ namespace IOWebApplication.Controllers
                 {
                     errorMessage = "Изберете потребител.";
                 }
-                if (model.TaskExecutionId == WorkTaskConstants.TaskExecution.ByOrganization && model.CourtOrganizationId <= 0 && (taskType.SelfTask == false))
+                if (model.TaskExecutionId == WorkTaskConstants.TaskExecution.ByOrganization && (model.CourtOrganizationId ?? 0) <= 0 && (taskType.SelfTask == false))
                 {
                     errorMessage = "Изберете структура.";
                 }
@@ -237,8 +273,10 @@ namespace IOWebApplication.Controllers
             {
                 errorMessage = $"Съда е променен на {userContext.CourtName}. Презаредете текущия екран.";
             }
+
             return errorMessage;
         }
+        [DisableAudit]
 
         public IActionResult RedirectTask(long id)
         {
@@ -246,26 +284,38 @@ namespace IOWebApplication.Controllers
             model.UserId = null;
             model.CourtOrganizationId = null;
             model.TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser;
-            //ViewBag.CourtOrganizationId_ddl = organizationService.CourtOrganization_SelectForDropDownList(userContext.CourtId);
             return PartialView(model);
         }
+
+        [DisableAudit]
         [HttpPost]
-        public JsonResult RedirectTask(WorkTaskEditVM model)
+        public async Task<JsonResult> RedirectTask(WorkTaskEditVM model)
         {
             string validationError = ValidateTaskModel(model);
             if (!string.IsNullOrEmpty(validationError))
             {
                 return Json(new { result = false, message = validationError });
             }
-            return Json(new { result = workTaskService.RedirectTask(model) });
+            var saveResult = await workTaskService.RedirectTask(model);
+            if (saveResult)
+            {
+                AddAuditInfo(AuditConstants.Operations.Update, model.SourceDescription, $"{model.TaskTypeName} - пренасочена", SourceTypeSelectVM.WorkTask);
+            }
+            return Json(new { result = saveResult });
         }
 
         [HttpPost]
-        public JsonResult AcceptTask(long id)
+        public async Task<JsonResult> AcceptTask(long id)
         {
-            return Json(new { result = workTaskService.AcceptTask(id) });
+            if (CheckDoublePostback("tacc"))
+            {
+                return Json(new { result = true });
+            }
+            var saveResult = await workTaskService.AcceptTask(id);
+            return Json(new { result = saveResult.Result, error = saveResult.ErrorMessage });
         }
 
+        [DisableAudit]
         public IActionResult CompleteTask(long id)
         {
             var model = workTaskService.Select_ById(id);
@@ -290,16 +340,20 @@ namespace IOWebApplication.Controllers
             return PartialView(model);
         }
 
+        [DisableAudit]
         [HttpPost]
-        public JsonResult CompleteTask(WorkTask model)
+        public async Task<JsonResult> CompleteTask(WorkTask model)
         {
-            bool result = workTaskService.CompleteTask(model);
+            bool result = await workTaskService.CompleteTask(model);
 
             bool reloadNeeded = false;
             if (result)
             {
-                var task = workTaskService.GetById<WorkTask>(model.Id);
-                reloadNeeded = workTaskService.UpdateAfterCompleteTask(task).Result;
+                var task = await workTaskService.GetByIdAsync<WorkTask>(model.Id);
+                reloadNeeded = (await workTaskService.UpdateAfterCompleteTask(task)).Result;
+                var taskType = workTaskService.GetPropById<TaskType, string>(x => x.Id == task.TaskTypeId, x => x.Label);
+
+                AddAuditInfo(AuditConstants.Operations.Update, task.SourceDescription, $"{taskType} - приключена", SourceTypeSelectVM.WorkTask);
             }
 
             return Json(new { result, reloadNeeded });
@@ -307,6 +361,7 @@ namespace IOWebApplication.Controllers
 
         #region DoAction methods
 
+        [DisableAudit]
         public IActionResult DoTask_Case_SelectLawUnit(long id)
         {
             var caseId = workTaskService.GetCaseIdByDocTaskId(id);

@@ -18,6 +18,7 @@ using System.Linq;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using Rotativa.AspNetCore.Options;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
+using IOWebApplication.Infrastructure.Data.Models.Money;
 
 namespace IOWebApplication.Controllers
 {
@@ -59,12 +60,13 @@ namespace IOWebApplication.Controllers
         /// <param name="sourceType"></param>
         /// <param name="sourceId"></param>
         /// <returns></returns>
-        public IActionResult Index(int sourceType, long sourceId)
+        public async Task<IActionResult> Index(int sourceType, long sourceId)
         {
-            if (!CheckAccess(service, sourceType, sourceId, AuditConstants.Operations.View))
+            if (!await CheckAccessAsync(service, sourceType, sourceId, AuditConstants.Operations.List))
             {
                 return Redirect_Denied();
             }
+            CurrentContext_SetObjectInfo("Изходящи документи");
 
             ViewBag.sourceType = sourceType;
             ViewBag.sourceId = sourceId;
@@ -95,6 +97,7 @@ namespace IOWebApplication.Controllers
         /// <param name="sourceType"></param>
         /// <param name="sourceId"></param>
         /// <returns></returns>
+        [DisableAudit]
         public IActionResult AppendUpdateSingle(int sourceType, long sourceId)
         {
             var singleDoc = service.DocumentTemplate_Select(sourceType, sourceId).FirstOrDefault();
@@ -114,14 +117,14 @@ namespace IOWebApplication.Controllers
         /// <param name="sourceType"></param>
         /// <param name="sourceId"></param>
         /// <returns></returns>
-        public IActionResult Add(int sourceType, long sourceId)
+        public async Task<IActionResult> Add(int sourceType, long sourceId)
         {
             var model = service.DocumentTemplate_Init(sourceType, sourceId);
-            if (!CheckAccess(service, sourceType, sourceId, AuditConstants.Operations.Append))
+            if (!await CheckAccessAsync(service, sourceType, sourceId, AuditConstants.Operations.Append))
             {
                 return Redirect_Denied();
             }
-
+            CurrentContext_SetObjectInfo("Нов изходящ документ");
             SetViewBag(model);
             return View(nameof(Edit), model);
         }
@@ -131,16 +134,27 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var model = service.GetById<DocumentTemplate>(id);
-            if (!CheckAccess(service, model.SourceType, model.SourceId, AuditConstants.Operations.Update))
+            var model = await service.GetByIdAsync<DocumentTemplate>(id);
+            if (!await CheckAccessAsync(service, model.SourceType, model.SourceId, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-
+            auditInfo(model);
             SetViewBag(model);
             return View(nameof(Edit), model);
+        }
+
+        void auditInfo(DocumentTemplate model, string addInfo = "")
+        {
+            var docTypeName = service.GetPropById<DocumentType, string>(x => x.Id == model.DocumentTypeId, x => x.Label);
+            var blankName = "Общ формуляр";
+            if (model.HtmlTemplateId > 0)
+            {
+                blankName = service.GetPropById<HtmlTemplate, string>(x => x.Id == model.HtmlTemplateId, x => x.Label);
+            }
+            CurrentContext_SetObjectInfo($"Изх. документ: {docTypeName} {blankName} {addInfo}");
         }
 
         /// <summary>
@@ -151,6 +165,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult Edit(DocumentTemplate model)
         {
+            ValidateModel(model);
             if (!ModelState.IsValid)
             {
                 SetViewBag(model);
@@ -161,6 +176,7 @@ namespace IOWebApplication.Controllers
             {
                 this.SaveLogOperation(currentId == 0, model.Id, null, "edit");
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                auditInfo(model);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
             else
@@ -169,6 +185,16 @@ namespace IOWebApplication.Controllers
             }
             SetViewBag(model);
             return View(nameof(Edit), model);
+        }
+
+        void ValidateModel(DocumentTemplate model)
+        {
+            model.SignerId = model.SignerId.EmptyToNull().EmptyToNull("0");
+            model.AuthorId = model.AuthorId.EmptyToNull().EmptyToNull("0");
+            if (string.IsNullOrEmpty(model.SignerId) && string.IsNullOrEmpty(model.AuthorId))
+            {
+                ModelState.AddModelError(nameof(DocumentTemplate.AuthorId), "Въведете поне едно от двете полета: Автор или съдия");
+            }
         }
 
         private void SetViewBag(DocumentTemplate model)
@@ -230,6 +256,7 @@ namespace IOWebApplication.Controllers
         public async Task<IActionResult> Blank(int id, bool del = false)
         {
             var docTemplate = service.GetById<DocumentTemplate>(id);
+            auditInfo(docTemplate, " - изготвяне");
             BlankEditVM blankModel = null;
             if (docTemplate.HtmlTemplateId > 0)
             {
@@ -286,7 +313,7 @@ namespace IOWebApplication.Controllers
             string html = await cdnService.LoadHtmlFileTemplate(new CdnFileSelect() { SourceType = sourceType, SourceId = id.ToString() });
             if (string.IsNullOrEmpty(html))
             {
-                TinyMCEVM htmlModel = printService.FillHtmlTemplateDocumentTemplate(id);
+                TinyMCEVM htmlModel = await printService.FillHtmlTemplateDocumentTemplate(id);
                 html = htmlModel.Text;
             }
 
@@ -329,7 +356,9 @@ namespace IOWebApplication.Controllers
             {
                 string html = await cdnService.LoadHtmlFileTemplate(new CdnFileSelect() { SourceType = model.SourceType, SourceId = model.SourceId });
 
+                printService.PreviewModel = true;
                 pdfBytes = await PdfBytesFromTemplate(id, html);
+                printService.PreviewModel = false;
                 //pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true, GetFooterInfoUrl(userContext.CourtId)).GetByte(this.ControllerContext);
             }
             else
@@ -419,6 +448,7 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <param name="documentId"></param>
         /// <returns></returns>
+        [DisableAudit]
         public async Task<IActionResult> GenerateDocumentFile(int id, long documentId)
         {
             if (!service.DocumentTemplate_UpdateDocumentId(id, documentId))
@@ -463,10 +493,10 @@ namespace IOWebApplication.Controllers
                 SourceType = SourceTypeSelectVM.Document,
                 SourceId = documentId,
                 TaskTypeId = WorkTaskConstants.Types.Document_Sign,
-                UserId = headerModel.AuthorId,
+                UserId = headerModel.SignerId ?? headerModel.AuthorId,
                 TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser
             };
-            taskService.CreateTask(newTask);
+            await taskService.CreateTask(newTask);
 
             if (docTemplate.SourceType == SourceTypeSelectVM.ExchangeDoc)
             {
@@ -486,7 +516,7 @@ namespace IOWebApplication.Controllers
         {
             string result = "";
 
-            TinyMCEVM htmlModel = printService.FillHtmlTemplateDocumentTemplate(id, preparedBlank);
+            TinyMCEVM htmlModel = await printService.FillHtmlTemplateDocumentTemplate(id, preparedBlank);
             if (htmlModel == null)
             {
                 return result;
@@ -496,7 +526,7 @@ namespace IOWebApplication.Controllers
 
         private async Task<byte[]> PdfBytesFromTemplate(int id, string preparedBlank = null)
         {
-            TinyMCEVM htmlModel = printService.FillHtmlTemplateDocumentTemplate(id, preparedBlank);
+            TinyMCEVM htmlModel = await printService.FillHtmlTemplateDocumentTemplate(id, preparedBlank);
             if (htmlModel == null)
             {
                 return null;
@@ -519,7 +549,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public async Task<IActionResult> PrintBlankByTemplate(int id)
         {
-            TinyMCEVM htmlModel = printService.FillHtmlTemplateDocumentTemplate(id);
+            TinyMCEVM htmlModel = await printService.FillHtmlTemplateDocumentTemplate(id);
             string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
             var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true).GetByte(this.ControllerContext);
             return File(pdfBytes, System.Net.Mime.MediaTypeNames.Application.Pdf, "Template" + id.ToString() + ".pdf");
@@ -535,29 +565,23 @@ namespace IOWebApplication.Controllers
             TinyMCEVM htmlModel = printService.FillHtmlTemplateExchangeDoc(id);
             string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
             var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html }, true).GetByte(this.ControllerContext);
+
+            var model = service.GetById<ExchangeDoc>(id);
+            var fileName = $"Протокол за ИЛ_{model.RegNumber}_{model.RegDate:dd.MM.yyyy}";
+
             var pdfRequest = new CdnUploadRequest()
             {
                 SourceType = SourceTypeSelectVM.ExchangeDoc,
                 SourceId = id.ToString(),
-                FileName = "exchangeDoc.pdf",
+                FileName = fileName + ".pdf",
                 ContentType = "application/pdf",
-                Title = "Протокол на изпращане на ИЛ в НАП",
+                Title = fileName,
                 FileContentBase64 = Convert.ToBase64String(pdfBytes)
             };
             bool result = await cdnService.MongoCdn_AppendUpdate(pdfRequest);
             Response.Headers.Clear();
 
             return result;
-        }
-        public string GetFooterInfoText(int courtId)
-        {
-            var court = service.GetById<Infrastructure.Data.Models.Common.Court>(courtId);
-
-            if (court != null)
-            {
-                return $"{court.Address}, {court.CityName}";
-            }
-            return "";
         }
 
         /// <summary>
@@ -566,9 +590,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult DocumentTemplate_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> DocumentTemplate_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.DocumentTemplate, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.DocumentTemplate, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
@@ -581,7 +605,7 @@ namespace IOWebApplication.Controllers
             (bool result, string errorMessage) = service.DocumentTemplate_SaveExpired(model);
             if (result)
             {
-                var documentTemplate = service.GetById<DocumentTemplate>(model.Id);
+                var documentTemplate = await service.GetByIdAsync<DocumentTemplate>(model.Id);
                 SetAuditContextDelete(docService, SourceTypeSelectVM.DocumentTemplate, model.Id);
                 SetSuccessMessage(MessageConstant.Values.DocumentTemplateExpireOK);
                 return Json(new { result = true, redirectUrl = Url.Action("SourceTypeAction", new { sourceType = documentTemplate.SourceType, sourceId = documentTemplate.SourceId }) });

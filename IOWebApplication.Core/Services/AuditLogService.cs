@@ -4,32 +4,35 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Audit;
-using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.AuditLog;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
     public class AuditLogService : BaseService, IAuditLogService
     {
         private readonly IConfiguration config;
+        private readonly IHttpContextAccessor httpContextAccessor;
         public AuditLogService(IRepository _repo,
                                IUserContext _userContext,
-                               IConfiguration _config)
+                               IConfiguration _config,
+                               IHttpContextAccessor _httpContextAccessor)
         {
             repo = _repo;
             userContext = _userContext;
             config = _config;
+            httpContextAccessor = _httpContextAccessor;
         }
-
+        /*
         public IQueryable<AuditLogSprVM> AuditLog_Select(DateTime DateFrom, DateTime DateTo, string RegNumber, string Operation, string UserId, int courtId)
         {
             List<AuditLogSprVM> auditLogSprVMs = new List<AuditLogSprVM>();
@@ -67,6 +70,7 @@ namespace IOWebApplication.Core.Services
                 .Select(grp => grp.FirstOrDefault())
                 .AsQueryable();
         }
+        */
 
         private SelectListItem FillSelectListItem(string Value)
         {
@@ -118,7 +122,7 @@ namespace IOWebApplication.Core.Services
             {
                 whereRegNumber = x => EF.Functions.ILike(x.BaseObject, RegNumber.ToPaternSearch());
             }
-            Expression<Func<AuditLog, bool>> whereUser = x => true;
+            Expression<Func<AuditLog, bool>> whereUser = x => x.UserId != null;
             if (!string.IsNullOrEmpty(UserId))
             {
                 whereUser = x => x.UserId == UserId;
@@ -129,27 +133,28 @@ namespace IOWebApplication.Core.Services
                 whereOper = x => x.Operation == Operation;
             }
             return repo.AllReadonly<AuditLog>()
-                             .Include(x => x.ApplicationUser)
-                             .ThenInclude(x => x.LawUnit)
-                             .Where(x => x.CourtId == courtId)
-                             .Where(x => x.InsertedDate >= DateFrom && x.InsertedDate <= DateTo)
-                             .Where(whereUser)
-                             .Where(whereOper)
-                             .Where(whereRegNumber)
-                             .Where(x => !EF.Functions.ILike(x.FullName ?? "", "JsonResult"))
-                             .Select(x => new AuditLogSprVM
-                             {
-                                 Date = x.InsertedDate,
-                                 Operation = x.Operation,
-                                 ObjectType = x.ObjectType,
-                                 ObjectInfo = x.ObjectInfo,
-                                 BaseObject = x.BaseObject,
-                                 //UserName = x.RequestUrl,
-                                 UserName = (x.ApplicationUser != null) ? x.ApplicationUser.LawUnit.FullName : "",
-                                 RequestUrl = x.RequestUrl,
-                                 UserId = x.UserId,
-                                 CourtId = x.CourtId
-                             }).AsQueryable();
+                       .Where(x => x.InsertedDate >= DateFrom && x.InsertedDate <= DateTo)
+                       .Where(x => x.CourtId == courtId)
+                       .Where(whereUser)
+                       .Where(whereOper)
+                       .Where(whereRegNumber)
+                       .Select(x => new AuditLogSprVM
+                       {
+                           Id = x.Id,
+                           Date = x.InsertedDate,
+                           Operation = x.Operation,
+                           ObjectType = x.ObjectType,
+                           ObjectInfo = x.ObjectInfo,
+                           BaseObject = x.BaseObject,
+                           UserName = x.ApplicationUser.LawUnit.FullName,
+                           Email = x.ApplicationUser.Email,
+                           RequestUrl = x.RequestUrl,
+                           ShowLink = x.Method == "GET",
+                           UserId = x.UserId,
+                           CourtId = x.CourtId,
+                           ClientIP = x.ClientIP
+                       })
+                       .AsQueryable();
         }
 
         public bool SaveLog(AuditLog model)
@@ -162,18 +167,20 @@ namespace IOWebApplication.Core.Services
 
                 using (var dbContext = new ApplicationDbContext(optionsBuilder.Options))
                 {
-                    using (var _repo = new Repository(dbContext))
-                    {
-                        model.CourtId = model.CourtId.EmptyToNull(0).EmptyToNull(-1);
-                        model.UserId = model.UserId.EmptyToNull();
-                        _repo.Add(model);
-                        _repo.SaveChanges();
-                        return model.Id > 0;
-                    }
+
+                    model.Id = Guid.NewGuid();
+                    model.InsertedDate = DateTime.Now;
+                    model.CourtId = model.CourtId.EmptyToNull(0).EmptyToNull(-1);
+                    model.UserId = model.UserId.EmptyToNull();
+                    dbContext.AuditLog.Add(model);
+                    dbContext.SaveChanges();
+                    return true;
+
                 }
 
             }
             catch { return false; }
         }
+
     }
 }

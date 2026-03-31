@@ -4,12 +4,14 @@ using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common.Mediation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace IOWebApplication.Core.Services
 {
@@ -31,17 +33,16 @@ namespace IOWebApplication.Core.Services
         }
 
         /// <summary>
-        /// Извличане на данни за Дежурства към съд
+        /// Извличане на данни за дежурства/замествания към съд
         /// </summary>
-        /// <param name="courtId"></param>
-        /// <param name="label"></param>
+        /// <param name="filter">Филтър попълнен от потребител</param>
         /// <returns></returns>
-        public IQueryable<CourtDutyVM> CourtDuty_Select(int courtId, string label)
+        public IQueryable<CourtDutyVM> CourtDuty_Select(CourtDutyFilterVM filter)
         {
-            label = label?.ToLower();
+            Expression<Func<CourtDuty, bool>> courtIdWhere = x => x.CourtId == filter.CourtId;
+
             return repo.AllReadonly<CourtDuty>()
-                       .Include(x => x.Court)
-                       .Where(x => x.CourtId == courtId)
+                       .Where(courtIdWhere)
                        .Select(x => new CourtDutyVM()
                        {
                            Id = x.Id,
@@ -51,8 +52,7 @@ namespace IOWebApplication.Core.Services
                            DateFrom = x.DateFrom,
                            DateTo = x.DateTo,
                            CountLawUnit = x.CourtDutyLawUnits.Where(a => a.DateTo == null).Count()
-                       })
-                       .AsQueryable();
+                       });
         }
 
         /// <summary>
@@ -104,9 +104,9 @@ namespace IOWebApplication.Core.Services
         public IList<CourtDutyLawUnit> CourtDutyLowUnit_Select(int dutyId)
         {
             return repo.AllReadonly<CourtDutyLawUnit>()
-                .Where(x => x.CourtDutyId == dutyId)
-                .Select(x => x)
-                .ToList();
+                       .Where(x => x.CourtDutyId == dutyId)
+                       .Select(x => x)
+                       .ToList();
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace IOWebApplication.Core.Services
             foreach (var check in model.checkListVMs)
             {
                 // търси елемента от екрана в списъка с записани елементи
-                var court = courtDutyLowUnits.Where(x => x.LawUnitId == int.Parse(check.Value)).DefaultIfEmpty(null).FirstOrDefault();
+                var court = courtDutyLowUnits.Where(x => x.LawUnitId == int.Parse(check.Value)).FirstOrDefault();
 
                 if (court != null)
                 {
@@ -253,7 +253,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в CourtDutyService.SaveLawUnit");
                 return false;
             }
         }
@@ -269,7 +269,7 @@ namespace IOWebApplication.Core.Services
 
             var result = repo.AllReadonly<CourtDuty>()
                 .Where(x => x.CourtId == courtId && (x.DateTo ?? dateTomorrow) > DateTime.Now)
-                 .OrderBy(x => x.Label)
+                 .OrderBy(x => x.DateFrom)
                                  .Select(x => new SelectListItem()
                                  {
                                      Value = x.Id.ToString(),

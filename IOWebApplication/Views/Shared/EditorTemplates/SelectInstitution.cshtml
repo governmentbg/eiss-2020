@@ -12,7 +12,7 @@
     @if (string.IsNullOrEmpty(label))
     {
         <label asp-for="@Model" class="control-label @reqClass"></label>
-        <input id="@fieldName" class="form-control institution-control" autocomplete="false" />
+        <input id="@fieldName" class="form-control institution-control" autocomplete="false" placeholder="Моля, въведете част от името на институцията" />
     }
     else
     {

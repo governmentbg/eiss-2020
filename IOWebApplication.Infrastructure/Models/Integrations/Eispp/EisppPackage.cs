@@ -40,9 +40,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [XmlIgnore]
         public bool IsForEdit { get; set; }
         [XmlIgnore]
-        public int? PersonOldMeasureId { get; set; }
-        [XmlIgnore]
-        public int? PersonMeasureId { get; set; }
+        public List<PersonMeasureVM> PersonMeasures { get; set; }
         [XmlIgnore]
         public bool SaveIfHaveDiff { get; set; }
         [XmlIgnore]

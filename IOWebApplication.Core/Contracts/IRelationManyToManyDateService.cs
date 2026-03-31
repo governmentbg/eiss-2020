@@ -2,27 +2,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
-    public interface IRelationManyToManyDateService 
+    public interface IRelationManyToManyDateService
     {
-        bool SaveData<T>(int parentId, List<int> codes,
+        Task<bool> SaveData<T>(int parentId, List<int> codes,
                                 Expression<Func<T, int>> parentProp,
+                                Expression<Func<T, bool>> savedDataFilter,
                                 Expression<Func<T, int>> itemProp,
                                 Expression<Func<T, DateTime?>> dateFromProp,
                                 Expression<Func<T, DateTime?>> dateToProp,
                                 Func<T, bool> setNew)
             where T : class, new();
-        bool SaveDataPercent<T>(int parentId, List<MultiSelectTransferPercentVM> codes,
+        Task<bool> SaveDataPercent<T>(int parentId, List<MultiSelectTransferPercentVM> codes,
                                 Expression<Func<T, bool>> courtIdWhere,
                                 Expression<Func<T, int>> parentProp,
+                                Expression<Func<T, bool>> savedDataFilter,
                                 Expression<Func<T, int>> itemProp,
                                 Expression<Func<T, DateTime?>> dateFromProp,
                                 Expression<Func<T, DateTime?>> dateToProp,
                                 Expression<Func<T, int>> percentProp,
-                                Func<T, bool> setNew, bool IsLawunit) 
+                                Func<T, bool> setNew, bool IsLawunit)
             where T : class, new();
     }
 }

@@ -52,7 +52,7 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<HtmlTemplate>()
                        .Include(x => x.HtmlTemplateType)
-                       .Where(x => x.HtmlTemplateTypeId == filterData.HtmlTemplateTypeId || filterData.HtmlTemplateTypeId <=  0)
+                       .Where(x => x.HtmlTemplateTypeId == filterData.HtmlTemplateTypeId || filterData.HtmlTemplateTypeId <= 0)
                        .Select(x => new HtmlTemplateVM()
                        {
                            Id = x.Id,
@@ -63,7 +63,8 @@ namespace IOWebApplication.Core.Services
                            Content = x.Content,
                            FileName = x.FileName,
                            ContentType = x.ContentType,
-                           IsCreate = x.IsCreate
+                           IsCreate = x.IsCreate,
+                           IsActive = (x.DateTo ?? DateTime.MaxValue) > DateTime.Now
                        })
                        .AsQueryable();
         }
@@ -124,7 +125,7 @@ namespace IOWebApplication.Core.Services
         /// <param name="files"></param>
         private void FillDataFile(HtmlTemplate html, ICollection<IFormFile> files)
         {
-            if (files != null && files.Count() > 0)
+            if (files != null && files.Any())
             {
                 var file = files.First();
                 using (var memory = new MemoryStream())
@@ -160,6 +161,7 @@ namespace IOWebApplication.Core.Services
                     saved.StyleTemplateId = model.StyleTemplateId;
                     saved.HaveSessionAct = model.HaveSessionAct;
                     saved.HaveSessionActComplain = model.HaveSessionActComplain;
+                    saved.HaveSessionMultiAct = model.HaveSessionMultiAct;
                     saved.RequiredSessionActComplain = model.RequiredSessionActComplain;
                     saved.HaveActComplainFree = model.HaveActComplainFree;
                     saved.HaveMultiActComplain = model.HaveMultiActComplain;
@@ -173,6 +175,8 @@ namespace IOWebApplication.Core.Services
                     saved.HaveMoneyObligation = model.HaveMoneyObligation;
                     saved.HaveInstitutionDocument = model.HaveInstitutionDocument;
                     saved.HaveFromToDate = model.HaveFromToDate;
+                    saved.HaveDocuments = model.HaveDocuments;
+                    saved.HaveMongoFiles = model.HaveMongoFiles;
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
 
@@ -191,7 +195,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в HtmlTemplateService.HtmlTemplate_SaveData");
                 return false;
             }
         }
@@ -202,7 +206,7 @@ namespace IOWebApplication.Core.Services
             {
                 model.CourtTypeId = model.CourtTypeId.NumberEmptyToNull();
                 model.CaseGroupId = model.CaseGroupId.NumberEmptyToNull();
-                model.SourceType =  model.SourceType.NumberEmptyToNull();
+                model.SourceType = model.SourceType.NumberEmptyToNull();
                 if (model.Id > 0)
                 {
                     //Update
@@ -224,7 +228,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в HtmlTemplateService.HtmlTemplateLink_SaveData");
                 return false;
             }
         }
@@ -356,7 +360,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в HtmlTemplateService.SaveHtmlTemplatesImport");
                 return false;
             }
         }
@@ -488,7 +492,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в HtmlTemplateService.SaveParam");
                 return false;
             }
         }
@@ -513,7 +517,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в HtmlTemplateService.SaveBlankParam");
                 return false;
             }
         }
@@ -531,7 +535,7 @@ namespace IOWebApplication.Core.Services
 
         public bool HtmlTemplate_ImportParam()
         {
-            var htmls = repo.AllReadonly<HtmlTemplate>();
+            var htmls = repo.AllReadonly<HtmlTemplate>().ToList();
             List<string> _params = new List<string>();
             List<BlankParam> blankParams = new List<BlankParam>();
 
@@ -584,7 +588,7 @@ namespace IOWebApplication.Core.Services
                 })
                 .ToList();
 
-            foreach (var templateParamLinkVM in htmlTemplateParams.Where(x => ((x.HtmlTemplateParamDescr ?? string.Empty) == string.Empty)))
+            foreach (var templateParamLinkVM in htmlTemplateParams.Where(x => string.IsNullOrEmpty(x.HtmlTemplateParamDescr)))
             {
                 var part1 = @"keyValuePairs.Add(new KeyValuePairVM() { Key = """", Label = """", Value = """" }); ";
                 result += ReplaceString(part1, @"Key = """"", @"Key = ""{" + templateParamLinkVM.HtmlTemplateParamLabel + @"}""");
@@ -655,7 +659,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                //logger.log(ex)
+                logger.LogError(ex, "Грешка в HtmlTemplateService.HtmlTemplateCreate_SaveData");
                 return false;
             }
         }

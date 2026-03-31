@@ -1,7 +1,10 @@
-﻿using IO.SignTools.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Models;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.Cdn;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -13,19 +16,22 @@ namespace IOWebApplication.Components
 {
     public class SignPdfComponent : ViewComponent
     {
-        //private readonly IIOSignToolsService signTools;
         private readonly ILogger logger;
         private readonly ICdnService cdn;
+        private readonly IWorkTaskService taskService;
+        private readonly IUserContext userContext;
 
         public SignPdfComponent(
             ICdnService cdn,
-            //IIOSignToolsService signTools,
-            ILogger<SignPdfComponent> logger
+            ILogger<SignPdfComponent> logger,
+            IWorkTaskService taskService,
+            IUserContext userContext
             )
         {
-            //this.signTools = signTools;
             this.logger = logger;
             this.cdn = cdn;
+            this.taskService = taskService;
+            this.userContext = userContext;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(SignPdfInfo info, string viewName = "")
@@ -38,8 +44,26 @@ namespace IOWebApplication.Components
                 SourceId = info.SourceId,
                 SourceType = info.DestinationType,
                 SignerName = info.SignerName,
-                SignerUic = info.SignerUic
+                SignerUic = info.SignerUic,
+                WorkTaskId = info.WorkTaskId
             };
+
+            if (info.WorkTaskId > 0 && userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+            {
+                var taskModel = await taskService.GetReadonlyAsync<WorkTask>(info.WorkTaskId);
+                switch (taskModel.SourceType)
+                {
+                    case SourceTypeSelectVM.CaseSessionAct:
+                        var signInfo = await taskService.CheckCompletedTasks(taskModel);
+                        if (!signInfo.HasUncompleteTasks)
+                        {
+                            ViewBag.signComfirmMessage = await taskService.MakeSignComfirmMessage(taskModel);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             try
             {
@@ -53,9 +77,9 @@ namespace IOWebApplication.Components
                 {
                     var (hash, tempPdfId) = await cdn.SignTools.GetPdfHash(ms, info.Reason, info.Location);
 
-                    model.PdfUrl = Url.Action("GetFile", "PDF", new { pdfContentId = pdf.FileId });
-                    model.PdfId = tempPdfId;
-                    model.PdfHash = hash;
+                    model.PreviewPdfUrl = Url.Action("GetFile", "SignDocument", new { pdfContentId = pdf.FileId });
+                    model.TempFileId = tempPdfId;
+                    model.FileHash = hash;
                     model.FileName = pdf.FileName;
                     model.FileTitle = pdf.FileTitle;
                     model.FileId = pdf.FileId;

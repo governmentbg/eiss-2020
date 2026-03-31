@@ -14,7 +14,7 @@
     }
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -40,6 +40,7 @@
                             <div class="col-lg-12">@Html.EditorFor(x => x.CasePersonId, "GenericDropDown")</div>
                             <div class="col-lg-12">@Html.EditorFor(x => x.PersonRoleInCrimeId, "GenericDropDown")</div>
                             <div class="col-lg-12">@Html.EditorFor(x => x.RecidiveTypeId, "GenericDropDown")</div>
+                            <div class="col-lg-12">@Html.EditorFor(x => x.NotPunished, "Boolean")</div>
                         </fieldset>
                     </div>
                 </div>

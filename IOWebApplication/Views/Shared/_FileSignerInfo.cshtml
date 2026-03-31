@@ -1,0 +1,54 @@
+﻿@model List<FileSignerInfoVM>
+@if (Model == null || Model.Count == 0)
+{
+    <h3>Няма намерени електронни подписи.</h3>
+    return;
+}
+@foreach (var sign in Model)
+{
+    @if (sign.FromApi)
+    {
+        string createUserText = string.Empty;
+        if (!string.IsNullOrEmpty(sign.CreateUserName))
+        {
+            createUserText = $", издаден на {sign.CreateUserName}";
+        }
+        <fieldset>
+            <legend>Подадено на: @sign.ApplyDate.ToString("dd.MM.yyyy HH:mm:ss")</legend>
+            Заявлението е подадено през електронните услуги на ЕПЕП от @sign.EpepUserName, чрез ключ за достъп,
+            @if (!string.IsNullOrEmpty(sign.CreateUserName))
+            {
+                <text> издаден на @sign.CreateUserName, след автентикация с КЕП.</text>
+            }
+            else
+            {
+                <text> издаден на законен представител, след автентикация с КЕП.</text>
+            }
+        </fieldset>
+    }
+    else
+    {
+        <fieldset>
+            <legend>Подписано на: @sign.SignedOn.ToString("dd.MM.yyyy HH:mm:ss")</legend>
+            <div class="row">
+                <div class="col-lg-8">
+                    @Html.DisplayFor(x => sign.Name, "obj")
+                </div>
+                <div class="col-lg-4">
+                    @Html.DisplayFor(x => sign.Identifier, "obj")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4">
+                    @Html.DisplayFor(x => sign.Issuer, "obj")
+                </div>
+                <div class="col-lg-4">
+                    @Html.DisplayFor(x => sign.CertificateNumber, "obj")
+                </div>
+                <div class="col-lg-4">
+                    @Html.DisplayFor(x => sign.ValidTo, "datetime")
+                </div>
+            </div>
+        </fieldset>
+    }
+}

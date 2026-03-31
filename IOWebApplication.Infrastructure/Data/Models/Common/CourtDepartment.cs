@@ -1,5 +1,7 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -55,6 +57,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("case_instance_id")]
         [Display(Name = "Инстанция")]
         public int? CaseInstanceId { get; set; }
+
+        public virtual ICollection<CourtDepartmentLawUnit> CourtDepartmentLawUnits { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

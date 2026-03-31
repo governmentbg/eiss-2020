@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
+﻿using IOWebApplication.Core.Models;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -14,13 +16,29 @@ namespace IOWebApplication.Core.Contracts
     {
         IQueryable<CasePersonListVM> CasePerson_Select(int caseId, int? caseSessionId, bool checkSessionDate, bool showExpired, bool setRowNumberFromCase);
 
-        (bool result, string errorMessage) CasePerson_SaveData(CasePersonVM model);
+        /// <summary>
+        /// Извличане на данни за лица по дело/заседание в лист
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <param name="caseSessionId">Идентификатор на заседание</param>
+        /// <param name="checkSessionDate"></param>
+        /// <param name="showExpired">Флаг да показва изтритите записи</param>
+        /// <param name="setRowNumberFromCase">Ако е за заседание и е true да вземе rownumber от делото за този идентификатор</param>
+        /// <param name="start">От коя позиция да дръпне данните</param>
+        /// <param name="length">Дължина</param>
+        /// <param name="sortedColumns">Колони по които се сортира</param>
+        /// <returns></returns>
+        Task<DataTableResponseVM<CasePersonListVM>> CasePersonList_Select(int caseId, int? caseSessionId, bool checkSessionDate, bool showExpired, bool setRowNumberFromCase, int start, int length, List<DataTablesSortColumnVM> sortedColumns);
 
-        CasePersonVM CasePerson_GetById(int id);
+        IQueryable<CasePersonListVM> CasePersonFast_SelectForCasePreview(int caseId, int? caseSessionId = null);
+
+        Task<(bool result, string errorMessage)> CasePerson_SaveData(CasePersonVM model);
+
+        Task<CasePersonVM> CasePerson_GetById(int id);
 
         IQueryable<CasePersonAddressListVM> CasePersonAddress_Select(int casePersonId);
 
-        (bool result, string errorMessage) CasePersonAddress_SaveData(CasePersonAddress model);
+        Task<(bool result, string errorMessage)> CasePersonAddress_SaveData(CasePersonAddress model);
 
         CasePersonAddress CasePersonAddress_GetById(int id);
 
@@ -38,14 +56,24 @@ namespace IOWebApplication.Core.Contracts
         /// <param name="caseId"></param>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        CheckListViewVM CasePerson_SelectForCheck(int caseId, int caseSessionId, int realCaseSessionId);
-        CheckListViewVM CasePersonPrint_SelectForCheck(int caseId);
+        Task<CheckListViewVM> CasePerson_SelectForCheck(int caseId, int caseSessionId, int realCaseSessionId);
+        Task<CheckListViewVM> CasePersonPrint_SelectForCheck(int caseId);
 
         CheckListViewVM CasePersonNotification_SelectForCheck(int caseId, int caseSessionId);
 
         bool CasePerson_CopyCasePerson(string ids, int caseId, int caseNewSessionId);
 
-        List<SelectListItem> CasePerson_SelectForDropDownList(int caseId, int? caseSessionId, string roleKindIds = "", string defaultElementText = "");
+        /// <summary>
+        /// Извличане на данни за лица по дело/заседание за чекбокс
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <param name="caseSessionId">Идентификатор на заседание</param>
+        /// <param name="roleKindIds">Идентификатори на тип</param>
+        /// <param name="defaultElementText">Друго име на дефолтната стойност</param>
+        /// <param name="dateTo">До дата</param>
+        /// <param name="isViewUic">Флаг дали да се вижда идентификатора</param>
+        /// <returns></returns>
+        List<SelectListItem> CasePerson_SelectForDropDownList(int caseId, int? caseSessionId, string roleKindIds = "", string defaultElementText = "", DateTime? dateTo = null, bool isViewUic = true);
 
         List<SelectListItem> GetDropDownList(int caseId, int? caseSessionId, bool addLinkName3, int? notificationTypeId, int? casePersonId, bool filterPersonOnNotification, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDropDownList_RightSide(int caseId, int? caseSessionId, bool addDefaultElement = true, bool addAllElement = false);
@@ -62,6 +90,15 @@ namespace IOWebApplication.Core.Contracts
 
         List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId, int notificationDeliveryGroupId);
         List<SelectListItem> GetDDL_AddressByCasePersonAddress(int casePersonId);
+
+        /// <summary>
+        /// Извличане на адреси за комбобокс
+        /// </summary>
+        /// <param name="casePersonId"></param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> GetDDL_AddressByCasePersonAddressAsync(int casePersonId);
+
+        List<SelectListItem> GetDDL_CasePersonAddress(int casePersonId);
         List<CasePersonAddress> Get_CasePersonAddress(int casePersonId);
 
         void SetCasePersonDataForCopySession(int caseId, int? caseOldSession, int caseNewSessionId, List<CasePerson> casePersonList, DateTime caseNewSessionDateFrom);
@@ -70,25 +107,28 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CaseSessionNotificationListVM> PersonListForPrint_Select(CheckListViewVM model);
         (List<SelectListItem> person_ddl, List<SelectListItem> linkDirection_ddl) CasePersonForLinkRel_SelectForDropDownList(int casePersonId);
         (List<SelectListItem> men, List<SelectListItem> women, List<PersonDataVM> personData) GetCasePersonForDivorce(int actId);
-        (bool result, string errorMessage) CasePersonAddress_AddFromSearch(int casePersonId, int addressId);
+        Task<(bool result, string errorMessage)> CasePersonAddress_AddFromSearch(int casePersonId, int addressId);
 
         IQueryable<CasePersonInheritanceVM> CasePersonInheritance_Select(int CasePersonId);
-        bool CasePersonInheritance_SaveData(CasePersonInheritance model);
+        Task<bool> CasePersonInheritance_SaveData(CasePersonInheritance model);
 
         IQueryable<CasePersonMeasureVM> CasePersonMeasure_Select(int CasePersonId, bool showExpired = false);
-        bool CasePersonMeasure_SaveData(CasePersonMeasureEditVM model);
+        Task<bool> CasePersonMeasure_SaveData(CasePersonMeasureEditVM model);
         IQueryable<CasePersonDocumentVM> CasePersonDocument_Select(int CasePersonId, bool showExpired = false);
-        bool CasePersonDocument_SaveData(CasePersonDocument model);
-        CasePersonMeasureEditVM CasePersonMeasure_GetById(int id);
+        Task<bool> CasePersonDocument_SaveData(CasePersonDocument model);
+        Task<CasePersonMeasureEditVM> CasePersonMeasure_GetById(int id);
         List<SelectListItem> GetForEispp(int caseId);
-        (bool result, string errorMessage) CheckCasePersonExpired(CasePerson model);
+        Task<(bool result, string errorMessage)> CheckCasePersonExpired(CasePerson model);
         bool IsPersonDead(int casePersonId);
-        bool CasePerson_SaveExpiredPlus(ExpiredInfoVM model);
+        Task<bool> CasePerson_SaveExpiredPlus(ExpiredInfoVM model);
 
 
-        List<SelectListItem> GetAddressByCasePerson_DropDown(int casePersonId);
+        Task<List<SelectListItem>> GetAddressByCasePerson_DropDown(int casePersonId);
 
-        SaveResultVM CasePersonAddress_IsUsed(CasePersonAddress model);
+        Task<SaveResultVM> CasePersonAddress_IsUsed(CasePersonAddress model);
         bool IsExistFastProcess(int CaseId, int PersonId);
+        Task<SaveResultVM> CasePersonPrevName_SaveData(CasePersonPrevName model);
+        IQueryable<CasePersonPrevNameVM> CasePersonPrevName_Select(int casePersonId);
+        Task<List<CheckListVM>> CasePersonSentencePunishmentMeasure_GetPunishmentChecks(int casePersonMeasureId, int casePersonId);
     }
 }

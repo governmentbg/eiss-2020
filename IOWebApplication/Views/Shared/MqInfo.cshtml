@@ -1,38 +1,67 @@
-﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
 @using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants
+@using System.Linq
 @model SourceTypeSelectVM
+@{
+    bool isGeneric = !(new[] { SourceTypeSelectVM.CaseLawyerHelp, SourceTypeSelectVM.CasePersonBulletin }).Contains(Model.SourceType);
+    bool hasExecProcess = (bool?)ViewBag.hasExecProcess == true;
+}
 @if (Model.SourceId > 0)
 {
-    <div class="pull-right">
-        <div class="btn-group">
-            <button type="button" title="Заявки за интеграция с външни системи" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                <i class="fa fa-exchange"></i> <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
+    <div class="btn-group">
+        <button type="button" title="Заявки за интеграция с външни системи" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+            <i class="fa fa-exchange"></i> <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            @if (isGeneric)
+            {
                 <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕПЕП</a></li>
-                @switch (Model.SourceType)
-                {
-                    case SourceTypeSelectVM.Document:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.DocumentFiles" data-si="@Model.SourceId">ЕПЕП - Файлове</a></li>
-                        break;
-                    case SourceTypeSelectVM.CaseSessionAct:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActPdf" data-si="@Model.SourceId">ЕПЕП - Акт</a></li>
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActDepersonalized" data-si="@Model.SourceId">ЕПЕП - Обезличен</a></li>
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.LegalActs" data-st="@Model.SourceType" data-si="@Model.SourceId">ЦУБИПСА</a></li>
-                        break;
-                    case SourceTypeSelectVM.CaseSelectionProtokol:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.CSRD" data-st="@Model.SourceType" data-si="@Model.SourceId">ЦСРД</a></li>
-                        break;
-                    case SourceTypeSelectVM.Case:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EISPP" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕИСПП</a></li>
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.ISPN" data-st="@Model.SourceType" data-si="@Model.SourceId">ИСПН</a></li>
-                        break;
-                    case SourceTypeSelectVM.CaseLawUnitDismisal:
-                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPRO" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕПРО</a></li>
-                        break;
-                }
-            </ul>
-        </div>
+            }
+            @switch (Model.SourceType)
+            {
+                case SourceTypeSelectVM.Document:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.DocumentFiles" data-si="@Model.SourceId">ЕПЕП - Файлове</a></li>
+                    if (Model.ObjectId == NomenclatureConstants.Courts.RandomAssignment)
+                    {
+                        <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EpepDocuments" data-st="@SourceTypeSelectVM.Document" data-si="@Model.SourceId">Централно Разпределение</a></li>
+                    }
+                    break;
+                case SourceTypeSelectVM.CaseSessionAct:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActPdf" data-si="@Model.SourceId">ЕПЕП - Акт</a></li>
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseSessionActDepersonalized" data-si="@Model.SourceId">ЕПЕП - Обезличен</a></li>
+                    @if (hasExecProcess)
+                    {
+                        <li><a href="@Url.Action("EpepShowExecProcess","Epep",new{actId= Model.SourceId})">ЕПЕП - Електронна партида</a></li>
+                    }
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.LegalActs" data-st="@Model.SourceType" data-si="@Model.SourceId">ЦУБИПСА</a></li>
+                    break;
+                case SourceTypeSelectVM.CaseSelectionProtokol:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.CSRD" data-st="@Model.SourceType" data-si="@Model.SourceId">ЦСРД</a></li>
+                    break;
+                case SourceTypeSelectVM.Case:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EISPP" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕИСПП</a></li>
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.ISPN" data-st="@Model.SourceType" data-si="@Model.SourceId">ИСПН</a></li>
+                    break;
+                case SourceTypeSelectVM.CaseLawUnitDismisal:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPRO" data-st="@Model.SourceType" data-si="@Model.SourceId">ЕПРО</a></li>
+                    break;
+                case SourceTypeSelectVM.CaseNotification:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseNotificationPrint" data-si="@Model.SourceId">ЕПЕП - Файл</a></li>
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.CaseNotificationReturn" data-si="@Model.SourceId">ЕПЕП - Отрязък</a></li>
+                    break;
+                case SourceTypeSelectVM.CaseLawyerHelp:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.Eespp" data-st="@SourceTypeSelectVM.CaseLawyerHelp" data-si="@Model.SourceId">ЕЕСПП</a></li>
+                    break;
+                case SourceTypeSelectVM.CasePersonBulletin:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.Cais" data-st="@SourceTypeSelectVM.CasePersonBulletin" data-si="@Model.SourceId">ЦАИС</a></li>
+                    break;
+                case SourceTypeSelectVM.ExecList:
+                    <li><a href="#" class="mq--info" data-it="@IntegrationTypes.EPEP" data-st="@SourceTypeSelectVM.ExecListPdf" data-si="@Model.SourceId">ЕПЕП - ИЛ</a></li>
+                    <li><a href="@Url.Action("EpepShowExecProcess","Epep",new{execListId= Model.SourceId})">ЕПЕП - Електронна партида</a></li>
+                    break;
+            }
+        </ul>
     </div>
 }
 

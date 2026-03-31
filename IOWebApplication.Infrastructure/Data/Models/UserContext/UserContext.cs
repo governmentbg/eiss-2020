@@ -1,24 +1,25 @@
 ﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Data.Models.UserContext
 {
     public class UserContext : IUserContext
     {
-        private readonly UserManager<ApplicationUser> userManager;
-
         HttpContext context;
         private ClaimsPrincipal _user;
         private ClaimsPrincipal User
@@ -32,11 +33,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
                 return _user;
             }
         }
-        public UserContext(IHttpContextAccessor _ca, UserManager<ApplicationUser> _userManager)
+        public UserContext(IHttpContextAccessor _ca)
         {
             context = _ca.HttpContext;
-            userManager = _userManager;
-
         }
 
 
@@ -44,7 +43,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
         {
             get
             {
-                string userId = string.Empty;
+                string userId = null;
 
                 if (User != null && User.Claims != null && User.Claims.Count() > 0)
                 {
@@ -329,24 +328,26 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
             }
             return false;
         }
-
-        public async Task<UserSettingsModel> Settings()
+        public string EnvironmentName
         {
-            if (User == null || !User.Identity.IsAuthenticated)
+            get
             {
-                return new UserSettingsModel();
-            }
-            ApplicationUser appUser = await userManager.GetUserAsync(User);
-            var settings = appUser?.UserSettings;
-            if (!string.IsNullOrEmpty(settings))
-            {
-                return JsonConvert.DeserializeObject<UserSettingsModel>(settings);
-            }
-            else
-            {
-                return new UserSettingsModel();
+                string result = null;
+                if (User != null && User.Claims != null && User.Claims.Count() > 0)
+                {
+                    var subClaim = User.Claims
+                        .FirstOrDefault(c => c.Type == CustomClaimType.EnvName);
+
+                    if (subClaim != null)
+                    {
+                        result = subClaim.Value;
+                    }
+                }
+
+                return result;
             }
         }
+
 
         public string ClaimValue(string claimType)
         {
@@ -411,7 +412,120 @@ namespace IOWebApplication.Infrastructure.Data.Models.UserContext
             }
         }
 
+        public bool IsInterimPeriodEuro
+        {
+            get
+            {
+                bool result = false;
 
+                if (User != null && User.Claims != null && User.Claims.Count() > 0)
+                {
+                    DateTime now = DateTime.Now.Date;
+                    DateTime dateStart = ParseDateEuroFromClaim(CustomClaimType.InterimPeriodEuroStart);
+                    DateTime dateEnd = ParseDateEuroFromClaim(CustomClaimType.InterimPeriodEuroEnd);
+
+                    result = dateStart <= now && dateEnd >= now;
+                }
+
+                return result;
+            }
+        }
+
+        public bool IsPeriodEuro
+        {
+            get
+            {
+                bool result = false;
+
+                if (User != null && User.Claims != null && User.Claims.Count() > 0)
+                {
+                    DateTime now = DateTime.Now.Date;
+                    DateTime dateStart = ParseDateEuroFromClaim(CustomClaimType.InterimPeriodEuroStart);
+
+                    result = dateStart <= now;
+                }
+
+                return result;
+            }
+        }
+
+        public string CurrentCurrencyCode
+        {
+            get
+            {
+                if (IsPeriodEuro)
+                    return NomenclatureConstants.CurrencyCode.EUR;
+                else
+                    return NomenclatureConstants.CurrencyCode.BGN;
+            }
+        }
+
+        public decimal EuroExchangeRate
+        {
+            get
+            {
+                decimal result = 1;
+
+                if (User != null && User.Claims != null && User.Claims.Count() > 0)
+                {
+                    var euroRateStr = ClaimValue(CustomClaimType.EuroExchangeRate);
+
+                    result = NomenclatureExtensions.ParseDecimal(euroRateStr);
+                }
+
+                return result;
+            }
+        }
+
+        private DateTime ParseDateEuroFromClaim(string claimType)
+        {
+            DateTime date = DateTime.Now.AddYears(1);
+
+            try
+            {
+                var dateStr = ClaimValue(claimType);
+
+                if (string.IsNullOrEmpty(dateStr) == false)
+                {
+                    DateTime.TryParseExact(dateStr, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+                }
+            }
+            catch (Exception)
+            {
+                date = DateTime.Now.AddYears(1);
+            }
+
+            return date;
+        }
+
+    }
+
+    public class DBUserContext : IDBUserContext
+    {
+        private IUserContext userContext;
+        private IRepository repo;
+        public DBUserContext(IUserContext userContext, IRepository repo)
+        {
+            this.userContext = userContext;
+            this.repo = repo;
+        }
+
+        public async Task<UserSettingsModel> Settings()
+        {
+
+            var settings = await repo.AllReadonly<ApplicationUser>()
+                                    .Where(x => x.Id == userContext.UserId)
+                                    .Select(x => x.UserSettings)
+                                    .FirstOrDefaultAsync();
+            if (!string.IsNullOrEmpty(settings))
+            {
+                return JsonTextSerializer.Deserialize<UserSettingsModel>(settings);
+            }
+            else
+            {
+                return new UserSettingsModel();
+            }
+        }
     }
 }
 

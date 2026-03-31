@@ -98,8 +98,12 @@
         }
         // Глоба
         if (mode == 'fine') {
+            $punismentContainer.find('.punishment-kind-container').removeClass("col-lg-3")
+            $punismentContainer.find('.punishment-kind-container').addClass("col-lg-6")
             $punismentContainer.find('.fine-amount').show();
         } else {
+            $punismentContainer.find('.punishment-kind-container').removeClass("col-lg-6")
+            $punismentContainer.find('.punishment-kind-container').addClass("col-lg-3")
             $punismentContainer.find('.fine-amount').hide();
         }
 
@@ -157,8 +161,12 @@
     function EisppSetVisibleCrimePunishmentVals($punismentContainer, mode) {
         // Глоба
         if (mode == 'fine') {
+            $punismentContainer.find('.crime-kind-container').removeClass('col-lg-3')
+            $punismentContainer.find('.crime-kind-container').addClass('col-lg-6')
             $punismentContainer.find('.crime-fine-amount').show();
         } else {
+            $punismentContainer.find('.crime-kind-container').removeClass('col-lg-6')
+            $punismentContainer.find('.crime-kind-container').addClass('col-lg-3')
             $punismentContainer.find('.crime-fine-amount').hide();
         }
 

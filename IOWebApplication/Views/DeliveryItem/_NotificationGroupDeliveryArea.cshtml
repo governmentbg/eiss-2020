@@ -1,0 +1,28 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+@model NotificationItemVM
+<div class="notification-item-delivery-area">
+    <div class="row ">
+        <div class="col-md-12">
+            @Html.DisplayFor(x => x.AddressId, "intWithHidden", new { DisplayClass = "address-name" })
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">@Html.EditorFor(x => x.ToCourtId, "GenericDropDown")</div>
+    </div>
+    <div class="row ">
+        <div class="col-md-12">
+            @Html.EditorFor(x => x.DeliveryAreaId, "GenericDropDown")
+        </div>
+    </div>
+    <div class="row ">
+        <div class="col-md-12">
+            @Html.DisplayFor(x => x.LawUnitId, "intWithHidden", new { DisplayClass = "law-unit-name" })
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 text-right">
+            <input type="button" value="Потвърди" id="btnCustomDeliveryArea" class="btn btn-success" />
+        </div>
+    </div>
+</div>
+

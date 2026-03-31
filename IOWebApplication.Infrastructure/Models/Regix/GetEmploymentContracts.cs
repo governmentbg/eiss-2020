@@ -19,7 +19,7 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
 
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://egov.bg/RegiX/NRA/EmploymentContracts")]
     [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://egov.bg/RegiX/NRA/EmploymentContracts", IsNullable = false)]
@@ -31,83 +31,13 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
 
         /// <remarks/>
         Active,
+
+        /// <remarks/>
+        Terminated,
     }
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
-    [System.SerializableAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://egov.bg/RegiX/NRA/EmploymentContracts")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://egov.bg/RegiX/NRA/EmploymentContracts", IsNullable = false)]
-    public enum EContractReasonType
-    {
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("01")]
-        Item01,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("02")]
-        Item02,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("03")]
-        Item03,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("04")]
-        Item04,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("05")]
-        Item05,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("06")]
-        Item06,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("07")]
-        Item07,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("08")]
-        Item08,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("09")]
-        Item09,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("10")]
-        Item10,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("11")]
-        Item11,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("12")]
-        Item12,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("13")]
-        Item13,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("14")]
-        Item14,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("15")]
-        Item15,
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlEnumAttribute("16")]
-        Item16,
-    }
-
-    /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://egov.bg/RegiX/NRA/EmploymentContracts")]
     [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://egov.bg/RegiX/NRA/EmploymentContracts", IsNullable = false)]
@@ -131,7 +61,7 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
     }
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -145,6 +75,18 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
         private ContractsFilterType contractsFilterField;
 
         private bool contractsFilterFieldSpecified;
+
+        private System.DateTime dateToField;
+
+        private bool dateToFieldSpecified;
+
+        private int pageField;
+
+        private bool pageFieldSpecified;
+
+        private int sizeField;
+
+        private bool sizeFieldSpecified;
 
         /// <remarks/>
         public IdentityTypeRequest Identity
@@ -185,10 +127,92 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
                 this.contractsFilterFieldSpecified = value;
             }
         }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType = "date")]
+        public System.DateTime DateTo
+        {
+            get
+            {
+                return this.dateToField;
+            }
+            set
+            {
+                this.dateToField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool DateToSpecified
+        {
+            get
+            {
+                return this.dateToFieldSpecified;
+            }
+            set
+            {
+                this.dateToFieldSpecified = value;
+            }
+        }
+
+        /// <remarks/>
+        public int Page
+        {
+            get
+            {
+                return this.pageField;
+            }
+            set
+            {
+                this.pageField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool PageSpecified
+        {
+            get
+            {
+                return this.pageFieldSpecified;
+            }
+            set
+            {
+                this.pageFieldSpecified = value;
+            }
+        }
+
+        /// <remarks/>
+        public int Size
+        {
+            get
+            {
+                return this.sizeField;
+            }
+            set
+            {
+                this.sizeField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool SizeSpecified
+        {
+            get
+            {
+                return this.sizeFieldSpecified;
+            }
+            set
+            {
+                this.sizeFieldSpecified = value;
+            }
+        }
     }
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -228,7 +252,7 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
     }
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -250,6 +274,18 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
         private System.DateTime reportDateField;
 
         private bool reportDateFieldSpecified;
+
+        private System.DateTime dateToField;
+
+        private bool dateToFieldSpecified;
+
+        private int pageField;
+
+        private bool pageFieldSpecified;
+
+        private int sizeField;
+
+        private bool sizeFieldSpecified;
 
         /// <remarks/>
         public ResponseIdentityType Identity
@@ -344,10 +380,92 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
                 this.reportDateFieldSpecified = value;
             }
         }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType = "date")]
+        public System.DateTime DateTo
+        {
+            get
+            {
+                return this.dateToField;
+            }
+            set
+            {
+                this.dateToField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool DateToSpecified
+        {
+            get
+            {
+                return this.dateToFieldSpecified;
+            }
+            set
+            {
+                this.dateToFieldSpecified = value;
+            }
+        }
+
+        /// <remarks/>
+        public int Page
+        {
+            get
+            {
+                return this.pageField;
+            }
+            set
+            {
+                this.pageField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool PageSpecified
+        {
+            get
+            {
+                return this.pageFieldSpecified;
+            }
+            set
+            {
+                this.pageFieldSpecified = value;
+            }
+        }
+
+        /// <remarks/>
+        public int Size
+        {
+            get
+            {
+                return this.sizeField;
+            }
+            set
+            {
+                this.sizeField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool SizeSpecified
+        {
+            get
+            {
+                return this.sizeFieldSpecified;
+            }
+            set
+            {
+                this.sizeFieldSpecified = value;
+            }
+        }
     }
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -403,7 +521,7 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
     }
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -431,9 +549,7 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
 
         private bool endDateFieldSpecified;
 
-        private EContractReasonType reasonField;
-
-        private bool reasonFieldSpecified;
+        private string reasonField;
 
         private System.DateTime timeLimitField;
 
@@ -450,6 +566,20 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
         private string professionNameField;
 
         private string eKATTECodeField;
+
+        private string lastTermIdField;
+
+        private System.DateTime beginDateField;
+
+        private bool beginDateFieldSpecified;
+
+        private System.DateTime beginAmendmentDateField;
+
+        private bool beginAmendmentDateFieldSpecified;
+
+        private decimal salaryEuroField;
+
+        private bool salaryEuroFieldSpecified;
 
         /// <remarks/>
         public string ContractorBulstat
@@ -588,7 +718,7 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
         }
 
         /// <remarks/>
-        public EContractReasonType Reason
+        public string Reason
         {
             get
             {
@@ -597,20 +727,6 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
             set
             {
                 this.reasonField = value;
-            }
-        }
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool ReasonSpecified
-        {
-            get
-            {
-                return this.reasonFieldSpecified;
-            }
-            set
-            {
-                this.reasonFieldSpecified = value;
             }
         }
 
@@ -720,10 +836,106 @@ namespace IOWebApplication.Infrastructure.Models.Regix.GetEmploymentContracts
                 this.eKATTECodeField = value;
             }
         }
+
+        /// <remarks/>
+        public string LastTermId
+        {
+            get
+            {
+                return this.lastTermIdField;
+            }
+            set
+            {
+                this.lastTermIdField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType = "date")]
+        public System.DateTime BeginDate
+        {
+            get
+            {
+                return this.beginDateField;
+            }
+            set
+            {
+                this.beginDateField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool BeginDateSpecified
+        {
+            get
+            {
+                return this.beginDateFieldSpecified;
+            }
+            set
+            {
+                this.beginDateFieldSpecified = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute(DataType = "date")]
+        public System.DateTime BeginAmendmentDate
+        {
+            get
+            {
+                return this.beginAmendmentDateField;
+            }
+            set
+            {
+                this.beginAmendmentDateField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool BeginAmendmentDateSpecified
+        {
+            get
+            {
+                return this.beginAmendmentDateFieldSpecified;
+            }
+            set
+            {
+                this.beginAmendmentDateFieldSpecified = value;
+            }
+        }
+
+        /// <remarks/>
+        public decimal SalaryEuro
+        {
+            get
+            {
+                return this.salaryEuroField;
+            }
+            set
+            {
+                this.salaryEuroField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool SalaryEuroSpecified
+        {
+            get
+            {
+                return this.salaryEuroFieldSpecified;
+            }
+            set
+            {
+                this.salaryEuroFieldSpecified = value;
+            }
+        }
     }
 
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.3081.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]

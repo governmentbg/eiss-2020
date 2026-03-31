@@ -1,0 +1,236 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@model BankFilePaymentFilterVM
+
+@{
+    ViewData["Title"] = "Плащания от банков файл";
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PaymentTypeId, "GenericDropDown")</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.DebtorIdentifier)</div>
+</div>
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.DebtorNames)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.SenderName)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PaymentInfo)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.PaymentDescription)</div>
+</div>
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(m => m.BankId)</div>
+    <div class="col-lg-2">@Html.EditorFor(m => m.Amount, "Decimal")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="refreshTable('#mainTable');" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function ReloadDatatable()
+        {
+            refreshTable('#mainTable');
+            HideModal();
+        }
+        $(function () {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataBankFilePayment")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.model = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            PaymentTypeId: $("#PaymentTypeId").val(),
+                            DebtorIdentifier: $("#DebtorIdentifier").val(),
+                            DebtorNames: $("#DebtorNames").val(),
+                            SenderName: $("#SenderName").val(),
+                            PaymentInfo: $("#PaymentInfo").val(),
+                            BankId: $("#BankId").val(),
+                            PaymentDescription: $("#PaymentDescription").val(),
+                            Amount: $("#Amount").val(),
+                        };
+                    }
+
+                },
+                scrollX: true,
+                scroller: true,
+                columns: [
+                    {
+                        name: 'iban',
+                        data: 'iban',
+                        title: 'Сметка',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'bankId',
+                        data: 'bankId',
+                        title: 'Референтен номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'paidDate',
+                        data: 'paidDate',
+                        title: 'Дата на плащане',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: "text-right",
+                        name: 'amount',
+                        data: 'amount',
+                        title: 'Сума',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    },
+                    {
+                        name: 'currency',
+                        data: 'currency',
+                        title: 'Валута',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'paymentType',
+                        data: 'paymentType',
+                        title: 'Начин на плащане',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'paymentTypeCode',
+                        data: 'paymentTypeCode',
+                        title: 'Вид плащане',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'senderName',
+                        data: 'senderName',
+                        title: 'Вносител',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'debtorNames',
+                        data: 'debtorNames',
+                        title: 'Име задължено лице',
+                        sortable: false,
+                        searchable: true
+                    },
+                    {
+                        name: 'debtorIdentifier',
+                        data: 'debtorIdentifier',
+                        title: 'Идентификатор задължено лице',
+                        sortable: false,
+                        searchable: true
+                    },
+                    {
+                        name: 'paymentInfo',
+                        data: 'paymentInfo',
+                        title: 'Основание',
+                        sortable: false,
+                        searchable: true
+                    },
+                    {
+                        name: 'paymentDescription',
+                        data: 'paymentDescription',
+                        title: 'Основание 2',
+                        sortable: false,
+                        searchable: true
+                    },
+                    {
+                        name: 'paymentNumber',
+                        data: 'paymentNumber',
+                        title: 'Номер на плащане',
+                        sortable: false,
+                        searchable: true
+                    },
+                    {
+                        name: 'obligations',
+                        data: null,
+                        title: "Прихванати задължения",
+                        sortable: false,
+                        searchable: false,
+                        "render": function (a,b,row) {
+                                    return TemplateToHtml('#templateObligation', row);
+                        }
+                    },
+                    {
+                        name: 'expireData',
+                        data: 'expireData',
+                        title: 'Анулиране',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        width: 250,
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateStorno', row);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+
+    <script id="templateObligation" type="text/x-handlebars-template">
+        {{#each obligationPayments}}
+        {{obligationInfo}}
+        <br/>
+        <span class="text-muted">{{courtName}}</span>
+        {{/each}}
+    </script>
+
+    <script id="templateStorno" type="text/x-handlebars-template">
+        <a href="#"
+           data-modal-title="Анулиране на плащане"
+           data-modal-url="@Url.Action("ExpiredInfo", "Manage")?SubmitUrl=@Url.Action("StornoBankFilePayment", "Money")&longId={{this.id}}"
+           class="btn btn-def btn-sm modal-loader" title="Премахване">
+            <i class="fa fa-remove"></i>
+        </a>
+    </script>
+
+}

@@ -1,19 +1,19 @@
-﻿using IOWebApplication.Core.Contracts;
+﻿using DnsClient.Internal;
+using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Delivery;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using IOWebApplicationApi.Contracts;
 using IOWebApplicationApi.Data.Models;
+using IOWebApplicationApi.Helper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NSwag.Annotations;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace IOWebApplicationApi.Controllers
 {
@@ -24,14 +24,17 @@ namespace IOWebApplicationApi.Controllers
         private readonly IDeliveryItemService deliveryItemService;
         private readonly IWorkingDaysService workingDaysService;
         private readonly IMobileFileService mobileFileService;
+        private readonly ILogger<DeliveryItemController> logger;
         public DeliveryItemController(
             IDeliveryItemService _deliveryItemService,
             IWorkingDaysService _workingDaysService,
-            IMobileFileService _mobileFileService)
+            IMobileFileService _mobileFileService,
+            ILogger<DeliveryItemController> logger)
         {
             deliveryItemService = _deliveryItemService;
             workingDaysService = _workingDaysService;
             mobileFileService = _mobileFileService;
+            this.logger = logger;
         }
 
         private int GetCourtId()
@@ -66,7 +69,7 @@ namespace IOWebApplicationApi.Controllers
             return lawUnitId;
         }
         [HttpPost("LoadData")]
-        public JsonResult LoadData([FromBody]SyncParam model)
+        public JsonResult LoadData([FromBody] SyncParam model)
         {
             int courtId = GetCourtId();
             int lawUnitId = GetLawUnitId();
@@ -82,18 +85,42 @@ namespace IOWebApplicationApi.Controllers
             return Json(new { items = deliveryItems, courts, notificationStates, reasons, workingDays, notificationTypes });
         }
         [HttpPost("SaveVisit")]
-        public JsonResult SaveVisit([FromBody]DeliveryItemVisitMobile model)
+        public async Task<JsonResult> SaveVisit([FromBody] DeliveryItemVisitMobileModel model)
         {
-            model.DateOper = model.DateOper.AddHours(3);
-            model.LawUnitId = GetLawUnitId();
-            if (model.CourtId <= 0)
-                model.CourtId = GetCourtId();
-            var result = deliveryItemService.DeliveryItemSaveOperMobile(model);
+            if (model == null)
+            {
+                logger.LogError("SaveVisit.DeliveryItemVisitMobileModel.Model is null");
+            }
+
+
+            DeliveryItemVisitMobile modelData = new DeliveryItemVisitMobile()
+            {
+                Id = model.Id,
+                DateOper = model.DateOper,
+                DeliveryItemId = model.DeliveryItemId,
+                DeliveryOperId = model.DeliveryOperId,
+                NotificationStateId = model.NotificationStateId,
+                Lat = model.Lat.ToString(),
+                Long = model.Long.ToString(),
+                DeliveryReasonId = model.DeliveryReasonId,
+                UserId = model.UserId,
+                CourtId = model.CourtId,
+                DeliveryUUID = model.DeliveryUUID
+
+            };
+
+            modelData.DateOper = modelData.DateOper.ConvertUtcToBGTime();
+            modelData.LawUnitId = GetLawUnitId();
+            if (modelData.CourtId <= 0)
+                modelData.CourtId = GetCourtId();
+            var result = await deliveryItemService.DeliveryItemSaveOperMobile(modelData);
             return Json(result);
         }
+
         [HttpPost("SaveMobileFile")]
         [DisableRequestSizeLimit]
-        public JsonResult SaveMobileFile() {
+        public async Task<JsonResult> SaveMobileFile()
+        {
             var User = HttpContext.User;
             int courtId = 0;
             string deliveryAccountId = "";
@@ -116,21 +143,17 @@ namespace IOWebApplicationApi.Controllers
             bool result = false;
             using (var reader = new StreamReader(Request.Body))
             {
-                var content = reader.ReadToEnd();
-                result = mobileFileService.SaveMobileFile(deliveryAccountId, courtId, content);
+                var content = await reader.ReadToEndAsync();
+                result = await mobileFileService.SaveMobileFile(deliveryAccountId, courtId, content);
             }
             return Json(result);
         }
 
-        //[AllowAnonymous]
-        //[HttpPost("test_mobile")]
-        //[HttpGet("test_mobile")]
-        //public JsonResult TestMobile()
-        //{
-        //    var model = deliveryItemService.GetById<DeliveryItemVisitMobile>(65);
-        //    var result = deliveryItemService.DeliveryItemSaveOperMobile(model);
-        //    return Json(result);
-        //}
-
+        [AllowAnonymous]
+        [HttpGet(nameof(test))]
+        public IActionResult test()
+        {
+            return Ok("Test OK.");
+        }
     }
 }

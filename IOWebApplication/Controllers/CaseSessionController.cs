@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -13,6 +10,13 @@ using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -27,6 +31,8 @@ namespace IOWebApplication.Controllers
         private readonly ICaseSessionMeetingService caseSessionMeetingService;
         private readonly ICaseNotificationService caseNotificationService;
         private readonly ICaseSessionActService caseSessionActService;
+        private readonly ICaseService caseService;
+
         public CaseSessionController(ICaseSessionService _service,
                                      INomenclatureService _nomService,
                                      ICommonService _commonService,
@@ -35,7 +41,8 @@ namespace IOWebApplication.Controllers
                                      ICourtDepartmentService _courtDepartmentService,
                                      ICaseSessionMeetingService _caseSessionMeetingService,
                                      ICaseNotificationService _caseNotificationService,
-                                     ICaseSessionActService _caseSessionActService)
+                                     ICaseSessionActService _caseSessionActService,
+                                     ICaseService _caseService)
         {
             service = _service;
             nomService = _nomService;
@@ -46,14 +53,15 @@ namespace IOWebApplication.Controllers
             caseSessionMeetingService = _caseSessionMeetingService;
             caseNotificationService = _caseNotificationService;
             caseSessionActService = _caseSessionActService;
+            caseService = _caseService;
         }
 
-        public IActionResult Index(int id)
+        public async Task<IActionResult> Index(int id)
         {
-            var tcase = service.GetById<Case>(id);
+            var EISSPNumber = await service.GetPropByIdAsync<Case, string>(id, x => x.EISSPNumber);
             ViewBag.caseId = id;
-            ViewBag.casenumber = tcase.EISSPNumber;
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.View, id))
+            ViewBag.casenumber = EISSPNumber;
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.View, id))
             {
                 return Redirect_Denied();
             }
@@ -64,15 +72,21 @@ namespace IOWebApplication.Controllers
         /// Справка за заседания
         /// </summary>
         /// <returns></returns>
-        public IActionResult Index_Spr()
+        public async Task<IActionResult> Index_Spr()
         {
-            ViewBag.CaseGroupIds_ddl = nomService.GetDropDownList<CaseGroup>(false);
-            ViewBag.HallId_ddl = commonService.GetDropDownList_CourtHall(userContext.CourtId);
-            ViewBag.CaseSessionTypeIds_ddl = nomService.GetDropDownList<SessionType>(false);
-            ViewBag.SessionResultIds_ddl = nomService.GetDropDownList<SessionResult>(false);
-            ViewBag.SessionStateId_ddl = nomService.GetDropDownList<SessionState>();
-            ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
-            ViewBag.CourtDepartmentOtdelenieId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.Case, null, AuditConstants.Operations.View))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран Съдебни заседания");
+
+            ViewBag.CaseGroupIds_ddl = await nomService.GetDropDownListAsync<CaseGroup>(false);
+            ViewBag.HallId_ddl = await commonService.GetDropDownList_CourtHall(userContext.CourtId);
+            ViewBag.CaseSessionTypeIds_ddl = await nomService.GetDropDownListAsync<SessionType>(false);
+            ViewBag.SessionResultIds_ddl = await nomService.GetDDL_SessionResultAsync();
+            ViewBag.SessionStateId_ddl = await nomService.GetDropDownListAsync<SessionState>();
+            ViewBag.CourtDepartmentId_ddl = await courtDepartmentService.Department_SelectDDLAsync(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+            ViewBag.CourtDepartmentOtdelenieId_ddl = await courtDepartmentService.Department_SelectDDLAsync(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
             SetHelpFile(HelpFileValues.CourtHearings);
 
             CaseSessionFilterVM filter = new CaseSessionFilterVM();
@@ -115,6 +129,61 @@ namespace IOWebApplication.Controllers
             return File(xlsBytes, System.Net.Mime.MediaTypeNames.Application.Rtf, "SessionReport.xlsx");
         }
 
+        [HttpPost]
+        public IActionResult ListDataSprCalendar(DateTime dateFrom, DateTime dateTo, int year, int caseSessionTypeId, int hallId, string secretaryUserId, string caseGroupIds_text,
+                                                 string caseTypeIds_text, string regNumber, int sessionResultId, int sessionStateId, int judgeReporterId, int courtDepartmentId,
+                                                 int courtDepartmentOtdelenieId, string caseSessionTypeIds_text, string sessionResultIds_text)
+        {
+            var model = new CaseSessionFilterVM()
+            {
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                Year = year,
+                CaseSessionTypeId = caseSessionTypeId,
+                HallId = hallId,
+                SecretaryUserId = secretaryUserId,
+                CaseGroupIds_text = caseGroupIds_text,
+                CaseTypeIds_text = caseTypeIds_text,
+                RegNumber = regNumber,
+                SessionResultId = sessionResultId,
+                SessionStateId = sessionStateId,
+                JudgeReporterId = judgeReporterId,
+                CourtDepartmentId = courtDepartmentId,
+                CourtDepartmentOtdelenieId = courtDepartmentOtdelenieId,
+                CaseSessionTypeIds_text = caseSessionTypeIds_text,
+                SessionResultIds_text = sessionResultIds_text
+            };
+            var calendarVMs = service.CaseSessionSprCalendar_Select(model).ToList();
+            return Json(calendarVMs);
+        }
+
+        public IActionResult CaseSessionSprCalendar(DateTime dateFrom, DateTime dateTo, int year, int caseSessionTypeId, int hallId, string secretaryUserId, string caseGroupIds_text,
+                                                    string caseTypeIds_text, string regNumber, int sessionResultId, int sessionStateId, int judgeReporterId, int courtDepartmentId,
+                                                    int courtDepartmentOtdelenieId, string caseSessionTypeIds_text, string sessionResultIds_text)
+        {
+            var model = new CaseSessionFilterVM()
+            {
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                Year = year,
+                CaseSessionTypeId = caseSessionTypeId,
+                HallId = hallId,
+                SecretaryUserId = secretaryUserId,
+                CaseGroupIds_text = caseGroupIds_text,
+                CaseTypeIds_text = caseTypeIds_text,
+                RegNumber = regNumber,
+                SessionResultId = sessionResultId,
+                SessionStateId = sessionStateId,
+                JudgeReporterId = judgeReporterId,
+                CourtDepartmentId = courtDepartmentId,
+                CourtDepartmentOtdelenieId = courtDepartmentOtdelenieId,
+                CaseSessionTypeIds_text = caseSessionTypeIds_text,
+                SessionResultIds_text = sessionResultIds_text
+            };
+
+            return PartialView("_CaseSession_Spr_Calendar", model);
+        }
+
         /// <summary>
         /// Проверка за съдия-докладчик към дело дали съществува
         /// </summary>
@@ -131,9 +200,9 @@ namespace IOWebApplication.Controllers
         /// <param name="caseId"></param>
         /// <param name="sessionDate"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseId, DateTime? sessionDate = null)
+        public async Task<IActionResult> Add(int caseId, DateTime? sessionDate = null)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -153,7 +222,7 @@ namespace IOWebApplication.Controllers
                 model.DateFrom = sessionDate.ForceStartDate().Value.AddHours(9);
             }
 
-            SetViewbag(0, caseId, null);
+            await SetViewbag(0, caseId, null);
             SetHelpFile(HelpFileValues.CaseSession);
             return View(nameof(Edit), model);
         }
@@ -163,19 +232,19 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var model = service.CaseSessionVMById(id);
+            var model = await service.CaseSessionVMById(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас заседание не е намерено и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас заседание не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, id, AuditConstants.Operations.Update, model.CaseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSession, id, AuditConstants.Operations.Update, model.CaseId))
             {
                 return Redirect_Denied();
             }
             ViewBag.CaseSessionName = model.SessionTypeLabel + " " + model.DateFrom.ToString("dd.MM.yyyy");
-            SetViewbag(id, model.CaseId, model.Id);
+            await SetViewbag(id, model.CaseId, model.Id);
             SetHelpFile(HelpFileValues.SessionMainData);
             return View(nameof(Edit), model);
         }
@@ -186,40 +255,51 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <param name="notifListTypeId"></param>
         /// <returns></returns>
-        public IActionResult Preview(int id, int? notifListTypeId)
+        public async Task<IActionResult> Preview(int id, int? notifListTypeId)
         {
-            var model = service.CaseSessionVMById(id);
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, model.Id, AuditConstants.Operations.View, model.CaseId))
+            var model = await service.CaseSessionVMById(id);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSession, model.Id, AuditConstants.Operations.View, model.CaseId))
             {
                 return Redirect_Denied();
             }
             model.NotificationListTypeId = notifListTypeId;
             ViewBag.CaseSessionName = model.SessionTypeLabel + " " + model.DateFrom.ToString("dd.MM.yyyy");
-            SetViewbag(id, model.CaseId, model.Id, false);
+            await SetViewbag(id, model.CaseId, model.Id, false);
             SetHelpFile(HelpFileValues.SessionMainData);
 
             return View(nameof(Preview), model);
         }
 
-        void SetViewbag(int id, int caseId, int? caseSessionId, bool IsViewRowSessionBreadcrumbs = true)
+        async Task SetViewbag(int id, int caseId, int? caseSessionId, bool IsViewRowSessionBreadcrumbs = true)
         {
             var modelSession = new CaseSessionVM();
+            DateTime? dtNow = DateTime.Now;
 
             if (id > 0)
             {
-                modelSession = service.CaseSessionVMById(id);
+                modelSession = await service.CaseSessionVMById(id);
                 ViewBag.IsExpired = modelSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno;
+                dtNow = modelSession.DateWrt;
+                //dtNow = modelSession.DateFrom;
             }
             else
                 ViewBag.IsExpired = false;
 
             ViewBag.CaseSessionName = modelSession.SessionTypeLabel + " " + modelSession.DateFrom.ToString("dd.MM.yyyy");
             ViewBag.CourtHallId = modelSession.CourtHallId ?? 0;
-            ViewBag.SessionTypeId_ddl = nomService.GetDDL_SessionTypesByCase(caseId);
-            ViewBag.SessionStateId_ddl = nomService.GetDDL_SessionStateRoute(modelSession.SessionStateId);
-            ViewBag.CourtHallId_ddl = commonService.GetDropDownList_CourtHall(userContext.CourtId);
-            ViewBag.CaseClassification_ddl = classficationService.CaseClassification_Select(caseId, caseSessionId);
-            ViewBag.DateTo_Minutes_ddl = nomService.GetDDL_SessionDuration();
+            List<SelectListItem> sessionTypes = await nomService.GetDDL_SessionTypesByCase(caseId, (((id > 0) && (modelSession.DateFrom < DateTime.Now)) ? modelSession.SessionTypeId : (int?)null), true, false, dtNow);
+            if (id > 0 && !sessionTypes.Any(t => t.Value == modelSession.SessionTypeId.ToString()))
+            {
+                var firstDateWrt = service.GetFirstHistoryDate<CaseSessionH>(id);
+                sessionTypes = await nomService.GetDDL_SessionTypesByCase(caseId, (((id > 0) && (modelSession.DateFrom < DateTime.Now)) ? modelSession.SessionTypeId : (int?)null), true, false, firstDateWrt);
+            }
+            ViewBag.SessionTypeId_ddl = sessionTypes;
+
+
+            ViewBag.SessionStateId_ddl = await nomService.GetDDL_SessionStateRoute(modelSession.SessionStateId);
+            ViewBag.CourtHallId_ddl = await commonService.GetDropDownList_CourtHall(userContext.CourtId);
+            ViewBag.CaseClassification_ddl = await classficationService.CaseClassification_Select(caseId, caseSessionId);
+            ViewBag.DateTo_Minutes_ddl = await nomService.GetDDL_SessionDuration();
 
             if (caseSessionId > 0)
             {
@@ -229,11 +309,14 @@ namespace IOWebApplication.Controllers
             {
                 ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(caseId);
             }
-            ViewBag.hasSubstitutions = (lawUnitService.LawUnitSubstitution_SelectForSession(caseSessionId ?? 0) != null) ? lawUnitService.LawUnitSubstitution_SelectForSession(caseSessionId ?? 0).Any() : false;
+
+            ViewBag.hasSubstitutions = lawUnitService.LawUnitSubstitution_SelectForSession(caseSessionId ?? 0)?.Any();
+            ViewBag.hasSubstitutionsOutCase = (await lawUnitService.GetCaseSelectionProtokolSubstitution(caseSessionId ?? 0))?.Any();
+            //ViewBag.hasSubstitutions = (lawUnitService.LawUnitSubstitution_SelectForSession(caseSessionId ?? 0) != null) ? lawUnitService.LawUnitSubstitution_SelectForSession(caseSessionId ?? 0).Any() : false;
 
             if (id == 0)
             {
-                var caseModel = service.GetById<Case>(caseId);
+                var caseModel = await service.GetReadonlyAsync<Case>(caseId);
                 if (caseModel.CourtId == NomenclatureConstants.Courts.VKS && caseModel.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
                 {
                     ViewBag.VksLawunitChange_ddl = nomService.GetDDL_VksSessionLawunitChange();
@@ -241,16 +324,39 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        private void SetViewbagAddSessionAndAct(int caseId)
+        private async Task SetViewbagAddSessionAndAct(int caseId)
         {
-            ViewBag.SessionTypeId_ddl = nomService.GetDDL_SessionTypesByCaseByGroupe(caseId, NomenclatureConstants.CaseSessionTypeGroup.PrivateSession);
-            //ViewBag.SessionStateId_ddl = nomService.GetDDL_SessionStateFiltered(0);
+            ViewBag.SessionTypeId_ddl = await nomService.GetDDL_SessionTypesByCaseByGroupe(caseId, NomenclatureConstants.CaseSessionTypeGroup.PrivateSession, true, false, DateTime.Now);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(caseId);
-            //ViewBag.ActTypeId_ddl = caseSessionActService.GetActTypesFromCaseByCase(caseId);
-            var caseCase = service.GetById<Case>(caseId);
-            var actComplainResults = nomService.GetDDL_ActComplainResult(caseCase.CaseTypeId);
+            var caseCaseCaseTypeId = await service.GetPropByIdAsync<Case, int>(caseId, x => x.CaseTypeId);
+            var actComplainResults = await nomService.GetDDL_ActComplainResultAsync(caseCaseCaseTypeId);
             ViewBag.ActComplainResultId_ddl = actComplainResults;
             ViewBag.hasComplainResult = actComplainResults.Count > 1;
+            ViewBag.SessionResultId_ddl = await nomService.GetDDL_SessionResultFromRulesByCaseId(caseId);
+            ViewBag.hasActComplainResultRespect = actComplainResults.Any(x => x.Value == NomenclatureConstants.ActComplainResults.Respect.ToString());
+            var selectListItemsCaseSession = await service.GetDDL_CaseSessionAddAct(caseId);
+            ViewBag.CaseSessionAddActId_ddl = selectListItemsCaseSession;
+            ViewBag.hasSessionAddAct = selectListItemsCaseSession.Count > 1;
+            ViewBag.RelatedActId_ddl = await caseSessionActService.GetDropDownList_CaseSessionActEnforced(caseId);
+            ViewBag.hasTDActForRegistration = await nomService.CheckCaseFeature(caseId, NomenclatureConstants.CaseFeatures.ISPN_ActHasForRegistration);
+            ViewBag.CorrectedActsIds_ddl = ViewBag.RelatedActId_ddl;
+
+            var caseInfo = await service.GetPropByIdAsync<Case, dynamic>(caseId, x => new
+            {
+                x.IsISPNcase,
+                x.IspnKind
+            });
+            ViewBag.isISPNcase = caseInfo.IsISPNcase == true;
+            if (ViewBag.isISPNcase == true)
+            {
+                ViewBag.ActISPNReasonId_ddl = await nomService.GetDLL_ActIspnReasonByGroup(NomenclatureConstants.ActISPNReasonGroupings.CaseSessionAct_ISPN);
+                ViewBag.ActISPNDebtorStateId_ddl = await nomService.GetDropDownListAsync<ActISPNDebtorState>();
+            }
+            ViewBag.isRNFLcase = caseInfo.IspnKind == NomenclatureConstants.IspnKinds.Rnfl;
+            if (ViewBag.isRNFLcase == true)
+            {
+                ViewBag.ActISPNReasonId_ddl = await nomService.GetDLL_ActIspnReasonByGroup(NomenclatureConstants.ActISPNReasonGroupings.CaseSessionAct_RNFL);
+            }
         }
 
         /// <summary>
@@ -259,7 +365,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Edit(CaseSessionVM model)
+        public async Task<IActionResult> Edit(CaseSessionVM model)
         {
             model.DateFrom = model.DateFrom.MakeEndSeconds();
             model.DateTo = model.DateFrom.AddMinutes(model.DateTo_Minutes).MakeEndSeconds();
@@ -267,26 +373,26 @@ namespace IOWebApplication.Controllers
 
             if (!ModelState.IsValid)
             {
-                SetViewbag(model.Id, model.CaseId, model.Id);
+                await SetViewbag(model.Id, model.CaseId, model.Id);
                 return View(nameof(Edit), model);
             }
 
             string _isvalid = IsValid(model);
             if (_isvalid != string.Empty)
             {
-                SetViewbag(model.Id, model.CaseId, model.Id);
+                await SetViewbag(model.Id, model.CaseId, model.Id);
                 SetErrorMessage(_isvalid);
                 return View(nameof(Edit), model);
             }
 
             var currentId = model.Id;
-            var saveResult = service.CaseSession_SaveData(model);
+            var saveResult = await service.CaseSession_SaveData(model);
             if (saveResult.Result)
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseSession, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
 
-                if ((!service.IsExistCaseSessionResult(model.Id)) && (model.SessionStateId == NomenclatureConstants.SessionState.Provedeno))
+                if ((!await service.IsExistCaseSessionResult(model.Id)) && (model.SessionStateId == NomenclatureConstants.SessionState.Provedeno))
                 {
                     SetSuccessMessage(MessageConstant.Values.SaveOK + " Моля, добавете резултат от заседание.");
                     return RedirectToAction("AddResult", new { caseSessionId = model.Id });
@@ -307,7 +413,7 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(saveResult.ErrorMessage);
             }
 
-            SetViewbag(model.Id, model.CaseId, model.Id);
+            await SetViewbag(model.Id, model.CaseId, model.Id);
             return View(nameof(Edit), model);
         }
 
@@ -316,9 +422,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult AddSessionAndAct(int caseId)
+        public async Task<IActionResult> AddSessionAndAct(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -333,44 +439,55 @@ namespace IOWebApplication.Controllers
                 CaseLawUnitByCase = lawUnitService.GetCheckListCaseLawUnitByCase(caseId),
                 ActCanAppeal = false,
                 IsFinalDoc = false,
-                CaseSessions = service.GetCheckListCaseSession(caseId)
+                IsMainResult = true,
+                RnflEffectiveImmediately = true
             };
 
             //Следващия кръгъл час
             //model.DateFrom = model.DateFrom.AddMinutes(-model.DateFrom.Minute).AddHours(1);
-            SetViewbagAddSessionAndAct(caseId);
+            await SetViewbagAddSessionAndAct(caseId);
             return View(nameof(AddSessionAndAct), model);
         }
 
         [HttpPost]
-        public IActionResult AddSessionAndAct(CaseSessionVM model)
+        public async Task<IActionResult> AddSessionAndAct(CaseSessionVM model)
         {
             model.DateFrom = model.DateFrom.MakeEndSeconds();
             model.DateTo = model.DateFrom.AddMinutes(model.DateTo_Minutes).MakeEndSeconds();
+            model.DateWrt = DateTime.Now;
+
+            if (model.CaseSessionAddActId > 0)
+            {
+                model.SessionResultId = null;
+            }
 
             ModelState["SessionStateId"].Errors.Clear();
             ModelState["SessionStateId"].ValidationState = Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Valid;
 
             if (!ModelState.IsValid)
             {
-                SetViewbagAddSessionAndAct(model.CaseId);
+                await SetViewbagAddSessionAndAct(model.CaseId);
                 return View(nameof(AddSessionAndAct), model);
             }
 
             string _isvalid = IsValidSessionAndAct(model);
             if (_isvalid != string.Empty)
             {
-                SetViewbagAddSessionAndAct(model.CaseId);
+                await SetViewbagAddSessionAndAct(model.CaseId);
                 SetErrorMessage(_isvalid);
                 return View(nameof(AddSessionAndAct), model);
             }
 
             var currentId = model.Id;
-            var saveResult = service.CaseSession_SaveData(model);
+            var saveResult = await service.CaseSession_SaveData(model);
             if (saveResult.Result)
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseSession, model.Id, currentId == 0);
-                this.SaveLogOperation(currentId == 0, model.Id, null, nameof(Edit));
+                if (model.ActSaveId > 0)
+                {
+                    this.SaveLogOperation(true, model.Id, null, nameof(Edit));
+                    this.SaveLogOperation(true, model.ActSaveId, null, nameof(Edit), nameof(CaseSessionAct));
+                }
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 if (string.IsNullOrEmpty(model.ActSaveType))
                     return RedirectToAction("Edit", "CaseSessionAct", new { id = model.ActSaveId });
@@ -382,7 +499,7 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(saveResult.ErrorMessage);
             }
 
-            SetViewbagAddSessionAndAct(model.CaseId);
+            await SetViewbagAddSessionAndAct(model.CaseId);
             return View(nameof(AddSessionAndAct), model);
         }
 
@@ -391,7 +508,7 @@ namespace IOWebApplication.Controllers
             if (model.SessionTypeId <= 0)
                 return "Няма избран вид заседание";
 
-            if (model.DateFrom == null)
+            if (model.DateFrom.Year < 2000)
                 return "Няма въведена начална дата";
             else
             {
@@ -410,9 +527,9 @@ namespace IOWebApplication.Controllers
                 //    }
                 //}
 
-                var caseCase = service.GetById<Case>(model.CaseId);
+                var caseCaseRegDate = service.GetPropById<Case, DateTime>(model.CaseId, x => x.RegDate);
 
-                if (model.DateFrom < caseCase.RegDate)
+                if (model.DateFrom < caseCaseRegDate)
                     return "Не можете да насрочвате заседание с дата/час по-малка от дата/час на регистрация на делото";
             }
 
@@ -424,12 +541,16 @@ namespace IOWebApplication.Controllers
 
             if (model.IsFinalDoc ?? false)
             {
-                var _case = service.GetById<Case>(model.CaseId);
-                var actComplainResults = nomService.GetDDL_ActComplainResult(_case.CaseTypeId);
+                var _caseCaseTypeId = service.GetPropById<Case, int>(model.CaseId, x => x.CaseTypeId);
+                var actComplainResults = nomService.GetDDL_ActComplainResult(_caseCaseTypeId);
                 if ((model.ActComplainResultId < 1) && (actComplainResults.Count() > 1))
                 {
                     return "Изберете резултат/степен на уважаване на иска";
                 }
+            }
+            else
+            {
+                model.ActComplainResultId = null;
             }
 
             if (!lawUnitService.IsExistJudgeReporterByCase(model.CaseId, model.DateFrom))
@@ -451,13 +572,13 @@ namespace IOWebApplication.Controllers
                 }
             }
 
-            if (model.CaseSessions != null)
-            {
-                if (model.CaseSessions.Where(x => x.Checked).Count() > 1)
-                {
-                    return "Може да бъде избрано само едно заседание";
-                }
-            }
+            //if (model.CaseSessions != null)
+            //{
+            //    if (model.CaseSessions.Where(x => x.Checked).Count() > 1)
+            //    {
+            //        return "Може да бъде избрано само едно заседание";
+            //    }
+            //}
 
             var caseSessions = service.CaseSession_OldSelect(model.CaseId, null, null).ToList();
             if (caseSessions.Count > 0)
@@ -465,6 +586,16 @@ namespace IOWebApplication.Controllers
                 if (caseSessions.Any(x => x.DateFrom == model.DateFrom))
                 {
                     return "Вече има заседание в това дело с тази начална дата/час";
+                }
+            }
+
+            if ((model.SessionResultId > 0) && (model.DateFrom <= DateTime.Now))
+            {
+                var selectListItems = nomService.GetDDL_SessionResultBase(model.SessionResultId ?? 0, false, false, true, model.CaseId);
+                if (selectListItems.Any())
+                {
+                    if (model.SessionResultBaseId < 1)
+                        return "Няма избрано основание";
                 }
             }
 
@@ -494,12 +625,12 @@ namespace IOWebApplication.Controllers
             if (model.SessionTypeId < 0)
                 return "Няма избран вид";
 
-            if (model.DateFrom == null)
+            if (model.DateFrom.Year < 2000)
                 return "Няма въведена начална дата";
 
-            var caseCase = service.GetById<Case>(model.CaseId);
+            var caseRegDate = service.GetPropById<Case, DateTime>(x => x.Id == model.CaseId, x => x.RegDate);
 
-            if (model.DateFrom < caseCase.RegDate)
+            if (model.DateFrom < caseRegDate)
                 return "Не можете да насрочвате заседание с дата/час по-малка от дата/час на регистрация на делото";
 
             if (model.CourtHallId > 0)
@@ -530,19 +661,29 @@ namespace IOWebApplication.Controllers
                     return "Няма активен съдия докладчик";
                 }
             }
+            var caseSessionOld = (model.Id > 0) ? service.GetReadonly<CaseSession>(model.Id) : new CaseSession();
 
             if (model.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno)
             {
-                if (model.DateFrom <= DateTime.Now)
+                if (model.Id > 0 && NomenclatureConstants.SessionType.OpenSessionsForPastSessions.Contains(caseSessionOld.SessionTypeId))
                 {
-                    return "Не може да насрочвате/коригирате заседание с минала дата/час.";
+
+                }
+                else
+                {
+                    if (model.DateFrom <= DateTime.Now)
+                    {
+                        return "Не може да насрочвате/коригирате заседание с минала дата/час.";
+                    }
                 }
             }
 
             var caseSessions = service.CaseSession_OldSelect(model.CaseId, null, null).ToList();
             if (caseSessions.Count > 0)
             {
-                if (caseSessions.Any(x => (x.DateFrom == model.DateFrom) && ((model.Id > 0) ? x.Id != model.Id : true)))
+                if (caseSessions.Any(x => (x.DateFrom == model.DateFrom) &&
+                                          ((model.Id > 0) ? x.Id != model.Id : true) &&
+                                          (x.SessionStateId != NomenclatureConstants.SessionState.Cancel)))
                 {
                     return "Вече има заседание в това дело с тази начална дата/час";
                 }
@@ -559,7 +700,6 @@ namespace IOWebApplication.Controllers
                     }
                 }
 
-                var caseSessionOld = service.GetById<CaseSession>(model.Id);
                 if (model.DateFrom != caseSessionOld.DateFrom)
                 {
                     if (caseNotificationService.IsExistNotificationForSession(model.Id))
@@ -598,14 +738,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public IActionResult AddResult(int caseSessionId, int CallFromActId)
+        public async Task<IActionResult> AddResult(int caseSessionId, int CallFromActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionResult, null, AuditConstants.Operations.Append, caseSessionId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionResult, null, AuditConstants.Operations.Append, caseSessionId))
             {
                 return Redirect_Denied();
             }
 
-            var caseSession = service.CaseSessionVMById(caseSessionId);
+            var caseSession = await service.CaseSessionVMByIdAsync(caseSessionId);
             var model = new CaseSessionResultEditVM()
             {
                 CaseId = caseSession.CaseId,
@@ -613,20 +753,20 @@ namespace IOWebApplication.Controllers
                 CaseSessionId = caseSessionId,
                 IsActive = true,
                 IsMain = !service.IsExistMainResult(caseSessionId),
-                CaseLawUnitByCase = lawUnitService.GetCheckListCaseLawUnitByCaseAll(caseSession.CaseId),
+                CaseLawUnitByCase = await lawUnitService.GetCheckListCaseLawUnitByCaseAllAsync(caseSession.CaseId),
                 CallFromActId = CallFromActId
             };
 
-            SetViewbagResult(caseSessionId);
+            await SetViewbagResult(caseSessionId);
             return View(nameof(EditResult), model);
         }
 
-        void SetViewbagResult(int caseSessionId)
+        private async Task SetViewbagResult(int caseSessionId)
         {
-            ViewBag.SessionResultId_ddl = nomService.GetDDL_SessionResultFromRules(caseSessionId);
-            var caseSession = service.CaseSessionVMById(caseSessionId);
-            var caseCase = service.GetById<Case>(caseSession.CaseId);
-            ViewBag.CaseName = caseCase.RegNumber;
+            ViewBag.SessionResultId_ddl = await nomService.GetDDL_SessionResultFromRulesAsync(caseSessionId);
+            var caseSession = await service.CaseSessionVMByIdAsync(caseSessionId);
+            var caseCase = await caseService.GetCaseInfo(caseSession.CaseId);
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
             ViewBag.CaseSessionName = caseSession.SessionTypeLabel + " " + caseSession.DateFrom.ToString("dd.MM.yyyy");
             ViewBag.caseId = caseCase.Id;
             ViewBag.caseSessionId = caseSession.Id;
@@ -638,17 +778,17 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditResult(int id, int CallFromActId)
+        public async Task<IActionResult> EditResult(int id, int CallFromActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionResult, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionResult, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
 
-            var model = service.GetSessionResultEditVMById(id);
+            var model = await service.GetSessionResultEditVMByIdAsync(id);
             model.CallFromActId = CallFromActId;
 
-            SetViewbagResult(model.CaseSessionId);
+            await SetViewbagResult(model.CaseSessionId);
             return View(nameof(EditResult), model);
         }
 
@@ -662,8 +802,8 @@ namespace IOWebApplication.Controllers
             if (model.SessionResultId < 0)
                 return "Няма избран резултат";
 
-            var selectListItems = nomService.GetDDL_SessionResultBase(model.SessionResultId);
-            if (selectListItems.Count > 1)
+            var selectListItems = nomService.GetDDL_SessionResultBase(model.SessionResultId, false, false, true, model.CaseId);
+            if (selectListItems.Any())
             {
                 if (model.SessionResultBaseId < 1)
                     return "Няма избрано основание";
@@ -677,8 +817,7 @@ namespace IOWebApplication.Controllers
 
             if (model.Id == 0)
             {
-                if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.S_opredelenie_za_otvod ||
-                    model.SessionResultId == NomenclatureConstants.CaseSessionResult.S_razporejdane_za_otvod)
+                if (NomenclatureConstants.CaseSessionResult.ActZaOtvod.Contains(model.SessionResultId))
                 {
                     if (model.CaseLawUnitByCase == null)
                         return "Няма избран съдия";
@@ -705,9 +844,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditResult(CaseSessionResultEditVM model)
+        public async Task<IActionResult> EditResult(CaseSessionResultEditVM model)
         {
-            SetViewbagResult(model.CaseSessionId);
+            await SetViewbagResult(model.CaseSessionId);
             if (!ModelState.IsValid)
             {
                 return View(nameof(Edit), model);
@@ -721,14 +860,13 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CaseSessionResult_SaveData(model))
+            if (await service.CaseSessionResult_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseSessionResult, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
 
-                if ((model.SessionResultId == NomenclatureConstants.CaseSessionResult.S_opredelenie_za_otvod) ||
-                    (model.SessionResultId == NomenclatureConstants.CaseSessionResult.S_razporejdane_za_otvod))
+                if (NomenclatureConstants.CaseSessionResult.ActZaOtvod.Contains(model.SessionResultId))
                 {
                     if (currentId == 0)
                     {
@@ -759,19 +897,19 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult CopySession(int id)
+        public async Task<IActionResult> CopySession(int id)
         {
-            var model = service.CaseSessionVMById(id);
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.Append, model.CaseId))
+            var model = await service.CaseSessionVMById(id);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSession, null, AuditConstants.Operations.Append, model.CaseId))
             {
                 return Redirect_Denied();
             }
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас заседание не е намерено и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас заседание не е намерено и/или нямате достъп до него.");
             }
 
-            SetViewbag(model.Id, model.CaseId, model.Id);
+            await SetViewbag(model.Id, model.CaseId, model.Id);
             SetHelpFile(HelpFileValues.SessionMainData);
             return View(nameof(CopySession), model);
         }
@@ -782,9 +920,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CopySession(CaseSessionVM model)
+        public async Task<IActionResult> CopySession(CaseSessionVM model)
         {
-            SetViewbag(model.Id, model.CaseId, model.Id);
+            await SetViewbag(model.Id, model.CaseId, model.Id);
             SetHelpFile(HelpFileValues.SessionMainData);
             if (!ModelState.IsValid)
             {
@@ -792,7 +930,7 @@ namespace IOWebApplication.Controllers
             }
 
             model.DateFrom = model.DateFrom.MakeEndSeconds();
-            var caseSessions = service.CaseSession_OldSelect(model.CaseId, null, null).ToList();
+            var caseSessions = await service.CaseSession_OldSelect(model.CaseId, null, null).ToListAsync();
             if (caseSessions.Count > 0)
             {
                 if (caseSessions.Any(x => x.DateFrom == model.DateFrom))
@@ -802,9 +940,17 @@ namespace IOWebApplication.Controllers
                 }
             }
 
+            var caseCase = await service.GetByIdAsync<Case>(model.CaseId);
+
+            if (model.DateFrom < caseCase.RegDate)
+            {
+                SetErrorMessage("Не можете да насрочвате заседание с дата/час по-малка от дата/час на регистрация на делото");
+                return View(nameof(CopySession), model);
+            }
+
             var currentId = model.Id;
 
-            if (service.CaseSession_CopyData(model))
+            if (await service.CaseSession_CopyData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseSession, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -824,9 +970,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="HallId"></param>
         /// <returns></returns>
-        public IActionResult CaseSessionHallUseSpr(int HallId)
+        public async Task<IActionResult> CaseSessionHallUseSpr(int HallId)
         {
-            ViewBag.CourtHallId_ddl = commonService.GetDropDownList_CourtHall(userContext.CourtId);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.Case, null, AuditConstants.Operations.View))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран Заетост на зали");
+            ViewBag.CourtHallId_ddl = await commonService.GetDropDownList_CourtHall(userContext.CourtId);
             var model = new CaseSessionHallUseFilterVM();
             model.DateFrom = NomenclatureExtensions.ForceStartDate(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second));
             model.DateTo = NomenclatureExtensions.ForceEndDate(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)));
@@ -871,9 +1022,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public JsonResult CourtHallBusy(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int ModelId)
+        public async Task<JsonResult> CourtHallBusy(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int ModelId)
         {
-            return Json(new { result = service.CourtHallBusy(CourtHallId, DateFrom, DateTo_Minutes, ModelId) });
+            return Json(new { result = await service.CourtHallBusy(CourtHallId, DateFrom, DateTo_Minutes, ModelId) });
         }
 
         /// <summary>
@@ -910,9 +1061,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CaseSession_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseSession_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSession, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSession, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
@@ -925,12 +1076,12 @@ namespace IOWebApplication.Controllers
                 return Json(new { result = false, message = "Няма въведена причина за изтриване." });
             }
 
-            var expireObject = service.GetById<CaseSession>(model.Id);
+            var expireObjectCaseId = service.GetPropById<CaseSession, int>(model.Id, x => x.CaseId);
             if (service.CaseSession_ExpiredInfo(model))
             {
                 SetAuditContextDelete(service, SourceTypeSelectVM.CaseSession, model.Id);
                 SetSuccessMessage(MessageConstant.Values.CaseSessionExpireOK);
-                return Json(new { result = true, redirectUrl = Url.Action("CasePreview", "Case", new { id = expireObject.CaseId }) });
+                return Json(new { result = true, redirectUrl = Url.Action("CasePreview", "Case", new { id = expireObjectCaseId }) });
             }
             else
             {
@@ -942,6 +1093,7 @@ namespace IOWebApplication.Controllers
         /// Справка за Заседания за период с участието на малолетни/непълнолетни лица
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexReportMaturity()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
@@ -975,18 +1127,18 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CaseSessionResult_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseSessionResult_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionResult, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionResult, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
-            var expireObject = service.GetById<CaseSessionResult>(model.Id);
+            var expireObjectCaseSessionId = service.GetPropById<CaseSessionResult, int>(model.Id, x => x.CaseSessionId);
             if (service.CaseSessionResult_ExpiredInfo(model))
             {
                 SetAuditContextDelete(service, SourceTypeSelectVM.CaseSessionResult, model.Id);
                 SetSuccessMessage(MessageConstant.Values.CaseSessionResultExpireOK);
-                return Json(new { result = true, redirectUrl = Url.Action("Preview", "CaseSession", new { id = expireObject.CaseSessionId }) });
+                return Json(new { result = true, redirectUrl = Url.Action("Preview", "CaseSession", new { id = expireObjectCaseSessionId }) });
             }
             else
             {
@@ -995,14 +1147,66 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
+        /// Функция за групова проверка при запис на заседание - за сега няма да се ползва
+        /// </summary>
+        /// <param name="CaseId">ИД на дело</param>
+        /// <param name="CaseSessionId">Ид на заседание</param>
+        /// <param name="SessionStateId">Статус</param>
+        /// <param name="SessionTypeId">Тип на заседание</param>
+        /// <param name="DateTimeFrom">Час на започване</param>
+        /// <param name="DateTo_Minutes">Колко минути ще е заседанието</param>
+        /// <param name="CourtHallId">ИД на зала</param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<JsonResult> ChecksOnSaveSession(int CaseId, int CaseSessionId, int SessionStateId, int SessionTypeId, DateTime DateTimeFrom, int DateTo_Minutes, int CourtHallId)
+        {
+            var messageResult = string.Empty;
+
+            if (await lawUnitService.IsFullComposition(CaseId))
+                messageResult += (!string.IsNullOrEmpty(messageResult) ? " " : string.Empty) + "Съставът по делото не е пълен!";
+
+            if (await lawUnitService.IsExistJudgeLawUnitInCase(CaseId))
+                messageResult += (!string.IsNullOrEmpty(messageResult) ? " " : string.Empty) + "Не фигурирате по това дело!";
+
+            if (SessionStateId == @NomenclatureConstants.SessionState.Provedeno &&
+                SessionTypeId != @NomenclatureConstants.SessionType.ClosedSession &&
+                CaseSessionId > 0)
+            {
+                if (await caseSessionMeetingService.CheckExistSecretaryOfAllMeeting(CaseSessionId))
+                    messageResult += (!string.IsNullOrEmpty(messageResult) ? " " : string.Empty) + "Има сесия без секретар!";
+            }
+
+            if (DateTo_Minutes > 0)
+            {
+                var _res = await caseSessionMeetingService.IsCaseLawUnitFromCaseBusy(CaseId, SessionStateId, DateTimeFrom, DateTimeFrom.AddMinutes(DateTo_Minutes));
+                if (!string.IsNullOrEmpty(_res))
+                    messageResult += (!string.IsNullOrEmpty(messageResult) ? " " : string.Empty) + _res;
+            }
+
+            if (CaseSessionId < 1)
+            {
+                if (await service.IsExistLastSessionWithoutAct(CaseId, CaseSessionId))
+                    messageResult += (!string.IsNullOrEmpty(messageResult) ? " " : string.Empty) + "Има насрочено/проведено заседание без акт!";
+            }
+
+            if ((CourtHallId > 0) && (DateTo_Minutes > 0))
+            {
+                if (await caseSessionMeetingService.CourtHallBusyFromSession(CourtHallId, DateTimeFrom, DateTo_Minutes, CaseSessionId))
+                    messageResult += (!string.IsNullOrEmpty(messageResult) ? " " : string.Empty) + "Залата е заета в този интервал!";
+            }
+
+            return Json(new { result = messageResult });
+        }
+
+        /// <summary>
         /// Проверка за пълен състав по дело
         /// </summary>
         /// <param name="CaseId"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult IsFullComposition(int CaseId)
+        public async Task<JsonResult> IsFullComposition(int CaseId)
         {
-            return Json(new { result = lawUnitService.IsFullComposition(CaseId) });
+            return Json(new { result = await lawUnitService.IsFullComposition(CaseId) });
         }
 
         /// <summary>
@@ -1029,27 +1233,29 @@ namespace IOWebApplication.Controllers
         /// <param name="SessionId"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult IsExistLastSessionWithoutAct(int CaseId, int SessionId)
+        public async Task<JsonResult> IsExistLastSessionWithoutAct(int CaseId, int SessionId)
         {
-            return Json(new { result = service.IsExistLastSessionWithoutAct(CaseId, SessionId) });
+            return Json(new { result = await service.IsExistLastSessionWithoutAct(CaseId, SessionId) });
         }
 
+        #region Заседания с ненаписани съдебни актове от всички съдии
+
         /// <summary>
-        /// Справка Заседания с не написани съдебни актове към [дата] от всички съдии
+        /// Справка заседания с не написани съдебни актове към [дата] от всички съдии
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexCaseSessionWithActProject()
         {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за справка заседания с не написани съдебни актове към [дата] от всички съдии");
             CaseFilterReport filter = new CaseFilterReport()
             {
                 DateFrom = NomenclatureExtensions.GetStartYear(),
-                //DateTo = NomenclatureExtensions.GetEndYear(),
                 ActDateToSpr = DateTime.Now
             };
-            ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
-            ViewBag.SessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
-            SetHelpFile(HelpFileValues.Report19);
 
+            SetHelpFile(HelpFileValues.Report19);
+            ViewBagCaseSessionWithActProject();
             return View(filter);
         }
 
@@ -1057,13 +1263,26 @@ namespace IOWebApplication.Controllers
         /// Извличане на данни за Заседания с не написани съдебни актове към [дата] от всички съдии
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataCaseSessionWithActProject(IDataTablesRequest request, CaseFilterReport model)
+        public IActionResult ListDataCaseSessionWithActProject(IDataTablesRequest request, CaseFilterReport filter)
         {
-            var data = service.CaseSessionWithActProject_Select(userContext.CourtId, model);
+            var data = service.CaseSessionWithActProject_Select(filter);
             return request.GetResponse(data);
         }
+
+        private void ViewBagCaseSessionWithActProject()
+        {
+            ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            ViewBag.SessionTypeIds_ddl = nomService.GetDropDownList<SessionType>(false);
+        }
+
+        #endregion
+
+        //public IActionResult multidata()
+        //{
+        //    var model = service.CaseSession_MnogoZasedania(10658, 83);
+        //    return Json(model);
+        //}
     }
 }

@@ -1,0 +1,162 @@
+﻿// Copyright (C) Information Services. All Rights Reserved.
+// Licensed under the Apache License, Version 2.0
+
+using IOWebApplication.Infrastructure.Data.Models;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplicationApi.Helper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IOWebApplicationApi.Extensions
+{
+    public static class ProgramExtensions
+    {
+
+        public static async Task<string> GetRawBodyAsync(
+    this HttpRequest request,
+    Encoding encoding = null)
+        {
+            if (!request.Body.CanSeek)
+            {
+                // We only do this if the stream isn't *already* seekable,
+                // as EnableBuffering will create a new stream instance
+                // each time it's called
+                request.EnableBuffering();
+            }
+
+            request.Body.Position = 0;
+
+            var reader = new StreamReader(request.Body, encoding ?? Encoding.UTF8);
+
+            var body = await reader.ReadToEndAsync().ConfigureAwait(false);
+
+            request.Body.Position = 0;
+
+            return body;
+        }
+
+        public static void ConfigureServices(this IServiceCollection services, IConfiguration Configuration)
+        {
+            // За добавяне на контексти, използвайте extension метода!!!
+            services.AddAppDbContext(Configuration);
+
+            #region Identity
+            services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            { options.User.RequireUniqueEmail = false; }
+               )
+               .AddUserStore<ApplicationUserStore>()
+               .AddRoleStore<RoleStore<ApplicationRole, ApplicationDbContext, string, ApplicationUserRole, ApplicationRoleClaim>>()
+               .AddDefaultTokenProviders();
+
+            // ===== Add Jwt Authentication ========
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); //  => remove default claims
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+                })
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, cfg =>
+                {
+                    cfg.RequireHttpsMetadata = false;
+                    cfg.SaveToken = true;
+                    cfg.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = Configuration["JwtIssuer"],
+                        ValidAudience = Configuration["JwtIssuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JwtKey"])),
+                        ClockSkew = TimeSpan.Zero // remove delay of token when expire, 
+                    };
+                    //cfg.Events = new JwtBearerEvents()
+                    //{
+                    //    OnAuthenticationFailed = c =>
+                    //    {
+                    //        c.NoResult();
+
+                    //        c.Response.StatusCode = 401;
+                    //        c.Response.ContentType = "text/plain";
+
+                    //        return null;
+                    //    }
+
+                    //};
+                });
+
+            string privateKey = Configuration["JwtMobileKey"];
+            ECDsa eCDsa = EDCsaHelper.LoadPrivateKey(EDCsaHelper.FromHexString(privateKey));
+            var key = new ECDsaSecurityKey(eCDsa);
+
+            services
+              .AddAuthentication(options =>
+              {
+                  options.DefaultAuthenticateScheme = "MobileBearer"; //JwtBearerDefaults.AuthenticationScheme;
+                  options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                  options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+              })
+              .AddJwtBearer("MobileBearer", cfg =>
+              {
+                  cfg.RequireHttpsMetadata = false;
+                  cfg.SaveToken = true;
+                  cfg.IncludeErrorDetails = true;
+                  cfg.TokenValidationParameters = new TokenValidationParameters
+                  {
+                      ValidIssuer = Configuration["JwtMobileIssuer"],
+                      ValidAudience = Configuration["JwtMobileIssuer"],
+                      IssuerSigningKey = key, // new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JwtMobileKey"])),
+                      ClockSkew = TimeSpan.Zero // remove delay of token when expire
+                  };
+              });
+            services.AddCors();
+            #endregion Identity
+            // За добавяне на услуги, използвайте extension метода!!!
+            services.AddApplicationServices();
+
+            services.AddMvc();
+            #region IdentityServer
+            //services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+            //    .AddIdentityServerAuthentication(options =>
+            //    {
+            //        options.Authority = Configuration.GetValue<string>("OpenIdConnect:Authority");
+            //        options.RequireHttpsMetadata = false;
+            //        options.ApiName = Configuration.GetValue<string>("OpenIdConnect:ApiName");
+            //    });
+            #endregion IdentityServer
+            services.AddLogging(logging =>
+            {
+                logging.AddConsole();
+                logging.AddDebug();
+            });
+
+            //services.AddSwaggerDocument(conf =>
+            //{
+            //    conf.PostProcess = document =>
+            //    {
+            //        document.Info.Title = Configuration.GetValue<string>("SwaggerUI:Title");
+            //        document.Info.Description = Configuration.GetValue<string>("SwaggerUI:Description");
+            //        document.Info.Version = Configuration.GetValue<string>("SwaggerUI:Version");
+            //        document.Schemes = new List<SwaggerSchema>() { SwaggerSchema.Http, SwaggerSchema.Https };
+            //        document.SecurityDefinitions.Add("apikey", new SwaggerSecurityScheme
+            //        {
+            //            Type = SwaggerSecuritySchemeType.ApiKey,
+            //            Name = "Authorization",
+            //            In = SwaggerSecurityApiKeyLocation.Header
+            //        });
+            //    };
+            //});
+        }
+    }
+}

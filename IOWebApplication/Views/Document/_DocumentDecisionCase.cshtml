@@ -17,68 +17,68 @@
 <partial name="_CdnScript" />
 
 <script>
-        $(function () {
-            var table = $('#documentDecisionCaseMainTable').DataTable({
-                'order': [[0, 'asc']],
-                ajax: {
-                    "url": "@Url.Action("DocumentDecisionCaseListData", "Document")",
-                    "type": "POST",
-                    "datatype": "json",
-                    data: function (d) {
-                        d.documentDecisionId = @Model;
-                    }
+    $(function () {
+        var table = $('#documentDecisionCaseMainTable').DataTable({
+            'order': [[0, 'asc']],
+            ajax: {
+                "url": "@Url.Action("DocumentDecisionCaseListData", "Document")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.documentDecisionId = @Model;
+                }
 
+            },
+            filter: false,
+            columns: [
+                {
+                    name: 'decisionRequestTypeName',
+                    data: 'decisionRequestTypeName',
+                    title: 'Искане за',
+                    sortable: true,
+                    searchable: true
                 },
-                filter: false,
-                columns: [
-                    {
-                        name: 'decisionRequestTypeName',
-                        data: 'decisionRequestTypeName',
-                        title: 'Искане за',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'caseRegNumber',
-                        data: 'caseRegNumber',
-                        title: 'Номер на дело',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'caseRegDate',
-                        data: 'caseRegDate',
-                        title: 'Дата на дело',
-                        sortable: true,
-                        searchable: false,
-                        "render": function (value) {
-                            if (value)
-                                return moment(value).format("DD.MM.YYYY");
-                            else
-                                return "";
-                        }
-                    },
-                    {
-                        name: 'decisionName',
-                        data: 'decisionName',
-                        title: 'Решение',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'actions',
-                        data: "id",
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#documentDecisionCaseTemplateEdit', value);
-                        }
+                {
+                    name: 'caseRegNumber',
+                    data: 'caseRegNumber',
+                    title: 'Номер на дело',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'caseRegDate',
+                    data: 'caseRegDate',
+                    title: 'Дата на дело',
+                    sortable: true,
+                    searchable: false,
+                    "render": function (value) {
+                        if (value)
+                            return moment(value).format("DD.MM.YYYY");
+                        else
+                            return "";
                     }
-                ]
-            });
+                },
+                {
+                    name: 'decisionName',
+                    data: 'decisionName',
+                    title: 'Решение',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#documentDecisionCaseTemplateEdit', value);
+                    }
+                }
+            ]
         });
+    });
 </script>
 
 <script id="documentDecisionCaseTemplateEdit" type="text/x-handlebars-template">
@@ -90,14 +90,14 @@
         requestContent('@Url.Action("AddDocumentDecisionCase", "Document")'
             , { documentDecisionId: @Model }
             , function (data) {
-                ShowModalDialog('Добавяне', data);
+                ShowModalDialog('Добавяне', data, true, true);
             });
     }
     function EditClick(id) {
         requestContent('@Url.Action("EditDocumentDecisionCase", "Document")'
             , { id: id }
             , function (data) {
-                ShowModalDialog('Редакция', data);
+                ShowModalDialog('Редакция', data, true, true);
             });
     }
 </script>

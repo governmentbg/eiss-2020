@@ -15,5 +15,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
         public DateTime DateStart { get; set; }
         [Display(Name = "Крайна дата")]
         public DateTime? DateEnd { get; set; }
+        public string IsActiveText { get; set; }
     }
 }

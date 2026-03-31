@@ -147,29 +147,29 @@ namespace IOWebApplication.Core.Extensions
                     break;
             }
 
-            if ((l4 == "") && (l3 == "") && (l2 == "") && (l1 == ""))
+            if (string.IsNullOrEmpty(l4) && string.IsNullOrEmpty(l3) && string.IsNullOrEmpty(l2) && string.IsNullOrEmpty(l1))
             {
                 result = "нула ";
             }
             else
             {
-                if ((l1 != "") && (l1.IndexOf(sa) == -1))
+                if (!string.IsNullOrEmpty(l1) && (l1.IndexOf(sa) == -1))
                 {
-                    if ((l2 != "") || (l3 != "") || (l4 != ""))
+                    if (!string.IsNullOrEmpty(l2) || !string.IsNullOrEmpty(l3) || !string.IsNullOrEmpty(l4))
                     {
                         l1 = a + l1;
                     }
                 }
-                else if ((l2 != "") && (l2.IndexOf(sa) == -1))
+                else if (!string.IsNullOrEmpty(l2) && (l2.IndexOf(sa) == -1))
                 {
-                    if ((l3 != "") || (l4 != ""))
+                    if (!string.IsNullOrEmpty(l3) || !string.IsNullOrEmpty(l4))
                     {
                         l2 = a + l2;
                     }
                 }
-                else if ((l3 != "") && (l3.IndexOf(sa) == -1))
+                else if (!string.IsNullOrEmpty(l3) && (l3.IndexOf(sa) == -1))
                 {
-                    if (l4 != "")
+                    if (!string.IsNullOrEmpty(l4))
                     {
                         l3 = a + l3;
                     }
@@ -178,7 +178,7 @@ namespace IOWebApplication.Core.Extensions
                 // rezult[1] = chr(ord(Result[1])-32);
             }
 
-            if ((l4 == "") && (l3 == "") && (l2 == "") && (l1 == "един " || l1 == "една " || l1 == "едно "))
+            if (string.IsNullOrEmpty(l4) && string.IsNullOrEmpty(l3) && string.IsNullOrEmpty(l2) && (l1 == "един " || l1 == "една " || l1 == "едно "))
             {
                 result = result + cqloSingle + SystavnoToStr(int.Parse(stotinki), systavnoSingle, systavnoMany, rodSystavno);
             }
@@ -240,22 +240,43 @@ namespace IOWebApplication.Core.Extensions
 
         public static string MoneyToStringUSD(decimal money)
         {
-            return NumberToString(money, "долар", "долара", "цент", "центове", ROD.MYGKI, ROD.GENSKI);
+            return NumberToString(money, "долар", "долара", "цент", "центове", ROD.MYGKI, ROD.MYGKI);
         }
 
         public static string MoneyToStringEUR(decimal money)
         {
-            return NumberToString(money, "евро", "евро", "евроцент", "евроцентове", ROD.MYGKI, ROD.GENSKI);
+            return NumberToString(money, "евро", "евро", "цент", "цента", ROD.SREDEN, ROD.MYGKI);
         }
 
         public static string MoneyToStringCHF(decimal money)
         {
-            return NumberToString(money, "швейцарски франк", "швейцарски франка", "рапен", "рапена", ROD.MYGKI, ROD.GENSKI);
+            return NumberToString(money, "швейцарски франк", "швейцарски франка", "рапен", "рапена", ROD.MYGKI, ROD.MYGKI);
         }
 
         public static string MoneyToStringGBP(decimal money)
         {
-            return NumberToString(money, "британски паунд", "британски паунда", "пенс", "пенса", ROD.MYGKI, ROD.GENSKI);
+            return NumberToString(money, "британски паунд", "британски паунда", "пенс", "пенса", ROD.MYGKI, ROD.MYGKI);
+        }
+
+        public static string MoneyToStringTRY(decimal money)
+        {
+            return NumberToString(money, "Турска лира", "Турски лири", "куруш", "куруша", ROD.GENSKI, ROD.MYGKI);
+        }
+
+        public static string MoneyToStringRON(decimal money)
+        {
+            return NumberToString(money, "Румънска лея", "Румънски леи", "бан", "бани", ROD.GENSKI, ROD.MYGKI);
+        }
+
+        public static string MoneyToStringRSD(decimal money)
+        {
+            return NumberToString(money, "Сръбски динар", "Сръбски динари", "пара", "пари", ROD.MYGKI, ROD.GENSKI);
+        }
+
+        public static string MoneyToStringN_A(decimal money)
+        {
+            //За валута - Друго (с код N/A) да не се вижда никакви означения на валути
+            return NumberToString(money, "", "", "", "", ROD.MYGKI, ROD.GENSKI);
         }
 
         public static string MoneyToString(decimal money, int currencyId)
@@ -264,22 +285,51 @@ namespace IOWebApplication.Core.Extensions
             {
                 case NomenclatureConstants.Currency.BGN: 
                     return MoneyToString(money);
-                    break;
                 case NomenclatureConstants.Currency.EUR:
                     return MoneyToStringEUR(money);
-                    break;
                 case NomenclatureConstants.Currency.USD:
                     return MoneyToStringUSD(money);
-                    break;
                 case NomenclatureConstants.Currency.CHF:
                     return MoneyToStringCHF(money);
-                    break;
                 case NomenclatureConstants.Currency.GBP:
                     return MoneyToStringGBP(money);
-                    break;
+                case NomenclatureConstants.Currency.TRY:
+                    return MoneyToStringTRY(money);
+                case NomenclatureConstants.Currency.RON:
+                    return MoneyToStringRON(money);
+                case NomenclatureConstants.Currency.RSD:
+                    return MoneyToStringRSD(money);
+                case NomenclatureConstants.Currency.N_A:
+                    return MoneyToStringN_A(money);
                 default:
                     return MoneyToString(money);
-                    break;
+            }
+        }
+
+        public static string MoneyToString(decimal money, string currencyCode)
+        {
+            switch (currencyCode)
+            {
+                case NomenclatureConstants.CurrencyCode.BGN:
+                    return MoneyToString(money);
+                case NomenclatureConstants.CurrencyCode.EUR:
+                    return MoneyToStringEUR(money);
+                case NomenclatureConstants.CurrencyCode.USD:
+                    return MoneyToStringUSD(money);
+                case NomenclatureConstants.CurrencyCode.CHF:
+                    return MoneyToStringCHF(money);
+                case NomenclatureConstants.CurrencyCode.GBP:
+                    return MoneyToStringGBP(money);
+                case NomenclatureConstants.CurrencyCode.TRY:
+                    return MoneyToStringTRY(money);
+                case NomenclatureConstants.CurrencyCode.RON:
+                    return MoneyToStringRON(money);
+                case NomenclatureConstants.CurrencyCode.RSD:
+                    return MoneyToStringRSD(money);
+                case NomenclatureConstants.CurrencyCode.N_A:
+                    return MoneyToStringN_A(money);
+                default:
+                    return MoneyToString(money);
             }
         }
     }

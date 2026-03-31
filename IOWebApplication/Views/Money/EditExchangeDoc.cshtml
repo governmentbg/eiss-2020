@@ -46,13 +46,16 @@
             </div>
 
             <div class="form-group">
-                <a asp-action="ExecListIndex" class="btn btn-danger">Назад</a>
+                <a asp-action="ExchangeDocList" class="btn btn-danger">Назад</a>
 
                 @if (Model.Id > 0)
                 {
                     <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.ExchangeDoc" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
 
                     <div class="pull-right">
+                        @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Деактивиране на протокол", ExpireSubmitUrl = Url.Action("StornoExchangeDoc") })
+                        <span>&nbsp;</span>
+
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }
@@ -63,7 +66,7 @@
 
 <partial name="_CdnScript" />
 
-<div id="modalMessageContainer">
+<div id="modalMessageContainerPopUp">
 </div>
 
 <script>

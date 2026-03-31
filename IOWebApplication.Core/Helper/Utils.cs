@@ -1,6 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.UserContext;
+using System;
+using System.Globalization;
+using System.Linq;
 
 namespace IOWebApplication.Core.Helper
 {
@@ -169,6 +172,26 @@ namespace IOWebApplication.Core.Helper
                 }
                 else
                     return false;
+
+                return true;
+            }
+
+            public static bool IsLnch(string lnch)
+            {
+                if (string.IsNullOrEmpty(lnch))
+                {
+                    return false;
+                }
+
+                if (lnch.Length != 10)
+                {
+                    return false;
+                }
+
+                if (lnch.Any(c => !Char.IsDigit(c)))
+                {
+                    return false;
+                }
 
                 return true;
             }
@@ -422,8 +445,77 @@ namespace IOWebApplication.Core.Helper
 
         public static string FullDateDiggitName(this DateTime value)
         {
-            return $"{DayDiggitName(value)} {MonthDiggitName(value)}, през {YearDiggitName(value)} година".ToLower();
+            return $"{DayDiggitName(value)} {MonthDiggitName(value)} през {YearDiggitName(value)} година".ToLower();
 
+        }
+        /// <summary>
+        /// Returns Input string with First letter Uppercase
+        /// </summary>
+        /// <param name="input">Input String</param>
+        /// <returns>string</returns>
+        public static string FirstCharToUpper(this string input)
+        {
+            if (!string.IsNullOrEmpty(input) && !string.IsNullOrWhiteSpace(input))
+            {
+                return input.First().ToString().ToUpper() + input.Substring(1);
+            }
+            return input;
+
+        }
+
+        public static DateTime? SafeParseDate(string input,string format = FormattingConstant.NormalDateFormat)
+        {
+            DateTime? result = null;
+
+            try
+            {
+                result = DateTime.ParseExact(input, format, CultureInfo.InvariantCulture);
+            }
+            catch (FormatException)
+            {
+                try
+                {
+                    result = DateTime.Parse(input, new CultureInfo("bg-bg").DateTimeFormat);
+                }
+                catch (Exception e)
+                {
+                }
+            }
+            return result;
+        }
+
+        public static decimal GetAmountBGN(decimal amount, bool isPeriodEuro, decimal euroExchangeRate)
+        {
+            decimal result = amount;
+
+            if (isPeriodEuro)
+            {
+                result = Math.Round(amount * euroExchangeRate, 2, MidpointRounding.AwayFromZero);
+            }
+
+            return result;
+        }
+
+        public static decimal GetAmountEUR(decimal amount, bool isPeriodEuro, decimal euroExchangeRate)
+        {
+            decimal result = amount;
+
+            if (isPeriodEuro)
+            {
+                result = Math.Round(amount / euroExchangeRate, 2, MidpointRounding.AwayFromZero);
+            }
+
+            return result;
+        }
+
+        public static int GetCurrency(bool isPeriodEuro)
+        {
+            return isPeriodEuro == true ? NomenclatureConstants.Currency.EUR : NomenclatureConstants.Currency.BGN;
+        }
+
+        public static string GetCurrencyStr(bool isPeriodEuro)
+        {
+            return isPeriodEuro == true ? "евро" : "лв.";
         }
     }
 }

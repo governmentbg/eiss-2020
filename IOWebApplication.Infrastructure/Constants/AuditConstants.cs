@@ -13,8 +13,14 @@
             public const string ChoiceByList = "Добавяне/премахване от списък";
             public const string Print = "Печат";
             public const string GeneratingFile = "Генериране на файл";
+            public const string Login = "Вход";
+            public const string Logout = "Изход";
+            public const string Patch = "Промяна";
+            public const string Sign = "Подписване";
 
             public static string[] ChangingOperations = { Append, Update, Delete };
         }
+
+        public const string TagNet8_1 = "Net8_1";
     }
 }

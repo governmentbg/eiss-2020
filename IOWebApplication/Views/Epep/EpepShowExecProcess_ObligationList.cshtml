@@ -1,0 +1,59 @@
+﻿@model ExecProcessInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+@using RestEpep = IOWebApplication.Infrastructure.Models.Integrations.EpepRest;
+@{
+    RestEpep.ExecProcessDetailsVM execProcess = Model.Data;
+}
+
+@if (execProcess.ObligationList?.Length > 0)
+{
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Задължения</legend>
+        @for (int i = 0; i < execProcess.ObligationList.Length; i++)
+        {
+            var obligation = execProcess.ObligationList[i];
+            var beneficiarySide = execProcess.SideList.Where(s => s.Gid == obligation.BeneficiaryGid).FirstOrDefault();
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => beneficiarySide.SideName, "obj", null, new { label = beneficiarySide.SideRoleName })
+                </div>
+                <div class="col-md-3">
+                    <label class="control-label">Длъжници</label>
+                    <div>
+                        @foreach (var debtor in obligation.Debtors)
+                        {
+                            var debtorSide = execProcess.SideList.Where(s => s.Gid == debtor).FirstOrDefault();
+                            <p>@(debtorSide.SideName) (@(debtorSide.SideRoleName))</p>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    @{
+                        string typeName = obligation.ObligationTypeName;
+                        if (!string.IsNullOrEmpty(obligation.Description))
+                        {
+                            typeName = (typeName ?? "") + $"; {obligation.Description}";
+                        }
+                    }
+                    @Html.DisplayFor(x => obligation.ObligationTypeName, "objVal", null, new { label = "Вид", value = typeName })
+                </div>
+                <div class="col-md-3">
+                    @{
+                        string amountText = $"{obligation.Amount:N2} {obligation.CurrencyCode}";
+                    }
+                    @Html.DisplayFor(x => obligation.Amount, "objVal", null, new { label = "Сума", value = amountText })
+                    @if (obligation.StatutoryInterestDate.HasValue)
+                    {
+                        <span>Законна лихва: @obligation.StatutoryInterestDate.Value.ToString("dd.MM.yyyy")</span>
+                    }
+                </div>
+
+            </div>
+
+        }
+    </fieldset>
+}
+else
+{
+    <p> Няма въведени задължения.</p>
+}

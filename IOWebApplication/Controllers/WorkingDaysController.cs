@@ -8,7 +8,6 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Linq;
 
 namespace IOWebApplication.Controllers
 {

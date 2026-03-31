@@ -20,8 +20,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 
         public string DeadlineType { get; set; }
 
-        public string LawUnitName { get; set; }
-        public string SecretaryName { get; set; }
+        //public string LawUnitName { get; set; }
+        //public string LawUnitNameSession { get; set; }
+        //public string SecretaryName { get; set; }
+        public string MakerName { get; set; }
 
         public DateTime StartDate { get; set; }
 

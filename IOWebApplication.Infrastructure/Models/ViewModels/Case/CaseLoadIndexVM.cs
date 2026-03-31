@@ -8,13 +8,18 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
     {
         public int Id { get; set; }
         public int CaseId { get; set; }
+        public string CaseName { get; set; }
         public int? CaseSessionId { get; set; }
         public int LawUnitId { get; set; }
         public string LawUnitName { get; set; }
         public string NameActivity { get; set; }
         public decimal BaseIndex { get; set; }
+        public decimal CaseLoadIndex { get; set; }
+        public decimal CaseLoadCorrectionIdex { get; set; }
         public string LoadValue { get; set; }
         public decimal CalcValue { get; set; }
+        public decimal CaseCalcValue { get; set; }
         public bool IsMainActivity { get; set; }
+        public string IsMainActivityText { get; set; }
     }
 }

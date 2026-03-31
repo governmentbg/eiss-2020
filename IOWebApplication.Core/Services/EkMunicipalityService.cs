@@ -20,7 +20,7 @@ namespace IOWebApplication.Core.Services
     public class EkMunicipalityService : BaseService, IEkMunicipalityService
     {
         public EkMunicipalityService(
-            ILogger<EkMunincipality> _logger,
+            ILogger<EkMunicipalityService> _logger,
             IRepository _repo,
             IUserContext _userContext)
         {

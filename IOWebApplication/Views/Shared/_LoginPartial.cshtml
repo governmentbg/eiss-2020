@@ -27,12 +27,15 @@
                 </div>
             </li>
             <li class="user-footer">
-                @if (IOWebApplication.Infrastructure.Constants.AccountConstants.PasswordLoginEnabled)
+                @* @if (IOWebApplication.Infrastructure.Constants.AccountConstants.PasswordLoginEnabled)
                 {
                     <div class="pull-left">
                         <a asp-action="ChangePassword" asp-controller="Account" class="btn btn-default">Смяна на паролата</a>
                     </div>
-                }
+                } *@
+                <div class="pull-left">
+                    <a href="@Url.Content("~/userguide/eiss-user-manual.pdf")" target="_blank" style="margin-top: 5px;display: block;">Ръководство</a>
+                </div>
                 <div class="pull-right">
                     <a asp-controller="Account" asp-action="LogOut" class="btn btn-def">Изход</a>
                 </div>

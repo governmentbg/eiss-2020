@@ -1,0 +1,35 @@
+﻿@model ExecProcessInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+@using RestEpep = IOWebApplication.Infrastructure.Models.Integrations.EpepRest;
+@{
+    RestEpep.CorrectedActVM[] correctionActList = Model.Data.CorrectionActList;
+}
+@if (correctionActList.Length > 0)
+{
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Коригиращи Изпълнителни листове</legend>
+        @for (int i = 0; i < correctionActList.Length; i++)
+        {
+            var correctionAct = correctionActList[i];
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => correctionAct.ActKind, "obj", null, new { label = "Тип акт" })
+                </div>
+                <div class="col-md-2">
+                    @Html.DisplayFor(x => correctionAct.ActNumber, "obj", null, new { label = "Номер" })
+                </div>
+                <div class="col-md-2">
+                    @Html.DisplayFor(x => correctionAct.ActDate, "date", null, new { label = "Дата" })
+                </div>
+                <div class="col-md-2">
+                    @if (correctionAct.ActFileId != null){
+                        <a href="@(ViewBag.EPEP_FILE_PATH)@(correctionAct.ActFileId.Value)" title="Изтегли документа">
+                            Преглед на акт
+                        </a>
+                    }
+                </div>
+
+            </div>
+        }
+    </fieldset>
+}

@@ -6,6 +6,8 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using iText.StyledXmlParser.Css.Resolve.Shorthand.Impl;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Money
 {
@@ -70,6 +72,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Column("payment_number")]
         public string PaymentNumber { get; set; }
 
+        [Column("offline_pos")]
+        [Display(Name = "Без връзка с ПОС")]
+        public bool OfflinePos { get; set; }
+
+        [Column("amount_bgn")]
+        [Display(Name = "Сума в лева")]
+        public decimal? AmountBGN { get; set; }
+
+        [Column("is_automatic")]
+        [Comment("Плащането е от автоматична обработка на банков файл")]
+        public bool? IsAutomatic { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -83,12 +96,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [ForeignKey(nameof(UserDisabledId))]
         public virtual ApplicationUser UserDisabled { get; set; }
 
-        public virtual ICollection<ObligationPayment> ObligationPayments { get; set; }
+        public virtual List<ObligationPayment> ObligationPayments { get; set; }
         public virtual ICollection<PosPaymentResult> PosPaymentResults { get; set; }
 
         public Payment()
         {
-            ObligationPayments = new HashSet<ObligationPayment>();
+            ObligationPayments = new List<ObligationPayment>();
             PosPaymentResults = new HashSet<PosPaymentResult>();
         }
     }

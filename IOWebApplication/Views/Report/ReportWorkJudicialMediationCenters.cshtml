@@ -1,0 +1,192 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Report.ReportWorkJudicialMediationCenters
+@model ReportWorkJudicialMediationCentersFilterVM
+
+@{
+    ViewData["Title"] = "Отчет за работата на съдебните центрове по медиация";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.CourtId, "GenericDropDown")</div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.MediatorId, "GenericDropDown")</div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataReportWorkJudicialMediationCenters", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filter = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CourtId: $("#CourtId").val(),
+                            MediatorId: $("#MediatorId").val(),
+                        };
+                    }
+                },
+                filter:false,
+                scrollX: true,
+                scroller: true,
+                columns: [
+                    {
+                        className: 'col-md-3',
+                        name: 'mediatorName',
+                        data: 'mediatorName',
+                        title: 'Медиатор',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'mediationCenterName',
+                        data: 'mediationCenterName',
+                        title: 'Териториално поделение / съдебен център',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'informationMeetingsCount',
+                        data: 'informationMeetingsCount',
+                        title: 'Брой на проведените информационни срещи за процедура по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'informationMeetingDurationText',
+                        data: 'informationMeetingDurationText',
+                        title: 'Продължителност на информационните срещи за процедура по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'informationMeetingsElectedPartyCaseCount',
+                        data: 'informationMeetingsElectedPartyCaseCount',
+                        title: 'Брой информационни срещи за процедура по медиация, при които страните са избрали медиатора',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresERTPCount',
+                        data: 'mediationProceduresERTPCount',
+                        title: 'Проведените медиации',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresECRTPDurationText',
+                        data: 'mediationProceduresECRTPDurationText',
+                        title: 'Обща продължителност на процедурите по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresECRTPCount',
+                        data: 'mediationProceduresECRTPCount',
+                        title: 'Брой на проведени срещи',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'mediationProceduresElectedPartyCaseCount',
+                        data: 'mediationProceduresElectedPartyCaseCount',
+                        title: 'Брой медиации, при които страните са избрали медиатора',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'appraisals',
+                        data: 'appraisals',
+                        title: 'Обща удовлетвореност на страните от проведени процедури по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'terminationCaseCount',
+                        data: 'terminationCaseCount',
+                        title: 'Общ брой прекратени дела след проведена процедура по медиация',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'terminationCaseSettlementCount',
+                        data: 'terminationCaseSettlementCount',
+                        title: 'Прекратени дела със спогодба',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'terminationCaseTerminationWithdrawalRefusalCount',
+                        data: 'terminationCaseTerminationWithdrawalRefusalCount',
+                        title: 'Прекратени дела поради оттегляне или отказ от иска',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'partiallyTerminationCaseCount',
+                        data: 'partiallyTerminationCaseCount',
+                        title: 'Общ брой частично прекратени дела',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'partiallyTerminationCaseSettlementCount',
+                        data: 'partiallyTerminationCaseSettlementCount',
+                        title: 'Със спогодба',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'partiallyTerminationCaseTerminationWithdrawalRefusalCount',
+                        data: 'partiallyTerminationCaseTerminationWithdrawalRefusalCount',
+                        title: 'Поради частично оттегляне или отказ от иска',
+                        sortable: false,
+                        searchable: false
+                    },
+                ]
+            });
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#CourtId').select2({ language: "bg" });
+        $('#MediatorId').select2({ language: "bg" });
+    });
+</script>
+
+<script>
+    $(function () {
+    });
+</script>

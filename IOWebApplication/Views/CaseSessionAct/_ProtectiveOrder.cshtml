@@ -1,5 +1,7 @@
-﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+﻿@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
 @using IOWebApplication.Infrastructure.Constants
+@inject IUserContext userContext
 @model CaseSessionActPrintVM
 @{
     Layout = null;
@@ -36,7 +38,12 @@
             </p>
 
             <p align="center" style="margin-top:18.0pt;margin-right:0cm;margin-bottom:18.0pt;margin-left:0cm;text-align:center">
-                Град @Model.CourtCity Датата и номера ще бъдат генерирани след предаване за подпис
+                Град @Model.CourtCity
+                @if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+                {
+                    <span>&nbsp;Датата и номерът ще бъдат генерирани след предаване за подпис</span>
+                }
+                
             </p>
         }
 
@@ -61,11 +68,10 @@
         </p>
         @if (!Model.HeaderOnly)
         {
-            @Html.Raw(Model.MainBody)
+            @Html.Raw(Model.Dispositiv)
 
             <p style="margin-top:12.0pt;text-align:justify;text-indent:35.45pt;line-height:150%">
-                Тази обезпечителна заповед се издава на @Model.LeftSideName,
-                @Model.LeftSideCurrentAddress.
+                Тази обезпечителна заповед се издава на @Model.LeftSidesWithAddress.                         
             </p>
 
             <p style="margin-top:12.0pt;text-align:justify;text-indent:35.45pt;line-height:150%">
@@ -81,7 +87,7 @@
             </p>
             <p align=right style="text-align:right;line-height:150%;text-autospace:none">
                 <span lang=EN-US style="font-size:10.0pt;line-height:150%">
-                    /@Model.JudgeReporter/
+                    /@Model.SDorFirstJudge/
                 </span>
             </p>
         }

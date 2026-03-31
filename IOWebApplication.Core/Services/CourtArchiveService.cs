@@ -41,12 +41,13 @@ namespace IOWebApplication.Core.Services
                     saved.Description = model.Description;
                     saved.DateStart = model.DateStart;
                     saved.DateEnd = model.DateEnd;
-                    repo.Update(saved);
+                    //repo.Update(saved);
                 }
                 else
                 {
                     //Insert
                     repo.Add<CourtArchiveCommittee>(model);
+                    model.LawUnits = new List<CourtArchiveCommitteeLawUnit>();
                 }
 
                 DateTime fromDate = DateTime.Now;
@@ -65,10 +66,11 @@ namespace IOWebApplication.Core.Services
                     else
                     {
                         CourtArchiveCommitteeLawUnit newLawUnit = new CourtArchiveCommitteeLawUnit();
-                        newLawUnit.CourtArchiveCommitteeId = model.Id;
+                        //newLawUnit.CourtArchiveCommitteeId = model.Id;
                         newLawUnit.LawUnitId = itemId;
                         newLawUnit.DateFrom = fromDate;
-                        repo.Add<CourtArchiveCommitteeLawUnit>(newLawUnit);
+                        model.LawUnits.Add(newLawUnit);
+                        //repo.Add<CourtArchiveCommitteeLawUnit>(newLawUnit);
                     }
                 }
 
@@ -77,7 +79,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtArchiveCommittee Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtArchiveCommittee Id={model.Id}");
                 return false;
             }
         }
@@ -93,7 +95,7 @@ namespace IOWebApplication.Core.Services
            .Select(x => new MultiSelectTransferVM()
            {
                Id = x.LawUnitId,
-               Order = 0,
+               OrderInt = 0,
                Text = x.LawUnit.FullName
            }).AsQueryable();
         }
@@ -101,18 +103,18 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CourtArchiveIndexVM> CourtArchiveIndex_Select(int courtId)
         {
             return repo.AllReadonly<CourtArchiveIndex>()
-                .Include(x => x.CourtArchiveCommitteeId)
-                .Where(x => x.CourtId == courtId)
-                .Select(x => new CourtArchiveIndexVM()
-                {
-                    Id = x.Id,
-                    Code = x.Code,
-                    Label = x.Label,
-                    CourtArchiveCommitteeName = x.CourtArchiveCommittee.Label,
-                    StorageYears = x.StorageYears,
-                    DateStart = x.DateStart,
-                    DateEnd = x.DateEnd
-                }).AsQueryable();
+                       .Where(x => x.CourtId == courtId)
+                       .Select(x => new CourtArchiveIndexVM()
+                       {
+                           Id = x.Id,
+                           Code = x.Code,
+                           Label = x.Label,
+                           CourtArchiveCommitteeName = x.CourtArchiveCommittee.Label,
+                           StorageYears = x.StorageYears,
+                           DateStart = x.DateStart,
+                           DateEnd = x.DateEnd
+                       })
+                       .AsQueryable();
         }
 
         public CourtArchiveIndexEditVM GetByIdVM(int id)
@@ -192,10 +194,9 @@ namespace IOWebApplication.Core.Services
                     else
                     {
                         CourtArchiveIndexCode newCode = new CourtArchiveIndexCode();
-                        newCode.CourtArchiveIndexId = saved.Id;
                         newCode.CaseCodeId = itemId;
                         newCode.DateFrom = fromDate;
-                        repo.Add<CourtArchiveIndexCode>(newCode);
+                        saved.CourtArchiveIndexCodes.Add(newCode);
                     }
                 }
 
@@ -205,7 +206,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtArchiveIndex Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtArchiveIndex Id={model.Id}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
         }
@@ -221,14 +222,14 @@ namespace IOWebApplication.Core.Services
            .Select(x => new MultiSelectTransferVM()
            {
                Id = x.CaseCodeId,
-               Order = 0,
+               OrderInt = 0,
                Text = $"{x.CaseCode.Code} {x.CaseCode.Label}"
            }).AsQueryable();
         }
         public List<SelectListItem> ArchiveCommittee_SelectDDL(int courtId)
         {
             var result = repo.AllReadonly<CourtArchiveCommittee>()
-                       .Where(x=>x.CourtId == courtId)
+                       .Where(x => x.CourtId == courtId)
                        .OrderBy(x => x.Label)
                        .Select(x => new SelectListItem()
                        {

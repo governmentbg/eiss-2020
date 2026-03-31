@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Mime;
-using System.Threading.Tasks;
-using IO.LogOperation.Models;
+﻿using IO.LogOperation.Models;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
@@ -12,6 +6,9 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.Mime;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {

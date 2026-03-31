@@ -7,6 +7,6 @@ namespace IOWebApplicationApi.Contracts
 {
     public interface IMobileFileService
     {
-        bool SaveMobileFile(string deliveryAccountId, int courtId, string Content);
+        Task<bool> SaveMobileFile(string deliveryAccountId, int courtId, string Content);
     }
 }

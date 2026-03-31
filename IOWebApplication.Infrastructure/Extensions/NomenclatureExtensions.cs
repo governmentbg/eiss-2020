@@ -2,25 +2,26 @@
 using IOWebApplication.Infrastructure.Extensions.HTML;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Xml;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Extensions
 {
     public static class NomenclatureExtensions
     {
         /// <summary>
-        /// Creates SelectList from IQueryable<ICommonNomenclature>
+        /// Creates SelectList from IQueryable&lt;ICommonNomenclature&gt;
         /// </summary>
         /// <param name="model"></param>
         /// <param name="addDefaultElement"></param>
+        /// <param name="addAllElement"></param>
+        /// <param name="orderByNumber"></param>
         /// <returns></returns>
         public static List<SelectListItem> ToSelectList(this IQueryable<ICommonNomenclature> model, bool addDefaultElement = false, bool addAllElement = false, bool orderByNumber = true)
         {
@@ -41,8 +42,55 @@ namespace IOWebApplication.Infrastructure.Extensions
                 {
                     Text = x.Label,
                     Value = x.Id.ToString()
-                }).ToList() ?? new List<SelectListItem>();
-            
+                })
+                .ToList() ?? new List<SelectListItem>();
+
+            if (addDefaultElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Избери", Value = "-1" })
+                    .ToList();
+            }
+
+            if (addAllElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Всички", Value = "-2" })
+                    .ToList();
+            }
+
+            return result.Decode();
+        }
+
+        /// <summary>
+        /// Creates SelectList from IQueryable&lt;ICommonNomenclature&gt;
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="addDefaultElement"></param>
+        /// <param name="addAllElement"></param>
+        /// <param name="orderByNumber"></param>
+        /// <returns></returns>
+        public static async Task<List<SelectListItem>> ToSelectListAsync(this IQueryable<ICommonNomenclature> model, bool addDefaultElement = false, bool addAllElement = false, bool orderByNumber = true)
+        {
+            DateTime today = DateTime.Today;
+
+            Expression<Func<ICommonNomenclature, object>> order = x => x.OrderNumber;
+            if (!orderByNumber)
+            {
+                order = x => x.Label;
+            }
+
+            var result = await model
+                .Where(x => x.IsActive)
+                .Where(x => x.DateStart <= today)
+                .Where(x => (x.DateEnd ?? today) >= today)
+                .OrderBy(order)
+                .Select(x => new SelectListItem()
+                {
+                    Text = x.Label,
+                    Value = x.Id.ToString()
+                }).ToListAsync() ?? new List<SelectListItem>();
+
             if (addDefaultElement)
             {
                 result = result
@@ -69,7 +117,7 @@ namespace IOWebApplication.Infrastructure.Extensions
             return model;
         }
 
-        public static List<SelectListItem> ToSelectListFromCode(this IQueryable<ICommonNomenclature> model, bool addDefaultElement = false, bool addAllElement = false, bool orderByNumber = true)
+        public static List<SelectListItem> ToSelectListFromCode(this IQueryable<ICommonNomenclature> model, bool addDefaultElement = false, bool addAllElement = false, bool orderByNumber = true, bool labelText = true)
         {
             DateTime today = DateTime.Today;
 
@@ -86,7 +134,7 @@ namespace IOWebApplication.Infrastructure.Extensions
                 .OrderBy(order)
                 .Select(x => new SelectListItem()
                 {
-                    Text = x.Label,
+                    Text = (labelText) ? x.Label : x.Code,
                     Value = x.Code
                 }).ToList() ?? new List<SelectListItem>();
 
@@ -113,13 +161,13 @@ namespace IOWebApplication.Infrastructure.Extensions
             {
                 return null;
             }
-            if (model.Count(x => x.Value != "-1" && x.Value != "-2") == 1)
+            if (model.Count(x => x.Value != "-1" && x.Value != "-2" && !string.IsNullOrEmpty(x.Value)) == 1)
             {
-                if (model.ElementAt(0).Value == "-1" || model.ElementAt(0).Value == "-2")
+                if (model.ElementAt(0).Value == "-1" || model.ElementAt(0).Value == "-2" || string.IsNullOrEmpty(model.ElementAt(0).Value))
                 {
                     model.RemoveAt(0);
                 }
-                if (model.ElementAt(0).Value == "-1" || model.ElementAt(0).Value == "-2")
+                if (model.ElementAt(0).Value == "-1" || model.ElementAt(0).Value == "-2" || string.IsNullOrEmpty(model.ElementAt(0).Value))
                 {
                     model.RemoveAt(0);
                 }
@@ -128,7 +176,7 @@ namespace IOWebApplication.Infrastructure.Extensions
             return model;
         }
         /// <summary>
-        /// Creates SelectList from IQueryable<ICommonNomenclature>
+        /// Creates SelectList from IQueryable&lt;ICommonNomenclature&gt;
         /// </summary>
         /// <param name="model"></param>
         /// <param name="addDefaultElement"></param>
@@ -165,7 +213,7 @@ namespace IOWebApplication.Infrastructure.Extensions
         }
 
         /// <summary>
-        /// Creates SelectList from IQueryable<ICommonNomenclature>
+        /// Creates SelectList from IQueryable&lt;ICommonNomenclature&gt;
         /// </summary>
         /// <param name="model"></param>
         /// <param name="addDefaultElement"></param>
@@ -201,6 +249,43 @@ namespace IOWebApplication.Infrastructure.Extensions
             return result.Decode();
         }
 
+        /// <summary>
+        /// Creates SelectList from IQueryable&lt;ICommonNomenclature&gt;
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="addDefaultElement"></param>
+        /// <returns></returns>
+        public static List<SelectListItem> ToSelectListCodeDescription(this IQueryable<ICommonNomenclature> model, bool addDefaultElement = false, bool addAllElement = false)
+        {
+            DateTime today = DateTime.Today;
+
+            var result = model
+                .Where(x => x.IsActive)
+                .Where(x => x.DateStart <= today)
+                .Where(x => (x.DateEnd ?? today) >= today)
+                .Select(x => new SelectListItem()
+                {
+                    Text = (x.Description != null) ? x.Description : x.Label,
+                    Value = x.Code
+                }).ToList() ?? new List<SelectListItem>();
+
+            if (addDefaultElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Избери", Value = "-1" })
+                    .ToList();
+            }
+
+            if (addAllElement)
+            {
+                result = result
+                    .Prepend(new SelectListItem() { Text = "Всички", Value = "-2" })
+                    .ToList();
+            }
+
+            return result.Decode();
+        }
+
         public static List<SelectListItem> ToSelectList<TSource, TValue, TText>(
          this IEnumerable<TSource> source,
          Expression<Func<TSource, TValue>> valueField,
@@ -211,8 +296,8 @@ namespace IOWebApplication.Infrastructure.Extensions
             {
                 return new List<SelectListItem>();
             }
-            string valueName = ExpressionHelper.GetExpressionText(valueField);
-            string labelName = ExpressionHelper.GetExpressionText(labelField);
+            string valueName = valueField.GetName();
+            string labelName = labelField.GetName();
             return (new SelectList(source, valueName, labelName, selected)).ToList();
         }
 
@@ -271,6 +356,14 @@ namespace IOWebApplication.Infrastructure.Extensions
             return model.ToLower();
         }
 
+        public static DateTime MakeEndDate(this DateTime model)
+        {
+            if (model.Hour == 0 && model.Minute == 0)
+            {
+                return model.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+            }
+            return model;
+        }
         public static DateTime? MakeEndDate(this DateTime? model)
         {
             if (model.HasValue && model.Value.Hour == 0 && model.Value.Minute == 0)
@@ -289,6 +382,84 @@ namespace IOWebApplication.Infrastructure.Extensions
             }
 
             return model;
+        }
+
+        public static DateTime MakeZeroSeconds(this DateTime model)
+        {
+            return new DateTime(model.Year, model.Month, model.Day, model.Hour, model.Minute, 0);
+        }
+
+        public static string DateToString(this DateTime? model)
+        {
+            if (model != null)
+                return (model ?? DateTime.Now).ToString("dd.MM.yyyy");
+
+            return String.Empty;
+        }
+
+        /// <summary>
+        /// Конвертиране на дата в стринг
+        /// </summary>
+        /// <param name="model">Дата</param>
+        /// <returns></returns>
+        public static string ConvertDateTimeToString(this DateTime? model)
+        {
+            if (model.HasValue)
+            {
+                DateTime dateTime = model.Value;
+                return dateTime.ToString("dd.MM.yyyy");
+            }
+            else
+                return string.Empty;
+        }
+
+        /// <summary>
+		/// Конвертиране на дата в стринг
+		/// </summary>
+		/// <param name="model">Дата</param>
+		/// <returns></returns>
+		public static string ConvertDateTimeToStringCriminalReport(this DateTime? model)
+        {
+            if (model.HasValue)
+            {
+                DateTime dateTime = model.Value;
+                return $"{dateTime.ToString("yyyy")}, {dateTime.ToString("MM")}, {dateTime.ToString("dd")}";
+            }
+            else
+                return string.Empty;
+        }
+
+        public static string ConvertDateTimeToStringYear(this DateTime? model)
+        {
+            if (model.HasValue)
+            {
+                DateTime dateTime = model.Value;
+                return dateTime.ToString("yyyy");
+            }
+            else
+                return string.Empty;
+        }
+
+        public static string ConvertDateTimeToStringMonth(this DateTime? model)
+        {
+            if (model.HasValue)
+            {
+                DateTime dateTime = model.Value;
+                return dateTime.ToString("MM");
+            }
+            else
+                return string.Empty;
+        }
+
+        public static string ConvertDateTimeToStringDay(this DateTime? model)
+        {
+            if (model.HasValue)
+            {
+                DateTime dateTime = model.Value;
+                return dateTime.ToString("dd");
+            }
+            else
+                return string.Empty;
         }
 
         public static bool CompareDatesToMinutes(DateTime date1, DateTime date2)
@@ -314,6 +485,16 @@ namespace IOWebApplication.Infrastructure.Extensions
             return model;
         }
 
+        /// <summary>
+        /// Сетва краен час на дата и ако е null добавя към днешна датат години
+        /// </summary>
+        /// <param name="model">Дата</param>
+        /// <param name="year">Години за добавяне</param>
+        /// <returns></returns>
+        public static DateTime? ForceEndDateWithAddYear(this DateTime? model, int year)
+        {
+            return (model ?? DateTime.Now.AddYears(year)).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+        }
 
         public static DateTime? ForceStartDate(this DateTime? model)
         {
@@ -322,6 +503,17 @@ namespace IOWebApplication.Infrastructure.Extensions
                 return model.Value.ForceStartDate();
             }
             return model;
+        }
+
+        /// <summary>
+        /// Сетва начален час на датат и ако е null добавя към днешна дата години
+        /// </summary>
+        /// <param name="model">Дата</param>
+        /// <param name="year">Години за добавяне</param>
+        /// <returns></returns>
+        public static DateTime? ForceStartDateWithAddYear(this DateTime? model, int year)
+        {
+            return (model ?? DateTime.Now.AddYears(year)).ForceStartDate();
         }
 
         public static DateTime ForceEndDate(this DateTime model)
@@ -524,6 +716,11 @@ namespace IOWebApplication.Infrastructure.Extensions
             return new DateTime(model.Year, 12, 31);
         }
 
+        public static DateTime GetPastDate()
+        {
+            return new DateTime(1900, 1, 1);
+        }
+
         public static string ConcatenateWithSeparator(this ICollection<int> model, string separator = ",")
         {
             string result = string.Empty;
@@ -665,6 +862,82 @@ namespace IOWebApplication.Infrastructure.Extensions
                 return datestring;
             }
             return "";
+        }
+
+        public static int[] ToIntArray(this string model)
+        {
+            try
+            {
+                return model.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Int32.Parse).ToArray();
+            }
+            catch
+            {
+                return (new List<int>()).ToArray();
+            }
+        }
+
+        public static string IntToMonth(int month)
+        {
+            string result = "";
+            switch (month)
+            {
+                case 1:
+                    result = "Януари";
+                    break;
+                case 2:
+                    result = "Февруари";
+                    break;
+                case 3:
+                    result = "Март";
+                    break;
+                case 4:
+                    result = "Април";
+                    break;
+                case 5:
+                    result = "Май";
+                    break;
+                case 6:
+                    result = "Юни";
+                    break;
+                case 7:
+                    result = "Юли";
+                    break;
+                case 8:
+                    result = "Август";
+                    break;
+                case 9:
+                    result = "Септември";
+                    break;
+                case 10:
+                    result = "Октомври";
+                    break;
+                case 11:
+                    result = "Ноември";
+                    break;
+                case 12:
+                    result = "Декември";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
+            return result;
+
+
+        }
+
+        public static decimal ParseDecimal(string decValue)
+        {
+            try
+            {
+                decValue = decValue.Replace(".", System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                decValue = decValue.Replace(",", System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                return Convert.ToDecimal(decValue, System.Globalization.CultureInfo.CurrentCulture);
+            }
+            catch (Exception e)
+            {
+                return 0M;
+            }
         }
     }
 }

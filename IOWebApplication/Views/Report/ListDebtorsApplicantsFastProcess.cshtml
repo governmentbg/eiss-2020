@@ -1,0 +1,132 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model ListDebtorsApplicantsFilterFastProcessVM
+
+@{
+    ViewData["Title"] = "Списък на длъжници/заявители дела по чл. 410 ГПК и чл. 417 ГПК";
+    ViewData["ShowMenuCounts"] = true;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseRegDateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseRegDateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.NamePerson)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.IdentifikatorPerson)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+        });
+    </script>
+}
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataListDebtorsApplicantsFastProcess")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            CaseRegDateFrom: $("#CaseRegDateFrom").val(),
+                            CaseRegDateTo: $("#CaseRegDateTo").val(),
+                            NamePerson: $("#NamePerson").val(),
+                            IdentifikatorPerson: $("#IdentifikatorPerson").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'personName',
+                        data: 'personName',
+                        title: 'Име на лице',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseRegNum',
+                        data: 'caseRegNum',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                                var url = '@(Url.Action("CasePreview", "Case", new { id = 666 }))';
+                                url = url.replace('666', row.caseId);
+                                return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'documentRegNum',
+                        data: 'documentRegNum',
+                        title: 'Вх. номер',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            if (row.assignmentDocumentId != null)
+                            {
+                                var url = '@(Url.Action("Edit", "Document", new { id = 666 }))';
+                                url = url.replace('666', row.assignmentDocumentId);
+                                return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.documentRegNum + "</a>";
+                            }
+                            else
+                            {
+                                return "";
+                            }
+                        },
+                    },
+                    {
+                        name: 'caseCourtLabel',
+                        data: 'caseCourtLabel',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'documentRegNumEpep',
+                        data: 'documentRegNumEpep',
+                        title: 'Вх. номер от ЕПЕП',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseStateName',
+                        data: 'caseStateName',
+                        title: 'Статус на дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                ]
+            });
+        }
+    }
+</script>

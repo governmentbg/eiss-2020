@@ -1,0 +1,31 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Data.Models.Common;
+@using IOWebApplication.Core.Contracts;
+@model List<WorkNotificationWidgetVM>;
+<div class="box">
+    <div class="box-header with-border">
+        <h3 class="box-title">Известия Заповедно производство</h3>
+    </div>
+    <div class="box-body">
+        <div id="wtContainer">
+            @foreach (var notification in Model)
+            {
+                <div class="worktask-item">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <b>@notification.NotificationTypeName</b>
+                        </div>
+                        <div class="col-lg-4">
+                            <span style="font-weight:bold;font-size:12pt;">@notification.Count</span>  бр.
+                        </div>
+                        <div class="col-lg-2">
+                            <div class="pull-right" style="margin-right:5px;">
+                                <a asp-controller="WorkNotification" asp-action="Index" asp-route-wnTypeId="@notification.NotificationTypeId" asp-route-nKind="@NomenclatureConstants.NotificationKinds.FastProcess" class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-search"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

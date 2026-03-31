@@ -2,7 +2,7 @@
 @model HeritageFilterReportVM
 
 @{
-    ViewData["Title"] = "Книга за приемане и отказ от наследство";
+    ViewData["Title"] = "Книга за приемане и отказ от наследство преди 2022";
 }
 
 @section breadcrumb{
@@ -16,10 +16,8 @@
         <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
         <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
         <div class="col-lg-2">@Html.EditorFor(m => m.NumberAct)</div>
-    </div>
-    <div class="row">
-        <div class="col-lg-2">@Html.EditorFor(m => m.FromActInforcedDate, "DateTime")</div>
-        <div class="col-lg-2">@Html.EditorFor(m => m.ToActInforcedDate, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.FromActInforcedDate, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.ToActInforcedDate, "DateTime")</div>
     </div>
     <div class="row">
         <div class="col-md-6 text-left pb-15">

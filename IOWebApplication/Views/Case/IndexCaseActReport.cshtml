@@ -14,43 +14,35 @@
 }
 
 <div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateTo, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.Session_DateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.SessionDateTo, "DateTime")
-    </div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.Session_DateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SessionDateTo, "DateTime")</div>
 </div>
 
 <div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.ActDateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.ActDateTo, "DateTime")
-    </div>
-    <div class="col-lg-3">@Html.EditorFor(m => m.ActDateToId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActDateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActDateTo, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActDateToIds, "GenericDropDownMultipleArray")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActMotiveDateToId, "GenericDropDown")</div>
 </div>
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
 </div>
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.SessionResultId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.ActIsFinalDoc, "Boolean")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.CanAppeal, "Boolean")</div>
 </div>
 
 <div class="row">
@@ -86,14 +78,18 @@
                             Session_DateFrom: $("#Session_DateFrom").val(),
                             SessionDateTo: $("#SessionDateTo").val(),
                             ActDateFrom: $("#ActDateFrom").val(),
-                            ActDateTo: $("#ActDateTo").val(),
+                            ActDateToIds: $("#ActDateToIds").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
                             SessionResultId: $("#SessionResultId").val(),
                             CaseCodeId: $("#CaseCodeId").val(),
                             SessionTypeId: $("#SessionTypeId").val(),
-                            ActDateToId: $("#ActDateToId").val(),
-                            ActIsFinalDoc: $("#ActIsFinalDoc").is(":checked")
+                            ActDateTo: $("#ActDateTo").val(),
+                            ActMotiveDateToId: $("#ActMotiveDateToId").val(),
+                            ActIsFinalDoc: $("#ActIsFinalDoc").is(":checked"),
+                            CanAppeal: $("#CanAppeal").is(":checked"),
+                            RegNumber: $("#RegNumber").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val()
                         };
                     }
                 },
@@ -109,9 +105,14 @@
                     {
                         name: 'caseRegNum',
                         data: 'caseRegNum',
-                        title: 'Номер/Година',
+                        title: 'Номер на дело',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
                     },
                     {
                         name: 'caseCodeLabel',
@@ -134,11 +135,14 @@
                         }
                     },
                     {
-                        name: 'sessionResult',
-                        data: 'sessionResult',
+                        name: 'sessionResultFirst',
+                        data: 'sessionResultFirst',
                         title: 'Резултат',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            return row.sessionResult;
+                        },
                     },
                     {
                         name: 'judgeReport',
@@ -158,6 +162,32 @@
                         name: 'sessionActDate',
                         data: 'sessionActDate',
                         title: 'От дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actDeclaredDate',
+                        data: 'actDeclaredDate',
+                        title: 'Дата на постановяване на акта',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actMotivesDeclaredDate',
+                        data: 'actMotivesDeclaredDate',
+                        title: 'Дата на постановяване на мотиви към присъда/решение',
                         sortable: true,
                         searchable: false,
                         "render": function (value) {
@@ -192,7 +222,7 @@
                         }
                     }
                 ]
-            });
+            }).order([[1, "asc"]]);
         }
     }
 </script>
@@ -206,49 +236,15 @@
 <script>
     $(document).ready(function () {
         $('#CaseGroupId').trigger('change');
+        $('#ActDateToIds').select2({ language: "bg" });
     });
 
     $('#CaseGroupId').change(function () {
         requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
     });
 
-    $('#ActDateTo1Month').change(function () {
-        var check = $("#ActDateTo1Month").is(":checked");
-        if (check) {
-            $("#ActDateTo2Month").prop("checked", false);
-            $("#ActDateTo3Month").prop("checked", false);
-            $("#ActDateToUp3Month").prop("checked", false);
-        }
-    });
-
-    $('#ActDateTo2Month').change(function () {
-        var check = $("#ActDateTo2Month").is(":checked");
-        if (check) {
-            $("#ActDateTo1Month").prop("checked", false);
-            $("#ActDateTo3Month").prop("checked", false);
-            $("#ActDateToUp3Month").prop("checked", false);
-        }
-    });
-
-    $('#ActDateTo3Month').change(function () {
-        var check = $("#ActDateTo3Month").is(":checked");
-        if (check) {
-            $("#ActDateTo1Month").prop("checked", false);
-            $("#ActDateTo2Month").prop("checked", false);
-            $("#ActDateToUp3Month").prop("checked", false);
-        }
-    });
-
-    $('#ActDateToUp3Month').change(function () {
-        var check = $("#ActDateToUp3Month").is(":checked");
-        if (check) {
-            $("#ActDateTo1Month").prop("checked", false);
-            $("#ActDateTo2Month").prop("checked", false);
-            $("#ActDateTo3Month").prop("checked", false);
-        }
-    });
-
     $(function () {
         initCaseCode();
+        initLawUnit();
     });
 </script>

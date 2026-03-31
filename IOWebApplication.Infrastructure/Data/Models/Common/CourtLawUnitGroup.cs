@@ -1,6 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -29,6 +28,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Натовареност")]
         public int LoadIndex { get; set; }
 
+        [Column("load_index_description")]
+        [Display(Name = "Пояснение за натовареност")]
+        public string LoadIndexDescription { get; set; }
+
         [Column("date_from")]
         [Display(Name = "Дата от")]
         [Required(ErrorMessage = "Въведете {0}.")]
@@ -38,6 +41,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Дата до")]
         public DateTime? DateTo { get; set; }
 
+        [Column("date_to_description")]
+        [Display(Name = "Пояснение за дата до")]
+        public string DateToDescription { get; set; }
+
+        [Column("court_department_id")]
+        [Display(Name = "Съдебна структура")]
+        public int? CourtDepartmentId { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
@@ -46,6 +57,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [ForeignKey(nameof(CourtGroupId))]
         public virtual CourtGroup CourtGroup { get; set; }
+
+        [ForeignKey(nameof(CourtDepartmentId))]
+        public virtual CourtDepartment CourtDepartment { get; set; }
 
     }
 }

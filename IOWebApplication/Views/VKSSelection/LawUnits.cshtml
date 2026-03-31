@@ -27,11 +27,11 @@
 
 <div class="nav-tabs-custom">
     <ul class="nav nav-tabs" id="caseTab">
-        <li class="active"><a href="@Url.Action("LawUnits")"><i class="fa fa-users"></i> Състав</a></li>
-        <li class=""><a href="@Url.Action("Preview")/@Model.Id"><i class="fa fa-user"></i> Разпределение</a></li>
+        <li class="active"><a href="#"><i class="fa fa-users"></i> Състав</a></li>
+        <li class=""><a href="#" onclick="document.location.href='@Url.Action("Preview",new{ id=Model.Id})';"><i class="fa fa-newspaper-o"></i> Разпределение</a></li>
         @if (ViewBag.PeriodNo > 0)
         {
-            <li class=""><a href="@Url.Action("ProtocolList")/@Model.Id"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
+            <li class=""><a href="#" onclick="document.location.href='@Url.Action("ProtocolList",new{ id=Model.Id})';"><i class="fa fa-newspaper-o"></i> Протоколи</a></li>
 
         }
 

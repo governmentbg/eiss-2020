@@ -1,6 +1,5 @@
 ﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
-using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -8,15 +7,18 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -26,14 +28,14 @@ namespace IOWebApplication.Core.Services
         private readonly IWorkNotificationService workNotificationService;
         private readonly IWorkingDaysService workingDaysService;
         private readonly INomenclatureService nomService;
-        public CaseDeadlineService(
-            ILogger<CaseDeadline> _logger,
-            IRepository _repo,
-            IUserContext _userContext,
-            IUrlHelper _urlHelper,
-            IWorkNotificationService _workNotificationService,
-            IWorkingDaysService _workingDaysService,
-            INomenclatureService _nomService)
+
+        public CaseDeadlineService(ILogger<CaseDeadlineService> _logger,
+                                   IRepository _repo,
+                                   IUserContext _userContext,
+                                   IUrlHelper _urlHelper,
+                                   IWorkNotificationService _workNotificationService,
+                                   IWorkingDaysService _workingDaysService,
+                                   INomenclatureService _nomService)
         {
             logger = _logger;
             repo = _repo;
@@ -43,22 +45,27 @@ namespace IOWebApplication.Core.Services
             workingDaysService = _workingDaysService;
             nomService = _nomService;
         }
+
+
         public void DeadLineOnSessionResult(CaseSessionResult sessionResult)
         {
             DeadLineDeclaredForResolve(sessionResult);
-            DeadLineeOpenSessionResultComplete(sessionResult);
+            // Вече се гаси от подписване на протокол
+            // DeadLineOpenSessionResultComplete(sessionResult);
+            // DeadLineDeclaredForResolveCompleteOnResult(sessionResult);
             DeadLineCompanyCaseCompleteOnResult(sessionResult);
         }
+
         public void DeadLineOnCase(Case caseModel)
         {
             DeadLineCompanyCase(caseModel);
-            // Вече е при постановяване на протокол или решение
-            //DeadLineDeclaredForResolveComplete(caseModel);
         }
+
         public void DeadLineOnSession(CaseSession session)
         {
             DeadLineOpenSessionResult(session);
-            if (session.DateExpired != null) {
+            if (session.DateExpired != null)
+            {
                 repo.SaveChanges();
                 var deadlines = repo.AllReadonly<CaseDeadline>()
                          .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
@@ -67,17 +74,26 @@ namespace IOWebApplication.Core.Services
                          .ToList();
                 SaveDeadLineExpired(deadlines);
                 repo.SaveChanges();
-                var caseSessionAct = repo.AllReadonly<CaseSessionAct>()
-                                         .Where(x => x.CaseSessionId == session.Id);
+                var caseSessionActIds = repo.AllReadonly<CaseSessionAct>()
+                                         .Where(x => x.CaseSessionId == session.Id)
+                                         .Select(x => x.Id)
+                                         .ToArray()
+                                         .Select(x => (long)x)
+                                         .ToArray();
                 deadlines = repo.AllReadonly<CaseDeadline>()
                        .Where(x => x.SourceType == SourceTypeSelectVM.CaseSessionAct &&
-                                   caseSessionAct.Any(sa => x.SourceId == sa.Id) &&
+                                   caseSessionActIds.Contains(x.SourceId) &&
                                    x.DateExpired == null)
                        .ToList();
                 SaveDeadLineExpired(deadlines);
             }
         }
 
+        public void DeadLineCompleteOnSessionAct(CaseSessionAct caseSessionAct)
+        {
+            DeadLineDeclaredForResolveComplete(caseSessionAct);
+            DeadLineOpenSessionResultCompleteOnAct(caseSessionAct);
+        }
 
         private bool sessionHaveResult(CaseSession session, int resultId)
         {
@@ -89,26 +105,29 @@ namespace IOWebApplication.Core.Services
                                          .ToList();
             return caseSessionResults.Any(x => x.SessionResultId == resultId);
         }
+
         private void setUnExpired(CaseDeadline deadline)
         {
             deadline.DateExpired = null;
             deadline.UserExpiredId = null;
             deadline.DescriptionExpired = "";
         }
+
         private void setExpired(CaseDeadline deadline)
         {
             deadline.DateExpired = DateTime.Now;
-            deadline.UserExpiredId = userContext.UserId;
+            deadline.UserExpiredId = ImpersonatedUserId ?? userContext.UserId;
             deadline.DescriptionExpired = "";
         }
-        private void setDateEnd(CaseDeadline deadline, DeadlineType deadlineType, bool isSpecial = false)
+
+        private void setDateEnd(CaseDeadline deadline, Infrastructure.Data.Models.Nomenclatures.DeadlineType deadlineType, bool isSpecial = false)
         {
             int? months = isSpecial ? deadlineType.DeadlineSpecialMonths : deadlineType.DeadlineMonths;
             if (months != null)
             {
                 int month = months ?? 0;
                 deadline.EndDate = deadline.StartDate.AddMonths(month).Date;
-                while (!workingDaysService.IsWorkingDay(userContext.CourtId, deadline.EndDate))
+                while (!workingDaysService.IsWorkingDay(ImpersonatedCourtId ?? userContext.CourtId, deadline.EndDate))
                 {
                     deadline.EndDate = deadline.EndDate.AddDays(1).Date;
                 }
@@ -122,10 +141,9 @@ namespace IOWebApplication.Core.Services
                 while (wDays > 0)
                 {
                     deadline.EndDate = deadline.EndDate.AddDays(1);
-                    if (workingDaysService.IsWorkingDay(userContext.CourtId, deadline.EndDate))
+                    if (workingDaysService.IsWorkingDay(ImpersonatedCourtId ?? userContext.CourtId, deadline.EndDate))
                         wDays--;
                 }
-
             }
 
             int? normalDays = isSpecial ? deadlineType.DeadlineSpecialDays : deadlineType.DeadlineDays;
@@ -133,15 +151,16 @@ namespace IOWebApplication.Core.Services
             {
                 int days = normalDays ?? 0;
                 deadline.EndDate = deadline.StartDate.AddDays(days - 1).Date;
-                while (!workingDaysService.IsWorkingDay(userContext.CourtId, deadline.EndDate))
+                while (!workingDaysService.IsWorkingDay(ImpersonatedCourtId ?? userContext.CourtId, deadline.EndDate))
                 {
                     deadline.EndDate = deadline.EndDate.AddDays(1).Date;
                 }
             }
         }
+
         private void ExpireWorkNotifications(CaseDeadline deadline)
         {
-            var workNotifications = repo.AllReadonly<WorkNotification>()
+            var workNotifications = repo.All<WorkNotification>()
                                  .Where(x => x.CaseDeadlineId == deadline.Id && x.DateExpired == null)
                                  .ToList();
             foreach (var workNotification in workNotifications)
@@ -149,52 +168,84 @@ namespace IOWebApplication.Core.Services
                 workNotification.DateExpired = deadline.DateExpired ?? deadline.DateComplete;
                 workNotification.DescriptionExpired = deadline.DescriptionExpired;
                 workNotification.UserExpiredId = deadline.UserExpiredId ?? deadline.UserId;
-                repo.Update(workNotification);
             }
         }
 
+        /// <summary>
+        /// Запис на срок
+        /// </summary>
+        /// <param name="deadline">Попълнен обект за срок</param>
+        /// <returns></returns>
         private bool SaveDeadLine(CaseDeadline deadline)
         {
             if (deadline != null)
             {
-                if (workNotificationService.GetJudgeUserId(deadline.CaseId) == null)
-                    return false;
-                deadline.UserId = userContext.UserId;
+                if (deadline.SourceType == SourceTypeSelectVM.CaseSession)
+                {
+                    if (string.IsNullOrEmpty(workNotificationService.GetJudgeUserId(deadline.CaseId, (int)deadline.SourceId)))
+                        return false;
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(workNotificationService.GetJudgeUserId(deadline.CaseId)))
+                        return false;
+                }
+
+                deadline.UserId = ImpersonatedUserId ?? userContext.UserId;
                 deadline.DateWrt = DateTime.Now;
-                if ((deadline.CourtId ?? 0) <= 0)
-                    deadline.CourtId = userContext.CourtId;
+                deadline.CourtId = ((deadline.CourtId ?? 0) <= 0) ? (ImpersonatedCourtId ?? userContext.CourtId) : deadline.CourtId;
 
                 if (deadline.DateComplete == null && deadline.DateExpired == null)
                 {
-                    var workNotification = workNotificationService.NewWorkNotification(deadline);
-                    if (workNotification != null)
+                    List<WorkNotification> workNotifications = workNotificationService.NewWorkNotification(deadline).Result;
+
+                    if (deadline.Id == 0)
                     {
-                        workNotification.CaseDeadline = deadline;
-                        if (workNotification.Id == 0)
-                            repo.Add(workNotification);
+                        if (workNotifications?.Any() == true)
+                        {
+                            foreach (var workNotification in workNotifications)
+                            {
+                                workNotification.CaseDeadline = deadline;
+                            }
+                            repo.AddRange(workNotifications);
+                        }
                         else
-                            repo.Update(workNotification);
+                            repo.Add(deadline);
                     }
                     else
                     {
-                        if (deadline.Id == 0)
-                            repo.Add(deadline);
-                        else
-                            repo.Update(deadline);
+                        repo.Update(deadline);
+
+                        if (workNotifications?.Any() == true)
+                        {
+                            foreach (var workNotification in workNotifications)
+                            {
+                                workNotification.CaseDeadlineId = deadline.Id;
+                                if (workNotification.Id > 0)
+                                    repo.Update(workNotification);
+                                else
+                                    repo.Add(workNotification);
+                            }
+                        }
                     }
+
                     return true;
                 }
+
                 if (deadline.DateComplete != null || deadline.DateExpired != null)
                 {
                     if (deadline.Id == 0)
                         repo.Add(deadline);
                     else
                         repo.Update(deadline);
+
                     ExpireWorkNotifications(deadline);
                 }
             }
+
             return false;
         }
+
         private void SaveDeadLineExpired(List<CaseDeadline> deadlines)
         {
             foreach (var deadline in deadlines)
@@ -203,7 +254,100 @@ namespace IOWebApplication.Core.Services
                 SaveDeadLine(deadline);
             }
         }
+
+        public IQueryable<CaseDeadLineVM> CaseDeadLineSelect(CaseDeadLineFilterVM filter)
+        {
+            var users = repo.AllReadonly<CaseSessionMeetingUser>();
+
+            int? courtId = (ImpersonatedCourtId ?? userContext.CourtId);
+
+            var deadlines = repo.AllReadonly<CaseDeadline>()
+                                .Where(x => x.CourtId == courtId)
+                                .Where(x => x.DateExpired == null)
+                                .Where(x => x.DateComplete == null);
+
+            if (filter.DateStartFrom != null)
+                deadlines = deadlines.Where(x => x.StartDate >= filter.DateStartFrom.Value.Date);
+
+            if (filter.DateStartTo != null)
+                deadlines = deadlines.Where(x => x.StartDate.Date <= filter.DateEndTo);
+
+            if (filter.DateEndFrom != null)
+                deadlines = deadlines.Where(x => x.EndDate >= filter.DateEndFrom.Value.Date);
+
+            if (filter.DateEndTo != null)
+                deadlines = deadlines.Where(x => x.EndDate.Date <= filter.DateEndTo);
+
+            if (filter.CaseId > 0)
+                deadlines = deadlines.Where(x => x.CaseId == filter.CaseId);
+
+            if (filter.CaseGroupId > 0)
+                deadlines = deadlines.Where(x => x.Case.CaseGroupId == filter.CaseGroupId);
+
+            if (filter.LawUnitId > 0)
+                deadlines = deadlines.Where(x => x.Case
+                                                  .CaseLawUnits
+                                                  .Any(l => l.LawUnitId == filter.LawUnitId &&
+                                                            l.CaseSessionId == null &&
+                                                            l.DateTo == null &&
+                                                            l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter));
+
+            if (!string.IsNullOrEmpty(filter.RegNumber))
+                deadlines = deadlines.Where(x => EF.Functions.ILike(x.Case.RegNumber, filter.RegNumber.ToCasePaternSearch()));
+
+            if (filter.DeadlineTypeId > 0)
+                deadlines = deadlines.Where(x => x.DeadlineTypeId == filter.DeadlineTypeId);
+
+            return deadlines.Select(x => new CaseDeadLineVM()
+            {
+                Id = x.Id,
+                CaseId = x.CaseId,
+                CaseInfo = x.Case.RegNumber + " " + (x.Case.CaseType.Code ?? ""),
+                MakerName = (x.SourceType == SourceTypeSelectVM.CaseSession &&
+                             x.Case.CaseLawUnits.Where(l => l.CaseSessionId == x.SourceId &&
+                                                            l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                                .Any() ? string.Join("<br>", x.Case
+                                                                              .CaseLawUnits
+                                                                              .Where(l => l.CaseSessionId == x.SourceId &&
+                                                                                          l.DateTo == null &&
+                                                                                          x.SourceType == SourceTypeSelectVM.CaseSession &&
+                                                                                          l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                                                              .Select(n => n.LawUnit != null ? n.LawUnit.FullName : null)) :
+                                                        string.Join("<br>", x.Case
+                                                                             .CaseLawUnits
+                                                                             .Where(l => l.CaseSessionId == null &&
+                                                                                         l.DateTo == null &&
+                                                                                         l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                                                             .Select(n => n.LawUnit != null ? n.LawUnit.FullName : "")))
+                            + "<br>" +
+                            (x.DeadlineTypeId != NomenclatureConstants.DeadlineType.OpenSessionResult ? "" : string.Join("<br>", users.Where(u => u.CaseSessionMeeting.CaseSessionId == x.SourceId)
+                                                                                                                                      .Select(s => s.SecretaryUser.LawUnit.FullName))),
+                DeadlineGroup = x.DeadlineGroup.Label,
+                DeadlineType = x.DeadlineType.Label,
+                EndDate = x.EndDate,
+                StartDate = x.StartDate,
+                DateComplete = x.DateComplete,
+                SourceId = x.SourceId,
+                SourceType = x.SourceType,
+                SourceUrl = x.SourceType == SourceTypeSelectVM.CaseNotification ? urlHelper.Action("Edit", "CaseNotification", new { id = x.SourceId }) :
+                                                                                  (x.SourceType == SourceTypeSelectVM.CaseSession ? urlHelper.Action("Preview", "CaseSession", new { id = x.SourceId, tab = "tabname" }).Replace("tabname", "", StringComparison.InvariantCultureIgnoreCase) : string.Empty)
+            });
+        }
+        public string GetTaskObjectUrl(int sourceType, long sourceId)
+        {
+            switch (sourceType)
+            {
+                case SourceTypeSelectVM.CaseNotification:
+                    return urlHelper.Action("Edit", "CaseNotification", new { id = sourceId });
+                case SourceTypeSelectVM.CaseSession:
+                    return urlHelper.Action("Preview", "CaseSession", new { id = sourceId, tab = "tabname" }).Replace("tabname", "", StringComparison.InvariantCultureIgnoreCase);
+                default:
+                    return string.Empty;
+            }
+        }
+
         #region DeclaredForResolve
+
         public void DeadLineDeclaredForResolve(CaseSessionResult sessionResult)
         {
             {
@@ -219,7 +363,9 @@ namespace IOWebApplication.Core.Services
         }
         public CaseDeadline DeadLineDeclaredForResolveStart(CaseSessionResult sessionResult)
         {
-            CaseSession session = repo.AllReadonly<CaseSession>().Where(x => x.Id == sessionResult.CaseSessionId).FirstOrDefault();
+            CaseSession session = repo.AllReadonly<CaseSession>()
+                                      .Include(x => x.CaseSessionActs)
+                                      .Where(x => x.Id == sessionResult.CaseSessionId).FirstOrDefault();
             if (session == null)
                 return null;
             var deadline = repo.AllReadonly<CaseDeadline>()
@@ -249,14 +395,19 @@ namespace IOWebApplication.Core.Services
                         setDateEnd(deadline, deadlineType);
                         isSet = true;
                     }
-                } else
+                }
+                else
                 {
                     setExpired(deadline);
                     isSet = true;
                 }
-            } else {
+            }
+            else
+            {
                 if (sessionResult.SessionResultId == NomenclatureConstants.CaseSessionResult.AnnouncedForResolution)
                 {
+                    if (session.CaseSessionActs.Any(x => x.DateExpired == null && x.ActDeclaredDate != null && x.ActTypeId == NomenclatureConstants.ActType.Answer))
+                        return null;
                     deadline = new CaseDeadline();
                     deadline.CaseId = session.CaseId;
                     deadline.SourceType = SourceTypeSelectVM.CaseSession;
@@ -272,7 +423,8 @@ namespace IOWebApplication.Core.Services
             if (deadline != null && isSet)
             {
                 return deadline;
-            } else
+            }
+            else
             {
                 return null;
             }
@@ -291,7 +443,8 @@ namespace IOWebApplication.Core.Services
                                                x.DateComplete == null &&
                                                x.DateExpired == null)
                                    .ToList();
-                foreach (var deadline in deadlines) {
+                foreach (var deadline in deadlines)
+                {
                     setExpired(deadline);
                     deadline.ResultExpiredId = sessionResult.Id;
                     result.Add(deadline);
@@ -301,7 +454,7 @@ namespace IOWebApplication.Core.Services
             {
                 var deadlines = repo.AllReadonly<CaseDeadline>()
                                    .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
-                                               x.SourceId == session.Id &&
+                                               x.SourceId <= session.Id &&
                                                x.CaseId == session.CaseId &&
                                                x.DeadlineTypeId == NomenclatureConstants.DeadlineType.DeclaredForResolve &&
                                                x.DateComplete == null &&
@@ -363,10 +516,12 @@ namespace IOWebApplication.Core.Services
                 ExpireWorkNotifications(deadlineComplete);
             }
         }
+
+
         public void DeadLineDeclaredForResolveComplete(CaseSessionAct caseSessionAct)
         {
             var result = new List<CaseDeadline>();
-            if (caseSessionAct.ActTypeId == NomenclatureConstants.ActType.Protokol || caseSessionAct.ActTypeId == NomenclatureConstants.ActType.Answer)
+            if (caseSessionAct.ActTypeId == NomenclatureConstants.ActType.Answer)
             {
                 var deadlines = repo.AllReadonly<CaseDeadline>()
                                    .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
@@ -387,14 +542,16 @@ namespace IOWebApplication.Core.Services
                 ExpireWorkNotifications(deadlineComplete);
             }
         }
+
         #endregion DeclaredForResolve
 
         #region Motive
+
         private DateTime? MotiveDateStart(CaseSessionAct sessionAct)
         {
             var dateStart = sessionAct.ActDate?.AddDays(1).Date;// ActDeclaredDate
             if (dateStart != null)
-                while (!workingDaysService.IsWorkingDay(userContext.CourtId, dateStart.Value))
+                while (!workingDaysService.IsWorkingDay(ImpersonatedCourtId ?? userContext.CourtId, dateStart.Value))
                 {
                     dateStart = dateStart.Value.AddDays(1).Date;
                 }
@@ -428,6 +585,7 @@ namespace IOWebApplication.Core.Services
                 return;
             }
         }
+
         public CaseDeadline DeadLineMotiveStart(CaseSessionAct sessionAct)
         {
             if (sessionAct.DateExpired != null || MotiveDateStart(sessionAct) == null || MotiveDateEnd(sessionAct) != null)
@@ -447,7 +605,7 @@ namespace IOWebApplication.Core.Services
                 aCase = repo.AllReadonly<Case>().Where(x => x.Id == caseSession.CaseId).FirstOrDefault();
             }
             var deadlineType = repo.AllReadonly<DeadlineType>().Where(x => x.Id == NomenclatureConstants.DeadlineType.Motive).FirstOrDefault();
-          
+
             if (deadline != null)
             {
                 if (deadline.StartDate != MotiveDateStart(sessionAct))
@@ -459,6 +617,15 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
+                if (repo.AllReadonly<CaseSessionAct>()
+                        .Where(x => x.CaseId == sessionAct.CaseId &&
+                               x.ActTypeId == NomenclatureConstants.ActType.Answer &&
+                               x.ActDeclaredDate != null &&
+                               x.DateExpired != null)
+                        .Any()
+                   )
+                    return null;
+
                 deadline = new CaseDeadline();
                 deadline.CaseId = aCase.Id;
                 deadline.SourceType = SourceTypeSelectVM.CaseSessionAct;
@@ -503,16 +670,19 @@ namespace IOWebApplication.Core.Services
             }
             return null;
         }
+
         #endregion Motive
 
         #region OpenSessionResult
+
         public void DeadLineOpenSessionResult(CaseSession session)
         {
             var deadline = DeadLineOpenSessionResultStart(session);
             if (deadline != null)
             {
                 SaveDeadLine(deadline);
-            } else
+            }
+            else
             {
                 var deadlines = repo.AllReadonly<CaseDeadline>()
                      .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
@@ -591,8 +761,10 @@ namespace IOWebApplication.Core.Services
                                   x.SourceId == session.Id &&
                                   x.DeadlineTypeId == NomenclatureConstants.DeadlineType.OpenSessionResult)
                       .FirstOrDefault();
-            if (session.DateExpired != null) {
-                if (deadline != null && deadline.DateExpired == null) {
+            if (session.DateExpired != null)
+            {
+                if (deadline != null && deadline.DateExpired == null)
+                {
                     setExpired(deadline);
                     return deadline;
                 }
@@ -617,13 +789,25 @@ namespace IOWebApplication.Core.Services
                     setUnExpired(deadline);
                     deadline.StartDate = startDate;
                     setDateEnd(deadline, deadlineType);
-                } else
+                }
+                else
                 {
                     return null;
                 }
             }
             else
             {
+                if (repo.AllReadonly<CaseSessionAct>()
+                        .Where(x => x.CaseId == session.CaseId &&
+                                    x.CaseSessionId == session.Id &&
+                                    (x.ActTypeId == NomenclatureConstants.ActType.Protokol ||
+                                     x.ActTypeId == NomenclatureConstants.ActType.ProtokolOpredelenie ||
+                                     x.ActTypeId == NomenclatureConstants.ActType.Agreement) &&
+                                    x.ActDeclaredDate != null &&
+                                    x.DateExpired == null)
+                        .Any()
+                   )
+                    return null;
                 deadline = new CaseDeadline();
                 deadline.CaseId = aCase.Id;
                 deadline.SourceType = SourceTypeSelectVM.CaseSession;
@@ -635,7 +819,7 @@ namespace IOWebApplication.Core.Services
             }
             return deadline;
         }
-        public void DeadLineeOpenSessionResultComplete(CaseSessionResult sessionResult)
+        public void DeadLineOpenSessionResultComplete(CaseSessionResult sessionResult)
         {
             var deadline = DeadLineOpenSessionResultCompleteInit(sessionResult);
             SaveDeadLine(deadline);
@@ -655,8 +839,38 @@ namespace IOWebApplication.Core.Services
             deadline.CaseSessionResultId = sessionResult.Id;
             return deadline;
         }
+
+        public void DeadLineOpenSessionResultCompleteOnAct(CaseSessionAct caseSessionAct)
+        {
+            var result = new List<CaseDeadline>();
+            if (caseSessionAct.ActTypeId == NomenclatureConstants.ActType.Protokol ||
+                caseSessionAct.ActTypeId == NomenclatureConstants.ActType.ProtokolOpredelenie ||
+                caseSessionAct.ActTypeId == NomenclatureConstants.ActType.Agreement)
+            {
+                var deadlines = repo.AllReadonly<CaseDeadline>()
+                                   .Where(x => x.SourceType == SourceTypeSelectVM.CaseSession &&
+                                               x.CaseId == caseSessionAct.CaseId &&
+                                               x.DeadlineTypeId == NomenclatureConstants.DeadlineType.OpenSessionResult &&
+                                               x.DateComplete == null &&
+                                               x.DateExpired == null)
+                                   .ToList();
+                foreach (var deadline in deadlines)
+                {
+                    deadline.DateComplete = DateTime.Now;
+                    result.Add(deadline);
+                }
+            }
+            foreach (var deadlineComplete in result)
+            {
+                repo.Update(deadlineComplete);
+                ExpireWorkNotifications(deadlineComplete);
+            }
+        }
+
         #endregion OpenSessionResult
+
         #region CompanyCase
+
         public void DeadLineCompanyCase(Case companyCase)
         {
             var deadlines = DeadLineCompanyCaseStart(companyCase);
@@ -682,7 +896,7 @@ namespace IOWebApplication.Core.Services
                 repo.SaveChanges();
             }
         }
-        public void DeadLineCompanyCaseStartOnDocument(Document document)
+        public void DeadLineCompanyCaseStartOnDocument(Infrastructure.Data.Models.Documents.Document document)
         {
             var companyCase = repo.AllReadonly<DocumentCaseInfo>()
                             .Where(x => x.DocumentId == document.Id)
@@ -696,7 +910,7 @@ namespace IOWebApplication.Core.Services
                 SaveDeadLine(deadline);
             }
         }
-        public void DeadLineCompanyCaseCompleteOnResult(CaseSessionResult sessionResult) 
+        public void DeadLineCompanyCaseCompleteOnResult(CaseSessionResult sessionResult)
         {
             var companyCase = repo.AllReadonly<CaseSession>()
                             .Where(x => x.Id == sessionResult.CaseSessionId)
@@ -724,13 +938,13 @@ namespace IOWebApplication.Core.Services
                                 .ToList();
             if (!documents.Any(x => x.Id == companyCase.DocumentId))
             {
-                var document = repo.AllReadonly<Document>()
+                var document = repo.AllReadonly<Infrastructure.Data.Models.Documents.Document>()
                                 .Where(x => x.Id == companyCase.DocumentId)
                                 .Where(x => x.DocumentTypeId == NomenclatureConstants.DocumentType.ApplicationForCompanyRegister ||
                                             x.DocumentTypeId == NomenclatureConstants.DocumentType.ApplicationForCompanyChange)
                                 .FirstOrDefault();
                 if (document != null)
-                    documents.Add(document);     
+                    documents.Add(document);
             }
             foreach (var aDocument in documents)
             {
@@ -749,7 +963,7 @@ namespace IOWebApplication.Core.Services
                                    .FirstOrDefault();
 
                 var deadlineType = repo.AllReadonly<DeadlineType>().Where(x => x.Id == deadlineTypeId).FirstOrDefault();
-              
+
                 bool isSet = false;
                 if (deadline != null)
                 {
@@ -788,86 +1002,369 @@ namespace IOWebApplication.Core.Services
                                   x.CaseId == companyCase.Id &&
                                   x.DateComplete == null &&
                                   (x.DeadlineTypeId == NomenclatureConstants.DeadlineType.CompanyCaseRegister ||
-                                   x.DeadlineTypeId == NomenclatureConstants.DeadlineType.CompanyCaseChange ))
+                                   x.DeadlineTypeId == NomenclatureConstants.DeadlineType.CompanyCaseChange))
                       .ToList();
             foreach (var deadline in deadlines)
             {
                 var sessionResult = repo.AllReadonly<CaseSessionResult>()
-                         .Include(x => x.CaseSession)
-                         .Where(x => x.IsActive)
-                         .Where(x => x.CaseSession.CaseId == companyCase.Id && 
-                                     x.CaseSession.DateFrom >= deadline.StartDate.Date)
-                         .OrderBy(x => x.Id)
-                         .FirstOrDefault();
+                                         .Where(x => x.IsActive)
+                                         .Where(x => x.CaseSession.CaseId == companyCase.Id &&
+                                                     x.CaseSession.DateFrom >= deadline.StartDate.Date)
+                                         .OrderBy(x => x.Id)
+                                         .Select(x => new
+                                         {
+                                             x.Id,
+                                             DateFrom = (x.CaseSessionId > 0) ? x.CaseSession.DateFrom : DateTime.Now
+                                         })
+                                         .FirstOrDefault();
 
                 if (sessionResult != null)
                 {
-                    deadline.DateComplete = sessionResult.CaseSession?.DateFrom ?? DateTime.Now;
+                    deadline.DateComplete = sessionResult.DateFrom;
                     deadline.CaseSessionResultId = sessionResult.Id;
                     result.Add(deadline);
                 }
             }
             return result;
         }
+
         #endregion CompanyCase
-        public IQueryable<CaseDeadLineVM> CaseDeadLineSelect(CaseDeadLineFilterVM filter)
+
+        #region Заповедно произвдство
+
+        /// <summary>
+        /// Метод връщащ обект тип на срок
+        /// </summary>
+        /// <param name="deadlineTypeId">Идентификатор на записа</param>
+        /// <returns></returns>
+        private async Task<DeadlineType> GetDeadlineType(int deadlineTypeId)
         {
-            var users = repo.AllReadonly<CaseSessionMeetingUser>()
-                           .Include(x => x.SecretaryUser)
-                           .ThenInclude(x => x.LawUnit);
-
-            var deadlines = repo.AllReadonly<CaseDeadline>()
-                       .Where(x => x.CourtId == userContext.CourtId)
-                       .Where(x => x.DateExpired == null)
-                       .Where(x => x.DateComplete == null);
-
-            if (filter.DateStartFrom != null)
-                deadlines = deadlines.Where(x => x.StartDate >= filter.DateStartFrom.Value.Date);
-            if (filter.DateStartTo != null)
-                deadlines = deadlines.Where(x => x.StartDate.Date <= filter.DateEndTo);
-
-            if (filter.DateEndFrom != null)
-                deadlines = deadlines.Where(x => x.EndDate >= filter.DateEndFrom.Value.Date);
-            if (filter.DateEndTo != null)
-                deadlines = deadlines.Where(x => x.EndDate.Date <= filter.DateEndTo);
-
-            if (filter.CaseId > 0)
-                    deadlines = deadlines.Where(x => x.CaseId == filter.CaseId);
-            if (filter.CaseGroupId > 0)
-                deadlines = deadlines.Where(x => x.Case.CaseGroupId == filter.CaseGroupId);
-            if (filter.LawUnitId > 0)
-                deadlines = deadlines.Where(x => x.Case.CaseLawUnits.Any(l => l.LawUnitId == filter.LawUnitId && l.CaseSessionId == null && l.DateTo == null && l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter));
-            if (!string.IsNullOrEmpty(filter.RegNumber))
-                deadlines = deadlines.Where(x => EF.Functions.ILike(x.Case.RegNumber,filter.RegNumber.ToCasePaternSearch()));
-            if (filter.DeadlineTypeId > 0)
-                deadlines = deadlines.Where(x => x.DeadlineTypeId == filter.DeadlineTypeId);
-            return deadlines.Select(x => new CaseDeadLineVM()
-            {
-                Id = x.Id,
-                CaseId = x.CaseId,
-                CaseInfo = x.Case.RegNumber + "/" + x.Case.RegDate.ToString(FormattingConstant.NormalDateFormat) + " " + (x.Case.CaseType.Code ?? ""),
-                LawUnitName = string.Join("<br>", x.Case.CaseLawUnits.Where(l => l.CaseSessionId == null && l.DateTo == null && l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Select(n => n.LawUnit != null ? n.LawUnit.FullName : "")),
-                SecretaryName = x.DeadlineTypeId != NomenclatureConstants.DeadlineType.OpenSessionResult ? "" :
-                                           string.Join("<br>", users.Where(u => u.CaseSessionMeeting.CaseSessionId == x.SourceId).Select(s => s.SecretaryUser.LawUnit.FullName)),
-                DeadlineGroup = x.DeadlineGroup.Label,
-                DeadlineType = x.DeadlineType.Label,
-                EndDate = x.EndDate,
-                StartDate = x.StartDate,
-                DateComplete = x.DateComplete,
-                SourceUrl = GetTaskObjectUrl(x.SourceType, x.SourceId)
-            });
+            return await repo.AllReadonly<DeadlineType>()
+                             .Where(x => x.Id == deadlineTypeId)
+                             .FirstAsync();
         }
-        public string GetTaskObjectUrl(int sourceType, long sourceId)
+
+        /// <summary>
+        /// Проверка дали съществува срок за това дело
+        /// </summary>
+        /// <param name="sourceId">SourceId</param>
+        /// <param name="sourceType">SourceType</param>
+        /// <param name="dedlineTypeId">Идентификатор на тип на срок</param>
+        /// <returns></returns>
+        private async Task<bool> IsExistsDeadlineFastProcess(long sourceId, int sourceType, int dedlineTypeId)
         {
-            switch (sourceType)
+            return await repo.AllReadonly<CaseDeadline>()
+                             .AnyAsync(d => d.DeadlineTypeId == dedlineTypeId &&
+                                            d.SourceId == sourceId &&
+                                            d.SourceType == sourceType);
+        }
+
+        /// <summary>
+        /// Приключване на срок за дело по чл. 410 ГПК или чл. 417 ГПК
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <param name="sourceId">SourceId</param>
+        /// <param name="sourceType">SourceType</param>
+        /// <param name="dedlineTypeId">Идентификатор на тип на срок</param>
+        /// <param name="isComplete">Флаг който показва дали е приключване или сторно на срока</param>
+        /// <returns></returns>
+        public async Task<bool> CompleteExpiredCaseDeadlineFastProcess(int caseId, long? sourceId, int sourceType, int dedlineTypeId, bool isComplete = true)
+        {
+            Expression<Func<CaseDeadline, bool>> sourceIdSearch = x => true;
+            if (sourceId != null)
+                sourceIdSearch = d => d.SourceId == sourceId;
+
+            Expression<Func<CaseDeadline, bool>> completeExpiredSearch = x => x.DateComplete == null;
+            if (!isComplete)
+                completeExpiredSearch = x => x.DateExpired == null;
+
+            List<CaseDeadline> deadlines = await repo.All<CaseDeadline>()
+                                                     .Where(d => d.CaseId == caseId &&
+                                                                 d.SourceType == sourceType &&
+                                                                 d.DeadlineTypeId == dedlineTypeId)
+                                                     .Where(sourceIdSearch)
+                                                     .Where(completeExpiredSearch)
+                                                     .ToListAsync();
+
+            if (deadlines == null || deadlines.Count() < 1) return false;
+
+            foreach (CaseDeadline deadline in deadlines)
             {
-                case SourceTypeSelectVM.CaseNotification:
-                    return urlHelper.Action("Edit", "CaseNotification", new { id = sourceId });
-                case SourceTypeSelectVM.CaseSession:
-                    return urlHelper.Action("Preview", "CaseSession", new { id = sourceId, tab = "tabname" }).Replace("tabname", "", StringComparison.InvariantCultureIgnoreCase);
-                default:
-                    return string.Empty;
+                if (isComplete)
+                {
+                    deadline.DateComplete = DateTime.Now;
+
+                    List<WorkNotification> notifications = await repo.All<WorkNotification>()
+                                                                     .Where(n => n.CaseDeadlineId == deadline.Id)
+                                                                     .ToListAsync();
+
+                    if (notifications != null && notifications.Count() > 0)
+                        notifications.ForEach(n => { n.DateTurnOff = DateTime.Now; });
+                }
+                else
+                {
+                    deadline.DateExpired = DateTime.Now;
+                    deadline.UserExpiredId = ImpersonatedUserId ?? userContext.UserId;
+                    SaveDeadLine(deadline);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Валидация при създаване на срок за бързо производство
+        /// </summary>
+        /// <param name="documentRequestTypeCode">Тип на документа от което се взема дали е бързо производство</param>
+        /// <param name="sourceId">SourceId</param>
+        /// <param name="sourceType">SourceType</param>
+        /// <param name="dedlineTypeId">Идентификатор на тип на срок</param>
+        /// <returns></returns>
+        private async Task<bool> ValidateForStartDeadlineFastProcess(string documentRequestTypeCode, long sourceId, int sourceType, int dedlineTypeId)
+        {
+            if (!DocumentConstants.ElectronicDocumentRequestTypes.FastProcess.Contains(documentRequestTypeCode))
+                return false;
+
+            if (await IsExistsDeadlineFastProcess(sourceId, sourceType, dedlineTypeId))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Стартиране на срок за предприемане на действия по новообразувано дело N2
+        /// </summary>
+        /// <param name="caseId">Идентификатор на дело</param>
+        /// <returns></returns>
+        public async Task<bool> StartTakingActionFastProcess(int caseId)
+        {
+            try
+            {
+                var caseData = await repo.AllReadonly<Case>()
+                                     .Where(c => c.Id == caseId)
+                                     .Select(c => new
+                                     {
+                                         CaseId = c.Id,
+                                         c.CourtId,
+                                         DocumentRequestTypeCode = (c.Document.DocumentRequestTypeId != null ? c.Document.DocumentRequestType.RequestCode : string.Empty),
+                                         c.RegDate
+                                     })
+                                     .FirstOrDefaultAsync();
+
+                if (!await ValidateForStartDeadlineFastProcess(caseData.DocumentRequestTypeCode, caseId, SourceTypeSelectVM.Case, NomenclatureConstants.DeadlineType.TakingActionFastProcess))
+                    return false;
+
+                Infrastructure.Data.Models.Nomenclatures.DeadlineType deadlineType = await GetDeadlineType(NomenclatureConstants.DeadlineType.TakingActionFastProcess);
+
+                CaseDeadline deadline = new()
+                {
+                    CaseId = caseData.CaseId,
+                    CourtId = caseData.CourtId,
+                    SourceType = SourceTypeSelectVM.Case,
+                    SourceId = caseData.CaseId,
+                    DeadlineTypeId = NomenclatureConstants.DeadlineType.TakingActionFastProcess,
+                    DeadlineGroupId = deadlineType.DeadlineGroupId,
+                    StartDate = caseData.RegDate,
+                    NotificationKind = 2
+                };
+
+                setDateEnd(deadline, deadlineType);
+                SaveDeadLine(deadline);
+                await repo.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при стартиране на срок за предприемане на действия по новообразувано дело {caseId}");
+                return false;
+            }
+
+        }
+
+        /// <summary>
+        /// Стартиране на срок за липса на произнасяне по съпровождащ документ (или по частна жалба) N5
+        /// </summary>
+        /// <param name="documentId">Идентификатор на документ</param>
+        /// <returns></returns>
+        public async Task<bool> StartMissingActForCompliantDocumentFastProcess(long documentId)
+        {
+            try
+            {
+                var caseData = await repo.AllReadonly<DocumentCaseInfo>()
+                                     .Where(d => d.DocumentId == documentId &&
+                                                 d.CaseId != null &&
+                                                 d.Document.DocumentGroup.DocumentKindId == DocumentConstants.DocumentKind.CompliantDocument)
+                                     .Select(d => new
+                                     {
+                                         d.CaseId,
+                                         CaseCourtId = d.Case.CourtId,
+                                         CaseTypeLabel = d.Case.CaseType.Label,
+                                         CaseRegNumber = d.Case.RegNumber,
+                                         CaseYear = d.Case.RegDate.Year,
+                                         CaseDocumentRequestTypeCode = (d.Case.Document.DocumentRequestTypeId != null ? d.Case.Document.DocumentRequestType.RequestCode : string.Empty),
+                                         d.Document.DocumentDate,
+                                     })
+                                     .FirstOrDefaultAsync();
+
+                if (caseData == null)
+                    return false;
+
+                if (!await ValidateForStartDeadlineFastProcess(caseData.CaseDocumentRequestTypeCode, documentId, SourceTypeSelectVM.Document, NomenclatureConstants.DeadlineType.MissingActForCompliantDocumentFastProcess))
+                    return false;
+
+                DeadlineType deadlineType = await GetDeadlineType(NomenclatureConstants.DeadlineType.MissingActForCompliantDocumentFastProcess);
+
+                CaseDeadline deadline = new()
+                {
+                    CaseId = caseData.CaseId ?? 0,
+                    CourtId = caseData.CaseCourtId,
+                    SourceType = SourceTypeSelectVM.Document,
+                    SourceId = documentId,
+                    DeadlineTypeId = NomenclatureConstants.DeadlineType.MissingActForCompliantDocumentFastProcess,
+                    DeadlineGroupId = deadlineType.DeadlineGroupId,
+                    StartDate = caseData.DocumentDate,
+                    NotificationKind = 2
+                };
+
+                setDateEnd(deadline, deadlineType);
+                SaveDeadLine(deadline);
+                await repo.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при стартиране на срок за липса на произнасяне по съпровождащ документ (или по частна жалба) {documentId}");
+                return false;
+            }
+
+        }
+
+        /// <summary>
+        /// Приключване / сторно на срок за липса на произнасяне по съпровождащ документ (или по частна жалба) N5
+        /// </summary>
+        /// <param name="caseSessionActId">Идентификатор на акт</param>
+        /// <param name="isSaveChanges">Флаг дали да има SaveChanges</param>
+        /// <param name="isComplete">Флаг за тип операция приключване/сторно</param>
+        /// <returns></returns>
+        public async Task<bool> CompleteExpiredMissingActForCompliantDocumentFastProcess(int caseSessionActId, bool isSaveChanges, bool isComplete = true)
+        {
+            try
+            {
+                var docIds = await repo.AllReadonly<CaseSessionDoc>()
+                                       .Where(d => d.CaseSession.CaseSessionActs.Any(a => a.Id == caseSessionActId))
+                                       .Select(d => new { d.CaseId, d.DocumentId })
+                                       .ToListAsync();
+
+                if (docIds == null || docIds.Count < 1)
+                    return false;
+
+                foreach (var docId in docIds)
+                {
+                    await CompleteExpiredCaseDeadlineFastProcess(docId.CaseId ?? 0, docId.DocumentId, SourceTypeSelectVM.Document, NomenclatureConstants.DeadlineType.MissingActForCompliantDocumentFastProcess, isComplete);
+                }
+
+                if (isSaveChanges)
+                    await repo.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string typeOperation = isComplete ? "приключване" : "анулиране";
+                logger.LogError(ex, $"Грешка при {typeOperation} на нотификация за липса на произнасяне по съпровождащ документ (или по частна жалба) N5 CaseSessionActId:{caseSessionActId}");
+                return false;
             }
         }
+
+        /// <summary>
+        /// Стартиране на срок за невърнато съобщение по чл. 410 ГПК или чл. 417 ГПК N9
+        /// </summary>
+        /// <param name="caseNotificationId">Идентификатор на съобщението за връчване</param>
+        /// <returns></returns>
+        public async Task<bool> StartUnreturnedMessageFastProcess(int caseNotificationId)
+        {
+            try
+            {
+                var caseData = await repo.AllReadonly<CaseNotification>()
+                                         .Where(n => n.Id == caseNotificationId)
+                                         .Where(n => n.DateExpired == null)
+                                         .Where(n => n.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+                                         .Where(n => !NomenclatureConstants.HtmlTemplateConstants.NT_47s.Contains(n.HtmlTemplateId ?? 0))
+                                         .Select(n => new
+                                         {
+                                             n.CaseId,
+                                             n.CaseSessionId,
+                                             CaseCourtId = n.Case.CourtId,
+                                             CaseTypeLabel = n.Case.CaseType.Label,
+                                             CaseRegNumber = n.Case.RegNumber,
+                                             CaseYear = n.Case.RegDate.Year,
+                                             CaseDocumentRequestTypeCode = (n.Case.Document.DocumentRequestTypeId != null ? n.Case.Document.DocumentRequestType.RequestCode : string.Empty),
+                                             NotificationRegDate = n.RegDate,
+                                         })
+                                         .FirstOrDefaultAsync();
+
+                if (caseData == null)
+                    return false;
+
+                if (!await ValidateForStartDeadlineFastProcess(caseData.CaseDocumentRequestTypeCode, caseNotificationId, SourceTypeSelectVM.CaseNotification, NomenclatureConstants.DeadlineType.UnreturnedMessageFastProcess))
+                    return false;
+
+                DeadlineType deadlineType = await GetDeadlineType(NomenclatureConstants.DeadlineType.UnreturnedMessageFastProcess);
+
+                CaseDeadline deadline = new()
+                {
+                    CaseId = caseData.CaseId,
+                    CourtId = caseData.CaseCourtId,
+                    SourceType = SourceTypeSelectVM.CaseNotification,
+                    SourceId = caseNotificationId,
+                    DeadlineTypeId = NomenclatureConstants.DeadlineType.UnreturnedMessageFastProcess,
+                    DeadlineGroupId = deadlineType.DeadlineGroupId,
+                    StartDate = caseData.NotificationRegDate,
+                    NotificationKind = 2
+                };
+
+                setDateEnd(deadline, deadlineType);
+                SaveDeadLine(deadline);
+                await repo.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при стартиране на срок за  невърнато съобщение по чл. 410 ГПК или чл. 417 ГПК {caseNotificationId}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Приключване / сторно на срок за невърнато съобщение по чл. 410 ГПК или чл. 417 ГПК
+        /// </summary>
+        /// <param name="caseNotificationId">Идентификатор на съобщението за връчване</param>
+        /// <param name="isSaveChanges">Флаг дали да има SaveChanges</param>
+        /// <param name="isComplete">Флаг за тип операция приключване/сторно</param>
+        /// <returns></returns>
+        public async Task<bool> CompleteExpiredUnreturnedMessageFastProcess(int caseNotificationId, bool isSaveChanges, bool isComplete = true)
+        {
+            try
+            {
+                int caseId = await repo.AllReadonly<CaseNotification>()
+                                       .Where(n => n.Id == caseNotificationId)
+                                       .Select(n => n.CaseId)
+                                       .FirstAsync();
+
+                await CompleteExpiredCaseDeadlineFastProcess(caseId, caseNotificationId, SourceTypeSelectVM.CaseNotification, NomenclatureConstants.DeadlineType.UnreturnedMessageFastProcess, isComplete);
+                if (isSaveChanges)
+                    await repo.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string typeOperation = isComplete ? "приключване" : "анулиране";
+                logger.LogError(ex, $"Грешка при {typeOperation} на нотификация за невърнато съобщение по дело по чл. 410 ГПК или чл. 417 ГПК на CaseNotificationId:{caseNotificationId}");
+                return false;
+            }
+        }
+
+        #endregion
     }
 }

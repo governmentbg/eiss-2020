@@ -13,26 +13,23 @@
     </ol>
 }
 
+@Html.HiddenFor(x => x.WithFinalAct)
+
 <div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateTo, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.ActDeclaredDateFrom, "DateTime")
-    </div>
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.ActDeclaredDateTo, "DateTime")
-    </div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActDeclaredDateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActDeclaredDateTo, "DateTime")</div>
 </div>
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-6">@Html.EditorFor(x => x.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 <div class="row">
@@ -62,15 +59,16 @@
                     "type": "POST",
                     "datatype": "json",
                     "data": function (d) {
-                        d.model = {
+                        d.filter = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
                             ActDeclaredDateFrom: $("#ActDeclaredDateFrom").val(),
                             ActDeclaredDateTo: $("#ActDeclaredDateTo").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
-                            CaseCodeId: $("#CaseCodeId").val(),
-                            JudgeReporterId: $("#JudgeReporterId").val()
+                            CaseCodeIds: $("#CaseCodeIds").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val(),
+                            WithFinalAct: $("#WithFinalAct").val()
                         };
                     }
                 },
@@ -86,9 +84,14 @@
                     {
                         name: 'caseRegNum',
                         data: 'caseRegNum',
-                        title: 'Номер/Година',
+                        title: 'Номер на дело',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
                     },
                     {
                         name: 'judgeReport',
@@ -131,11 +134,14 @@
                         }
                     },
                     {
-                        name: 'casePersons',
-                        data: 'casePersons',
+                        name: 'casePerson',
+                        data: 'casePerson',
                         title: 'Лица',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            return row.casePersons;
+                        },
                     },
                     {
                         name: 'actions',
@@ -149,7 +155,7 @@
                         }
                     }
                 ]
-            });
+            }).order([[1, "asc"]]);
         }
     }
 </script>
@@ -163,14 +169,18 @@
 <script>
     $(document).ready(function () {
         $('#CaseGroupId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
     });
 
     $('#CaseGroupId').change(function () {
         requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
     });
 
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
+    });
+
     $(function () {
         initLawUnit();
-        initCaseCode();
     });
 </script>

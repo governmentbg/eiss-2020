@@ -15,7 +15,7 @@
     string moneyTypeJson = @ViewBag.MoneyTypeJson;
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -38,6 +38,10 @@
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
                 @Html.EditorFor(x => x.Person_SourceId, "GenericDropDownLong")
                 @Html.EditorFor(x => x.MoneyTypeId, "GenericDropDown")
+
+                <div id="divObligationDescription">
+                    @Html.EditorFor(x => x.ObligationDescription)
+                </div>
 
                 @if ((Model.CaseSessionActId ?? 0) > 0)
                 {
@@ -108,7 +112,7 @@
             ManageMoneyFineType();
         }
 
-        if (@(Model.MoneyFeeTypeId?? 0) > 0) {
+        if (@(Model.MoneyFeeTypeId?? 0) > 0 && @((Model.Amount > 0M) ? "true" : "false")) {
             $("#Amount").attr("readonly", true);
         }
 
@@ -136,15 +140,16 @@
     }
 
     $('#MoneyFeeTypeId').change(function () {
+        $("#Amount").attr("readonly", false);
         var feeId = $(this).val();
         if (feeId > 0) {
             requestGET_Json('@Url.Action("Get_PriceFee","Money")', { moneyFeeId: feeId }, function (data) {
                 $("#Amount").val(data.price);
-                $("#Amount").attr("readonly", true);
+
+                if (data.price > 0) {
+                    $("#Amount").attr("readonly", true);
+                }
             });
-        }
-        else {
-            $("#Amount").attr("readonly", false);
         }
     });
 
@@ -183,6 +188,8 @@
     }
 
     function ManageMoneyTypeAmount() {
+        $("#divObligationDescription").hide();
+
         var moneyTypeId = $("#MoneyTypeId").val();
         var moneyTypes = jQuery.parseJSON($("#moneyTypeJson").val());
 
@@ -193,6 +200,10 @@
             }
             else {
                 $("#divAmount").hide();
+            }
+
+            if (moneyType.IsOther == true) {
+                $("#divObligationDescription").show();
             }
         }
     }

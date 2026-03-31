@@ -2,9 +2,7 @@
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace IOWebApplication.Core.Services
 {
@@ -37,10 +35,10 @@ namespace IOWebApplication.Core.Services
                             .Where(x => x.Alias == nomenclatureAlias && x.InnerCode == innerCode)
                             .Select(x => x.OuterCode)
                             .FirstOrDefault();
-            if (result == null)
-            {
-                throw new Exception($"Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
-            }
+            //if (result == null)
+            //{
+            //    throw new Exception($"Ненамерена номенклатура: alias={nomenclatureAlias}; id={innerCode}");
+            //}
             return result;
         }
 

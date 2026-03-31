@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace IOWebApplicationService.Infrastructure.Constants
+﻿namespace IOWebApplicationService.Infrastructure.Constants
 {
     public static class DWConstants
     {
@@ -11,7 +7,10 @@ namespace IOWebApplicationService.Infrastructure.Constants
             /// <summary>
             /// Брой редове на транзакция
             /// </summary>
-            public const int TransferRowCounts =100;
+            public const int TransferRowCounts = 50;
+
+            //Общ брой редове, които да бъдат прехвърлени на 1 итерация на DWServiceJob-а
+            public const int TotalRowCounts = 5000;
         }
     }
 }

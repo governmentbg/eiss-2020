@@ -8,10 +8,8 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace IOWebApplication.Core.Services
 {

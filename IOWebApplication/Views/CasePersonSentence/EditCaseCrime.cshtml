@@ -1,5 +1,8 @@
 ﻿@model CaseCrime
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Data.Models.Cases
+@inject IUserContext userContext
 
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
@@ -13,9 +16,11 @@
         ViewData["Title"] = "Добавяне на престъпления";
     }
     var generateNumber = (bool?)ViewBag.GenerateNumber;
+    var editNumber = generateNumber == true || !string.IsNullOrEmpty(Model.EISSPNumber) ? "StringDisabled" : string.Empty;
+    bool is92024 = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request9_2024);
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -23,13 +28,14 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
         <form asp-action="EditCaseCrime" method="post">
             @Html.ValidationSummary()
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CaseId)
             @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.EISSId)
+            @Html.HiddenFor(x => x.CrimeSceneCityId)
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
@@ -39,15 +45,59 @@
                     <div class="col-lg-12">
                         <fieldset class="is-fieldset">
                             <legend class="legend_1"> Основни данни</legend>
-                            @if (generateNumber == true && string.IsNullOrEmpty(Model.EISSPNumber))
-                            {
-                                <div class="col-lg-12">Ще бъде генериран номер</div>
-                            }
-                            else
-                            {
-                                <div class="col-lg-12">@Html.EditorFor(x => x.EISSPNumber, "")</div>
-                            }
+                            <div class="col-lg-12">
+                                <div class="row">
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.EISSPNumber, editNumber)</div>
+                                    @if (Model.IsGeneratedEisppNumber == true && !string.IsNullOrEmpty(Model.EISSPNumber))
+                                    {
+                                        <div class="col-lg-6 padding-label"><label>генериран номер</label></div>
+                                    }
+                                    @if (generateNumber == true && string.IsNullOrEmpty(Model.EISSPNumber))
+                                    {
+                                        <div class="col-lg-6 padding-label"><label>Генериране на номер</label></div>
+                                    }
+                                    @if (generateNumber == null && string.IsNullOrEmpty(Model.EISSPNumber))
+                                    {
+                                        <div class="col-lg-6 padding-label">
+                                            @Html.EditorFor(m => m.IsGeneratedEisppNumber, "Boolean")
+                                        </div>
+                                    } 
+                                    else
+                                    {
+                                        @Html.HiddenFor(m => m.IsGeneratedEisppNumber)
+                                    }
+                                </div>
+                            </div>
                             <div class="col-lg-12">@Html.EditorFor(x => x.CrimeCode, "SelectEISPPTblElement", null, new { tblCode = "eiss_pne" })</div>
+
+                            @if (is92024)
+                            {
+                                @* <div class="col-lg-6">@Html.EditorFor(m => m.CategoryDeedId, "GenericSelect2")</div> *@
+                                <div class="col-lg-12">@Html.EditorFor(m => m.CategoryCommonDeedId, "GenericSelect2")</div>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.DescriptionOffence, "Textarea")</div>
+                                <div class="col-lg-12">@Html.EditorFor(x => x.LegalQualificationText, "Textarea")</div>
+
+                                <fieldset class="is-fieldset crime-address-control">
+                                    <legend class="legend_1"> Място на престъплението</legend>
+                                    <div class="col-lg-4">@Html.EditorFor(m => m.CrimeSceneCountryId, "GenericSelect2")</div>
+                                    @* <div class="col-lg-4 bg-address">@Html.EditorFor(m => m.CrimeSceneCityId, "GenericSelect2")</div> *@
+                                    <div class="col-lg-4 bg-address">@Html.EditorFor(m => m.CrimeSceneCityEisppId, "GenericSelect2")</div>
+                                    <div class="col-lg-4 bg-address">@Html.EditorFor(x => x.CrimeSceneStreetName)</div>
+                                    <div class="col-lg-8 foreign-address">@Html.EditorFor(x => x.CrimeSceneSettlementAbroad)</div>
+                                    <div class="col-lg-2">@Html.EditorFor(x => x.CrimeSceneBuilding)</div>
+                                    <div class="col-lg-2">@Html.EditorFor(x => x.CrimeSceneNumber)</div>
+                                    <div class="col-lg-2">@Html.EditorFor(x => x.CrimeSceneEntrance)</div>
+                                    <div class="col-lg-2">@Html.EditorFor(x => x.CrimeSceneFloor)</div>
+                                    <div class="col-lg-2">@Html.EditorFor(x => x.CrimeSceneAppartment)</div>
+                                    <div class="col-lg-2">@Html.EditorFor(x => x.CrimeSceneLocalization, "GenericDropDown")</div>
+                                    <div class="col-lg-12">@Html.EditorFor(x => x.CrimeSceneText, "Textarea")</div>
+                                </fieldset>
+
+                                <div class="col-md-12">@Html.EditorFor(x => x.FormGuiltId, "GenericDropDown")</div>
+                                <div class="col-md-6">@Html.EditorFor(x => x.HasPriorProbation, "Boolean")</div>
+                                <div class="col-md-6">@Html.EditorFor(x => x.ActPriorProbation)</div>
+                            }
+
                             <div class="col-lg-12">@Html.EditorFor(x => x.StartDateType, "DropDown", null, new { Ddl = ViewBag.StartDateTypeDDL })</div>
                             <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
                             <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
@@ -62,7 +112,7 @@
             <div class="form-group">
                 @if (access.CanChange)
                 {
-                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    <input id="submitButton" type="button" value="Запис" class="btn btn-success" />
                 }
                 <a asp-action="IndexCaseCrime" asp-route-caseId="@Model.CaseId" class="btn btn-danger">Назад</a>
                 @if (Model.Id > 0)
@@ -85,6 +135,65 @@
 
     $(document).ready(function () {
         initEISPPTblElement();
+
+        $('#CategoryCommonDeedId').select2({ language: "bg" });
+        $('#CrimeSceneCountryId').select2({ language: "bg" });
+        // $('#CrimeSceneCityId').select2({ language: "bg" });
+        $('#CrimeSceneCityEisppId').select2({ language: "bg" });
+
+        CrimeSceneCountryIdChange();
+    });
+
+    $('#CrimeSceneCountryId').change(function () {
+        CrimeSceneCountryIdChange();
+    });
+
+    $('#IsGeneratedEisppNumber').change(function () {
+        IsGeneratedEisppNumberChange();
+    });
+
+    function CrimeSceneCountryIdChange() {
+        // requestCombo('@Url.Action("GetDDL_EkatteSobr", "Ajax")', { countryId: $('#CrimeSceneCountryId').val() }, '#CrimeSceneCityId', @(Model.CrimeSceneCityId ?? -1), function () { $('#CrimeSceneCityId').trigger('change') });
+        requestCombo('@Url.Action("GetDDL_EisppEkatte", "Ajax")', { countryId: $('#CrimeSceneCountryId').val() }, '#CrimeSceneCityEisppId', @(Model.CrimeSceneCityEisppId ?? -1), function () { $('#CrimeSceneCityEisppId').trigger('change') });
+        const container = $('#CrimeSceneCountryId').parents('.crime-address-control:first');
+        if ($('#CrimeSceneCountryId').val() === '@NomenclatureConstants.CountryBGID') {
+            container.find('.bg-address').show();
+            container.find('.foreign-address').hide();
+        } else {
+             container.find('.bg-address').hide();
+             container.find('.foreign-address').show();
+        };
+    }
+    function IsGeneratedEisppNumberChange() {
+        if ($('#IsGeneratedEisppNumber').is(':checked')){
+             $('#EISSPNumber').attr('disabled', 'disabled');
+        } else {
+            $('#EISSPNumber').removeAttr('disabled');
+        }
+    }
+    $('#submitButton').click(function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if($("#submitButton").is(":disabled")){
+            return false;
+        }
+        $('#submitButton').attr('disabled', 'disabled');
+        const form = $('form');
+        if (!form.valid()){
+           $('#submitButton').removeAttr('disabled');
+        }
+        if (!$('#IsGeneratedEisppNumber').is(':checked'))
+        {
+           form.submit();
+           return false;
+        }
+        swalConfirm("Потвърдете генериране на номер?", function () {
+                    form.submit();
+                },function () {
+                     $('#submitButton').removeAttr('disabled');
+                     return false;
+                });
+        return false;
     });
 
 </script>

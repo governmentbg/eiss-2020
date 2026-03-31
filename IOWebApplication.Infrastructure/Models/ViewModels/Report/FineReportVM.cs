@@ -29,10 +29,14 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Сума")]
         public decimal Amount { get; set; }
 
+        [Display(Name = "Сума в лева")]
+        public decimal AmountBGN { get; set; }
+
         public decimal AmountPay { get; set; }
 
         [Display(Name = "Дата на внасяне")]
         public string PaidDate { get; set; }
+        public DateTime? PaidDateFirst { get; set; }
 
         [Display(Name = "Статус")]
         public string State

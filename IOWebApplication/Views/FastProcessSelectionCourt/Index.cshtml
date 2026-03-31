@@ -1,0 +1,31 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@model FastProcessSelectionMonthsVM
+
+@{
+    ViewData["Title"] = "Бързо производства разпределение";
+}
+
+<form asp-controller="FastProcessSelectionCourt" asp-action="Index" method="post">
+
+<div class="row">
+    <div class="col-lg-2">@Html.EditorFor(x => x.SelectionDate, "int")</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.SelectedCount, "int")</div>
+    <div class="col-lg-2">@Html.EditorFor(x => x.SelectionCount , "Int")</div>
+
+    </div>
+        <div class="row">
+        <div class="col-lg-2">
+            <button type="submit" class="btn btn-success single-click-submit" id="btnFilter" value="Разпредели" title="Разпредели">
+                Разпредели
+               
+            </button>
+            </div>
+        </div>
+  
+
+
+
+</form>
+
+

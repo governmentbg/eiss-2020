@@ -10,6 +10,7 @@ namespace IOWebApplication.Infrastructure.Models
         public string Value { get; set; }
         public string Description { get; set; }
         public bool Selected { get; set; }
+        public string ObjectKind { get; set; }
 
         public LabelValueVM()
         {

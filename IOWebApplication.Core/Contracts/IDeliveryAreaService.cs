@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -26,5 +27,6 @@ namespace IOWebApplication.Core.Contracts
         List<Select2ItemVM> RemoveSelectAddNoChangeSelect2(List<Select2ItemVM> fromList, string newVal);
         List<SelectListItem> DeliveryAreaListToDdl(List<DeliveryArea> deliveryAreaList);
         List<Select2ItemVM> DeliveryAreaListToDdlSelect2(List<DeliveryArea> deliveryAreaList);
+        Task<List<Select2ItemVM>> GetCourtForDelivery_Select2Data();
     }
 }

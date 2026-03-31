@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -14,12 +12,6 @@ namespace IOWebApplication.ModelBinders
     /// </summary>
     public class DecimalModelBinder : IModelBinder
     {
-        private readonly SimpleTypeModelBinder _baseBinder;
-
-        public DecimalModelBinder(ILoggerFactory loggerFactory)
-        {
-            this._baseBinder = new SimpleTypeModelBinder(typeof(Decimal), loggerFactory);
-        }
 
         public Task BindModelAsync(ModelBindingContext bindingContext)
         {
@@ -52,7 +44,7 @@ namespace IOWebApplication.ModelBinders
                 }
             }
 
-            return _baseBinder.BindModelAsync(bindingContext);
+            return Task.CompletedTask;
         }
     }
 }

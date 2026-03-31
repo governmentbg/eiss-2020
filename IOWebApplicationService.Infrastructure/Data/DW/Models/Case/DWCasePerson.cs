@@ -1,19 +1,14 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using IOWebApplicationService.Infrastructure.Data.DW.Models;
-using IOWebApplicationService.Infrastructure.Data.Models.Base;
+﻿using IOWebApplicationService.Infrastructure.Data.Models.Base;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IOWebApplicationService.Infrastructure.Data.DW.Models
 {
-  /// <summary>
-  /// Съдебен състав по дело - заседатели
-  /// </summary>
-  [Table("dw_case_person")]
+    /// <summary>
+    /// Съдебен състав по дело - заседатели
+    /// </summary>
+    [Table("dw_case_person")]
   public class DWCasePerson : DWUserDateWRT
   {
     [Key]
@@ -129,16 +124,6 @@ namespace IOWebApplicationService.Infrastructure.Data.DW.Models
 
     [Column("notification_number")]
     public int? NotificationNumber { get; set; }
-
-    [Column("user_id")]
-    public string UserId { get; set; }
-    [Column("date_wrt")]
-    public DateTime DateWrt { get; set; }
-
-
-
-    [Column("date_transfered_dw")]
-    public DateTime? DateTransferedDW { get; set; }
 
     /// <summary>
     /// Задържан

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NSwag.Annotations;
 
 namespace IOWebApplicationApi.Controllers
 {
@@ -16,7 +14,7 @@ namespace IOWebApplicationApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [SwaggerResponse(StatusCodes.Status200OK, typeof(string[]), Description = "Списък от стойности")]
+        //[SwaggerResponse(StatusCodes.Status200OK, typeof(string[]), Description = "Списък от стойности")]
         public IActionResult Get()
         {
             return Ok(new string[] { "value1", "value2" });
@@ -29,7 +27,7 @@ namespace IOWebApplicationApi.Controllers
         /// <returns></returns>
         [Authorize]
         [HttpGet("{id}")]
-        [SwaggerResponse(StatusCodes.Status200OK, typeof(string), Description = "Намерената стойност")]
+        //[SwaggerResponse(StatusCodes.Status200OK, typeof(string), Description = "Намерената стойност")]
         public IActionResult Get(int id)
         {
             var model = new { id };
@@ -43,7 +41,7 @@ namespace IOWebApplicationApi.Controllers
         /// <param name="value">Стойност за добавяне</param>
         /// <returns></returns>
         [HttpPost]
-        [SwaggerResponse(StatusCodes.Status201Created, typeof(string), Description = "Добавения елемент")]
+        //[SwaggerResponse(StatusCodes.Status201Created, typeof(string), Description = "Добавения елемент")]
         public IActionResult Post([FromBody]string value)
         {
             int newId = 8;
@@ -58,7 +56,7 @@ namespace IOWebApplicationApi.Controllers
         /// <param name="id"></param>
         /// <param name="value"></param>
         [HttpPut("{id}")]
-        [SwaggerIgnore]
+        //[SwaggerIgnore]
         public IActionResult Put(int id, [FromBody]string value)
         {
             return Ok(value);
@@ -69,7 +67,7 @@ namespace IOWebApplicationApi.Controllers
         /// </summary>
         /// <param name="id">Идентификатор на елемента за изтриване</param>
         [HttpDelete("{id}")]
-        [SwaggerResponse(StatusCodes.Status200OK, typeof(void))]
+        //[SwaggerResponse(StatusCodes.Status200OK, typeof(void))]
         public IActionResult Delete(int id)
         {
             return Ok();

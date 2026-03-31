@@ -24,12 +24,26 @@ namespace IOWebApplication.Infrastructure.Contracts
         bool IsUserInCourt(int courtId);
         bool IsSystemInFeature(string feature);
         string CertificateNumber { get; }
-        string ClaimValue(string claimType);
 
-        Task<UserSettingsModel> Settings();
+        string ClaimValue(string claimType);
 
         string GenHash(object id, object parent = null);
         bool CheckHash(string hash, object id, object parent = null);
         bool CheckHash(BlankEditVM blankModel);
+
+        bool IsInterimPeriodEuro { get; }
+
+        bool IsPeriodEuro { get; }
+        decimal EuroExchangeRate { get; }
+        string CurrentCurrencyCode { get; }
+        string EnvironmentName { get; }
+    }
+
+    /// <summary>
+    /// Допълнение към контекста - операции с база данни
+    /// </summary>
+    public interface IDBUserContext
+    {
+        Task<UserSettingsModel> Settings();
     }
 }

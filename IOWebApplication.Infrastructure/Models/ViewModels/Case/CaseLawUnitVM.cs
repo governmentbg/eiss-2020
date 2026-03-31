@@ -12,16 +12,32 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int? CaseSessionId { get; set; }
         public string CaseSessionLabel { get; set; }
         public int LawUnitId { get; set; }
+        public string LawUnitUserId { get; set; }
         public string LawUnitName { get; set; }
         public string LawUnitNameShort { get; set; }
+        public string LawUnitNameInitials { get; set; }
         public int JudgeRoleId { get; set; }
         public string JudgeRoleLabel { get; set; }
         public int? JudgeDepartmentRoleId { get; set; }
         public string JudgeDepartmentRoleLabel { get; set; }
         public bool IsExistDismisal { get; set; }
-        public string DismisalLabel { get; set; }
+        public string DismisalLabel 
+        { 
+            get
+            {
+                return IsExistDismisal ? "Има" : "Няма";
+            }
+        }
         public string DismisalLabelFull { get; set; }
-        public string RowLabelFull { get; set; }
+
+        public string RowLabelFull 
+        { 
+            get
+            {
+                return LawUnitName + " (" + JudgeRoleLabel + ") от " + DateFrom.ToString("dd.MM.yyyy") + ((DateTo != null) ? " до " + DateTo?.ToString("dd.MM.yyyy") : string.Empty) + ((!string.IsNullOrEmpty(DismisalLabelFull)) ? " " + DismisalLabelFull : string.Empty);
+            }
+        }
+
         public string DepartmentLabel { get; set; }
         public int? DepartmentId { get; set; }
         public DateTime DateFrom { get; set; }

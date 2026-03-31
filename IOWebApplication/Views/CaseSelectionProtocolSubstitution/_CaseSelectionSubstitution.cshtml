@@ -1,0 +1,92 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model CaseMainDataVM
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="substitutionMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var table = $('#substitutionMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("ListDataCaseSelectionSubstitution", "CaseSelectionProtocolSubstitution")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.caseId = @Model.Id;
+                }
+            },
+            dom: 'rt',
+            deferLoading: deferLoadingOnTab('#substitutionMainTable'),
+            columns: [
+                {
+                    className: 'col-md-1',
+                    className: 'text-center',
+                    name: 'dateWrt',
+                    data: 'dateWrt',
+                    title: 'Дата на заместване',
+                    sortable: true,
+                    searchable: true,
+                    render: function (data) {
+                        return moment(data).format("DD.MM.YYYY HH:mm");
+                    }
+                },
+                {
+                    className: 'col-md-3',
+                    name: 'sessionLabel',
+                    data: 'sessionLabel',
+                    title: 'Заседание',
+                    sortable: false,
+                    searchable: false
+                },
+                {
+                    className: 'col-md-1',
+                    className: 'text-center',
+                    name: 'selectionDate',
+                    data: 'selectionDate',
+                    title: 'Дата на протокол',
+                    sortable: true,
+                    searchable: true,
+                    render: function (data) {
+                        return moment(data).format("DD.MM.YYYY");
+                    }
+                },
+                {
+                    className: 'col-md-3',
+                    name: 'substitutedLawUnitName',
+                    data: 'substitutedLawUnitName',
+                    title: 'Съдия за заместване',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: 'col-md-3',
+                    className: 'text-center',
+                    name: 'selectedLawUnitName',
+                    data: 'selectedLawUnitName',
+                    title: 'Заместник',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    className: 'col-md-1',
+                    name: 'actions',
+                    data: "id",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#substitutionTemplateEdit', value);
+                    }
+                }
+            ]
+        }).order([[0, "desc"]]);
+    });
+</script>
+
+<script id="substitutionTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("PreviewDoc", "CaseSelectionProtocolSubstitution")?id={{this}}" class="btn btn-warning btn-sm" title="Преглед" target="_blank"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"> Преглед</span></a>
+</script>

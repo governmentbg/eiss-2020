@@ -6,6 +6,13 @@
     IEnumerable<SelectListItem> ddl = null;
 
     var reqClass = ViewData.ModelMetadata.GetIOReqClass();
+    bool isWrapText = (bool?)ViewData["wrap"] == true;
+
+    var wrapClass = "";
+    if (isWrapText)
+    {
+        wrapClass = " wrap";
+    }
 }
 
 @if (ViewData[fieldName] != null)
@@ -18,7 +25,7 @@ else
     ddl = new List<SelectListItem>();
 }
 
-<div class="form-group">
+<div class="form-group @wrapClass">
     @if (ViewData["label"] != null)
     {
         <label class="control-label @reqClass">@ViewData["label"]</label>

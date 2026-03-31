@@ -14,7 +14,7 @@
 
 <div class="row">
     <div class="col-md-6">
-        @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frmCheckList" }))
+        @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frmCheckList", enctype = "multipart/form-data" }))
         {
             @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.ObjectId)

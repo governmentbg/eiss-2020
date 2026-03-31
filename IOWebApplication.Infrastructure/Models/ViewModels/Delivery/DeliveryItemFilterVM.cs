@@ -48,6 +48,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         public int NotificationTypeId { get; set; }
         [Display(Name = "Призовкар")]
         public int LawUnitId { get; set; }
+        [Display(Name = "Изготвил")]
+        public int PreparedById { get; set; }
+
+        [Display(Name = "Състав")]
+        public int CourtDepartmentId { get; set; }
+        [Display(Name = "Генерирани")]
+        public string IsGenerated { get; set; } = "А";
+
+        [Display(Name = NomenclatureConstants.DeliveryItemMessage.FastProcess)]
+        public string IsFastProcess { get; set; } = "А";
+
         public string getDeliveryTypeName()
         {
             switch (FilterType)

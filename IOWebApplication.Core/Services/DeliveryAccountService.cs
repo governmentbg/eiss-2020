@@ -9,12 +9,9 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using QRCoder;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using ZXing;
-using ZXing.QrCode;
 
 namespace IOWebApplication.Core.Services
 {
@@ -35,7 +32,7 @@ namespace IOWebApplication.Core.Services
         public (string, string) GenerateBarcodeTying(string userId)
         {
             string mobileApiAddr = configuration["MobileApiURI"];
-            var user = repo.All<ApplicationUser>()
+            var user = repo.AllReadonly<ApplicationUser>()
                        .Where(x => x.Id == userId)
                        .FirstOrDefault();
             if (user == null)
@@ -74,43 +71,55 @@ namespace IOWebApplication.Core.Services
 
         private string GenerateBarcode(string apiAddr)
         {
-            var writer = new BarcodeWriterPixelData
-            {
-                Format = BarcodeFormat.QR_CODE,
-                Options = new QrCodeEncodingOptions { Width = 400, Height = 400, Margin = 1 }
-            };
+            return GenerateQRcode(apiAddr);
 
-            var result = writer.Write(apiAddr);
-            var base64str = string.Empty;
+            //var writer = new BarcodeWriterPixelData
+            //{
+            //    Format = BarcodeFormat.QR_CODE,
+            //    Options = new QrCodeEncodingOptions { Width = 400, Height = 400, Margin = 1 }
+            //};
 
-            using (var bitmap = new System.Drawing.Bitmap(result.Width, result.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
-            {
-                using (var ms = new System.IO.MemoryStream())
-                {
-                    var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, result.Width, result.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
-                    try
-                    {
-                        // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
-                        System.Runtime.InteropServices.Marshal.Copy(result.Pixels, 0, bitmapData.Scan0, result.Pixels.Length);
-                    }
-                    finally
-                    {
-                        bitmap.UnlockBits(bitmapData);
-                    }
+            //var result = writer.Write(apiAddr);
+            //var base64str = string.Empty;
 
-                    // PNG or JPEG or whatever you want
-                    bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                    base64str = Convert.ToBase64String(ms.ToArray());
-                }
-            }
-            return (base64str);
+            //using (var bitmap = new System.Drawing.Bitmap(result.Width, result.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
+            //{
+            //    using (var ms = new System.IO.MemoryStream())
+            //    {
+            //        var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, result.Width, result.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            //        try
+            //        {
+            //            // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
+            //            System.Runtime.InteropServices.Marshal.Copy(result.Pixels, 0, bitmapData.Scan0, result.Pixels.Length);
+            //        }
+            //        finally
+            //        {
+            //            bitmap.UnlockBits(bitmapData);
+            //        }
+
+            //        // PNG or JPEG or whatever you want
+            //        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            //        base64str = Convert.ToBase64String(ms.ToArray());
+            //    }
+            //}
+            //return (base64str);
+        }
+
+        private string GenerateQRcode(string apiAddr)
+        {
+            QRCodeGenerator qrGenerator = new QRCodeGenerator();
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(apiAddr.ToLower(), QRCodeGenerator.ECCLevel.L);
+            PngByteQRCode qrCodePng = new PngByteQRCode(qrCodeData);
+
+            byte[] qrCodeImagePng = qrCodePng.GetGraphic(7, new byte[] { 0, 0, 0 }, new byte[] { 255, 255, 255 });
+            return Convert.ToBase64String(qrCodeImagePng);
         }
         public IQueryable<DeliveryTokenVM> GetDeliveryTokenForUser(string userId)
         {
-            var courts = repo.All<Court>();
-            var users = repo.All<ApplicationUser>()
+            var courts = repo.AllReadonly<Court>();
+            var users = repo.AllReadonly<ApplicationUser>()
                             .Include(x => x.LawUnit);
-            return repo.All<DeliveryAccount>()
+            return repo.AllReadonly<DeliveryAccount>()
                        .Where(x => x.MobileUserId == userId)
                        .Select(x => new DeliveryTokenVM
                        {
@@ -123,8 +132,8 @@ namespace IOWebApplication.Core.Services
                            UserNameCreate = users.Where(c => c.Id == x.UserId).Select(s => s.Email).FirstOrDefault() ?? "",
                            UserNameExpired = users.Where(c => c.Id == x.UserExpiredId).Select(s => s.Email).FirstOrDefault() ?? "",
                            DateExpired = x.DateExpired,
-                           DateCreate = x.DateWrt, 
-                           StateName = x.DateExpired != null ? " Изтрит" : (string.IsNullOrEmpty(x.PinHash) ? (string.IsNullOrEmpty(x.MobileToken)? "Нов" : "В процес на сдвояване"  ): "Сдвоен"),
+                           DateCreate = x.DateWrt,
+                           StateName = x.DateExpired != null ? " Изтрит" : (string.IsNullOrEmpty(x.PinHash) ? (string.IsNullOrEmpty(x.MobileToken) ? "Нов" : "В процес на сдвояване") : "Сдвоен"),
                            IsNew = x.DateExpired == null && string.IsNullOrEmpty(x.PinHash) && string.IsNullOrEmpty(x.MobileToken)
                        });
         }
@@ -133,7 +142,7 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<DeliveryAccount>()
                        .Where(x => x.UserId == userId &&
                                    x.DateExpired == null &&
-                                   string.IsNullOrEmpty(x.PinHash)&& 
+                                   string.IsNullOrEmpty(x.PinHash) &&
                                    string.IsNullOrEmpty(x.MobileToken)
                                    )
                        .Count();

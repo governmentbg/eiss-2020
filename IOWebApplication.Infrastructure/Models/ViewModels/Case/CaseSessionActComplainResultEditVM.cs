@@ -30,6 +30,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         [Display(Name = "Дата на отразяване на резултат")]
         public DateTime? DateResult { get; set; }
 
+        [Display(Name = "Дата на връщане")]
+        public DateTime? ActReturn { get; set; }
+
         [Display(Name = "Дело от друга система")]
         public bool CaseOtherSystem { get; set; }
 

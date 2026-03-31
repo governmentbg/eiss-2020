@@ -1,5 +1,4 @@
 ﻿@model int
-@inject IViewLocalizer Localizer
 @using IOWebApplication.Core.Helper.GlobalConstants;
 @{
     int deliveryItemId = @Model;
@@ -9,7 +8,7 @@
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 @Html.HiddenFor(x => deliveryItemId)

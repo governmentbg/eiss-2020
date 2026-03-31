@@ -35,7 +35,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Имена на разпределящ")]
         public string UserId { get; set; }
 
-        [Display(Name = "Номер на инициращ документ")]
+        [Display(Name = "Номер на иницииращ документ")]
         public string DocumentNumber { get; set; }
 
         [Display(Name = "Основен вид дело")]
@@ -68,5 +68,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Група по натовареност")]
         public string LoadGroupLinkIds { get; set; }
         public string LoadGroupLinkIds_text { get; set; }
+        [Display(Name = "Масово преразпределение")]
+        public bool IsMassSelection { get; set; }
+
     }
 }

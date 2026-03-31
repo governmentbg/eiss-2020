@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
@@ -13,6 +9,8 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -36,6 +34,8 @@ namespace IOWebApplication.Controllers
             caseService = _caseService;
             commonService = _commonService;
         }
+
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult Index([AllowHtml] string filterJson)
         {
             CaseDeadLineFilterVM model = null;
@@ -54,13 +54,13 @@ namespace IOWebApplication.Controllers
 
             return View(model);
         }
-        public IActionResult IndexCase(int caseId)
+        public async Task<IActionResult> IndexCase(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseDeadLine, null, AuditConstants.Operations.View, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseDeadLine, null, AuditConstants.Operations.View, caseId))
             {
                 return Redirect_Denied();
             }
-            CaseDeadLineFilterVM model = new CaseDeadLineFilterVM();
+            CaseDeadLineFilterVM model = new();
             // model.DateEndTo = DateTime.Now; да се виждат и бъдещите срокове
             model.CaseId = caseId;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(caseId);

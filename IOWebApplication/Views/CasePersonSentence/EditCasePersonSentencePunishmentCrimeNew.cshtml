@@ -4,6 +4,7 @@
 
 @{
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    bool isViewBGN = (bool?)ViewBag.IsViewBGN ?? false;
 }
 
 @using (Html.BeginForm(FormMethod.Post, null, new { id = "pcModalForm" }))
@@ -36,7 +37,11 @@
         <div class="col-lg-12" id="divMoneyCrime">
             <fieldset class="is-fieldset">
                 <legend class="legend_1"> Сума</legend>
-                <div class="col-lg-12">@Html.EditorFor(x => x.SentenseMoney, "Decimal")</div>
+                <div class="col-lg-6">@Html.EditorFor(x => x.SentenseMoney, "Decimal")</div>
+                @if (isViewBGN && Model.Id > 0)
+                {
+                    <div class="col-lg-6">@Html.EditorFor(x => x.SentenseMoneyBGN, "Decimal")</div>
+                }
             </fieldset>
         </div>
     </div>
@@ -55,6 +60,7 @@
 <script>
     $(document).ready(function () {
         Is_PeriodProbationCrime();
+        $('#SentenseMoneyBGN').attr("disabled", true);
     });
 
     $(function () {

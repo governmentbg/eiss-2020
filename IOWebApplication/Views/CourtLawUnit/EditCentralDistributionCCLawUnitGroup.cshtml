@@ -1,0 +1,120 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@model CourtLawUnitGroupCCEditVM
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+
+    string d = ViewBag.desc;
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("IndexCentralDistributionCC", "CourtLawUnit")">Група Централизирано разпределение ГД</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditCentralDistributionCCLawUnitGroup" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CourtGroupKind)
+            @Html.HiddenFor(x => x.LoadIndexOld)
+            @Html.HiddenFor(x => x.LoadIndexDescriptionOld)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-4">@Html.EditorFor(x => x.CourtId, "GenericSelect2")</div>
+                    <div class="col-lg-4">@Html.EditorFor(x => x.LawUnitId, "GenericDropDown")</div>
+                    <div class="col-lg-4">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-4">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                    <div class="col-lg-4">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.DateToDescription, "Textarea")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-4">@Html.EditorFor(x => x.LoadIndex, "Int32")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.LoadIndexDescription, "Textarea")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="CourtLawUnit" asp-action="IndexCentralDistributionCC" asp-route-courtGroupKind="@Model.CourtGroupKind" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#CourtId').select2({ language: "bg" });
+            $('#LawUnitId').select2({ language: "bg" });
+            $('#CourtDepartmentId').select2({ language: "bg" });
+            courtIdChange();
+            lawUnitIdChange();
+        });
+
+        $('#CourtId').change(function () {
+            courtIdChange();
+            lawUnitIdChange();
+        });
+
+        $('#LawUnitId').change(function () {
+            lawUnitIdChange();
+        });
+
+        $('#LoadIndex').change(function () {
+            var _LoadIndex = $('#LoadIndex').val();
+            var _LoadIndexOld = $('#LoadIndexOld').val();
+
+            if (_LoadIndex != _LoadIndexOld)
+            {
+                $('#LoadIndexDescription').val('');
+            }
+            else
+            {
+                $('#LoadIndexDescription').val($('#LoadIndexDescriptionOld').val());
+            }
+        });
+
+        function courtIdChange() {
+            requestCombo('@Url.Action("GetDDL_CommonCourtLawUnitCentralDistributionCC", "CourtLawUnit")', { courtId: $('#CourtId').val(), lawUnitId: @Model.LawUnitId }, '#LawUnitId', '@Model.LawUnitId');
+        }
+
+        function lawUnitIdChange() {
+            var valLawUnit = $('#LawUnitId').val();
+            if (valLawUnit == null)
+                valLawUnit = @Model.LawUnitId;
+
+            requestCombo('@Url.Action("GetDDL_DepartmentByLawUnit", "CourtDepartment")', { courtId: $('#CourtId').val(), lawUnitId: valLawUnit }, '#CourtDepartmentId', '@Model.CourtDepartmentId');
+        }
+    </script>
+}

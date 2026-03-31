@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
@@ -39,10 +41,12 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="filterCaseGroupId"></param>
         /// <returns></returns>
-        public IActionResult Index(int filterCaseGroupId)
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
+        public IActionResult Index(int filterCaseGroupId, int groupKind = NomenclatureConstants.CourtGroupKinds.JudgeSelection)
         {
             SetViewbag(filterCaseGroupId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtGroups(filterCaseGroupId).DeleteOrDisableLast();
+            ViewBag.groupKind = groupKind;
             return View();
         }
 
@@ -53,9 +57,9 @@ namespace IOWebApplication.Controllers
         /// <param name="filterCaseGroupId"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request, int filterCaseGroupId)
+        public IActionResult ListData(IDataTablesRequest request, int filterCaseGroupId, int groupKind)
         {
-            var data = service.CourtGroup_Select(userContext.CourtId, filterCaseGroupId);
+            var data = service.CourtGroup_Select(userContext.CourtId, filterCaseGroupId, groupKind);
 
             return request.GetResponse(data);
         }
@@ -79,12 +83,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="filterCaseGroupId"></param>
         /// <returns></returns>
-        public IActionResult Add(int filterCaseGroupId)
+        [DisableAudit]
+        public IActionResult Add(int filterCaseGroupId, int groupKind)
         {
             var model = new CourtGroup()
             {
                 CourtId = userContext.CourtId,
-                CaseGroupId = filterCaseGroupId
+                CaseGroupId = filterCaseGroupId,
+                GroupKind = groupKind
             };
             SetViewbag(filterCaseGroupId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtGroupAdd(filterCaseGroupId).DeleteOrDisableLast();
@@ -101,6 +107,7 @@ namespace IOWebApplication.Controllers
         {
             var model = service.GetById<CourtGroup>(id);
             SetViewbag(filterCaseGroupId);
+            auditInfo(AuditConstants.Operations.View, model);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCourtGroupEdit(filterCaseGroupId, id).DeleteOrDisableLast();
             return View(nameof(Edit), model);
         }
@@ -112,8 +119,9 @@ namespace IOWebApplication.Controllers
         /// <param name="filterCaseGroupId"></param>
         /// <param name="caseCodesJson"></param>
         /// <returns></returns>
+        [DisableAudit]
         [HttpPost]
-        public IActionResult Edit(CourtGroup model, int filterCaseGroupId, string caseCodesJson)
+        public async Task<IActionResult> Edit(CourtGroup model, int filterCaseGroupId, string caseCodesJson)
         {
             SetViewbag(filterCaseGroupId);
             List<int> caseCodes = new List<int>();
@@ -137,9 +145,10 @@ namespace IOWebApplication.Controllers
 
             if (service.CourtGroup_SaveData(model))
             {
-                codeService.CourtGroupCode_SaveData(model.Id, caseCodes);
+                await codeService.CourtGroupCode_SaveData(model.Id, caseCodes);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                auditInfo(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
             else
@@ -148,6 +157,12 @@ namespace IOWebApplication.Controllers
                 return View(nameof(Edit), model);
             }
 
+        }
+
+        void auditInfo(string operation, CourtGroup model, string add = "")
+        {
+            var cGroup = service.GetNomCodeById<CaseGroup>(model.CaseGroupId);
+            AddAuditInfo(operation, $"{model.Label} ({cGroup})", add, "Група шифри");
         }
 
         void SetViewbag(int filterCaseGroupId)
@@ -218,6 +233,7 @@ namespace IOWebApplication.Controllers
         /// <param name="id"></param>
         /// <param name="filterCaseGroupId"></param>
         /// <returns></returns>
+        [DisableAudit]
         public IActionResult EditCourtGroupLawUnit(int id, int filterCaseGroupId)
         {
             ViewBag.filterCaseGroupId = filterCaseGroupId;
@@ -248,7 +264,8 @@ namespace IOWebApplication.Controllers
         /// <param name="filterCaseGroupId"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditCourtGroupLawUnit(CourtGroupVM model, string groupJudgeJson, int filterCaseGroupId)
+        [DisableAudit]
+        public async Task<IActionResult> EditCourtGroupLawUnit(CourtGroupVM model, string groupJudgeJson, int filterCaseGroupId)
         {
             if (!ModelState.IsValid)
             {
@@ -267,10 +284,12 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed + ex.Message);
                 return View(nameof(EditCourtGroupLawUnit), model);
             }
-            if (serviceGroupLawUnit.CourtGroupLawUnitSaveData(userContext.CourtId, model.Id, judge_codes))
+            if (await serviceGroupLawUnit.CourtGroupLawUnitSaveData(userContext.CourtId, model.Id, judge_codes))
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 SaveLogOperation(IO.LogOperation.Models.OperationTypes.Patch, model.Id);
+                var cgroup = service.GetById<CourtGroup>(model.Id);
+                auditInfo(AuditConstants.Operations.Patch, cgroup, "Промяна съдии към група");
             }
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
@@ -284,9 +303,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="courtGroupId"></param>
         /// <returns></returns>
-        public JsonResult CourtGroupLawUnitRightList(int courtGroupId)
+        public JsonResult CourtGroupLawUnitRightList(int courtGroupId, int groupKind)
         {
-            var data = serviceGroupLawUnit.CourtGroupLawUnitSaved(userContext.CourtId, courtGroupId);
+            var data = serviceGroupLawUnit.CourtGroupLawUnitSaved(userContext.CourtId, courtGroupId, groupKind);
             return Json(data);
         }
 
@@ -294,9 +313,9 @@ namespace IOWebApplication.Controllers
         /// Списък със съдии за добавяне към група
         /// </summary>
         /// <returns></returns>
-        public JsonResult CourtGroupLawUnitLeftList()
+        public JsonResult CourtGroupLawUnitLeftList(int groupKind)
         {
-            var data = serviceGroupLawUnit.CourtGroupLawUnitForSelect(userContext.CourtId);
+            var data = serviceGroupLawUnit.CourtGroupLawUnitForSelect(userContext.CourtId, groupKind);
             return Json(data);
         }
 
@@ -313,5 +332,10 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
+        #region CourtGroup
+
+
+
+        #endregion
     }
 }

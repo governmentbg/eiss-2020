@@ -16,6 +16,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     public int StateId { get; set; }
 
     public int CaseCount { get; set; }
+    public int LawUnitTotalCount { get; set; }
+
+    
 
     public decimal? CaseCourtTotalCount { get; set; }
 
@@ -28,6 +31,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
     public int? CaseGroupId { get; set; }
 
     public DateTime? FromDateInGROUP { get; set; }
+
+    public DateTime? ToDateInGROUP { get; set; }
+
+    public int LawUnitGroupId { get; set; }
 
   }
 }

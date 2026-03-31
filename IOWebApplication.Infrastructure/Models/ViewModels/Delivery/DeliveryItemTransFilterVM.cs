@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using IOWebApplication.Infrastructure.Constants;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
 {
@@ -26,6 +27,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         [Display(Name = "Тип на документа")]
         public int NotificationTypeId { get; set; }
 
+        [Display(Name = "Вид известяване")]
+        public int NotificationDeliveryGroupId { get; set; }
+
+
         [Display(Name = "Нов статус")]
         public int ToNotificationStateId { get; set; }
 
@@ -40,7 +45,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
 
         [Display(Name = "Нов район за доставка")]
         public int NewDeliveryAreaId { get; set; }
-
+        
+        [Display(Name = NomenclatureConstants.DeliveryItemMessage.FastProcess)]
+        public string IsFastProcess { get; set; } = "А";
         public static string GetTitle(int toNotificationStateId)
         {
             switch (toNotificationStateId)
@@ -116,13 +123,10 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
             {
                 case NomenclatureConstants.NotificationState.Send:
                     return NomenclatureConstants.NotificationState.Ready;
-                    break;
                 case NomenclatureConstants.NotificationState.Received:
                     return NomenclatureConstants.NotificationState.Send;
-                    break;
                 case NomenclatureConstants.NotificationState.ForDelivery:
                     return NomenclatureConstants.NotificationState.Received;
-                    break;
             }
             return 0;
         }

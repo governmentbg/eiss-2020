@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
 {
@@ -93,19 +95,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
         [Display(Name = "Акт/Протокол")]
         public int? CaseSessionActId { get; set; }
 
-        /// <summary>
-        /// Отменена мяркa
-        /// </summary>
-        [Display(Name = "Отменена мяркa за процесуална принуда")]
-        [Range(1, int.MaxValue, ErrorMessage = "Изберете Oтменена мяркa")]
-        public int? PersonOldMeasureId { get; set; }
-
-        /// <summary>
-        /// Наложена мяркa
-        /// </summary>
-        [Display(Name = "Наложена мяркa за процесуална принуда")]
-        [Range(1, int.MaxValue, ErrorMessage = "Изберете Наложена мяркa")]
-        public int? PersonMeasureId { get; set; }
+        public List<PersonMeasureVM> PersonMeasures { get; set; }
 
         /// <summary>
         /// Обединено дело

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Report;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Collections.Generic;
 
 namespace IOWebApplication.Controllers
 {
@@ -21,13 +18,14 @@ namespace IOWebApplication.Controllers
             this.service = _service;
         }
 
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult Index()
         {
             var model = new DeactivateItemFilterVM();
             List<SelectListItem> sources = new List<SelectListItem>()
             {
                 new SelectListItem("Документи",SourceTypeSelectVM.Document.ToString()),
-                new SelectListItem("Прикачени документи",(SourceTypeSelectVM.Files - SourceTypeSelectVM.Document).ToString()),
+                new SelectListItem("Прикачени документи",SourceTypeSelectVM.DeactivateAttachedFiles.ToString()),
                 new SelectListItem("Уведомления и призовки",SourceTypeSelectVM.CaseNotification.ToString()),
                 //new SelectListItem("Документи към призовки",(SourceTypeSelectVM.Files - SourceTypeSelectVM.CaseNotification).ToString()),
                 new SelectListItem("Съдебни актове",SourceTypeSelectVM.CaseSessionAct.ToString())

@@ -29,11 +29,12 @@ namespace IOWebApplication.Core.Contracts
 
         DeliveryAreaFindVM DeliveryAreaCasePersonAddressIdFind(int CasePersonAddressId, int courtId);
 
-        DeliveryAreaFindVM DeliveryAreaAddressIdFind(int AddressId, int courtId);
+        DeliveryAreaFindVM DeliveryAreaAddressIdFind(long AddressId, int courtId);
         IQueryable<DeliveryAreaAddressVM> DeliveryAreaAddressDuplication(int courtId);
         DeliveryAreaAddressTestVM DeliveryAreaAddressFindTest(DeliveryAreaAddressTestVM model, int courtId);
         IQueryable<MultiSelectTransferVM> EkStreetForSelect_Select(string cityId, int courtId);
         bool DeliveryAreaAddressSaveListData(int deliveryAreaId, List<int> streets, string cityId);
         List<SelectListItem> ExpiredTypeDDL();
+        DeliveryAreaFindVM DeliveryAreaDocumentPersonAddressIdFind(int documentPersonAddressId, int courtId);
     }
 }

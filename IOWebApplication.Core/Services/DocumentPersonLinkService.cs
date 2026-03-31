@@ -251,7 +251,6 @@ namespace IOWebApplication.Core.Services
         /// <summary>
         /// Извличане на данни за Ред на представляване
         /// </summary>
-        /// <param name="caseId"></param>
         /// <param name="defaultElementText"></param>
         /// <returns></returns>
         public List<SelectListItem> SeccondRelationalPersonDDL(long documentId, string defaultElementText = null)
@@ -289,7 +288,6 @@ namespace IOWebApplication.Core.Services
         /// <summary>
         /// Извличане на данни за Възможенo участие на роля във връзка между страни за комбо
         /// </summary>
-        /// <param name="casePersonId"></param>
         /// <returns></returns>
         public List<SelectListItem> LinkDirectionForPersonDDL(long documentPersonId)
         {

@@ -34,9 +34,9 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 
 		/// <summary>
 		/// mpprzm
-		/// Размер на гаранция в лева
+		/// Размер на гаранция в евро
 		/// </summary>
-		[Display(Name = "Гаранция, лв")]
+		[Display(Name = "Гаранция, евро")]
 		[XmlAttribute("mpprzm", DataType = "double")]
 		public double BailAmount { get; set; }
 
@@ -44,7 +44,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		/// mppsid
 		/// Системен идентификатор
 		/// </summary>
-		[Display(Name = "Гаранция, лв")]
+		[Display(Name = "Гаранция, евро")]
 		[XmlAttribute("mppsid")]
 		public int MeasureId { get; set; }
 

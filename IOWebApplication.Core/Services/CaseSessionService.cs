@@ -1,5 +1,4 @@
 ﻿using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
@@ -13,16 +12,18 @@ using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Report;
 using IOWebApplication.Infrastructure.Models.ViewModels.VKSSelection;
-using iText.Forms.Xfdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using System.Transactions;
 using static IOWebApplication.Infrastructure.Constants.EpepConstants;
 
@@ -41,9 +42,10 @@ namespace IOWebApplication.Core.Services
         private readonly IUrlHelper urlHelper;
         private readonly IVksNotificationService vksNotificationService;
         private readonly ICourtLawUnitService courtLawUnitService;
+        private readonly IWorkNotificationService workNotificationService;
+
         public CaseSessionService(ILogger<CaseSessionService> _logger,
                                   IRepository _repo,
-                                  AutoMapper.IMapper _mapper,
                                   IUserContext _userContext,
                                   ICasePersonService _casePersonService,
                                   IMoneyService _moneyService,
@@ -55,11 +57,13 @@ namespace IOWebApplication.Core.Services
                                   ICommonService _commonService,
                                   IUrlHelper _url,
                                   IVksNotificationService _vksNotificationService,
-                                  ICourtLawUnitService _courtLawUnitService)
+                                  ICourtLawUnitService _courtLawUnitService,
+                                  IReadonlyRepository _readonlyrepo,
+                                  IConfiguration _config,
+                                  IWorkNotificationService _workNotificationService)
         {
             logger = _logger;
             repo = _repo;
-            mapper = _mapper;
             userContext = _userContext;
             casePersonService = _casePersonService;
             moneyService = _moneyService;
@@ -72,6 +76,9 @@ namespace IOWebApplication.Core.Services
             urlHelper = _url;
             vksNotificationService = _vksNotificationService;
             courtLawUnitService = _courtLawUnitService;
+            readonlyrepo = _readonlyrepo;
+            applicationDbConnectionString = _config.GetConnectionString("DefaultConnection");
+            workNotificationService = _workNotificationService;
         }
 
         /// <summary>
@@ -84,33 +91,32 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseSessionListVM> CaseSession_Select(int CaseId, DateTime? DateFrom, DateTime? DateTo, bool IsVisibleExpired = false)
         {
+            List<CaseSessionListVM> result = new List<CaseSessionListVM>();
+
             var datetimeNow = DateTime.Now;
 
+            DateFrom = DateFrom.ForceStartDateWithAddYear(-100);
+            DateTo = DateTo.ForceEndDateWithAddYear(100);
+
+            Expression<Func<CaseSession, bool>> dateFromWhere = x => x.DateFrom >= DateFrom && x.DateFrom <= DateTo;
+
             return repo.AllReadonly<CaseSession>()
-                       .Include(x => x.CaseSessionResults)
-                       .ThenInclude(x => x.SessionResult)
-                       .Include(x => x.Case)
-                       .Include(x => x.SessionType)
-                       .Include(x => x.CourtHall)
-                       .Include(x => x.SessionState)
-                       .Include(x => x.CaseSessionActs)
-                       .ThenInclude(x => x.ActComplainResult)
-                       .Where(x => x.CaseId == CaseId &&
-                                   ((DateFrom != null) ? ((x.DateFrom.Date >= (DateFrom ?? DateTime.Now).Date) && (x.DateFrom.Date <= (DateTo ?? DateTime.Now).Date)) : true))
+                       .Where(x => x.CaseId == CaseId)
+                       .Where(dateFromWhere)
                        .Where(this.FilterExpireInfo<CaseSession>(IsVisibleExpired))
                        .Select(x => new CaseSessionListVM()
                        {
                            Id = x.Id,
-                           SessionTypeLabel = (x.SessionType != null) ? x.SessionType.Label : string.Empty,
-                           CourtHallName = (x.CourtHall != null) ? x.CourtHall.Name : string.Empty,
+                           SessionTypeLabel = x.SessionType.Label,
+                           CourtHallName = x.CourtHallId != null ? x.CourtHall.Name : string.Empty,
                            SessionStateLabel = x.SessionState.Label,
                            DateFrom = x.DateFrom,
-                           SessionResultLabel = x.CaseSessionResults.Any(r => r.IsMain && r.DateExpired == null) ? (x.CaseSessionResults.Where(r => r.IsMain && r.DateExpired == null).FirstOrDefault()).SessionResult.Label : string.Empty,
-                           ActComplainResultLabel = x.CaseSessionActs.Any(a => a.IsFinalDoc && a.DateExpired == null) ? ((x.CaseSessionActs.Where(a => a.IsFinalDoc && a.DateExpired == null).FirstOrDefault()).ActComplainResult != null ? (x.CaseSessionActs.Where(a => a.IsFinalDoc && a.DateExpired == null).FirstOrDefault()).ActComplainResult.Label : string.Empty) : string.Empty,
-                           SessionWornings = (x.DateFrom <= datetimeNow && (x.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno || x.SessionStateId == NomenclatureConstants.SessionState.Provedeno)) ? ((!x.CaseSessionActs.Any(a => a.DateExpired == null && a.ActDeclaredDate != null) ? NomenclatureConstants.SessionWornings.NotExistAct : ((!x.CaseSessionResults.Any(r => r.DateExpired == null) ? NomenclatureConstants.SessionWornings.NotExistResult : NomenclatureConstants.SessionWornings.AllOk)))) : NomenclatureConstants.SessionWornings.AllOk
-
+                           SessionResultLabel = x.CaseSessionResults.Where(r => r.IsMain && r.DateExpired == null).Select(r => r.SessionResult.Label).FirstOrDefault(),
+                           ActComplainResultLabel = x.CaseSessionActs.Where(a => a.IsFinalDoc && a.DateExpired == null && a.ActComplainResultId != null).Select(a => a.ActComplainResult.Label).FirstOrDefault(),
+                           SessionWornings = (x.DateFrom <= datetimeNow && (x.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno || x.SessionStateId == NomenclatureConstants.SessionState.Provedeno)) ? ((!x.CaseSessionActs.Any(a => a.DateExpired == null && a.ActDeclaredDate != null) ? NomenclatureConstants.SessionWornings.NotExistAct : ((!x.CaseSessionResults.Any(r => r.DateExpired == null) ? NomenclatureConstants.SessionWornings.NotExistResult : NomenclatureConstants.SessionWornings.AllOk)))) : NomenclatureConstants.SessionWornings.AllOk,
+                           SessionActList = string.Join("", x.CaseSessionActs.Where(a => a.DateExpired == null && a.ActDeclaredDate != null).OrderBy(a => a.RegDate).Select(a => "<div class='cdn-listview' style='margin-left:5px;'><a href='#' class='cdn-loader' data-sourceType='" + @SourceTypeSelectVM.CaseSessionActAllFiles + "' data-sourceId='" + a.Id + "'><i class='fa fa-file-text'></i> " + a.ActType.Label + " " + (!string.IsNullOrEmpty(a.RegNumber) ? a.RegNumber + "/" + (a.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty) + "</a></div>"))
                        })
-                .AsQueryable();
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -124,10 +130,6 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseSessionVM> CaseSession_OldSelect(int CaseId, DateTime? DateFrom, DateTime? DateTo, bool IsVisibleExpired = false)
         {
             return repo.AllReadonly<CaseSession>()
-                .Include(x => x.Case)
-                .Include(x => x.SessionType)
-                .Include(x => x.CourtHall)
-                .Include(x => x.SessionState)
                 .Where(x => x.CaseId == CaseId &&
                             ((DateFrom != null) ? ((x.DateFrom.Date >= (DateFrom ?? DateTime.Now).Date) && (x.DateFrom.Date <= (DateTo ?? DateTime.Now).Date)) : true)
                             )
@@ -138,18 +140,31 @@ namespace IOWebApplication.Core.Services
                     CourtId = x.CourtId,
                     CaseId = x.CaseId,
                     CaseName = x.Case.RegNumber,
-                    SessionTypeLabel = (x.SessionType != null) ? x.SessionType.Label : string.Empty,
-                    CourtHallName = (x.CourtHall != null) ? x.CourtHall.Name : string.Empty,
+                    SessionTypeLabel = x.SessionType.Label,
+                    CourtHallName = (x.CourtHallId > 0) ? x.CourtHall.Name : string.Empty,
                     SessionStateLabel = x.SessionState.Label,
                     DateFrom = x.DateFrom,
                     DateTo = x.DateTo,
+                    VideoUrl = x.VideoUrl,
                     Description = x.Description,
                     CourtHallId = x.CourtHallId,
                     SessionStateId = x.SessionStateId,
-                    SessionTypeId = x.SessionTypeId,
-                    DateTo_Minutes = Convert.ToInt32(((TimeSpan)(x.DateTo ?? x.DateFrom).Subtract(x.DateFrom)).TotalMinutes)
+                    SessionTypeId = x.SessionTypeId
                 })
                 .AsQueryable();
+        }
+
+        private static void CaseSessionEmptyToNull(CaseSessionVM model)
+        {
+            model.CourtHallId = model.CourtHallId.EmptyToNull();
+            model.ActTypeId = model.ActTypeId.NumberEmptyToNull();
+            model.ActKindId = model.ActKindId.NumberEmptyToNull();
+            model.ActISPNReasonId = model.ActISPNReasonId.NumberEmptyToNull();
+            model.RelatedActId = model.RelatedActId.NumberEmptyToNull();
+            model.ActComplainResultId = model.ActComplainResultId.NumberEmptyToNull();
+            model.VksLawunitChange = model.VksLawunitChange.NumberEmptyToNull();
+            model.SessionResultId = model.SessionResultId.NumberEmptyToNull();
+            model.SessionResultBaseId = model.SessionResultBaseId.NumberEmptyToNull();
         }
 
         /// <summary>
@@ -157,26 +172,33 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public SaveResultVM CaseSession_SaveData(CaseSessionVM model)
+        public async Task<SaveResultVM> CaseSession_SaveData(CaseSessionVM model)
         {
             try
             {
-                model.CourtHallId = model.CourtHallId.EmptyToNull();
-                model.ActTypeId = model.ActTypeId.NumberEmptyToNull();
-                model.ActKindId = model.ActKindId.NumberEmptyToNull();
-                model.ActComplainResultId = model.ActComplainResultId.NumberEmptyToNull();
-                model.VksLawunitChange = model.VksLawunitChange.NumberEmptyToNull();
+                var dateTimeNow = DateTime.Now;
+                var date_session = model.DateFrom.MakeZeroSeconds();
+                var date_now = dateTimeNow.MakeZeroSeconds();
+
+                CaseSessionEmptyToNull(model);
+
+                if (!(model.IsFinalDoc ?? false))
+                    model.ActComplainResultId = null;
+
+                if (!await CheckCaseFeature(model.CaseId, NomenclatureConstants.CaseFeatures.ISPN_ActHasForRegistration))
+                    model.TDActForRegistration = false;
 
                 var selectSession = 0;
-                if (model.CaseSessions != null)
+                if (model.CaseSessionAddActId > 0)
                 {
-                    var checkList = model.CaseSessions.Where(x => x.Checked).FirstOrDefault();
-                    selectSession = int.Parse(checkList != null ? checkList.Value : "0");
+                    selectSession = model.CaseSessionAddActId ?? 0;
                     model.Id = selectSession;
                 }
 
-                var saved = (model.Id > 0) ? repo.GetById<CaseSession>(model.Id) : new CaseSession();
+                CaseSession saved = (model.Id > 0) ? await repo.GetByIdAsync<CaseSession>(model.Id) : new CaseSession();
                 var savedState = saved.SessionStateId;
+
+                bool isFastProcess = await repo.GetPropByIdAsync<Case, bool>(x => x.Id == saved.CaseId, x => x.IsFastProcess ?? false);
 
                 if (saved.Id > 0)
                 {
@@ -196,6 +218,7 @@ namespace IOWebApplication.Core.Services
                     saved.CourtId = model.CourtId;
                     saved.SessionTypeId = model.SessionTypeId;
                     saved.CourtHallId = model.CourtHallId;
+                    saved.VideoUrl = model.VideoUrl;
                     saved.Description = model.Description;
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateFrom.AddMinutes(model.DateTo_Minutes);
@@ -204,7 +227,7 @@ namespace IOWebApplication.Core.Services
 
                 if ((model.ActTypeId != null) || (selectSession > 0))
                 {
-                    if (model.DateFrom <= DateTime.Now)
+                    if (date_session <= date_now)
                         saved.SessionStateId = NomenclatureConstants.SessionState.Provedeno;
                     else
                         saved.SessionStateId = NomenclatureConstants.SessionState.Nasrocheno;
@@ -214,38 +237,48 @@ namespace IOWebApplication.Core.Services
                     saved.SessionStateId = model.SessionStateId;
                 }
 
-                saved.DateWrt = DateTime.Now;
+                saved.DateWrt = dateTimeNow;
                 saved.UserId = userContext.UserId;
+
+                if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.ClearTrackedUsers))
+                {
+                    try
+                    {
+                        repo.StopTrackingApplicationUser();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "StopTrackingApplicationUser.CaseNotification_SaveData");
+                    }
+                }
 
                 if (model.Id > 0)
                 {
-                    using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                    using (var ts = repo.BeginTransaction())
                     {
                         CreateHistory<CaseSession, CaseSessionH>(saved);
                         caseDeadlineService.DeadLineOnSession(saved);
-                        repo.Update(saved);
 
                         if (selectSession < 1)
                         {
-                            if ((model.SessionStateId != NomenclatureConstants.SessionState.Provedeno) && (model.DateFrom.Date >= DateTime.Now.Date))
+                            if ((model.SessionStateId != NomenclatureConstants.SessionState.Provedeno) && (model.DateFrom.Date >= dateTimeNow.Date))
                             {
-                                var caseSessionMeetings = repo.AllReadonly<CaseSessionMeeting>()
-                                                              .Where(x => (x.CaseSessionId == saved.Id) &&
-                                                                          (x.IsAutoCreate == true))
-                                                              .FirstOrDefault();
+                                CaseSessionMeeting caseSessionMeetings = await repo.All<CaseSessionMeeting>()
+                                                                                   .Where(x => x.CaseSessionId == saved.Id &&
+                                                                                               (x.IsAutoCreate ?? false))
+                                                                                   .FirstOrDefaultAsync();
                                 if (caseSessionMeetings != null)
                                 {
                                     if ((caseSessionMeetings.DateFrom != model.DateFrom) ||
                                         (caseSessionMeetings.DateTo != model.DateTo) ||
                                         (caseSessionMeetings.CourtHallId != model.CourtHallId))
                                     {
-                                        var dateTimeToMeeteng = (saved.DateFrom.Date > (saved.DateTo ?? saved.DateFrom).Date) ? (new DateTime(saved.DateFrom.Year, saved.DateFrom.Month, saved.DateFrom.Day, 23, 59, 59)) : (saved.DateTo ?? saved.DateFrom);
+                                        DateTime dateTimeToMeeteng = (saved.DateFrom.Date > (saved.DateTo ?? saved.DateFrom).Date) ? saved.DateFrom.MakeEndDate() : (saved.DateTo ?? saved.DateFrom);
                                         caseSessionMeetings.DateFrom = saved.DateFrom;
                                         caseSessionMeetings.DateTo = dateTimeToMeeteng;
                                         caseSessionMeetings.CourtHallId = saved.CourtHallId;
-                                        caseSessionMeetings.DateWrt = DateTime.Now;
+                                        caseSessionMeetings.DateWrt = dateTimeNow;
                                         caseSessionMeetings.UserId = userContext.UserId;
-                                        repo.Update(caseSessionMeetings);
                                     }
                                 }
                             }
@@ -261,21 +294,44 @@ namespace IOWebApplication.Core.Services
                                     CaseSessionId = saved.Id,
                                     ActTypeId = model.ActTypeId ?? 0,
                                     ActKindId = model.ActKindId,
+                                    RelatedActId = model.RelatedActId,
                                     ActStateId = NomenclatureConstants.SessionActState.Project,
+                                    ActISPNReasonId = model.ActISPNReasonId.EmptyToNull(),
+                                    RnflEffectiveImmediately = model.RnflEffectiveImmediately,
                                     IsFinalDoc = false,
+                                    TDActForRegistration = model.TDActForRegistration,
                                     IsReadyForPublish = false,
                                     CanAppeal = model.ActCanAppeal,
-                                    DateWrt = DateTime.Now,
+                                    DateWrt = dateTimeNow,
                                     UserId = userContext.UserId
                                 };
 
-                                repo.Add<CaseSessionAct>(caseSessionAct);
-                                repo.SaveChanges();
+                                await repo.AddAsync<CaseSessionAct>(caseSessionAct);
+                                await repo.SaveChangesAsync();
+
                                 model.ActSaveId = caseSessionAct.Id;
+
+                                if ((model.SessionResultId > 0) && (date_session <= date_now))
+                                {
+                                    var caseSessionResult = new CaseSessionResult()
+                                    {
+                                        CourtId = saved.CourtId,
+                                        CaseId = saved.CaseId,
+                                        CaseSessionId = saved.Id,
+                                        SessionResultId = model.SessionResultId ?? 0,
+                                        SessionResultBaseId = model.SessionResultBaseId,
+                                        Description = model.Description,
+                                        IsActive = true,
+                                        IsMain = model.IsMainResult,
+                                    };
+
+                                    await repo.AddAsync(caseSessionResult);
+                                    AutoChangeCaseStatsFromSessionResult(model.SessionResultId ?? 0, saved.CaseId, null);
+                                }
                             }
                         }
 
-                        repo.SaveChanges();
+                        await repo.SaveChangesAsync();
 
                         //Запис на пари за заседатели
                         (bool result, string errorMessage) = moneyService.CalcEarningsJury(saved, userContext.CourtId);
@@ -293,23 +349,24 @@ namespace IOWebApplication.Core.Services
                         if (savedState == NomenclatureConstants.SessionState.Nasrocheno
                             && model.SessionStateId == NomenclatureConstants.SessionState.Provedeno)
                         {
-                            mqEpepService.AppendActsFromSession(model.Id);
+                            await mqEpepService.AppendActsFromSession(model.Id);
                         }
-                        ts.Complete();
+                        ts.Commit();
                     }
                 }
                 else
                 {
-                    var isFirstSession = !repo.AllReadonly<CaseSession>()
-                                                .Where(FilterExpireInfo<CaseSession>(false))
-                                                .Where(x => x.CaseId == saved.CaseId)
-                                                .Any();
-                    using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                    var isFirstSession = !await repo.AllReadonly<CaseSession>()
+                                                    .Where(FilterExpireInfo<CaseSession>(false))
+                                                    .Where(x => x.CaseId == saved.CaseId)
+                                                    .AnyAsync();
+
+                    using (var ts = repo.BeginTransaction())
                     {
 
                         CreateHistory<CaseSession, CaseSessionH>(saved);
-                        repo.Add<CaseSession>(saved);
-                        repo.SaveChanges();
+                        await repo.AddAsync<CaseSession>(saved);
+                        await repo.SaveChangesAsync();
 
                         var hasVKSLawunitChange = false;
 
@@ -319,39 +376,55 @@ namespace IOWebApplication.Core.Services
                             hasVKSLawunitChange = updateCaseLawUnitByDateVKS(saved);
                         }
 
-                        DateTime dateEnd = DateTime.Now.AddYears(100);
-                        var lawUnits = repo.AllReadonly<CaseLawUnit>()
-                                           .Where(x => (x.CaseId == model.CaseId) &&
-                                                       (x.CaseSessionId == null) &&
-                                                       ((NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) || NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId)) &&
-                                                       (x.DateFrom <= saved.DateFrom) &&
-                                                       ((x.DateTo ?? dateEnd) >= saved.DateFrom)).ToList();
+                        DateTime dateEnd = dateTimeNow.AddYears(100);
+                        List<CaseLawUnit> lawUnits = (model.SessionTypeId == NomenclatureConstants.SessionType.OpenSession ||
+                                                      model.SessionTypeId == NomenclatureConstants.SessionType.OpenSessionOpenDoors ||
+                                                      model.SessionTypeId == NomenclatureConstants.SessionType.OpenSessionAfterFirst ||
+                                                      model.SessionTypeId == NomenclatureConstants.SessionType.DispositionalSession) ? await repo.AllReadonly<CaseLawUnit>()
+                                                                                                                                                 .Where(x => (x.CaseId == model.CaseId) &&
+                                                                                                                                                                 (x.CaseSessionId == null) &&
+                                                                                                                                                                 ((NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) ||
+                                                                                                                                                                   NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId) ||
+                                                                                                                                                                   x.JudgeRoleId == NomenclatureConstants.JudgeRole.Jury) &&
+                                                                                                                                                                 (x.DateFrom <= saved.DateFrom) &&
+                                                                                                                                                                 ((x.DateTo ?? dateEnd) >= saved.DateFrom))
+                                                                                                                                                 .ToListAsync() :
+                                                                                                                                       await repo.AllReadonly<CaseLawUnit>()
+                                                                                                                                                 .Where(x => (x.CaseId == model.CaseId) &&
+                                                                                                                                                             (x.CaseSessionId == null) &&
+                                                                                                                                                             ((NomenclatureConstants.JudgeRole.JudgeRolesActiveList.Contains(x.JudgeRoleId)) ||
+                                                                                                                                                               NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId)) &&
+                                                                                                                                                             (x.DateFrom <= saved.DateFrom) &&
+                                                                                                                                                             ((x.DateTo ?? dateEnd) >= saved.DateFrom))
+                                                                                                                                                 .ToListAsync();
 
-                        var casePersons = new List<CasePerson>();
+                        List<CasePerson> casePersons = new();
                         if (model.CaseSessionOldId != null)
                         {
-                            casePersons = repo.AllReadonly<CasePerson>()
-                                              .Include(x => x.Addresses)
-                                              .ThenInclude(x => x.Address)
-                                              .Where(x => (x.CaseId == model.CaseId) &&
-                                                          (x.CaseSessionId == model.CaseSessionOldId) &&
-                                                          (x.DateExpired == null) &&
-                                                          (x.DateFrom <= saved.DateFrom) &&
-                                                          (((x.DateTo ?? dateEnd) >= saved.DateFrom))).ToList();
+                            casePersons = await repo.AllReadonly<CasePerson>()
+                                                    .Include(x => x.Addresses)
+                                                    .ThenInclude(x => x.Address)
+                                                    .Where(x => (x.CaseId == model.CaseId) &&
+                                                                (x.CaseSessionId == model.CaseSessionOldId) &&
+                                                                (x.DateExpired == null) &&
+                                                                (x.DateFrom <= saved.DateFrom) &&
+                                                                (((x.DateTo ?? dateEnd) >= saved.DateFrom)))
+                                                    .ToListAsync();
                         }
                         else
                         {
-                            casePersons = repo.AllReadonly<CasePerson>()
-                                              .Include(x => x.Addresses)
-                                              .ThenInclude(x => x.Address)
-                                              .Where(x => (x.CaseId == model.CaseId) &&
-                                                          (x.CaseSessionId == null) &&
-                                                          (x.DateExpired == null) &&
-                                                          (x.DateFrom <= saved.DateFrom) &&
-                                                          (((x.DateTo ?? dateEnd) >= saved.DateFrom))).ToList();
+                            casePersons = await repo.AllReadonly<CasePerson>()
+                                                    .Include(x => x.Addresses)
+                                                    .ThenInclude(x => x.Address)
+                                                    .Where(x => (x.CaseId == model.CaseId) &&
+                                                                (x.CaseSessionId == null) &&
+                                                                (x.DateExpired == null) &&
+                                                                (x.DateFrom <= saved.DateFrom) &&
+                                                                (((x.DateTo ?? dateEnd) >= saved.DateFrom)))
+                                                    .ToListAsync();
                         }
 
-                        List<int> selectLawUnit = new List<int>();
+                        List<int> selectLawUnit = new();
                         if ((model.ActTypeId == NomenclatureConstants.ActType.Injunction) ||
                             (model.ActTypeId == NomenclatureConstants.ActType.ObezpechitelnaZapoved))
                         {
@@ -369,23 +442,23 @@ namespace IOWebApplication.Core.Services
                             lawUnit.Id = 0;
                             lawUnit.CaseSessionId = saved.Id;
                             //lawUnit.DateFrom = saved.DateFrom;
-                            lawUnit.DateWrt = DateTime.Now;
+                            lawUnit.DateWrt = dateTimeNow;
                             lawUnit.UserId = userContext.UserId;
-                            repo.Add<CaseLawUnit>(lawUnit);
+                            await repo.AddAsync<CaseLawUnit>(lawUnit);
                         }
 
                         casePersonService.SetCasePersonDataForCopySession(model.CaseId, null, saved.Id, casePersons, saved.DateFrom);
-
+                        await repo.SaveChangesAsync();
                         foreach (var item in casePersons)
-                            item.PersonRole = repo.GetById<PersonRole>(item.PersonRoleId);
+                            item.PersonRole = await GetReadonlyAsync<PersonRole>(item.PersonRoleId);
 
-                        var sessionNotificationList = new List<CaseSessionNotificationList>();
-                        var maxNumber = 0;
+                        List<CaseSessionNotificationList> sessionNotificationList = new();
+                        int maxNumber = 0;
 
-                        foreach (var casePerson in casePersons.OrderBy(x => x.PersonRole.RoleKindId))
+                        foreach (var casePerson in casePersons.OrderBy(x => x.RowNumber))
                         {
                             maxNumber++;
-                            var notificationList = new CaseSessionNotificationList()
+                            CaseSessionNotificationList notificationList = new()
                             {
                                 CourtId = saved.CourtId,
                                 CaseId = saved.CaseId,
@@ -394,48 +467,16 @@ namespace IOWebApplication.Core.Services
                                 CasePersonId = casePerson.Id,
                                 NotificationAddressId = ((casePerson.Addresses.Count > 0) ? ((casePerson.Addresses.Any(x => (x.ForNotification ?? false) == true)) ? (casePerson.Addresses.Where(x => x.ForNotification == true).FirstOrDefault().AddressId) : (casePerson.Addresses.FirstOrDefault().AddressId)) : (long?)null),
                                 RowNumber = maxNumber,
-                                DateWrt = DateTime.Now,
+                                DateWrt = dateTimeNow,
                                 UserId = userContext.UserId
                             };
 
                             sessionNotificationList.Add(notificationList);
                         }
 
-                        var lawUnitIds = lawUnits.Select(x => x.LawUnitId).ToList() ?? new List<int>();
-                        var addressLawUnit = lawUnitIds.Any() ? repo.AllReadonly<LawUnitAddress>()
-                                                                    .Include(x => x.Address)
-                                                                    .Where(x => lawUnitIds.Contains(x.LawUnitId))
-                                                                    .ToList() : new List<LawUnitAddress>();
+                        repo.AddRange(sessionNotificationList);
 
-                        foreach (var caseLawUnit in lawUnits.Where(x => NomenclatureConstants.JudgeRole.JuriRolesList.Contains(x.JudgeRoleId))
-                                                            .OrderBy(x => x.LawUnit.FullName))
-                        {
-                            maxNumber++;
-
-                            var unitAddresses = addressLawUnit.Where(x => x.LawUnitId == caseLawUnit.LawUnitId).ToList();
-
-                            var notificationList = new CaseSessionNotificationList()
-                            {
-                                CourtId = saved.CourtId,
-                                CaseId = saved.CaseId,
-                                CaseSessionId = saved.Id,
-                                NotificationPersonType = NomenclatureConstants.NotificationPersonType.CaseLawUnit,
-                                CaseLawUnitId = caseLawUnit.Id,
-                                NotificationAddressId = (unitAddresses.Count > 0) ? unitAddresses.FirstOrDefault().AddressId : (long?)null,
-                                RowNumber = maxNumber,
-                                DateWrt = DateTime.Now,
-                                UserId = userContext.UserId
-                            };
-
-                            sessionNotificationList.Add(notificationList);
-                        }
-
-                        foreach (var item in sessionNotificationList)
-                        {
-                            repo.Add<CaseSessionNotificationList>(item);
-                        }
-
-                        var dateTimeToMeeteng = (saved.DateFrom.Date > (saved.DateTo ?? saved.DateFrom).Date) ? (new DateTime(saved.DateFrom.Year, saved.DateFrom.Month, saved.DateFrom.Day, 23, 59, 59)) : (saved.DateTo ?? saved.DateFrom);
+                        DateTime dateTimeToMeeteng = (saved.DateFrom.Date > (saved.DateTo ?? saved.DateFrom).Date) ? saved.DateFrom.MakeEndDate() : (saved.DateTo ?? saved.DateFrom);
 
                         var caseSessionMeeting = new CaseSessionMeeting()
                         {
@@ -449,10 +490,10 @@ namespace IOWebApplication.Core.Services
                             Description = "Автоматично създаване",
                             IsAutoCreate = true,
                             IsActive = true,
-                            DateWrt = DateTime.Now,
+                            DateWrt = dateTimeNow,
                             UserId = userContext.UserId
                         };
-                        repo.Add<CaseSessionMeeting>(caseSessionMeeting);
+                        await repo.AddAsync(caseSessionMeeting);
 
                         if (saved.SessionTypeId != NomenclatureConstants.SessionType.ClosedSession)
                         {
@@ -467,12 +508,12 @@ namespace IOWebApplication.Core.Services
                                         CaseId = saved.CaseId,
                                         CaseSessionMeetingId = caseSessionMeeting.Id,
                                         SecretaryUserId = caseLawUnits.FirstOrDefault().LawUnitUserId,
-                                        DateWrt = DateTime.Now,
+                                        DateWrt = dateTimeNow,
                                         UserId = userContext.UserId
                                     };
 
                                     if (caseSessionMeetingUser.SecretaryUserId != null)
-                                        repo.Add<CaseSessionMeetingUser>(caseSessionMeetingUser);
+                                        caseSessionMeeting.CaseSessionMeetingUsers.Add(caseSessionMeetingUser);
                                 }
                             }
                         }
@@ -486,22 +527,92 @@ namespace IOWebApplication.Core.Services
                                 CaseSessionId = saved.Id,
                                 ActTypeId = model.ActTypeId ?? 0,
                                 ActKindId = model.ActKindId,
+                                RelatedActId = model.RelatedActId,
                                 ActStateId = NomenclatureConstants.SessionActState.Project,
                                 ActComplainResultId = model.ActComplainResultId,
                                 IsFinalDoc = model.IsFinalDoc ?? false,
+                                TDActForRegistration = model.TDActForRegistration ?? false,
+                                ActISPNReasonId = model.ActISPNReasonId,
+                                RnflEffectiveImmediately = model.RnflEffectiveImmediately,
                                 IsReadyForPublish = false,
                                 CanAppeal = model.ActCanAppeal,
-                                DateWrt = DateTime.Now,
+                                DateWrt = dateTimeNow,
                                 UserId = userContext.UserId
                             };
 
-                            repo.Add<CaseSessionAct>(caseSessionAct);
-                            repo.SaveChanges();
+                            if (model.HasCorrectedAct)
+                            {
+                                List<int> correctedActs = new();
+                                if (model.CorrectedActsIds != null)
+                                {
+                                    correctedActs = model.CorrectedActsIds.Select(c => int.Parse(c)).ToList();
+                                }
+                                caseSessionAct.ActsToCorrect = correctedActs.Select(c => new CaseSessionActCorrection
+                                {
+                                    CorrectedActId = c
+                                }).ToList();
+                            }
+
+                            await repo.AddAsync<CaseSessionAct>(caseSessionAct);
+                            await repo.SaveChangesAsync();
+
                             model.ActSaveId = caseSessionAct.Id;
 
+                            if ((model.SessionResultId > 0) && (date_session <= date_now))
+                            {
+                                var caseSessionResult = new CaseSessionResult()
+                                {
+                                    CourtId = saved.CourtId,
+                                    CaseId = saved.CaseId,
+                                    CaseSessionId = saved.Id,
+                                    SessionResultId = model.SessionResultId ?? 0,
+                                    SessionResultBaseId = model.SessionResultBaseId,
+                                    Description = model.Description,
+                                    IsActive = true,
+                                    IsMain = model.IsMainResult,
+                                };
+
+                                await repo.AddAsync(caseSessionResult);
+                                AutoChangeCaseStatsFromSessionResult(model.SessionResultId ?? 0, saved.CaseId, null);
+
+                                if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.ReferralInformationalMeetingMediation)
+                                {
+                                    Case @case = await repo.All<Case>()
+                                                           .Where(x => x.Id == saved.CaseId &&
+                                                                       !(x.IsMediation ?? false))
+                                                           .FirstOrDefaultAsync();
+
+                                    if (@case != null)
+                                    {
+                                        @case.IsMediation = true;
+                                        @case.StartMediationDate = DateTime.Now;
+                                        await repo.SaveChangesAsync();
+                                        var resultStart = await caseLifecycleService.StartLifecycleMediation(saved.CaseId);
+                                    }
+                                }
+
+                                if ((NomenclatureConstants.CaseSessionResult.LifecycleStopOne.Contains(model.SessionResultId ?? 0) &&
+                                     model.SessionResultBaseId == NomenclatureConstants.CaseSessionResultBase.AgreementReachedBetweenPartiesAfterMediation) ||
+                                     (NomenclatureConstants.CaseSessionResult.LifecycleStopTwo.Contains(model.SessionResultId ?? 0) &&
+                                     model.SessionResultBaseId == NomenclatureConstants.CaseSessionResultBase.WithdrawalAbandonmentClaimAfterMediationProcedure))
+                                {
+                                    bool resultStop = await caseLifecycleService.StopLifecycleMediation(saved.CaseId);
+                                }
+
+                                if (NomenclatureConstants.CaseSessionResult.ResultsStartNotificationN3.Contains(model.SessionResultId ?? 0))
+                                {
+                                    await repo.SaveChangesAsync();
+
+                                    if (isFastProcess)
+                                        await workNotificationService.SaveNotificationsForN3Result(caseSessionResult.Id);
+                                }
+                            }
+
+                            if (isFastProcess)
+                                await workNotificationService.SaveNotificationsForN3(caseSessionAct.Id);
                         }
 
-                        repo.SaveChanges();
+                        await repo.SaveChangesAsync();
 
                         //Запис на пари за заседатели
                         (bool result, string errorMessage) = moneyService.CalcEarningsJury(saved, userContext.CourtId);
@@ -511,7 +622,7 @@ namespace IOWebApplication.Core.Services
                         }
 
                         caseDeadlineService.DeadLineOnSession(saved);
-                        repo.SaveChanges();
+                        await repo.SaveChangesAsync();
                         mqEpepService.AppendCaseSession(saved, EpepConstants.ServiceMethod.Add);
 
                         completeAllTasks_ForSession(saved.CaseId);
@@ -535,7 +646,7 @@ namespace IOWebApplication.Core.Services
                             courtLawUnitService.CourtDepartmentUnitOrder_ActualizeForCase(model.CaseId);
                         }
 
-                        ts.Complete();
+                        ts.Commit();
                     }
                 }
 
@@ -543,11 +654,14 @@ namespace IOWebApplication.Core.Services
 
                 caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_CC_SaveData(model.CaseId);
 
+                if ((model.SessionResultId > 0) && (saved.DateFrom <= dateTimeNow))
+                    caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(saved.Id);
+
                 return new SaveResultVM(true);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Заседание Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Заседание Id={model.Id}");
                 return new SaveResultVM(false, MessageConstant.Values.SaveFailed);
             }
         }
@@ -570,7 +684,7 @@ namespace IOWebApplication.Core.Services
                 {
                     item.DateCompleted = DateTime.Now;
                     item.TaskStateId = WorkTaskConstants.States.Completed;
-                    repo.Update(item);
+                    //repo.Update(item);
                 }
                 repo.SaveChanges();
             }
@@ -593,6 +707,22 @@ namespace IOWebApplication.Core.Services
         }
 
         /// <summary>
+        /// Изчитане на заседание по ИД
+        /// </summary>
+        /// <param name="caseSessionId"></param>
+        /// <returns></returns>
+        public async Task<CaseSession> CaseSessionByIdAsync(int caseSessionId)
+        {
+            return await repo.AllReadonly<CaseSession>()
+                             .Include(x => x.Case)
+                             .Include(x => x.SessionType)
+                             .Include(x => x.CourtHall)
+                             .Include(x => x.SessionState)
+                             .Where(x => x.Id == caseSessionId)
+                             .FirstOrDefaultAsync();
+        }
+
+        /// <summary>
         /// Изчитане на данни за резултати по заседание
         /// </summary>
         /// <param name="CaseSessionId"></param>
@@ -609,13 +739,74 @@ namespace IOWebApplication.Core.Services
                 {
                     Id = x.Id,
                     CaseSessionId = x.CaseSessionId,
-                    SessionResultLabel = (x.SessionResult != null) ? x.SessionResult.Label : string.Empty,
+                    SessionResultLabel = x.SessionResult.Label,
                     SessionResultId = x.SessionResultId,
-                    SessionResultBaseLabel = (x.SessionResultBase != null) ? x.SessionResultBase.Label : string.Empty,
+                    SessionResultBaseLabel = (x.SessionResultBaseId != null) ? x.SessionResultBase.Label : string.Empty,
                     IsActiveText = x.IsActive ? MessageConstant.Yes : MessageConstant.No,
                     IsMainText = x.IsMain ? MessageConstant.Yes : MessageConstant.No,
                 })
                 .AsQueryable();
+        }
+
+        private void AutoChangeCaseStatsFromSessionResult(int sessionResultId, int caseId, int? caseSessionId)
+        {
+            #region Автоматизиране на статус на дело
+
+            var sessionResultGroupId = GetPropById<SessionResult, int?>(sessionResultId, x => x.SessionResultGroupId);
+
+
+            switch (sessionResultGroupId)
+            {
+                //   // Спиране на дело
+                case NomenclatureConstants.CaseSessionResultGroups.Stop:
+                    {
+                        var caseCase = repo.GetById<Case>(caseId);
+                        caseCase.CaseStateId = NomenclatureConstants.CaseState.Stop;
+                        caseCase.DateWrt = DateTime.Now;
+                        caseCase.UserId = userContext.UserId;
+                    }
+                    break;
+                // Прекратяване на дело
+                case NomenclatureConstants.CaseSessionResultGroups.Suspended:
+                    {
+                        var caseCase = repo.GetById<Case>(caseId);
+                        caseCase.CaseStateId = NomenclatureConstants.CaseState.Suspend;
+                        caseCase.DateWrt = DateTime.Now;
+                        caseCase.UserId = userContext.UserId;
+                    }
+                    break;
+            }
+
+
+
+
+            if (sessionResultId == NomenclatureConstants.CaseSessionResult.AnnouncedForResolution)
+            {
+                if (caseSessionId != null)
+                {
+                    if (!repo.AllReadonly<CaseSessionAct>()
+                             .Any(x => x.DateExpired == null &&
+                                       x.CaseSessionId == caseSessionId &&
+                                       x.ActDeclaredDate != null))
+                    {
+                        var caseCase = repo.GetById<Case>(caseId);
+                        caseCase.CaseStateId = NomenclatureConstants.CaseState.AnnouncedForResolution;
+                        caseCase.DateWrt = DateTime.Now;
+                        caseCase.UserId = userContext.UserId;
+                        //repo.Update(caseCase);
+                    }
+                }
+                else
+                {
+                    var caseCase = repo.GetById<Case>(caseId);
+                    caseCase.CaseStateId = NomenclatureConstants.CaseState.AnnouncedForResolution;
+                    caseCase.DateWrt = DateTime.Now;
+                    caseCase.UserId = userContext.UserId;
+                    //repo.Update(caseCase);
+                }
+            }
+
+            #endregion
         }
 
         /// <summary>
@@ -623,14 +814,15 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CaseSessionResult_SaveData(CaseSessionResultEditVM model)
+        public async Task<bool> CaseSessionResult_SaveData(CaseSessionResultEditVM model)
         {
             try
             {
                 model.SessionResultBaseId = model.SessionResultBaseId.EmptyToNull();
-                var caseSession = repo.GetById<CaseSession>(model.CaseSessionId);
+                var caseSession = await repo.GetByIdAsync<CaseSession>(model.CaseSessionId);
+                bool isFastProcess = await repo.GetPropByIdAsync<Case, bool>(x => x.Id == caseSession.CaseId, x => x.IsFastProcess ?? false);
 
-                var saved = (model.Id > 0) ? repo.GetById<CaseSessionResult>(model.Id) :
+                var saved = (model.Id > 0) ? await repo.GetByIdAsync<CaseSessionResult>(model.Id) :
                                              new CaseSessionResult()
                                              {
                                                  CourtId = model.CourtId,
@@ -651,9 +843,9 @@ namespace IOWebApplication.Core.Services
                     saved.Description = model.Description;
                     saved.IsActive = model.IsActive;
                     saved.IsMain = model.IsMain;
-                    repo.Update(saved);
+                    //repo.Update(saved);
                     caseDeadlineService.DeadLineOnSessionResult(saved);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();
                     if (mqEpepService.ISPN_IsISPN(null, model.CaseId ?? 0))
                     {
                         mqEpepService.ISPN_CaseSessionResult(saved.Id, ServiceMethod.Add, saved.CaseId);
@@ -664,54 +856,14 @@ namespace IOWebApplication.Core.Services
                 else
                 {
                     // Това да се провери после
-                    repo.Add<CaseSessionResult>(saved);
+                    await repo.AddAsync(saved);
 
-                    #region Автоматизиране на статус на дело
+                    AutoChangeCaseStatsFromSessionResult(model.SessionResultId, model.CaseId ?? 0, model.CaseSessionId);
 
-                    var sessionResult = repo.GetById<SessionResult>(model.SessionResultId);
-
-                    // Спиране на дело
-                    if (sessionResult.SessionResultGroupId == NomenclatureConstants.CaseSessionResultGroups.Stop)
-                    {
-                        var caseCase = repo.GetById<Case>(model.CaseId);
-                        caseCase.CaseStateId = NomenclatureConstants.CaseState.Stop;
-                        caseCase.DateWrt = DateTime.Now;
-                        caseCase.UserId = userContext.UserId;
-                        repo.Update(caseCase);
-                    }
-
-                    // Прекратяване на дело
-                    if (sessionResult.SessionResultGroupId == NomenclatureConstants.CaseSessionResultGroups.Suspended)
-                    {
-                        var caseCase = repo.GetById<Case>(model.CaseId);
-                        caseCase.CaseStateId = NomenclatureConstants.CaseState.Suspend;
-                        caseCase.DateWrt = DateTime.Now;
-                        caseCase.UserId = userContext.UserId;
-                        repo.Update(caseCase);
-                    }
-
-                    // Обявено за решаване
-                    if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.AnnouncedForResolution)
-                    {
-                        if (!repo.AllReadonly<CaseSessionAct>()
-                                 .Any(x => x.DateExpired == null &&
-                                           x.CaseSessionId == model.CaseSessionId &&
-                                           x.ActDeclaredDate != null))
-                        {
-                            var caseCase = repo.GetById<Case>(model.CaseId);
-                            caseCase.CaseStateId = NomenclatureConstants.CaseState.AnnouncedForResolution;
-                            caseCase.DateWrt = DateTime.Now;
-                            caseCase.UserId = userContext.UserId;
-                            repo.Update(caseCase);
-                        }
-                    }
-
-                    #endregion
-
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();
                     model.Id = saved.Id;
                     caseDeadlineService.DeadLineOnSessionResult(saved);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();
                     if (mqEpepService.ISPN_IsISPN(null, model.CaseId ?? 0))
                     {
                         mqEpepService.ISPN_CaseSessionResult(model.Id, ServiceMethod.Add, model.CaseId);
@@ -719,16 +871,45 @@ namespace IOWebApplication.Core.Services
                     mqEpepService.AppendCaseSession(caseSession, ServiceMethod.Update);
                 }
 
-                if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSession)
+                if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSession ||
+                    model.SessionResultId == NomenclatureConstants.CaseSessionResult.ScheduledFirstSessionWithoutDocuments)
                     caseLifecycleService.CaseLifecycle_SaveFirst_ForCaseType(model.CaseSessionId);
 
+                if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.ReferralInformationalMeetingMediation)
+                {
+                    Case @case = await repo.All<Case>()
+                                           .Where(x => x.Id == model.CaseId &&
+                                                       !(x.IsMediation ?? false))
+                                           .FirstOrDefaultAsync();
+
+                    if (@case != null)
+                    {
+                        @case.IsMediation = true;
+                        @case.StartMediationDate = DateTime.Now;
+                        await repo.SaveChangesAsync();
+                        await caseLifecycleService.StartLifecycleMediation(model.CaseId ?? 0);
+                    }
+                }
+
+                if ((NomenclatureConstants.CaseSessionResult.LifecycleStopOne.Contains(model.SessionResultId) &&
+                     model.SessionResultBaseId == NomenclatureConstants.CaseSessionResultBase.AgreementReachedBetweenPartiesAfterMediation) ||
+                     (NomenclatureConstants.CaseSessionResult.LifecycleStopTwo.Contains(model.SessionResultId) &&
+                     model.SessionResultBaseId == NomenclatureConstants.CaseSessionResultBase.WithdrawalAbandonmentClaimAfterMediationProcedure))
+                    await caseLifecycleService.StopLifecycleMediation(model.CaseId ?? 0);
+
                 caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(model.CaseSessionId);
+
+                if (isFastProcess)
+                    await workNotificationService.SaveNotificationsForDecreeRecusalSelfRecusalFastProcessBySessionResultId(model.Id);
+
+                if (model.SessionResultId == NomenclatureConstants.CaseSessionResult.ByActOnProgressCaseWithoutNotifyingParties && isFastProcess)
+                    await workNotificationService.SaveNotificationsForN3Result(model.Id);
 
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на резултат за заседание Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на резултат за заседание Id={model.Id}");
                 return false;
             }
         }
@@ -738,36 +919,65 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public CaseSessionVM CaseSessionVMById(int caseSessionId)
+        public async Task<CaseSessionVM> CaseSessionVMById(int caseSessionId)
         {
-            return repo.AllReadonly<CaseSession>()
-                .Include(x => x.Case)
-                .Include(x => x.SessionType)
-                .Include(x => x.CourtHall)
-                .Include(x => x.SessionState)
-                .Where(x => x.Id == caseSessionId)
-                .Select(x => new CaseSessionVM()
-                {
-                    Id = x.Id,
-                    DateWrt = x.DateWrt,
-                    CourtId = x.CourtId,
-                    CaseId = x.CaseId,
-                    CaseName = x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"),
-                    SessionTypeLabel = (x.SessionType != null) ? x.SessionType.Label : string.Empty,
-                    CourtHallName = (x.CourtHall != null) ? x.CourtHall.Name : string.Empty,
-                    SessionStateLabel = x.SessionState.Label,
-                    DateFrom = x.DateFrom,
-                    DateTo = x.DateTo,
-                    Description = x.Description,
-                    CourtHallId = x.CourtHallId,
-                    SessionStateId = x.SessionStateId,
-                    SessionTypeId = x.SessionTypeId,
-                    IsExpired = x.DateExpired != null,
-                    DateTo_Minutes = Convert.ToInt32(((TimeSpan)(x.DateTo ?? x.DateFrom).Subtract(x.DateFrom)).TotalMinutes),
-                    CaseTypeId = x.Case.CaseTypeId,
-                    VksLawunitChange = x.CaseLawunitChange ?? NomenclatureConstants.VksSessionLawunitChange.NoChange
-                })
-                .FirstOrDefault();
+            return await repo.AllReadonly<CaseSession>()
+                             .Where(x => x.Id == caseSessionId)
+                             .Select(x => new CaseSessionVM()
+                             {
+                                 Id = x.Id,
+                                 DateWrt = x.DateWrt,
+                                 CourtId = x.CourtId,
+                                 CaseId = x.CaseId,
+                                 CaseName = x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"),
+                                 SessionTypeLabel = x.SessionType.Label,
+                                 CourtHallName = (x.CourtHallId > 0) ? x.CourtHall.Name : string.Empty,
+                                 SessionStateLabel = x.SessionState.Label,
+                                 DateFrom = x.DateFrom,
+                                 DateTo = x.DateTo,
+                                 Description = x.Description,
+                                 CourtHallId = x.CourtHallId,
+                                 SessionStateId = x.SessionStateId,
+                                 SessionTypeId = x.SessionTypeId,
+                                 VideoUrl = x.VideoUrl,
+                                 IsExpired = x.DateExpired != null,
+                                 CaseTypeId = x.Case.CaseTypeId,
+                                 VksLawunitChange = x.CaseLawunitChange ?? NomenclatureConstants.VksSessionLawunitChange.NoChange
+                             })
+                             .FirstOrDefaultAsync();
+        }
+
+        /// <summary>
+        /// Изчитане на данни по заседание
+        /// </summary>
+        /// <param name="caseSessionId"></param>
+        /// <returns></returns>
+        public async Task<CaseSessionVM> CaseSessionVMByIdAsync(int caseSessionId)
+        {
+            return await repo.AllReadonly<CaseSession>()
+                             .Where(x => x.Id == caseSessionId)
+                             .Select(x => new CaseSessionVM()
+                             {
+                                 Id = x.Id,
+                                 DateWrt = x.DateWrt,
+                                 CourtId = x.CourtId,
+                                 CaseId = x.CaseId,
+                                 CaseName = x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"),
+                                 SessionTypeLabel = x.SessionType.Label,
+                                 CourtHallName = (x.CourtHallId != null) ? x.CourtHall.Name : string.Empty,
+                                 SessionStateLabel = x.SessionState.Label,
+                                 DateFrom = x.DateFrom,
+                                 DateTo = x.DateTo,
+                                 Description = x.Description,
+                                 CourtHallId = x.CourtHallId,
+                                 SessionStateId = x.SessionStateId,
+                                 SessionTypeId = x.SessionTypeId,
+                                 VideoUrl = x.VideoUrl,
+                                 IsExpired = x.DateExpired != null,
+                                 CaseTypeId = x.Case.CaseTypeId,
+                                 VksLawunitChange = x.CaseLawunitChange ?? NomenclatureConstants.VksSessionLawunitChange.NoChange
+                             })
+                             .FirstOrDefaultAsync();
         }
 
         /// <summary>
@@ -775,7 +985,7 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CaseSession_CopyData(CaseSessionVM model)
+        public async Task<bool> CaseSession_CopyData(CaseSessionVM model)
         {
             try
             {
@@ -791,15 +1001,40 @@ namespace IOWebApplication.Core.Services
                 model.DateTo = model.DateFrom.AddMinutes(model.DateTo_Minutes);
                 model.CourtHallId = saved.CourtHallId;
 
-                var result = CaseSession_SaveData(model);
+                var result = await CaseSession_SaveData(model);
 
                 return result.Result;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при копиране на Заседание Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при копиране на Заседание Id={model.Id}");
                 return false;
             }
+        }
+
+        public async Task<SaveResultVM> CaseSession_MnogoZasedania(int caseId, int courtId)
+        {
+            for (int months = 4; months < 12; months++)
+            {
+                for (int days = 1; days < 28; days++)
+                {
+                    for (int hour = 8; hour < 18; hour++)
+                    {
+                        var model = new CaseSessionVM
+                        {
+                            CaseId = caseId,
+                            CourtId = courtId,
+                            SessionTypeId = NomenclatureConstants.SessionType.OpenSession,
+                            DateFrom = new DateTime(2024, months, days, hour, 0, 0),
+                            SessionStateId = NomenclatureConstants.SessionState.Nasrocheno,
+                            DateTo_Minutes = 30
+                        };
+                        await CaseSession_SaveData(model);
+                    }
+                    repo.RefreshDbContext(applicationDbConnectionString);
+                }
+            }
+            return new SaveResultVM(true);
         }
 
         /// <summary>
@@ -808,57 +1043,62 @@ namespace IOWebApplication.Core.Services
         /// <param name="CourtId"></param>
         /// <param name="CourtHallId"></param>
         /// <param name="DateFrom"></param>
-        /// <param name="DateТо"></param>
+        /// <param name="DateTo"></param>
+        /// <param name="JudgeReporterId"></param>
         /// <returns></returns>
-        public IQueryable<CaseSessionHallUseVM> CaseSessionHallUse_Select(int CourtId, int? CourtHallId, DateTime? DateFrom, DateTime? DateТо, int? JudgeReporterId)
+        public IQueryable<CaseSessionHallUseVM> CaseSessionHallUse_Select(int CourtId, int? CourtHallId, DateTime? DateFrom, DateTime? DateTo, int? JudgeReporterId)
         {
             CourtHallId = CourtHallId.EmptyToNull();
             JudgeReporterId = JudgeReporterId.NumberEmptyToNull();
             var dateAddYear = DateTime.Now.AddYears(100);
 
-            var caseSessionHallUseVMs = repo.AllReadonly<CaseSessionMeeting>()
-                                            //.Include(x => x.CourtHall)
-                                            //.Include(x => x.SessionMeetingType)
-                                            //.Include(x => x.Case)
-                                            //.Include(x => x.CaseSession)
-                                            //.ThenInclude(x => x.SessionType)
-                                            //.Include(x => x.CaseSession)
-                                            //.ThenInclude(x => x.SessionState)
-                                            .Where(x => (x.Case.CourtId == CourtId) &&
-                                                        (x.CaseSession.SessionStateId != NomenclatureConstants.SessionState.Prenasrocheno && x.CaseSession.SessionStateId != NomenclatureConstants.SessionState.Cancel) &&
-                                                        (x.DateExpired == null) &&
-                                                        (x.CaseSession.DateExpired == null) &&
-                                                        (x.DateFrom >= (DateFrom ?? DateTime.Now)) &&
-                                                        (x.DateFrom <= (DateТо ?? DateTime.Now.AddDays(30))) &&
-                                                        ((CourtHallId != null) ? (x.CourtHallId == CourtHallId) : (x.CourtHallId != null)) &&
-                                                        ((JudgeReporterId != null) ? x.CaseSession.CaseLawUnits.Where(a => (a.DateTo ?? dateAddYear).Date >= x.CaseSession.DateFrom && a.LawUnitId == JudgeReporterId &&
-                                                                                                                           a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any() : true))
-                                            .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
-                                            .OrderBy(x => x.CourtHall)
-                                            .ThenBy(x => x.Id)
-                                            .ThenBy(x => x.DateFrom)
-                                            .Select(x => new CaseSessionHallUseVM()
-                                            {
-                                                Id = x.Id,
-                                                CaseId = x.CaseId ?? 0,
-                                                CaseSessionId = x.CaseSessionId,
-                                                SessionLabel = x.SessionMeetingType.Label +
-                                                               " " + x.CaseSession.SessionType.Label + " " + x.DateFrom.ToString("dd.MM.yyyy"),
-                                                CaseName = x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"),
-                                                CourtHallName = (x.CourtHall != null) ? x.CourtHall.Name : string.Empty,
-                                                DateFrom = x.DateFrom,
-                                                DateTo = x.DateTo,
-                                                CourtHallId = x.CourtHallId,
-                                                SessionTypeLabel = x.CaseSession.SessionType.Label,
-                                                CourtHallLocation = (x.CourtHall != null) ? x.CourtHall.Location : string.Empty,
-                                                JudgeReport = x.CaseSession.CaseLawUnits.Where(l => l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter &&
-                                                                               (l.DateTo ?? DateTime.Now.AddYears(100)) >= x.CaseSession.DateFrom)
-                                                                   .Select(l => l.LawUnit.FullName + ((l.CourtDepartment != null) ? " състав: " + l.CourtDepartment.Label : string.Empty))
-                                                                   .FirstOrDefault()
-                                            })
-                                            .ToList();
+            Expression<Func<CaseSessionMeeting, bool>> courtHallIdWhere = x => x.CourtHallId != null;
+            if (CourtHallId != null)
+                courtHallIdWhere = x => x.CourtHallId == CourtHallId;
 
-            return caseSessionHallUseVMs.AsQueryable();
+            Expression<Func<CaseSessionMeeting, bool>> judgeReporterIdWhere = x => true;
+            if (JudgeReporterId != null)
+                judgeReporterIdWhere = x => x.CaseSession.CaseLawUnits.Where(a => (a.DateTo ?? dateAddYear).Date >= x.CaseSession.DateFrom && a.LawUnitId == JudgeReporterId &&
+                                                                                   a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any();
+
+            DateFrom = DateFrom ?? DateTime.Now;
+            DateTo = DateTo ?? DateTime.Now.AddDays(30);
+
+            return repo.AllReadonly<CaseSessionMeeting>()
+                       .Where(x => (x.Case.CourtId == CourtId) &&
+                                   (x.CaseSession.SessionStateId != NomenclatureConstants.SessionState.Prenasrocheno && x.CaseSession.SessionStateId != NomenclatureConstants.SessionState.Cancel) &&
+                                   (x.DateExpired == null) &&
+                                   (x.CaseSession.DateExpired == null) &&
+                                   (x.DateFrom >= DateFrom) &&
+                                   (x.DateFrom <= DateTo))
+                       .Where(courtHallIdWhere)
+                       .Where(judgeReporterIdWhere)
+                       .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
+                       .OrderBy(x => x.CourtHall)
+                       .ThenBy(x => x.Id)
+                       .ThenBy(x => x.DateFrom)
+                       .Select(x => new CaseSessionHallUseVM()
+                       {
+                           Id = x.Id,
+                           CaseId = x.CaseId ?? 0,
+                           CaseSessionId = x.CaseSessionId,
+                           SessionLabel = x.SessionMeetingType.Label +
+                                          " " + x.CaseSession.SessionType.Label + " " + x.CaseSession.DateFrom.ToString("dd.MM.yyyy"),
+                           SessionDate = x.CaseSession.DateFrom,
+                           CaseName = x.Case.CaseType.Code + " " + x.Case.ShortNumber + "/" + x.Case.RegDate.ToString("yyyy"),
+                           CaseDate = x.Case.RegDate,
+                           CourtHallName = (x.CourtHallId != null) ? x.CourtHall.Name : string.Empty,
+                           DateFrom = x.DateFrom,
+                           DateTo = x.DateTo,
+                           CourtHallId = x.CourtHallId,
+                           SessionTypeLabel = x.CaseSession.SessionType.Label,
+                           CourtHallLocation = (x.CourtHallId != null) ? x.CourtHall.Location : string.Empty,
+                           JudgeReport = x.CaseSession.CaseLawUnits.Where(l => l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter &&
+                                                          (l.DateTo ?? DateTime.Now.AddYears(100)) >= x.CaseSession.DateFrom)
+                                              .Select(l => l.LawUnit.FullName + ((l.CourtDepartmentId != null) ? " състав: " + l.CourtDepartment.Label : string.Empty))
+                                              .FirstOrDefault()
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -884,10 +1124,10 @@ namespace IOWebApplication.Core.Services
                        .AsQueryable();
         }
 
-        public bool IsExistCaseSessionResult(int CaseSessionId)
+        public async Task<bool> IsExistCaseSessionResult(int CaseSessionId)
         {
-            return repo.AllReadonly<CaseSessionResult>()
-                       .Any(x => x.CaseSessionId == CaseSessionId && x.DateExpired == null);
+            return await repo.AllReadonly<CaseSessionResult>()
+                             .AnyAsync(x => x.CaseSessionId == CaseSessionId && x.DateExpired == null);
         }
 
         /// <summary>
@@ -897,7 +1137,7 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public List<SelectListItem> CaseSessionResultStringList_SelectByCaseId(int CaseId)
         {
-            var caseSessionResults = CaseSessionResult_SelectByCaseId(CaseId);
+            var caseSessionResults = CaseSessionResult_SelectByCaseId(CaseId).ToList();
             List<SelectListItem> selectListItems = new List<SelectListItem>();
 
             foreach (var caseSessionResult in caseSessionResults)
@@ -908,13 +1148,13 @@ namespace IOWebApplication.Core.Services
                 {
                     SelectListItem item = new SelectListItem()
                     {
-                        Text = caseSessionResult.SessionResultLabel + ((caseSessionResult.SessionResultBaseLabel != string.Empty) ? " - " + caseSessionResult.SessionResultBaseLabel : string.Empty) + ";",
+                        Text = caseSessionResult.SessionResultLabel + ((!string.IsNullOrEmpty(caseSessionResult.SessionResultBaseLabel)) ? " - " + caseSessionResult.SessionResultBaseLabel : string.Empty) + ";",
                         Value = caseSessionResult.CaseSessionId.ToString()
                     };
                     selectListItems.Add(item);
                 }
                 else
-                    selectListItem.Text += caseSessionResult.SessionResultLabel + ((caseSessionResult.SessionResultBaseLabel != string.Empty) ? " - " + caseSessionResult.SessionResultBaseLabel : string.Empty) + ";";
+                    selectListItem.Text += caseSessionResult.SessionResultLabel + ((!string.IsNullOrEmpty(caseSessionResult.SessionResultBaseLabel)) ? " - " + caseSessionResult.SessionResultBaseLabel : string.Empty) + ";";
             }
 
             return selectListItems;
@@ -928,15 +1168,15 @@ namespace IOWebApplication.Core.Services
         /// <param name="DateTo_Minutes"></param>
         /// <param name="ModelId"></param>
         /// <returns></returns>
-        public bool CourtHallBusy(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int ModelId)
+        public async Task<bool> CourtHallBusy(int CourtHallId, DateTime DateFrom, int DateTo_Minutes, int ModelId)
         {
             DateTime DateTo = DateFrom.AddMinutes(DateTo_Minutes);
-            return repo.AllReadonly<CaseSession>()
-                       .Any(x => (x.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
-                                 (x.CourtHallId == CourtHallId) &&
-                                 ((ModelId > 0) ? x.Id != ModelId : true) &&
-                                 (x.DateExpired == null) &&
-                                 ((DateTo >= x.DateFrom) && (DateFrom <= x.DateTo)));
+            return await repo.AllReadonly<CaseSession>()
+                             .AnyAsync(x => (x.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
+                                       (x.CourtHallId == CourtHallId) &&
+                                       ((ModelId > 0) ? x.Id != ModelId : true) &&
+                                       (x.DateExpired == null) &&
+                                       ((DateTo >= x.DateFrom) && (DateFrom <= x.DateTo)));
         }
 
         /// <summary>
@@ -946,13 +1186,11 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseSessionVM> CaseSessionSpr_Select(CaseSessionFilterVM model)
         {
-            DateTime dateFromSearch = model.DateFrom == null ? DateTime.Now.AddYears(-100) : (DateTime)model.DateFrom;
-            DateTime dateToSearch = model.DateTo == null ? DateTime.Now.AddYears(100) : (DateTime)model.DateTo;
+            DateTime? dateFromSearch = model.DateFrom ?? DateTime.Now.AddYears(-100).ForceStartDate();
+            DateTime? dateToSearch = model.DateTo ?? DateTime.Now.AddYears(100).ForceEndDate();
             DateTime dateEnd = DateTime.Now.AddYears(100);
 
-            Expression<Func<CaseSession, bool>> dateSearch = x => true;
-            if (model.DateFrom != null || model.DateTo != null)
-                dateSearch = x => x.DateFrom >= dateFromSearch && x.DateFrom <= dateToSearch;
+            Expression<Func<CaseSession, bool>> dateSearch = x => x.DateFrom >= dateFromSearch && x.DateFrom <= dateToSearch;
 
             Expression<Func<CaseSession, bool>> yearWhere = x => true;
             if ((model.Year ?? 0) > 0)
@@ -1010,7 +1248,7 @@ namespace IOWebApplication.Core.Services
                 var listSessionResultIds = new List<int>();
                 if (!string.IsNullOrEmpty(model.SessionResultIds_text))
                     listSessionResultIds = model.SessionResultIds_text.Split(',').Select(Int32.Parse).ToList();
-                caseTypeWhere = x => x.CaseSessionResults.Any(res => listSessionResultIds.Contains(res.SessionResultId) && res.DateExpired == null);
+                caseSessionResultWhere = x => x.CaseSessionResults.Any(res => listSessionResultIds.Contains(res.SessionResultId) && res.DateExpired == null);
             }
 
             Expression<Func<CaseSession, bool>> sessionStateWhere = x => true;
@@ -1035,15 +1273,6 @@ namespace IOWebApplication.Core.Services
                 courtDepartmentOtdelenie = x => x.Case.OtdelenieId == model.CourtDepartmentOtdelenieId;
 
             return repo.AllReadonly<CaseSession>()
-                       .Include(x => x.CaseLawUnits)
-                       .ThenInclude(x => x.LawUnit)
-                       .Include(x => x.CaseLawUnits)
-                       .ThenInclude(x => x.CourtDepartment)
-                       .Include(x => x.Case)
-                       .Include(x => x.SessionType)
-                       .Include(x => x.CourtHall)
-                       .Include(x => x.SessionState)
-                       .Include(x => x.CaseSessionResults)
                        .Where(x => x.Case.CourtId == userContext.CourtId)
                        .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
                        .Where(x => x.DateExpired == null)
@@ -1066,9 +1295,10 @@ namespace IOWebApplication.Core.Services
                            CourtId = x.CourtId,
                            CaseId = x.CaseId,
                            CaseName = x.Case.RegNumber,
+                           CaseNameText = x.Case.CaseType.Code + " " + x.Case.ShortNumber + "/" + x.Case.RegDate.ToString("yyyy"),
                            CaseTypeLabel = x.Case.CaseType.Code,
-                           SessionTypeLabel = (x.SessionType != null) ? x.SessionType.Label : string.Empty,
-                           CourtHallName = (x.CourtHall != null) ? x.CourtHall.Name : string.Empty,
+                           SessionTypeLabel = x.SessionType.Label,
+                           CourtHallName = (x.CourtHallId != null) ? x.CourtHall.Name : string.Empty,
                            SessionStateLabel = x.SessionState.Label,
                            DateFrom = x.DateFrom,
                            DateFromTime = x.DateFrom,
@@ -1079,13 +1309,64 @@ namespace IOWebApplication.Core.Services
                            CourtHallId = x.CourtHallId,
                            SessionStateId = x.SessionStateId,
                            SessionTypeId = x.SessionTypeId,
-                           DateTo_Minutes = Convert.ToInt32(((TimeSpan)(x.DateTo ?? x.DateFrom).Subtract(x.DateFrom)).TotalMinutes),
+                           //DateTo_Minutes = Convert.ToInt32(((TimeSpan)(x.DateTo ?? x.DateFrom).Subtract(x.DateFrom)).TotalMinutes),
+                           SessionResultIds = x.CaseSessionResults.Where(r => r.DateExpired == null).Select(r => r.SessionResult.Label).FirstOrDefault(),
                            SessionResultLabel = string.Join(",", x.CaseSessionResults.Where(r => r.DateExpired == null).Select(r => r.SessionResult.Label + (r.SessionResultBaseId != null ? " - " + r.SessionResultBase.Label : string.Empty))),
                            JudgeReporterLabel = x.CaseLawUnits.Where(a => (a.DateTo ?? dateEnd) >= x.DateFrom && a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Select(a => a.LawUnit.FullName).FirstOrDefault(),
-                           JudgeCompositionLabel = string.Join(", ", x.CaseLawUnits.Where(a => (a.DateTo ?? dateEnd) >= x.DateFrom && (a.JudgeRoleId == NomenclatureConstants.JudgeRole.Judge || a.JudgeRoleId == NomenclatureConstants.JudgeRole.ExtJudge)).Select(a => a.LawUnit.FullName + (a.CourtDepartment != null ? " (" + a.CourtDepartment.Label + ")" : string.Empty))),
-                           DepartmentOtdelenieText = (x.Case.Otdelenie != null ? x.Case.Otdelenie.Label : string.Empty) + (x.Case.JudicalComposition != null ? (x.Case.Otdelenie != null ? " / " + x.Case.JudicalComposition.Label : x.Case.JudicalComposition.Label) : string.Empty)
+                           JudgeCompositionLabel = string.Join(", ", x.CaseLawUnits.Where(a => (a.DateTo ?? dateEnd) >= x.DateFrom && (a.JudgeRoleId == NomenclatureConstants.JudgeRole.Judge || a.JudgeRoleId == NomenclatureConstants.JudgeRole.ExtJudge)).Select(a => a.LawUnit.FullName + (a.CourtDepartmentId != null ? " (" + a.CourtDepartment.Label + ")" : string.Empty))),
+                           DepartmentOtdelenieText = (x.Case.OtdelenieId != null && x.Case.Otdelenie.DepartmentTypeId != NomenclatureConstants.DepartmentType.Napravlenie ? x.Case.Otdelenie.Label : string.Empty) +
+                                                     (x.Case.JudicalCompositionId != null ? (x.Case.OtdelenieId != null && x.Case.Otdelenie.DepartmentTypeId != NomenclatureConstants.DepartmentType.Napravlenie ? " / " + x.Case.JudicalComposition.Label : x.Case.JudicalComposition.Label) : string.Empty)
                        })
                        .AsQueryable();
+        }
+
+        public IEnumerable<CalendarVM> CaseSessionSprCalendar_Select(CaseSessionFilterVM model)
+        {
+            List<CalendarVM> result = new List<CalendarVM>();
+
+            var sessions = CaseSessionSpr_Select(model).Select(x => new CalendarVM()
+            {
+                id = x.Id,
+                title = x.SessionTypeLabel,
+                start = x.DateFrom,
+                end = x.DateTo,
+                color = "#00c0ef",
+                pop_content = x.CaseNameText,
+                pop_title = "Дело",
+                SourceId = x.Id
+            }).ToList();
+
+            foreach (var item in sessions)
+            {
+                item.url = urlHelper.Action("Preview", "CaseSession", new { id = item.SourceId });
+            }
+            result.AddRange(sessions);
+
+            var holidays = repo.AllReadonly<WorkingDay>()
+                               .Where(x => x.DayTypeId == CommonContants.WorkingDays.NotWorkDay)
+                               .Where(x => x.Day >= model.DateFrom && x.Day <= model.DateTo)
+                               .Where(x => (x.CourtId ?? userContext.CourtId) == userContext.CourtId)
+                               .Select(x => new CalendarVM
+                               {
+                                   id = x.Id,
+                                   //title = "Почивен ден",
+                                   title = x.Description ?? "Почивен ден",
+                                   start = x.Day,
+                                   allDay = false,
+                                   color = "#F5A9A9",
+                                   pop_title = x.Description,
+                                   url = "#hide"
+                               }).ToList();
+
+            foreach (var day in holidays)
+            {
+                day.end = day.start.MakeEndDate();
+
+            }
+
+            result.AddRange(holidays);
+
+            return result;
         }
 
         /// <summary>
@@ -1094,7 +1375,7 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseSessionTimeBook"></param>
         private void FillLeftRightSide(CaseSessionTimeBookVM caseSessionTimeBook)
         {
-            var casePersonLists = casePersonService.CasePerson_Select(caseSessionTimeBook.CaseId, caseSessionTimeBook.Id, false, false, false).ToList();
+            var casePersonLists = casePersonService.CasePersonFast_SelectForCasePreview(caseSessionTimeBook.CaseId, caseSessionTimeBook.Id).ToList();
             caseSessionTimeBook.LeftSide = string.Join("; ", casePersonLists.Where(x => x.RoleKindId == NomenclatureConstants.PersonKinds.LeftSide).OrderBy(x => x.FullName).Select(x => x.FullName));
             caseSessionTimeBook.RightSide = string.Join("; ", casePersonLists.Where(x => x.RoleKindId == NomenclatureConstants.PersonKinds.RightSide).OrderBy(x => x.FullName).Select(x => x.FullName));
             caseSessionTimeBook.Prosecutor = string.Join("; ", casePersonLists.Where(x => x.PersonRoleId == NomenclatureConstants.PersonRole.Prokuror).OrderBy(x => x.FullName).Select(x => x.FullName));
@@ -1155,7 +1436,7 @@ namespace IOWebApplication.Core.Services
         /// <param name="caseSessionTimeBook"></param>
         private void FillResultAndAct(CaseSessionTimeBookVM caseSessionTimeBook)
         {
-            var caseSessionResults = CaseSessionResult_Select(caseSessionTimeBook.Id);
+            var caseSessionResults = CaseSessionResult_Select(caseSessionTimeBook.Id).ToList();
             var caseSessionActs = repo.AllReadonly<CaseSessionAct>()
                                       .Include(x => x.ActType)
                                       .Include(x => x.ActState)
@@ -1164,7 +1445,7 @@ namespace IOWebApplication.Core.Services
 
             foreach (var caseSessionResult in caseSessionResults)
             {
-                caseSessionTimeBook.ResultAndAct += caseSessionResult.SessionResultLabel + ((caseSessionResult.SessionResultBaseLabel != string.Empty) ? " - " + caseSessionResult.SessionResultBaseLabel + "; " : "; ");
+                caseSessionTimeBook.ResultAndAct += caseSessionResult.SessionResultLabel + ((!string.IsNullOrEmpty(caseSessionResult.SessionResultBaseLabel)) ? " - " + caseSessionResult.SessionResultBaseLabel + "; " : "; ");
             }
 
             foreach (var caseSessionAct in caseSessionActs)
@@ -1313,7 +1594,8 @@ namespace IOWebApplication.Core.Services
                                    .Where(x => (x.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno) &&
                                                ((ModelId > 0) ? x.Id != ModelId : true) &&
                                                (x.DateExpired == null) &&
-                                               ((DateTo >= x.DateFrom) && (DateFrom <= x.DateTo)));
+                                               ((DateTo >= x.DateFrom) && (DateFrom <= x.DateTo)))
+                                   .ToList();
 
             foreach (var caseSession in caseSessions)
             {
@@ -1357,71 +1639,88 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public IQueryable<CaseSessionSprVM> CaseSessionReportMaturity_Select(int courtId, CaseFilterReport model)
         {
-            List<CaseSessionSprVM> result = new List<CaseSessionSprVM>();
+            model.DateFrom = NomenclatureExtensions.ForceStartDate(model.DateFrom ?? DateTime.Now.AddYears(-100));
+            model.DateTo = NomenclatureExtensions.ForceEndDate(model.DateTo ?? DateTime.Now.AddYears(100));
 
-            model.DateFrom = NomenclatureExtensions.ForceStartDate(model.DateFrom);
-            model.DateTo = NomenclatureExtensions.ForceEndDate(model.DateTo);
+            Expression<Func<CaseSession, bool>> caseGroupIdWhere = x => true;
+            if (model.CaseGroupId > 0)
+                caseGroupIdWhere = x => x.Case.CaseGroupId == model.CaseGroupId;
 
-            var casesSessions = repo.AllReadonly<CaseSession>()
-                                    .Include(x => x.SessionType)
-                                    .Include(x => x.CasePersons)
-                                    .ThenInclude(x => x.PersonMaturity)
-                                    .Include(x => x.CasePersons)
-                                    .ThenInclude(x => x.PersonRole)
-                                    .Include(x => x.CaseLawUnits)
-                                    .ThenInclude(x => x.LawUnit)
-                                    .Include(x => x.CaseLawUnits)
-                                    .ThenInclude(x => x.JudgeRole)
-                                    .Include(x => x.CaseLawUnits)
-                                    .ThenInclude(x => x.CourtDepartment)
-                                    .Include(x => x.Case)
-                                    .ThenInclude(x => x.CaseGroup)
-                                    .Include(x => x.Case)
-                                    .ThenInclude(x => x.CaseType)
-                                    .Include(x => x.Case)
-                                    .ThenInclude(x => x.CaseCode)
-                                    .Include(x => x.CaseSessionResults)
-                                    .ThenInclude(x => x.SessionResult)
-                                    .Where(x => (x.CourtId == courtId) && x.DateExpired == null &&
-                                                ((x.DateFrom >= model.DateFrom) && (x.DateFrom <= (model.DateTo ?? DateTime.Now.AddYears(100)))) &&
-                                                (x.Case.CaseStateId != NomenclatureConstants.CaseState.Draft) &&
-                                                (x.CasePersons.Any(p => p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderAged || p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderLegalAge)) &&
-                                                (model.SessionTypeId > 0 ? x.SessionTypeId == model.SessionTypeId : true) &&
-                                                ((model.CaseGroupId > 0) ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
-                                                ((model.CaseTypeId > 0) ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
-                                                ((model.JudgeReporterId > 0) ? (x.CaseLawUnits.Where(a => (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.Case.RegDate.Date && a.LawUnitId == model.JudgeReporterId &&
-                                                                                                          a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true))
-                                    .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
-                                    .ToList();
+            Expression<Func<CaseSession, bool>> caseTypeIdWhere = x => true;
+            if (model.CaseTypeId > 0)
+                caseTypeIdWhere = x => x.Case.CaseTypeId == model.CaseTypeId;
 
-            foreach (var session in casesSessions)
-            {
-                var judgeRep = session.CaseLawUnits.Where(x => x.CaseSessionId == session.Id && (x.DateTo ?? DateTime.Now.AddYears(100)).Date >= session.Case.RegDate.Date && x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).FirstOrDefault();
-                var act = repo.AllReadonly<CaseSessionAct>()
-                              .Where(x => x.CaseSessionId == session.Id &&
-                                          x.IsFinalDoc)
-                              .FirstOrDefault();
-                var res = session.CaseSessionResults.Where(x => x.IsMain && x.DateExpired == null).FirstOrDefault();
+            Expression<Func<CaseSession, bool>> sessionTypeIdWhere = x => true;
+            if (model.SessionTypeId > 0)
+                sessionTypeIdWhere = x => x.SessionTypeId == model.SessionTypeId;
 
-                var item = new CaseSessionSprVM();
-                item.CaseGroupLabel = session.Case.CaseGroup.Label + " - " + session.Case.CaseType.Label;
-                item.CaseRegNum = session.Case.RegNumber + "/" + session.Case.RegDate.Year.ToString() + "г.";
-                item.CaseRegDate = session.Case.RegDate;
-                item.JudgeReport = (judgeRep != null) ? judgeRep.LawUnit.FullName + ((judgeRep.CourtDepartment != null) ? " състав: " + judgeRep.CourtDepartment.Label : string.Empty) : string.Empty;
-                item.SessionTypeLabel = session.SessionType.Label;
-                item.SessionDateFrom = session.DateFrom;
-                item.CasePersons = GetStringPerson(session.CasePersons.Where(p => p.CaseSessionId == session.Id && (p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderAged || p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderLegalAge)).ToList());
-                item.ActDeclaredDate = (act != null) ? act.ActDeclaredDate : null;
-                item.SessionResultLabel = (res != null) ? res.SessionResult.Label : string.Empty;
-                item.Id = session.Id;
-                item.CaseId = session.CaseId;
-                item.SessionDateReturn = (act != null) ? act.RegDate : null;
-                item.SessionDateEntryIntoForce = (act != null) ? act.ActInforcedDate : null;
+            Expression<Func<CaseSession, bool>> judgeReporterIdWhere = x => true;
+            if (model.JudgeReporterId > 0)
+                judgeReporterIdWhere = x => x.CaseLawUnits.Where(a => (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.Case.RegDate.Date && a.LawUnitId == model.JudgeReporterId &&
+                                                                      a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any();
 
-                result.Add(item);
-            }
-
-            return result.AsQueryable();
+            return repo.AllReadonly<CaseSession>()
+                       //.Include(x => x.SessionType)
+                       //.Include(x => x.CasePersons)
+                       //.ThenInclude(x => x.PersonMaturity)
+                       //.Include(x => x.CasePersons)
+                       //.ThenInclude(x => x.PersonRole)
+                       //.Include(x => x.CaseLawUnits)
+                       //.ThenInclude(x => x.LawUnit)
+                       //.Include(x => x.CaseLawUnits)
+                       //.ThenInclude(x => x.JudgeRole)
+                       //.Include(x => x.CaseLawUnits)
+                       //.ThenInclude(x => x.CourtDepartment)
+                       //.Include(x => x.Case)
+                       //.ThenInclude(x => x.CaseGroup)
+                       //.Include(x => x.Case)
+                       //.ThenInclude(x => x.CaseType)
+                       //.Include(x => x.Case)
+                       //.ThenInclude(x => x.CaseCode)
+                       //.Include(x => x.CaseSessionResults)
+                       //.ThenInclude(x => x.SessionResult)
+                       .Where(x => (x.CourtId == courtId) && x.DateExpired == null &&
+                                   ((x.DateFrom >= model.DateFrom) && (x.DateFrom <= (model.DateTo ?? DateTime.Now.AddYears(100)))) &&
+                                   (x.Case.CaseStateId != NomenclatureConstants.CaseState.Draft) &&
+                                   (x.CasePersons.Any(p => p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderAged || p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderLegalAge)))
+                       .Where(caseGroupIdWhere)
+                       .Where(caseTypeIdWhere)
+                       .Where(sessionTypeIdWhere)
+                       .Where(judgeReporterIdWhere)
+                       .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
+                       .Select(x => new CaseSessionSprVM()
+                       {
+                           CaseGroupLabel = x.Case.CaseGroup.Label + " - " + x.Case.CaseType.Label,
+                           CaseRegNum = x.Case.RegNumber,
+                           CaseRegDate = x.Case.RegDate,
+                           JudgeReport = x.CaseLawUnits.Where(l => l.CaseSessionId == x.Id &&
+                                                                   (l.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.Case.RegDate.Date &&
+                                                                   l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                                       .Select(l => l.LawUnit.FullName + ((l.CourtDepartmentId != null) ? " състав: " + l.CourtDepartment.Label : string.Empty))
+                                                       .FirstOrDefault(),
+                           SessionTypeLabel = x.SessionType.Label,
+                           SessionDateFrom = x.DateFrom,
+                           CasePersons = string.Join(", ", x.CasePersons
+                                                            .Where(p => p.CaseSessionId == x.Id &&
+                                                                        (p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderAged ||
+                                                                         p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderLegalAge))
+                                                            .Select(p => p.FullName +
+                                                                         " (" + p.PersonRole.Label + ")" +
+                                                                         (p.PersonMaturityId != null ? " - " + p.PersonMaturity.Label : string.Empty))),
+                           CasePerson = x.CasePersons
+                                         .Where(p => p.CaseSessionId == x.Id &&
+                                                     (p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderAged ||
+                                                      p.PersonMaturityId == NomenclatureConstants.PersonMaturity.UnderLegalAge))
+                                         .Select(p => p.FullName)
+                                         .FirstOrDefault(),
+                           ActDeclaredDate = x.CaseSessionActs.Where(a => a.IsFinalDoc).Select(a => a.ActDeclaredDate).FirstOrDefault(),
+                           SessionResultLabel = x.CaseSessionResults.Where(r => r.IsMain && r.DateExpired == null).Select(r => r.SessionResult.Label).FirstOrDefault(),
+                           Id = x.Id,
+                           CaseId = x.CaseId,
+                           SessionDateReturn = x.CaseSessionActs.Where(a => a.IsFinalDoc).Select(a => a.RegDate).FirstOrDefault(),
+                           SessionDateEntryIntoForce = x.CaseSessionActs.Where(a => a.IsFinalDoc).Select(a => a.ActInforcedDate).FirstOrDefault()
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -1487,108 +1786,102 @@ namespace IOWebApplication.Core.Services
         /// <summary>
         /// Справка за Заседания с не написани съдебни актове от всички съдии
         /// </summary>
-        /// <param name="courtId"></param>
-        /// <param name="model"></param>
+        /// <param name="filter">Филтър попълнен от потребител</param>
         /// <returns></returns>
-        public IQueryable<CaseSprVM> CaseSessionWithActProject_Select(int courtId, CaseFilterReport model)
+        public IQueryable<CaseSprVM> CaseSessionWithActProject_Select(CaseFilterReport filter)
         {
             List<CaseSprVM> result = new List<CaseSprVM>();
 
-            model.DateFrom = NomenclatureExtensions.ForceStartDate(model.DateFrom);
-            model.ActDateToSpr = model.ActDateToSpr == null ? NomenclatureExtensions.ForceEndDate(DateTime.Now) : NomenclatureExtensions.ForceEndDate(model.ActDateToSpr);
+            var dateNow = DateTime.Now;
 
-            var caseSessionsSQL = repo.AllReadonly<CaseSession>()
-                                   .Where(x => (x.CourtId == courtId) && x.DateExpired == null &&
-                                            ((x.DateFrom >= model.DateFrom) && (x.DateTo <= (model.ActDateToSpr ?? DateTime.Now.AddYears(100)))) &&
-                                            (x.Case.CaseStateId != NomenclatureConstants.CaseState.Draft) &&
-                                            ((model.CaseGroupId > 0) ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
-                                            ((model.CaseTypeId > 0) ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
-                                            ((model.CaseCodeId > 0) ? x.Case.CaseCodeId == model.CaseCodeId : true) &&
-                                            (x.SessionStateId == NomenclatureConstants.SessionState.Provedeno) &&
-                                            (!x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && b.ActDeclaredDate != null && b.ActDeclaredDate <= model.ActDateToSpr) ||
-                                             (x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && b.ActDeclaredDate != null && b.ActDeclaredDate <= model.ActDateToSpr && b.ActTypeId == NomenclatureConstants.ActType.Sentence && b.ActMotivesDeclaredDate == null) && (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)) ||
-                                             (x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && b.ActDeclaredDate != null && b.ActDeclaredDate <= model.ActDateToSpr && b.ActTypeId == NomenclatureConstants.ActType.Answer && (b.ActMotivesDeclaredDate == null || b.ActMotivesDeclaredDate > model.ActDateToSpr)) &&
-                                                                         (x.CaseSessionResults.Any(r => r.DateExpired != null && r.SessionResultId != NomenclatureConstants.CaseSessionResult.WithDecisionAndMotives)) &&
-                                                                         (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo))) &&
-                                            ((model.JudgeReporterId > 0) ? (x.CaseLawUnits.Where(a => (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.DateFrom && a.LawUnitId == model.JudgeReporterId &&
-                                                                                                      a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true))
-                                   .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
-                                   .Where(x => model.SessionTypeId > 0 ? x.SessionTypeId == model.SessionTypeId : true)
-                                   .ToSql();
+            filter.DateFrom = NomenclatureExtensions.ForceStartDate(filter.DateFrom ?? DateTime.Now.AddYears(-100));
+            filter.DateTo = DateTime.Now.AddYears(100);
+            filter.ActDateToSpr = filter.ActDateToSpr == null ? NomenclatureExtensions.ForceEndDate(DateTime.Now) : NomenclatureExtensions.ForceEndDate(filter.ActDateToSpr);
 
-            var caseSessions = repo.AllReadonly<CaseSession>()
-                                   .Include(x => x.Case)
-                                   .ThenInclude(x => x.CaseGroup)
-                                   .Include(x => x.Case)
-                                   .ThenInclude(x => x.CaseType)
-                                   .Include(x => x.Case)
-                                   .ThenInclude(x => x.CaseCode)
-                                   .Include(x => x.Case)
-                                   .ThenInclude(x => x.CaseLawUnits)
-                                   .ThenInclude(x => x.LawUnit)
-                                   .Include(x => x.CaseLawUnits)
-                                   .ThenInclude(x => x.LawUnit)
-                                   .Include(x => x.CaseLawUnits)
-                                   .ThenInclude(x => x.JudgeRole)
-                                   .Include(x => x.CaseLawUnits)
-                                   .ThenInclude(x => x.CourtDepartment)
-                                   .Include(x => x.SessionType)
-                                   .Include(x => x.CaseSessionActs)
-                                   .Include(x => x.CaseSessionResults)
-                                   .ThenInclude(x => x.SessionResult)
-                                   .Where(x => (x.CourtId == courtId) && x.DateExpired == null &&
-                                            ((x.DateFrom >= model.DateFrom) && (x.DateTo <= (model.ActDateToSpr ?? DateTime.Now.AddYears(100)))) &&
-                                            (x.Case.CaseStateId != NomenclatureConstants.CaseState.Draft) &&
-                                            ((model.CaseGroupId > 0) ? x.Case.CaseGroupId == model.CaseGroupId : true) &&
-                                            ((model.CaseTypeId > 0) ? x.Case.CaseTypeId == model.CaseTypeId : true) &&
-                                            ((model.CaseCodeId > 0) ? x.Case.CaseCodeId == model.CaseCodeId : true) &&
-                                            (x.SessionStateId == NomenclatureConstants.SessionState.Provedeno) &&
-                                            (!x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && b.ActDeclaredDate != null && b.ActDeclaredDate <= model.ActDateToSpr) ||
-                                             (x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && b.ActDeclaredDate != null && b.ActDeclaredDate <= model.ActDateToSpr && b.ActTypeId == NomenclatureConstants.ActType.Sentence && b.ActMotivesDeclaredDate == null) && (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)) ||
-                                             (x.CaseSessionActs.Any(b => b.DateExpired == null && b.IsFinalDoc && b.ActDeclaredDate != null && b.ActDeclaredDate <= model.ActDateToSpr && b.ActTypeId == NomenclatureConstants.ActType.Answer && (b.ActMotivesDeclaredDate == null || b.ActMotivesDeclaredDate > model.ActDateToSpr)) &&
-                                                                         (x.CaseSessionResults.Any(r => r.DateExpired == null && r.SessionResultId != NomenclatureConstants.CaseSessionResult.WithDecisionAndMotives) || !x.CaseSessionResults.Any(r => r.DateExpired == null)) &&
-                                                                         (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo))) &&
-                                            ((model.JudgeReporterId > 0) ? (x.CaseLawUnits.Where(a => (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.DateFrom && a.LawUnitId == model.JudgeReporterId &&
-                                                                                                      a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true))
-                                   .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
-                                   .Where(x => model.SessionTypeId > 0 ? x.SessionTypeId == model.SessionTypeId : true)
-                                   .ToList();
+            Expression<Func<CaseSession, bool>> caseGroupIdWhere = x => true;
+            if (filter.CaseGroupId > 0)
+                caseGroupIdWhere = x => x.Case.CaseGroupId == filter.CaseGroupId;
 
-            foreach (var caseSession in caseSessions)
+            Expression<Func<CaseSession, bool>> caseTypeIdWhere = x => true;
+            if (filter.CaseTypeId > 0)
+                caseTypeIdWhere = x => x.Case.CaseTypeId == filter.CaseTypeId;
+
+            Expression<Func<CaseSession, bool>> caseCodeIdWhere = x => true;
+            if (filter.CaseCodeId > 0)
+                caseCodeIdWhere = x => x.Case.CaseCodeId == filter.CaseCodeId;
+
+            Expression<Func<CaseSession, bool>> caseCodeIdsWhere = x => true;
+            if (filter.CaseCodeIds != null && filter.CaseCodeIds.Any())
             {
-                var judgeRep = caseSession.CaseLawUnits.Where(x => (x.DateTo ?? DateTime.Now.AddYears(100)).Date >= caseSession.DateFrom && x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).FirstOrDefault();
-
-                DateTime? sessionActDate = null;
-                if (caseSession.CaseSessionActs.Count > 0)
-                {
-                    var caseSessionAct = caseSession.CaseSessionActs.Where(x => x.ActStateId == NomenclatureConstants.SessionActState.Project && x.DateExpired == null).FirstOrDefault();
-                    if (caseSessionAct != null)
-                        sessionActDate = caseSessionAct.RegDate;
-                    else
-                    {
-                        caseSessionAct = caseSession.CaseSessionActs.Where(x => x.ActDeclaredDate <= model.ActDateToSpr && x.DateExpired == null).FirstOrDefault();
-                        if (caseSessionAct != null)
-                            sessionActDate = caseSessionAct.RegDate;
-                    }
-                }
-
-                var item = new CaseSprVM()
-                {
-                    Id = caseSession.CaseId,
-                    JudgeReport = (judgeRep != null) ? judgeRep.LawUnit.FullName + ((judgeRep.CourtDepartment != null) ? " състав: " + judgeRep.CourtDepartment.Label : string.Empty) : string.Empty,
-                    CaseTypeLabel = caseSession.Case.CaseType.Label,
-                    CaseRegNum = caseSession.Case.RegNumber + "/" + caseSession.Case.RegDate.Year.ToString() + "г.",
-                    CaseCodeLabel = caseSession.Case.CaseCode.Code,
-                    SessionTypeLabel = caseSession.SessionType.Label,
-                    SessionDateFrom = caseSession.DateFrom,
-                    SessionActDate = sessionActDate,
-                    SessionResult = string.Join(", ", caseSession.CaseSessionResults.Where(x => x.DateExpired == null).Select(x => x.SessionResult.Label))
-                };
-
-                result.Add(item);
+                int[] caseCodeIds = filter.CaseCodeIds.Select(x => int.Parse(x)).ToArray();
+                caseCodeIdsWhere = x => caseCodeIds.Contains(x.Case.CaseCodeId ?? 0);
             }
 
-            return result.AsQueryable();
+            Expression<Func<CaseSession, bool>> sessionTypeIdWhere = x => true;
+            if (filter.SessionTypeIds != null && filter.SessionTypeIds.Any())
+            {
+                int[] sessionTypeIds = filter.SessionTypeIds.Select(x => int.Parse(x)).ToArray();
+                sessionTypeIdWhere = x => sessionTypeIds.Contains(x.SessionTypeId);
+            }
+
+            Expression<Func<CaseSession, bool>> judgeReporterIdWhere = x => true;
+            if (filter.JudgeReporterId > 0)
+                judgeReporterIdWhere = x => x.CaseLawUnits.Where(a => (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.DateFrom && a.LawUnitId == filter.JudgeReporterId &&
+                                                                      a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any();
+
+            return readonlyrepo.AllReadonly<CaseSession>()
+                       .Where(x => (x.CourtId == userContext.CourtId) && x.DateExpired == null &&
+                                   ((x.DateFrom >= filter.DateFrom) && (x.DateTo <= (filter.ActDateToSpr ?? DateTime.Now.AddYears(100)))) &&
+                                   (x.Case.CaseStateId != NomenclatureConstants.CaseState.Draft) &&
+                                   (x.SessionStateId == NomenclatureConstants.SessionState.Provedeno) &&
+                                   (!x.CaseSessionActs.Any(b => b.DateExpired == null &&
+                                                                b.ActDeclaredDate != null &&
+                                                                b.ActDeclaredDate <= filter.ActDateToSpr &&
+                                                                (b.ActTypeId != NomenclatureConstants.ActType.Protokol ||
+                                                                 (b.ActTypeId == NomenclatureConstants.ActType.Protokol &&
+                                                                  x.CaseSessionResults.Any(r => r.DateExpired == null &&
+                                                                                                (r.SessionResult.SessionResultGroupId != null ||
+                                                                                                 NomenclatureConstants.CaseSessionResult.CaseSessionWithActProject.Contains(r.SessionResultId)))))) ||
+                                   (x.CaseSessionActs.Any(b => b.DateExpired == null &&
+                                                               b.IsFinalDoc &&
+                                                               b.ActDeclaredDate != null &&
+                                                               b.ActDeclaredDate <= filter.ActDateToSpr &&
+                                                               b.ActTypeId == NomenclatureConstants.ActType.Sentence &&
+                                                               b.ActMotivesDeclaredDate == null) &&
+                                    x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo) ||
+                                   (x.CaseSessionActs.Any(b => b.DateExpired == null &&
+                                                               b.IsFinalDoc &&
+                                                               b.ActDeclaredDate != null &&
+                                                               b.ActDeclaredDate <= filter.ActDateToSpr &&
+                                                               b.ActTypeId == NomenclatureConstants.ActType.Answer &&
+                                                               (b.ActMotivesDeclaredDate == null || b.ActMotivesDeclaredDate > filter.ActDateToSpr)) &&
+                                    (!x.CaseSessionResults.Any(r => r.DateExpired == null && r.SessionResultId == NomenclatureConstants.CaseSessionResult.WithDecisionAndMotives) ||
+                                     !x.CaseSessionResults.Any(r => r.DateExpired == null)) &&
+                                    (x.Case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo))))
+                       .Where(caseGroupIdWhere)
+                       .Where(caseTypeIdWhere)
+                       .Where(caseCodeIdWhere)
+                       .Where(sessionTypeIdWhere)
+                       .Where(judgeReporterIdWhere)
+                       .Where(caseCodeIdsWhere)
+                       .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
+                       .Select(x => new CaseSprVM()
+                       {
+                           Id = x.CaseId,
+                           JudgeReport = x.CaseLawUnits.Where(c => (c.DateTo ?? dateNow.AddYears(100)).Date >= x.DateFrom && c.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                                       .Select(c => c.LawUnit.FullName + ((c.CourtDepartment != null) ? " състав: " + c.CourtDepartment.Label : String.Empty))
+                                                       .FirstOrDefault(),
+                           CaseTypeLabel = x.Case.CaseType.Label,
+                           CaseRegNum = x.Case.RegNumber,
+                           CaseCodeLabel = x.Case.CaseCode.Code,
+                           SessionTypeLabel = x.SessionType.Label,
+                           SessionDateFrom = x.DateFrom,
+                           SessionResult = string.Join(", ", x.CaseSessionResults.Where(r => r.DateExpired == null).Select(r => r.SessionResult.Label)),
+                           SessionActDate = x.CaseSessionActs.Any(a => a.ActStateId == NomenclatureConstants.SessionActState.Project && a.DateExpired == null) ? x.CaseSessionActs.Where(a => a.ActStateId == NomenclatureConstants.SessionActState.Project && a.DateExpired == null).Select(a => a.RegDate).FirstOrDefault() :
+                                                                                                                                                                 (x.CaseSessionActs.Any(a => a.ActDeclaredDate <= filter.ActDateToSpr && a.DateExpired == null) ? x.CaseSessionActs.Where(a => a.ActDeclaredDate <= filter.ActDateToSpr && a.DateExpired == null).Select(a => a.RegDate).FirstOrDefault() :
+                                                                                                                                                                                                                                                                 (DateTime?)null)
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -1598,6 +1891,8 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public bool IsCanExpired(int CaseSessionId)
         {
+
+
             if (repo.AllReadonly<CaseSessionAct>()
                     .Any(x => x.CaseSessionId == CaseSessionId &&
                               x.DateExpired == null))
@@ -1622,6 +1917,12 @@ namespace IOWebApplication.Core.Services
             if (repo.AllReadonly<CaseSessionDoc>()
                     .Any(x => x.CaseSessionId == CaseSessionId &&
                               x.DateExpired == null))
+            {
+                return false;
+            }
+
+            var obligations = moneyService.Obligation_Select(0, 0, CaseSessionId, userContext.CourtId, 0);
+            if (obligations.Any(x => x.ExpenseOrderId > 0))
             {
                 return false;
             }
@@ -1655,7 +1956,7 @@ namespace IOWebApplication.Core.Services
                 start = x.DateFrom,
                 end = x.DateTo,
                 color = "#00c0ef",
-                pop_content = x.CaseName + (string.IsNullOrEmpty(x.CourtHallName) ? " " + x.CourtHallName + (string.IsNullOrEmpty(x.CourtHallLocation) ? " " + x.CourtHallLocation : string.Empty) : string.Empty),
+                pop_content = x.CaseName,
                 pop_title = "Дело",
                 SourceId = x.CaseSessionId
             }).ToList();
@@ -1676,10 +1977,17 @@ namespace IOWebApplication.Core.Services
                                    //title = "Почивен ден",
                                    title = x.Description ?? "Почивен ден",
                                    start = x.Day,
-                                   allDay = true,
+                                   allDay = false,
                                    color = "#F5A9A9",
-                                   pop_title = x.Description
+                                   pop_title = x.Description,
+                                   url = "#hide"
                                }).ToList();
+
+            foreach (var day in holidays)
+            {
+                day.end = day.start.MakeEndDate();
+
+            }
 
             result.AddRange(holidays);
 
@@ -1707,60 +2015,41 @@ namespace IOWebApplication.Core.Services
                            "на делата на" + ((otdelenie != null) ? " " + otdelenie.Label + " отделение," : string.Empty) + ((court != null) ? " " + court.Label + "," : string.Empty) + System.Environment.NewLine +
                            "които ще се разглеждат на" + (model.DateFrom != null ? " " + (model.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty) + (model.DateTo != null ? " - " + (model.DateTo ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty) + (model.Year != null ? " " + model.Year : string.Empty) + System.Environment.NewLine;
 
-            ExcelExportColumnList<CaseSessionVM> columns = new ExcelExportColumnList<CaseSessionVM>(model)
-            {
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.NumberRow,2000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.CaseTypeLabel,5000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.CaseName,5000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.DateFromDateString,5000,"dateFrom"),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.DateFromTimeString,5000,"dateFromTime"),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.CourtHallName,5000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.JudgeReporterLabel,5000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.DepartmentOtdelenieText,5000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.SessionTypeLabel,5000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.SessionStateLabel,5000),
-                new ExcelExportColumnVM<CaseSessionVM>(x => x.SessionResultLabel,5000),
-            };
-            var cols = columns.GetColumns();
-            excelService.AddRange(labelSpr, columns.GetColumnsWidth().Length, 3, excelService.CreateTitleStyle());
+
+            excelService.AddRange(labelSpr, 12, excelService.CreateTitleStyle());
             excelService.AddRow();
             excelService.AddRow();
             excelService.AddRow();
             excelService.AddRow();
 
-            excelService.AddList(
-                dataRows.OrderBy(x => x.NumberRow).ToList(),
-                columns.GetColumnsWidth(),
-                columns.GetColumns(),
-                NPOI.HSSF.Util.HSSFColor.Grey40Percent.Index,
-                NPOI.HSSF.Util.HSSFColor.White.Index,
-                NPOI.HSSF.Util.HSSFColor.White.Index
-            );
-            //excelService.AddList(
-            //    dataRows.OrderBy(x => x.NumberRow).ToList(),
-            //    new int[] { 2000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 },
-            //    new List<Expression<Func<CaseSessionVM, object>>>()
-            //    {
-            //        x => x.NumberRow,
-            //        x => x.CaseTypeLabel,
-            //        x => x.CaseName,
-            //        x => x.DateFromDateString,
-            //        x => x.DateFromTimeString,
-            //        x => x.CourtHallName,
-            //        x => x.JudgeReporterLabel,
-            //        x => x.SessionTypeLabel,
-            //        x => x.SessionStateLabel,
-            //        x => x.SessionResultLabel
-            //    },
-            //    NPOI.HSSF.Util.HSSFColor.Grey40Percent.Index,
-            //    NPOI.HSSF.Util.HSSFColor.White.Index,
-            //    NPOI.HSSF.Util.HSSFColor.White.Index
-            //);
+            excelService.AddList(dataRows.OrderBy(x => x.NumberRow).ToList(),
+                                 new int[] { 2000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 },
+                                 new List<Expression<Func<CaseSessionVM, object>>>()
+                                 {
+                                     x => x.NumberRow,
+                                     x => x.CaseTypeLabel,
+                                     x => x.CaseName,
+                                     x => x.DateFromDateString,
+                                     x => x.DateFromTimeString,
+                                     x => x.CourtHallName,
+                                     x => x.JudgeReporterLabel,
+                                     x => x.DepartmentOtdelenieText,
+                                     x => x.JudgeCompositionLabel,
+                                     x => x.SessionTypeLabel,
+                                     x => x.SessionStateLabel,
+                                     x => x.SessionResultLabel,
+                                 },
+                                 NPOI.HSSF.Util.HSSFColor.White.Index,
+                                 NPOI.HSSF.Util.HSSFColor.White.Index,
+                                 NPOI.HSSF.Util.HSSFColor.White.Index);
+
             excelService.AddRow();
             excelService.AddRow();
             excelService.AddRange(dataRows.Count + " бр. записа отговарят на зададените критерии", 9);
+
             return excelService.ToArray();
         }
+
         public bool CaseSessionResult_ExpiredInfo(ExpiredInfoVM model)
         {
             if (!SaveExpireInfo<CaseSessionResult>(model))
@@ -1779,21 +2068,41 @@ namespace IOWebApplication.Core.Services
         }
         public bool CaseSession_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!SaveExpireInfo<CaseSession>(model))
-                return false;
-            var session = repo.AllReadonly<CaseSession>()
-                                    .Where(x => x.Id == model.Id)
-                                    .FirstOrDefault();
-            if (session != null)
+            try
             {
+                using (var ts = repo.BeginTransaction())
+                {
+                    if (!SaveExpireInfo<CaseSession>(model))
+                        return false;
+                    var session = repo.AllReadonly<CaseSession>()
+                                            .Where(x => x.Id == model.Id)
+                                            .FirstOrDefault();
+                    if (session != null)
+                    {
 
-                caseDeadlineService.DeadLineOnSession(session);
-                repo.SaveChanges();
+                        caseDeadlineService.DeadLineOnSession(session);
+                        repo.SaveChanges();
 
-                updateVksLawunitsAfterExpire(session);
+                        updateVksLawunitsAfterExpire(session);
 
-                mqEpepService.AppendCaseSession(session, ServiceMethod.Delete);
+                        mqEpepService.AppendCaseSession(session, ServiceMethod.Delete);
+
+                        (bool result, string errorMessage) = moneyService.CalcEarningsJury(session, userContext.CourtId);
+                        if (result == false)
+                        {
+                            return false;
+                        }
+
+                        ts.Commit();
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при премахване на Заседание Id={model.Id}");
+                return false;
+            }
+
             return true;
         }
 
@@ -1850,6 +2159,30 @@ namespace IOWebApplication.Core.Services
                        .ToList();
         }
 
+
+        public async Task<List<SelectListItem>> GetDDL_CaseSessionAddAct(int caseId)
+        {
+            var dateTimeTo = DateTime.Now;
+            var result = await repo.AllReadonly<CaseSession>()
+                                   .Where(x => x.CaseId == caseId &&
+                                               x.DateExpired == null &&
+                                               x.DateTo <= dateTimeTo &&
+                                               x.SessionTypeId == NomenclatureConstants.SessionType.ClosedSession &&
+                                               !x.CaseSessionActs.Any(a => a.DateExpired == null))
+                                   .Select(x => new SelectListItem
+                                   {
+                                       Value = x.Id.ToString(),
+                                       Text = x.SessionType.Label + " от " + x.DateFrom.ToString("dd.MM.yyyy HH:mm")
+                                   })
+                                   .ToListAsync();
+
+            result = result
+                    .Prepend(new SelectListItem() { Text = "Избери", Value = "0" })
+                    .ToList();
+
+            return result;
+        }
+
         public CaseSessionResultEditVM GetSessionResultEditVMById(int Id)
         {
             return repo.AllReadonly<CaseSessionResult>()
@@ -1867,6 +2200,25 @@ namespace IOWebApplication.Core.Services
                            IsActive = x.IsActive
                        })
                        .FirstOrDefault();
+        }
+
+        public async Task<CaseSessionResultEditVM> GetSessionResultEditVMByIdAsync(int Id)
+        {
+            return await repo.AllReadonly<CaseSessionResult>()
+                             .Where(x => x.Id == Id)
+                             .Select(x => new CaseSessionResultEditVM()
+                             {
+                                 Id = x.Id,
+                                 CourtId = x.CourtId,
+                                 CaseId = x.CaseId,
+                                 CaseSessionId = x.CaseSessionId,
+                                 SessionResultId = x.SessionResultId,
+                                 SessionResultBaseId = x.SessionResultBaseId,
+                                 Description = x.Description,
+                                 IsMain = x.IsMain,
+                                 IsActive = x.IsActive
+                             })
+                             .FirstOrDefaultAsync();
         }
 
         /// <summary>
@@ -2089,17 +2441,21 @@ namespace IOWebApplication.Core.Services
                                                              a.ActDeclaredDate != null));
         }
 
-        public bool IsExistLastSessionWithoutAct(int CaseId, int SessionId)
+        public async Task<bool> IsExistLastSessionWithoutAct(int CaseId, int SessionId)
         {
-            var dateTo = (SessionId > 0) ? (repo.GetById<CaseSession>(SessionId)).DateFrom : DateTime.Now;
+            var dateTo = DateTime.Now;
+            if (SessionId > 0)
+            {
+                dateTo = await repo.GetPropByIdAsync<CaseSession, DateTime>(x => x.Id == SessionId, x => x.DateFrom);
+            }
 
-            var lastSession = repo.AllReadonly<CaseSession>()
-                                  .Include(x => x.CaseSessionActs)
-                                  .Where(x => x.CaseId == CaseId &&
-                                              x.DateExpired == null &&
-                                              ((SessionId > 0) ? x.Id != SessionId && x.DateFrom < dateTo : true))
-                                  .OrderByDescending(x => x.DateFrom)
-                                  .FirstOrDefault();
+            var lastSession = await repo.AllReadonly<CaseSession>()
+                                        .Include(x => x.CaseSessionActs)
+                                        .Where(x => x.CaseId == CaseId &&
+                                                    x.DateExpired == null &&
+                                                    ((SessionId > 0) ? x.Id != SessionId && x.DateFrom < dateTo : true))
+                                        .OrderByDescending(x => x.DateFrom)
+                                        .FirstOrDefaultAsync();
 
             if (lastSession == null)
                 return false;

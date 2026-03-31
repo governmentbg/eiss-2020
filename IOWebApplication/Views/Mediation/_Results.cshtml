@@ -1,0 +1,90 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseNavigationVM
+
+@{
+   
+}
+
+<div id="myDiv">
+    @Html.HiddenFor(x => x.CaseId)
+    @Html.HiddenFor(x => x.MediationCaseSessionId)
+
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="Mediation" asp-action="AddMediationCaseSessionResult" asp-route-mediationCaseSessionId="@Model.MediationCaseSessionId" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави резултат
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <table id="resultMainTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#resultMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataResults", "Mediation")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            MediationCaseSessionId: $("#MediationCaseSessionId").val()
+                        };
+                    }
+                },
+                dom: 'rt',
+                deferLoading: deferLoadingOnTab('#resultMainTable'),
+                columns: [
+                    {
+                        className: 'col-md-5',
+                        name: 'mediationResultLabel',
+                        data: 'mediationResultLabel',
+                        title: 'Резултат от среща',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-5',
+                        name: 'mediationResultBaseLabel',
+                        data: 'mediationResultBaseLabel',
+                        title: 'Основание за резултат от среща',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'isMainText',
+                        data: 'isMainText',
+                        title: 'Основен резултат',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#resultTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="resultTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditMediationCaseSessionResult", "Mediation")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

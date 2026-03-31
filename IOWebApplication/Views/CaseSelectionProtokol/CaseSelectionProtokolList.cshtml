@@ -46,6 +46,7 @@
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(x => x.CourtGroupIds, "GenericDropDownMultiple")</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.LoadGroupLinkIds, "GenericDropDownMultiple")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.IsMassSelection, "Boolean")</div>
     @*<div class="col-lg-3">@Html.EditorFor(x => x.CourtGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.LoadGroupLinkId, "GenericDropDown")</div>*@
 </div>
@@ -98,7 +99,8 @@
                             CaseGroupIds_text: $('#CaseGroupIds_text').val(),
                             CaseTypeIds_text: $('#CaseTypeIds_text').val(),
                             CourtGroupIds_text: $('#CourtGroupIds_text').val(),
-                            LoadGroupLinkIds_text: $('#LoadGroupLinkIds_text').val()
+                            LoadGroupLinkIds_text: $('#LoadGroupLinkIds_text').val(),
+                            IsMassSelection: $('#IsMassSelection').is(":checked")
                         };
                     }
                 },
@@ -186,6 +188,15 @@
                         sortable: true,
                         searchable: false,
                         visible: false
+                    },
+                    {
+                        name: 'caseCourtGroupLabel',
+                        data: 'caseCourtGroupLabel',
+                        title: 'Група',
+                        sortable: true,
+                        searchable: false,
+                        visible: false
+                       
                     },
                     {
                         name: 'caseStateLabel',

@@ -1,14 +1,20 @@
 ﻿@model IOWebApplication.Core.Models.ScanInfoViewModel
+@inject IOWebApplication.Infrastructure.Contracts.IDBUserContext dbUserContext;
+@{
+    var settings = await dbUserContext.Settings();
+    var lastScanner = System.Web.HttpUtility.HtmlDecode(settings.LastSelectedScaner);
+    var savedScanner = !string.IsNullOrEmpty(lastScanner);
+}
 
-    <form id="scanForm" asp-action="scan" asp-controller="scan" method="post">
-        @Html.HiddenFor(model => model.ReturnUrl)
-        @Html.HiddenFor(model => model.FileContent)
-        @Html.HiddenFor(model => model.FileName)
-        @Html.HiddenFor(model => model.Mode)
-        @Html.HiddenFor(model => model.SourceId)
-        @Html.HiddenFor(model => model.SourceType)
-        @Html.HiddenFor(model => model.Title)
-    </form>
+<form id="scanForm" asp-action="scan" asp-controller="scan" method="post">
+    @Html.HiddenFor(model => model.ReturnUrl)
+    @Html.HiddenFor(model => model.FileContent)
+    @Html.HiddenFor(model => model.FileName)
+    @Html.HiddenFor(model => model.Mode)
+    @Html.HiddenFor(model => model.SourceId)
+    @Html.HiddenFor(model => model.SourceType)
+    @Html.HiddenFor(model => model.Title)
+</form>
 
 <div id="scanMessageContainer" style="display:none">
     <div class="row">
@@ -49,20 +55,40 @@
 
 <script>
     $(function () {
-        scanner.loadScanners()
-            .then((data) => {
-                data.forEach((item, index, arr) => {
-                    $("#scanSources").append(new Option(item.name, index));
+    @if (Model.ScanDPI > 0)
+    {
+        <text>
+                    scanner.configure(@Model.ScanDPI,@Model.ScanBlackThreshold);
+        </text>
+    }
+
+
+            scanner.loadScanners()
+                .then((data) => {
+                    data.forEach((item, index, arr) => {
+                        let opt = new Option(item.name, index);
+                        if ('@lastScanner' == item.name) {
+                            opt.selected = true;
+                        }
+                        $("#scanSources").append(opt);
+                    });
+
+    @if (!string.IsNullOrEmpty(lastScanner))
+    {
+        <text>
+                                $('#scanSources').trigger('change');
+        </text>
+    }
+                                        })
+                .catch((error) => {
+                    $('#scanErrorMessage').text(error);
+                    $('#scanMessageContainer').show();
                 });
-            })
-            .catch((error) => {
-                $('#scanErrorMessage').text(error);
-                $('#scanMessageContainer').show();
-            });
 
         $('#scanSources').on('change', (e) => {
             scanner.setSource(e.target.value);
             $('.scanner-button').removeAttr("disabled");
+            updateLastScannerUsed();
         });
 
         $('#addPages').on('click', (e) => {
@@ -84,6 +110,8 @@
                 $('#FileName').val($('#modalFileName').val());
                 $('#Title').val($('#fileDescription').val());
                 HideModal();
+
+
                 scanner.getFile()
                     .then((fileData) => {
                         $('#FileContent').val(fileData);
@@ -124,6 +152,19 @@
         }
     }
 
+    function updateLastScannerUsed() {
+
+        let selectedScannerName = $('#scanSources option:selected:first').text();
+
+        if (selectedScannerName == '@lastScanner') {
+            return;
+        }
+
+        if ($('#scanSources option:selected:first').val()) {
+            updateUserSetting('LastSelectedScaner', selectedScannerName);
+        }
+    }
+
 </script>
 <script defer src="~/js/prod/scan.min.js"></script>
 <script id="pagePreviewTemplate" type="text/x-handlebars-template">
@@ -144,3 +185,12 @@
     </div>
     <button type="button" id="modalSave" class="btn btn-default">Запис</button>
 </script>
+
+
+@*
+    SCS.scanInit = function (dpi, black_threshold) {        return SCS.invoke('scan/init', {"DPI" : dpi, "BlackThreshold" : black_threshold});    };
+dpi = 200
+black_threshold = 200
+https://sign.uslugi.io/index-scan.html
+
+*@

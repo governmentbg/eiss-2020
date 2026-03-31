@@ -4,6 +4,7 @@ using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Extensions;
@@ -12,15 +13,17 @@ using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Account;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using static IOWebApplication.Infrastructure.Constants.AccountConstants;
 
 namespace IOWebApplication.Controllers
@@ -33,28 +36,24 @@ namespace IOWebApplication.Controllers
         private readonly RoleManager<ApplicationRole> roleManager;
         private readonly ILogger<AccountController> logger;
         private readonly ICommonService commonService;
-        private readonly IStringLocalizer localizer;
         private readonly IConfiguration config;
-
-        public AccountController(
-            SignInManager<ApplicationUser> _signInManager,
-            UserManager<ApplicationUser> _userManager,
-            RoleManager<ApplicationRole> _roleManager,
-            ILogger<AccountController> _logger,
-            ICommonService _commonService,
-            IConfiguration _config,
-            IStringLocalizer<AccountController> _localizer
-            )
+        public AccountController(SignInManager<ApplicationUser> _signInManager,
+                                 UserManager<ApplicationUser> _userManager,
+                                 RoleManager<ApplicationRole> _roleManager,
+                                 ILogger<AccountController> _logger,
+                                 ICommonService _commonService,
+                                 IConfiguration _config,
+                                 IDBUserContext dbUserContext)
         {
             signInManager = _signInManager;
             userManager = _userManager;
             roleManager = _roleManager;
             logger = _logger;
             commonService = _commonService;
-            localizer = _localizer;
             config = _config;
+            this.dbUserContext = dbUserContext;
         }
-
+        [DisableAudit]
         [AllowAnonymous]
         public IActionResult AccessDenied()
         {
@@ -66,7 +65,8 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_Account().DeleteOrDisableLast();
             SetHelpFile(HelpFileValues.Nom4);
-
+            addToAudit(AuditConstants.Operations.List, 0, string.Empty);
+            SetViewbagIndex();
             return View();
         }
 
@@ -75,20 +75,35 @@ namespace IOWebApplication.Controllers
         public IActionResult ListData(IDataTablesRequest request, UserFilterVM filter)
         {
             var data = commonService.Users_Select(filter, true);
-
             return request.GetResponse(data);
         }
 
+        /// <summary>
+        /// Метод попълващ номенклатури за странцата с потребители
+        /// </summary>
+        private void SetViewbagIndex()
+        {
+            ViewBag.UserRoles_ddl = roleManager.Roles
+                                               .OrderBy(x => x.OrderNumber)
+                                               .Select(x => new SelectListItem
+                                               {
+                                                   Value = x.Id,
+                                                   Text = $"{x.Code} {x.Label}",
+                                               })
+                                               .ToList();
+        }
+
+        [DisableAudit]
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Login_Cert_Error(string error)
+        public IActionResult Login_Cert_Error(string error)
         {
             logger.LogError(error);
 
             return RedirectToAction(nameof(Login), new { error = "Моля изберете валиден сертификат." });
         }
 
-
+        [DisableAudit]
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null, string error = null, string showPassword = null)
@@ -111,6 +126,7 @@ namespace IOWebApplication.Controllers
             return View(model);
         }
 
+        [DisableAudit]
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginVM model)
@@ -129,7 +145,7 @@ namespace IOWebApplication.Controllers
                     ModelState.AddModelError("Password", "Невалиден потребител и/или парола");
                 }
             }
-            var lawUnit = commonService.GetById<LawUnit>(user.LawUnitId);
+            var lawUnit = await commonService.GetByIdAsync<LawUnit>(user.LawUnitId);
             if (lawUnit.DateTo.HasValue && lawUnit.DateTo < DateTime.Now)
             {
                 ModelState.AddModelError("Password", "Невалиден потребител и/или парола");
@@ -154,12 +170,13 @@ namespace IOWebApplication.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> LogOut()
         {
+            AddAuditInfo(AuditConstants.Operations.Logout, userContext?.FullName, "", "Потребител");
             await signInManager.SignOutAsync();
 
             return LocalRedirect("/");
         }
 
-
+        [DisableAudit]
         [HttpPost]
         [AllowAnonymous]
         public IActionResult ExternalLogin(string provider, string returnUrl = null)
@@ -171,6 +188,7 @@ namespace IOWebApplication.Controllers
             return new ChallengeResult(provider, properties);
         }
 
+        [DisableAudit]
         [AllowAnonymous]
         public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
         {
@@ -195,7 +213,8 @@ namespace IOWebApplication.Controllers
             ApplicationUser user = null;
             if (info.LoginProvider == "IdStampIT")
             {
-                string userId = commonService.Users_GetByLawUnitUIC(info.ProviderKey);
+                //string userId = await commonService.Users_GetByLawUnitUIC("9901122213"/*info.ProviderKey*/);
+                string userId = await commonService.Users_GetByLawUnitUIC(info.ProviderKey);
                 if (!string.IsNullOrEmpty(userId))
                 {
                     user = await userManager.FindByIdAsync(userId);
@@ -220,7 +239,10 @@ namespace IOWebApplication.Controllers
                 {
                     if (certNoClaim != null)
                     {
-                        await userManager.ReplaceClaimAsync(user, certNoClaim, currentCertNoClaim);
+                        if (certNoClaim.Value != currentCertNoClaim.Value)
+                        {
+                            await userManager.ReplaceClaimAsync(user, certNoClaim, currentCertNoClaim);
+                        }
                     }
                     else
                     {
@@ -228,13 +250,24 @@ namespace IOWebApplication.Controllers
                     }
                 }
 
-                await signInManager.SignInAsync(user, isPersistent: false);
+                await signInManager.SignInAsync(user, getAuthenticationProperties());
 
+                AddAuditInfo(AuditConstants.Operations.Login, user.LawUnit.FullName, "", "Потребител", false, user.Id, user.CourtId);
                 return LocalRedirect(returnUrl);
             }
 
 
             return RedirectToAction("AccessDenied");
+        }
+
+        AuthenticationProperties getAuthenticationProperties()
+        {
+            return new AuthenticationProperties
+            {
+                IsPersistent = false,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(config.GetValue<int>("Authentication:CookieMaxAgeMinutes")),
+                AllowRefresh = true
+            };
         }
 
 
@@ -249,6 +282,7 @@ namespace IOWebApplication.Controllers
         }
 
         [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
+        [TitleAudit(Operation = AuditConstants.Operations.Append)]
         public IActionResult Register()
         {
             SetBreadcrums("");
@@ -256,6 +290,7 @@ namespace IOWebApplication.Controllers
             return View(model);
         }
 
+        [DisableAudit]
         [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
         [HttpPost]
         public async Task<IActionResult> Register(UserProfileRegisterVM model)
@@ -296,8 +331,10 @@ namespace IOWebApplication.Controllers
 
             if (res.Succeeded)
             {
+                //var registeredUser = await userManager.FindByNameAsync(user.UserName);
                 commonService.Users_GenerateEissId(user.Id);
-                this.SaveLogOperation(true, user.Id);
+                this.SaveLogOperation(true, user.Id, null, nameof(Edit));
+                addToAudit(AuditConstants.Operations.Append, user.LawUnitId, user.Email);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Index));
             }
@@ -346,12 +383,15 @@ namespace IOWebApplication.Controllers
                 WorkNotificationToMail = user.WorkNotificationToMail == true,
                 IsActive = user.IsActive
             };
-            model.Roles = roleManager.Roles.Select(x => new CheckListVM
-            {
-                Value = x.Name,
-                Label = localizer[x.Name].ToString(),
-                Checked = false
-            }).OrderBy(x => x.Label).ToList();
+            model.Roles = roleManager.Roles
+                                     .OrderBy(x => x.OrderNumber)
+                                     .Select(x => new CheckListVM
+                                     {
+                                         Value = x.Name,
+                                         Label = $"{x.Code} {x.Label}",
+                                         Checked = false
+                                     })
+                                     .ToList();
 
             var userRoles = await userManager.GetRolesAsync(user);
             foreach (var role in model.Roles)
@@ -377,9 +417,12 @@ namespace IOWebApplication.Controllers
                     }
                 }
             }
+            addToAudit(AuditConstants.Operations.View, model.LawUnitId, model.Email);
             ViewBag.canChange = canChange;
             return View(model);
         }
+
+        [DisableAudit]
         [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
         [HttpPost]
         public async Task<IActionResult> Edit(UserProfileVM model)
@@ -411,6 +454,7 @@ namespace IOWebApplication.Controllers
                 user.IsActive = model.IsActive;
                 await userManager.UpdateAsync(user);
                 this.SaveLogOperation(false, user.Id);
+                addToAudit(AuditConstants.Operations.Update, user.LawUnitId, user.Email);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
             }
             else
@@ -421,25 +465,43 @@ namespace IOWebApplication.Controllers
             return RedirectToAction(nameof(Edit), new { id = model.Id });
         }
 
-        [HttpGet]
-        public IActionResult SearchUser(string query)
+        void addToAudit(string operation, int lawUnitId, string email)
         {
-            var model = commonService.Users_Select(new UserFilterVM() { FullName = query })
+            var baseInfo = string.Empty;
+            var addInfo = string.Empty;
+            var operationType = $"Потребител";
+            if (lawUnitId > 0)
+            {
+                var fullName = commonService.GetPropById<LawUnit, string>(x => x.Id == lawUnitId, x => x.FullName);
+                baseInfo = fullName;
+                addInfo = $"Електронна поща: {email}";
+            }
+
+            AddAuditInfo(operation, baseInfo, addInfo, operationType);
+        }
+
+        [DisableAudit]
+        [HttpGet]
+        public IActionResult SearchUser(string query, string selectMode = NomenclatureConstants.LawUnitSelectMode.Current)
+        {
+            var model = commonService.Users_SelectForAutocomplete(new UserFilterVM() { FullName = query }, selectMode)
                             .Select(x => new LabelValueVM
                             {
                                 Value = x.Id,
-                                Label = $"{x.FullName} ({x.Email}, {x.LawUnitTypeName})"
+                                Label = $"{x.FullName} {(!x.IsActive ? "Неакт." : "")}({x.Email}, {x.LawUnitTypeName})"
                             });
             return new JsonResult(model);
         }
+
+        [DisableAudit]
         [HttpGet]
         public IActionResult GetUser(string id)
         {
-            var model = commonService.Users_Select(new UserFilterVM() { UserId = id })
+            var model = commonService.Users_SelectForAutocomplete(new UserFilterVM() { UserId = id })
                             .Select(x => new LabelValueVM
                             {
                                 Value = x.Id,
-                                Label = $"{x.FullName} ({x.Email}, {x.LawUnitTypeName})"
+                                Label = $"{x.FullName} {(!x.IsActive ? "Неакт." : "")}({x.Email}, {x.LawUnitTypeName})"
                             }).FirstOrDefault();
 
             if (model == null)
@@ -450,6 +512,7 @@ namespace IOWebApplication.Controllers
             return new JsonResult(model);
         }
 
+        [DisableAudit]
         public IActionResult SelectCourt()
         {
 
@@ -466,7 +529,8 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> SelectCourt(SelectCourtVM model)
         {
-            var avaliablesCourts = commonService.CourtSelect_ByUser(userContext.UserId).Select(x => x.Value).ToArray();
+            var userCourts = commonService.CourtSelect_ByUser(userContext.UserId);
+            var avaliablesCourts = userCourts.Select(x => x.Value).ToArray();
             if (!avaliablesCourts.Contains(model.CourtId.ToString()))
             {
                 return Json(new { result = false, message = "Непозволена операция." });
@@ -474,15 +538,19 @@ namespace IOWebApplication.Controllers
             var user = await userManager.FindByIdAsync(userContext.UserId);
             user.CourtId = model.CourtId;
             await userManager.UpdateAsync(user);
+
+            var newCourt = userCourts.Where(x => x.Value == model.CourtId.ToString()).Select(x => x.Label).FirstOrDefault();
+            AddAuditInfo("Смяна на съд", userContext.FullName, newCourt, "Потребител");
             await this.signInManager.SignOutAsync();
-            await this.signInManager.SignInAsync(user, isPersistent: false);
+            await this.signInManager.SignInAsync(user, getAuthenticationProperties());
             return Json(new { result = true });
         }
 
+        [DisableAudit]
         [HttpPost]
         public async Task<IActionResult> UpdateUserSetting(string setting, string value)
         {
-            if (await commonService.Users_UpdateSetting(setting, value))
+            if (await commonService.Users_UpdateSetting(setting, System.Web.HttpUtility.UrlEncode(value)))
             {
                 return Content("ok");
             }
@@ -492,15 +560,21 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        [DisableAudit]
         public async Task<IActionResult> UserSetting()
         {
-            var model = await userContext.Settings();
+            var model = await dbUserContext.Settings();
+            if (!string.IsNullOrEmpty(model.LastSelectedScaner))
+            {
+                model.LastSelectedScaner = HttpUtility.HtmlDecode(model.LastSelectedScaner);
+            }
             return View(model);
         }
+        [DisableAudit]
         [HttpPost]
-        public IActionResult UserSetting(UserSettingsModel model)
+        public async Task<IActionResult> UserSetting(UserSettingsModel model)
         {
-            if (commonService.Users_UpdateSetting(model))
+            if (await commonService.Users_UpdateSetting(model))
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
 
@@ -512,6 +586,7 @@ namespace IOWebApplication.Controllers
             return View(model);
         }
 
+        [DisableAudit]
         public async Task<IActionResult> ResetPassword(string userId)
         {
             var user = await userManager.FindByIdAsync(userId);
@@ -582,12 +657,12 @@ namespace IOWebApplication.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
-        public IActionResult manage()
-        {
-            var result = roleManager.CreateAsync(new ApplicationRole() { Name = AccountConstants.Roles.CourtManager }).Result;
+        //[Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
+        //public IActionResult manage()
+        //{
+        //    var result = roleManager.CreateAsync(new ApplicationRole() { Name = AccountConstants.Roles.CourtManager }).Result;
 
-            return Json(result);
-        }
+        //    return Json(result);
+        //}
     }
 }

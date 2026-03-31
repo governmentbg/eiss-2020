@@ -1,0 +1,50 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
+@using IOWebApplication.Core.Extensions
+@using IOWebApplication.Infrastructure.Constants
+@model RegixRelationsSearchVM
+
+@if (Model.Report.Id > 0)
+{
+    <div>
+        <partial name="_Header" model="@Model.Report.HeaderFooter" />
+
+        @Html.DisplayFor(x => x.RelationsSearchFilter.IdentifierFilter, "objInline", new { label = "Справка за: ЕГН " })
+        <b>
+            Статус на данните:
+        </b>
+
+        <br />
+        <br />
+        @if (Model.RelationsSearchResponse.Count == 0)
+        {
+            <b>
+                Няма данни
+            </b>
+        }
+        else
+        {
+            @foreach (var cl in Model.RelationsSearchResponse)
+            {
+                <center>
+                    <b>Родствена връзка</b>
+                </center>
+
+                @Html.DisplayFor(x => cl.RelationTypeLabel, "objInline")
+                @Html.DisplayFor(x => cl.Identifier, "objInline")
+                @Html.DisplayFor(x => cl.BirthDate, "objInline")
+                @Html.DisplayFor(x => cl.FirstName, "objInline")
+                @Html.DisplayFor(x => cl.SurName, "objInline")
+                @Html.DisplayFor(x => cl.FamilyName, "objInline")
+                @Html.DisplayFor(x => cl.GenderCode, "objInline")
+                @Html.DisplayFor(x => cl.NationalityName, "objInline")
+                @Html.DisplayFor(x => cl.NationalityName2, "objInline")
+                @Html.DisplayFor(x => cl.DeathDate, "objInline")
+                <br />
+                <br />
+            }
+        }
+
+        <partial name="_Footer" model="@Model.Report.HeaderFooter" />
+    </div>
+}
+

@@ -16,20 +16,19 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace IOWebApplication.Core.Services
 {
     public class DocumentTemplateService : BaseService, IDocumentTemplateService
     {
         private readonly IUrlHelper urlHelper;
-        private readonly IDocumentService documentService;
+        //private readonly IDocumentService documentService;
         private readonly ICounterService counterService;
         private readonly IMQEpepService mqService;
 
         public DocumentTemplateService(
             ILogger<DocumentTemplateService> _logger,
-            IDocumentService _documentService,
+            //IDocumentService _documentService,
             IRepository _repo,
             IUrlHelper _urlHelper,
             IUserContext _userContext,
@@ -38,7 +37,7 @@ namespace IOWebApplication.Core.Services
         {
             this.logger = _logger;
             this.repo = _repo;
-            documentService = _documentService;
+            //documentService = _documentService;
             this.urlHelper = _urlHelper;
             this.userContext = _userContext;
             counterService = _counterService;
@@ -189,6 +188,7 @@ namespace IOWebApplication.Core.Services
                     saved.DocumentGroupId = model.DocumentGroupId;
                     saved.DocumentTypeId = model.DocumentTypeId;
                     saved.HtmlTemplateId = model.HtmlTemplateId;
+                    saved.SignerId = model.SignerId.EmptyToNull();
                     saved.AuthorId = model.AuthorId;
                     saved.Description = model.Description;
                     saved.DocumentTemplateStateId = model.DocumentTemplateStateId;
@@ -212,7 +212,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при DocumentTemplate_SaveData Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при DocumentTemplate_SaveData Id={model.Id}");
             }
             return false;
         }
@@ -223,37 +223,43 @@ namespace IOWebApplication.Core.Services
             switch (model.SourceType)
             {
                 case SourceTypeSelectVM.CaseSessionAct:
-                    var actModel = repo.AllReadonly<CaseSessionAct>()
-                                    .Include(x => x.ActType)
-                                    .FirstOrDefault(x => x.Id == model.SourceId);
 
-                    var sessionModel = repo.AllReadonly<CaseSession>()
-                                     .Include(x => x.SessionType)
-                                     .Include(x => x.Case)
-                                     .FirstOrDefault(x => x.Id == actModel.CaseSessionId);
+                    var actInfo = repo.AllReadonly<CaseSessionAct>()
+                                        .Where(x => x.Id == model.SourceId)
+                                        .Select(x => new
+                                        {
+                                            x.Id,
+                                            ActTypeLabel = x.ActType.Label,
+                                            x.RegNumber,
+                                            x.RegDate,
+                                            x.CaseSession.CaseId,
+                                            x.CaseSession.DateFrom,
+                                            SessionTypeLabel = x.CaseSession.SessionType.Label
+                                        }).FirstOrDefault();
 
 
                     result.Add(new LabelValueVM
                     {
-                        Value = urlHelper.Action("CasePreview", "Case", new { id = sessionModel.CaseId }),
-                        Label = $"Дело {sessionModel.Case.RegNumber}"
+                        Value = urlHelper.Action("CasePreview", "Case", new { id = actInfo.CaseId }),
+                        Label = $"Дело {actInfo.RegNumber}"
                     });
                     result.Add(new LabelValueVM
                     {
-                        Value = urlHelper.Action("Preview", "CaseSession", new { id = actModel.Id }),
-                        Label = $"{sessionModel.SessionType.Label} {sessionModel.DateFrom:dd.MM.yyyy}"
+                        Value = urlHelper.Action("Preview", "CaseSession", new { id = actInfo.Id }),
+                        Label = $"{actInfo.SessionTypeLabel} {actInfo.DateFrom:dd.MM.yyyy}"
                     });
                     result.Add(new LabelValueVM
                     {
-                        Value = urlHelper.Action("Edit", "CaseSessionAct", new { id = actModel.Id }),
-                        Label = $"{actModel.ActType.Label} {actModel.RegNumber} / {actModel.RegDate:dd.MM.yyyy}"
+                        Value = urlHelper.Action("Edit", "CaseSessionAct", new { id = actInfo.Id }),
+                        Label = $"{actInfo.ActTypeLabel} {actInfo.RegNumber} / {actInfo.RegDate:dd.MM.yyyy}"
                     });
 
                     break;
                 default:
                     return null;
 
-            };
+            }
+            ;
             return result;
         }
 
@@ -271,10 +277,11 @@ namespace IOWebApplication.Core.Services
                                     Id = x.Id,
                                     CaseId = x.CaseId,
                                     DocumentId = x.DocumentId,
-                                    DocumentNumber = (x.Document != null) ? x.Document.DocumentNumber : "",
+                                    DocumentNumber = (x.Document != null) ? x.Document.DocumentNumber : "::НОМЕР ДОКУМЕНТ::",
                                     DocumentDate = (x.Document != null) ? x.Document.DocumentDate : DateTime.Now,
                                     AuthorId = x.AuthorId,
                                     AuthorName = (x.Author != null) ? x.Author.LawUnit.FullName_MiddleNameInitials : "",
+                                    SignerId = x.SignerId,
                                     CourtName = x.Court.Label,
                                     CourAddress = $"{x.Court.CityName}, {x.Court.Address}",
                                     DocumentTypeLabel = x.DocumentType.Label,
@@ -301,10 +308,26 @@ namespace IOWebApplication.Core.Services
             }
             if (model.DocumentId > 0)
             {
-                var docModel = documentService.Document_GetById(model.DocumentId.Value).Result;
-                var firstPerson = docModel.DocumentPersons.FirstOrDefault();
-                model.DocumentReccipientName = firstPerson.FullName;
-                model.DocumentReccipientAddress = firstPerson.Addresses.FirstOrDefault()?.Address.FullAddress;
+                //var docModel = documentService.Document_GetById(model.DocumentId.Value).Result;
+                //var firstPerson = docModel.DocumentPersons.FirstOrDefault();
+                var firstPerson = repo.AllReadonly<DocumentPerson>()
+                                        .Include(x => x.Addresses)
+                                        .ThenInclude(x => x.Address)
+                                        .Where(x => x.DocumentId == model.DocumentId)
+                                        .ToList()
+                                        .Select(x => new
+                                        {
+                                            x.FullName,
+                                            FullAddress = x.Addresses.Select(a => a.Address.FullAddress).FirstOrDefault()
+                                        }).FirstOrDefault();
+                model.DocumentReccipientName = firstPerson?.FullName;
+                //model.DocumentReccipientAddress = firstPerson.Addresses.FirstOrDefault()?.Address.FullAddress;
+                model.DocumentReccipientAddress = firstPerson?.FullAddress;
+            }
+            else
+            {
+                model.DocumentReccipientName = "::ПОЛУЧАТЕЛ::";
+                model.DocumentReccipientAddress = "::Данните ще се актуализират при регистиране на документа::";
             }
 
             return model;
@@ -445,7 +468,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при премахване на документ с Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при премахване на документ с Id={model.Id}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
         }

@@ -101,6 +101,7 @@
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
+        {{#if isEdit}}
         @if (access.CanChange)
         {
             <a href="@Url.Action("EditInheritance", "CasePerson")?id={{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
@@ -109,5 +110,7 @@
         {
             <a href="@Url.Action("EditInheritance", "CasePerson")?id={{id}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
         }
+        {{/if}}
+
     </script>
 }

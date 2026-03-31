@@ -42,7 +42,8 @@
 
 
             <div class="form-group row col-md-12">
-                <a id="submit_button" class="btn btn-success" />Запис</a>
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                @* <a id="submit_button" class="btn btn-success" >Запис</a> *@
                 <a asp-action="Index" asp-route-periodType="@Model.PeriodTypeId" asp-route-lawUnitType="@NomenclatureConstants.LawUnitTypes.Judge" class="btn btn-danger">Назад</a>
                 <div class="pull-right">
                     @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = $"{userContext.CourtId}|{Model.LawUnitId}" })
@@ -76,6 +77,10 @@
             return true;
         });
         $('#submit_button').click(function(){
+            if($('#submit_button').is(":disabled")){
+                return false;
+            }
+            $('#submit_button').attr("disabled", true);
             $("#formEdit").submit();
         });
     </script>

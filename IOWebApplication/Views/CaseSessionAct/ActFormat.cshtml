@@ -4,10 +4,13 @@
     Layout = null;
 }
 <div class="act-body">
-    <partial name="ActHeaderLegacy" model="@Model" />
+    <partial name="ActHeader" model="@Model" />
     <div>
         @Html.Raw(Model.MainBody)
     </div>
     <partial name="ActFooter" model="@Model" />
-    <partial name="ActFooterSigns" model="@Model" />   
+    <partial name="ActFooterSigns" model="@Model" />
+    <div>
+        @Html.Raw(Model.Coordinations)
+    </div>
 </div>

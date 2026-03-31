@@ -1,0 +1,326 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@inject IUserContext userContext
+@model FastProcessRequestVM
+@{
+    bool is417 = Model.RequestTypeCode == FastProcessRequestVM.FastProcess417;
+    string currentCurrency = userContext.CurrentCurrencyCode;
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+    IAccessControl accessControl = (IAccessControl)ViewBag.AccessControl;
+    string postAction = Url.Action("Index");
+    if (accessControl?.CanChange != true)
+    {
+        postAction = "#";
+    }
+}
+
+
+<form action="@postAction" method="post" id="formRequest">
+    @Html.ValidationSummary(null, new { @class = "text-bold" })
+    <input type="hidden" id="saveMode" name="saveMode" />
+    <input type="hidden" asp-for="@Model.DocumentId" />
+    <input type="hidden" asp-for="@Model.CaseId" />
+    <input type="hidden" asp-for="@Model.TaxAmount" />
+    <input type="hidden" asp-for="@Model.RequestTypeCode" />
+    <input type="hidden" asp-for="@Model.RequestTitle" />
+    <input type="hidden" asp-for="@Model.RequestFullTitle" />
+    <partial name="_FastProcess" model="@Model" />
+    <div class="row">
+        <div class="col-lg-offset-2 col-lg-4">
+            @if (accessControl?.CanChange == true)
+            {
+                <button type="submit" class="btn btn-success">Запис</button>
+                <text>&nbsp;</text>
+            }
+            @if (Model.CaseId > 0)
+            {
+                <a asp-action="CasePreview" asp-controller="Case" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+            }
+            else
+            {
+                <a asp-action="Edit" asp-controller="Document" asp-route-id="@Model.DocumentId" class="btn btn-danger">Назад</a>
+            }
+        </div>
+        @* <div class="col-lg-6">
+            <div class="">
+                @if (Model.CaseId > 0)
+                {
+                    <button type="submit" name="recalcExpense" value="recalcExpense" class="btn btn-warning pull-right">Преизчисли разноски</button>
+                }
+            </div>
+        </div> *@
+    </div>
+    @if (Model.ErrorCount > 0)
+    {
+        <div class="row">
+            <div class="col-lg-offset-2">
+                @Html.EditorFor(x => x.SubmitOnErrors, "Bool")
+            </div>
+        </div>
+    }
+</form>
+
+
+@section scripts {
+    <script>
+        let isInEuro = @(isInEuro ? "true" : "false");
+        $(function () {
+            initDynamicForms();
+            initData();
+
+             // $('button.btn.btn-submit').click(function () {
+             //     $('#saveMode').val($(this).data('mode'));
+             //     $('#formRequest').trigger('submit');
+             // });
+        });
+        function initData(){
+            //refreshSideList();
+
+            $('.moneyClaimList,.itemSubstitutionList,.itemList,.debtDistributionList').hide();
+
+            showHideOnCheckbox('#ClaimTypes_MoneyClaim','.moneyClaimList',true);
+            showHideOnCheckbox('#ClaimTypes_ItemSubstitutionClaim','.itemSubstitutionList',true);
+            showHideOnCheckbox('#ClaimTypes_ItemClaim','.itemList',true);
+            showHideOnCheckbox('#ClaimTypes_PropertyClaim','.itemList',true);
+            initMoneyClaimTypeCodeChange();
+            showHideOnRadio('input[name="JoinedDestributionTypeId"]','2','.debtDistributionList',true);
+            $('input[name="JoinedDestributionTypeId"]:checked').trigger('click');
+            showHideOnRadio('input[name="CededClaim"]','1','.divCededDescription',true);
+            $('.divCededDescription').hide();
+            initDatePicker();
+            callbackAddDebtDistribution();
+            $('#btnConfirmSelectDocumentData').hide();
+            showHideOnCheckbox('#selectDocument_SelectDocumentConscent','#btnConfirmSelectDocumentData',true);
+            $('.select-document-toggle').click(function(){
+                $('.select-document-container').toggle();
+            })
+
+            $(document).on('change',".moneyClaimList input[id*='_Amount'],.debtDistributionList input[id*='_Amount']",function(){
+                let parentRow = $(this).parents('.item-template:first')[0];
+                let rowCurrency = $(parentRow).find("select[id*='CurrencyCode']").val();
+                if(rowCurrency == '@currentCurrency'){
+                    $(parentRow).find("input[id*='TotalAmount']").val($(this).val());
+                }
+            });
+            $(document).on('change',"select[id*='ExpenseTypeCode']",function(){
+                let parentRow = $(this).parents('.item-template:first')[0];
+                if($(this).val() == '39'){
+                    $(parentRow).find("input[id*='Description']").removeAttr('disabled');
+                }else{
+                    $(parentRow).find("input[id*='Description']").attr('disabled',true).val('');
+                }
+            });
+            $("select[id*='ExpenseTypeCode']").trigger('change');
+
+        @if (is417)
+        {
+                                            <text>
+                                                                                                                            showHideOnCheckbox('#CompetencyBase417_ForCompetencyBase','.combo-forcompetence',true);
+                                                                                                                            $('#CompetencyBase417_ForCompetencyBase').change(function(){
+                                                                                                                                if($(this).is(':checked') && $('#CompetencyBase417_CompetencyBaseCode').val() == '-1'){
+                                                                                                                                    $('#CompetencyBase417_CompetencyBaseCode').val('31');
+                                                                                                                                }
+                                                                                                                            });</text>
+        }
+        }
+
+         function saveSelectedDocument(){
+                swalConfirm('Данните от избрания документ ще заличат въведените промени в делото!',function(){
+                    postContent('@Url.Action("SelectDocumentDataToCase")',{caseId:@Model.CaseId,documentId:$('#selectDocument_SelectDocumentRequestId').val()},function(){
+                    document.location.href = document.location.href.replace('#','');
+                    });
+                });
+         }
+
+
+        function callbackAddMoneyClaim(){
+            initDatePicker();
+            //attachCurrentCurrencyTotal();
+            fixTdNumber('.moneyClaimList');
+        }
+        function callbackRemoveMoneyClaims(delIndex,itemTemplate){
+            fixTdNumber('.moneyClaimList');
+
+            if(delIndex){
+                $('input[type="hidden"][name*="MoneyClaims['+delIndex+']"]').remove();
+            }
+
+            let removedGid = $(itemTemplate).find('td.item-number').data('gid');
+            removeClaimFromDistribution(`1|${removedGid}`);
+        }
+        function callbackAddSubstItemClaim(){
+            fixTdNumber('.itemSubstitutionList');
+        }
+        function callbackRemoveSubstItem(delIndex,itemTemplate){
+            fixTdNumber('.itemSubstitutionList');
+            let removedGid = $(itemTemplate).find('td.item-number').data('gid');
+            removeClaimFromDistribution(`2|${removedGid}`);
+        }
+        function callbackAddExpense(){
+            fixTdNumber('.expenseList');
+        }
+        function callbackRemoveExpenses(index,itemTemplate){
+            fixTdNumber('.expenseList');
+
+            let removedGid = $(itemTemplate).find('td.item-number').data('gid');
+            removeClaimFromDistribution(`4|${removedGid}`);
+        }
+        function fixTdNumber(container){
+            $(container).find('.item-template td.item-number').each((i,tbNumber) =>{
+                tbNumber.innerText = (i + 1).toString();
+            });
+        }
+
+        function removeClaimFromDistribution(removedClaimCode){
+            //Премахва всички редове за разпределения, които са с избран изтрото вземане
+            $('.debtDistributionList .item-template').each((i,e) =>{
+                if($(e).find('select[id*="ClaimCode"]:first').val() == removedClaimCode){
+                    $(e).remove();
+                }
+            });
+
+             $(`select.debt-claim-code option[value="${removedClaimCode}"]`).each(function(ci,opt){
+                    $(opt).remove();
+                });
+
+            //Променя имената на избраните с преномерираните вземания
+            let claims = generateClaimsListForDistribution();
+            for(let i=0;i<claims.length;i++){
+                $(`select.debt-claim-code option[value="${claims[i].value}"]`).each(function(ci,opt){
+                    $(opt).text(claims[i].text);
+                });
+            }
+        }
+        function generateClaimsListForDistribution(){
+            let claims = [];
+            $('.moneyClaimList .item-template td.item-number').each((i,tbNumber) =>{
+                let val = `1|${$(tbNumber).data('gid')}`;
+                let txt = `Парично вземане ${$(tbNumber).text().trim()}`;
+                claims.push({value: val, text: txt});
+            });
+            $('.itemSubstitutionList .item-template td.item-number').each((i,tbNumber) =>{
+                let val = `2|${$(tbNumber).data('gid')}`;
+                let txt = `Заместима вещ ${$(tbNumber).text().trim()}`;
+                claims.push({value: val, text: txt});
+            });
+            if($('.itemList').is(':visible')){
+                let val = `3|`;
+                let txt = `Движима вещ`;
+                claims.push({value: val, text: txt});
+            }
+            $('.expenseList .item-template td.item-number').each((i,tbNumber) =>{
+                let val = `4|${$(tbNumber).data('gid')}`;
+                let txt = `Разноска ${$(tbNumber).text().trim()}`;
+                claims.push({value: val, text: txt});
+            });
+            return claims;
+        }
+        function callbackAddDebtDistribution(){
+            let claims = generateClaimsListForDistribution();
+            $('select.debt-claim-code').each((i,e) =>{
+                if($(e).find('option').length == 0){
+                    //Нов празен select
+                      $(e).html(claims.map(claim =>
+                          {
+                              if(claim.value == $(e).data('saved'))
+                                    return `<option value="${claim.value}" selected="selected">${claim.text}</option>`
+                              else
+                                    return `<option value="${claim.value}">${claim.text}</option>`
+                         }
+                        ).join('')
+                    );
+                }
+            });
+        }
+        function initMoneyClaimTypeCodeChange(){
+            $(document).on('change','select[id*="MoneyClaimTypeCode"]',function(i,e){
+                let itemRow =  $(this).parents('.item-template:first');
+                if($(this).val() == '@FastProcessRequestVM.MoneyClaimType_Base'){
+                    let checkBox = $(itemRow).find('input[id*="HasStatutoryinterest"]:first');
+                    if(!$(checkBox).is(':checked')){
+                        $(checkBox).prop('checked','checked');
+                    }
+                }
+            });
+        }
+        function autoDebtDistribution(){
+
+            swalConfirm('Потвърдете разпределението на задълженията, съгласно въведените дялове!',
+                function(){
+                    let claims = [];
+                    $('.moneyClaimList .main-item').each(function(i,e){
+                        let claimCode = `1|${$(e).find('td.item-number').data('gid')}`;
+                        let claimCurrency = $(e).find('select[id*="CurrencyCode"]').val();
+                        let claimAmount = parseFloat($(e).find('input[id$="Amount"]').val());
+                        let claimTotal = parseFloat($(e).find('input[id*="TotalAmount"]').val());
+                        claims.push({claimCode,claimAmount,claimCurrency,claimTotal});
+                    });
+                    $('.itemSubstitutionList .item-template').each(function(i,e){
+                        let claimCode = `2|${$(e).find('td.item-number').data('gid')}`;
+                        let claimTotal = parseFloat($(e).find('input[id*="TotalAmount"]').val());
+                        let claimCurrency = 'BGN';
+                        if(isInEuro){
+                            claimCurrency = 'EUR';
+                        }
+                        let claimAmount = claimTotal;
+                        claims.push({claimCode,claimAmount,claimCurrency,claimTotal});
+                    });
+                    if($('.itemList').is(':visible')){
+                        let claimCode = `3|`;
+                        let claimTotal = parseFloat($('input[id*="ItemClaim_TotalAmount"]').val());
+                        let claimCurrency = 'BGN';
+                        if(isInEuro){
+                            claimCurrency = 'EUR';
+                        }
+                        let claimAmount = claimTotal;
+                        claims.push({claimCode,claimAmount,claimCurrency,claimTotal});
+                    }
+                    $('.expenseList .item-template').each(function(i,e){
+                        let claimCode = `4|${$(e).find('td.item-number').data('gid')}`;
+                        let claimTotal = parseFloat($(e).find('input[id*="TotalAmount"]').val());
+                        let claimCurrency = 'BGN';
+                        if(isInEuro){
+                            claimCurrency = 'EUR';
+                        }
+                        let claimAmount = claimTotal;
+                        claims.push({claimCode,claimAmount,claimCurrency,claimTotal});
+                    });
+
+                    $('.debtDistributionList .item-template').each(function(i,e){
+                         let claimCode = $(e).find('select[id*="ClaimCode"]').val();
+                         let share = parseFloat($(e).find('input[id*="ShareProcent"]').val());
+                         for(var c=0;c<claims.length;c++){
+                             if(claims[c].claimCode == claimCode && share != 0){
+                                 $(e).find('select[id*="CurrencyCode"]').val(claims[c].claimCurrency);
+                                 let claimForDebtAmount = (claims[c].claimAmount * share / 100).toFixed(2);
+                                 $(e).find('input[id$="Amount"]').val(claimForDebtAmount);
+                                 let claimForDebtTotal = (claims[c].claimTotal * share / 100).toFixed(2);
+                                 $(e).find('input[id*="TotalAmount"]').val(claimForDebtTotal);
+                             }
+                         }
+                    });
+                }
+            );
+        }
+        function updateRepresentatives(){
+            requestModal('Актуализиране на представители','@Url.Action("UpdateRepresentatives", new { documentId = Model.DocumentId })',{},true,function(){
+                 attachAjaxForm('#frmUpdateRepresentatives', function (data) {
+                    if (data.responseJSON.result == true) {
+                        messageHelper.ShowSuccessMessage('Представителите бях актуализирани успешно.');
+                        reloadSides();
+                        HideModal();
+                    } else {
+                        messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+                    }
+        });
+            });
+        }
+        function reloadSides(){
+            requestContent('@Url.Action("LoadPersonList", new { documentId = Model.DocumentId, caseId = Model.CaseId })',{},function(html){
+                $('#divPersonContainer').html(html);
+
+            })
+        }
+    </script>
+}

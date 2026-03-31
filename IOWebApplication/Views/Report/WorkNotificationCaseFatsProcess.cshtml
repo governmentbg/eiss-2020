@@ -1,0 +1,211 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model WorkNotificationFilterFatsProcessVM
+
+@{
+    ViewData["Title"] = "Справка нотификации по дела по чл. 410 ГПК и чл. 417 ГПК";
+    ViewData["ShowMenuCounts"] = true;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="filter-form">
+    @Html.HiddenFor(m => m.CaseId)
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.NotificationDateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.NotificationDateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.NotificationTypeId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.UserFullName)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+        <div class="col-md-10">
+            <div class="pull-right">
+                <button type="button" class="btn btn-danger" onclick="manage('@Url.Action("WorkNotificationsIsRead")','Отмяна');" title="Отмяна">
+                    Отмяна
+                    <i class="fa fa-trash" title="Отмяна"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        LoadTable();
+    });
+
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataWorkNotificationFatsProcess")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            NotificationDateFrom: $("#NotificationDateFrom").val(),
+                            NotificationDateTo: $("#NotificationDateTo").val(),
+                            NotificationTypeId: $("#NotificationTypeId").val(),
+                            UserFullName: $("#UserFullName").val(),
+                            CaseId: $("#CaseId").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a, b, item, d) {
+                            return TemplateToHtml('#templateCheck', item);
+                        }
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'userFullName',
+                        data: 'userFullName',
+                        title: 'Име на потребител',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-4',
+                        name: 'notificationTypeLabel',
+                        data: 'notificationTypeLabel',
+                        title: 'Вид нотификация',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: "text-center",
+                        name: 'notificationDate',
+                        data: 'notificationDate',
+                        title: 'Дата на получаване',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: "text-center",
+                        name: 'dateTurnOff',
+                        data: 'dateTurnOff',
+                        title: 'Дата на изключване',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            if (row.caseRegNumber)
+                            {
+                                if (row.isLinkCase)
+                                {
+                                    var url = '@(Url.Action("CasePreview", "Case", new { id = 666 }))';
+                                    url = url.replace('666', row.caseId);
+                                    return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNumber + "</a>";
+                                }
+                                else
+                                {
+                                    return row.caseRegNumber;
+                                }
+                            }
+                            else
+                                return "";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    // {
+                    //     name: 'actions',
+                    //     data: "id",
+                    //     title: "",
+                    //     width: 100,
+                    //     sortable: false,
+                    //     searchable: false,
+                    //     className: "text-center noExport",
+                    //     "render": function (value) {
+                    //         return TemplateToHtml('#templateEdit', value);
+                    //     }
+                    // }
+                ]
+            }).order([3, 'desc']);
+        }
+    }
+
+    function manage(manageUrl, title) {
+        let _data = {
+            notificationIds: getNotificationIds()
+        };
+        if (_data) {
+            requestContent(manageUrl, _data, function (html) {
+                ShowModalDialog(title, html);
+            });
+        }
+    }
+
+    function getNotificationIds() {
+        var result = '';
+        debugger;
+        $('.task-check').each(function (i, e) {
+            if ($(e).is(':checked')) {
+                result += ',' + $(e).data('id');
+            }
+        });
+        if (result.length > 0) {
+            return result.substr(1);
+        } else {
+            return undefined;
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+    </div>
+</script>
+
+<script id="templateCheck" type="text/x-handlebars-template">
+    {{#if isUnRead}}
+    <input type="checkbox" class="task-check" data-id="{{id}}" />
+    {{/if}}
+</script>

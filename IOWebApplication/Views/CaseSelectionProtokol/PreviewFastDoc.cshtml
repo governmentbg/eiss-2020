@@ -1,0 +1,245 @@
+﻿@model FastProcessSelectionProtokolPreviewVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@{
+    ViewData["Title"] = "Преглед на протокол";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+}
+@section menuHeader{
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+@section contentHeader{
+    <section class="content-header">
+        <h1>
+            @ViewData["Title"]
+        </h1>
+        @if (ViewBag.breadcrumbs != null)
+        {
+            <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        }
+    </section>
+}
+@if (Model.SelectionProtokolStateId != NomenclatureConstants.SelectionProtokolState.Signed)
+{
+    <div class="box box-default">
+        <div class="box-header with-border">
+            <h3 class="box-title">Подписване на протокол</h3>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="">
+            <form asp-action="SignDoc" method="get">
+                @Html.HiddenFor(x => x.Id)
+                <div class="form-group">
+
+                  
+                        <input type="submit" value="Подписване" class="btn btn-success single-click-submit" />
+
+                        <text>&nbsp;</text>
+                
+                    <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                </div>
+            </form>
+        </div>
+        <!-- /.box-body -->
+    </div>
+
+}
+
+@if (Model.SelectionProtokolStateId == NomenclatureConstants.SelectionProtokolState.Signed)
+{
+    <div class="box box-default">
+        <div class="box-header with-border">
+            <h3 class="box-title">Прикачени документи</h3>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body" style="">
+            <div class="cdn-files" data-label="hidden" data-sourcetype="@SourceTypeSelectVM.CaseSelectionProtokol" data-sourceid="@Model.Id" data-editmode="none"></div>
+            <a asp-controller="CaseSelectionProtokol" asp-action="Index" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+        </div>
+        <!-- /.box-body -->
+    </div>
+    <partial name="_CdnScript" />
+
+}
+<div class="box box-default">
+    <div class="box-header with-border">
+    <center>
+        <b>@Model.CourtName</b>
+    </center>
+    <br />
+    @if (Model.SelectedLawUnitName != NomenclatureConstants.SelectionProtocolConstants.NoAvailableJudges)
+    {
+        <center>
+            <b>
+                Протокол от избор на @Model.JudgeRoleName @if (Model.DismisalId != null)
+                {
+                    <text>(преразпределение)</text>
+                }
+            </b>
+        </center>
+    }
+    else
+    {
+        <center>
+            <b>
+                Протокол за липса на възможни съдии за избор
+
+            </b>
+        </center>
+    }
+
+    <br />
+    <br />
+    <br />
+
+    <div>
+        @Html.DisplayFor(x => x.SelectionDate, "objInline")
+        @Html.DisplayFor(x => x.RegNumber, "objInline")
+        @Html.DisplayFor(x => x.CaseTypeName, "objInline")
+        @Html.DisplayFor(x => x.CaseYear, "objInline")
+        @Html.DisplayFor(x => x.Document_Number, "objInline")
+        @Html.DisplayFor(x => x.CourtGroupName, "objInline")
+        @Html.DisplayFor(x => x.CaseCodeName, "objInline")
+        @Html.DisplayFor(x => x.LoadGroupLinkName, "objInline")
+        @Html.DisplayFor(x => x.SelectedLawUnitName, "objInline", new { label = "Разпределен " + @Model.SelectedLawUnitTypeName.ToLower() + ": " })
+        @Html.DisplayFor(x => x.SelectionModeName, "objInline")
+
+    </div>
+    <br />
+    <table width="100%">
+
+        <tr>
+            <td colspan="3">
+                <b>Списък на възможни съдии</b>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="3">
+                <table width="100%" class="bordered protokol-table">
+
+                    <tr>
+                        <th width="50%"><b>Съдия</b></th>
+                        @if (Model.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                        {
+                            <th align="center"><b>Съд</b></th>
+                            <th align="center"><b>Натоварване</b></th>
+                            <th align="center"> <b>Брой дела в групата</b></th>
+                        }
+                    </tr>
+
+                        @foreach (var item in Model.LawUnits.Where(x => x.StateId != NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.CourtName).ThenBy(x => x.LawUnitFullName))
+                    {
+                        string trclass = "";
+
+                        @if (item.Id == Model.SelectedLawUnitId)
+                        {
+                            trclass = "highlight-bold";
+                        }
+                        <tr class="@trclass">
+
+
+
+
+                            <td align="left">
+                                @item.LawUnitFullName
+                            </td>
+
+
+
+                            <td align="center">
+
+                                @item.CourtName
+
+                            </td>
+                            <td align="center">
+
+                                    @item.LoadIndex%
+
+                             </td>
+                            <td align="center"> @item.CaseCount</td>
+
+
+
+
+                        </tr>
+                    }
+                </table>
+            </td>
+        </tr>
+        @if (Model.SelectedLawUnitName == NomenclatureConstants.SelectionProtocolConstants.NoAvailableJudges)
+        {
+            <tr>
+                <td colspan="3">
+                    <center>
+                        <b>Няма налични съдии в съда, които могат да бъдат избрани.</b>
+                    </center>
+                </td>
+            </tr>
+
+        }
+
+        @if (Model.LawUnits.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).Any())
+        {
+
+            @*<tr>
+        <td colspan="3">
+
+        </td>
+        </tr>*@
+            <tr>
+                <td colspan="3">
+
+                    <b>Списък на изключени съдии</b>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="3">
+                    <table width="100%" class="bordered protokol-table">
+
+                        <tr>
+                            <th width="50%"><b>Съдия</b></th>
+                            <th align="center"><b>Съд</b></th>
+                            <th><b>Причини</b></th>
+                        </tr>
+
+                            @foreach (var item in Model.LawUnits.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.CourtName).ThenBy(x => x.LawUnitFullName))
+                        {
+                            <tr>
+                                <td> @item.LawUnitFullName</td>
+                                <td align="left"> @item.CourtName </td>
+                                <td> @item.Description </td>
+                            </tr>
+                        }
+
+                    </table>
+                </td>
+            </tr>
+
+        }
+
+
+
+        <tr>
+            <td>
+                <br />
+                @Html.DisplayFor(x => x.UserName, "objInline")
+            </td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td></td>
+            <td width="30%" style="font-weight:bold">Подпис: </td>
+        </tr>
+    </table>
+
+</div>
+
+</div>

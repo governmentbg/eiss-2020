@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
@@ -14,8 +15,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Вид дело/документ")]
         public string DocumentData { get; set; }
 
+        public DateTime? DocumentDataSort { get; set; }
+
         [Display(Name = "Документ")]
-        public string PaymentData { get; set; }
+        public string PaymentData { get { return this.PaymentDataAll == null ? "" : string.Join("; ", this.PaymentDataAll.Distinct()); } }
+
+        public string[] PaymentDataAll { get; set; }
 
         [Display(Name = "Точен вид")]
         public string CaseTypeCode { get; set; }
@@ -30,11 +35,16 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Сума")]
         public decimal Amount { get; set; }
 
+        [Display(Name = "Сума в лева")]
+        public decimal AmountBGN { get; set; }
+
         [Display(Name = "Внесена на")]
         public string PaidDate { get; set; }
+        public DateTime? PaidDateDate { get; set; }
 
         [Display(Name = "Вносна бележка")]
         public string PaymentDescription { get; set; }
+        public string PaymentDescriptionFirst { get; set; }
 
         [Display(Name = "Текст")]
         public string Description { get; set; }

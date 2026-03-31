@@ -146,11 +146,11 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
 		[XmlAttribute("nkzrjm")]
 		public int PunishmentRegime { get; set; }
 
-		/// <summary>
-		/// nkzrzm
-		/// Размер на глоба в лева
-		/// </summary>
-		[Display(Name = "Размер на глоба лв.")]
+        /// <summary>
+        /// nkzrzm
+        /// Размер на глоба в евро
+        /// </summary>
+        [Display(Name = "Размер на глоба евро")]
 		[XmlAttribute("nkzrzm", DataType = "double")]
 		public double FineAmount { get; set; }
 

@@ -37,6 +37,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Номер служебно дело/година")]
         public string CaseLinkNumber { get; set; }
+        public string CaseLinkNumberOnly { get; set; }
     }
 
     public class CaseLinkFilterReportVM

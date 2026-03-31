@@ -1,4 +1,5 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 @model ObligationJuryFilterReportVM
 
 @{
@@ -13,6 +14,7 @@
 }
 <form name="formFilter" id="formFilter" action="@Url.Action("ObligationJuryReportExportExcel")" method="post">
     @Html.HiddenFor(m => m.PersonTypeLabel)
+    @Html.HiddenFor(m => m.ColumnVisibility)
     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
         <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
@@ -73,14 +75,14 @@
                     {
                         name: 'caseTypeName',
                         data: 'caseTypeName',
-                        title: 'Вид дело',
+                        title: 'Точен вид',
                         sortable: true,
                         searchable: true
                     },
                     {
                         name: 'caseNumber',
                         data: 'caseNumber',
-                        title: 'Номер/Година',
+                        title: 'Номер дело',
                         sortable: true,
                         searchable: true
                     },
@@ -129,7 +131,7 @@
                     {
                         name: 'moneyGroupName',
                         data: 'moneyGroupName',
-                        title: 'Сметка',
+                        title: 'Вид сметка',
                         sortable: true,
                         searchable: true
                     },
@@ -161,6 +163,25 @@
                                 return "0.00";
                         }
                     },
+                    @if (userContext.IsInterimPeriodEuro)
+                    {
+                        <text>
+                         {
+                            className: "text-right",
+                            name: 'amountBGN',
+                            data: 'amountBGN',
+                            title: 'Сума в лева',
+                            sortable: true,
+                            searchable: false,
+                            "render": function (value) {
+                                if (value)
+                                    return parseFloat(value).toFixed(2);
+                                else
+                                    return "0.00";
+                            }
+                         },
+                       </text>
+                    } 
                     {
                         className: "text-right",
                         name: 'amountTransport',
@@ -175,6 +196,25 @@
                                 return "0.00";
                         }
                     },
+                    @if (userContext.IsInterimPeriodEuro)
+                    {
+                        <text>
+                         {
+                            className: "text-right",
+                            name: 'amountTransportBGN',
+                            data: 'amountTransportBGN',
+                            title: 'В т.ч. пътни в лева',
+                            sortable: true,
+                            searchable: false,
+                            "render": function (value) {
+                                if (value)
+                                    return parseFloat(value).toFixed(2);
+                                else
+                                    return "0.00";
+                            }
+                         },
+                       </text>
+                    } 
                     {
                         name: 'status',
                         data: 'status',
@@ -185,7 +225,7 @@
                     {
                         name: 'description',
                         data: 'description',
-                        title: 'Текст',
+                        title: 'Забележка',
                         sortable: true,
                         searchable: true
                     },
@@ -222,7 +262,7 @@
                         }
                     }
                 ]
-            });
+            }).order([[8, "desc"]]);
         }
     }
 </script>
@@ -241,6 +281,7 @@
 
         $.fn.dataTable.ext.buttons.io_excel.action = function () {
             $("#PersonTypeLabel").val($("#PersonType option:selected").text());
+            $('#ColumnVisibility').val(getDataTablesVisibleColumns('#obligationJuryMainTable'));
             $("#formFilter").submit();
         };
     });

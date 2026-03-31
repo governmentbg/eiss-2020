@@ -11,8 +11,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public int Index { get; set; }
 
         [Display(Name = "Дата на изготвяне на съобщението")]
-        [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}", ApplyFormatInEditMode = true)]
-        public DateTime DivorceRegDate { get; set; }
+        public string DivorceRegDate { get; set; }
 
         [Display(Name = "№ и дата на писмото, с което е изпратено съобщението")]
         public string OutDocumentData { get; set; }

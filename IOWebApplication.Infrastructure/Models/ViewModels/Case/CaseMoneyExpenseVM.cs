@@ -10,6 +10,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string CaseMoneyExpenseTypeLabel { get; set; }
         public string CurrencyLabel { get; set; }
         public string CurrencyCode { get; set; }
+        public string CurrencyDescription { get; set; }
         public decimal Amount { get; set; }
         public string AmountString { get; set; }
         public string Description { get; set; }

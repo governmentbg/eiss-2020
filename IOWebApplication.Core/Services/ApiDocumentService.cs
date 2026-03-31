@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.ApiModels.Common;
@@ -26,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace IOWebApplication.Core.Services
 {
@@ -115,7 +113,7 @@ namespace IOWebApplication.Core.Services
 
             try
             {
-                using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                using (var ts = repo.BeginTransaction())
                 {
                     repo.AddRange(bankAccounts);
                     repo.AddRange(moneyClaims);
@@ -143,12 +141,13 @@ namespace IOWebApplication.Core.Services
                         }
                     }
 
-                    ts.Complete();
+                    ts.Commit();
                     return true;
                 }
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, "ApiDocumentService.UpdateFastProcessFromData");
                 return false;
             }
         }
@@ -302,7 +301,7 @@ namespace IOWebApplication.Core.Services
         public async Task<DocumentResponseModel> RegisterDocumentAsync(IDocumentRequest model)
         {
             var document = mapDocumentToEntity(model.Document);
-            var isOk = await docService.Document_SaveData(document);
+            var isOk = await docService.Document_SaveData(document).ConfigureAwait(false);
             throw new NotImplementedException();
         }
 
@@ -775,6 +774,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, "ApiDocumentService.GenerateDocumentWithRequestFromString");
                 return (null, null);
             }
         }

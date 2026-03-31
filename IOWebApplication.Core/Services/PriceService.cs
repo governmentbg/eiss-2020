@@ -217,6 +217,7 @@ namespace IOWebApplication.Core.Services
             }
         }
 
+        //TODO: Да се добави комбинация от процент/мин-макс стойност и твърда стойност, ако процента е 0
         public decimal GetPriceValue(int? courtId, string keyword, decimal mainData = 0M, DateTime? dateNow = null, decimal baseValue = 0M, int colNumber = 0, string rowKeyword = null)
         {
             decimal result = 0M;

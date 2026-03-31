@@ -32,7 +32,7 @@ namespace IOWebApplication.Test
                 var userContext = serviceProvider.GetService<IUserContext>();
                 int documentDirection = 5;
 
-                var document = service.Document_Init(documentDirection);
+                var document = service.Document_Init(documentDirection).Result;
 
                 Assert.That(document.DocumentDirectionId, Is.EqualTo(documentDirection));
                 Assert.That(document.DocumentCaseInfo.CourtId, Is.EqualTo(userContext.CourtId));
@@ -61,7 +61,7 @@ namespace IOWebApplication.Test
 
                 repo.Add(template);
 
-                var document = service.Document_Init(documentDirection, template.Id);
+                var document = service.Document_Init(documentDirection, template.Id).Result;
 
                 Assert.That(document.TemplateId, Is.EqualTo(template.Id));
                 Assert.That(document.DocumentKindId, Is.EqualTo(template.DocumentKindId));
@@ -87,7 +87,7 @@ namespace IOWebApplication.Test
                 };
 
                 repo.Add(template);
-                Infrastructure.Data.Models.Cases.Case templateCase = new Infrastructure.Data.Models.Cases.Case 
+                Infrastructure.Data.Models.Cases.Case templateCase = new Infrastructure.Data.Models.Cases.Case
                 {
                     Id = template.CaseId ?? 0,
                     CourtId = userContext.CourtId
@@ -95,7 +95,7 @@ namespace IOWebApplication.Test
 
                 repo.Add(templateCase);
 
-                var document = service.Document_Init(documentDirection, template.Id);
+                var document = service.Document_Init(documentDirection, template.Id).Result;
 
                 Assert.That(document.DocumentCaseInfo.CourtId, Is.EqualTo(templateCase.CourtId));
                 Assert.That(document.DocumentCaseInfo.CaseId, Is.EqualTo(templateCase.Id));

@@ -23,6 +23,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
 
         [Display(Name = "Сума")]
         public decimal Amount { get; set; }
+
+        [Display(Name = "Сума в лева")]
+        public decimal AmountBGN { get; set; }
     }
 
     public class ExchangeDocFilterVM

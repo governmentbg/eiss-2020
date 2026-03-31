@@ -9,6 +9,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
 {
     public class CaseSessionNotificationListNotificationVM
     {
+        public int Id { get; set; }
         public string AddressString { get; set; }
         public string DateSend { get; set; }
         public string Remark { get; set; }

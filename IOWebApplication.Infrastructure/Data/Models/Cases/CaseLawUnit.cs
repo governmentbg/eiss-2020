@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using System.Collections.Generic;
@@ -85,6 +86,20 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("to_case_session_id")]
         public int? ToCaseSessionId { get; set; }
 
+        [Column("saved_order_by")]
+        public int SavedOrderBy { get; set; }
+
+        /// <summary>
+        /// Идентификатор на протокол за разпределяне извън дело
+        /// </summary>
+        [Comment("Идентификатор на протокол за разпределяне извън дело")]
+        [Column("case_selection_protokol_substitution_id")]
+        public int? CaseSelectionProtokolSubstitutionId { get; set; }
+
+        //За подредба по старшинство в шапка на актове
+        [NotMapped]
+        public int? OrderBy { get; set; }
+
         [ForeignKey(nameof(CaseSelectionProtokolId))]
         public virtual CaseSelectionProtokol CaseSelectionProtokol { get; set; }
 
@@ -131,5 +146,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(LawUnitSubstitutionId))]
         public virtual CourtLawUnitSubstitution LawUnitSubstitution { get; set; }
+
+        /// <summary>
+        /// Протокол за разпределяне извън дело
+        /// </summary>
+        [ForeignKey(nameof(CaseSelectionProtokolSubstitutionId))]
+        public virtual CaseSelectionProtokolSubstitution CaseSelectionProtokolSubstitution { get; set; }
     }
 }

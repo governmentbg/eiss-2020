@@ -9,58 +9,66 @@
 
 
 <script>
-        $(function () {
-            var table = $('#caseHronologiaMainTable').DataTable({
-                ajax: {
-                    "url": "@Url.Action("CaseFolder_ListData", "Case")",
-                    "type": "POST",
-                    "datatype": "json",
-                    data: function (d) {
-                        d.caseId = @Model.Id;
+    $(function () {
+        var table = $('#caseHronologiaMainTable').DataTable({
+            ajax: {
+                "url": "@Url.Action("CaseFolder_ListData", "Case")",
+                "type": "POST",
+                "datatype": "json",
+                data: function (d) {
+                    d.caseId = @Model.Id;
+                }
+                ,
+                initialCall: false
+            },
+            filter: false,
+            deferLoading: deferLoadingOnTab('#caseHronologiaMainTable'),
+            columns: [
+                {
+                    name: 'date',
+                    data: 'date',
+                    title: 'Дата',
+                    sortable: true,
+                    searchable: false,
+                    render: function (a, b, row, c) {
+                        return row.dateText;
                     }
-                    ,
-                    initialCall: false
                 },
-                deferLoading: deferLoadingOnTab('#caseHronologiaMainTable'),
-                columns: [
-                   {
-                        name: 'date',
-                        data: 'date',
-                        title: 'Дата',
-                        sortable: true,
-                        searchable: true,
-                        render: function (data) {
-                            return moment(data).format("DD.MM.YYYY HH:mm");
-                        }
-                    },
-                    {
-                        name: 'typeName',
-                        data: 'typeName',
-                        title: 'Вид',
-                        sortable: true,
-                        searchable: false,
-                    },
-                    {
-                        name: 'title',
-                        data: 'title',
-                        title: 'Описание',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'actions',
-                        data: "elementUrl",
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#templateEdit', value);
-                        }
+                {
+                    name: 'typeName',
+                    data: 'typeName',
+                    title: 'Вид',
+                    sortable: true,
+                    searchable: false,
+                },
+                {
+                    name: 'title',
+                    data: 'title',
+                    title: 'Описание',
+                    sortable: true,
+                    searchable: false
+                },
+                {
+                    name: 'description',
+                    data: 'description',
+                    title: 'Доп. описание',
+                    sortable: true,
+                    searchable: false
+                },
+                {
+                    name: 'actions',
+                    data: "elementUrl",
+                    title: "",
+                    sortable: false,
+                    searchable: false,
+                    className: "text-center noExport",
+                    "render": function (value) {
+                        return TemplateToHtml('#templateEdit', value);
                     }
-                ]
-            }).order([[ 0, "asc" ]]);
-        });
+                }
+            ]
+        }).order([[0, "desc"]]);
+    });
 </script>
 
 <script id="templateEdit" type="text/x-handlebars-template">

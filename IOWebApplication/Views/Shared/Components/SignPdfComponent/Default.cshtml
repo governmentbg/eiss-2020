@@ -1,4 +1,8 @@
-﻿@model IOWebApplication.Models.SignPdfViewModel
+﻿@using System.Web
+@model IOWebApplication.Models.SignPdfViewModel
+@{
+    string signComfirmMessage = (string)ViewBag.signComfirmMessage;
+}
 
 <div id="signMessageContainer" style="display:none">
     <div class="row">
@@ -22,13 +26,13 @@
                 }
             </div>
             <div class="box-body">
-                <object data="@(Model.PdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;">
-                    <embed src="@(Model.PdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;" />
+                <object data="@(Model.PreviewPdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;">
+                    <embed src="@(Model.PreviewPdfUrl)#toolbar=0&navpanes=0" type="application/pdf" width="100%" style="height:70vh;" />
                 </object>
             </div>
             <div class="box-footer">
-                <form action="@Url.Action("SignPdf", "PDF", new { area = String.Empty })" method="post" class="pdfSigner">
-                    @Html.HiddenFor(m => m.PdfId)
+                <form action="@Url.Action("SignPdf", "SignDocument", new { area = String.Empty })" method="post" class="pdfSigner">
+                    @Html.HiddenFor(m => m.TempFileId)
                     @Html.HiddenFor(m => m.FileName)
                     @Html.HiddenFor(m => m.SuccessUrl)
                     @Html.HiddenFor(m => m.ErrorUrl)
@@ -39,11 +43,15 @@
                     @Html.HiddenFor(m => m.FileTitle)
                     @Html.HiddenFor(m => m.FileId)
                     @Html.HiddenFor(m => m.SignituresCount)
-                    @Html.HiddenFor(m => m.PdfHash, new { disabled = "disabled" })
-                    <input name="Signature" id="Signature" type="hidden" />
-                    <input name="ErrorCode" id="ErrorCode" type="hidden" />
+                    @Html.HiddenFor(m => m.ClientCode)
+                    @Html.HiddenFor(m => m.WorkTaskId)
+                    @Html.HiddenFor(m => m.FileHash, new { disabled = "disabled" })
+                    @Html.HiddenFor(m => m.Signature)
+                    @* <input name="Signature" id="Signature" type="hidden" /> *@
+                    @Html.HiddenFor(m => m.ErrorCode)
+                    @* <input name="ErrorCode" id="ErrorCode" type="hidden" /> *@
                     <a href="@Model.CancelUrl" class="btn btn-danger">Назад</a>
-                    <button type="button" class="btn btn-success pull-right submit" disabled>Подпиши</button>
+                    <button type="button" class="btn btn-success pull-right submit-sign-pdf" disabled data-signwarning="@signComfirmMessage">Подпиши</button>
                 </form>
             </div>
         </div>
@@ -51,8 +59,13 @@
 </div>
 
 <script>
+    $(function () {
+        $('form.pdfSigner').submit(function () {
+            $('#ClientCode').val(Date.now());
+        });
+    });
     function checkError(errorCode) {
-        $.get('@Url.Action("CheckLSMErrorCode", "pdf", new { area = String.Empty })' + '?errorCode=' + errorCode)
+        $.get('@Url.Action("CheckLSMErrorCode", "SignDocument", new { area = String.Empty })' + '?errorCode=' + errorCode)
             .then(function (data) {
                 showSignError(data.errorMessage);
             });

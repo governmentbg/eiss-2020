@@ -4,6 +4,7 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
@@ -30,12 +31,8 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CounterVM> Counter_Select(int courtId, string label)
         {
             label = label?.ToLower();
-            //return repo.AllReadonly<Counter>(x => x.CourtId == courtId && x.Label.ToLower().Contains(label ?? x.Label.ToLower()))
             return repo.AllReadonly<Counter>()
-                .Include(x => x.CounterType)
-                .Include(x => x.ResetType)
                 .Where(x => x.CourtId == courtId)
-                //.OrderBy(x => x.Label)
                 .Select(x => new CounterVM()
                 {
                     Id = x.Id,
@@ -146,7 +143,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Counter Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Counter Id={model.Id}");
                 return false;
             }
         }
@@ -166,18 +163,39 @@ namespace IOWebApplication.Core.Services
                     model.DocumentNumber = stringValue;
                     model.DocumentNumberValue = intValue;
                     model.DocumentDate = DateTime.Now;
+
                     return true;
                 }
                 else
                 {
-                    throw new Exception($"Няма настроен брояч за документи. DocumentDirection={ model.DocumentDirectionId },Court={ model.CourtId}");
+                    throw new Exception($"Няма настроен брояч за документи. DocumentDirection={model.DocumentDirectionId},Court={model.CourtId}");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Counter. DocumentDirection={ model.DocumentDirectionId },Court={ model.CourtId}");
+                logger.LogError(ex, $"Грешка при запис на Counter. DocumentDirection={model.DocumentDirectionId},Court={model.CourtId}");
             }
             return false;
+        }
+
+        public bool CheckIsCounterCheckDublicateKeyException(Exception exception)
+        {
+            if (exception == null)
+            {
+                //Така се извиква от Quartz
+                return true;
+            }
+
+            if (exception.InnerException == null)
+            {
+                return false;
+            }
+            if (!exception.InnerException.Message.Contains("duplicate key") || !exception.InnerException.Message.Contains("PK_common_counter_check"))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public GetCounterValueVM Counter_GetDocumentCounterMulti(int counterCount, int docDirection, int courtId)
@@ -192,16 +210,28 @@ namespace IOWebApplication.Core.Services
                 if (counterId > 0)
                 {
                     var counter = repo.ExecuteProc<GetCounterValueVM>("public.get_counter_value_multi({0},{1})", counterId, counterCount).FirstOrDefault();
+
+                    int currentYear = DateTime.Now.Year;
+                    for (int counterValue = counter.Value - (counterCount - 1); counterValue <= counter.Value; counterValue++)
+                    {
+                        repo.Add(new CounterCheck()
+                        {
+                            SourceType = SourceTypeSelectVM.Document,
+                            CouterValue = $"{currentYear}-{courtId}-{docDirection}-{counterValue}",
+                            DateCheck = DateTime.Now
+                        });
+                    }
+
                     return counter;
                 }
                 else
                 {
-                    throw new Exception($"Няма настроен брояч за документи. DocumentDirection={ docDirection },Court={ courtId}");
+                    throw new Exception($"Няма настроен брояч за документи. DocumentDirection={docDirection},Court={courtId}");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Counter. DocumentDirection={ docDirection },Court={ courtId}");
+                logger.LogError(ex, $"Грешка при запис на Counter. DocumentDirection={docDirection},Court={courtId}");
             }
             return null;
         }
@@ -218,20 +248,53 @@ namespace IOWebApplication.Core.Services
 
             return (intValue: counter.Value, stringValue: string.Format("{0}{1:D" + counter.DigitCount.ToString() + "}{2}", counter.Prefix, counter.Value, counter.Suffix));
         }
+        private GetCounterValueVM Counter_GetValueMultiEF(int counterId, int counterCount = 1)
+        {
+            var counter = repo.ExecuteSQL<Counter>("select id, court_id, counter_type, reset_type, value, init_value, last_used, preffix, suffix, digit_count, label from public.\"common_counter\" where id = {0} FOR UPDATE", counterId).FirstOrDefault();
+            if (counter == null)
+                throw new InvalidOperationException($"Counter with ID {counterId} not found.");
+
+            var currentYear = DateTime.Now.Year;
+            var lastUsedYear = counter.LastUsed.Year;
+
+            if (currentYear > lastUsedYear && lastUsedYear > 10)
+            {
+                counter.Value = counter.InitValue + counterCount;
+            }
+            else
+            {
+                counter.Value += counterCount;
+            }
+
+            counter.LastUsed = DateTime.Now;
+
+            repo.Update(counter);
+            repo.SaveChanges();
+            return new GetCounterValueVM
+            {
+                DigitCount = counter.DigitCount,
+                Prefix = counter.Prefix,
+                Value = counter.Value,
+                Suffix = counter.Suffix
+            };
+        }
 
         public bool Counter_GetCaseCounter(Case model, int? oldNumber = null, DateTime? oldDate = null)
         {
             try
             {
+                if (model.RegDate.Year > 2000 || !string.IsNullOrEmpty(model.RegNumber))
+                {
+                    return true;
+                }
 
-                var courtCode = repo.AllReadonly<Court>().FirstOrDefault(x => x.Id == model.CourtId)?.Code;
+                var courtCode = repo.AllReadonly<Court>().Where(x => x.Id == model.CourtId).Select(x => x.Code).FirstOrDefault();
                 var characterCode = repo.AllReadonly<CaseCharacter>()
                                             .Where(x => x.Id == model.CaseCharacterId)
                                             .Select(x => x.Code)
                                             .FirstOrDefault();
 
                 var counterId = repo.AllReadonly<CounterCase>()
-                                    .Include(x => x.Counter)
                                     .Where(x => x.CaseGroupId == model.CaseGroupId)
                                     .Where(x => x.Counter.CourtId == model.CourtId && x.Counter.CounterTypeId == NomenclatureConstants.CounterTypes.Case)
                                     .Select(x => x.CounterId)
@@ -245,6 +308,7 @@ namespace IOWebApplication.Core.Services
                     }
                     else
                     {
+
                         model.ShortNumber = Counter_GetValue(counterId);
                         model.RegDate = DateTime.Now;
                     }
@@ -254,17 +318,18 @@ namespace IOWebApplication.Core.Services
                     {
                         model.ShortNumberValue = int.Parse(model.ShortNumber);
                     }
-                    catch (Exception ee) { }
+                    catch (Exception) { }
+
                     return true;
                 }
                 else
                 {
-                    throw new Exception($"Няма настроен брояч за дела. CaseGroupId={ model.CaseGroupId },Court={ model.CourtId}");
+                    throw new Exception($"Няма настроен брояч за дела. CaseGroupId={model.CaseGroupId},Court={model.CourtId}");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Counter. CaseGroupId={ model.CaseGroupId },Court={ model.CourtId}");
+                logger.LogError(ex, $"Грешка при запис на Counter. CaseGroupId={model.CaseGroupId},Court={model.CourtId}");
             }
             return false;
         }
@@ -297,12 +362,12 @@ namespace IOWebApplication.Core.Services
                 }
                 else
                 {
-                    throw new Exception($"Няма настроен брояч за архивиране. CaseGroupId={ caseModel.CaseGroupId },Court={ caseModel.CourtId}");
+                    throw new Exception($"Няма настроен брояч за архивиране. CaseGroupId={caseModel.CaseGroupId},Court={caseModel.CourtId}");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Counter. CaseGroupId={ caseModel.CaseGroupId },Court={ caseModel.CourtId}");
+                logger.LogError(ex, $"Грешка при запис на Counter. CaseGroupId={caseModel.CaseGroupId},Court={caseModel.CourtId}");
             }
             return false;
         }
@@ -312,19 +377,17 @@ namespace IOWebApplication.Core.Services
             try
             {
                 var sessionActGroupId = repo.AllReadonly<SessionActType>()
-                                                .Include(x => x.SessionActGroup)
                                                 .Where(x => x.ActTypeId == model.ActTypeId && x.SessionActGroup.CaseGroupId == caseGroupId)
                                                 .Select(x => x.SessionActGroupId)
                                                 .FirstOrDefault();
 
                 if (sessionActGroupId < 1)
                 {
-                    throw new Exception($"Няма настроена група за номериране на актове. ActTypeId={model.ActTypeId },Court={courtId}");
+                    throw new Exception($"Няма настроена група за номериране на актове. ActTypeId={model.ActTypeId},Court={courtId}");
                 }
 
 
                 var counterId = repo.AllReadonly<CounterSessionAct>()
-                                    .Include(x => x.Counter)
                                     .Where(x => x.Counter.CourtId == courtId && x.SessionActGroupId == sessionActGroupId)
                                     .Select(x => x.CounterId)
                                     .FirstOrDefault();
@@ -340,17 +403,17 @@ namespace IOWebApplication.Core.Services
                     }
                     else
                     {
-                        throw new Exception($"Грешка вземане на стойност от брояч CounterId={counterId}. CaseGroupId={caseGroupId },Court={courtId}");
+                        throw new Exception($"Грешка вземане на стойност от брояч CounterId={counterId}. CaseGroupId={caseGroupId},Court={courtId}");
                     }
                 }
                 else
                 {
-                    throw new Exception($"Няма настроен брояч за актове. CaseGroupId={caseGroupId },Court={courtId}");
+                    throw new Exception($"Няма настроен брояч за актове. CaseGroupId={caseGroupId},Court={courtId}");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Counter. CaseGroupId={caseGroupId },Court={courtId}");
+                logger.LogError(ex, $"Грешка при запис на Counter. CaseGroupId={caseGroupId},Court={courtId}");
             }
             return false;
         }
@@ -384,6 +447,35 @@ namespace IOWebApplication.Core.Services
             return false;
         }
         public bool Counter_GetNotificationCounter(DocumentNotification model, int courtId)
+        {
+            try
+            {
+                var counterId = repo.AllReadonly<Counter>()
+                                    .Where(x => x.CourtId == courtId && x.CounterTypeId == NomenclatureConstants.CounterTypes.Notification)
+                                    .Select(x => x.Id)
+                                    .FirstOrDefault();
+                if (counterId > 0)
+                {
+                    var courtCode = repo.AllReadonly<Court>().FirstOrDefault(x => x.Id == courtId)?.Code;
+
+
+                    model.RegNumber = $"{DateTime.Now.Year}{courtCode}{Counter_GetValue(counterId)}";
+                    model.RegDate = DateTime.Now;
+                    return true;
+                }
+                else
+                {
+                    throw new Exception($"Няма настроен брояч за известия. Court={courtId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на брояч за известия. Court={courtId}");
+            }
+            return false;
+        }
+
+        public bool Counter_GetNotificationCounter(MediationNotification model, int courtId)
         {
             try
             {
@@ -643,6 +735,35 @@ namespace IOWebApplication.Core.Services
             return false;
         }
 
+        public bool Counter_GetCaseBulletinFileCounter(CasePersonSentenceBulletinFile model, int courtId)
+        {
+            try
+            {
+                var counterId = repo.AllReadonly<Counter>()
+                                    .Where(x => x.CourtId == courtId && x.CounterTypeId == NomenclatureConstants.CounterTypes.CasePersonBulletin)
+                                    .Select(x => x.Id)
+                                    .FirstOrDefault();
+                if (counterId > 0)
+                {
+                    var courtCode = repo.GetPropById<Court, string>(x => x.Id == courtId, x => x.Code);
+
+
+                    model.RegNumber = $"{DateTime.Now.Year}{courtCode}{Counter_GetValue(counterId)}";
+                    model.RegDate = DateTime.Now;
+                    return true;
+                }
+                else
+                {
+                    throw new Exception($"Няма настроен брояч за съдебни бюлетини. Court={courtId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на брояч за съдебни бюлетини. Court={courtId}");
+            }
+            return false;
+        }
+
         public void InitAllCounters()
         {
 
@@ -655,9 +776,9 @@ namespace IOWebApplication.Core.Services
             //}
 
             var courts = repo.AllReadonly<Court>().ToList();
-            var docDirections = repo.AllReadonly<DocumentDirection>().ToList();
-            var caseGroups = repo.AllReadonly<CaseGroup>().ToList();
-            var actGroups = repo.AllReadonly<SessionActGroup>().ToList();
+            //var docDirections = repo.AllReadonly<DocumentDirection>().ToList();
+            //var caseGroups = repo.AllReadonly<CaseGroup>().ToList();
+            //var actGroups = repo.AllReadonly<SessionActGroup>().ToList();
             foreach (var court in courts)
             {
                 ////Броячи за документи
@@ -760,7 +881,7 @@ namespace IOWebApplication.Core.Services
                 //repo.Add(expenseOrder);
 
                 //Броячи за актове
-                //foreach (var actGroup in actGroups.Where(x => x.Id == 27 || x.Id == 28 || x.Id == 29))
+                //foreach (var actGroup in actGroups.Where(x => x.Id == 30))
                 //{
                 //    var counter = new Counter()
                 //    {
@@ -914,6 +1035,32 @@ namespace IOWebApplication.Core.Services
                 //    repo.Add(counterEISPP_Crime);
                 //}
 
+                //Брояч за Наследство
+                //var inheritance = new Counter()
+                //{
+                //    CourtId = court.Id,
+                //    CounterTypeId = NomenclatureConstants.CounterTypes.CasePersonInheritance,
+                //    Label = $"{court.Label} : Наследство",
+                //    ResetTypeId = 1,
+                //    InitValue = 0,
+                //    Value = 0,
+                //    DigitCount = 7
+                //};
+                //repo.Add(inheritance);
+
+                //Брояч за Съдебен бюлетин
+                var counterBulletin = new Counter()
+                {
+                    CourtId = court.Id,
+                    CounterTypeId = NomenclatureConstants.CounterTypes.CasePersonBulletin,
+                    Label = $"{court.Label} : Бюлетин за съдимост",
+                    ResetTypeId = 1,
+                    InitValue = 0,
+                    Value = 0,
+                    DigitCount = 5
+                };
+                repo.Add(counterBulletin);
+
                 repo.SaveChanges();
             }
         }
@@ -1028,6 +1175,33 @@ namespace IOWebApplication.Core.Services
                 logger.LogError(ex, $"Грешка при запис на брояч за ЕИСПП. Court={courtId}");
             }
             return string.Empty;
+        }
+
+        public bool Counter_GetCasePersonInheritanceCounter(CasePersonInheritance model, int courtId)
+        {
+            try
+            {
+                var counterId = repo.AllReadonly<Counter>()
+                                    .Where(x => x.CourtId == courtId && x.CounterTypeId == NomenclatureConstants.CounterTypes.CasePersonInheritance)
+                                    .Select(x => x.Id)
+                                    .FirstOrDefault();
+                if (counterId > 0)
+                {
+                    (int intValue, string stringValue) = Counter_GetValueMulti(counterId);
+                    model.RegNumber = stringValue;
+                    model.RegNumberValue = intValue;
+                    return true;
+                }
+                else
+                {
+                    throw new Exception($"Няма настроен брояч за наследство. Court={courtId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на брояч за наследство. Court={courtId}");
+            }
+            return false;
         }
     }
 }

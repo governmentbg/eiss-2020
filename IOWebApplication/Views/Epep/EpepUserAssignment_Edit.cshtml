@@ -1,5 +1,5 @@
 ﻿@model EpepUserAssignment
-@using  IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Constants
 @using IOWebApplication.Infrastructure.Data.Models.Common
 
 @{
@@ -37,8 +37,9 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div id="saveContainer">
                     <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                    @Html.EditorFor(x => x.CaseId, "SelectCase", new { onChange = "courtSelect();" })
+                    @Html.EditorFor(x => x.CaseId, "SelectCase", new {courtId = Model.CourtId, onChange = "caseSelect();" })
                     @Html.EditorFor(x => x.CasePersonId, "GenericDropDown")
+                    @Html.EditorFor(x => x.AssignmentRole, "GenericDropDown")
                     @Html.EditorFor(x => x.CanSummon)
                 </div>
 
@@ -71,13 +72,24 @@
 @section scripts{
     <script>
         $(function () {
-            $('#CaseId').parents('.case-container:first').data('court', @(Model.CourtId));
+            $('#CasePersonId').select2();
             initCase();
-            courtSelect();
-        });
-        function courtSelect() {
+        @if (Model.CasePersonId > 0)
+        {
+            <text>caseSelect(); </text>
+        }
+
+                        });
+
+        var lastSelectedCaseId;
+        function caseSelect() {
             let caseId = $('#CaseId').val();
-            requestCombo('@Url.Action("Get_CasePerson")', { caseId: caseId }, '#CasePersonId','@Model.CasePersonId');
+            if (lastSelectedCaseId == caseId) {
+                return;
+            }
+            //Дублира заявката на onChange при blur
+            lastSelectedCaseId = caseId;
+            requestCombo('@Url.Action("Get_CasePerson")', { caseId: caseId }, '#CasePersonId', '@Model.CasePersonId');
         }
     </script>
 }

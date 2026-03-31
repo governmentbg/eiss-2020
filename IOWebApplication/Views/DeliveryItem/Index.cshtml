@@ -1,17 +1,16 @@
-﻿@using  IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 @using IOWebApplication.Infrastructure.Constants;
 @model DeliveryItemFilterVM;
-@inject IViewLocalizer Localizer
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 
 @{
     ViewData["Title"] = Model.getDeliveryTypeName();
- }
+}
 <form id="formFilter" asp-action="Edit" method="post" class="quick-submit">
     @Html.HiddenFor(x => x.FilterType)
     @Html.HiddenFor(x => x.NoAutoLoad)
@@ -38,6 +37,21 @@
             @Html.EditorFor(x => x.DateAcceptedTo)
         </div>
     </div>
+    @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.Inner)
+    {
+        <div class="row">
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+            </div>
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.PreparedById, "GenericDropDown")
+            </div>
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")
+            </div>
+        </div>
+    }
+
     <div class="row">
         <div class="col-md-2">
             @Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")
@@ -48,28 +62,42 @@
         <div class="col-md-2">
             @Html.EditorFor(x => x.CaseRegNumber)
         </div>
-
-        @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.Inner)
-        {
-            <div class="col-md-4">
-                @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
-            </div>
-
-        }
         @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.FromOther)
         {
             <div class="col-md-4">
                 @Html.EditorFor(x => x.FromCourtId, "GenericDropDown")
             </div>
-            <div class="col-md-4">
-                @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
-            </div>
-
         }
         @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.ToOther)
         {
             <div class="col-md-4">
                 @Html.EditorFor(x => x.CourtId, "GenericDropDown")
+            </div>
+        }
+        <div class="col-md-2">
+            @Html.EditorFor(m => m.IsGenerated, "GenericDropDownString")
+        </div>
+        @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.Inner)
+        {
+            <div class="col-md-2">
+                @Html.EditorFor(m => m.IsFastProcess, "GenericDropDownString")
+            </div>
+        }
+    </div>
+    <div class="row">
+        @if (Model.FilterType != NomenclatureConstants.DeliveryItemFilterType.Inner)
+        {
+            <div class="col-md-2">
+                @Html.EditorFor(m => m.IsFastProcess, "GenericDropDownString")
+            </div>
+        }
+        @if (Model.FilterType == NomenclatureConstants.DeliveryItemFilterType.FromOther)
+        {
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.LawUnitId, "GenericDropDown")
+            </div>
+            <div class="col-md-4">
+                @Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")
             </div>
         }
     </div>
@@ -120,6 +148,7 @@
                     d.filterData = JSON.parse($('#filterJson').val());
                 }
             },
+            stateSave: false,
             "fnDrawCallback": function (oSettings) {
                 hideCourtName();
             },
@@ -132,9 +161,11 @@
                     "render": function (item, type, row, meta) {
                         if (row.caseNotificationId > 0) {
                             return '<a style="cursor: pointer;" data-toggle="tooltip" onclick="printNotificationRaw(' + row.caseNotificationId + ')" title="Печат">' + row.regNumber + '</a>';
-                        } else {
-                            return row.regNumber;
                         }
+                        if (row.documentNotificationId > 0) {
+                            return '<a style="cursor: pointer;" data-toggle="tooltip" onclick="printNotificationDocumentRaw(' + row.documentNotificationId + ')" title="Печат">' + row.regNumber + '</a>';
+                        }
+                        return row.regNumber;
                     },
                     sortable: true,
                     searchable: true
@@ -152,7 +183,15 @@
                     data: 'caseInfo',
                     title: 'Към дело',
                     sortable: true,
-                    searchable: true
+                    searchable: true, 
+                    "render": function (item, type, row, meta) {
+                        let info = item;
+                        if (row.fastCaseInfo)
+                        {
+                            info += `<span class="fast-case-info"> ${row.fastCaseInfo}</span>`;
+                        }
+                        return info;
+                    }
                 },
                 {
                     name: 'personName',
@@ -162,16 +201,33 @@
                     searchable: true
                 },
                 {
-                    name: 'address',
-                    data: 'address',
+                    name: 'fullAddress',
+                    data: 'fullAddress',
                     title: 'Адрес',
                     sortable: true,
+                    searchable: true,
+                    render: function (a, b, row, c) {
+                        return row.address;
+                    }
+                },
+                {
+                    name: 'departmentLabel',
+                    data: 'departmentLabel',
+                    title: 'Състав',
+                    sortable: false,
                     searchable: true
                 },
                 {
                     name: 'lawUnitName',
                     data: 'lawUnitName',
                     title: 'Връчител',
+                    sortable: true,
+                    searchable: true
+                },
+                {
+                    name: 'preparedBy',
+                    data: 'preparedBy',
+                    title: 'Изготвил',
                     sortable: true,
                     searchable: true
                 },
@@ -258,15 +314,18 @@
                     }
                 }
             ]
-        });
+        })
+        //debugger;
+        // setTimeout(function () {
+        //     table.state.clear();
+        // }, 500);
+
     };
     function hideCourtName() {
-        if (@Model.FilterType != @NomenclatureConstants.DeliveryItemFilterType.FromOther)
-        {
-             $('.from-court-name').hide();
+        if (@Model.FilterType != @NomenclatureConstants.DeliveryItemFilterType.FromOther) {
+            $('.from-court-name').hide();
         }
-        if (@Model.FilterType != @NomenclatureConstants.DeliveryItemFilterType.ToOther)
-        {
+        if (@Model.FilterType != @NomenclatureConstants.DeliveryItemFilterType.ToOther) {
             $('.to-court-name').hide();
         }
         if (@Model.FilterType == @NomenclatureConstants.DeliveryItemFilterType.FromOther) {
@@ -292,15 +351,15 @@
         }
     }
     function EditDeliveryItem(id) {
-        $('#formPostEdit').attr('action', '@Url.Action("Edit")/'+ id);
+        $('#formPostEdit').attr('action', '@Url.Action("Edit")/' + id);
         $("#formPostEdit").submit();
     }
     function EditDeliveryItemState(id) {
-        $('#formPostEdit').attr('action', '@Url.Action("EditState")/'+ id);
+        $('#formPostEdit').attr('action', '@Url.Action("EditState")/' + id);
         $("#formPostEdit").submit();
     }
     function AddDeliveryItemOper(id) {
-        $('#formPostEdit').attr('action', '@Url.Action("Index", "DeliveryItemOper")?deliveryItemId='+ id);
+        $('#formPostEdit').attr('action', '@Url.Action("Index", "DeliveryItemOper")?deliveryItemId=' + id);
         $("#formPostEdit").submit();
     }
     function postCheckReceived() {
@@ -320,6 +379,10 @@
     }
     function DeliveryItemOperList(id) {
         $('#formPostEdit').attr('action', '@Url.Action("IndexHistory", "DeliveryItemOper")?deliveryItemId=' + id);
+        $("#formPostEdit").submit();
+    }
+    function DeliveryItemHistory(id) {
+        $('#formPostEdit').attr('action', '@Url.Action("IndexHistory", "DeliveryItem")?deliveryItemId=' + id);
         $("#formPostEdit").submit();
     }
     $("#RegNumber").keypress(function (event) {
@@ -347,6 +410,10 @@
         $('#LawUnitId').select2({
             language: "bg"
         });
+        $('#PreparedById').select2({
+            language: "bg"
+        });
+
         if ($('#NoAutoLoad').val() != 'Y')
             LoadDeliveryItems();
         if ("@Model.FilterType" == "@NomenclatureConstants.DeliveryItemFilterType.ToOther") {
@@ -382,9 +449,6 @@
         }
         return filterMsg;
     }
-    function printNotificationRaw(id) {
-        window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
-    }
 </script>
 
 <script id="templateEdit" type="text/x-handlebars-template">
@@ -404,10 +468,14 @@
         <i class="fa fa-address-card"></i>
         <span class="hidden-sm hidden-xs"></span>
     </a>
-    @*<a href='@Url.Action("ToCaseNotification", "DeliveryItem")/{{this}}' class="btn btn-def btn-sm" title="Съобщение">
-        <i class="fa fa-envelope-open"></i>
+    <a onclick="DeliveryItemHistory({{this}})" class="btn btn-def btn-sm" title="История">
+        <i class="fa fa-history"></i>
         <span class="hidden-sm hidden-xs"></span>
-    </a>*@
+    </a>
+    @*<a href='@Url.Action("ToCaseNotification", "DeliveryItem")/{{this}}' class="btn btn-def btn-sm" title="Съобщение">
+            <i class="fa fa-envelope-open"></i>
+            <span class="hidden-sm hidden-xs"></span>
+        </a>*@
 </script>
 <script id="templateEditNoVisit" type="text/x-handlebars-template">
     <a onclick="EditDeliveryItemState({{this}})" class="btn btn-warning btn-sm" title="Смяна на статус">

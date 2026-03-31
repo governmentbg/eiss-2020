@@ -1,13 +1,40 @@
 ﻿@model CaseSessionActPrintVM
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@inject IUserContext userContext
 @{
     Layout = null;
 }
 
     <div style="font-family: 'Times New Roman'">
         <center>
-            <b>ЗАПОВЕД ЗА ЗАЩИТА № @Model.ActRegNumber</b><br /><br />
-            @Model.CourtCity, @DateTime.Now.ToString("dd.MM.yyyy")г.<br /><br />
+        @if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+        {
+                    <b>ЗАПОВЕД ЗА ЗАЩИТА № @Model.ActRegNumber</b>
+
+            <br />
+
+            <br />
+                    <p>@Model.CourtCity, @DateTime.Now.ToString("dd.MM.yyyy")г.</p>
+
+            <br />
+
+            <br />
+        }
+        else
+        {
+                    <b>ЗАПОВЕД ЗА ЗАЩИТА</b>
+
+            <br />
+
+            <br />
+                    <p>@Model.CourtCity</p>
+
+            <br />
+
+            <br />
+        }
             <b>В ИМЕТО НА НАРОДА</b><br /><br />
         </center>
         <br />

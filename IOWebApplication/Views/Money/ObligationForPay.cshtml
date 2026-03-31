@@ -1,4 +1,5 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 @model ObligationForPayFilterVM
 
 @{
@@ -23,6 +24,10 @@
     <div class="col-lg-2">@Html.EditorFor(m => m.Status, "GenericDropDown")</div>
     <div class="col-lg-2">@Html.EditorFor(m => m.PersonUicSearch)</div>
     <div class="col-lg-4">@Html.EditorFor(m => m.PersonNameSearch)</div>
+    @if (Model.Sign == IOWebApplication.Infrastructure.Constants.NomenclatureConstants.MoneySign.SignMinus)
+    {
+        <div class="col-lg-3">@Html.EditorFor(m => m.PersonType, "GenericDropDownString")</div>
+    }
 </div>
 <div class="row">
     <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
@@ -32,6 +37,11 @@
     @if (Model.Sign == IOWebApplication.Infrastructure.Constants.NomenclatureConstants.MoneySign.SignMinus)
     {
         <div class="col-lg-2">@Html.EditorFor(m => m.ExpenseOrderSearch)</div>
+    }
+    @if (Model.Sign == IOWebApplication.Infrastructure.Constants.NomenclatureConstants.MoneySign.SignPlus)
+    {
+        <div class="col-lg-2">@Html.EditorFor(x => x.ReceiveSourceTypeId, "GenericDropDown")</div>
+        <div class="col-lg-2">@Html.EditorFor(x => x.ReceiveSourceId, "SelectSource", null, new { sourceTypeContainer = "#ReceiveSourceTypeId" })</div>
     }
 </div>
 
@@ -104,15 +114,18 @@
                     "datatype": "json",
                    data: function (d) {
                        d.model = {
-                        Status: $("#Status").val(),
-                        PersonUicSearch: $("#PersonUicSearch").val(),
-                        PersonNameSearch: $("#PersonNameSearch").val(),
-                        ExpenseOrderSearch: $("#ExpenseOrderSearch").val(),
-                        DateFrom: $("#DateFrom").val(),
-                        DateTo: $("#DateTo").val(),
-                        Sign: @Model.Sign,
-                        MoneyTypeId: $("#MoneyTypeId").val(),
-                        CaseRegNumber: $("#CaseRegNumber").val()
+                           Status: $("#Status").val(),
+                           PersonUicSearch: $("#PersonUicSearch").val(),
+                           PersonNameSearch: $("#PersonNameSearch").val(),
+                           ExpenseOrderSearch: $("#ExpenseOrderSearch").val(),
+                           DateFrom: $("#DateFrom").val(),
+                           DateTo: $("#DateTo").val(),
+                           Sign: @Model.Sign,
+                           MoneyTypeId: $("#MoneyTypeId").val(),
+                           CaseRegNumber: $("#CaseRegNumber").val(),
+                           ReceiveSourceTypeId: $("#ReceiveSourceTypeId").val(),
+                           ReceiveSourceId: $("#ReceiveSourceId").val(),
+                           PersonType: $("#PersonType").val(),
                        };
                     }
                },
@@ -185,6 +198,25 @@
                                 return "0.00";
                         }
                     },
+                    @if (userContext.IsInterimPeriodEuro)
+                    {
+                        <text>
+                         {
+                            className: "text-right",
+                            name: 'amountBGN',
+                            data: 'amountBGN',
+                            title: 'Сума в лева',
+                            sortable: true,
+                            searchable: false,
+                            "render": function (value) {
+                                if (value)
+                                    return parseFloat(value).toFixed(2);
+                                else
+                                    return "0.00";
+                            }
+                         },
+                       </text>
+                    }    
                     {
                         className: "text-right",
                         name: 'amountPay',
@@ -201,8 +233,8 @@
                     },
                     {
                         className: "text-right",
-                        name: 'amountForPay',
-                        data: 'amountForPay',
+                        name: 'amountForPayRead',
+                        data: 'amountForPayRead',
                         title: 'Остатък',
                         sortable: true,
                         searchable: false,
@@ -260,18 +292,31 @@
                     }
                         </text>
                             }
+                    @if (Model.Sign == IOWebApplication.Infrastructure.Constants.NomenclatureConstants.MoneySign.SignPlus)
+                        {
+                         <text>
                     ,
                     {
-                            name: 'actions',
+                        name: 'receivePerson',
+                        data: 'receivePerson',
+                        title: 'В полза на',
+                        sortable: true,
+                        searchable: true
+                    }
+                        </text>
+                        }
+                    ,
+                    {
+                        name: 'actions',
                         data: "id",
                         title: "",
                         sortable: false,
                         searchable: false,
                         className: "text-center noExport",
                         "render": function (value) {
-                                    return TemplateToHtml('#obligationForPayTemplate', value);
-                                }
+                                return TemplateToHtml('#obligationForPayTemplate', value);
                             }
+                        }
                 ]
             });
         }
@@ -308,9 +353,9 @@
             return;
         }
         requestContent('@Url.Action("Payment","Money")'
-            , { idStr:ids}
+            , { idStr: ids, documentId: 0}
             , function (data) {
-                ShowModalDialog('Плащане', data);
+                ShowModalDialogBackdrop('Плащане', data);
             });
     }
 
@@ -361,6 +406,9 @@
             });
     }
 
+    $('#ReceiveSourceTypeId').change(function () {
+        $('#ReceiveSourceId').parent().find('input').val('');
+    });
 </script>
 
 <script id="obligationForPayTemplate" type="text/x-handlebars-template">
@@ -376,7 +424,7 @@
                     MakeBigModalDialog("div#paymentsForObligation");
                     $("#paymentsForObligation").html(data);
                 });
-        }
+    }
 </script>
 <script id="templateExpenseOrder" type="text/x-handlebars-template">
     {{#if expenseOrderId}}
@@ -389,3 +437,8 @@
     {{/if}}
 </script>
 
+<script>
+    $(function () {
+        initSource();
+    });
+</script>

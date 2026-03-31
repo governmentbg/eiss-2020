@@ -1,5 +1,4 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Utils;
+﻿using IOWebApplication.Infrastructure.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Net.Http;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Http
 {
-    public class HttpRequester : IHttpRequester
+    public class HttpRequester : IHttpRequester, IDisposable
     {
         public string ApiKey { get; set; }
 
@@ -125,7 +124,8 @@ namespace IOWebApplication.Infrastructure.Http
 
             if (data != null)
             {
-                request.Content = new StringContent(data, Encoding.UTF8, "text/xml");
+                request.Content = new StringContent(data, Encoding.UTF8, "application/xml");
+
             }
 
             if (this.ApiKey != null)
@@ -133,7 +133,7 @@ namespace IOWebApplication.Infrastructure.Http
                 client.DefaultRequestHeaders.Add("X-apiKey", this.ApiKey);
             }
 
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
 
             return await client.SendAsync(request);
         }
@@ -141,6 +141,15 @@ namespace IOWebApplication.Infrastructure.Http
         public void AddBearerAuthorization(string autorizationToken)
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", autorizationToken);
+        }
+
+        public void Dispose()
+        {
+            if (client != null)
+            {
+                client.Dispose();
+                client = null;
+            }
         }
     }
 }

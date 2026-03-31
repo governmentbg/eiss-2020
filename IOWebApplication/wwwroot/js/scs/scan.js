@@ -7,6 +7,13 @@
     var source;
     var interval;
     var pages = [];
+    var dpi = 200;
+    var blackThreshold = 190;
+
+    const configure = function (_dpi, _blackThreshold) {
+        dpi = _dpi;
+        blackThreshold = _blackThreshold;
+    }
 
     const load = function () {
         return new Promise(function (resolve, reject) {
@@ -43,7 +50,7 @@
     const init = function () {
         return new Promise(function (resolve, reject) {
             if (!is_initialized) {
-                SCS.scanInit()
+                SCS.scanInitEx(dpi, blackThreshold, true)
                     .then(function (json) {
                         is_initialized = true;
                         resolve(is_initialized);
@@ -243,6 +250,7 @@
     }
 
     return {
+        configure,
         loadScanners,
         release,
         setSource,

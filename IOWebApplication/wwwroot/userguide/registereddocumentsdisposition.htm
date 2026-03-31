@@ -9,21 +9,36 @@
 		<!--
 		/* Font Definitions */
 		@font-face {
+			font-family: SimSun;
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+
+		@font-face {
 			font-family: "Cambria Math";
 			panose-1: 2 4 5 3 5 4 6 3 2 4;
 		}
 
 		@font-face {
-			font-family: "Calibri Light";
-			panose-1: 2 15 3 2 2 2 4 3 2 4;
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: "\@SimSun";
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
 		}
 		/* Style Definitions */
 		p.MsoNormal, li.MsoNormal, div.MsoNormal {
 			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
-			margin-top: 0in;
-			margin-right: 0in;
+			margin-top: 0cm;
+			margin-right: 0cm;
 			margin-bottom: 10.0pt;
-			margin-left: 0in;
+			margin-left: 0cm;
 			text-align: justify;
 			text-indent: 35.45pt;
 			line-height: 115%;
@@ -32,19 +47,17 @@
 		}
 
 		h2 {
-			mso-style-link: "Heading 2 Char";
-			margin-top: 2.0pt;
-			margin-right: 0in;
-			margin-bottom: 0in;
-			margin-left: 0in;
-			margin-bottom: .0001pt;
+			mso-style-name: "Heading 2\,h2\,Major\,heading 2\,2\,sub-sect\,Subhead A\,ClassHeading\,H2\,Heading 2 Hidden\,Heading 2rh\,2nd level\,Titre3\,h2 main heading\,Attribute Heading 2\,B\.2 Heading 2\,A\.1 Heading 2\,Header 2\,Reset numbering\,Module Name\,Chapter\,1\.Seite\,H21\,HeadB\,HD2\,l2\,x2\,x21";
+			mso-style-link: "Heading 2 Char\,h2 Char\,Major Char\,heading 2 Char\,2 Char\,sub-sect Char\,Subhead A Char\,ClassHeading Char\,H2 Char\,Heading 2 Hidden Char\,Heading 2rh Char\,2nd level Char\,Titre3 Char\,h2 main heading Char\,Attribute Heading 2 Char\,B\.2 Heading 2 Char\,H21 Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
 			text-align: justify;
 			text-indent: 35.45pt;
 			line-height: 115%;
-			page-break-after: avoid;
-			font-size: 13.0pt;
-			font-family: "Calibri Light",sans-serif;
-			color: #2E74B5;
+			font-size: 12.0pt;
+			font-family: "Arial",sans-serif;
 			font-weight: normal;
 		}
 
@@ -52,10 +65,9 @@
 			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
 			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
 			margin-top: 3.0pt;
-			margin-right: 0in;
-			margin-bottom: 0in;
-			margin-left: 0in;
-			margin-bottom: .0001pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 0cm;
 			text-align: center;
 			text-indent: 35.45pt;
 			line-height: 150%;
@@ -64,10 +76,9 @@
 		}
 
 		span.Heading2Char {
-			mso-style-name: "Heading 2 Char";
-			mso-style-link: "Heading 2";
-			font-family: "Calibri Light",sans-serif;
-			color: #2E74B5;
+			mso-style-name: "Heading 2 Char\,h2 Char\,Major Char\,heading 2 Char\,2 Char\,sub-sect Char\,Subhead A Char\,ClassHeading Char\,H2 Char\,Heading 2 Hidden Char\,Heading 2rh Char\,2nd level Char\,Titre3 Char\,h2 main heading Char\,Attribute Heading 2 Char\,B\.2 Heading 2 Char\,H21 Char";
+			mso-style-link: "Heading 2\,h2\,Major\,heading 2\,2\,sub-sect\,Subhead A\,ClassHeading\,H2\,Heading 2 Hidden\,Heading 2rh\,2nd level\,Titre3\,h2 main heading\,Attribute Heading 2\,B\.2 Heading 2\,A\.1 Heading 2\,Header 2\,Reset numbering\,Module Name\,Chapter\,1\.Seite\,H21\,HeadB\,HD2\,l2\,x2\,x21";
+			font-family: "Arial",sans-serif;
 		}
 
 		span.CaptionChar {
@@ -81,8 +92,7 @@
 		}
 
 		.MsoPapDefault {
-			margin-bottom: 8.0pt;
-			line-height: 107%;
+			line-height: 12.0pt;
 		}
 
 		@page WordSection1 {
@@ -95,25 +105,27 @@
 		}
 		/* List Definitions */
 		ol {
-			margin-bottom: 0in;
+			margin-bottom: 0cm;
 		}
 
 		ul {
-			margin-bottom: 0in;
+			margin-bottom: 0cm;
 		}
 		-->
 	</style>
 
 </head>
 
-<body lang=BG>
+<body lang=BG style='word-wrap:break-word'>
 
 	<div class=WordSection1>
 
-		<h2 style='margin-left:54.95pt;text-indent:-19.5pt'>
-			<a name="_Toc75359135">
-				1.1<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>РАЗПОРЕЖДАНИЯ ПО
-				РЕГИСТРИРАНИ ДОКУМЕНТИ
+		<h2 style='margin-left:35.45pt;text-indent:0cm'>
+			<a name="_Toc147497484">
+				<span lang=X-NONE style='font-family:"Times New Roman",serif'>
+					РАЗПОРЕЖДАНИЯ ПО РЕГИСТРИРАНИ
+					ДОКУМЕНТИ
+				</span><span lang=X-NONE> </span>
 			</a>
 		</h2>
 
@@ -123,7 +135,7 @@
 			регистрирани документи.
 		</p>
 
-		<p class=MsoCaption style='text-align:justify;text-indent:0in;line-height:115%'>
+		<p class=MsoCaption style='text-align:justify;text-indent:0cm;line-height:115%'>
 			<img width=605 height=149 id="Picture 143178"
 				 src="registereddocumentsdisposition_files/image001.jpg">
 		</p>
@@ -141,15 +153,15 @@
 		<p class=MsoNormal style='text-indent:42.55pt'>
 			След натискане на бутон
 			Филтриране <img width=94 height=25 id="Picture 143197"
-						 src="registereddocumentsdisposition_files/image003.jpg">резултатите се извеждат
+						 src="registereddocumentsdisposition_files/image002.jpg">резултатите се извеждат
 			в долната половина на екрана в табличен вид:
 		</p>
 
-		<p class=MsoNormal style='text-indent:0in'>
+		<p class=MsoNormal style='text-indent:0cm'>
 			<b>
 				<span style='line-height:115%'>
 					<img width=605 height=187 id="Picture 143825"
-						 src="registereddocumentsdisposition_files/image004.jpg">
+						 src="registereddocumentsdisposition_files/image003.jpg">
 				</span>
 			</b>
 		</p>
@@ -164,9 +176,22 @@
 
 		<p class=MsoNormal>Номерът на разпореждането е активен хиперлинк към акта.</p>
 
-		<p class=MsoNormal align=left style='text-align:left'>
-			<span style='font-family:
-"Calibri Light",sans-serif;color:#0070C0'>{registereddocumentsdisposition}</span>
+		<h2 style='margin-left:35.45pt;text-indent:0cm'>
+			<b>
+				<span style='line-height:
+115%;font-family:"Times New Roman",serif'>Необработени електронни документи</span>
+			</b>
+		</h2>
+
+		<p class=MsoNormal>
+			В справка необработени електронни документи се визуализират
+			всички, електронни документи, които са постъпили в съда и не са обработени,
+			след входиране на документа, записа се премахва от справката.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=575 height=67 id="Picture 2016263932"
+				 src="registereddocumentsdisposition_files/image004.png">
 		</p>
 
 		<p class=MsoNormal>&nbsp;</p>

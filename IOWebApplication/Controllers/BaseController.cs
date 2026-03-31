@@ -3,6 +3,7 @@ using IO.LogOperation.Service;
 using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
@@ -11,6 +12,7 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -18,19 +20,16 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace IOWebApplication.Controllers
 {
     [Authorize]
-    //[Audit(EventTypeName = "{controller}/{action} ({verb})",
-    //    IncludeHeaders = false,
-    //    IncludeModel = true,
-    //    IncludeRequestBody = false,
-    //    IncludeResponseBody = false)]
     public class BaseController : Controller
     {
         private IUserContext _userContext;
+        protected IDBUserContext dbUserContext;
         protected const string TempData_CurrentContext = "CurrentContext";
 
         protected IUserContext userContext
@@ -43,25 +42,22 @@ namespace IOWebApplication.Controllers
                          .RequestServices
                          .GetService(typeof(IUserContext));
                 }
-
-
-
                 return _userContext;
             }
         }
 
         public string LanguageCode = "bg";
 
-        protected void SaveLogOperation(bool isInsert, object objectKey, object masterKey = null, string actionName = null)
+        protected void SaveLogOperation(bool isInsert, object objectKey, object masterKey = null, string actionName = null, string controllerName = null)
         {
-            SaveLogOperation((isInsert) ? OperationTypes.Insert : OperationTypes.Update, objectKey, masterKey, actionName);
+            SaveLogOperation((isInsert) ? OperationTypes.Insert : OperationTypes.Update, objectKey, masterKey, actionName, controllerName);
         }
-        protected void SaveLogOperation(OperationTypes operation, object objectKey, object masterKey = null, string actionName = null)
+        protected void SaveLogOperation(OperationTypes operation, object objectKey, object masterKey = null, string actionName = null, string controllerName = null)
         {
             if (Request.Form["hfContainer"].FirstOrDefault() != null)
             {
                 var html = Request.Form["hfContainer"].FirstOrDefault();
-                SaveLogOperation(this.ControllerName?.ToLower(), actionName ?? this.ActionName, html, operation, objectKey, masterKey);
+                SaveLogOperation(controllerName ?? this.ControllerName?.ToLower(), actionName ?? this.ActionName, html, operation, objectKey, masterKey);
             }
         }
 
@@ -77,6 +73,52 @@ namespace IOWebApplication.Controllers
 
         public string ActionName { get; set; }
         public string ControllerName { get; set; }
+
+        protected void ClearCheckDoublePostback(string actionKey)
+        {
+            var tempDataKey = $"CDP{actionKey}";
+
+            TempData.Remove(tempDataKey);
+        }
+        protected bool CheckDoublePostback(string actionKey = "", double millisecondsAfterLastCheck = 3000)
+        {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CheckDoublePostback))
+            {
+                return false;
+            }
+
+            bool result = false;
+            var tsFormat = "yyMMddHHmmssfff";
+            var tempDataKey = $"CDP{actionKey}";
+
+            var stored = TempData.Peek<string>(tempDataKey);
+            if (string.IsNullOrEmpty(stored))
+            {
+                TempData[tempDataKey] = DateTime.Now.ToString(tsFormat);
+                return false;
+            }
+
+            try
+            {
+                var storedDate = Utils.SafeParseDate(stored, tsFormat);
+                if ((DateTime.Now - storedDate.Value).TotalMilliseconds < millisecondsAfterLastCheck)
+                {
+                    return true;
+                }
+                TempData[tempDataKey] = DateTime.Now.ToString(tsFormat);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+            return result;
+        }
+
+        protected IActionResult NotFoundError(string message)
+        {
+            return RedirectToAction("NotFound", "Home", new { message });
+        }
 
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
@@ -140,6 +182,9 @@ namespace IOWebApplication.Controllers
             {
                 ViewBag.AccessControl = (IAccessControl)currentContext;
             }
+
+            if (string.IsNullOrEmpty(ProgramExtensions.MachineName))
+                ProgramExtensions.MachineName = System.Net.Dns.GetHostName();
         }
 
         private void encodeStringProperties(object obj)
@@ -221,9 +266,34 @@ namespace IOWebApplication.Controllers
         {
             return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName, new { message = message });
         }
+
+        public void SetDataKey(object key, string tempDataKey = null)
+        {
+            var tdKey = tempDataKey ?? $"DataKey{userContext.UserId}";
+            TempData[tdKey] = key.ToString();
+        }
+        public bool CheckDataKey(object key, bool setModelStateError = true, string tempDataKey = null)
+        {
+            var tdKey = tempDataKey ?? $"DataKey{userContext.UserId}";
+            var storedKey = TempData.Peek(tdKey);
+            var result = storedKey?.ToString().Equals(key?.ToString()) ?? false;
+            if (setModelStateError && !result)
+            {
+                ModelState.AddModelError("", "Промяната на ключови данни не е разрешена!");
+            }
+            return result;
+        }
+        public IActionResult Redirect_DataChange()
+        {
+            return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName, new { message = "Промяната на ключови данни не е разрешена!" });
+        }
         public void SetAuditContext(IBaseService service, int sourceType, long? sourceId, bool isInsert)
         {
             CheckAccess(service, sourceType, sourceId, (isInsert) ? AuditConstants.Operations.Append : AuditConstants.Operations.Update);
+        }
+        public Task SetAuditContextAsync(IBaseService service, int sourceType, long? sourceId, bool isInsert)
+        {
+            return CheckAccessAsync(service, sourceType, sourceId, (isInsert) ? AuditConstants.Operations.Append : AuditConstants.Operations.Update);
         }
         public void SetAuditContextDelete(IBaseService service, int sourceType, long? sourceId)
         {
@@ -238,7 +308,10 @@ namespace IOWebApplication.Controllers
         {
             return CurrentContext_Set(service.GetCurrentContext(sourceType, sourceId, operation, parentId));
         }
-
+        public async Task<bool> CheckAccessAsync(IBaseService service, int sourceType, long? sourceId, string operation = "", object parentId = null)
+        {
+            return CurrentContext_Set(await service.GetCurrentContextAsync(sourceType, sourceId, operation, parentId));
+        }
 
         public bool CurrentContext_IsSame(int sourceType, object sourceId)
         {
@@ -295,32 +368,88 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        #endregion
+        public void CurrentContext_SetObjectInfo(string objectInfo, bool appendMode = false)
+        {
+            CurrentContextModel context = TempData.Peek<CurrentContextModel>(TempData_CurrentContext);
+            if (context != null)
+            {
+                if (appendMode)
+                {
+                    objectInfo = (context.Info.ObjectInfo ?? "") + objectInfo;
+                }
+                context.Info.ObjectInfo = objectInfo;
 
-        protected void AddAuditInfo(string operation, string baseInfo, string addInfo = null, int sourceType = 0)
+                CurrentContext_Set(context);
+            }
+        }
+        public string CurrentContext_GetObjectInfo()
+        {
+            CurrentContextModel context = TempData.Peek<CurrentContextModel>(TempData_CurrentContext);
+            if (context != null)
+            {
+                return context.Info.ObjectInfo ?? "";
+            }
+            return "";
+        }
+        #endregion        
+
+        
+        protected void AddAuditInfo(string operation, string baseInfo, string addInfo, string objectType, bool alwaysSetUrl = false, string userId = null, int? courtId = null)
         {
             var auditService = (IAuditLogService)HttpContext.RequestServices.GetService(typeof(IAuditLogService));
             var auditLog = new Infrastructure.Data.Models.Audit.AuditLog()
             {
-                CourtId = userContext.CourtId,
+                CourtId = courtId ?? userContext.CourtId,
                 Operation = operation,
                 BaseObject = baseInfo,
                 ObjectInfo = addInfo,
-                UserId = userContext.UserId
+                InsertedDate = DateTime.Now,
+                UserId = userId ?? userContext.UserId,
+                ObjectType = objectType
             };
+            if (Request.Method == "GET" || alwaysSetUrl)
+            {
+                string requestUrl = Request.Path;
+                if (!string.IsNullOrEmpty(Request.QueryString.Value))
+                {
+                    requestUrl += Request.QueryString.Value;
+                }
+
+                auditLog.RequestUrl = requestUrl;
+            }
+            if (Request.Headers.TryGetValue("X-Forwarded-For", out var currentIp))
+            {
+                string ip = currentIp;
+                auditLog.ClientIP = ip;
+            }
+            if (auditService.SaveLog(auditLog))
+            {
+                auditManualySaved = true;
+            }
+        }
+        protected void AddAuditInfo(string operation, string baseInfo, string addInfo = null, int sourceType = 0, bool alwaysSetUrl = false)
+        {
+            string objType = null;
             if (sourceType > 0)
             {
-                auditLog.ObjectType = SourceTypeSelectVM.GetSourceTypeName(sourceType);
+                objType = SourceTypeSelectVM.GetSourceTypeName(sourceType);
             }
-            auditService.SaveLog(auditLog);
+            AddAuditInfo(operation, baseInfo, addInfo, objType, alwaysSetUrl);
         }
 
+
+        protected void DisableAudit()
+        {
+            auditManualySaved = true;
+        }
+
+        bool auditManualySaved = false;
         ActionExecutedContext lastContext;
         string lastClientIP;
         protected override void Dispose(bool disposing)
         {
 
-            if (lastContext != null && !lastContext.IsJsonResult())
+            if (lastContext != null && !lastContext.IsHiddenActionResult() && !auditManualySaved)
             {
                 ControllerActionDescriptor controllerActionDescriptor = lastContext.ActionDescriptor as ControllerActionDescriptor;
                 if (controllerActionDescriptor != null)
@@ -336,6 +465,15 @@ namespace IOWebApplication.Controllers
                                                         .CustomAttributes
                                                         .Where(a => a.AttributeType == typeof(DisableAuditAttribute))
                                                         .Any();
+                    var titleAuditOperation = controllerActionDescriptor
+                                                        .MethodInfo
+                                                        .CustomAttributes
+                                                        .Where(a => a.AttributeType == typeof(TitleAuditAttribute))
+                                                        .Select(x => x.NamedArguments
+                                                                    .Where(n => n.MemberName == nameof(TitleAuditAttribute.Operation))
+                                                                    .Select(n => n.TypedValue.Value.ToString())
+                                                                    .FirstOrDefault())
+                                                        .FirstOrDefault();
 
                     if (!disableAuditOnController && !disableAuditOnAction)
                     {
@@ -349,29 +487,42 @@ namespace IOWebApplication.Controllers
                         var _context = CurrentContext;
                         if (_context.IsRead && _context.LastController == this.ControllerName)
                         {
-
-                            auditLog.Operation = _context.Info.Operation;
-                            if (Request?.Method == "GET")
-                            {
-                                auditLog.Operation = AuditConstants.Operations.View;
-                            }
                             auditLog.ObjectType = _context.Info.ObjectType;
                             auditLog.BaseObject = _context.Info.BaseObject;
                             auditLog.ObjectInfo = _context.Info.ObjectInfo;
+                            auditLog.Operation = _context.Info.Operation;
+                            if (Request?.Method == "GET")
+                            {
+                                if (auditLog.Operation == AuditConstants.Operations.Append && string.IsNullOrEmpty(auditLog.ObjectInfo))
+                                {
+                                    auditLog.ObjectInfo = "Създаване на нов обект";
+                                }
+                                auditLog.Operation = AuditConstants.Operations.View;
+                            }
+
                         }
                         else
                         {
-                            //ако няма контекст - се взема само title на страницата - зададен е в layout.cshtml
-                            var pageTitle = TempData["PageTitle"];
-                            auditLog.Operation = AuditConstants.Operations.View;
-                            auditLog.BaseObject = (string)pageTitle;
+
+                            if (!string.IsNullOrEmpty(titleAuditOperation))
+                            {
+                                //ако няма контекст - се взема само title на страницата - зададен е в layout.cshtml
+                                var pageTitle = TempData["PageTitle"];
+                                auditLog.Operation = titleAuditOperation;
+                                auditLog.BaseObject = (string)pageTitle;
+                            }
                         }
                         //if (Request.Headers.TryGetValue("X-Forwarded-For", out var currentIp))
                         //{
                         //    string ip = currentIp;
                         //    auditLog.ClientIP = ip;
                         //}
-                        auditLog.RequestUrl = lastContext.HttpContext.Request.Path;
+                        string requestUrl = lastContext.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(lastContext.HttpContext.Request.QueryString.Value))
+                        {
+                            requestUrl += lastContext.HttpContext.Request.QueryString.Value;
+                        }
+                        auditLog.RequestUrl = requestUrl;
                         var auditService = (IAuditLogService)HttpContext.RequestServices.GetService(typeof(IAuditLogService));
                         auditService.SaveLog(auditLog);
                     }
@@ -414,6 +565,26 @@ namespace IOWebApplication.Controllers
         public void ClearHelpFile()
         {
             TempData.Remove("HelpFile");
+        }
+
+        public void SetSourceKey(int sourceType, object sourceId, string tempDataKey = null)
+        {
+            SetDataKey($"{sourceType}|{sourceId.ToString()}", tempDataKey);
+        }
+
+        public bool CheckSourceKey(int sourceType, object sourceId, string tempDataKey = null)
+        {
+            return CheckDataKey($"{sourceType}|{sourceId.ToString()}", false, tempDataKey);
+        }
+
+        public IActionResult SourceKeyExpireJsonError()
+        {
+            return Json(new { result = false, message = "Грешен или променен идентификатор." });
+        }
+
+        public IActionResult SourceKeyExpireJsonErrorDescription()
+        {
+            return Json(new { result = false, message = "Въведете Причина за премахването." });
         }
 
         public IActionResult SourceTypeAction(int sourceType, long sourceId)

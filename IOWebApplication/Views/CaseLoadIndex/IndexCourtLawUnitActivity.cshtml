@@ -1,4 +1,7 @@
-﻿@{
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseLoadIndexFilterVM
+@{
     ViewData["Title"] = "Допълнителни и административни дейности към съдии по съд";
 }
 
@@ -16,6 +19,38 @@
         </a>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.Year, "DateTimeYear")
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })
+    </div>
+    <div class="col-lg-6">
+        @Html.EditorFor(x => x.JudgeLoadActivityId, "GenericDropDown")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-12">
         <table id="mainTable" class="table table-hover table-striped"></table>
@@ -24,64 +59,85 @@
 
 @section scripts {
     <script>
-        $(function () {
-            var table = $('#mainTable').DataTable({
-                ajax: {
-                    "url": "@Url.Action("ListDataCourtLawUnitActivity")",
-                    "type": "POST",
-                    "datatype": "json"
-                },
-                columns: [
-                    {
-                        name: 'lawUnitLabel',
-                        data: 'lawUnitLabel',
-                        title: 'Съдия',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'activityDate',
-                        data: 'activityDate',
-                        title: 'Дата',
-                        sortable: true,
-                        searchable: true,
-                        render: function (data) {
-                            return moment(data).format("DD.MM.YYYY");
+        function LoadTable() {
+            if ($("#DateFrom").val() == '' && $("#DateTo").val() == '' && $("#Year").val() == '') {
+                return messageHelper.ShowErrorMessage('Попълнете от дата до дата или година', messageContainer);
+            }
+            if ($.fn.dataTable.isDataTable('#mainTable')) {
+                refreshTable('#mainTable');
+            }
+            else {
+                $('#mainTable').DataTable({
+                    ajax: {
+                        "url": "@Url.Action("ListDataCourtLawUnitActivity")",
+                        "type": "POST",
+                        "datatype": "json",
+                        "data": function (d) {
+                            d.model = {
+                                DateFrom: $("#DateFrom").val(),
+                                DateTo: $("#DateTo").val(),
+                                Year: $("#Year").val(),
+                                LawUnitId: $("#LawUnitId").val(),
+                                JudgeLoadActivityId: $("#JudgeLoadActivityId").val()
+                            };
                         }
                     },
-                    {
-                        name: 'judgeLoadActivityLabel',
-                        data: 'judgeLoadActivityLabel',
-                        title: 'Дейност',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'loadIndex',
-                        data: 'loadIndex',
-                        title: 'Индекс',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
-                        name: 'actions',
-                        data: "id",
-                        title: "",
-                        sortable: false,
-                        searchable: false,
-                        className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#templateEdit', value);
+                    columns: [
+                        {
+                            name: 'lawUnitLabel',
+                            data: 'lawUnitLabel',
+                            title: 'Съдия',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'activityDate',
+                            data: 'activityDate',
+                            title: 'Дата',
+                            sortable: true,
+                            searchable: true,
+                            render: function (data) {
+                                return moment(data).format("DD.MM.YYYY");
+                            }
+                        },
+                        {
+                            name: 'judgeLoadActivityLabel',
+                            data: 'judgeLoadActivityLabel',
+                            title: 'Дейност',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'loadIndex',
+                            data: 'loadIndex',
+                            title: 'Индекс',
+                            sortable: true,
+                            searchable: true
+                        },
+                        {
+                            name: 'actions',
+                            data: "id",
+                            title: "",
+                            sortable: false,
+                            searchable: false,
+                            className: "text-center noExport",
+                            "render": function (value) {
+                                return TemplateToHtml('#templateEdit', value);
+                            }
                         }
-                    }
-                ]
-            });
-
-
-        });
+                    ]
+                });
+            }
+        }
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
         <a href="@Url.Action("EditCourtLawUnitActivity")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
     </script>
 }
+
+<script>
+    $(function () {
+        initLawUnit();
+    });
+</script>

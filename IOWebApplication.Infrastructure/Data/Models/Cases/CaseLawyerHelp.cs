@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Искане за Правна помощ
     /// </summary>
     [Table("case_lawyer_help")]
-    public class CaseLawyerHelp : UserDateWRT, IExpiredInfo
+    public class CaseLawyerHelp : UserDateWRT, IExpiredInfo, IHaveId
     {
         [Key]
         [Column("id")]
@@ -105,11 +105,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         public virtual ICollection<CaseLawyerHelpOtherLawyer> CaseLawyerHelpOtherLawyers { get; set; }
         public virtual ICollection<CaseLawyerHelpPerson> CaseLawyerHelpPersons { get; set; }
+        public virtual ICollection<CaseLawyerHelpAssignedLawyer> CaseLawyerHelpAssignedLawyers { get; set; }
 
         public CaseLawyerHelp()
         {
             CaseLawyerHelpOtherLawyers = new HashSet<CaseLawyerHelpOtherLawyer>();
             CaseLawyerHelpPersons = new HashSet<CaseLawyerHelpPerson>();
+            CaseLawyerHelpAssignedLawyers = new HashSet<CaseLawyerHelpAssignedLawyer>();
         }
     }
 }

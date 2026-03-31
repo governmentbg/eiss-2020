@@ -1,0 +1,113 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+}
+
+<div id="myDivCLHAL">
+    @if (access.CanChange)
+    {
+        
+    }
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <table id="caseLawyerHelpAssignedLawyerMainTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</div>
+
+<partial name="_CdnScript" />
+
+<script>
+        $(function () {
+            var table = $('#caseLawyerHelpAssignedLawyerMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseLawyerHelpAssignedLawyer", "CaseLawyerHelp")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseLawyerHelpId = @Model.Id;
+                    }
+
+                },
+                dom: 'rt',
+                columns: [
+                    {
+                        name: 'lawyer',
+                        data: 'lawyer',
+                        title: 'Върнат адвокат',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'people',
+                        data: 'people',
+                        title: 'За лицето/лицата',
+                        sortable: false,
+                        searchable: false
+                    },
+                    {
+                        name: 'lawyerStateLabel',
+                        data: 'lawyerStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'file',
+                        data: 'file',
+                        title: 'Файл',
+                        sortable: false,
+                        searchable: false,
+                        "render": function (item, type, row, meta) {
+                            return "<div class='cdn-listview' style='margin-left:5px;'><a href='#' class='cdn-loader' data-sourceType='" + @SourceTypeSelectVM.CaseLawyerHelpAssignedLawyer + "' data-sourceId='" + row.id + "'>Файл</a></div>";
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",                        
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#caseLawyerHelpAssignedLawyerTemplateEdit', row);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+
+    $(function () {
+         $(document).on('click', 'div.cdn-listview a.cdn-loader', function () {
+                    let url = '@Url.Action("FileListView","Files")';
+                    if ($(this).data('url')) {
+                        url = $(this).data('url');
+                    }
+                    let lnk = $(this);
+                    requestContent(url,
+                        { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                        function (html) {
+                            $(lnk).parent().html(html);
+                        });
+                    return false;
+                });
+         });
+</script>
+
+<script id="caseLawyerHelpAssignedLawyerTemplateEdit" type="text/x-handlebars-template">
+    {{#if isEdit}}
+    <a href="@Url.Action("EditCaseLawyerHelpAssignedLawyer", "CaseLawyerHelp")?id={{id}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    @*<a href="@Url.Action("CaseLawyerHelpAssignedLawyer_Confirmed", "CaseLawyerHelp")?id={{id}}&caseLawyerHelpId=@Model.Id" class="btn btn-success btn-sm m-b-5" title="Приемане"><i class="fa fa-check-circle"></i><span class="hidden-sm hidden-xs"></span></a>
+    <a href="@Url.Action("CaseLawyerHelpAssignedLawyer_Declined", "CaseLawyerHelp")?id={{id}}&caseLawyerHelpId=@Model.Id" class="btn btn-warning btn-sm m-b-5" title="Отказ"><i class="fa fa-times"></i><span class="hidden-sm hidden-xs"></span></a>*@
+    {{/if}}
+    {{#if isFinish}}
+    <a href="@Url.Action("CaseLawyerHelpAssignedLawyer_Finish", "CaseLawyerHelp")?caseId={{caseId}}&id={{id}}&caseLawyerHelpId=@Model.Id" class="btn btn-danger btn-sm m-b-5" title="Финализиране"><i class="fa fa-stop-circle-o"></i><span class="hidden-sm hidden-xs"></span></a>
+    {{/if}}
+</script>
+
+

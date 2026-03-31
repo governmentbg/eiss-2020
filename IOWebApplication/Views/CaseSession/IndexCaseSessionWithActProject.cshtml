@@ -14,23 +14,16 @@
 }
 
 <div class="row">
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.DateFrom, "DateTime")
-    </div>
-    @*<div class="col-lg-3">
-            @Html.EditorFor(m => m.DateTo, "DateTime")
-        </div>*@
-    <div class="col-lg-3">
-        @Html.EditorFor(m => m.ActDateToSpr, "DateTime")
-    </div>
-    <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActDateToSpr, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SessionTypeIds, "GenericDropDownMultipleArray")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
 </div>
 
 <div class="row">
@@ -60,15 +53,14 @@
                     "type": "POST",
                     "datatype": "json",
                     "data": function (d) {
-                        d.model = {
+                        d.filter = {
                             DateFrom: $("#DateFrom").val(),
-                            //DateTo: $("#DateTo").val(),
                             ActDateToSpr: $("#ActDateToSpr").val(),
                             CaseGroupId: $("#CaseGroupId").val(),
                             CaseTypeId: $("#CaseTypeId").val(),
-                            CaseCodeId: $("#CaseCodeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
                             JudgeReporterId: $("#JudgeReporterId").val(),
-                            SessionTypeId: $("#SessionTypeId").val()
+                            SessionTypeIds: $("#SessionTypeIds").val()
                         };
                     }
                 },
@@ -91,9 +83,14 @@
                     {
                         name: 'caseRegNum',
                         data: 'caseRegNum',
-                        title: 'Номер/Година',
+                        title: 'Номер на дело',
                         sortable: true,
-                        searchable: true
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
                     },
                     {
                         name: 'caseCodeLabel',
@@ -117,7 +114,7 @@
                         searchable: false,
                         "render": function (value) {
                             if (value)
-                                return moment(value).format("DD.MM.YYYY");
+                                return moment(value).format("DD.MM.YYYY HH:mm");
                             else
                                 return "";
                         }
@@ -125,7 +122,7 @@
                     {
                         name: 'sessionActDate',
                         data: 'sessionActDate',
-                        title: 'Връщане',
+                        title: 'Дата на постановяване на акта/протокола',
                         sortable: true,
                         searchable: false,
                         "render": function (value) {
@@ -155,7 +152,7 @@
                         }
                     }
                 ]
-            });
+            }).order([[2, "asc"]]);
         }
     }
 </script>
@@ -169,16 +166,19 @@
 <script>
     $(document).ready(function () {
         $('#CaseGroupId').trigger('change');
-        //var table = $('#mainTableCaseSessionWithActProject').DataTable();
-        //table.column(7).visible(false);
+        $('#SessionTypeIds').select2({ language: "bg" });
+        $('#CaseCodeIds').select2({ language: "bg" });
     });
 
     $('#CaseGroupId').change(function () {
         requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
     });
 
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
+    });
+
     $(function () {
         initLawUnit();
-        initCaseCode();
     });
 </script>

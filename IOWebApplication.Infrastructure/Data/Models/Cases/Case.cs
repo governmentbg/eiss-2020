@@ -1,12 +1,15 @@
-﻿using IOWebApplication.Infrastructure.Constants;
-using IOWebApplication.Infrastructure.Contracts;
+﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
-using IOWebApplication.Infrastructure.Data.Models.Identity;
+using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation;
+using IOWebApplication.Infrastructure.Models.ViewModels.Report;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Cases
@@ -15,7 +18,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Съдебни дела
     /// </summary>
     [Table("case")]
-    public class Case : BaseInfo_Case, IHaveHistory<CaseH>
+    public class Case : BaseInfo_Case, IHaveHistory<CaseH>, IHaveId
     {
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -31,6 +34,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(CaseCodeId))]
         public virtual CaseCode CaseCode { get; set; }
+
+        /// <summary>
+        /// Подшифър
+        /// </summary>
+        [ForeignKey(nameof(CaseCodeSubId))]
+        public virtual CaseCodeSub CaseCodeSub { get; set; }
 
         [ForeignKey(nameof(CaseTypeUnitId))]
         public virtual CaseTypeUnit CaseTypeUnit { get; set; }
@@ -59,10 +68,21 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [ForeignKey(nameof(OtdelenieId))]
         public virtual CourtDepartment Otdelenie { get; set; }
 
+        [ForeignKey(nameof(IspnCaseCompetenceId))]
+        public virtual IspnCaseCompetence IspnCaseCompetence { get; set; }
+
+        [ForeignKey(nameof(MediationProcedureId))]
+        public virtual MediationProcedure MediationProcedure { get; set; }
+
+        [ForeignKey(nameof(RnflProcessTypeId))]
+        public virtual RnflProcessType RnflProcessType { get; set; }
+
         public virtual ICollection<CasePerson> CasePersons { get; set; }
         public virtual ICollection<CaseCrime> CaseCrimes { get; set; }
         public virtual ICollection<CasePersonCrime> CasePersonCrimes { get; set; }
         public virtual ICollection<CaseSession> CaseSessions { get; set; }
+        public virtual ICollection<MediationCaseSession> MediationCaseSessions { get; set; }
+        public virtual ICollection<MediationCaseMediator> MediationCaseMediators { get; set; }
         public virtual ICollection<CaseLawUnit> CaseLawUnits { get; set; }
         public virtual ICollection<CaseLawUnitCount> CaseLawUnitCount { get; set; }
         public virtual ICollection<CaseArchive> CaseArchives { get; set; }
@@ -82,6 +102,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual ICollection<CaseDeactivation> CaseDeactivations { get; set; }
 
         public virtual ICollection<CaseH> History { get; set; }
+
+        public virtual ICollection<DocumentCaseInfo> DocumentCaseInfos { get; set; }
+
+        public virtual ICollection<ExecList> ExecLists { get; set; }
+
+        [InverseProperty(nameof(Case))]
+        public virtual ICollection<CaseSimilarCase> SimilarCases { get; set; }
+
         public Case()
         {
             CasePersons = new HashSet<CasePerson>();
@@ -99,6 +127,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
             CasePersonSentencePunishments = new HashSet<CasePersonSentencePunishment>();
             CaseSessionDocs = new HashSet<CaseSessionDoc>();
             CaseDeactivations = new HashSet<CaseDeactivation>();
+            MediationCaseSessions = new HashSet<MediationCaseSession>();
+            MediationCaseMediators = new HashSet<MediationCaseMediator>();
+            DocumentCaseInfos = new HashSet<DocumentCaseInfo>();
+            ExecLists = new HashSet<ExecList>();
+            SimilarCases = new HashSet<CaseSimilarCase>();
         }
     }
     /// <summary>
@@ -115,6 +148,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(Id))]
         public virtual Case Case { get; set; }
+
+        public void ClearForeignKeys()
+        {
+            Case = null;
+        }
     }
     public class BaseInfo_Case : UserDateWRT
     {
@@ -149,7 +187,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public string RegNumber { get; set; }
 
         [Column("reg_date")]
-        public DateTime RegDate { get; set; }
+        public DateTime RegDate { get; set; } = new DateTime(1800, 1, 1);
 
         [Column("is_old_number")]
         public bool? IsOldNumber { get; set; }
@@ -166,6 +204,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [Column("case_code_id")]
         public int? CaseCodeId { get; set; }
+
+        /// <summary>
+        /// Идентификатор на подшифри в дело
+        /// </summary>
+        [Column("case_code_sub_id")]
+        [Comment("Идентификатор на подшифри в дело")]
+        public int? CaseCodeSubId { get; set; }
 
         /// <summary>
         /// Съдебна група за разпределяне
@@ -275,6 +320,81 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("is_generated_eispp_number")]
         public bool? IsGeneratedEisppNumber { get; set; }
 
-        
+        /// <summary>
+        /// Дело за възобновяване
+        /// </summary>
+        [Column("is_renew_case")]
+        public bool? IsRenewCase { get; set; }
+
+        /// <summary>
+        /// Компетентност за образуване на дело
+        /// </summary>
+        [Column("ispn_case_competence_id")]
+        public int? IspnCaseCompetenceId { get; set; }
+
+        /// <summary>
+        /// Брой длъжници по шифри: 21110, 21111 24100, 24111
+        /// </summary>
+        [Column("debtors_count")]
+        public int? DebtorsCount { get; set; }
+
+        /// <summary>
+        /// Флаг оказващ делото дали е бързо производство
+        /// </summary>
+        [Column("is_fast_process")]
+        public bool? IsFastProcess { get; set; }
+
+        /// <summary>
+        /// Флаг оказващ делото дали подлежи на медиация
+        /// </summary>
+        [Column("is_mediation")]
+        public bool? IsMediation { get; set; }
+
+        /// <summary>
+        /// Начална дата на медиация
+        /// </summary>
+        [Column("start_mediation_date")]
+        public DateTime? StartMediationDate { get; set; }
+
+        /// <summary>
+        /// Идентификатор на вид процедура по медиация
+        /// </summary>
+        [Column("mediation_procedure_id")]
+        public int? MediationProcedureId { get; set; }
+
+        /// <summary>
+        /// Номер на версия на Ред
+        /// </summary>
+        [Column("row_version")]
+        [DefaultValue(0)]
+        public int RowVersion { get; set; }
+
+        /// <summary>
+        /// Тип ИСПН производство:1-Състояние до 2026 (при дело IsIspn)];2-Предприемачи;3-РНФЛ
+        /// </summary>
+        [Column("ispn_kind")]
+        public int? IspnKind { get; set; }
+
+        /// <summary>
+        /// Флаг показващ дали са заредени данни за сходни дела за бързо производство
+        /// </summary>
+        [Column("is_read_similar_cases")]
+        public bool? IsReadSimilarCases { get; set; }
+
+        /*
+         * За РНФЛ: датата на обявявяне на акт за стартиране на производство
+         */
+        /// <summary>
+        /// Дата на стартиране изпращането на данни по делото към външни системи, при отложено изпращане
+        /// </summary>
+        [Column("transfer_start_date")]
+        public DateTime? TransferStartDate { get; set; }
+
+
+        /// <summary>
+        /// РНФЛ - Вид производство, по подразбиране - Главно
+        /// </summary>
+        [Column("rnfl_process_type_id")]
+        public int? RnflProcessTypeId { get; set; }
     }
 }

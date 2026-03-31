@@ -26,7 +26,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <form id="frmCaseSessinMeetingEdit" asp-action="Edit" method="post">
+        <form id="frmCaseSessinMeetingEdit" asp-action="Edit" method="post" onsubmit="checkOnSubmit(event);">
             @Html.HiddenFor(x => x.Id)
             @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.CaseId)
@@ -88,7 +88,8 @@
             <div class="form-group">
                 @if (access.CanChange)
                 {
-                    <input id="subButton" type="button" value="Запис" onclick={SubmitCaseEditLawUnitIsBusy()} class="btn btn-success" />
+                    @* <input id="subButton" type="button" value="Запис" onclick={SubmitCaseEditLawUnitIsBusy()} class="btn btn-success" /> *@
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
                 }
                 <a asp-controller="CaseSession" asp-action="Preview" asp-route-id="@caseSessionId" class="btn btn-danger">Назад</a>
                 @if (Model.Id > 0)
@@ -119,78 +120,42 @@
         $('#link').prop('href', '@Url.Action("CaseSessionHallUseSpr", "CaseSession")?HallId=' + selected);
     });
 
-    function SubmitCaseEditLawUnitIsBusy() {
-        $("#subButton").attr("disabled", true);
-        var isProvedeno = '@Model.IsSessionProvedeno';
-        if (isProvedeno == 'True') {
-            $('#frmCaseSessinMeetingEdit').trigger('submit');
-            $('#subButton').removeAttr("disabled");
-        }
-        else {
-            var dateFrom = getDevidedDateTimeValue("#DateFrom");
-            var dateTo = getDevidedDateTimeValue("#DateTo");
-            var modelId = @Model.CaseSessionId;
-            var caseId = @Model.CaseId;
+    var checkSubmitValidations = true;
 
-            if ((dateFrom != null) && (dateTo != null)) {
-                postContent('@Url.Action("IsCaseLawUnitFromCaseBusyMeeting", "CaseSessionMeeting")'
-                    , { caseId: caseId, caseSessionId: modelId, dateTimeFrom: dateFrom, dateTimeТо: dateTo }
-                    , function (data) {
-                        if (data.result != '') {
-                            swalConfirm(data.result, function () {
-                                SubmitCaseSessionMeetingEdit();
-                            }, function () {
-                                $('#subButton').removeAttr("disabled");
-                            });
-                        } else {
-                            SubmitCaseSessionMeetingEdit();
-                        }
-                    });
-            }
-            else {
-                SubmitCaseSessionMeetingEdit();
-            };
+    function checkOnSubmit(e) {
+        if (!checkSubmitValidations) {
+            return true;
         }
-    }
 
-    function SubmitCaseSessionMeetingEdit() {
-        var courtHall = $("#CourtHallId").val();
         var dateFrom = getDevidedDateTimeValue("#DateFrom");
         var dateTo = getDevidedDateTimeValue("#DateTo");
         var modelId = @Model.CaseSessionId;
-        if ((courtHall > 0) && (dateFrom != null) && (dateTo != null)) {
-
-            postContent('@Url.Action("CourtHallBusy", "CaseSessionMeeting")', { CourtHallId: courtHall, DateFrom: dateFrom, DateTo: dateTo, CaseSessionId: modelId }
-                , function (data)
-                {
-                    if (data.result == true)
-                    {
-                        swalConfirm('Залата е заета в този интервал!', function ()
-                        {
-                            $('#frmCaseSessinMeetingEdit').trigger('submit');
-                        });
-                    }
-                    else
-                    {
+        var caseId = @Model.CaseId;
+        var courtHall = $("#CourtHallId").val();
+        e.preventDefault();
+        postContent('@Url.Action("ChecksOnSaveSessionMeeting", "CaseSessionMeeting")'
+            , {
+                caseId: caseId,
+                caseSessionId: modelId,
+                dateTimeFrom: dateFrom,
+                dateTimeТо: dateTo,
+                courtHallId: courtHall
+            }
+            , function (data) {
+                if (data.result != '' && false) {
+                    swalConfirm(data.result, function () {
+                        checkSubmitValidations = false;
                         $('#frmCaseSessinMeetingEdit').trigger('submit');
-                    }
-                });
-        }
-        else {
-            $('#frmCaseSessinMeetingEdit').trigger('submit');
-        };
-        $('#subButton').removeAttr("disabled");
+                    }, function () {
+                        singleClickSubmitEnable();
+                    });
+                    return false;
+                } else {
+                    checkSubmitValidations = false;
+                    $('#frmCaseSessinMeetingEdit').trigger('submit');
+                }
+            }
+        );
     }
-
-    @*function SH_Elements() {
-        debugger;
-        var isProvedeno = '@Model.IsSessionProvedeno';
-        if (isProvedeno == 'True') {
-            $("#MeetingData").hide();
-        }
-        else {
-            $("#MeetingData").show();
-        }
-    }*@
 
 </script>

@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
@@ -17,19 +15,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string Description { get; set; }
 
         public bool IsSubstituted { get; set; }
-
-
-        public static MapperConfiguration GetMapping()
-        {
-            return new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<CourtLawUnitSubstitution, CourtLawUnitSubstitutionVM>()
-                   .ForMember(dest => dest.LawUnitName, opt => opt.MapFrom(src => src.LawUnit.FullName))
-                   .ForMember(dest => dest.SubstituteLawUnitName, opt => opt.MapFrom(src => src.SubstituteLawUnit.FullName))
-                   ;
-            });
-
-        }
     }
 
     public class CourtLawUnitSubstitutionFilter

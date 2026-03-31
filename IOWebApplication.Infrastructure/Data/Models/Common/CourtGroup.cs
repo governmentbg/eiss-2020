@@ -10,7 +10,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
     /// Групи дела по СЪД
     /// </summary>
     [Table("common_court_group")]
-    public class CourtGroup 
+    public class CourtGroup
     {
         [Key]
         [Column("id")]
@@ -31,7 +31,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [Column("description")]
         [Display(Name = "Описание")]
-        public string Description { get; set; }       
+        public string Description { get; set; }
 
         [Column("date_from")]
         [Display(Name = "Дата от")]
@@ -45,6 +45,20 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Номер по ред")]
         [Column("order_number")]
         public int OrderNumber { get; set; }
+
+
+        /// <summary>
+        /// Вид група на съд:
+        /// 1 - Група шифри към съдии за разпределение
+        /// 2 - Група шифри към съдии за разпределение
+        /// </summary>
+        [Display(Name = "Вид група")]
+        [Column("group_kind")]
+        public int GroupKind { get; set; }
+
+        [Display(Name = "Брой дни до край на отсъствие на съдии")]
+        [Column("days_to_presence")]
+        public int? DaysToPresence { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

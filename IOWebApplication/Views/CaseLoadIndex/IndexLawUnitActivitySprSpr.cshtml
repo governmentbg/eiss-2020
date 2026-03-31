@@ -1,4 +1,5 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
 @model CaseLoadIndexFilterVM
 
 @{
@@ -19,7 +20,8 @@
     <div class="col-lg-3">
         @Html.EditorFor(m => m.DateTo, "DateTime")
     </div>
-    <div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1" })</div>
+    @*<div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { lawUnitTypes = "1" })</div>*@
+    <div class="col-lg-6">@Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 <div class="row">
@@ -72,15 +74,15 @@
                         searchable: false
                     },
                     {
-                        name: 'loadIndex',
-                        data: 'loadIndex',
+                        name: 'sumLoadIndex',
+                        data: 'sumLoadIndex',
                         title: 'Натоварване извън дела',
                         sortable: true,
                         searchable: false
                     },
                     {
-                        name: 'sumLoadIndex',
-                        data: 'sumLoadIndex',
+                        name: 'loadIndex',
+                        data: 'loadIndex',
                         title: 'Общо',
                         sortable: true,
                         searchable: false

@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,7 +11,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
     /// HTML Бланки на документи
     /// </summary>
     [Table("common_html_template")]
-    public class HtmlTemplate
+    public class HtmlTemplate : IHaveId
     {
         [Key]
         [Column("id")]
@@ -78,6 +79,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("have_session_act")]
         [Display(Name = "Насочено е към aкт/протокол")]
         public bool? HaveSessionAct { get; set; }
+        
+        [Column("have_session_multi_act")]
+        [Display(Name = "Насочено е към множество aктове/протоколи")]
+        public bool? HaveSessionMultiAct { get; set; }
 
         [Column("have_session_act_complain")]
         [Display(Name = "Насочено е към жалба към aкт/протокол")]
@@ -118,6 +123,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("is_create")]
         [Display(Name = "Създадена в системата")]
         public bool? IsCreate { get; set; }
+
+        [Column("have_documents")]
+        [Display(Name = "Има съпровождащи доkументи")]
+        public bool? HaveDocuments { get; set; }
+
+        [Column("have_mongo_files")]
+        [Display(Name = "Има прикачени файлове")]
+        public bool? HaveMongoFiles { get; set; }
 
         /// <summary>
         /// Да се избира ли лице от делото в DocumentTemplate
@@ -160,6 +173,6 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [NotMapped]
         [Display(Name = "Landscape")]
         public bool LandscapeVM { get { return (StyleTemplateId == 224); } set { StyleTemplateId = value ? 224 : 223; } }
-        
+
     }
 }

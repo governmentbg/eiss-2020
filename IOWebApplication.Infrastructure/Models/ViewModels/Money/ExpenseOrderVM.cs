@@ -24,6 +24,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         [Display(Name = "Сума")]
         public decimal Amount { get; set; }
 
+        [Display(Name = "Сума")]
+        public decimal AmountBGN { get; set; }
+
         [Display(Name = "Статус")]
         public string ExpenseOrderStateName { get; set; }
 

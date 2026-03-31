@@ -7,6 +7,7 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,6 +31,7 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="institutionType"></param>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult Index(int institutionType)
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_Institution(institutionType).DeleteOrDisableLast();
@@ -75,6 +77,7 @@ namespace IOWebApplication.Controllers
             {
                 InstitutionTypeId = institutionType
             };
+            addToAudit(AuditConstants.Operations.Append, model);
             ViewBag.institutionType = commonService.GetById<InstitutionType>(institutionType);
             return View(nameof(Edit), model);
         }
@@ -90,6 +93,7 @@ namespace IOWebApplication.Controllers
 
             var model = commonService.GetById<Institution>(id);
             ViewBag.institutionType = commonService.GetById<InstitutionType>(model.InstitutionTypeId);
+            addToAudit(AuditConstants.Operations.Update, model);
             return View(model);
         }
 
@@ -113,6 +117,7 @@ namespace IOWebApplication.Controllers
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                addToAudit((currentId > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, model);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
             else
@@ -144,10 +149,16 @@ namespace IOWebApplication.Controllers
             }
             var valMessage = commonService.Institution_Validate(model);
             if (!string.IsNullOrEmpty(valMessage))
-                    {
-                        ModelState.AddModelError(nameof(model.Code), valMessage);
-                    }
-            
+            {
+                ModelState.AddModelError(nameof(model.Code), valMessage);
+            }
+
+        }
+
+        void addToAudit(string operation, Institution model)
+        {
+            var _type = commonService.GetById<InstitutionType>(model.InstitutionTypeId).Label;
+            AddAuditInfo(operation, _type, model.FullName, SourceTypeSelectVM.Instutution);
         }
 
         /// <summary>
@@ -173,6 +184,7 @@ namespace IOWebApplication.Controllers
         /// <param name="request"></param>
         /// <param name="institutionId"></param>
         /// <returns></returns>
+        [DisableAudit]
         [HttpPost]
         public IActionResult ListDataInstitutionAddress(IDataTablesRequest request, int institutionId)
         {
@@ -198,6 +210,7 @@ namespace IOWebApplication.Controllers
         {
             SetBreadcrumsInstitutionAddress(institutionId, 0);
             SetViewBagInstitutionAddress(institutionId);
+            AddAuditInfo(AuditConstants.Operations.View, ViewBag.institutionName, "Добавяне на адрес", SourceTypeSelectVM.Instutution);
 
             var model = new InstitutionAddress()
             {
@@ -219,7 +232,7 @@ namespace IOWebApplication.Controllers
 
             var model = commonService.InstitutionAddress_GetById(institutionId, addressId);
             SetViewBagInstitutionAddress(model.InstitutionId);
-
+            AddAuditInfo(AuditConstants.Operations.View, ViewBag.institutionName, "Редакция на адрес: " + model.Address.FullAddress, SourceTypeSelectVM.Instutution);
             return View(nameof(EditInstitutionAdr), model);
         }
 
@@ -229,7 +242,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         void ValidateModelAdr(InstitutionAddress model)
         {
-            if (string.IsNullOrEmpty(model.Address.CityCode))
+            if (string.IsNullOrEmpty(model.Address.CityCode) && string.IsNullOrEmpty(model.Address.ForeignAddress))
             {
                 ModelState.AddModelError("", "Въведете адрес");
             }
@@ -261,7 +274,17 @@ namespace IOWebApplication.Controllers
             {
                 this.SaveLogOperation(currentId == 0, model.AddressId);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                if (currentId == 0)
+                {
+                    AddAuditInfo(AuditConstants.Operations.Append, ViewBag.institutionName, "Адрес: " + model?.Address?.FullAddress, SourceTypeSelectVM.Instutution);
+                }
+                else
+                {
+                    AddAuditInfo(AuditConstants.Operations.Update, ViewBag.institutionName, "Адрес: " + model?.Address?.FullAddress, SourceTypeSelectVM.Instutution);
+                }
+
                 return RedirectToAction(nameof(EditInstitutionAdr), new { institutionId = model.InstitutionId, addressId = model.AddressId });
+
             }
             else
             {

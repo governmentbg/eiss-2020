@@ -18,7 +18,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         /// true при избор на свързан документ от друга система
         /// </summary>
         [Display(Name = "документ от друга система")]
-        public bool IsLegacyDocument { get; set; }
+        public bool? IsLegacyDocument { get; set; }
 
         [Display(Name = "Направление")]
         [Range(0, 9999999, ErrorMessage = "Изберете '{0}'.")]

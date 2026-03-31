@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
-using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace IOWebApplication.Controllers
 {
@@ -31,6 +28,7 @@ namespace IOWebApplication.Controllers
         public IActionResult Index()
         {
             SetHelpFile(HelpFileValues.Nom10);
+            addToAudit(AuditConstants.Operations.List, null);
             return View();
         }
 
@@ -65,6 +63,7 @@ namespace IOWebApplication.Controllers
                 CourtOrganizationCaseGroups = service.FillCheckListCourtOrganizationCaseGroups()
             };
             SetViewbag();
+            addToAudit(AuditConstants.Operations.View, null);
             return View(nameof(Edit), model);
         }
 
@@ -77,6 +76,7 @@ namespace IOWebApplication.Controllers
         {
             var model = service.CourtOrganization_GetById(id);
             SetViewbag(id);
+            addToAudit(AuditConstants.Operations.View, model);
             return View(nameof(Edit), model);
         }
 
@@ -89,11 +89,11 @@ namespace IOWebApplication.Controllers
         {
             if (model.OrganizationLevelId < 1)
                 return "Изберете ниво";
-            
+
             if (string.IsNullOrEmpty(model.Label))
                 return "Въведете име";
 
-            if (model.DateFrom == null)
+            if (model.DateFrom.Year < 2000)
                 return "Въведете дата от";
 
             if (model.IsDocumentRegistry ?? false)
@@ -133,6 +133,14 @@ namespace IOWebApplication.Controllers
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                if (currentId == 0)
+                {
+                    addToAudit(AuditConstants.Operations.Append, model);
+                }
+                else
+                {
+                    addToAudit(AuditConstants.Operations.Update, model);
+                }
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
             else
@@ -140,6 +148,21 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
             return View(nameof(Edit), model);
+        }
+
+        void addToAudit(string operation, CourtOrganizationEditVM model)
+        {
+            var baseInfo = string.Empty;
+            var addInfo = string.Empty;
+            var operationType = $"Организационна структура";
+
+            if (model?.Id > 0)
+            {
+                var orgType = service.GetPropById<OrganizationLevel, string>(x => x.Id == model.OrganizationLevelId, x => x.Label);
+                baseInfo = $"{model.Label} ({orgType})";
+            }
+
+            AddAuditInfo(operation, baseInfo, addInfo, operationType);
         }
     }
 }

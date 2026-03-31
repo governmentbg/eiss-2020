@@ -799,7 +799,7 @@ namespace Integration.LegalActs
         {
             if ((endpointConfiguration == EndpointConfiguration.BasicHttpBinding_ILegalActsService))
             {
-                return new System.ServiceModel.EndpointAddress("http://servicelegalacts.abbaty.com/LegalActsWebService.svc");
+                return new System.ServiceModel.EndpointAddress("$$SECRET$$");
             }
             throw new System.InvalidOperationException(string.Format("Could not find endpoint with name \'{0}\'.", endpointConfiguration));
         }

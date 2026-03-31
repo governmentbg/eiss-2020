@@ -1,8 +1,15 @@
-﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 @model SourceTypeSelectVM
 @inject IWorkTaskService wtService;
+@inject IUserContext userContext;
 @{
     var canEdit = wtService.ValidateSourceCourt(Model.SourceType, Model.SourceId);
+    // if (!NomenclatureConstants.LawUnitTypes.WorkTaskCreators.Contains(userContext.LawUnitTypeId))
+    // {
+    //     canEdit = false;
+    // }
 }
 <div>
     <div id="wtContainer">
@@ -10,7 +17,7 @@
     @if (canEdit)
     {
         <a href="#" data-modal-title="Нова задача"
-           data-modal-url="@Url.Action("CreateTask","WorkTask",new {sourceType=Model.SourceType,sourceId=Model.SourceId })"
+           data-modal-url="@Url.Action("CreateTask", "WorkTask", new { sourceType = Model.SourceType, sourceId = Model.SourceId })"
            class="modal-loader btn btn-sm btn-success">
             <i class="fa fa-plus"></i> Нова задача
         </a>
@@ -23,8 +30,8 @@
         }
     });
     function wtLoadData() {
-        requestGET_Json('@Url.Action("Select","WorkTask")'
-            , { sourceType:@Model.SourceType, sourceId:@Model.SourceId}
+        requestGET_Json('@Url.Action("Select", "WorkTask")'
+            , { sourceType: @Model.SourceType, sourceId: @Model.SourceId}
             , function (data) {
                 $('#wtContainer').html(TemplateToHtml('#workTaskTemplate', data));
                 if ('@(Model.TaskRequired.ToString().ToLower())' == 'true') {
@@ -45,26 +52,30 @@
             return;
         }
         $(sender).attr('disabled', 'disabled');
-            postContent('@Url.Action("AcceptTask","WorkTask")'
-            , {id:id}
+        postContent('@Url.Action("AcceptTask", "WorkTask")'
+            , { id: id }
             , function (data) {
                 if (data.result == true) {
                     wtLoadData();
                     messageHelper.ShowSuccessMessage('Задачата е приета успешно.');
                 } else {
-                    messageHelper.ShowErrorMessage('Грешка при приемане на задача.');
+                    messageHelper.ShowErrorMessage(data.error);
                     $(sender).removeAttr('disabled');
                 }
             });
     }
     function wtCompleteTask(id) {
-        requestContent('@Url.Action("CompleteTask","WorkTask")'
-            , { id:id}
+        requestContent('@Url.Action("CompleteTask", "WorkTask")'
+            , { id: id }
             , function (data) {
                 ShowModalDialog('Изпълни задача', data);
             });
     }
     function wtDoTask(sender) {
+        if ($(sender).attr('disabled')) {
+            return false;
+        }
+        $(sender).attr('disabled', 'disabled');
         window.location.href = $(sender).data('url');
     }
 </script>
@@ -99,14 +110,14 @@
                 {{#if descriptionCreated}}
                 <br />
                 <span class="remark">
-                    {{descriptionCreated}}
+                    {{decode descriptionCreated}}
                 </span>
                 {{/if}}
                 {{#if canUpdate}}
                 <br />
                 <a href="#" class="modal-loader btn btn-xs btn-warning"
                    data-modal-title="Редакция на задача"
-                   data-modal-url="@Url.Action("UpdateTask","WorkTask")?id={{id}}"><i class="fa fa-edit"></i> Редакция</a>
+                   data-modal-url="@Url.Action("UpdateTask", "WorkTask")?id={{id}}"><i class="fa fa-edit"></i> Редакция</a>
                 {{/if}}
             </div>
             <div class="col-lg-3">
@@ -136,7 +147,7 @@
                 {{/if}}
                 {{#if canRedirect}}
                 <a href="#" class="modal-loader btn btn-xs btn-danger" data-modal-title="Пренасочване на задача"
-                   data-modal-url="@Url.Action("RedirectTask","WorkTask")?id={{id}}"><i class="glyphicon glyphicon-random"></i> Пренасочване</a>
+                   data-modal-url="@Url.Action("RedirectTask", "WorkTask")?id={{id}}"><i class="glyphicon glyphicon-random"></i> Пренасочване</a>
                 {{/if}}
             </div>
             <div class="col-lg-3">
@@ -147,7 +158,11 @@
                 {{#if description}}
                 <br />
                 <span class="remark">
-                    {{description}}
+                    {{#if longDescription}}
+                    <i class="fa fa-exclamation-triangle text-warning" title="{{decode description}}"></i>
+                    {{else}}
+                    {{decode description}}
+                    {{/if}}
                 </span>
                 {{/if}}
                 {{else}}

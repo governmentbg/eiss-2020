@@ -1,0 +1,57 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseEditVM
+
+@{
+    ViewData["Title"] = "Редакция на данни за медиация";
+}
+
+@section breadcrumb {
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditMediationCase" method="post">
+            @Html.HiddenFor(x => x.Id)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.IsMediation)</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.CaseCodeSubId, "GenericSelect2")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.MediationProcedureId, "GenericDropDown")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="Case" asp-action="CasePreview" asp-route-id="@Model.Id" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#CaseCodeSubId').select2({ language: "bg" });
+        });
+    </script>
+}

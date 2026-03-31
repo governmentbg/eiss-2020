@@ -1,4 +1,6 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Extensions;
+using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -14,7 +16,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -24,25 +28,28 @@ namespace IOWebApplication.Core.Services
         private readonly ICaseLawUnitService caseLawUnitService;
         private readonly ICaseLifecycleService caseLifecycleService;
         private readonly ICaseMigrationService caseMigrationService;
+        private readonly IMQEpepService epepService;
 
 
         public CaseSessionActComplainService(ILogger<CaseSessionActComplainService> _logger,
                                              IRepository _repo,
-                                             AutoMapper.IMapper _mapper,
                                              IUserContext _userContext,
                                              ICasePersonService _casePersonService,
                                              ICaseLawUnitService _caseLawUnitService,
                                              ICaseLifecycleService _caseLifecycleService,
-                                             ICaseMigrationService _caseMigrationService)
+                                             ICaseMigrationService _caseMigrationService,
+                                             IReadonlyRepository _readonlyrepo,
+                                             IMQEpepService epepService)
         {
             logger = _logger;
             repo = _repo;
-            mapper = _mapper;
             userContext = _userContext;
             casePersonService = _casePersonService;
             caseLawUnitService = _caseLawUnitService;
             caseLifecycleService = _caseLifecycleService;
             caseMigrationService = _caseMigrationService;
+            readonlyrepo = _readonlyrepo;
+            this.epepService = epepService;
         }
 
         #region CaseSessionActComplain
@@ -81,7 +88,7 @@ namespace IOWebApplication.Core.Services
 
             return result.AsQueryable();
         }
-        
+
         /// <summary>
         /// Проверка за обжалване по съпровождащ документ
         /// </summary>
@@ -113,125 +120,156 @@ namespace IOWebApplication.Core.Services
         /// <summary>
         /// Извличане на данни за справка за обжалване
         /// </summary>
-        /// <param name="DateFrom"></param>
-        /// <param name="DateTo"></param>
-        /// <param name="DateFromActReturn"></param>
-        /// <param name="DateToActReturn"></param>
-        /// <param name="DateFromSendDocument"></param>
-        /// <param name="DateToSendDocument"></param>
-        /// <param name="CaseGroupId"></param>
-        /// <param name="CaseTypeId"></param>
-        /// <param name="CaseRegNumber"></param>
-        /// <param name="ActRegNumber"></param>
-        /// <param name="CaseRegNumFrom"></param>
-        /// <param name="CaseRegNumTo"></param>
-        /// <param name="ActComplainIndexId"></param>
-        /// <param name="ActResultId"></param>
-        /// <param name="JudgeReporterId"></param>
+        /// <param name="filter">Филтър</param>
         /// <returns></returns>
-        public IQueryable<CaseSessionActComplainSprVM> CaseSessionActComplainSpr_Select(DateTime DateFrom, DateTime DateTo, DateTime? DateFromActReturn, DateTime? DateToActReturn, DateTime? DateFromSendDocument, DateTime? DateToSendDocument, int CaseGroupId, int CaseTypeId, string CaseRegNumber, string ActRegNumber, int CaseRegNumFrom, int CaseRegNumTo, int ActComplainIndexId, int ActResultId, int JudgeReporterId)
+        public IQueryable<CaseSessionActComplainSprVM> CaseSessionActComplainSpr_Select(CaseSessionActComplainFilterVM filter)
         {
-            DateFrom = NomenclatureExtensions.ForceStartDate(DateFrom);
-            DateTo = NomenclatureExtensions.ForceEndDate(DateTo);
-            DateFromActReturn = NomenclatureExtensions.ForceStartDate(DateFromActReturn);
-            DateToActReturn = NomenclatureExtensions.ForceEndDate(DateToActReturn);
-            DateFromSendDocument = NomenclatureExtensions.ForceStartDate(DateFromSendDocument);
-            DateToSendDocument = NomenclatureExtensions.ForceEndDate(DateToSendDocument);
+            filter.DateFrom = NomenclatureExtensions.ForceStartDate(filter.DateFrom);
+            filter.DateTo = NomenclatureExtensions.ForceEndDate(filter.DateTo);
+            filter.DateFromActReturn = NomenclatureExtensions.ForceStartDate(filter.DateFromActReturn);
+            filter.DateToActReturn = NomenclatureExtensions.ForceEndDate(filter.DateToActReturn);
+            filter.DateFromSendDocument = NomenclatureExtensions.ForceStartDate(filter.DateFromSendDocument);
+            filter.DateToSendDocument = NomenclatureExtensions.ForceEndDate(filter.DateToSendDocument);
 
-            var caseSessionActComplains = repo.AllReadonly<CaseSessionActComplain>()
-                                              .Include(x => x.Case)
-                                              .ThenInclude(x => x.CaseGroup)
-                                              .Include(x => x.Case)
-                                              .ThenInclude(x => x.CaseType)
-                                              .Include(x => x.Case)
-                                              .ThenInclude(x => x.CaseCode)
-                                              .Include(x => x.ComplainDocument)
-                                              .ThenInclude(x => x.DocumentType)
-                                              .Include(x => x.ComplainState)
-                                              .Include(x => x.CaseSessionAct)
-                                              .ThenInclude(x => x.ActComplainIndex)
-                                              .Include(x => x.CaseSessionAct)
-                                              .ThenInclude(x => x.CaseSession)
-                                              .ThenInclude(x => x.CaseLawUnits)
-                                              .Where(x => (x.CourtId == userContext.CourtId) &&
-                                                          (x.DateExpired == null) &&
-                                                          (x.ComplainDocument.DocumentDate >= DateFrom && x.ComplainDocument.DocumentDate <= DateTo) &&
-                                                          ((DateFromActReturn != null && DateToActReturn != null) ? x.CaseSessionAct.ActReturnDate >= DateFromActReturn && x.CaseSessionAct.ActReturnDate <= DateToActReturn : true) &&
-                                                          ((DateFromSendDocument != null && DateToSendDocument != null) ? (repo.AllReadonly<CaseMigration>().Any(m => m.CaseId == x.CaseId &&
-                                                                                                                                                                      m.CaseSessionActId == x.CaseSessionActId && 
-                                                                                                                                                                      m.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendNextLevel &&
-                                                                                                                                                                      (m.OutDocument.DocumentDate >= DateFromSendDocument && m.OutDocument.DocumentDate <= DateToSendDocument))) : true) &&
-                                                          (CaseGroupId > 0 ? x.Case.CaseGroupId == CaseGroupId : true) &&
-                                                          (CaseTypeId > 0 ? x.Case.CaseTypeId == CaseTypeId : true) &&
-                                                          (CaseRegNumFrom > 0 ? x.Case.ShortNumberValue >= CaseRegNumFrom : true) &&
-                                                          (CaseRegNumTo > 0 ? x.Case.ShortNumberValue <= CaseRegNumTo : true) &&
-                                                          (ActComplainIndexId > 0 ? x.CaseSessionAct.ActComplainIndexId == ActComplainIndexId : true) &&
-                                                          (ActResultId > 0 ? x.CaseSessionAct.ActResultId == ActResultId : true) &&
-                                                          ((JudgeReporterId > 0) ? (x.CaseSessionAct.CaseSession.CaseLawUnits.Where(a => (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.CaseSessionAct.CaseSession.DateFrom && a.LawUnitId == JudgeReporterId &&
-                                                                                                                                          a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any()) : true) &&
-                                                          (!string.IsNullOrEmpty(CaseRegNumber) ? x.Case.RegNumber.ToLower().Contains(CaseRegNumber.ToLower()) : true) &&
-                                                          (!string.IsNullOrEmpty(ActRegNumber) ? x.CaseSessionAct.RegNumber.ToLower().Contains(ActRegNumber.ToLower()) : true))
-                                              .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
-                                              .ToList();
+            DateTime dateEnd = DateTime.Now.AddYears(100);
+            DateTime dateNow = DateTime.Now;
 
-            var result = new List<CaseSessionActComplainSprVM>();
+            Expression<Func<CaseSessionActComplain, bool>> caseGroupIdWhere = x => true;
+            if (filter.CaseGroupId > 0)
+                caseGroupIdWhere = x => x.Case.CaseGroupId == filter.CaseGroupId;
 
-            foreach (var caseSessionActComplain in caseSessionActComplains)
-            {
-                var migrationSend = repo.AllReadonly<CaseMigration>()
-                                        .Include(x => x.OutDocument)
-                                        .ThenInclude(x => x.DocumentType)
-                                        .Where(x => x.CaseId == caseSessionActComplain.CaseId &&
-                                                    x.CaseSessionActId == caseSessionActComplain.CaseSessionActId &&
-                                                    x.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendNextLevel).FirstOrDefault();
+            Expression<Func<CaseSessionActComplain, bool>> caseTypeIdWhere = x => true;
+            if (filter.CaseTypeId > 0)
+                caseTypeIdWhere = x => x.Case.CaseTypeId == filter.CaseTypeId;
 
-                CaseMigration migrationRecive = null;
-                if (migrationSend != null)
-                {
-                    migrationRecive = repo.AllReadonly<CaseMigration>()
-                                              .Include(x => x.Case)
-                                              .ThenInclude(x => x.Court)
-                                              .Where(x => x.OutCaseMigrationId == migrationSend.Id)
-                                              .FirstOrDefault();
-                }
+            Expression<Func<CaseSessionActComplain, bool>> actReturnWhere = x => true;
+            if (filter.DateFromActReturn != null && filter.DateToActReturn != null)
+                actReturnWhere = x => x.CaseSessionAct.ActReturnDate >= filter.DateFromActReturn && x.CaseSessionAct.ActReturnDate <= filter.DateToActReturn;
 
-                //var migration = repo.AllReadonly<CaseMigration>()
-                //                    .Where(x => x.CaseId == caseSessionActComplain.CaseId &&
-                //                                x.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.AcceptCase_AfterComplain &&
-                //                                x.DateWrt >= caseSessionActComplain.ComplainDocument.DocumentDate).FirstOrDefault();
+            Expression<Func<CaseSessionActComplain, bool>> documentDateWhere = x => true;
+            if (filter.DateFrom != null && filter.DateTo != null)
+                documentDateWhere = x => x.ComplainDocument.DocumentDate >= filter.DateFrom && x.ComplainDocument.DocumentDate <= filter.DateTo;
 
-                var complainResult  = repo.AllReadonly<CaseSessionActComplainResult>()
-                                          .Include(x => x.ActResult)
-                                          .Include(x => x.ComplainCase)
-                                          .ThenInclude(x => x.Court)
-                                          .Where(x => x.CaseSessionActComplainId == caseSessionActComplain.Id).FirstOrDefault();
+            Expression<Func<CaseSessionActComplain, bool>> sendDocumentWhere = x => true;
+            if (filter.DateFromSendDocument != null && filter.DateToSendDocument != null)
+                sendDocumentWhere = x => readonlyrepo.AllReadonly<CaseMigration>().Any(m => m.CaseId == x.CaseId &&
+                                                                                    m.CaseSessionActId == x.CaseSessionActId &&
+                                                                                    m.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendNextLevel &&
+                                                                                    (m.OutDocument.DocumentDate >= filter.DateFromSendDocument && m.OutDocument.DocumentDate <= filter.DateToSendDocument));
 
-                var caseLawUnitsActive = caseLawUnitService.CaseLawUnit_Select(caseSessionActComplain.CaseId ?? 0, null).ToList();
-                var judgeRep = caseLawUnitsActive.Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).FirstOrDefault();
-                var sessionActComplainVM = new CaseSessionActComplainSprVM()
-                {
-                    Id = caseSessionActComplain.Id,
-                    JudgeName = (judgeRep != null) ? judgeRep.LawUnitName + ((!string.IsNullOrEmpty(judgeRep.DepartmentLabel)) ? " състав: " + judgeRep.DepartmentLabel : string.Empty) : string.Empty,
-                    //ComplainDocumentNumber = caseSessionActComplain.ComplainDocument.DocumentNumber,
-                    //ComplainDocumentDate = caseSessionActComplain.ComplainDocument.DocumentDate,
-                    //ComplainDocumentType = caseSessionActComplain.ComplainDocument.DocumentType.Label,
-                    ComplainDocumentNumber = migrationSend != null ? (migrationSend.OutDocument != null ? migrationSend.OutDocument.DocumentNumber : string.Empty) : string.Empty,
-                    ComplainDocumentDate = migrationSend != null ? (migrationSend.OutDocument != null ? (DateTime?)migrationSend.OutDocument.DocumentDate : null) : null,
-                    ComplainDocumentType = migrationSend != null ? (migrationSend.OutDocument != null ? migrationSend.OutDocument.DocumentType.Label : string.Empty) : string.Empty,
-                    ActName = caseSessionActComplain.CaseSessionAct.RegNumber + "/" + (caseSessionActComplain.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy"),
-                    CaseGroupLabel = caseSessionActComplain.Case.CaseType.Label + " " + caseSessionActComplain.Case.CaseCode.Code,
-                    CaseNumber = caseSessionActComplain.Case.RegNumber + "/" + caseSessionActComplain.Case.RegDate.Year + "г.",
-                    CaseId = caseSessionActComplain.Case.Id,
-                    DateReturn = caseSessionActComplain.CaseSessionAct.ActReturnDate, /*migration?.DateWrt,*/
-                    Result = (complainResult != null) ? complainResult.ActResult.Label : string.Empty,
-                    Instance = (migrationRecive != null) ? migrationRecive.Case.Court.Label : string.Empty,
-                    IndexLabel = (caseSessionActComplain.CaseSessionAct.ActComplainIndex != null) ? caseSessionActComplain.CaseSessionAct.ActComplainIndex.Code + " - " + caseSessionActComplain.CaseSessionAct.ActComplainIndex.Label : string.Empty
-                };
+            Expression<Func<CaseSessionActComplain, bool>> caseRegNumFromWhere = x => true;
+            if (filter.CaseRegNumFrom > 0)
+                caseRegNumFromWhere = x => x.Case.ShortNumberValue >= filter.CaseRegNumFrom;
 
-                result.Add(sessionActComplainVM);
-            }
+            Expression<Func<CaseSessionActComplain, bool>> caseRegNumToWhere = x => true;
+            if (filter.CaseRegNumTo > 0)
+                caseRegNumToWhere = x => x.Case.ShortNumberValue <= filter.CaseRegNumTo;
 
-            return result.AsQueryable();
+            Expression<Func<CaseSessionActComplain, bool>> actComplainIndexIdWhere = x => true;
+            if (filter.ActComplainIndexId > 0)
+                actComplainIndexIdWhere = x => x.CaseSessionAct.ActComplainIndexId == filter.ActComplainIndexId;
+
+            Expression<Func<CaseSessionActComplain, bool>> actResultIdWhere = x => true;
+            if (filter.ActResultId > 0)
+                actResultIdWhere = x => x.ComplainResults.Any(r => r.ActResultId == filter.ActResultId);
+
+            Expression<Func<CaseSessionActComplain, bool>> judgeReporterIdWhere = x => true;
+            if (filter.JudgeReporterId > 0)
+                judgeReporterIdWhere = x => x.CaseSessionAct.CaseSession.CaseLawUnits.Where(a => (a.DateTo ?? DateTime.Now.AddYears(100)).Date >= x.CaseSessionAct.CaseSession.DateFrom && a.LawUnitId == filter.JudgeReporterId &&
+                                                                                                 a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).Any();
+
+            Expression<Func<CaseSessionActComplain, bool>> judgeReporterFinalActIdWhere = x => true;
+            if (filter.JudgeReporterFinalActId > 0)
+                judgeReporterFinalActIdWhere = x => x.CaseSessionAct
+                                                     .CaseSession
+                                                     .CaseLawUnits
+                                                     .Any(a => (a.DateTo ?? dateEnd) >= dateNow && a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter && a.LawUnitId == filter.JudgeReporterFinalActId);
+
+            Expression<Func<CaseSessionActComplain, bool>> caseRegnumberSearch = x => true;
+            if (!string.IsNullOrEmpty(filter.CaseRegNumber))
+                caseRegnumberSearch = x => EF.Functions.ILike(x.Case.RegNumber, filter.CaseRegNumber.ToCasePaternSearch());
+
+            Expression<Func<CaseSessionActComplain, bool>> actRegNumberSearch = x => true;
+            if (!string.IsNullOrEmpty(filter.ActRegNumber))
+                actRegNumberSearch = x => EF.Functions.ILike(x.CaseSessionAct.RegNumber, filter.ActRegNumber.ToEndingPaternSearch());
+
+            Expression<Func<CaseSessionActComplain, bool>> actIsFinalDocSearch = x => true;
+            if (filter.ActIsFinalDoc)
+                actIsFinalDocSearch = x => x.CaseSessionAct.IsFinalDoc;
+
+            var caseLawUnit = readonlyrepo.AllReadonly<CaseLawUnit>()
+                                  .Where(l => l.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter &&
+                                              (l.DateTo ?? dateNow.AddYears(1)) >= dateNow &&
+                                              l.CaseSessionId == null);
+
+            var migrationSend = readonlyrepo.AllReadonly<CaseMigration>()
+                                    .Where(m => (m.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendNextLevel) ||
+                                                (m.CaseMigrationTypeId == NomenclatureConstants.CaseMigrationTypes.SendCase_ToOtherSystem &&
+                                                 m.OutDocument.DocumentTypeId == NomenclatureConstants.DocumentType.LetterOfTransmittalForAppeal));
+
+            var migrationRecive = readonlyrepo.AllReadonly<CaseMigration>();
+
+            return readonlyrepo.AllReadonly<CaseSessionActComplain>()
+                       .Where(x => x.CourtId == userContext.CourtId && x.DateExpired == null)
+                       .Where(documentDateWhere)
+                       .Where(caseGroupIdWhere)
+                       .Where(caseTypeIdWhere)
+                       .Where(actReturnWhere)
+                       .Where(sendDocumentWhere)
+                       .Where(caseRegNumFromWhere)
+                       .Where(caseRegNumToWhere)
+                       .Where(actComplainIndexIdWhere)
+                       .Where(actResultIdWhere)
+                       .Where(judgeReporterIdWhere)
+                       .Where(judgeReporterFinalActIdWhere)
+                       .Where(caseRegnumberSearch)
+                       .Where(actRegNumberSearch)
+                       .Where(actIsFinalDocSearch)
+                       .Where(x => !x.Case.CaseDeactivations.Any(d => d.CaseId == x.CaseId && d.DateExpired == null))
+                       .Select(x => new CaseSessionActComplainSprVM()
+                       {
+                           Id = x.Id,
+                           JudgeName = caseLawUnit.Where(l => l.CaseId == x.CaseId)
+                                                  .Select(l => l.LawUnit.FullName + ((l.CourtDepartmentId != null) ? " състав: " + l.CourtDepartment.Label : string.Empty))
+                                                  .FirstOrDefault(),
+                           JudgeReporterFinalActName = x.CaseSessionAct
+                                                        .CaseSession
+                                                        .CaseLawUnits
+                                                        .Where(a => (a.DateTo ?? dateEnd) >= dateNow && a.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                                        .Select(a => a.LawUnit.FullName)
+                                                        .FirstOrDefault(),
+                           ComplainDocumentNumber = migrationSend.Where(m => m.CaseId == x.CaseId &&
+                                                                             m.CaseSessionActId == x.CaseSessionActId)
+                                                                 .OrderByDescending(m => m.Id)
+                                                                 .Select(m => m.OutDocumentId != null ? m.OutDocument.DocumentNumber : string.Empty)
+                                                                 .FirstOrDefault(),
+                           ComplainDocumentDate = migrationSend.Where(m => m.CaseId == x.CaseId &&
+                                                                           m.CaseSessionActId == x.CaseSessionActId)
+                                                               .OrderByDescending(m => m.Id)
+                                                               .Select(m => m.OutDocumentId != null ? (DateTime?)m.OutDocument.DocumentDate : null)
+                                                               .FirstOrDefault(),
+                           ComplainDocumentType = migrationSend.Where(m => m.CaseId == x.CaseId &&
+                                                                           m.CaseSessionActId == x.CaseSessionActId)
+                                                               .OrderByDescending(m => m.Id)
+                                                               .Select(m => m.OutDocumentId != null ? m.OutDocument.DocumentType.Label : null)
+                                                               .FirstOrDefault(),
+                           ActName = x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") + " ",
+                           ActDate = x.CaseSessionAct.RegDate,
+                           CaseGroupLabel = x.Case.CaseType.Code + " " + x.Case.CaseCode.Code,
+                           CaseNumber = x.Case.ShortNumber + "/" + x.Case.RegDate.Year + "г.",
+                           CaseId = x.CaseId ?? 0,
+                           DateReturn = x.CaseSessionAct.ActReturnDate,
+                           Result = x.ComplainResults.Select(r => r.ActResult.Label).FirstOrDefault(),
+                           Instance = migrationRecive.Where(mr => mr.OutCaseMigrationId == migrationSend.Where(m => m.CaseId == x.CaseId &&
+                                                                                                                    m.CaseSessionActId == x.CaseSessionActId)
+                                                                                                        .OrderByDescending(m => m.Id)
+                                                                                                        .Select(m => m.Id)
+                                                                                                        .FirstOrDefault())
+                                                     .Select(mr => mr.Case.Court.Label)
+                                                     .FirstOrDefault(),
+                           IndexLabel = (x.CaseSessionAct.ActComplainIndex != null) ? x.CaseSessionAct.ActComplainIndex.Code + " - " + x.CaseSessionAct.ActComplainIndex.Label : string.Empty
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -239,7 +277,7 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CaseSessionActComplain_SaveData(CaseSessionActComplain model)
+        public async Task<bool> CaseSessionActComplain_SaveData(CaseSessionActComplain model)
         {
             try
             {
@@ -255,21 +293,25 @@ namespace IOWebApplication.Core.Services
                     saved.ComplainStateId = model.ComplainStateId;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
-                    repo.Update(saved);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();                   
                 }
                 else
                 {
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
                     repo.Add<CaseSessionActComplain>(model);
-                    repo.SaveChanges();
+                    await repo.SaveChangesAsync();                    
+                }
+                (bool isRNFL, bool transferStarted) = await epepService.RNFL_CheckCase(model.CaseId ?? 0);
+                if (isRNFL && transferStarted)
+                {
+                    await epepService.RNFL_SendAppeal(model.Id, EpepConstants.ServiceMethod.Add);
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Обжалвания към съдебен акт Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Обжалвания към съдебен акт Id={model.Id}");
                 return false;
             }
         }
@@ -296,12 +338,12 @@ namespace IOWebApplication.Core.Services
                         (document.DocumentCaseInfo.Any(x => x.SessionActId != null)))
                     {
                         var caseSessionAct = repo.GetById<CaseSessionAct>(document.DocumentCaseInfo.Select(x => x.SessionActId).FirstOrDefault());
-                        var casePersons = casePersonService.CasePerson_Select(caseSessionAct.CaseId ?? 0, null, false, false, false).Where(x => x.CaseSessionId == null).ToList();
+                        //var casePersons = casePersonService.CasePerson_Select(caseSessionAct.CaseId ?? 0, null, false, false, false).Where(x => x.CaseSessionId == null).ToList();
+                        var casePersons = casePersonService.CasePersonFast_SelectForCasePreview(caseSessionAct.CaseId ?? 0).ToList();
 
                         //caseSessionAct.CanAppeal = true;
                         //caseSessionAct.DateWrt = DateTime.Now;
                         //caseSessionAct.UserId = userContext.UserId;
-                        //repo.Update(caseSessionAct);
 
                         var caseSessionActComplain = new CaseSessionActComplain()
                         {
@@ -313,11 +355,15 @@ namespace IOWebApplication.Core.Services
                             UserId = userContext.UserId,
                             DateWrt = DateTime.Now
                         };
-                        repo.Add(caseSessionActComplain);
+
 
                         foreach (var documentPerson in document.DocumentPersons)
                         {
-                            var casePerson = casePersons.Where(x => x.Uic == documentPerson.Uic).FirstOrDefault();
+                            var casePerson = new CasePersonListVM();
+                            if (!string.IsNullOrEmpty(documentPerson.Uic))
+                                casePerson = casePersons.Where(x => x.Uic == documentPerson.Uic).FirstOrDefault();
+                            else
+                                casePerson = null;
 
                             if (casePerson != null)
                             {
@@ -325,15 +371,18 @@ namespace IOWebApplication.Core.Services
                                 {
                                     CourtId = caseSessionAct.CourtId,
                                     CaseId = caseSessionAct.CaseId,
-                                    CaseSessionActComplainId = caseSessionActComplain.Id,
+                                    //CaseSessionActComplainId = caseSessionActComplain.Id,
                                     CasePersonId = casePerson.Id,
                                     UserId = userContext.UserId,
                                     DateWrt = DateTime.Now
                                 };
-
-                                repo.Add(caseSessionActComplainPerson);
+                                caseSessionActComplain.CasePersons = caseSessionActComplain.CasePersons ?? new List<CaseSessionActComplainPerson>();
+                                caseSessionActComplain.CasePersons.Add(caseSessionActComplainPerson);
+                                //repo.Add(caseSessionActComplainPerson);
                             }
                         }
+
+                        repo.Add(caseSessionActComplain);
 
                         repo.SaveChanges();
                     }
@@ -343,7 +392,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Обжалвания към съдебен акт Id={ DocumentId }");
+                logger.LogError(ex, $"Грешка при запис на Обжалвания към съдебен акт Id={DocumentId}");
                 return false;
             }
         }
@@ -396,12 +445,12 @@ namespace IOWebApplication.Core.Services
         /// Извличане на данни за акт за комбобокс
         /// </summary>
         /// <param name="caseId"></param>
-        /// <param name="caseSessionActId"></param>
+        /// <param name="caseSessionActIds"></param>
         /// <param name="htmlTemplateId"></param>
         /// <param name="addDefaultElement"></param>
         /// <param name="addAllElement"></param>
         /// <returns></returns>
-        public List<SelectListItem> GetDropDownListForAct(int caseId, int caseSessionActId, int htmlTemplateId, bool addDefaultElement = true, bool addAllElement = false)
+        public List<SelectListItem> GetDropDownListForAct(int caseId, int[] caseSessionActIds, int htmlTemplateId, bool addDefaultElement = true, bool addAllElement = false)
         {
             bool complainActFree = repo.AllReadonly<HtmlTemplate>()
                                    .FirstOrDefault(x => x.Id == htmlTemplateId)?
@@ -409,14 +458,14 @@ namespace IOWebApplication.Core.Services
             var caseSessionActComplain = repo.AllReadonly<CaseSessionActComplain>()
                                              .Where(x => x.DateExpired == null);
 
-            
+
             if (complainActFree)
             {
-                 caseSessionActComplain = caseSessionActComplain.Where(x => x.CaseSessionAct.CaseId == caseId);
+                caseSessionActComplain = caseSessionActComplain.Where(x => x.CaseSessionAct.CaseId == caseId);
             }
             else
             {
-                caseSessionActComplain = caseSessionActComplain.Where(x => x.CaseSessionActId == caseSessionActId);
+                caseSessionActComplain = caseSessionActComplain.Where(x => caseSessionActIds.Contains(x.CaseSessionActId));
             }
 
             var result = caseSessionActComplain.Select(x => new SelectListItem()
@@ -464,7 +513,7 @@ namespace IOWebApplication.Core.Services
                                    x.DateExpired == null &&
                                    !x.ComplainResults.Any(r => r.CaseSessionActComplainId == x.Id))
                        .Select(x => new CheckListVM()
-                       { 
+                       {
                            Checked = false,
                            Value = x.Id.ToString(),
                            Label = (x.ComplainDocument.DocumentType.Label ?? "") + " " + x.ComplainDocument.DocumentNumber + "/" + x.ComplainDocument.DocumentDate.ToString("dd.MM.yyyy")
@@ -484,12 +533,6 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseSessionActComplainResultVM> CaseSessionActComplainResult_Select(int CaseSessionActComplainId)
         {
             return repo.AllReadonly<CaseSessionActComplainResult>()
-                       .Include(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.Case)
-                       .ThenInclude(x => x.Court)
-                       .Include(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.ActType)
-                       .Include(x => x.ActResult)
                        .Where(x => x.CaseSessionActComplainId == CaseSessionActComplainId)
                        .Select(x => new CaseSessionActComplainResultVM()
                        {
@@ -511,14 +554,6 @@ namespace IOWebApplication.Core.Services
         private IList<CaseSessionActComplainResultVM> CaseSessionActComplainResultForCaseId_Select(int CaseId)
         {
             return repo.AllReadonly<CaseSessionActComplainResult>()
-                       .Include(x => x.ComplainCase)
-                       .ThenInclude(x => x.Court)
-                       .Include(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.ActType)
-                       .Include(x => x.ActResult)
-                       .Include(x => x.CaseSessionActComplain)
-                       .ThenInclude(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.CaseSession)
                        .Where(x => x.CaseSessionActComplain.CaseSessionAct.CaseSession.CaseId == CaseId)
                        .Select(x => new CaseSessionActComplainResultVM()
                        {
@@ -594,7 +629,29 @@ namespace IOWebApplication.Core.Services
         /// <returns></returns>
         public CaseSessionActComplainResultEditVM CaseSessionActComplainResult_GetById(int Id)
         {
-            return FillCaseSessionActComplainResultEditVM(repo.GetById<CaseSessionActComplainResult>(Id));
+            return repo.AllReadonly<CaseSessionActComplainResult>()
+                       .Where(c => c.Id == Id)
+                       .Select(x => new CaseSessionActComplainResultEditVM()
+                       {
+                           Id = x.Id,
+                           ComplainCourtId = x.ComplainCourtId,
+                           ComplainCaseId = x.ComplainCaseId,
+                           CaseSessionActComplainId = x.CaseSessionActComplainId,
+                           CourtId = x.CourtId,
+                           CaseId = x.CaseId,
+                           CaseSessionActId = x.CaseSessionActId,
+                           ActResultId = x.ActResultId,
+                           Description = x.Description,
+                           DateResult = x.DateResult,
+                           CaseRegNumberOtherSystem = x.CaseRegNumberOtherSystem,
+                           CaseSessionActOtherSystem = x.CaseSessionActOtherSystem,
+                           CaseShortNumberOtherSystem = x.CaseShortNumberOtherSystem,
+                           CaseYearOtherSystem = x.CaseYearOtherSystem,
+                           CaseOtherSystem = (x.CaseSessionActId == null),
+                           DateFromLifeCycle = x.DateFromLifeCycle,
+                           ActReturn = x.CaseSessionActComplain.CaseSessionAct.ActReturnDate
+                       })
+                       .First();
         }
 
         /// <summary>
@@ -630,7 +687,6 @@ namespace IOWebApplication.Core.Services
                     saved.DateFromLifeCycle = model.DateFromLifeCycle;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
-                    repo.Update(saved);
                 }
                 else
                 {
@@ -638,6 +694,8 @@ namespace IOWebApplication.Core.Services
                     modelSave.UserId = userContext.UserId;
                     repo.Add<CaseSessionActComplainResult>(modelSave);
                 }
+
+
 
                 if (model.CaseSessionActComplains != null)
                 {
@@ -650,7 +708,34 @@ namespace IOWebApplication.Core.Services
                         caseSessionActComplainSave.DateWrt = DateTime.Now;
                         caseSessionActComplainSave.UserId = userContext.UserId;
                         repo.Add<CaseSessionActComplainResult>(caseSessionActComplainSave);
+
+                        if (model.CaseOtherSystem)
+                        {
+                            int actComplainId = int.Parse(caseSessionActComplain.Value);
+                            CaseSessionActComplain actComplain = repo.AllReadonly<CaseSessionActComplain>()
+                                                                     .Where(x => x.Id == actComplainId)
+                                                                     .First();
+
+                            CaseSessionAct act = repo.All<CaseSessionAct>()
+                                                     .Where(a => a.Id == actComplain.CaseSessionActId)
+                                                     .First();
+
+                            act.ActReturnDate = model.ActReturn;
+                        }
                     }
+                }
+
+                if (model.CaseOtherSystem)
+                {
+                    CaseSessionActComplain actComplain = repo.AllReadonly<CaseSessionActComplain>()
+                                                             .Where(x => x.Id == model.CaseSessionActComplainId)
+                                                             .First();
+
+                    CaseSessionAct act = repo.All<CaseSessionAct>()
+                                             .Where(a => a.Id == actComplain.CaseSessionActId)
+                                             .First();
+
+                    act.ActReturnDate = model.ActReturn;
                 }
 
                 repo.SaveChanges();
@@ -670,14 +755,14 @@ namespace IOWebApplication.Core.Services
                         dateAccept = model.DateFromLifeCycle;
                     }
 
-                    caseLifecycleService.CaseLifecycle_NewIntervalSave(model.CaseId, dateAccept ?? DateTime.Now);
+                    caseLifecycleService.CaseLifecycle_NewIntervalSave(model.CaseId, dateAccept ?? DateTime.Now, null);
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Резултат по Обжалвания към съдебен акт Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Резултат по Обжалвания към съдебен акт Id={model.Id}");
                 return false;
             }
         }
@@ -829,7 +914,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Страни в Обжалвания към съдебен акт Id={ model.ObjectId }");
+                logger.LogError(ex, $"Грешка при запис на Страни в Обжалвания към съдебен акт Id={model.ObjectId}");
                 return false;
             }
         }
@@ -845,7 +930,7 @@ namespace IOWebApplication.Core.Services
 
             foreach (var actComplainPerson in caseSessionActComplainPeople)
             {
-                if (result != string.Empty)
+                if (!string.IsNullOrEmpty(result))
                     result += ", ";
 
                 result += actComplainPerson.CasePerson.FullName;
@@ -864,7 +949,7 @@ namespace IOWebApplication.Core.Services
         {
             IList<CheckListVM> checkListVMs = new List<CheckListVM>();
 
-            var casePersons = casePersonService.CasePerson_Select(caseId, null, false, false, false).Where(x => x.CaseSessionId == null).ToList();
+            var casePersons = casePersonService.CasePersonFast_SelectForCasePreview(caseId).ToList();
             var caseSessionActComplainPeople = CaseSessionActComplainPerson_Select(CaseSessionActComplainId).ToList();
 
             foreach (var person in casePersons.Where(x => x.DateFrom <= DateTime.Now && (x.DateTo ?? DateTime.Now.AddYears(100)) >= DateTime.Now))

@@ -42,6 +42,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         public string DepartmentName { get; set; }
 
         [Column("latin_name")]
+        [Display(Name = "Име на латиница")]
         public string LatinName { get; set; }
 
         [Column("is_deceased")]
@@ -60,10 +61,19 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         [Column("person_source_code")]
         public string Person_SourceCode { get; set; }
 
+        [Column("gender_id")]
+        [Display(Name = "Пол")]
+        public int? GenderId { get; set; }
+
+        [Column("citizenship_id")]
+        [Display(Name = "Гражданство")]
+        public int? CitizenshipId { get; set; }
+
         [ForeignKey(nameof(UicTypeId))]
         public virtual UicType UicType { get; set; }
 
-
+        [ForeignKey(nameof(CitizenshipId))]
+        public virtual EkCountry Citizenship { get; set; }
 
         public string UicTypeLabel
         {
@@ -94,6 +104,21 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
                     case NomenclatureConstants.UicTypes.EGN:
                     case NomenclatureConstants.UicTypes.LNCh:
                     case NomenclatureConstants.UicTypes.BirthDate:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
+
+        public bool IsFirm
+        {
+            get
+            {
+                switch (this.UicTypeId)
+                {
+                    case NomenclatureConstants.UicTypes.EIK:
+                    case NomenclatureConstants.UicTypes.Bulstat:
                         return true;
                     default:
                         return false;
@@ -154,7 +179,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
 
             //Махат се двойните интервали в името и тирета за втора фамилия
             value = value.Replace("-", "").Replace("  ", "").Replace("  ", "");
-            var names = value.Split(' ');
+            var names = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (names.Length > 0)
             {
                 this.FirstName = names[0];

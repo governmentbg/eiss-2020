@@ -1,19 +1,33 @@
 ﻿$(function () {
-    var frm = $('.pdfSigner');
-
     SCS.get(signToolsPath)
         .then(function (json) {
-            frm.find('button.submit').removeAttr('disabled');
+            $('.pdfSigner').find('button.submit-sign-pdf').removeAttr('disabled');
+            $('.xmlSigner').find('button.submit-sign-xml').removeAttr('disabled');
         })
         .then(null, function (err) {
             showSignError('ERROR:' + "\r\n" + err.message);
         });
 
-    $(document).on('click', 'button.submit', function (e) {
+    $(document).on('click', 'button.submit-sign-pdf', function (e) {
         e.preventDefault();
         var signFrm = $(e.currentTarget).parents('form:first');
-        $(signFrm).find('button.submit').attr('disabled', true);
-        var val = $(signFrm).find('#PdfHash').val();
+        let btnSign = $(signFrm).find('button.submit-sign-pdf');
+        let signWarning = $(btnSign).data('signwarning');
+        if (signWarning && $(btnSign).data('warningshown') != 'true') {
+            swalConfirm(signWarning, function () {
+                $(btnSign).data('warningshown', 'true');
+                $(btnSign).trigger('click');
+               
+            }, function () {
+               
+            })
+            return;
+        }
+
+
+
+        $(btnSign).attr('disabled', true);
+        var val = $(signFrm).find('#FileHash').val();
 
         if (!val.length) {
             return showSignError('Не сте въвели хеш за подписване');
@@ -41,7 +55,7 @@
                     showSignError('ERROR:' + "\r\n" + err.message);
                 }
                 
-                $(signFrm).find('button.submit').removeAttr('disabled');
+                $(btnSign).removeAttr('disabled');
             });
 
         return false;

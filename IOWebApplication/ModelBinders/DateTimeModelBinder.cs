@@ -17,14 +17,12 @@ namespace IOWebApplication.ModelBinders
         #region Fields
 
         private readonly string _customFormat;
-        private readonly SimpleTypeModelBinder _baseBinder;
 
         #endregion
 
-        public DateTimeModelBinder(string customFormat, ILoggerFactory loggerFactory)
+        public DateTimeModelBinder(string customFormat)
         {
             this._customFormat = customFormat;
-            this._baseBinder = new SimpleTypeModelBinder(typeof(DateTime), loggerFactory);
         }
 
         Task IModelBinder.BindModelAsync(ModelBindingContext bindingContext)
@@ -67,7 +65,7 @@ namespace IOWebApplication.ModelBinders
                 }
             }
 
-            return _baseBinder.BindModelAsync(bindingContext);
+            return Task.CompletedTask;
         }
     }
 }

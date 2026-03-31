@@ -1,19 +1,45 @@
-﻿@inject IOWebApplication.Core.Contracts.IWorkTaskService workTaskContext;
+﻿@using IOWebApplication.Infrastructure.Constants;
+@inject IOWebApplication.Core.Contracts.IWorkTaskService workTaskContext;
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 @{
-    string helpFile = TempData["HelpFile"]?.ToString();  
+    string helpFile = TempData["HelpFile"]?.ToString();
+    var showElDocs = (bool?)ViewData["ShowWaitingElectronicDocs"] == true;
+    if (!userContext.IsUserInRole(AccountConstants.Roles.DocumentInit))
+    {
+        showElDocs = false;
+    }
+    bool showMenuCounts = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.MainMenuCounts);
+    if (!showMenuCounts)
+    {
+
+        showMenuCounts = (bool?)ViewData["ShowMenuCounts"] == true;
+    };
+    //03.07.2024 Пускане на всички идникатори
+    showMenuCounts = true;
+    int myTasksCount = 0;
+
+    if (showMenuCounts)
+    {
+        myTasksCount = await workTaskContext.Select_ToDoCount();
+    }
 }
 <!-- /.navbar-collapse -->
 <!-- Navbar Right Menu -->
 <div class="navbar-custom-menu">
     <ul class="nav navbar-nav nav-main">
         <li><a href="@Url.Action("CaseReport","Case")" title="Разширено търсене"><i class="fa fa-search"></i></a></li>
-        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyNotificationComponent), new { view = "NotificationCount" })
-        <partial name="_MyTaskCount" model="@workTaskContext.Select_ToDoCount()" />
 
-        @*@await Component.InvokeAsync(nameof(IOWebApplication.Components.MyTasksComponent), new { view = "TaskCount" })*@
-        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyMovementComponent), new { view = "MovementCount" })
+        @if (showMenuCounts)
+        {
+            @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyNotificationComponent), new { view = "NotificationCount" })
+            <partial name="_MyTaskCount" model="@myTasksCount" />
 
-        @*@await Component.InvokeAsync(nameof(IOWebApplication.Components.UserInfoComponent), "CourtInfo")*@
+            @await Component.InvokeAsync(nameof(IOWebApplication.Components.MyMovementComponent), new { view = "MovementCount" })
+        }
+        @if (showElDocs)
+        {
+            @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainGroupComponent), new { view = "MenuCount", sourceType = SourceTypeSelectVM.ElectronicDocument, title = "Електронно подадени документи" })
+        }
 
         <partial name="_LoginPartial" />
         @if (helpFile != null)

@@ -4,10 +4,20 @@
 @using static IOWebApplication.Infrastructure.Constants.EpepConstants;
 
 @{
+    int integrationType = (int)ViewBag.integrationType;
     bool isGlobalAdmin = (bool)ViewBag.isGlobalAdmin;
+    bool showDescription = (bool)ViewBag.isGlobalAdmin || integrationType == NomenclatureConstants.IntegrationTypes.Cais;
     bool isSupervisor = (bool)ViewBag.isSupervisor;
+    string ispnRemark = (string)ViewBag.IspnRemark;
 }
-
+@if (!string.IsNullOrEmpty(ispnRemark))
+{
+    <div>
+        <b>
+            @ispnRemark не подлежат на изпращане към ИСПН!
+        </b>
+    </div>
+}
 @if (Model.Any())
 {
     <table class="table table-condensed" width="100%">
@@ -15,7 +25,7 @@
             <th>Дата</th>
             @*<th>Операция</th>*@
             <th>Статус</th>
-            @if (isGlobalAdmin)
+            @if (showDescription)
             {
                 <th>Описание</th>
             }
@@ -27,8 +37,8 @@
                     @(item.DateWrt.ToString("dd.MM.yyyy HH:mm"))
                 </td>
                 @*<td>
-                        @item.OperName
-                    </td>*@
+        @item.OperName
+        </td>*@
 
                 @switch (item.StateId)
                 {
@@ -53,16 +63,35 @@
                         <td>Грешка в данните</td>
                         break;
                 }
-                @if (isGlobalAdmin)
+                @if (showDescription)
                 {
-                    <td>@item.Id; @item.ErrorDescription</td>
+                    <td>
+                        @if (isGlobalAdmin)
+                        {
+                            <text>@item.Id; </text>
+                        }
+                        @if (isGlobalAdmin || (item.StateId == IntegrationStates.DataContentError))
+                        {
+                            <text>@item.ErrorDescription</text>
+                        }
+                    </td>
                 }
             </tr>
         }
     </table>
-    @if (isSupervisor && Model.Any(x => EpepConstants.IntegrationStates.ResetMQErrorStates.Contains(x.StateId)))
+    @if (isSupervisor)
     {
-        <a href="#" onclick="loadMqResetData();return false;" class="btn btn-sm btn-warning">Повторен трансфер</a>
+        if (Model.Any(x => EpepConstants.IntegrationStates.ResetMQErrorStates.Contains(x.StateId ?? 0)))
+        {
+            <a href="#" onclick="loadMqResetData();return false;" class="btn btn-sm btn-warning">Повторен трансфер</a>
+            <span>&nbsp;</span>
+        }
+        if (!string.IsNullOrEmpty(ViewBag.restartCaseUrl))
+        {
+
+            <a href="#" onclick="loadMqRestartCase();return false;" class="btn btn-sm btn-danger" title="Рестартиране на всички заявки към свързани с делото обекти, които не са изпратени успешно">Рестартиране на всички заявки</a>
+            <p class="text-remark">@ViewBag.restartCaseInfo</p>
+        }
     }
 }
 else
@@ -71,7 +100,14 @@ else
 }
 <script>
     function loadMqResetData() {
-        var _url = "@Html.Raw(ViewBag.resetUrl)" + '&returnToMQ=true';
+        var _url = "@Html.Raw(ViewBag.resetUrl)";
+        requestContent(_url, null, function (html) {
+            let _title = $('.master-modal .modal-title:first').text();
+            ShowModalDialog(_title, html, true);
+        });
+    }
+    function loadMqRestartCase() {
+        var _url = "@Html.Raw(ViewBag.restartCaseUrl)";
         requestContent(_url, null, function (html) {
             let _title = $('.master-modal .modal-title:first').text();
             ShowModalDialog(_title, html, true);

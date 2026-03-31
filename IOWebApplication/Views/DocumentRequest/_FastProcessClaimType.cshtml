@@ -1,0 +1,29 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessRequestVM
+@{
+    bool is417 = Model.RequestTypeCode == FastProcessRequestVM.FastProcess417;
+    var colCount = 4;
+    if (is417)
+    {
+        colCount = 3;
+    }
+}
+<h3 class="section-title section-title--xs mb-3" id="fp-claimstype">3.1 Предмет на вземането</h3>
+<div class="row">
+    <div class="col-lg-@colCount">
+        @Html.EditorFor(x => x.ClaimTypes.MoneyClaim)
+    </div>
+    <div class="col-lg-@colCount">
+        @Html.EditorFor(x => x.ClaimTypes.ItemSubstitutionClaim)
+    </div>
+    <div class="col-lg-@colCount">
+        @Html.EditorFor(x => x.ClaimTypes.ItemClaim)
+    </div>
+    @if (is417)
+    {
+        <div class="col-lg-@colCount">
+            @Html.EditorFor(x => x.ClaimTypes.PropertyClaim)
+        </div>
+    }
+</div>
+@Html.ValidationMessageFor(x => x.ClaimTypes.ClaimTypeValidations, null, new { @class = "text-danger" })

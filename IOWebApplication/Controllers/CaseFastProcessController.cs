@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
-using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -22,30 +19,33 @@ namespace IOWebApplication.Controllers
         private readonly ICaseFastProcessService service;
         private readonly ICaseLawUnitService lawUnitService;
         private readonly IApiDocumentService apiDocService;
+        private readonly ICaseService caseService;
 
         public CaseFastProcessController(INomenclatureService _nomService,
                                          ICaseFastProcessService _service,
                                          ICaseLawUnitService _lawUnitService,
-                                         IApiDocumentService _apiDocService)
+                                         IApiDocumentService _apiDocService,
+                                         ICaseService _caseService)
         {
             nomService = _nomService;
             service = _service;
             lawUnitService = _lawUnitService;
             apiDocService = _apiDocService;
+            caseService = _caseService;
         }
 
         /// <summary>
-        /// Страница с Заповедни производства към дело
+        /// Страница със Заповедни производства към дело
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
         public async Task<IActionResult> Index(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseFastProcess, null, AuditConstants.Operations.View, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseFastProcess, null, AuditConstants.Operations.View, caseId))
             {
                 return Redirect_Denied();
             }
-            SetViewBag(caseId);
+            await SetViewBag(caseId);
             SetHelpFile(HelpFileValues.CaseFastProcess);
             if ((bool)ViewBag.req_4_2021 == true)
             {
@@ -54,12 +54,14 @@ namespace IOWebApplication.Controllers
             return View(caseId);
         }
 
-        private void SetViewBag(int CaseId)
+        private async Task SetViewBag(int CaseId)
         {
             ViewBag.caseId = CaseId;
-            var caseCase = service.GetById<Case>(CaseId);
-            ViewBag.CaseName = caseCase.RegNumber;
-            ViewBag.req_4_2021 = ((service.SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start);
+            var caseCase = await caseService.GetCaseInfo(CaseId);
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
+            ViewBag.req_4_2021 = true;
+
+            //((service.SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start);
         }
 
         /// <summary>
@@ -151,9 +153,9 @@ namespace IOWebApplication.Controllers
         /// <param name="caseId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult CaseBankAccount(int caseId, int? id)
+        public async Task<IActionResult> CaseBankAccount(int caseId, int? id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseBankAccount, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseBankAccount, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -161,7 +163,7 @@ namespace IOWebApplication.Controllers
             CaseBankAccount model;
             if (id > 0)
             {
-                model = nomService.GetById<CaseBankAccount>(id);
+                model = await nomService.GetByIdAsync<CaseBankAccount>(id);
             }
             else
             {
@@ -203,9 +205,9 @@ namespace IOWebApplication.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult CaseBankAccount_Delete(int Id)
+        public async Task<JsonResult> CaseBankAccount_Delete(int Id)
         {
-            CheckAccess(service, SourceTypeSelectVM.CaseBankAccount, Id, AuditConstants.Operations.Delete);
+            await CheckAccessAsync(service, SourceTypeSelectVM.CaseBankAccount, Id, AuditConstants.Operations.Delete);
             return Json(new { result = service.CaseBankAccount_DeleteData(Id) });
         }
 
@@ -252,9 +254,9 @@ namespace IOWebApplication.Controllers
         /// <param name="caseId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult CaseMoneyClaim(int caseId, int? id)
+        public async Task<IActionResult> CaseMoneyClaim(int caseId, int? id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMoneyClaim, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyClaim, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -262,7 +264,7 @@ namespace IOWebApplication.Controllers
             CaseMoneyClaim model;
             if (id > 0)
             {
-                model = nomService.GetById<CaseMoneyClaim>(id);
+                model = await nomService.GetByIdAsync<CaseMoneyClaim>(id);
             }
             else
             {
@@ -343,9 +345,9 @@ namespace IOWebApplication.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult CaseMoneyClaim_Delete(int Id)
+        public async Task<JsonResult> CaseMoneyClaim_Delete(int Id)
         {
-            CheckAccess(service, SourceTypeSelectVM.CaseMoneyClaim, Id, AuditConstants.Operations.Delete);
+            await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyClaim, Id, AuditConstants.Operations.Delete);
             return Json(new { result = service.CaseMoneyClaim_DeleteData(Id) });
         }
 
@@ -369,9 +371,9 @@ namespace IOWebApplication.Controllers
         /// <param name="mainMoneyCollectionId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult CaseMoneyCollection(int caseId, int? moneyClaimId, int? mainMoneyCollectionId, int? id)
+        public async Task<IActionResult> CaseMoneyCollection(int caseId, int? moneyClaimId, int? mainMoneyCollectionId, int? id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMoneyCollection, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, moneyClaimId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyCollection, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, moneyClaimId))
             {
                 return Redirect_Denied();
             }
@@ -408,9 +410,9 @@ namespace IOWebApplication.Controllers
         /// <param name="moneyClaimId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult CaseMoneyCollectionWithKindItems(int caseId, int? moneyClaimId, int? id)
+        public async Task<IActionResult> CaseMoneyCollectionWithKindItems(int caseId, int? moneyClaimId, int? id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMoneyCollection, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, moneyClaimId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyCollection, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, moneyClaimId))
             {
                 return Redirect_Denied();
             }
@@ -455,11 +457,11 @@ namespace IOWebApplication.Controllers
             {
                 case NomenclatureConstants.CaseMoneyCollectionGroup.Money:
                     {
-                        if (model.MainCaseMoneyCollectionId < 1)
-                        {
-                            if (model.Money_CaseMoneyCollectionTypeId < 1)
-                                return "Изберете тип.";
-                        }
+                        //if (model.MainCaseMoneyCollectionId < 1)
+                        //{
+                        if (model.Money_CaseMoneyCollectionTypeId < 1)
+                            return "Изберете тип.";
+                        //}
 
                         if (model.CurrencyId < 1)
                             return "Изберете Валута.";
@@ -789,15 +791,15 @@ namespace IOWebApplication.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult CaseMoneyCollection_Delete(int Id)
+        public async Task<JsonResult> CaseMoneyCollection_Delete(int Id)
         {
-            CheckAccess(service, SourceTypeSelectVM.CaseMoneyCollection, Id, AuditConstants.Operations.Delete);
+            await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyCollection, Id, AuditConstants.Operations.Delete);
             return Json(new { result = service.CaseMoneyCollection_DeleteData(Id) });
         }
 
-        public IActionResult CaseMoneyCollectionSetRespectAmount(int caseId)
+        public async Task<IActionResult> CaseMoneyCollectionSetRespectAmount(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMoneyCollection, null, AuditConstants.Operations.Update, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyCollection, null, AuditConstants.Operations.Update, caseId))
             {
                 return Redirect_Denied();
             }
@@ -815,7 +817,8 @@ namespace IOWebApplication.Controllers
         {
             ViewBag.CaseMoneyExpenseTypeId_ddl = nomService.GetDropDownList<CaseMoneyExpenseType>();
             ViewBag.CurrencyId_ddl = nomService.GetDropDownList<Currency>();
-            ViewBag.req_4_2021 = ((service.SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start);
+            ViewBag.req_4_2021 = true;
+            //((service.SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start);
         }
 
         /// <summary>
@@ -883,9 +886,9 @@ namespace IOWebApplication.Controllers
         /// <param name="caseId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult CaseMoneyExpense(int caseId, int? id)
+        public async Task<IActionResult> CaseMoneyExpense(int caseId, int? id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseMoneyExpense, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyExpense, (id > 0) ? id : null, (id > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -941,9 +944,9 @@ namespace IOWebApplication.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult CaseMoneyExpense_Delete(int Id)
+        public async Task<JsonResult> CaseMoneyExpense_Delete(int Id)
         {
-            CheckAccess(service, SourceTypeSelectVM.CaseMoneyExpense, Id, AuditConstants.Operations.Delete);
+            await CheckAccessAsync(service, SourceTypeSelectVM.CaseMoneyExpense, Id, AuditConstants.Operations.Delete);
             return Json(new { result = service.CaseMoneyExpense_DeleteData(Id) });
         }
 
@@ -956,9 +959,9 @@ namespace IOWebApplication.Controllers
             return string.Empty;
         }
 
-        public IActionResult CaseFastProcess(int caseId)
+        public async Task<IActionResult> CaseFastProcess(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseFastProcess, null, AuditConstants.Operations.Update, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseFastProcess, null, AuditConstants.Operations.Update, caseId))
             {
                 return Redirect_Denied();
             }

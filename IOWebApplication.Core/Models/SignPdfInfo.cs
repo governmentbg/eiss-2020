@@ -44,6 +44,7 @@ namespace IOWebApplication.Core.Models
         /// ObjectID of MongoFile
         /// </summary>
         public string FileId { get; set; }
+        public string PreviewFileId { get; set; }
 
 
         /// <summary>
@@ -55,22 +56,24 @@ namespace IOWebApplication.Core.Models
         public string SignerName { get; set; }
         public string SignerUic { get; set; }
 
+        public long WorkTaskId { get; set; }
+
         /// <summary>
         /// Reason for signing document
         /// </summary>
-        public string Reason 
-        { 
-            get => reason ?? string.Empty; 
-            set => reason = value; 
+        public string Reason
+        {
+            get => reason ?? string.Empty;
+            set => reason = value;
         }
 
         /// <summary>
         /// Location of signing
         /// </summary>
-        public string Location 
-        { 
-            get => location ?? string.Empty; 
-            set => location = value; 
+        public string Location
+        {
+            get => location ?? string.Empty;
+            set => location = value;
         }
     }
 }

@@ -16,6 +16,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         public int StateId { get; set; }
         public int VisitCount { get; set; }
         public int ReasonId { get; set; }
+        public DateTime? FirstVisit { get; set; }
         public DateTime? LastVisit { get; set; }
         public bool HaveHolidayVisit { get; set; }
         public int NotificationTypeId { get; set; }

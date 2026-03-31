@@ -1,5 +1,4 @@
 ﻿using IOWebApplication.Infrastructure.Extensions.HTML;
-using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -9,7 +8,6 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 namespace IOWebApplication.Core.Services
 {
@@ -32,6 +30,8 @@ namespace IOWebApplication.Core.Services
             sheet.PrintSetup.PaperSize = (short)PaperSize.A4 + 1;
             sheet.PrintSetup.HeaderMargin = 0.2d;
             sheet.PrintSetup.FooterMargin = 0.2d;
+            sheet.PrintSetup.FitWidth = 1;
+            sheet.PrintSetup.FitHeight = 0;
             sheet.SetMargin(MarginType.LeftMargin, 0.2d);
             sheet.SetMargin(MarginType.RightMargin, 0.2d);
             sheet.SetMargin(MarginType.TopMargin, 0.3d);
@@ -43,6 +43,8 @@ namespace IOWebApplication.Core.Services
             {
                 workBook = new XSSFWorkbook(stream);
                 sheet = workBook.GetSheetAt(sheetNum);
+                sheet.PrintSetup.FitWidth = 1;
+                sheet.PrintSetup.FitHeight = 0;
             }
             creationHelper = workBook.GetCreationHelper();
             defaultCellStyle = CreateDefaultStyle();
@@ -226,10 +228,10 @@ namespace IOWebApplication.Core.Services
                 sheet.AddMergedRegion(cra);
                 if (cellStyle != null)
                 {
-                    RegionUtil.SetBorderTop((int)cellStyle.BorderTop, cra, sheet, workBook);
-                    RegionUtil.SetBorderBottom((int)cellStyle.BorderBottom, cra, sheet, workBook);
-                    RegionUtil.SetBorderLeft((int)cellStyle.BorderLeft, cra, sheet, workBook);
-                    RegionUtil.SetBorderRight((int)cellStyle.BorderRight, cra, sheet, workBook);
+                    RegionUtil.SetBorderTop((int)cellStyle.BorderTop, cra, sheet);
+                    RegionUtil.SetBorderBottom((int)cellStyle.BorderBottom, cra, sheet);
+                    RegionUtil.SetBorderLeft((int)cellStyle.BorderLeft, cra, sheet);
+                    RegionUtil.SetBorderRight((int)cellStyle.BorderRight, cra, sheet);
                 }
             }
             //if (cellStyle != null && cellStyle.Alignment == HorizontalAlignment.Center)
@@ -305,10 +307,10 @@ namespace IOWebApplication.Core.Services
             int[] colWidths,
             ICollection<Expression<Func<TSource, object>>> propertyLambdaList,
             short titleColor, short oddColColor, short evenColColor,
-            bool printHeader = true)
+            bool printHeader = true,
+            List<string> visibleColumns = null)
             where TSource : new()
         {
-
             SetColumnWidths(colWidths);
             if (printHeader)
             {
@@ -320,6 +322,8 @@ namespace IOWebApplication.Core.Services
                 {
                     var dataItem = new TSource();
                     PropertyInfo pInfo = GetPropertyInfo(dataItem, propertyLambda);
+                    if (visibleColumns != null && visibleColumns.Contains(pInfo.Name) == false) continue;
+
                     AddCell(pInfo.GetCustomAttribute<DisplayAttribute>()?.Name, styleTitle);
                 }
             }
@@ -339,6 +343,8 @@ namespace IOWebApplication.Core.Services
                 foreach (var propertyLambda in propertyLambdaList)
                 {
                     PropertyInfo pInfo = GetPropertyInfo(dataList[0], propertyLambda);
+                    if (visibleColumns != null && visibleColumns.Contains(pInfo.Name) == false) continue;
+
                     var value = pInfo.GetValue(data);
                     var valueText = GetValueFromProperty(pInfo, data);
                     AddCell(valueText, styleRow, getCellTypeIsNumeric(pInfo));

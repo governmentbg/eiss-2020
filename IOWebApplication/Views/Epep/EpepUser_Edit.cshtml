@@ -1,5 +1,5 @@
 ﻿@model EpepUser
-@using  IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Constants
 @using IOWebApplication.Infrastructure.Models.ViewModels.Epep
 @using IOWebApplication.Infrastructure.Data.Models.Common
 @inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
@@ -14,8 +14,9 @@
     }
     var docInfo = (EpepDocumentInfoVM)ViewBag.documentInfo;
     var hasEpepUserOtherType = ViewBag.hasEpepUserOtherType == true;
+
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -23,90 +24,86 @@
 }
 
 <div class="row">
-    <div class="col-md-6">
-        <form asp-action="EpepUser_Edit" method="post">
-            @Html.HiddenFor(x => x.Id)
-            @Html.HiddenFor(x => x.DocumentId)
-            @Html.HiddenFor(x => x.DocumentDecisionId)
-            <fieldset class="is-fieldset">
-                <legend class="legend_1">Основни данни</legend>
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                @if (docInfo != null)
-                {
-                    <div class="row">
-                        <div class="col-lg-6">@Html.DisplayFor(x => docInfo.CourtName, "obj")</div>
-                        <div class="col-lg-6">
-                            <div class="form-group">
-                                @Html.LabelFor(x => docInfo.DocumentInfo)
-                                <div>
-                                    @if (userContext.CourtId == docInfo.CourtId)
-                                    {
-                                        <a href="@Url.Action("View","Document",new { id=docInfo.DocumentId})" target="_blank">
-                                            @docInfo.DocumentInfo
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <span>@docInfo.DocumentInfo</span>
-                                    }
-                                </div>
+    <div class="col-md-4">
+
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Основни данни</legend>
+            @if (docInfo != null)
+            {
+                <div class="row">
+                    <div class="col-lg-6">@Html.DisplayFor(x => docInfo.CourtName, "obj")</div>
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            @Html.LabelFor(x => docInfo.DocumentInfo)
+                            <div>
+                                @if (userContext.CourtId == docInfo.CourtId)
+                                {
+                                    <a href="@Url.Action("View","Document",new { id=docInfo.DocumentId})" target="_blank">
+                                        @docInfo.DocumentInfo
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>@docInfo.DocumentInfo</span>
+                                }
                             </div>
                         </div>
                     </div>
-                }
-                <div id="saveContainer">
-                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                    <div class="row">
-                        <div class="col-lg-6">
-                            @if (Model.Id > 0)
-                            {
-                                @Html.HiddenFor(x => x.EpepUserTypeId)
-                                @Html.DisplayFor(x => x.EpepUserTypeId, "objVal", new { value = ViewBag.epepUserType })
-                            }
-                            else
-                            {
-                                @Html.EditorFor(x => x.EpepUserTypeId, "GenericDropDown")
-                            }
-                        </div>
-                        <div class="col-lg-6">@Html.EditorFor(x => x.BirthDate)</div>
-                    </div>
-                    <div id="lawyerControls">
-                        <div class="row">
-                            <div class="col-lg-12">@Html.EditorFor(x => x.LawyerLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Lawyer })</div>
-                        </div>
-                    </div>
-                    <div id="personControls">
-                        <div class="row">
-                            <div class="col-lg-6">@Html.EditorFor(x => x.Uic)</div>
-                            <div class="col-lg-6">@Html.EditorFor(x => x.FullName)</div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6">@Html.EditorFor(x => x.Address)</div>
-                        <div class="col-lg-6">@Html.EditorFor(x => x.Email)</div>
-                    </div>
-                    @Html.EditorFor(x => x.Description)
                 </div>
-            </fieldset>
-            <div class="form-group">
-                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
-                <a asp-action="EpepUser" class="btn btn-danger">Назад</a>
+            }
 
-                @if (Model.Id > 0)
+            <div class="row">
+                <div class="col-lg-6">
+                    @Html.DisplayFor(x => x.EpepUserTypeId, "objVal", new { value = ViewBag.epepUserType })
+                </div>
+            </div>
+            <div class="row">
+                @switch (Model.EpepUserTypeId)
                 {
-                    <div class="pull-right">
-                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), IconOnly = true })
-                        <span>&nbsp;</span>
-                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.EpepUser, SourceId = Model.Id })" />
-                    </div>
+                    case EpepConstants.UserTypes.Person:
+                        if (!string.IsNullOrEmpty(Model.LawyerNumber))
+                        {
+                            <div class="col-lg-12">@Html.DisplayFor(x => x.LawyerNumber, "obj")</div>
+                        }
+                        else
+                        {
+                            <div class="col-lg-12">@Html.DisplayFor(x => x.Uic, "obj", null, new { label = "ЕГН" })</div>
+                        }
+                        break;
+                    case EpepConstants.UserTypes.Organization:
+                        <div class="col-lg-12">@Html.DisplayFor(x => x.Uic, "obj", null, new { label = "ЕИК/Булстат" })</div>
+                        break;
                 }
             </div>
-        </form>
+            <div class="row">
+                <div class="col-lg-12">@Html.DisplayFor(x => x.FullName, "obj")</div>
+            </div>
+
+            <div class="row">
+                @*<div class="col-lg-6">@Html.EditorFor(x => x.Address)</div>*@
+                <div class="col-lg-12">@Html.DisplayFor(x => x.Email, "obj")</div>
+            </div>
+            @*@Html.EditorFor(x => x.Description)*@
+
+        </fieldset>
+        <div class="form-group">
+
+            <a asp-action="EpepUser" class="btn btn-danger">Назад</a>
+
+            @if (Model.Id > 0)
+            {
+                <div class="pull-right">
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), IconOnly = true })
+                    <span>&nbsp;</span>
+                    <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.EpepUser, SourceId = Model.Id })" />
+                </div>
+            }
+        </div>
+
     </div>
     @if (Model.Id > 0)
     {
-        <div class="col-md-6">
+        <div class="col-md-8">
             <fieldset class="is-fieldset">
                 <legend class="legend_1">Участие в дела</legend>
                 <div class="pull-right">
@@ -115,12 +112,13 @@
                         Добави
                     </a>
                 </div>
+                <br></br>
                 <table id="dtAssignments" class="table table-hover table-striped"></table>
             </fieldset>
         </div>
     }
 </div>
-@section scripts{
+@section scripts {
     <script>
         $(function () {
             $('#EpepUserTypeId').change(function () {
@@ -136,19 +134,20 @@
                     default:
                 }
             }).trigger('change');
-            @if(Model.Id > 0)
-            {
-                <text>loadAssignments();</text>
-            }
-            initLawUnit();
-            @if (hasEpepUserOtherType) {
-                <text>
-            swalConfirm('Съществува създаден потребител от друг тип в ЕПЕП с тази електронна поща. Желаете ли да заредите съществуващите данни?', function () {
-                document.location.href = '@Url.Action("EpepUser_AddFromEmail",new { email = Model.Email})';
-                });
-                </text>
-            }
-        });
+        @if (Model.Id > 0)
+        {
+            <text>loadAssignments(); </text>
+        }
+                initLawUnit();
+        @if (hasEpepUserOtherType)
+        {
+            <text>
+                    swalConfirm('Съществува създаден потребител от друг тип в ЕПЕП с тази електронна поща. Желаете ли да заредите съществуващите данни?', function () {
+                        document.location.href = '@Url.Action("EpepUser_AddFromEmail", new { email = Model.Email })';
+                    });
+            </text>
+        }
+                                                                                                                                        });
         function loadAssignments() {
             $('#dtAssignments').DataTable({
                 ajax: {
@@ -159,27 +158,31 @@
                         d.epepUserId = @(Model.Id);
                     }
                 },
-                filter:false,
+                sortable: false,
+                filter: true,
                 columns: [
                     {
                         name: 'courtName',
                         data: 'courtName',
                         title: 'Съд',
-                        sortable: true,
+                        sortable: false,
                         searchable: true
                     },
                     {
-                        name: 'caseInfo',
-                        data: 'caseInfo',
+                        name: 'caseNumber',
+                        data: 'caseNumber',
                         title: 'Дело',
-                        sortable: true,
-                        searchable: true
+                        sortable: false,
+                        searchable: true,
+                        "render": function (a, b, item, c) {
+                            return item.caseInfo;
+                        }
                     },
                     {
-                        name: 'sideInfo',
-                        data: null,
+                        name: 'sideName',
+                        data: 'sideName',
                         title: 'Страна',
-                        sortable: true,
+                        sortable: false,
                         searchable: true,
                         "render": function (a, b, item, c) {
                             return TemplateToHtml('#templateSide', item);
@@ -193,7 +196,7 @@
                         sortable: false,
                         searchable: false,
                         className: "text-center noExport",
-                        "render": function (a,b,item,c) {
+                        "render": function (a, b, item, c) {
                             return TemplateToHtml('#templateEdit', item);
                         }
                     }
@@ -206,6 +209,10 @@
         {{#if canSummon}}
         &nbsp;
         <i class="text-yellow fa fa-bell" title="Разрешено призоваване чрез ЕПЕП"></i>
+        {{/if}}
+         {{#if isLawyer}}
+        &nbsp;
+        <i class="text-orange fa fa-user" title="В качеството на адвокат"></i>
         {{/if}}
     </script>
     <script id="templateEdit" type="text/x-handlebars-template">

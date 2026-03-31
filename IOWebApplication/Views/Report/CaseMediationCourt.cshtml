@@ -1,0 +1,255 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@using IOWebApplication.Infrastructure.Constants
+@model MediationCaseFilterVM
+
+@{
+    ViewData["Title"] = "Справка за информационните срещи и процедурите по медиация";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<form name="formFilter" id="formFilter" method="post">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.CourtId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
+        <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeSubId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.MediatorId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.MediationProcedureId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseMediationCourt", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filter = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
+                            CaseCodeSubId: $("#CaseCodeSubId").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val(),
+                            MediatorId: $("#MediatorId").val(),
+                            MediationProcedureId: $("#MediationProcedureId").val(),
+                            CourtId: $("#CourtId").val()
+                        };
+                    }
+                },
+                filter:false,
+                scrollX: true,
+                scroller: true,
+                columns: [
+                    {
+                        name: 'caseRegNumber',
+                        data: 'caseRegNumber',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreviewMediation", "Mediation", new { id = 666 }))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseCodeName',
+                        data: 'caseCodeName',
+                        title: 'Предмет и шифър',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'caseCodeSubName',
+                        data: 'caseCodeSubName',
+                        title: 'Подшифър',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'caseMediators',
+                        data: 'caseMediators',
+                        title: 'Медиатор',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'informationMeetingScheduled',
+                        data: 'informationMeetingScheduled',
+                        title: 'Насрочена информационна среща',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'informationMeetingLabel',
+                        data: 'informationMeetingLabel',
+                        title: 'Проведена информационна среща',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'informationMeetingDuration',
+                        data: 'informationMeetingDuration',
+                        title: 'Продължителност на информационните срещи за процедура по медиация',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'reasonNonImplementation',
+                        data: 'reasonNonImplementation',
+                        title: 'Причина за непровеждане',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'informationMeetingLocation',
+                        data: 'informationMeetingLocation',
+                        title: 'Място на провеждане',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'mediationProcedureScheduled',
+                        data: 'mediationProcedureScheduled',
+                        title: 'Насрочена среща за процедура по медиация',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'mediationProcedureLabel',
+                        data: 'mediationProcedureLabel',
+                        title: 'Проведена медиация',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'mediationProcedureDurationText',
+                        data: 'mediationProcedureDurationText',
+                        title: 'Продължителност на  процедурите по медиация',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'mediationProcedureSessionCount',
+                        data: 'mediationProcedureSessionCount',
+                        title: 'Брой проведени срещи',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'concludedAgreement',
+                        data: 'concludedAgreement',
+                        title: 'Сключено споразумение',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'mediationProcedureReasonTermination',
+                        data: 'mediationProcedureReasonTermination',
+                        title: 'Причина за прекратяване',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'mediationProcedureLocation',
+                        data: 'mediationProcedureLocation',
+                        title: 'Място на провеждане на среща',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'terminationCaseSettlement',
+                        data: 'terminationCaseSettlement',
+                        title: 'Прекратена със спогодба',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'terminationCaseTerminationWithdrawalRefusal',
+                        data: 'terminationCaseTerminationWithdrawalRefusal',
+                        title: 'Прекратяване поради оттегляне или отказ от иска',
+                        sortable: false,
+                        searchable: false,
+                    },
+                    {
+                        name: 'partiallyTerminationCaseSettlement',
+                        data: 'partiallyTerminationCaseSettlement',
+                        title: 'Частично прекратяване със спогодба',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'partiallyTerminationCaseTerminationWithdrawalRefusal',
+                        data: 'partiallyTerminationCaseTerminationWithdrawalRefusal',
+                        title: 'Прекратяване поради частично оттегляне или отказ от иска',
+                        sortable: true,
+                        searchable: false,
+                    },
+                ]
+            }).order([[0, "asc"]]);
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#MediatorId').select2({ language: "bg" });
+        $('#CaseGroupId').trigger('change');
+        $('#CaseTypeId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
+        $('#CaseCodeSubId').select2({ language: "bg" });
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val()}, '#CaseTypeId', @Model.CaseTypeId);
+    });
+
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
+    });
+</script>
+
+<script>
+    $(function () {
+        initLawUnit();
+    });
+</script>

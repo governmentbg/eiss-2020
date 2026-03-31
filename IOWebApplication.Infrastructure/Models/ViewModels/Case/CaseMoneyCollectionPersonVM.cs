@@ -16,5 +16,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public decimal RespectedAmount { get; set; }
         public string RespectedAmountString { get; set; }
         public string CurrencyCode { get; set; }
+        public string CurrencyDescription { get; set; }
     }
 }

@@ -1,0 +1,89 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
+@model ElectronicDocumentInfoVM
+<fieldset class="is-fieldset">
+
+    <legend class="legend_1">
+        Електронно подаден документ от ЕПЕП
+    </legend>
+    <div class="row">
+        <div class="col-lg-3">
+            @Html.DisplayFor(x => x.ApplyNumber, "obj")
+        </div>
+
+        <div class="col-lg-3">
+            @Html.DisplayFor(x => x.ApplyDate, "datetime")
+        </div>
+        <div class="col-lg-6">
+            @Html.DisplayFor(x => x.EpepUserInfo, "obj")
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.CaseInfo))
+    {
+        <div class="row">
+            <div class="col-lg-4">
+                @Html.DisplayFor(x => x.CaseInfo, "obj")
+            </div>
+            @if (!string.IsNullOrEmpty(Model.PersonInfo))
+            {
+                <div class="col-lg-8">
+                    @Html.DisplayFor(x => x.PersonInfo, "obj")
+                </div>
+            }
+        </div>
+    }
+    @if (Model.TaxAmount > 0M)
+    {
+        <div class="row">
+            @if (!string.IsNullOrEmpty(Model.CurrencyCode))
+            {
+                <div class="col-lg-1">
+                    @Html.DisplayFor(x => x.CurrencyCode, "obj")
+                </div>
+                <div class="col-lg-5">
+                    @Html.DisplayFor(x => x.TaxAmount, "decimal")
+                </div>
+            }
+            else
+            {
+                <div class="col-lg-6">
+                    @Html.DisplayFor(x => x.TaxAmount, "decimal")
+                </div>
+            }
+            @if (Model.BaseAmount > 0M)
+            {
+                <div class="col-lg-6">
+                    @Html.DisplayFor(x => x.BaseAmount, "decimal")
+                </div>
+            }
+        </div>
+        <div class="row">
+            <div class="col-lg-4">
+                @if (Model.PaymentTypeId != NomenclatureConstants.PaymentType.Bank)
+                {
+                    @Html.DisplayFor(x => x.PaidDate, "datetime")
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(Model.PaymentType))
+            {
+                <div class="col-lg-4">
+                    @Html.DisplayFor(x => x.PaymentType, "obj")
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.PaidInCourtName))
+            {
+                <div class="col-lg-4">
+                    @Html.DisplayFor(x => x.PaidInCourtName, "obj")
+                </div>
+            }
+        </div>
+    }
+    <div class="row">
+        <div class="col-lg-12">
+            @Html.DisplayFor(x => x.Description, "obj")
+        </div>
+    </div>
+    <p class="text-muted">
+        С подписването с КЕП при подаването на настоящия електронен пакет, заявителят удостовери съответствието с оригинала на всички приложени документи.
+    </p>
+</fieldset>

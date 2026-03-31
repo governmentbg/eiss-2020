@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
@@ -38,9 +37,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="documentId"></param>
         /// <returns></returns>
-        public IActionResult Index(long documentId, long? documentResolutionId)
+        public async Task<IActionResult> Index(long documentId, long? documentResolutionId)
         {
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
             {
                 return Redirect_Denied();
             }
@@ -69,9 +68,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="documentId"></param>
         /// <returns></returns>
-        public IActionResult Add(long documentId, long? documentResolutionId)
+        public async Task<IActionResult> Add(long documentId, long? documentResolutionId)
         {
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
             {
                 return Redirect_Denied();
             }
@@ -91,11 +90,11 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id, long? documentResolutionId)
+        public async Task<IActionResult> Edit(int id, long? documentResolutionId)
         {
-            var model = service.GetById<DocumentPersonLink>(id);
+            var model = await service.GetByIdAsync<DocumentPersonLink>(id);
 
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, model.DocumentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, model.DocumentId))
             {
                 return Redirect_Denied();
             }

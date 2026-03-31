@@ -1,0 +1,141 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCasePreviewVM
+
+@{
+    ViewData["Title"] = "Съдебно дело - медиация";
+}
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <form method="post">
+            @Html.HiddenFor(x => x.Id)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="nav-tabs-custom">
+
+                <ul class="nav nav-tabs" id="mediationTab">
+                    <li class="active"><a href="#tabCaseData" data-toggle="tab"><i class="fa fa-database"></i> Основни данни</a></li>
+                    <li class=""><a href="#tabMediationSession" data-toggle="tab"><i class="fa fa-handshake-o"></i> Срещи за медиация</a></li>
+                    <li class=""><a href="#tabWorkTask" data-toggle="tab"><i class="fa fa-exclamation"></i> Задачи</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="tabCaseData">
+                        <div class="row">
+                            <div class="col-lg-5">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-database"></i> Данни</legend>
+                                    <div class="row">
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.CourtLabel)</div>
+                                        <div class="col-lg-3">@Html.EditorFor(x => x.ShortNumber)</div>
+                                        <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
+                                        <div class="col-lg-3">@Html.EditorFor(x => x.RegDate)</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.CaseGroupLabel)</div>
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.CaseTypeLabel)</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-12">@Html.EditorFor(x => x.CaseCodeLabel)</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-lg-12">@Html.EditorFor(x => x.ParentLinkCases, "Textarea")</div>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                            <div class="col-lg-7">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-users"></i> Медиатори</legend>
+                                    <div class="tab-pane1" id="tabCaseMediators">
+                                        <partial name="../Mediation/_Mediators.cshtml" model="@new MediationCaseNavigationVM { CaseId = Model.Id } " />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane dt-lazy-loading" id="tabMediationSession">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-handshake-o"></i> Срещи</legend>
+                                    <div class="tab-pane1" id="tabCaseSessions">
+                                        <partial name="../Mediation/_Sessions.cshtml" model="@new MediationCaseNavigationVM { CaseId = Model.Id } " />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane dt-lazy-loading" id="tabWorkTask">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1"><i class="fa fa-exclamation"></i> Задачи</legend>
+                                    <div class="tab-pane1" id="tabWorkTask">
+                                        <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.MediationCase, Model.Id))" />
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#CourtLabel').attr("disabled", true);
+        $('#ShortNumber').attr("disabled", true);
+        $('#RegNumber').attr("disabled", true);
+        $('#RegDate').attr("disabled", true);
+        $('#CaseGroupLabel').attr("disabled", true);
+        $('#CaseTypeLabel').attr("disabled", true);
+        $('#CaseCodeLabel').attr("disabled", true);
+        $('#ParentLinkCases').attr("disabled", true);
+
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTabMediation', $(e.target).attr('href'));
+        });
+
+        var activeTab = localStorage.getItem('activeTabMediation');
+        if (activeTab) {
+            $('#mediationTab a[href="' + activeTab + '"]').tab('show');
+            ChangeUserGuide($('#mediationTab a[href="' + activeTab + '"]'));
+        }
+
+        var url = document.location.toString();
+        if (url.match('#')) {
+            $('.nav-tabs a[href="#' + url.split('#')[1] + '"]').tab('show');
+            ChangeUserGuide($('.nav-tabs a[href="#' + url.split('#')[1] + '"]'));
+        }
+
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
+            window.location.hash = e.target.hash;
+        })
+    });
+
+    $(function () {
+        $('.nav-tabs li a').click(function (e) {
+            ChangeUserGuide($(this));
+        });
+    });
+
+    function ChangeUserGuide(tab) {
+        var fileName = tab.data('filename');
+        if (fileName != undefined) {
+            var newurl = '@Url.Content($"~/userguide/")' + fileName + ".htm";
+            $("#horizontalUserguideId").attr('href', newurl);
+        }
+    }
+</script>

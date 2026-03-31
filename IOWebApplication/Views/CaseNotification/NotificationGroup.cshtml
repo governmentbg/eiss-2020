@@ -1,0 +1,704 @@
+﻿@model NotificationGroupVM
+@using IOWebApplication.Core.Contracts
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    var label = "призовки";
+    if (Model.NotificationTypeId == NomenclatureConstants.NotificationType.Message)
+    {
+        label = "съобщения";
+    }
+    if (Model.NotificationTypeId == NomenclatureConstants.NotificationType.Notification)
+    {
+        label = "уведомления";
+    }
+    ViewData["Title"] = $"Генериране на множество {label}";
+}
+
+@section breadcrumb {
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
+    }
+}
+@if (access.CanChange)
+{
+    <div class="row">
+
+        <div class="col-lg-12 col-md-12">
+            <form id="editNotificationGroup" action="@Url.Action("NotificationGroupSave", "CaseNotification")" method="post">
+                @Html.ValidationSummary()
+                <div class="notification-group" style="display:none">
+                    @Html.HiddenFor(x => x.CaseId)
+                    @Html.HiddenFor(x => x.CaseSessionId)
+                    @Html.HiddenFor(x => x.NotificationListTypeId)
+                    @Html.HiddenFor(x => x.MultiComplainIdResultVM)
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.NotificationDeliveryGroupId, "GenericDropDown")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6 html-template">@Html.EditorFor(x => x.HtmlTemplateId, "GenericDropDown")</div>
+                        <div class="col-lg-6" id="DeliveryDateDiv">@Html.EditorFor(x => x.DeliveryDate, "DateTimeWithTime")</div>
+                    </div>
+                    <div class="row session-act">
+                        <div class="col-lg-6" id="CaseSessionAct">@Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")</div>
+                        <div class="col-lg-6" id="CaseSessionActComplain">@Html.EditorFor(x => x.CaseSessionActComplainId, "GenericDropDown")</div>
+                        <div class="col-lg-12" id="MultiAct">@Html.EditorFor(x => x.MultiActIdVM, "GenericDropDownMultiple")</div>
+                        <div class="col-lg-12" id="MultiComplain">@Html.EditorFor(x => x.MultiComplainIdVM, "GenericDropDownMultiple")</div>
+                    </div>
+                    <div id="NotificationIspnReasonDiv" class="row">
+                        <div class="col-lg-12">
+                            @Html.EditorFor(x => x.NotificationIspnReasonId, "GenericDropDown")
+                        </div>
+                    </div>
+                    <div id="ExpertReportDiv">
+                        <div class="row">
+                            <div class="col-lg-6">@Html.EditorFor(x => x.ExpertDeadDate, "DateTime")</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12">@Html.EditorFor(x => x.ExpertReport, "TextArea")</div>
+                        </div>
+                    </div>
+                    <div id="DocumentSenderPersonDiv">
+                        <div class="row">
+                            <div class="col-lg-12">@Html.EditorFor(x => x.DocumentSenderPersonId, "GenericDropDown")</div>
+                        </div>
+                    </div>
+                    <div id="InstitutionDocumentDiv" class="row institution-document-container">
+                        <div class="col-lg-12">
+                            @Html.EditorFor(x => x.InstitutionDocumentId, "EisppDropDownString", null, new { Ddl = ViewBag.InstitutionDocumentId_ddl, @class = "case-cause-dd" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 notification-state">@Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")</div>
+                    @if (Model.ToRowNumber != 0)
+                    {
+                        <div class="col-lg-2">@Html.EditorFor(x => x.FromRowNumber)</div>
+                        <div class="col-lg-2">@Html.EditorFor(x => x.ToRowNumber)</div>
+                        <div style="display:none">
+                            <button id="btnNotificationItemLoadSubmit" formnovalidate formaction="@Url.Action("NotificationGroup", "CaseNotification")"></button>
+                        </div>
+                        <div class="col-lg-2">
+                            <br>
+                            <button type="button" id="btnNotificationItemLoad" onclick="notificationItemLoad()" class="btn btn-primary">Зареди списък</button>
+                        </div>
+                    }
+                </div>
+                @if (Model.NotificationItems.Count > 0)
+                {
+                    <div class="notification-item-list">
+                        <div class="check-tools">
+                            <a href="#" data-action="all" class="btn btn-xs btn-default">Маркирайте всички</a>
+                            <a href="#" data-action="none" class="btn btn-xs btn-default">Размаркирайте всички</a>
+                        </div>
+                        @for (int i = 0; i < Model.NotificationItems.Count; i++)
+                        {
+                            <div class="notification-item">
+                                <fieldset class="is-fieldset">
+                                    <legend class="legend_1">
+                                        @Html.EditorFor(x => x.NotificationItems[i].IsChecked, "BooleanMultiNotification", null, new { IsSelectedReadOnly = false, label = $"{Model.NotificationItems[i].RowNumber}.{Model.NotificationItems[i].PersonLabel} ({Model.NotificationItems[i].PersonRole})", @class = "is-checked" })
+                                    </legend>
+                                    <span asp-validation-for="@Model.NotificationItems[i].PersonId" class="text-danger"></span>
+                                    @Html.HiddenFor(x => x.NotificationItems[i].PersonId, new { @class = "person-id" })
+                                    @Html.HiddenFor(x => x.NotificationItems[i].IsLawUnit)
+                                    @Html.HiddenFor(x => Model.NotificationItems[i].LawUnitId)
+                                    <div class="row">
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.NotificationItems[i].LinkId, "DropDown", null, new { onchange = "LinkIdChange(this)", Ddl = Model.NotificationItems[i].LinkId_Ddl, @class = "link-id" })</div>
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.NotificationItems[i].AddressId, "DropDownlong", null, new { Ddl = Model.NotificationItems[i].AddressId_Ddl, @class = "address-id" })</div>
+                                    </div>
+                                    <div class="row rajon-add">
+                                        <div class="col-lg-3 col-md-6">
+                                            <div class="row">
+                                                <div class="col-md-6 text-left pb-15 btn-rajon">
+                                                    <br>
+                                                    <a onclick="getToCourtAndType(this, '@Model.NotificationItems[i].IsLawUnit')" class="btn btn-success col-xs-12">
+                                                        <i class="fa fa-address-book"></i>
+                                                        Райониране
+                                                    </a>
+                                                </div>
+                                                <div class="col-md-6 text-left pb-15 btn-rajon">
+                                                    <br>
+                                                    <a onclick="getCustomToCourtAndType(this, '@Model.NotificationItems[i].IsLawUnit')" class="btn btn-warning col-xs-12">
+                                                        <i class="fa fa-close"></i>
+                                                        Ръчно райониране
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-md-6">
+                                            @Html.DisplayFor(x => x.NotificationItems[i].ToCourtId, "intWithHidden", new { DisplayClass = "to-court-name" })
+                                        </div>
+                                        <div class="col-lg-3  col-md-6">
+                                            @Html.DisplayFor(x => x.NotificationItems[i].DeliveryAreaId, "intWithHidden", new { DisplayClass = "delivery-area-name" })
+                                        </div>
+                                        <div class="col-lg-3 col-md-6">
+                                            @Html.DisplayFor(x => x.NotificationItems[i].LawUnitId, "intWithHidden", new { DisplayClass = "law-unit-name" })
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                        }
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <input type="submit" value="Запис" class="btn btn-success" />
+                                @await Html.PartialAsync("_ButtonClose")
+                            </div>
+                        </div>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+}
+
+<script>
+    var htmlTemplateArr = new Array();
+
+    function NotificationTypeIdChange() {
+        var htmlTemplateId = @(Model.HtmlTemplateId);
+        var notificationTypeId = $("#NotificationTypeId").val();
+        var notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        if (notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper)
+            notificationTypeId = @NomenclatureConstants.NotificationType.GovernmentPaper;
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetDDL_HtmlTemplate", "Ajax")',
+            dataType: "json",
+            cache: false,
+            data: { notificationTypeId: notificationTypeId, caseId: @Model.CaseId, htmlTemplateId },
+            success: function(response) {
+                htmlTemplateArr = response;
+                fillCombo(htmlTemplateArr, $('#HtmlTemplateId'));
+                $('#HtmlTemplateId').val(htmlTemplateId);
+                if ($('#HtmlTemplateId').val() != htmlTemplateId) {
+                    $('#HtmlTemplateId').prop("selectedIndex", 0);
+                };
+                $('#HtmlTemplateId').trigger('change');
+            },
+            complete: function() { },
+            error: log_ajax_err
+        });
+    }
+    function setReadOnly($el) {
+        $el.attr('readonly', true);
+        $el.attr("style", "pointer-events: none;");
+        if ($("label[for='" + $el.attr("id") + "']").hasClass("io-req")) {
+            $("label[for='" + $el.attr("id") + "']").addClass("io-delreq");
+            $("label[for='" + $el.attr("id") + "']").removeClass("io-req");
+        }
+    }
+    var courtForDeliveryDdl = [];
+    $(document).ready(function() {
+        $('.notification-group').show()
+        setReadOnly($('#NotificationTypeId'));
+        $('#MultiComplainIdVM').select2({
+            language: "bg"
+        });
+        $('#MultiActIdVM').select2({
+            language: "bg"
+        });
+        HtmlTemplateIdChange();
+        NotificationTypeIdChange();
+        NotificationDeliveryGroupIdChange(true);
+        setRulesAddrAll();
+
+        $('.check-tools a').click(function() {
+            var checkAll = $(this).data('action') == 'all';
+            $('.notification-item').find('input[type="checkbox"].is-checked').each(function(i, element) {
+                if ($(element).prop('checked') != checkAll) {
+                    $(element).prop('checked', checkAll);
+                    $(element).change();
+                }
+            });
+        })
+    });
+
+    $('#CaseSessionActId').change(function() {
+        LoadCaseSessionActComplain();
+    });
+    $('#HtmlTemplateId').change(function() {
+        HtmlTemplateIdChange();
+    });
+    $('#NotificationDeliveryGroupId').change(function() {
+        NotificationDeliveryGroupIdChange(true);
+    });
+    $('input[type=submit]').click(function(e) {
+        e.preventDefault();
+        $('#MultiComplainIdResultVM').val($('#MultiComplainIdVM').val());
+        $('#MultiActIdResultVM').val($('#MultiActIdVM').val());
+        var disabled = $(this).is(':disabled') || $(this).attr('disabled');
+        if (disabled) {
+            return false;
+        }
+        $(this).attr('disabled', 'disabled');
+
+        if ($('#editNotificationGroup').valid()) {
+            $('#editNotificationGroup').trigger('submit');
+        } else {
+            $(this).removeAttr("disabled");
+        }
+        return false;
+    });
+    function GetHtmlTemplate(htmlTemplateId) {
+        var htmlTemplate = htmlTemplateArr.find(el => el.value == htmlTemplateId);
+        if (!htmlTemplate) {
+            htmlTemplate = {
+                haveSessionAct: false,
+                haveSessionActComplain: false,
+                requiredSessionActComplain: false,
+                haveExpertReport: false,
+                haveMultiActComplain: false,
+                haveDocumentSenderPerson: false,
+                haveInstitutionDocument: false,
+                haveMoneyObligation: false,
+                haveNotificationIspnReason: false,
+                haveSessionMultiAct : false
+            }
+        }
+        return htmlTemplate;
+    }
+    function LoadCaseSessionActComplain() {
+        debugger
+            const htmlTemplateId = $('#HtmlTemplateId').val();
+            const htmlTemplate = GetHtmlTemplate(htmlTemplateId);
+            const caseSessionActId = $("#CaseSessionActId").val();
+            const caseSessionActIds = [];
+            if (htmlTemplateId.haveSessionMultiAct) {
+               caseSessionActIds.push(caseSessionActId);
+            } else {
+                const multiActIds = $('#MultiActIdVM').val();
+                multiActIds.forEach((id) => {
+                    caseSessionActIds.push(Number(id));
+                });
+            }
+        var complainId = $("#CaseSessionActComplainId").val();
+        var complainIdInit = "@Model.CaseSessionActComplainId";
+        if (htmlTemplate.haveSessionActComplain) {
+            if (htmlTemplate.haveMultiActComplain) {
+                requestComboMulti('@Url.Action("CaseSessionActComplainMultiDDL")',
+                    {
+                        caseId: '@Model.CaseId',
+                        caseNotificationId: 0,
+                        caseSessionActIdsStr: caseSessionActIds.toString(),
+                        htmlTemplateId: htmlTemplateId
+                    },
+                    '#MultiComplainIdVM',
+                    $('#MultiComplainIdVM').val()
+                );
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("CaseSessionActComplainDDL")',
+                    dataType: "json",
+                    cache: false,
+                    data: { caseId: '@Model.CaseId', caseSessionActId: caseSessionActId, htmlTemplateId: htmlTemplateId },
+                    success: function(response) {
+                        fillCombo(response, $('#CaseSessionActComplainId'));
+                        $('#CaseSessionActComplainId').val(complainId);
+                        if ($('#CaseSessionActComplainId').prop("selectedIndex") < 0) {
+                            $('#CaseSessionActComplainId').val(complainIdInit);
+                            if ($('#CaseSessionActComplainId').prop("selectedIndex") < 0) {
+                                $('#CaseSessionActComplainId').prop("selectedIndex", 0);
+                            }
+                        };
+                    },
+                    complete: function() { },
+                    error: log_ajax_err
+                });
+            }
+        }
+    }
+    function HtmlTemplateIdChange() {
+        var htmlTemplateId = $('#HtmlTemplateId').val();
+        var htmlTemplate = GetHtmlTemplate(htmlTemplateId);
+        if (htmlTemplate) {
+            if (htmlTemplate.haveSessionAct) {
+                $('#CaseSessionActId').prop("disabled", false);
+                $(".session-act").show();
+            } else {
+                $('#CaseSessionActId').prop("disabled", true);
+                $(".session-act").hide();
+            }
+            if (htmlTemplate.haveSessionActComplain && htmlTemplate.requiredSessionActComplain && !htmlTemplate.haveMultiActComplain) {
+                $('#CaseSessionActComplainId').rules('add', {
+                    required: true,
+                    messages: {
+                        required: 'Въведете жалба!'
+                    }
+                });
+
+                $('#CaseSessionActComplainId').prop("disabled", false);
+                $('#CaseSessionActComplain').show();
+                $('#CaseSessionActId').change();
+            } else {
+                $('#CaseSessionActComplainId').rules('remove', 'required');
+                $('#CaseSessionActComplainId').prop("disabled", true);
+                $('#CaseSessionActComplain').hide();
+            }
+
+            if (htmlTemplate.haveSessionActComplain && htmlTemplate.haveMultiActComplain) {
+                $('#MultiComplain').show();
+            } else {
+                $('#MultiComplain').hide();
+            }
+
+               if (htmlTemplate.haveSessionMultiAct) {
+                    $('#MultiAct').show();
+                    $('#CaseSessionAct').hide();
+                } else {
+                    $('#MultiAct').hide();
+                    $('#CaseSessionAct').show();
+                }
+
+            if (htmlTemplate.haveSessionActComplain) {
+                LoadCaseSessionActComplain();
+            }
+            $('#MultiActIdVM').change(function () {
+               LoadCaseSessionActComplain();
+            });
+
+            if (htmlTemplate.haveExpertReport) {
+                $('#ExpertDeadDate').rules('add', {
+                    required: true,
+                    messages: {
+                        required: 'Въведете крайна дата за изговяне на експертиза!'
+                    }
+                });
+                $('#ExpertReport').rules('add', {
+                    required: true,
+                    messages: {
+                        required: 'Въведете крайна дата за изговяне на експертиза!'
+                    }
+                });
+
+                $('#ExpertDeadDate').prop("disabled", false);
+                $('#ExpertReport').prop("disabled", false);
+                $("#ExpertReportDiv").show();
+            } else {
+                $('#ExpertDeadDate').rules('remove', 'required');
+                $('#ExpertReport').rules('remove', 'required');
+                $('#ExpertDeadDate').prop("disabled", true);
+                $('#ExpertReport').prop("disabled", true);
+                $("#ExpertReportDiv").hide();
+            }
+            if (htmlTemplate.haveDocumentSenderPerson) {
+                $('#DocumentSenderPersonId').prop("disabled", false);
+                $("#DocumentSenderPersonDiv").show();
+            } else {
+                $('#DocumentSenderPersonId').prop("disabled", true);
+                $("#DocumentSenderPersonDiv").hide();
+            }
+            if (htmlTemplate.haveInstitutionDocument) {
+                $('#InstitutionDocumentId').prop("disabled", false);
+                $("#InstitutionDocumentDiv").show();
+            } else {
+                $('#InstitutionDocumentId').prop("disabled", true);
+                $("#InstitutionDocumentDiv").hide();
+            }
+            if (htmlTemplate.haveNotificationIspnReason) {
+                $('#NotificationIspnReasonId').prop("disabled", false);
+                $("#NotificationIspnReasonDiv").show();
+            } else {
+                $('#NotificationIspnReasonId').prop("disabled", true);
+                $("#NotificationIspnReasonDiv").hide();
+            }
+        }
+    }
+    function IsNotificationDeliveryGroupIdOnMomment(NotificationDeliveryGroupId) {
+        return (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnSession ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember50 ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember56 ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WillBeen);
+    }
+    function NotificationDeliveryGroupIdChange(runAjax) {
+        let NotificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        let NotificationStateId = $("#NotificationStateId").val();
+        let stateId = "@Model.NotificationStateId";
+        let isNotificationDeliveryGroupIdOnMomment = IsNotificationDeliveryGroupIdOnMomment(NotificationDeliveryGroupId);
+        let caseSessionId = $("#CaseSessionId").val();
+
+        if (isNotificationDeliveryGroupIdOnMomment) {
+            stateId = NotificationStateId;
+        }
+        if (runAjax) {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetDDL_NotificationStateFromDeliveryGroup")",
+                dataType: "json",
+                cache: false,
+                data: { notificationDeliveryGroupId: NotificationDeliveryGroupId, notificationStateId: stateId, caseSessionId },
+                success: function(response) {
+                    fillCombo(response.notificationStates, $("#NotificationStateId"));
+                    $("#NotificationStateId").val(NotificationStateId);
+                    if ($("#NotificationStateId").val() != NotificationStateId || $("#NotificationStateId").val() == -1) {
+                        $("#NotificationStateId").prop("selectedIndex", 1);
+                    }
+
+                    let datePrevSess = response.datePrevSess;
+                    if ((NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnSession ||
+                        NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember56) &&
+                        datePrevSess && !$("#DeliveryDate").val()) {
+                        datePrevSess = moment(datePrevSess, 'DD.MM.YYYY HH:mm');
+                        $("#DeliveryDate").val(datePrevSess.format('DD.MM.YYYY HH:mm'));
+                        // $("#DeliveryDate").datetimepicker('setDate', datePrevSess.format('DD.MM.YYYY HH:mm'));
+                    }
+                },
+                complete: function() { },
+                error: log_ajax_err
+            });
+        }
+        if (isNotificationDeliveryGroupIdOnMomment) {
+            if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail) {
+                $(".notification-state").show();
+                $(".html-template").show();
+                $("#HtmlTemplateId").removeAttr("disabled");
+            } else {
+                $(".html-template").hide();
+                $("#HtmlTemplateId").attr('disabled', 'disabled');
+
+                // $(".notification-state").hide();
+            }
+            $(".on-momment-hide").hide();
+            $("#DeliveryInfoDiv").show();
+            $("#DeliveryDateDiv").show();
+            $("#DeliveryDiv").hide();
+            setDateDelivery("#DeliveryDate", true);
+        } else {
+            $(".html-template").show();
+            $("#HtmlTemplateId").removeAttr("disabled");
+
+            $(".on-momment-hide").show();
+            $("#DeliveryInfoDiv").hide();
+            $("#DeliveryDateDiv").hide();
+            $("#DeliveryDiv").show();
+            setDateDelivery("#DeliveryDate", false);
+            $(".notification-state").show();
+        }
+    };
+    function setDateDelivery(el, isAdd) {
+
+        if ($(el).length === 0)
+            return;
+        if (isAdd) {
+            $(el).rules('add', {
+                required: true,
+                messages: {
+                    required: 'Въведете Дата на връчване!',
+                }
+            })
+        } else {
+            $(el).rules('remove', 'required');
+        }
+    }
+    function setRulesAddr(elCheck) {
+        if ($(elCheck).length === 0)
+            return;
+        let notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        let groupAdd = true;
+        if (notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper ||
+            IsNotificationDeliveryGroupIdOnMomment(notificationDeliveryGroupId)) {
+            groupAdd = false;
+        };
+        let el = $(elCheck).parents('.notification-item:first').find('.address-id');
+        let addCheck = $(elCheck).is(":checked");
+        el.rules('remove', 'required');
+        el.rules('remove', 'range');
+        //$("label[for='" + el.attr("id") + "']").text("Последен известен aдрес");
+        $("label[for='" + el.attr("id") + "']").removeClass("io-req");
+        if (groupAdd && addCheck) {
+            el.rules('add', {
+                required: true,
+                range: [1, 9999999999999],
+                messages: {
+                    required: 'Изберете адрес на получаване!',
+                    range: 'Изберете адрес на получаване!'
+                }
+            })
+            //$("label[for='" + el.attr("id") + "']").text("Адрес на получаване");
+            $("label[for='" + el.attr("id") + "']").addClass("io-req");
+        }
+    }
+    function setRulesAddrAll() {
+        $('.is-checked').each(function(i, element) {
+            $(element).change(function() {
+                setRulesAddr(element);
+            });
+            $(element).change();
+        });
+    }
+    function LinkIdChange(control) {
+        const linkId = $(control).val();
+        const container = $(control).parents('.notification-item:first');
+        const personId = container.find('.person-id').val();
+        const addressId = container.find('.address-id').val();
+        const notificationTypeId = $("#NotificationTypeId").val();
+        const notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        $.ajax({
+            type: "Get",
+            url: "@Url.Action("LoadAddrForPerson")",
+            dataType: "json",
+            cache: false,
+            data: {
+                casePersonId: personId,
+                casePersonLinkId: linkId,
+                notificationDeliveryGroupId: notificationDeliveryGroupId
+            },
+            success: function(response) {
+                fillCombo(response, container.find('.address-id'));
+                setComboSelectedOrFirst(container.find('.address-id'), addressId);
+            },
+            error: log_ajax_err
+        });
+        return false;
+    }
+    function notificationItemLoad() {
+        $('#btnNotificationItemLoad').attr('disabled', 'disabled');
+        $("notification-item-list").html('');
+        $('#btnNotificationItemLoadSubmit').trigger('click');
+    }
+    // $.ajax({
+    //     type: "Get",
+    //     url: '@Url.Action("GetCourtForDelivery_Select2Data")',
+    //     dataType: "json",
+    //     cache: false,
+    //     data: {},
+    //     success: function (response) {
+    //         courtForDeliveryDdl = response;
+    //         $("[name$='.ToCourtId']").select2({data : function () {return  courtForDeliveryDdl}})
+    //     },
+    //     complete: function () { },
+    //     error: log_ajax_err
+    // });
+    async function getToCourtAndType(control, isLawUnit) {
+        const container = $(control).parents('.notification-item:first');
+        const addressId = container.find('.address-id').val();
+        const notificationPersonType = (isLawUnit == 'True' ? 2 : 1);
+        const request = { notificationPersonType, addressId };
+        const responce = await fetch(
+            "@Url.Action("GetDeliveryAreaAndCourtGroup", "DeliveryItem")" + "?" + new URLSearchParams(request),
+            {
+                method: "GET",
+            });
+        const data = await responce.json();
+
+        if (data.deliveryAreaDDL2 &&
+            data.deliveryAreaDDL2 != null &&
+            data.deliveryAreaDDL2.length > 0) {
+            await getCustomToCourtAndType(control, isLawUnit, data.toCourtDDL2, data.deliveryAreaDDL2)
+            return;
+        }
+        container.find("[name$='.ToCourtId']").val(data.toCourtId)
+        container.find("[name$='.DeliveryAreaId']").val(data.deliveryAreaId)
+        container.find("[name$='.LawUnitId']").val(data.lawUnitId)
+        container.find(".delivery-area-name").val(data.deliveryAreaName)
+        container.find(".law-unit-name").val(data.lawUnitName)
+        container.find(".to-court-name").val(data.toCourtName)
+    }
+
+    var toCourtAllDdl = []
+    async function ShowModalDialogNotification(title, html, toCourtDdl, deliveryAreaDdl, container, wide, extraWide) {
+        SetModal(title, html, wide, extraWide);
+        SetBackDrop($('.master-modal'), true, true);
+        if (!toCourtDdl || toCourtDdl == null || toCourtDdl.length == 0) {
+            if (toCourtAllDdl.length == 0) {
+                const responce = await fetch(
+                    "@Url.Action("GetToCourtAllDdl", "DeliveryItem")",
+                    {
+                        method: "GET",
+                    });
+                toCourtAllDdl = await responce.json();
+            }
+            toCourtDdl = toCourtAllDdl;
+        }
+        $('.master-modal').find('#ToCourtId').select2({
+            language: "bg",
+            dropdownParent: ".master-modal",
+            data: toCourtDdl
+        });
+        $('.master-modal').find('#DeliveryAreaId').on("change", async function() {
+            const deliveryAreaId = $('.master-modal').find('#DeliveryAreaId').val();
+            $('.master-modal').find('.law-unit-name').val('')
+            $('.master-modal').find('#LawUnitId').val(-1)
+            if (deliveryAreaId && deliveryAreaId != null && deliveryAreaId != -1) {
+                $('.master-modal').find('.law-unit-name').val('')
+                const responce = await fetch(
+                    "@Url.Action("GetLawUnitName", "DeliveryItem")" + "?" + new URLSearchParams({ deliveryAreaId }),
+                    {
+                        method: "GET",
+                    });
+                const data = await responce.json();
+                $('.master-modal').find('.law-unit-name').val(data.name)
+                $('.master-modal').find('#LawUnitId').val(data.lawUnitId)
+            }
+        });
+        $('.master-modal').find('#ToCourtId').on("change", async function() {
+            if (deliveryAreaDdl && deliveryAreaDdl != null) {
+                const toCourtId = $('.master-modal').find('#ToCourtId').val();
+                const arrSelect = deliveryAreaDdl.filter(function(el) {
+                    return (el.masterId == toCourtId || (el.masterId == null));
+                });
+                $('.master-modal').find('#DeliveryAreaId').empty().trigger("change");
+                $('.master-modal').find('#DeliveryAreaId').select2({
+                    language: "bg",
+                    data: arrSelect
+                })
+                    .trigger('change');
+            } else {
+                const toCourtId = $('.master-modal').find('#ToCourtId').val();
+                const response = await fetch('@Url.Action("LoadDataLawUnitAndArea", "CaseNotification")' + "?" + new URLSearchParams({ toCourtId }),
+                    {
+                        method: "GET",
+                    });
+                var result = await response.json();
+
+                $('.master-modal').find('#DeliveryAreaId').empty().trigger("change");
+                $('.master-modal').find('#DeliveryAreaId').select2({
+                    language: "bg",
+                    data: result.deliveryAreaDdl
+                })
+                    .trigger('change');
+            }
+        });
+        $('.master-modal').find("#btnCustomDeliveryArea").on("click", function() {
+            setCustomDeliveryArea(container)
+        })
+        $('.master-modal').find('.address-name').val(container.find('.address-id option:selected').text());
+        $('.master-modal').find('#ToCourtId').trigger("change");
+        $('.master-modal').modal("show");
+    }
+    async function getCustomToCourtAndType(control, isLawUnit, toCourtDdl, deliveryAreaDdl) {
+        const responce = await fetch(
+            '@Url.Action("GetNotificationGroupDeliveryArea", "DeliveryItem")',
+            {
+                method: "GET",
+            });
+        const view = await responce.text();
+        const container = $(control).parents('.notification-item:first');
+
+        await ShowModalDialogNotification('Райониране', view, toCourtDdl, deliveryAreaDdl, container);
+    }
+    function setCustomDeliveryArea(container) {
+        const from = $('.notification-item-delivery-area');
+        const toCourtId = from.find('#ToCourtId').val();
+        container.find("[name$='.ToCourtId']").val(toCourtId);
+        container.find(".to-court-name").val(toCourtId > 0 ? from.find('#ToCourtId option:selected').text() : "")
+
+        const deliveryAreaId = from.find('#DeliveryAreaId').val();
+        container.find("[name$='.DeliveryAreaId']").val(deliveryAreaId);
+        container.find(".delivery-area-name").val(deliveryAreaId > 0 ? from.find('#DeliveryAreaId option:selected').text() : "")
+
+        container.find("[name$='.LawUnitId']").val(from.find('#LawUnitId').val());
+        container.find(".law-unit-name").val(from.find('.law-unit-name').val())
+        HideModal();
+    }
+</script>

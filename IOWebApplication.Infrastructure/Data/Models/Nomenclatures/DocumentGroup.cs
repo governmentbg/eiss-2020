@@ -11,7 +11,6 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
     {
         [Column("document_kind_id")]
         [Display(Name = "Вид документ")]
-
         public int DocumentKindId { get; set; }
 
         [ForeignKey(nameof(DocumentKindId))]

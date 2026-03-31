@@ -60,6 +60,7 @@ namespace IOWebApplication.Core.Services
                            CaseMoneyCollectionKindOrder = (x.CaseMoneyCollectionKind != null) ? x.CaseMoneyCollectionKind.OrderNumber : (int?)null,
                            CurrencyLabel = x.Currency.Label,
                            CurrencyCode = x.Currency.Code,
+                           CurrencyDescription = x.Currency.Description,
                            CurrencyId = x.CurrencyId,
                            InitialAmount = x.InitialAmount,
                            InitialAmountString = Extensions.MoneyExtensions.MoneyToString(x.InitialAmount, x.CurrencyId),
@@ -105,7 +106,8 @@ namespace IOWebApplication.Core.Services
                            PersonAmountString = Extensions.MoneyExtensions.MoneyToString(x.PersonAmount, x.CaseMoneyCollection.Currency.Id),
                            RespectedAmount = x.RespectedAmount,
                            RespectedAmountString = Extensions.MoneyExtensions.MoneyToString(x.RespectedAmount, x.CaseMoneyCollection.Currency.Id),
-                           CurrencyCode = x.CaseMoneyCollection.Currency.Code
+                           CurrencyCode = x.CaseMoneyCollection.Currency.Code,
+                           CurrencyDescription = x.CaseMoneyCollection.Currency.Description
                        })
                        .ToList();
         }
@@ -214,7 +216,6 @@ namespace IOWebApplication.Core.Services
                                           VisibleOrder = x.VisibleOrder ?? true,
                                           VisibleOrderText = (x.VisibleOrder ?? true) ? "Да" : "Не"
                                       })
-                                      .DefaultIfEmpty()
                                       .FirstOrDefault();
 
             return caseFastProcesses ?? new CaseFastProcessVM();
@@ -237,6 +238,7 @@ namespace IOWebApplication.Core.Services
                                           CaseMoneyExpenseTypeLabel = x.CaseMoneyExpenseType.Label,
                                           CurrencyLabel = x.Currency.Label,
                                           CurrencyCode = x.Currency.Code,
+                                          CurrencyDescription = x.Currency.Description,
                                           Amount = x.Amount,
                                           AmountString = Extensions.MoneyExtensions.MoneyToString(x.Amount, x.CurrencyId),
                                           Description = x.Description,
@@ -333,30 +335,44 @@ namespace IOWebApplication.Core.Services
                 {
                     if (string.IsNullOrEmpty(text))
                     {
-                        text = "Сумите: " + (collectionVM.CaseMoneyCollectionTypeLabel +
-                                            (collectionVM.DateFrom != null ? " от " + (collectionVM.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " : string.Empty) + (string.IsNullOrEmpty(collectionVM.DateToLabel) ? string.Empty : " " + collectionVM.DateToLabel) +
-                                            " в размер на " +
-                                            collectionVM.RespectedAmount.ToString("### ### ##0.00") +
-                                            " ").ToLower() +
-                                            collectionVM.CurrencyCode +
-                                            (" /" +
-                                            collectionVM.RespectedAmountString +
-                                            "/" +
-                                            (!string.IsNullOrEmpty(collectionVM.Description) ? " " + collectionVM.Description : string.Empty)).ToLower();
+                        //text = "Сумите: " + (collectionVM.CaseMoneyCollectionTypeLabel +
+                        //                    (collectionVM.DateFrom != null ? " от " + (collectionVM.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " : string.Empty) + (string.IsNullOrEmpty(collectionVM.DateToLabel) ? string.Empty : " " + collectionVM.DateToLabel) +
+                        //                    " в размер на " +
+                        //                    collectionVM.RespectedAmount.ToString("### ### ##0.00") +
+                        //                    " ").ToLower() +
+                        //                    collectionVM.CurrencyDescription +
+                        //                    (" /" +
+                        //                    collectionVM.RespectedAmountString +
+                        //                    "/" +
+                        //                    (!string.IsNullOrEmpty(collectionVM.Description) ? " " + collectionVM.Description : string.Empty)).ToLower();
+                        text = ((moneyClaimVM.CaseMoneyCollections.Where(x => x.IsMoney && x.RespectedAmount > (decimal)0.01).Count() > 1) ? "сумите " : "сумата ") +
+                               collectionVM.RespectedAmount.ToString("### ### ##0.00") + " " + collectionVM.CurrencyDescription +
+                               " (" + collectionVM.RespectedAmountString + ")" +
+                               ", представляваща " + (!string.IsNullOrEmpty(collectionVM.CaseMoneyCollectionTypeLabel) ? collectionVM.CaseMoneyCollectionTypeLabel?.ToLower() : "") + " " +
+                               //", представляваща " + collectionVM.CaseMoneyCollectionTypeLabel.ToLower() + " " +
+                               (!string.IsNullOrEmpty(collectionVM.Description) ? " за " + collectionVM.Description : string.Empty).ToLower() +
+                               (collectionVM.DateFrom != null ? " за период от " + (collectionVM.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + " г. " : string.Empty) + (string.IsNullOrEmpty(collectionVM.DateToLabel) ? string.Empty : " " + collectionVM.DateToLabel.ToLower());
                     }
                     else
                     {
-                        text += (", " +
-                                collectionVM.CaseMoneyCollectionTypeLabel +
-                                " от " + (collectionVM.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " + (string.IsNullOrEmpty(collectionVM.DateToLabel) ? string.Empty : " " + collectionVM.DateToLabel) +
-                                " в размер на " +
-                                collectionVM.RespectedAmount.ToString("### ### ##0.00") +
-                                " ").ToLower() +
-                                collectionVM.CurrencyCode +
-                                (" /" +
-                                collectionVM.RespectedAmountString +
-                                "/" +
-                                (!string.IsNullOrEmpty(collectionVM.Description) ? " " + collectionVM.Description : string.Empty)).ToLower();
+                        //text += (", " +
+                        //        collectionVM.CaseMoneyCollectionTypeLabel +
+                        //        " от " + (collectionVM.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " + (string.IsNullOrEmpty(collectionVM.DateToLabel) ? string.Empty : " " + collectionVM.DateToLabel) +
+                        //        " в размер на " +
+                        //        collectionVM.RespectedAmount.ToString("### ### ##0.00") +
+                        //        " ").ToLower() +
+                        //        collectionVM.CurrencyDescription +
+                        //        (" /" +
+                        //        collectionVM.RespectedAmountString +
+                        //        "/" +
+                        //        (!string.IsNullOrEmpty(collectionVM.Description) ? " " + collectionVM.Description : string.Empty)).ToLower();
+                        text += ", " +
+                                collectionVM.RespectedAmount.ToString("### ### ##0.00") + collectionVM.CurrencyDescription +
+                                " (" + collectionVM.RespectedAmountString + ")" +
+                                //", представляваща " + collectionVM.CaseMoneyCollectionTypeLabel.ToLower() + " " +
+                                ", представляваща " + (!string.IsNullOrEmpty(collectionVM.CaseMoneyCollectionTypeLabel) ? collectionVM.CaseMoneyCollectionTypeLabel?.ToLower() : "") + " " +
+                                (!string.IsNullOrEmpty(collectionVM.Description) ? " за " + collectionVM.Description : string.Empty).ToLower() +
+                                (collectionVM.DateFrom != null ? " за период от " + (collectionVM.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + " г. " : string.Empty) + (string.IsNullOrEmpty(collectionVM.DateToLabel) ? string.Empty : " " + collectionVM.DateToLabel.ToLower());
                     }
 
                     foreach (var caseMoneyCollection in collectionVM.CaseMoneyCollectionExtras.OrderBy(x => x.CaseMoneyCollectionKindOrder))
@@ -365,39 +381,49 @@ namespace IOWebApplication.Core.Services
                         {
                             text += (", ведно със " +
                                    caseMoneyCollection.CaseMoneyCollectionKindLabel +
-                                   " от " + (caseMoneyCollection.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " + (string.IsNullOrEmpty(caseMoneyCollection.DateToLabel) ? string.Empty : " " + caseMoneyCollection.DateToLabel)).ToLower();
+                                   " за период от " + (caseMoneyCollection.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + " г. " + (string.IsNullOrEmpty(caseMoneyCollection.DateToLabel) ? string.Empty : " " + caseMoneyCollection.DateToLabel)).ToLower();
                         }
                         else
                         {
-                            text += (", " +
-                                   caseMoneyCollection.CaseMoneyCollectionKindLabel +
-                                   " от " + (caseMoneyCollection.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " + (string.IsNullOrEmpty(caseMoneyCollection.DateToLabel) ? string.Empty : " " + caseMoneyCollection.DateToLabel) +
-                                   " в размер на " +
-                                   caseMoneyCollection.RespectedAmount.ToString("### ### ##0.00") +
-                                   " ").ToLower() +
-                                   caseMoneyCollection.CurrencyCode +
-                                   (" /" +
-                                   caseMoneyCollection.RespectedAmountString +
-                                   "/").ToLower();
+                            //text += (", " +
+                            //       caseMoneyCollection.CaseMoneyCollectionKindLabel +
+                            //       " за период от " + (caseMoneyCollection.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + " г. " + (string.IsNullOrEmpty(caseMoneyCollection.DateToLabel) ? string.Empty : " " + caseMoneyCollection.DateToLabel) +
+                            //       " в размер на " +
+                            //       caseMoneyCollection.RespectedAmount.ToString("### ### ##0.00") +
+                            //       " ").ToLower() +
+                            //       caseMoneyCollection.CurrencyDescription +
+                            //       (" /" +
+                            //       caseMoneyCollection.RespectedAmountString +
+                            //       "/").ToLower();
+                            text += (", сумата" +
+                                     caseMoneyCollection.RespectedAmount.ToString("### ### ##0.00") + " " +
+                                     caseMoneyCollection.CurrencyDescription + " (" +
+                                     caseMoneyCollection.RespectedAmountString +
+                                     ")" + ", представляваща " +
+                                     caseMoneyCollection.CaseMoneyCollectionKindLabel +
+                                     " за период от " + (caseMoneyCollection.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + " г. " + (string.IsNullOrEmpty(caseMoneyCollection.DateToLabel) ? string.Empty : " " + caseMoneyCollection.DateToLabel)
+                                     ).ToLower();
                         }
                     }
                 }
             }
 
+            var isAddCaseMoneyExpenses = false;
             foreach (var caseMoneyExpense in model.CaseMoneyExpenses)
             {
-                text += (", " +
+                text += ((!isAddCaseMoneyExpenses ? ", както и " : " и ") +
                        caseMoneyExpense.CaseMoneyExpenseTypeLabel +
                        " в размер на " +
                        caseMoneyExpense.Amount.ToString("### ### ##0.00") +
                        " ").ToLower() +
-                       caseMoneyExpense.CurrencyCode +
-                       (" /" +
+                       caseMoneyExpense.CurrencyDescription +
+                       (" (" +
                        caseMoneyExpense.AmountString +
-                       "/").ToLower();
+                       ")").ToLower();
+                isAddCaseMoneyExpenses = true;
             }
 
-            return text;
+            return text + ".";
         }
 
         private List<CaseMoneyPersonListTextVM> FillPersonSum(CaseFastProcessViewVM model)
@@ -424,9 +450,9 @@ namespace IOWebApplication.Core.Services
                                             personVM.RespectedAmount.ToString("### ### ##0.00") +
                                             " ").ToLower() +
                                             personVM.CurrencyCode +
-                                            (" /" +
+                                            (" (" +
                                             personVM.RespectedAmountString +
-                                            "/").ToLower()
+                                            ")").ToLower()
                             };
 
                             result.Add(caseMoneyPerson);
@@ -439,9 +465,9 @@ namespace IOWebApplication.Core.Services
                                                          personVM.RespectedAmount.ToString("### ### ##0.00") +
                                                          " ").ToLower() +
                                                          personVM.CurrencyCode +
-                                                         (" /" +
+                                                         (" (" +
                                                          personVM.RespectedAmountString +
-                                                         "/").ToLower();
+                                                         ")").ToLower();
                         }
                     }
 
@@ -466,9 +492,9 @@ namespace IOWebApplication.Core.Services
                                                     caseMoneyCollectionExtraPerson.RespectedAmount.ToString("### ### ##0.00") +
                                                     " ").ToLower() +
                                                     caseMoneyCollectionExtraPerson.CurrencyCode +
-                                                    (" /" +
+                                                    (" (" +
                                                     caseMoneyCollectionExtraPerson.RespectedAmountString +
-                                                    "/").ToLower()
+                                                    ")").ToLower()
                                     };
 
                                     result.Add(caseMoney);
@@ -482,9 +508,9 @@ namespace IOWebApplication.Core.Services
                                                            caseMoneyCollectionExtraPerson.RespectedAmount.ToString("### ### ##0.00") +
                                                            " ").ToLower() +
                                                            caseMoneyCollectionExtraPerson.CurrencyCode +
-                                                           (" /" +
+                                                           (" (" +
                                                            caseMoneyCollectionExtraPerson.RespectedAmountString +
-                                                           "/").ToLower();
+                                                           ")").ToLower();
                                 }
                             }
                         }
@@ -497,7 +523,7 @@ namespace IOWebApplication.Core.Services
                                 {
                                     caseMoney.MoneyText += (", ведно със " +
                                                             caseMoneyCollection.CaseMoneyCollectionKindLabel +
-                                                            " за периода от " + (caseMoneyCollection.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " + 
+                                                            " за периода от " + (caseMoneyCollection.DateFrom ?? DateTime.Now).ToString("dd.MM.yyyy") + "г. " +
                                                             (string.IsNullOrEmpty(caseMoneyCollection.DateToLabel) ? string.Empty : " " + caseMoneyCollection.DateToLabel)).ToLower();
                                 }
                             }
@@ -524,9 +550,9 @@ namespace IOWebApplication.Core.Services
                                         caseMoneyExpensePerson.PersonAmount.ToString("### ### ##0.00") +
                                         " ").ToLower() +
                                         caseMoneyExpensePerson.CurrencyCode +
-                                        (" /" +
+                                        (" (" +
                                         caseMoneyExpensePerson.PersonAmountString +
-                                        "/").ToLower()
+                                        ")").ToLower()
                         };
 
                         result.Add(caseMoneyPerson);
@@ -539,9 +565,9 @@ namespace IOWebApplication.Core.Services
                                                      caseMoneyExpensePerson.PersonAmount.ToString("### ### ##0.00") +
                                                      " ").ToLower() +
                                                      caseMoneyExpensePerson.CurrencyCode +
-                                                     (" /" +
+                                                     (" (" +
                                                      caseMoneyExpensePerson.PersonAmountString +
-                                                     "/").ToLower();
+                                                     ")").ToLower();
                     }
                 }
             }
@@ -1126,11 +1152,11 @@ namespace IOWebApplication.Core.Services
                     {
                         foreach (var caseMoneyCollection in FillObjectFromEditNewModelCollectionDataToModel(model))
                         {
-                            caseMoneyCollection.MainCaseMoneyCollectionId = saved.Id;
+                            caseMoneyCollection.MainCaseMoneyCollection = saved;
                             repo.Add(caseMoneyCollection);
                         }
                     }
-
+                    
                     repo.SaveChanges();
                     model.Id = saved.Id;
                 }
@@ -1162,7 +1188,7 @@ namespace IOWebApplication.Core.Services
             var tax = Math.Round((sumAll * (pcent / 100)), 2);
             tax = (tax > minvalue) ? tax : minvalue;
 
-            var caseFastProcess = repo.AllReadonly<CaseFastProcess>().Where(x => x.CaseId == caseId).DefaultIfEmpty().FirstOrDefault();
+            var caseFastProcess = repo.AllReadonly<CaseFastProcess>().Where(x => x.CaseId == caseId).FirstOrDefault();
 
             try
             {
@@ -1450,7 +1476,8 @@ namespace IOWebApplication.Core.Services
 
             if ((caseMoneyExpenseId ?? 0) < 1)
             {
-                if (((SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start))
+                if (true)
+                //if (((SystemParam_Select(NomenclatureConstants.SystemParamName.req_4_2021) ?? new SystemParam()).ParamValue == NomenclatureConstants.SystemParamValue.req_4_2021_Start))
                 {
                     var caseMoneyCollection = GetMoneyColleactionWithFraction(caseId);
 
@@ -1570,10 +1597,11 @@ namespace IOWebApplication.Core.Services
                 {
                     modelSave.UserId = userContext.UserId;
                     modelSave.DateWrt = DateTime.Now;
-                    repo.Add(modelSave);
 
                     if (model.CasePersonListDecimals != null)
                     {
+                        modelSave.CaseMoneyExpensePeople = new List<CaseMoneyExpensePerson>();
+
                         for (int i = 0; i < model.CasePersonListDecimals.Count; i++)
                         {
                             var caseMoneyExpense = FillCaseMoneyExpensePerson(modelSave,
@@ -1582,10 +1610,11 @@ namespace IOWebApplication.Core.Services
                                                                               (i == (model.CasePersonListDecimals.Count - 1)),
                                                                               sumTotal);
                             sumTotal += caseMoneyExpense.PersonAmount;
-                            repo.Add(caseMoneyExpense);
+                            modelSave.CaseMoneyExpensePeople.Add(caseMoneyExpense);
                         }
                     }
 
+                    repo.Add(modelSave);
                     repo.SaveChanges();
                     return modelSave.Id;
                 }
@@ -1753,13 +1782,7 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private string ReplaceNewLineBREnd(string text, string stringForReplace, string stringReplace)
-        {
-            if (string.IsNullOrEmpty(text))
-                return text;
-
-            return text.Replace(stringForReplace, stringReplace);
-        }
+        private string ReplaceNewLineBREnd(string text, string stringForReplace, string stringReplace) => string.IsNullOrEmpty(text) ? text : text.Replace(stringForReplace, stringReplace);
 
         private string ReplaceNewLine(string text)
         {
@@ -1771,18 +1794,23 @@ namespace IOWebApplication.Core.Services
 
         public CaseFastProcessEditVM GetByCaseId_CaseFastProcess(int CaseId)
         {
-            return repo.AllReadonly<CaseFastProcess>()
-                       .Where(x => x.CaseId == CaseId)
-                       .Select(x => new CaseFastProcessEditVM()
-                       {
-                           Id = x.Id,
-                           CaseId = x.CaseId,
-                           CourtId = x.CourtId ?? 0,
-                           DescriptionSave = x.Description,
-                           DescriptionEdit = ReplaceNewLineBREnd(x.Description, "<br />", System.Environment.NewLine),
-                           VisibleOrder = x.VisibleOrder
-                       })
-                       .FirstOrDefault() ?? new CaseFastProcessEditVM();
+            CaseFastProcessEditVM result = repo.AllReadonly<CaseFastProcess>()
+                                               .Where(x => x.CaseId == CaseId)
+                                               .Select(x => new CaseFastProcessEditVM()
+                                               {
+                                                   Id = x.Id,
+                                                   CaseId = x.CaseId,
+                                                   CourtId = x.CourtId ?? 0,
+                                                   DescriptionSave = x.Description,
+                                                   DescriptionEdit = x.Description,
+                                                   VisibleOrder = x.VisibleOrder
+                                               })
+                                               .FirstOrDefault() ?? new CaseFastProcessEditVM();
+
+            if (!string.IsNullOrEmpty(result.DescriptionEdit))
+                result.DescriptionEdit = ReplaceNewLineBREnd(result.DescriptionEdit, "<br />", System.Environment.NewLine);
+
+            return result;
         }
 
         public bool CaseFastProcess_SaveData(CaseFastProcessEditVM model)

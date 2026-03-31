@@ -41,7 +41,7 @@
         <div class="row">
             <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentType, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentTypeDDL, @class = "punishment-type" })</div>
             <div class="col-lg-3">@Html.EditorFor(x => x.PunishmentActivity, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentActivityDDL })</div>
-            <div class="col-lg-3">
+                <div class="col-lg-3 punishment-kind-container">
                 @Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "punishment-kind" })
                 <div class="punishment-kind-error" style="display:none; margin-bottom:15px;">
                     <label class="control-label">@MessageConstant.Values.EisppPunismentMpsNotSend</label>

@@ -1,5 +1,4 @@
 ﻿using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -9,17 +8,20 @@ using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
+using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
-using Remotion.Linq.Parsing.Structure.IntermediateModel;
+using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Transactions;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -29,39 +31,57 @@ namespace IOWebApplication.Core.Services
         private readonly ICaseLifecycleService lifecycleService;
         private readonly IMQEpepService mqEpepService;
         private readonly ICaseDeadlineService caseDeadlineService;
-        private readonly ICounterService counterService;
+        private readonly IWorkNotificationService workNotificationService;
         private readonly ICaseLoadIndexService caseLoadIndexService;
+        private readonly ICaseSessionActCoordinationService coordinationService;
+        private readonly ICommonService commonService;
+        private readonly ICdnService cdnService;
+        private readonly ILazybleService<IMoneyService> lazyMoneyService;
 
-        public WorkTaskService(
-            ILogger<WorkTaskService> _logger,
-            IRepository _repo,
-            IUserContext _userContext,
-            ICaseLifecycleService _lifecycleService,
-            IMQEpepService _mqEpepService,
-            ICaseDeadlineService _caseDeadlineService,
-            ICounterService _counterService,
-            ICaseLoadIndexService _caseLoadIndexService,
-            IUrlHelper _url)
+        public WorkTaskService(ILogger<WorkTaskService> _logger,
+                               IRepository _repo,
+                               IReadonlyRepository _readonlyrepo,
+                               IUserContext _userContext,
+                               ICaseLifecycleService _lifecycleService,
+                               IMQEpepService _mqEpepService,
+                               ICaseDeadlineService _caseDeadlineService,
+                               ICaseLoadIndexService _caseLoadIndexService,
+                               ICaseSessionActCoordinationService _coordinationService,
+                               ICdnService _cdnService,
+                               ICommonService _commonService,
+                               IWorkNotificationService _workNotificationService,
+                               ILazybleService<IMoneyService> _lazyMoneyService,
+                               IUrlHelper _url)
         {
             logger = _logger;
             repo = _repo;
+            readonlyrepo = _readonlyrepo;
             userContext = _userContext;
             lifecycleService = _lifecycleService;
             mqEpepService = _mqEpepService;
             caseDeadlineService = _caseDeadlineService;
-            counterService = _counterService;
             urlHelper = _url;
             caseLoadIndexService = _caseLoadIndexService;
+            coordinationService = _coordinationService;
+            cdnService = _cdnService;
+            commonService = _commonService;
+            workNotificationService = _workNotificationService;
+            lazyMoneyService = _lazyMoneyService;
         }
 
-        private IEnumerable<WorkTaskVM> selectTasks(bool showToDo, bool showMyTasks, int sourceType, long sourceId, bool customFilter = false)
+        public async Task<WorkTask> ReadById(long id)
         {
-            var _userOrganizations = userContext.CourtOrganizations;
+            return await repo.All<WorkTask>().Where(x => x.Id == id).FirstOrDefaultAsync().ConfigureAwait(false);
+        }
+
+        private IQueryable<WorkTaskVM> selectTasks(bool showToDo, bool showMyTasks, int sourceType, long sourceId, bool customFilter = false)
+        {
+            int?[] _userOrganizations = userContext.CourtOrganizations.Select(x => (int?)x).ToArray();
 
             Expression<Func<WorkTask, bool>> whereSelect = x => x.SourceType == sourceType && x.SourceId == sourceId;
             if (showToDo)
             {
-                whereSelect = x => (x.TaskStateId == WorkTaskConstants.States.New && (x.UserId == userContext.UserId || _userOrganizations.Contains(x.CourtOrganizationId ?? 0))
+                whereSelect = x => (x.TaskStateId == WorkTaskConstants.States.New && (x.UserId == userContext.UserId || _userOrganizations.Contains(x.CourtOrganizationId))
                                 || (x.TaskStateId == WorkTaskConstants.States.Accepted && x.UserId == userContext.UserId));
             }
 
@@ -77,14 +97,6 @@ namespace IOWebApplication.Core.Services
                 whereMyTasks = x => true;
             }
             var result = repo.AllReadonly<WorkTask>()
-                            .Include(x => x.TaskType)
-                            .Include(x => x.TaskAction)
-                            .Include(x => x.TaskState)
-                            .Include(x => x.CourtOrganization)
-                            .Include(x => x.User)
-                            .ThenInclude(x => x.LawUnit)
-                            .Include(x => x.UserCreated)
-                            .ThenInclude(x => x.LawUnit)
                             .Where(x => x.CourtId == userContext.CourtId)
                             .Where(whereSelect)
                             .Where(whereMyTasks)
@@ -120,49 +132,17 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        private int selectTasksForToDoCount()
+        public IQueryable<WorkTaskVM> Select(WorkTaskFilterVM filter)
         {
+            filter.Sanitize();
+
             var _userOrganizations = userContext.CourtOrganizations.Select(x => (int?)x).ToArray();
-            string userId = userContext.UserId;
-
-            //var result = repo.AllReadonly<WorkTask>()
-            //                .Where(x => x.CourtId == userContext.CourtId)
-            //                .Where(x=> (x.TaskStateId == WorkTaskConstants.States.New && (x.UserId == userId || _userOrganizations.Contains(x.CourtOrganizationId ?? 0))
-            //                    || (x.TaskStateId == WorkTaskConstants.States.Accepted && x.UserId == userId)))
-            //                .Count();
-
-
-            //var result = repo.AllReadonly<WorkTask>()
-            //                .Where(x => x.CourtId == userContext.CourtId)
-            //                .Where(x => x.TaskStateId == WorkTaskConstants.States.New && x.UserId == userId)
-            //                .Union(repo.AllReadonly<WorkTask>()
-            //                .Where(x => x.CourtId == userContext.CourtId)
-            //                .Where(x => x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId)))
-            //                .Union(repo.AllReadonly<WorkTask>()
-            //                .Where(x => x.CourtId == userContext.CourtId)
-            //                .Where(x => x.TaskStateId == WorkTaskConstants.States.Accepted && x.UserId == userId))
-            //                .Count();
-
-            var result = repo.AllReadonly<WorkTask>()
-                           .Where(x => x.CourtId == userContext.CourtId)
-                           .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId) && x.UserId == userId)
-                           .Count();
-            result += repo.AllReadonly<WorkTask>()
-                           .Where(x => x.CourtId == userContext.CourtId)
-                           .Where(x => x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId)
-                           && x.UserId == null)
-                           .Count();
-            return result;
-        }
-        public IEnumerable<WorkTaskVM> Select(WorkTaskFilterVM filter)
-        {
-            var _userOrganizations = userContext.CourtOrganizations;
 
             Expression<Func<WorkTaskVM, bool>> whereSelect = x => true;
             if (filter.UserMode == 1)
             {
                 whereSelect = x => (
-                                    (x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId ?? 0))
+                                    (x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId))
                                     ||
                                     (x.UserId == userContext.UserId)
                                     ) && x.UserCreatedId == (filter.UserId ?? x.UserCreatedId);
@@ -171,22 +151,39 @@ namespace IOWebApplication.Core.Services
             {
                 whereSelect = x => (x.UserCreatedId == userContext.UserId) && x.UserId == (filter.UserId ?? x.UserId);
             }
+            Expression<Func<WorkTaskVM, bool>> whereTaskType = x => true;
+            if (filter.TaskTypeId > 0)
+            {
+                whereTaskType = x => x.TaskTypeId == filter.TaskTypeId;
+            }
+
             Expression<Func<WorkTaskVM, bool>> whereState = x => x.TaskStateId == (filter.TaskStateId ?? x.TaskStateId);
             if (filter.TaskStateId == WorkTaskConstants.States.NotFinishedId)
             {
                 whereState = x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId);
             }
 
-            return selectTasks(false, false, 0, 0, true).AsQueryable()
+            Expression<Func<WorkTaskVM, bool>> whereSourceDescription = x => true;
+            if (!string.IsNullOrEmpty(filter.SourceDescription))
+            {
+                whereState = x => EF.Functions.ILike(x.SourceDescription ?? "", filter.SourceDescription.ToPaternSearch());
+            }
+            Expression<Func<WorkTaskVM, bool>> whereParentDescription = x => true;
+            if (!string.IsNullOrEmpty(filter.ParentDescription))
+            {
+                whereState = x => EF.Functions.ILike(x.ParentDescription ?? "", filter.ParentDescription.ToPaternSearch());
+            }
+
+            return selectTasks(false, false, 0, 0, true)
                     .Where(x => x.DateCreated >= (filter.DateFrom ?? x.DateCreated) && x.DateCreated <= (filter.DateTo.MakeEndDate() ?? x.DateCreated))
                     .Where(whereSelect)
-                    .Where(x => x.TaskTypeId == (filter.TaskTypeId ?? x.TaskTypeId))
+                    .Where(whereTaskType)
                     .Where(whereState)
-                    .Where(x => EF.Functions.ILike(x.SourceDescription ?? "", filter.SourceDescription.ToPaternSearch()))
-                    .Where(x => EF.Functions.ILike(x.ParentDescription ?? "", filter.ParentDescription.ToEndingPaternSearch()));
+                    .Where(whereSourceDescription)
+                    .Where(whereParentDescription);
         }
 
-        public IEnumerable<WorkTaskVM> SelectAll(WorkTaskFilterVM filter)
+        public IQueryable<WorkTaskVM> SelectAll(WorkTaskFilterVM filter)
         {
             Expression<Func<WorkTaskVM, bool>> userSearch = x => true;
             if (!string.IsNullOrEmpty(filter.AssignedTo))
@@ -194,13 +191,6 @@ namespace IOWebApplication.Core.Services
                 userSearch = x => x.UserId == filter.AssignedTo;
             }
             return repo.AllReadonly<WorkTask>()
-                            .Include(x => x.TaskType)
-                            .Include(x => x.TaskState)
-                            .Include(x => x.CourtOrganization)
-                            .Include(x => x.User)
-                            .ThenInclude(x => x.LawUnit)
-                            .Include(x => x.UserCreated)
-                            .ThenInclude(x => x.LawUnit)
                             .Where(x => x.CourtId == userContext.CourtId)
                             .Where(x => x.DateCreated >= (filter.DateFrom ?? x.DateCreated) && x.DateCreated <= (filter.DateTo.MakeEndDate() ?? x.DateCreated))
                             .Where(x => x.TaskTypeId == (filter.TaskTypeId ?? x.TaskTypeId) && x.TaskStateId == (filter.TaskStateId ?? x.TaskStateId))
@@ -234,9 +224,9 @@ namespace IOWebApplication.Core.Services
             //.Where(x => EF.Functions.ILike(x.UserFullName, filter.AssignedTo.ToPaternSearch()));
 
         }
-        public IEnumerable<WorkTaskVM> Select(int sourceType, long sourceId)
+        public async Task<IEnumerable<WorkTaskVM>> Select(int sourceType, long sourceId)
         {
-            var result = selectTasks(false, false, sourceType, sourceId).ToList();
+            var result = await selectTasks(false, false, sourceType, sourceId).ToListAsync();
             setTaskActions(result);
             if (!ValidateSourceCourt(sourceType, sourceId))
             {
@@ -267,26 +257,29 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        public int Select_ToDoCount()
+        public async Task<int> Select_ToDoCount()
         {
-            return selectTasksForToDoCount();
-            //int count = 0;
-            //using (TransactionScope ts = new TransactionScope(TransactionScopeOption.Required,
-            //        new TransactionOptions()
-            //        {
-            //            IsolationLevel = IsolationLevel.ReadUncommitted
-            //        }))
-            //{
-            //    count = selectTasks(true, false, 0, 0).Count();
-            //    ts.Complete();
-            //}
-            //return count;
+            var _userOrganizations = userContext.CourtOrganizations.Select(x => (int?)x).ToArray();
+            string userId = userContext.UserId;
+
+
+            var result = await readonlyrepo.AllReadonly<WorkTask>()
+                           .Where(x => x.CourtId == userContext.CourtId)
+                           .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId) && x.UserId == userId)
+                           .CountAsync().ConfigureAwait(false);
+
+            result += await readonlyrepo.AllReadonly<WorkTask>()
+                           .Where(x => x.CourtId == userContext.CourtId)
+                           .Where(x => x.TaskStateId == WorkTaskConstants.States.New && _userOrganizations.Contains(x.CourtOrganizationId)
+                           && x.UserId == null)
+                           .CountAsync().ConfigureAwait(false);
+            return result;
         }
 
         private void setTaskActions(IEnumerable<WorkTaskVM> model)
         {
             var isGlobalAdmin = userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator);
-            var _userOrganizations = userContext.CourtOrganizations;
+            var _userOrganizations = userContext.CourtOrganizations.Select(x => (int?)x).ToArray();
             bool isTaskRouter = userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
             foreach (var task in model)
             {
@@ -294,7 +287,7 @@ namespace IOWebApplication.Core.Services
                 switch (task.TaskExecutionId)
                 {
                     case WorkTaskConstants.TaskExecution.ByOrganization:
-                        sameUser = sameUser || _userOrganizations.Contains(task.CourtOrganizationId ?? 0);
+                        sameUser = sameUser || _userOrganizations.Contains(task.CourtOrganizationId);
                         break;
                     default:
                         sameUser = sameUser || task.UserId == userContext.UserId;
@@ -306,17 +299,25 @@ namespace IOWebApplication.Core.Services
                 task.CanRedirect = task.CanAccept || (isTaskRouter && WorkTaskConstants.States.NotFinished.Contains(task.TaskStateId));
                 task.CanDoAction = (task.DateAccepted != null) && (task.UserId == userContext.UserId || isGlobalAdmin) && task.DateCompleted == null && task.TaskStateId == WorkTaskConstants.States.Accepted;
                 task.CanComplete = task.CanDoAction;
-                if (WorkTaskConstants.Types.SelfCompleteTasks.Contains(task.TaskTypeId))
-                {
-                    task.CanComplete = false;
-                }
+
                 task.OverDue = (task.DateEnd < DateTime.Now) && WorkTaskConstants.States.NotFinished.Contains(task.TaskStateId);
                 if (WorkTaskConstants.Types.TaskCantUpdate.Contains(task.TaskTypeId))
                 {
                     task.CanUpdate = false;
                     task.CanRedirect = false;
                 }
+                if (WorkTaskConstants.Types.SelfCompleteTasks.Contains(task.TaskTypeId))
+                {
+                    task.CanComplete = false;
+                }
                 SetDoActionUrl(task);
+                if (WorkTaskConstants.Types.AutomatedTasks.Contains(task.TaskTypeId))
+                {
+                    task.CanAccept = false;
+                    task.CanRedirect = false;
+                    task.CanComplete = false;
+                    task.CanDoAction = false;
+                }
                 task.SourceInfo = SourceTypeSelectVM.GetSourceTypeName(task.SourceType);
                 task.ViewUrl = GetTaskObjectUrl(task.SourceType, task.SourceId);
             }
@@ -331,10 +332,14 @@ namespace IOWebApplication.Core.Services
                     return urlHelper.Action("Edit", "DocumentResolution", new { id = sourceId, tab = "tabname" }).Replace("tabname", "#tabWorkTask", StringComparison.InvariantCultureIgnoreCase);
                 case SourceTypeSelectVM.Case:
                     return urlHelper.Action("CasePreview", "Case", new { id = sourceId });
+                case SourceTypeSelectVM.MediationCase:
+                    return urlHelper.Action("CasePreviewMediation", "Mediation", new { id = sourceId });
                 case SourceTypeSelectVM.CaseSession:
                     return urlHelper.Action("Preview", "CaseSession", new { id = sourceId });
                 case SourceTypeSelectVM.CasePerson:
                     return urlHelper.Action("Edit", "CasePerson", new { id = sourceId });
+                case SourceTypeSelectVM.CasePersonBulletin:
+                    return urlHelper.Action("EditBulletin", "CasePersonSentence", new { id = sourceId });
                 case SourceTypeSelectVM.CaseLawUnit:
                     return urlHelper.Action("Edit", "CaseLawUnit", new { id = sourceId });
                 case SourceTypeSelectVM.CaseNotification:
@@ -357,6 +362,20 @@ namespace IOWebApplication.Core.Services
 
             switch (sourceType)
             {
+                case SourceTypeSelectVM.Document:
+                    caseId = repo.AllReadonly<Document>()
+                                    .Where(x => x.Id == sourceId)
+                                    .Select(x => x.Cases.Select(c => c.Id).FirstOrDefault())
+                                    .FirstOrDefault();
+
+                    if (caseId == 0)
+                    {
+                        caseId = repo.AllReadonly<Document>()
+                                   .Where(x => x.Id == sourceId)
+                                   .Select(x => x.DocumentCaseInfo.Select(c => c.CaseId).FirstOrDefault())
+                                   .FirstOrDefault();
+                    }
+                    break;
                 case SourceTypeSelectVM.Case:
                     caseId = (int)sourceId;
                     break;
@@ -369,6 +388,9 @@ namespace IOWebApplication.Core.Services
                 case SourceTypeSelectVM.CaseSessionActCoordination:
                     caseId = repo.GetById<CaseSessionActCoordination>((int)sourceId)?.CaseId;
                     break;
+                case SourceTypeSelectVM.CasePersonBulletin:
+                    caseId = repo.GetById<CasePersonSentenceBulletin>((int)sourceId)?.CaseId;
+                    break;
                 case SourceTypeSelectVM.ExecList:
                     caseId = repo.AllReadonly<ExecList>().Where(x => x.Id == (int)sourceId)
                         .Select(x => x.ExecListObligations.Select(a => a.Obligation.CaseId).FirstOrDefault())
@@ -376,8 +398,6 @@ namespace IOWebApplication.Core.Services
                     break;
                 case SourceTypeSelectVM.DocumentResolution:
                     caseId = repo.AllReadonly<DocumentResolution>()
-                                    .Include(x => x.Document)
-                                    .ThenInclude(x => x.Cases)
                                     .Where(x => x.Id == sourceId)
                                     .Select(x => x.Document.Cases.Select(c => c.Id).FirstOrDefault())
                                     .FirstOrDefault();
@@ -404,6 +424,11 @@ namespace IOWebApplication.Core.Services
                     model.DoActionUrl = urlHelper.Action("DoTask_SentForCoordinate", "CaseSessionAct", new { id = model.Id });
                     model.DoActionWarning = "След изпращане за съгласуване ще се създадат необходимите задачи към всички лица.";
                     break;
+                case WorkTaskConstants.Types.CaseSessionAct_SentMotiveToCoordinate:
+                    model.DoActionUrl = urlHelper.Action("DoTask_SentMotiveForCoordinate", "CaseSessionAct", new { id = model.Id });
+                    model.DoActionWarning = "След изпращане за съгласуване ще се създадат необходимите задачи към всички лица.";
+                    break;
+
                 case WorkTaskConstants.Types.CaseSessionAct_SentToSign:
                     model.DoActionUrl = urlHelper.Action("DoTask_SentForSign", "CaseSessionAct", new { id = model.Id });
                     model.DoActionWarning = "След изпращане за подписване, съдебният акт ще бъде регистриран и ще получи номер. Ако съществува вече създаден документ по акта, той ще бъде презареден от актуалната бланка на акта.";
@@ -450,6 +475,13 @@ namespace IOWebApplication.Core.Services
                         model.DoActionUrl = urlHelper.Action("Add", "DocumentResolution", new { documentId = _case.DocumentId });
                     }
                     break;
+                case WorkTaskConstants.Types.CasePersonBulletin_SentToSign:
+                case WorkTaskConstants.Types.CasePersonBulletin_SentToSignNewNumber:
+                    model.DoActionUrl = urlHelper.Action("DoTask_SentBuletinForSign", "CasePersonSentence", new { id = model.Id });
+                    break;
+                case WorkTaskConstants.Types.CasePersonBulletin_Sign:
+                    model.DoActionUrl = urlHelper.Action("SendBuletinForSign", "CasePersonSentence", new { id = model.SourceId, taskId = model.Id });
+                    break;
                 default:
                     model.DoActionUrl = null;
                     break;
@@ -467,9 +499,6 @@ namespace IOWebApplication.Core.Services
         public WorkTaskEditVM Get_ById(long id)
         {
             return repo.AllReadonly<WorkTask>()
-                             .Include(x => x.TaskType)
-                             .Include(x => x.UserCreated)
-                             .ThenInclude(x => x.LawUnit)
                              .Where(x => x.Id == id)
                              .Select(x => new WorkTaskEditVM
                              {
@@ -488,7 +517,7 @@ namespace IOWebApplication.Core.Services
                              })
                              .FirstOrDefault();
         }
-        public bool CreateTask(WorkTaskEditVM model)
+        public async Task<bool> CreateTask(WorkTaskEditVM model)
         {
             try
             {
@@ -506,7 +535,7 @@ namespace IOWebApplication.Core.Services
                 entity.TaskStateId = WorkTaskConstants.States.New;
                 if (!model.DisableSelfAcceptCheck)
                 {
-                    var taskType = repo.GetById<TaskType>(model.TaskTypeId);
+                    var taskType = await repo.GetByIdAsync<TaskType>(model.TaskTypeId);
                     if (taskType.SelfTask == true || entity.UserId == userContext.UserId)
                     {
                         entity.UserId = userContext.UserId;
@@ -514,11 +543,15 @@ namespace IOWebApplication.Core.Services
                         entity.TaskStateId = WorkTaskConstants.States.Accepted;
                     }
                 }
-                CreateTaskSourceDescription(entity);
+                await CreateTaskSourceDescription(entity);
+
                 repo.Add(entity);
-                repo.SaveChanges();
-                autoCompleteTasks(entity);
+                await repo.SaveChangesAsync();
+                await autoCompleteTasks(entity);
                 model.Id = entity.Id;
+                model.SourceDescription = entity.SourceDescription;
+                model.ParentDescription = entity.ParentDescription;
+                model.TaskTypeName = repo.GetPropById<TaskType, string>(x => x.Id == model.TaskTypeId, x => x.Label);
                 return true;
             }
             catch (Exception ex)
@@ -527,16 +560,16 @@ namespace IOWebApplication.Core.Services
                 return false;
             }
         }
-        private void autoCompleteTasks(WorkTask task)
+        private async Task autoCompleteTasks(WorkTask task)
         {
             if (!WorkTaskConstants.Types.AutoCompleteTasks.Contains(task.TaskTypeId))
             {
                 return;
             }
 
-            if (CompleteTask(task))
+            if (await CompleteTask(task))
             {
-                UpdateAfterCompleteTask(task);
+                await UpdateAfterCompleteTask(task);
             }
         }
         public bool UpdateTask(WorkTaskEditVM model)
@@ -545,8 +578,11 @@ namespace IOWebApplication.Core.Services
             {
                 var entity = repo.GetById<WorkTask>(model.Id);
                 model.ToEntity(entity);
-                repo.Update(entity);
+                //repo.Update(entity);
                 repo.SaveChanges();
+                model.SourceDescription = entity.SourceDescription;
+                model.ParentDescription = entity.ParentDescription;
+                model.TaskTypeName = repo.GetPropById<TaskType, string>(x => x.Id == model.TaskTypeId, x => x.Label);
                 return true;
             }
             catch (Exception ex)
@@ -556,124 +592,147 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private void CreateTaskSourceDescription(WorkTask model)
-        {
-            switch (model.SourceType)
-            {
-                case SourceTypeSelectVM.Document:
-                    {
-                        var info = repo.AllReadonly<Document>()
-                                        .Include(x => x.DocumentType)
-                                        .Include(x => x.DocumentCaseInfo)
-                                        .ThenInclude(x => x.Case)
-                                        .Where(x => x.Id == model.SourceId)
-                                        .Select(x => new
-                                        {
-                                            sd = $"{x.DocumentType.Label} {x.DocumentNumber}/{x.DocumentDate:dd.MM.yyyy}",
-                                            pdObject = x.DocumentCaseInfo.FirstOrDefault()
-                                        })
-                                        .FirstOrDefault();
-                        model.SourceDescription = info.sd;
-                        if (info.pdObject != null)
-                        {
-                            if (info.pdObject.Case != null)
-                            {
-                                model.ParentDescription = info.pdObject.Case.RegNumber;
-                            }
-                            else
-                            {
-                                model.ParentDescription = info.pdObject.CaseRegNumber;
-                            }
-                        }
-                    }
-                    break;
-                case SourceTypeSelectVM.DocumentResolution:
-                    {
-                        var info = repo.AllReadonly<DocumentResolution>()
-                                        .Include(x => x.Document)
-                                       .ThenInclude(x => x.DocumentType)
-                                       .Include(x => x.Document)
-                                       .ThenInclude(x => x.Cases)
-                                       .Where(x => x.Id == model.SourceId)
-                                       .Select(x => new
-                                       {
-                                           sd = $" към {x.Document.DocumentType.Label} {x.Document.DocumentNumber}/{x.Document.DocumentDate:dd.MM.yyyy}",
-                                           pd = (x.Document.Cases.Any()) ? x.Document.Cases.Select(c => c.RegNumber).FirstOrDefault() : ""
-                                       })
-                                       .FirstOrDefault();
-                        model.SourceDescription = info.sd;
-                        model.ParentDescription = info.pd;
-                    }
-                    break;
-                case SourceTypeSelectVM.CaseSessionAct:
-                    {
-                        var info = repo.AllReadonly<CaseSessionAct>()
-                                        .Include(x => x.ActType)
-                                        .Include(x => x.Case)
-                                        .Where(x => x.Id == (int)model.SourceId)
-                                        .Select(x => new
-                                        {
-                                            sd = $"{x.ActType.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
-                                            pd = x.Case.RegNumber
-                                        })
-                                        .FirstOrDefault();
-
-                        model.SourceDescription = info.sd;
-                        model.ParentDescription = info.pd;
-                    }
-                    break;
-                case SourceTypeSelectVM.ExecList:
-                    {
-                        var info = repo.AllReadonly<Infrastructure.Data.Models.Money.ExecList>()
-                                        .Where(x => x.Id == (int)model.SourceId)
-                                        .Select(x => new
-                                        {
-                                            sd = $"{x.ExecListType.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
-                                            pd = x.ExecListObligations.Select(a => a.Obligation.Case.RegNumber).FirstOrDefault(),
-                                        })
-                                        .FirstOrDefault();
-
-                        model.SourceDescription = info.sd;
-                        model.ParentDescription = info.pd;
-                    }
-                    break;
-                case SourceTypeSelectVM.Case:
-                    {
-                        var info = repo.AllReadonly<Case>()
-                                           .Include(x => x.CaseType)
-                                           .Where(x => x.Id == (int)model.SourceId)
-                                           .Select(x => new
-                                           {
-                                               sd = $"{x.CaseType.Code} {x.ShortNumber}/{x.RegDate:dd.MM.yyyy}",
-                                               pd = x.RegNumber
-                                           })
-                                           .FirstOrDefault();
-
-                        model.SourceDescription = info.sd;
-                        model.ParentDescription = info.pd;
-                    }
-                    break;
-            }
-        }
-
-        public bool AcceptTask(long id)
+        private async Task CreateTaskSourceDescription(WorkTask model)
         {
             try
             {
-                var model = repo.GetById<WorkTask>(id);
+                switch (model.SourceType)
+                {
+                    case SourceTypeSelectVM.Document:
+                        {
+                            var info = await repo.AllReadonly<Document>()
+                                            .Where(x => x.Id == model.SourceId)
+                                            .Select(x => new
+                                            {
+                                                sd = $"{x.DocumentType.Label} {x.DocumentNumber}/{x.DocumentDate:dd.MM.yyyy}",
+                                                caseId = x.DocumentCaseInfo.Select(x => x.CaseId).FirstOrDefault()
+                                                //pdCase = x.DocumentCaseInfo.Select(c => c.Case).FirstOrDefault()
+                                            })
+                                            .FirstOrDefaultAsync();
+
+                            model.SourceDescription = info.sd;
+
+                            if (info.caseId > 0)
+                            {
+                                var pdCase = await repo.AllReadonly<Case>()
+                                                        .Where(x => x.Id == info.caseId)
+                                                        .Select(x => new
+                                                        {
+                                                            x.CourtId,
+                                                            x.RegNumber
+                                                        }).FirstOrDefaultAsync();
+                                if (pdCase != null && pdCase.CourtId == model.CourtId)
+                                {
+                                    model.ParentDescription = pdCase.RegNumber;
+                                }
+                            }
+                        }
+                        break;
+                    case SourceTypeSelectVM.DocumentResolution:
+                        {
+                            var info = await repo.AllReadonly<DocumentResolution>()
+                                           .Where(x => x.Id == model.SourceId)
+                                           .Select(x => new
+                                           {
+                                               sd = $" към {x.Document.DocumentType.Label} {x.Document.DocumentNumber}/{x.Document.DocumentDate:dd.MM.yyyy}",
+                                               pd = (x.Document.Cases.Any()) ? x.Document.Cases.Select(c => c.RegNumber).FirstOrDefault() : ""
+                                           })
+                                           .FirstOrDefaultAsync();
+                            model.SourceDescription = info.sd;
+                            model.ParentDescription = info.pd;
+                        }
+                        break;
+                    case SourceTypeSelectVM.CaseSessionAct:
+                        {
+                            var info = await repo.AllReadonly<CaseSessionAct>()
+                                            .Where(x => x.Id == (int)model.SourceId)
+                                            .Select(x => new
+                                            {
+                                                sd = $"{x.ActType.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
+                                                pd = x.Case.RegNumber
+                                            })
+                                            .FirstOrDefaultAsync();
+
+                            model.SourceDescription = info.sd;
+                            model.ParentDescription = info.pd;
+                        }
+                        break;
+                    case SourceTypeSelectVM.ExecList:
+                        {
+                            var info = await repo.AllReadonly<ExecList>()
+                                            .Where(x => x.Id == (int)model.SourceId)
+                                            .Select(x => new
+                                            {
+                                                sd = $"{x.ExecListType.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
+                                                pd = x.ExecListObligations.Select(a => a.Obligation.Case.RegNumber).FirstOrDefault(),
+                                            })
+                                            .FirstOrDefaultAsync();
+
+                            model.SourceDescription = info.sd;
+                            model.ParentDescription = info.pd;
+                        }
+                        break;
+                    case SourceTypeSelectVM.Case:
+                    case SourceTypeSelectVM.MediationCase:
+                        {
+                            var info = await repo.AllReadonly<Case>()
+                                               .Where(x => x.Id == (int)model.SourceId)
+                                               .Select(x => new
+                                               {
+                                                   sd = $"{x.CaseType.Code} {x.ShortNumber}/{x.RegDate:dd.MM.yyyy}",
+                                                   pd = x.RegNumber
+                                               })
+                                               .FirstOrDefaultAsync();
+
+                            model.SourceDescription = info.sd;
+                            model.ParentDescription = info.pd;
+                        }
+                        break;
+                    case SourceTypeSelectVM.CasePersonBulletin:
+                        {
+                            var info = await repo.AllReadonly<CasePersonSentenceBulletin>()
+                                                .Where(x => x.Id == (int)model.SourceId)
+                                                .Select(x => new
+                                                {
+                                                    sd = $"{x.CasePerson.FullName}",
+                                                    pd = x.Case.RegNumber,
+                                                })
+                                            .FirstOrDefaultAsync();
+
+                            model.SourceDescription = info.sd;
+                            model.ParentDescription = info.pd;
+                        }
+                        break;
+                }
+            }
+            catch { }
+        }
+
+        public async Task<SaveResultVM> AcceptTask(long id)
+        {
+            try
+            {
+                var model = await ReadByIdAsync<WorkTask>(id);
 
                 if (!ValidateSourceCourt(model.SourceType, model.SourceId))
                 {
-                    return false;
+                    return new SaveResultVM(false, "Непозволена операция!");
                 }
-
+                if (model.TaskStateId == WorkTaskConstants.States.Deleted)
+                {
+                    return new SaveResultVM(false, "Задачата е отменена, моля презаредете екрана!");
+                }
+                if (model.TaskStateId == WorkTaskConstants.States.Redirected)
+                {
+                    return new SaveResultVM(false, "Задачата е пренасочена, моля презаредете екрана!");
+                }
                 if (model.DateAccepted != null)
                 {
-                    return false;
+                    return new SaveResultVM(false, "Задачата вече е приета!");
                 }
                 if (!string.IsNullOrEmpty(model.UserId) && (model.UserId != userContext.UserId) && !userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
                 {
-                    return false;
+                    return new SaveResultVM(false, "Непозволена операция!");
                 }
                 if (model.CourtOrganizationId > 0)
                 {
@@ -681,135 +740,431 @@ namespace IOWebApplication.Core.Services
                 }
                 model.DateAccepted = DateTime.Now;
                 model.TaskStateId = WorkTaskConstants.States.Accepted;
-                repo.Update(model);
-                repo.SaveChanges();
-                return true;
+                await repo.SaveChangesAsync();
+                return new SaveResultVM(true);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
-                return false;
+                return new SaveResultVM(false, "Грешка при приемане на задача!"); ;
             }
         }
-        public bool CompleteTask(long id)
+
+
+        public Task<bool> CompleteTask(long id)
         {
             return CompleteTask(new WorkTask() { Id = id });
         }
-
-        public bool CompleteTask(WorkTask model)
+        public Task<bool> RejectTask(long id, string description)
         {
+            return CompleteTask(new WorkTask() { Id = id, Description = description }, WorkTaskConstants.States.Deleted);
+        }
+
+        public async Task<bool> CompleteTask(WorkTask model, int completedState = WorkTaskConstants.States.Completed)
+        {
+
             try
             {
-                var saved = repo.GetById<WorkTask>(model.Id);
+                var saved = await ReadByIdAsync<WorkTask>(model.Id);
+
+                if (saved.TaskStateId == WorkTaskConstants.States.Completed)
+                {
+                    return false;
+                }
                 saved.TaskActionId = model.TaskActionId;
                 saved.Description = model.Description;
                 saved.DateCompleted = DateTime.Now;
-                saved.TaskStateId = WorkTaskConstants.States.Completed;
-                CreateTaskSourceDescription(saved);
-                CompleteTask_UpdateOthers(saved);
-                repo.Update(saved);
-                repo.SaveChanges();
+                saved.TaskStateId = completedState;
+                await CreateTaskSourceDescription(saved);
+                await CompleteTask_UpdateOthers(saved);
+                await repo.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex.Message, $"Грешка при приключване на задача Id:{model.Id}");
                 return false;
             }
         }
 
-        private void CompleteTask_UpdateOthers(WorkTask model)
+        private async Task CompleteTask_UpdateOthers(WorkTask model)
         {
-
-            Expression<Func<WorkTask, bool>> selectToDelete = x => false;
-            switch (model.TaskTypeId)
+            try
             {
-                case WorkTaskConstants.Types.CaseSessionAct_SentToSign:
-                    {
+                bool forSearch = false;
+                Expression<Func<WorkTask, bool>> selectToDelete = x => false;
+                switch (model.TaskTypeId)
+                {
+                    case WorkTaskConstants.Types.CaseSessionAct_SentToSign:
+                        {
 
-                        selectToDelete = x =>
-                            (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_SentToSign) ||
-                            (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_Sign) ||
-                            (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActCoordination_Sign);
-                    }
-                    break;
-                case WorkTaskConstants.Types.CaseSessionActMotives_SentToSign:
-                    {
+                            selectToDelete = x =>
+                                (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_SentToSign) ||
+                                (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionAct_Sign) ||
+                                (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActCoordination_Sign);
+                            forSearch = true;
+                        }
+                        break;
+                    case WorkTaskConstants.Types.CasePersonBulletin_SentToSign:
+                    case WorkTaskConstants.Types.CasePersonBulletin_SentToSignNewNumber:
+                        {
 
-                        selectToDelete = x =>
-                            (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActMotives_SentToSign) ||
-                            (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActMotives_Sign);
-                    }
-                    break;
-                case WorkTaskConstants.Types.DocumentResolution_SentToSign:
-                    {
-                        selectToDelete = x =>
-                            (x.TaskTypeId == WorkTaskConstants.Types.DocumentResolution_SentToSign) ||
-                            (x.TaskTypeId == WorkTaskConstants.Types.DocumentResolution_Sign);
-                    }
-                    break;
-                case WorkTaskConstants.Types.ExecList_SentToSign:
-                    {
-                        selectToDelete = x =>
-                            (x.TaskTypeId == WorkTaskConstants.Types.ExecList_SentToSign) ||
-                            (x.TaskTypeId == WorkTaskConstants.Types.ExecList_Sign);
-                    }
-                    break;
+                            selectToDelete = x =>
+                                (x.TaskTypeId == WorkTaskConstants.Types.CasePersonBulletin_SentToSign) ||
+                                (x.TaskTypeId == WorkTaskConstants.Types.CasePersonBulletin_SentToSignNewNumber) ||
+                                (x.TaskTypeId == WorkTaskConstants.Types.CasePersonBulletin_Sign);
+                            forSearch = true;
+                        }
+                        break;
+                    case WorkTaskConstants.Types.CaseSessionActMotives_SentToSign:
+                        {
+
+                            selectToDelete = x =>
+                                (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActMotives_SentToSign) ||
+                                (x.TaskTypeId == WorkTaskConstants.Types.CaseSessionActMotives_Sign);
+                            forSearch = true;
+                        }
+                        break;
+                    case WorkTaskConstants.Types.DocumentResolution_SentToSign:
+                        {
+                            selectToDelete = x =>
+                                (x.TaskTypeId == WorkTaskConstants.Types.DocumentResolution_SentToSign) ||
+                                (x.TaskTypeId == WorkTaskConstants.Types.DocumentResolution_Sign);
+                            forSearch = true;
+                        }
+                        break;
+                    case WorkTaskConstants.Types.ExecList_SentToSign:
+                        {
+                            selectToDelete = x =>
+                                (x.TaskTypeId == WorkTaskConstants.Types.ExecList_SentToSign) ||
+                                (x.TaskTypeId == WorkTaskConstants.Types.ExecList_Sign);
+                            forSearch = true;
+                        }
+                        break;
+                }
+
+                if (!forSearch)
+                {
+                    return;
+                }
+
+                //Отменя всички предходни неприключили задачи за подписване
+                var signTasks = await repo.All<WorkTask>().Where(x =>
+                               x.SourceId == model.SourceId
+                               && x.SourceType == x.SourceType
+                               && WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId)
+                               && (x.ParentTaskId ?? 0) != model.Id
+                               && x.Id < model.Id)
+                                .Where(selectToDelete)
+                                .ToListAsync();
+                foreach (var item in signTasks)
+                {
+                    item.TaskStateId = WorkTaskConstants.States.Deleted;
+                }
             }
-
-            //Отменя всички предходни неприключили задачи за подписване
-            var signTasks = repo.All<WorkTask>().Where(x =>
-                           x.SourceId == model.SourceId
-                           && x.SourceType == x.SourceType
-                           && WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId)
-                           && (x.ParentTaskId ?? 0) != model.Id
-                           && x.Id < model.Id
-                            )
-                            .Where(selectToDelete)
-                            .ToList();
-            foreach (var item in signTasks)
+            catch (Exception ex)
             {
-                item.TaskStateId = WorkTaskConstants.States.Deleted;
+                logger.LogError(ex, $"CompleteTask_UpdateOthers; TaskId:{model.Id}");
             }
         }
-        public SaveResultVM UpdateAfterCompleteTask(WorkTask model, object additionalService = null)
+
+        public async Task<SaveResultVM> UpdateBeforeCompleteTask(long workTaskId)
+        {
+            var taskModel = await repo.AllReadonly<WorkTask>().Where(x => x.Id == workTaskId).FirstOrDefaultAsync();
+            switch (taskModel.TaskTypeId)
+            {
+
+                case WorkTaskConstants.Types.CaseSessionAct_Sign:
+                    var actInfo = await repo.AllReadonly<CaseSessionAct>()
+                                            .Where(x => x.Id == (int)taskModel.SourceId)
+                                            .Select(x => new
+                                            {
+                                                x.ActDeclaredDate
+                                            }).FirstOrDefaultAsync();
+                    if (actInfo.ActDeclaredDate != null)
+                    {
+                        int[] tasksToDelete = { WorkTaskConstants.Types.CaseSessionAct_Sign, WorkTaskConstants.Types.CaseSessionAct_SentToSign };
+                        var unCompletedTasks = await repo.All<WorkTask>()
+                                                            .Where(x => x.SourceType == taskModel.SourceType)
+                                                            .Where(x => x.SourceId == taskModel.SourceId)
+                                                            .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                                            .Where(x => tasksToDelete.Contains(x.TaskTypeId))
+                                                            .ToListAsync();
+                        if (unCompletedTasks.Any())
+                        {
+                            foreach (var item in unCompletedTasks)
+                            {
+                                item.TaskStateId = WorkTaskConstants.States.Deleted;
+                            }
+                            await repo.SaveChangesAsync();
+
+                        }
+                        return new SaveResultVM(false, "Актът вече е постановен!", "taskdelete");
+                    }
+                    break;
+                case WorkTaskConstants.Types.CaseSessionActMotives_Sign:
+                    var motiveInfo = await repo.AllReadonly<CaseSessionAct>()
+                                            .Where(x => x.Id == (int)taskModel.SourceId)
+                                            .Select(x => new
+                                            {
+                                                x.ActMotivesDeclaredDate
+                                            }).FirstOrDefaultAsync();
+                    if (motiveInfo.ActMotivesDeclaredDate != null)
+                    {
+                        int[] tasksToDelete = { WorkTaskConstants.Types.CaseSessionActMotives_Sign, WorkTaskConstants.Types.CaseSessionActMotives_SentToSign };
+                        var unCompletedTasks = await repo.All<WorkTask>()
+                                                            .Where(x => x.SourceType == taskModel.SourceType)
+                                                            .Where(x => x.SourceId == taskModel.SourceId)
+                                                            .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                                            .Where(x => tasksToDelete.Contains(x.TaskTypeId))
+                                                            .ToListAsync();
+                        if (unCompletedTasks.Any())
+                        {
+                            foreach (var item in unCompletedTasks)
+                            {
+                                item.TaskStateId = WorkTaskConstants.States.Deleted;
+                            }
+                            await repo.SaveChangesAsync();
+
+                        }
+                        return new SaveResultVM(false, "Мотивите към акта вече са постановени!", "taskdelete");
+                    }
+                    break;
+
+                case WorkTaskConstants.Types.DocumentResolution_Sign:
+                    var resolutionInfo = await repo.AllReadonly<DocumentResolution>()
+                                            .Where(x => x.Id == (int)taskModel.SourceId)
+                                            .Select(x => new
+                                            {
+                                                x.DeclaredDate
+                                            }).FirstOrDefaultAsync();
+                    if (resolutionInfo.DeclaredDate != null)
+                    {
+                        int[] tasksToDelete = { WorkTaskConstants.Types.DocumentResolution_Sign, WorkTaskConstants.Types.DocumentResolution_SentToSign };
+                        var unCompletedTasks = await repo.All<WorkTask>()
+                                                            .Where(x => x.SourceType == taskModel.SourceType)
+                                                            .Where(x => x.SourceId == taskModel.SourceId)
+                                                            .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                                            .Where(x => tasksToDelete.Contains(x.TaskTypeId))
+                                                            .ToListAsync();
+                        if (unCompletedTasks.Any())
+                        {
+                            foreach (var item in unCompletedTasks)
+                            {
+                                item.TaskStateId = WorkTaskConstants.States.Deleted;
+                            }
+                            await repo.SaveChangesAsync();
+
+                        }
+                        return new SaveResultVM(false, "Разпореждането вече е постановено!", "taskdelete");
+                    }
+                    break;
+
+                case WorkTaskConstants.Types.DocumentForGlobalAssignment:
+                    var hasRequestFile = await repo.AllReadonly<MongoFile>()
+                                                   .Where(x => x.SourceId == taskModel.SourceId.ToString() && x.SourceType == SourceTypeSelectVM.DocumentRequest)
+                                                   .AnyAsync();
+                    if (!hasRequestFile)
+                    {
+                        int[] tasksToDelete = { WorkTaskConstants.Types.DocumentForGlobalAssignment };
+                        var unCompletedTasks = await repo.All<WorkTask>()
+                                                            .Where(x => x.SourceType == taskModel.SourceType)
+                                                            .Where(x => x.SourceId == taskModel.SourceId)
+                                                            .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                                            .Where(x => tasksToDelete.Contains(x.TaskTypeId))
+                                                            .ToListAsync();
+                        if (unCompletedTasks.Any())
+                        {
+                            foreach (var item in unCompletedTasks)
+                            {
+                                item.TaskStateId = WorkTaskConstants.States.Deleted;
+                            }
+                            await repo.SaveChangesAsync();
+
+                        }
+                        return new SaveResultVM(false, "Моля, въведете данни в заявлението!", "taskdelete");
+                    }
+                    break;
+            }
+            return new SaveResultVM(true);
+        }
+
+        public async Task<WorkTaskCheckCompletedVM> CheckCompletedTasks(long taskId)
+        {
+            var task = await repo.AllReadonly<WorkTask>()
+                                    .Where(x => x.Id == taskId)
+                                    .Select(x => new
+                                    {
+                                        x.Id,
+                                        x.SourceType,
+                                        x.SourceId,
+                                        x.TaskTypeId,
+                                        x.ParentTaskId
+                                    }).FirstOrDefaultAsync();
+            return await CheckCompletedTasks(task.SourceType, task.SourceId, task.TaskTypeId, task.Id, task.ParentTaskId);
+        }
+
+        public Task<WorkTaskCheckCompletedVM> CheckCompletedTasks(WorkTask task)
+        {
+            return CheckCompletedTasks(task.SourceType, task.SourceId, task.TaskTypeId, task.Id, task.ParentTaskId, task.DateCompleted);
+        }
+        public async Task<WorkTaskCheckCompletedVM> CheckCompletedTasks(int sourceType, long sourceId, int taskTypeId, long taskId, long? parentTaskId = null, DateTime? taskDateCompleted = null)
+        {
+            Expression<Func<WorkTask, bool>> whereParentTask = x => true;
+            if (parentTaskId > 0)
+            {
+                whereParentTask = x => x.ParentTaskId == parentTaskId.Value;
+            }
+            var signTasks = repo.AllReadonly<WorkTask>()
+                                .Where(x => x.SourceType == sourceType)
+                                .Where(x => x.SourceId == sourceId)
+                                .Where(x => x.TaskTypeId == taskTypeId)
+                                .Where(whereParentTask);
+
+
+
+            var result = new WorkTaskCheckCompletedVM()
+            {
+                HasTasks = await signTasks.CountAsync() > 0
+            };
+            if (result.HasTasks)
+            {
+                result.HasUncompleteTasks = await signTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
+                                                     .Where(x => x.TaskStateId != WorkTaskConstants.States.Deleted)
+                                                     .Where(x => x.Id != taskId)
+                                                     .CountAsync() > 0;
+
+                var lastCompletedTaskInfo = await signTasks
+                                        .Where(x => x.DateCompleted != null)
+                                        .OrderByDescending(x => x.DateCompleted)
+                                        .Select(x => new
+                                        {
+                                            x.UserId,
+                                            x.DateCompleted
+                                        })
+                                        .FirstOrDefaultAsync();
+                if (lastCompletedTaskInfo != null)
+                {
+                    result.LastUserIdCompleted = lastCompletedTaskInfo.UserId;
+                    result.LastDateCompleted = lastCompletedTaskInfo.DateCompleted;
+                    if (taskDateCompleted.HasValue && taskDateCompleted > result.LastDateCompleted)
+                    {
+                        result.LastDateCompleted = taskDateCompleted;
+                    }
+                }
+            }
+            return result;
+        }
+
+
+        public async Task<SaveResultVM> UpdateAfterCompleteTask(WorkTask model)
         {
             switch (model.TaskTypeId)
             {
+                case WorkTaskConstants.Types.Document_Sign:
+                    {
+                        var hasUnCompletedSignTasks = await repo.AllReadonly<WorkTask>()
+                                                            .Where(x => x.SourceType == model.SourceType)
+                                                            .Where(x => x.SourceId == model.SourceId)
+                                                            .Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
+                                                            .Where(x => x.TaskTypeId == model.TaskTypeId)
+                                                            .AnyAsync();
+                        if (!hasUnCompletedSignTasks)
+                        {
+                            var docFileRequest = await repo.AllReadonly<MongoFile>()
+                                                            .Where(x => x.SourceType == SourceTypeSelectVM.DocumentPdf
+                                                            && x.SourceIdNumber == model.SourceId
+                                                            && x.DateExpired == null
+                                                            && x.SignituresCount > 0)
+                                                            .Select(x => new CdnUploadRequest
+                                                            {
+                                                                MongoFileId = x.Id,
+                                                                SourceType = x.SourceType,
+                                                                SourceId = x.SourceId,
+                                                                FileId = x.FileId
+                                                            }).FirstOrDefaultAsync();
+
+                            if (docFileRequest != null)
+                            {
+
+                                var document = await repo.AllReadonly<Document>()
+                                                            .Include(x => x.DocumentPersons)
+                                                            .ThenInclude(x => x.Addresses)
+                                                            .ThenInclude(x => x.Address)
+                                                            .Include(x => x.DocumentCaseInfo)
+                                                            .Include(x => x.Cases)
+                                                            .Where(x => x.Id == model.SourceId)
+                                                            .AsSplitQuery()
+                                                            .FirstOrDefaultAsync().ConfigureAwait(false);
+                                await mqEpepService.AppendDocument(document, EpepConstants.ServiceMethod.Add);
+
+                                mqEpepService.AppendFile(docFileRequest, EpepConstants.ServiceMethod.Add);
+                            }
+
+                            var templateInfo = await repo.AllReadonly<DocumentTemplate>().Where(x => x.DocumentId == model.SourceId)
+                                                .Select(x => new { x.DocumentTypeId, x.SourceId, x.SourceType }).FirstOrDefaultAsync();
+                            if (templateInfo != null)
+                            {
+                                switch (templateInfo.SourceType)
+                                {
+                                    case SourceTypeSelectVM.CaseMigration:
+                                        mqEpepService.AppendCaseMigrationFull((int)templateInfo.SourceId);
+                                        await manageCaseMigrationAfterSign((int)templateInfo.SourceId);
+                                        break;
+                                    case SourceTypeSelectVM.CaseLawyerHelp:
+                                        mqEpepService.EESPP_LawyerHelp(EpepConstants.ServiceMethod.Add, (int)templateInfo.SourceId);
+                                        break;
+                                    case SourceTypeSelectVM.CaseSessionAct:
+                                        await mqEpepService.AppendISPNLetter((int)templateInfo.SourceId, templateInfo.DocumentTypeId);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+
+                            await workNotificationService.SaveNotificationsForN24(model.SourceId);
+
+                            return new SaveResultVM(true, "", "reload");
+                        }
+                        return new SaveResultVM(true);
+                    }
+
                 case WorkTaskConstants.Types.CaseSessionAct_Coordinate:
                     {
-                        var hasUnCompletedCoTasks = repo.AllReadonly<WorkTask>()
+                        var hasUnCompletedCoTasks = await repo.AllReadonly<WorkTask>()
                                                             .Where(x => x.ParentTaskId == model.ParentTaskId)
                                                             .Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
                                                             .Where(x => x.TaskTypeId == model.TaskTypeId)
-                                                            .Any();
-                        var actModel = repo.GetById<CaseSessionAct>((int)model.SourceId);
-                        if (!hasUnCompletedCoTasks && actModel.ActStateId < NomenclatureConstants.SessionActState.Coordinated)
+                                                            .AnyAsync();
+                        if (!hasUnCompletedCoTasks)
                         {
-                            actModel.ActStateId = NomenclatureConstants.SessionActState.Coordinated;
-                            repo.Update(actModel);
-                            repo.SaveChanges();
-                            return new SaveResultVM(true, "", "reload");
+                            var actModel = await this.ReadByIdAsync<CaseSessionAct>((int)model.SourceId);
+                            if (actModel.ActStateId < NomenclatureConstants.SessionActState.Coordinated)
+                            {
+                                actModel.ActStateId = NomenclatureConstants.SessionActState.Coordinated;
+                                await repo.SaveChangesAsync();
+                                return new SaveResultVM(true, "", "reload");
+                            }
                         }
+                        return new SaveResultVM(true);
                     }
-                    break;
 
                 case WorkTaskConstants.Types.CaseSessionAct_Sign:
                     {
-                        var signTasks = repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToList();
-                        var hasUnCompletedCoTasks = signTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
-                                                             .Where(x => x.TaskStateId != WorkTaskConstants.States.Deleted)
-                                                             .Where(x => x.TaskTypeId == model.TaskTypeId)
-                                                             .Any();
+                        var signTaskCheck = await CheckCompletedTasks(model);
 
-                        var actModel = repo.GetById<CaseSessionAct>((int)model.SourceId);
-                        if (!hasUnCompletedCoTasks)
+
+                        if (!signTaskCheck.HasUncompleteTasks && signTaskCheck.HasTasks)
                         {
+                            var actModel = await this.ReadByIdAsync<CaseSessionAct>((int)model.SourceId);
                             if (actModel.ActDeclaredDate == null)
                             {
                                 actModel.ActStateId = NomenclatureConstants.SessionActState.Enforced;
-                                actModel.ActDeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
+                                actModel.ActDeclaredDate = signTaskCheck.LastDateCompleted;
                                 actModel.DateWrt = DateTime.Now;
+                                var sessionDateFrom = await repo.GetPropByIdAsync<CaseSession, DateTime>(x => x.Id == actModel.CaseSessionId, x => x.DateFrom);
+                                int declaredMonthCount = await commonService.GetMonthsBetweenTwoDatesForActs(sessionDateFrom, actModel.ActDeclaredDate.Value);
+                                actModel.DeclaredMonthCount = declaredMonthCount;
 
                                 //Автоматично влизане в сила на актове, неподлежащи на обжалване
                                 if (actModel.CanAppeal == false)
@@ -817,144 +1172,386 @@ namespace IOWebApplication.Core.Services
                                     actModel.ActStateId = NomenclatureConstants.SessionActState.ComingIntoForce;
                                     actModel.ActInforcedDate = actModel.ActDeclaredDate;
                                 }
-                                repo.Update(actModel);
-                                repo.SaveChanges();
-                                using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                                await CreateHistoryAsync<CaseSessionAct, CaseSessionActH>(actModel, "Task.UpdateAfterCompleteTask.Sign");
+                                await repo.SaveChangesAsync();
+
+
+                                try
                                 {
-                                    caseDeadlineService.DeadLineMotive(actModel);
-                                    caseDeadlineService.DeadLineDeclaredForResolveComplete(actModel);
-                                    // Автоматизиране на статус - решено
-                                    var caseCase = repo.GetById<Case>(actModel.CaseId);
-                                    if ((caseCase.CaseStateId == NomenclatureConstants.CaseState.AnnouncedForResolution) && (actModel.ActTypeId == NomenclatureConstants.ActType.Answer))
+                                    mqEpepService.SetImpersonatedUser(signTaskCheck.LastUserIdCompleted);
+                                    await mqEpepService.AppendCaseSessionAct(actModel, EpepConstants.ServiceMethod.Add);
+                                    await mqEpepService.AppendCaseSessionAct_Private(actModel.Id, EpepConstants.ServiceMethod.Add);
+
+                                    if (NomenclatureConstants.ActType.ExecListActs.Contains(actModel.ActTypeId))
                                     {
-                                        caseCase.CaseStateId = NomenclatureConstants.CaseState.Resolution;
-                                        caseCase.DateWrt = DateTime.Now;
-                                        caseCase.UserId = userContext.UserId;
-                                        repo.Update(caseCase);
-                                        caseDeadlineService.DeadLineOnCase(caseCase);
+                                        await mqEpepService.AppendExecProcess(actModel.Id, 0);
                                     }
 
-                                    repo.SaveChanges();
+                                    //Изпраща всички вече подписани особени мнения
+                                    var signedCoordinations = await coordinationService.CaseSessionActCoordination_Select(actModel.Id).ToListAsync();
+                                    foreach (var coordination in signedCoordinations.Where(x => x.CoordinationDeclaredDate.HasValue))
+                                    {
+                                        mqEpepService.AppendAttachedDocument(SourceTypeSelectVM.CaseSessionActCoordinationPdf, coordination.Id, coordination.CaseSessionActId, EpepConstants.ServiceMethod.Add);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger.LogError(ex, $"Грешка при създаване на задачи за интеграция след подпис на акт Id:{actModel.Id}");
+                                }
 
-                                    lifecycleService.CaseLifecycle_SaveFirst_ForCaseType(actModel.CaseSessionId);
+                                await mqEpepService.EissProcessStart(NomenclatureConstants.EissProcessTypes.ActDeclared, SourceTypeSelectVM.CaseSessionAct, actModel.Id,
+                                    new Infrastructure.Models.Integrations.EISS.EissProcessActDeclaredVM()
+                                    {
+                                        LastUserIdCompleted = signTaskCheck.LastUserIdCompleted,
+                                        LastDateCompleted = signTaskCheck.LastDateCompleted
+                                    });
 
+                                /*
+                                 * Върнати методи, понеже изискват userContext
+                                 
+
+
+                                 */
+
+                                try
+                                {
+                                    lifecycleService.SetImpersonatedUser(signTaskCheck.LastUserIdCompleted);
+                                    lifecycleService.CaseLifecycle_SaveFirst_ForCaseType(actModel.CaseSessionId, signTaskCheck.LastDateCompleted);
                                     if (actModel.IsFinalDoc)
-                                    {
-                                        lifecycleService.CaseLifecycle_CloseInterval(actModel.CaseId ?? 0, actModel.Id, actModel.ActDeclaredDate ?? DateTime.Now);
-                                    }
+                                        await lifecycleService.CaseLifecycle_CloseInterval(actModel.CaseId ?? 0, actModel.Id, actModel.ActDeclaredDate ?? DateTime.Now);
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger.LogError(ex, $"Грешка при запис на CaseLifecycle на акт Id:{actModel.Id}");
+                                }
+                                caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
 
+
+                                /* - Тези обработки са преместени в EissProcessService.ProcessActDeclared
+                                try
+                                {
+                                    lifecycleService.SetImpersonatedUser(signTaskCheck.LastUserIdCompleted);
+                                    lifecycleService.CaseLifecycle_SaveFirst_ForCaseType(actModel.CaseSessionId, signTaskCheck.LastDateCompleted);
+                                    if (actModel.IsFinalDoc)
+                                        await lifecycleService.CaseLifecycle_CloseInterval(actModel.CaseId ?? 0, actModel.Id, actModel.ActDeclaredDate ?? DateTime.Now);
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger.LogError(ex, $"Грешка при запис на CaseLifecycle на акт Id:{actModel.Id}");
+                                }
+
+                                try
+                                {
+                                    mqEpepService.SetImpersonatedUser(signTaskCheck.LastUserIdCompleted);
                                     mqEpepService.AppendCaseSessionAct(actModel, EpepConstants.ServiceMethod.Add);
                                     mqEpepService.AppendCaseSessionAct_Private(actModel.Id, EpepConstants.ServiceMethod.Add);
 
-                                    caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
+                                    if (NomenclatureConstants.ActType.ExecListActs.Contains(actModel.ActTypeId))
+                                    {
+                                        await mqEpepService.AppendExecProcess(actModel.Id, 0);
+                                    }
 
-                                    ts.Complete();
-                                    return new SaveResultVM(true, "", "reload");
+                                    //Изпраща всички вече подписани особени мнения
+                                    var signedCoordinations = await coordinationService.CaseSessionActCoordination_Select(actModel.Id).ToListAsync();
+                                    foreach (var coordination in signedCoordinations.Where(x => x.CoordinationDeclaredDate.HasValue))
+                                    {
+                                        mqEpepService.AppendAttachedDocument(SourceTypeSelectVM.CaseSessionActCoordinationPdf, coordination.Id, coordination.CaseSessionActId, EpepConstants.ServiceMethod.Add);
+                                    }
                                 }
+                                catch (Exception ex)
+                                {
+                                    logger.LogError(ex, $"Грешка при създаване на задачи за интеграция след подпис на акт Id:{actModel.Id}");
+                                }
+                                //using (var ts = repo.BeginTransaction())
+                                //{
+                                caseDeadlineService.SetImpersonatedUser(signTaskCheck.LastUserIdCompleted);
+                                caseDeadlineService.DeadLineMotive(actModel);
+                                caseDeadlineService.DeadLineCompleteOnSessionAct(actModel);
+                                await caseDeadlineService.CompleteExpiredCaseDeadlineFastProcess(actModel.CaseId ?? 0, actModel.CaseId ?? 0, SourceTypeSelectVM.Case, NomenclatureConstants.DeadlineType.TakingActionFastProcess);
+                                await caseDeadlineService.CompleteExpiredCaseDeadlineFastProcess(actModel.CaseId ?? 0, null, SourceTypeSelectVM.Document, NomenclatureConstants.DeadlineType.MissingActForCompliantDocumentFastProcess);
+                                await caseDeadlineService.CompleteExpiredMissingActForCompliantDocumentFastProcess(actModel.Id, false);
+                                await workNotificationService.TurnOfCompliantDocumentCaseFastProcess(actModel.Id, false);
+
+                                // Автоматизиране на статус - решено
+                                var caseCase = await repo.GetByIdAsync<Case>(actModel.CaseId);
+                                if ((caseCase.CaseStateId == NomenclatureConstants.CaseState.AnnouncedForResolution) && (actModel.ActTypeId == NomenclatureConstants.ActType.Answer))
+                                {
+                                    caseCase.CaseStateId = NomenclatureConstants.CaseState.Resolution;
+                                    caseCase.DateWrt = DateTime.Now;
+                                    caseCase.UserId = userContext.UserId;
+                                    //repo.Update(caseCase);
+                                    caseDeadlineService.DeadLineOnCase(caseCase);
+                                }
+
+                                await repo.SaveChangesAsync();
+
+                                await workNotificationService.SaveNotificationsForN3(actModel.Id);
+                                await workNotificationService.SaveNotificationsForN11(actModel.Id);
+                                await workNotificationService.SaveNotificationsForDecreeRecusalSelfRecusalFastProcessByActId(actModel.Id);
+                                await workNotificationService.SaveNotificationsForActionTakenCourtOfficerDeclatActFastProcess(actModel.Id);
+                                await workNotificationService.TurnOffForN1(actModel.Id);
+                                await workNotificationService.SaveNotificationsForActInforcedAnotherInstanceFastProcess(actModel.Id);
+
+                                caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
+                                */
+                                //ts.Commit();
+                                return new SaveResultVM(true, "", "reload");
+                                //}
                             }
                             else
                             {
                                 //ако вече е постановен - само изпраща новите версии към ЕПЕП
-                                mqEpepService.AppendCaseSessionAct(actModel, EpepConstants.ServiceMethod.Update);
-                                mqEpepService.AppendCaseSessionAct_Private(actModel.Id, EpepConstants.ServiceMethod.Update);
+                                await mqEpepService.AppendCaseSessionAct(actModel, EpepConstants.ServiceMethod.Update);
+                                await mqEpepService.AppendCaseSessionAct_Private(actModel.Id, EpepConstants.ServiceMethod.Update);
                             }
+                        }
+                        else
+                        {
+                            return new SaveResultVM(true);
                         }
                     }
                     break;
+                case WorkTaskConstants.Types.CaseSessionActCoordination_Sign:
+                    {
+                        var coordination = await repo.GetByIdAsync<CaseSessionActCoordination>((int)(model.SubSourceId ?? 0));
+                        var act = await repo.GetByIdAsync<CaseSessionAct>((int)(model.SourceId));
+                        if (coordination != null && act != null)
+                        {
+                            coordination.CoordinationDeclaredDate = DateTime.Now;
+                            await repo.SaveChangesAsync();
+                            if (act.ActDeclaredDate.HasValue)
+                            {
+                                mqEpepService.AppendAttachedDocument(SourceTypeSelectVM.CaseSessionActCoordinationPdf, coordination.Id, coordination.CaseSessionActId, EpepConstants.ServiceMethod.Add);
+                            }
+                            return new SaveResultVM(true, "", "reload");
+                        }
+                        return new SaveResultVM(true);
+                    }
                 case WorkTaskConstants.Types.CaseSessionActMotives_Sign:
                     {
-                        var motivesTasks = repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToList();
+                        var motivesTasks = await repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToListAsync();
                         var hasUnCompletedCoTasks = motivesTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
                                                         .Where(x => x.TaskTypeId == model.TaskTypeId)
                                                         .Any();
-                        var actModel = repo.GetById<CaseSessionAct>((int)model.SourceId);
-                        if (!hasUnCompletedCoTasks && actModel.ActMotivesDeclaredDate == null)
+                        var actModel = await repo.GetByIdAsync<CaseSessionAct>((int)model.SourceId);
+                        if (!hasUnCompletedCoTasks)
                         {
-                            using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                            if (actModel.ActMotivesDeclaredDate == null)
                             {
+
+                                //using (var ts = repo.BeginTransaction())
+                                //{
                                 actModel.ActMotivesDeclaredDate = motivesTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
-                                caseDeadlineService.DeadLineMotive(actModel);
-                                repo.Update(actModel);
-                                repo.SaveChanges();
+
+                                await repo.SaveChangesAsync();
                                 mqEpepService.AppendCaseSessionAct_PrivateMotive(actModel.Id, EpepConstants.ServiceMethod.Add);
-                                caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
-                                ts.Complete();
+                                try
+                                {
+                                    caseDeadlineService.DeadLineMotive(actModel);
+                                    await repo.SaveChangesAsync();
+                                }
+                                catch (Exception ex) { }
+                                try
+                                {
+                                    caseLoadIndexService.CaseLoadIndexAutomationElementGroupe_SRA_SaveData(actModel.CaseSessionId);
+                                }
+                                catch (Exception ex) { }
+                                //  ts.Commit();
                                 return new SaveResultVM(true, "", "reload");
+                                //}
+                            }
+                            else
+                            {
+                                mqEpepService.AppendCaseSessionAct_PrivateMotive(actModel.Id, EpepConstants.ServiceMethod.Update);
                             }
                         }
+                        return new SaveResultVM(true);
                     }
-                    break;
                 case WorkTaskConstants.Types.DocumentResolution_Sign:
                     {
-                        var signTasks = repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToList();
-                        var hasUnCompletedCoTasks = signTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
-                                                        .Where(x => x.TaskTypeId == model.TaskTypeId)
-                                                        .Any();
+                        var signTaskCheck = await CheckCompletedTasks(model);
 
-                        var resolutionModel = repo.AllReadonly<DocumentResolution>()
+
+                        //var signTasks = await repo.AllReadonly<WorkTask>().Where(x => x.ParentTaskId == model.ParentTaskId).ToListAsync();
+                        //var hasUnCompletedCoTasks = signTasks.Where(x => x.TaskStateId != WorkTaskConstants.States.Completed)
+                        //                                .Where(x => x.TaskTypeId == model.TaskTypeId)
+                        //                                .Any();
+
+                        var resolutionModel = await repo.All<DocumentResolution>()
                                                         .Include(x => x.ResolutionType)
                                                         .Where(x => x.Id == model.SourceId)
-                                                        .FirstOrDefault(); ;
-                        if (!hasUnCompletedCoTasks && (resolutionModel.DeclaredDate == null))
+                                                        .FirstOrDefaultAsync();
+                        if (!signTaskCheck.HasUncompleteTasks && signTaskCheck.HasTasks && (resolutionModel.DeclaredDate == null))
                         {
-                            using (TransactionScope ts = TransactionScopeBuilder.CreateReadCommitted())
+                            //using (var ts = repo.BeginTransaction())
+                            //{
+                            resolutionModel.ResolutionStateId = NomenclatureConstants.ResolutionStates.Enforced;
+                            resolutionModel.DeclaredDate = signTaskCheck.LastDateCompleted;
+                            resolutionModel.DateWrt = DateTime.Now;
+
+                            await repo.SaveChangesAsync();
+
+                            if (resolutionModel.ResolutionTypeId == DocumentConstants.ResolutionTypes.ResolutionForSelection)
                             {
-                                resolutionModel.ResolutionStateId = NomenclatureConstants.ResolutionStates.Enforced;
-                                resolutionModel.DeclaredDate = signTasks.OrderByDescending(x => x.DateCompleted).Select(x => x.DateCompleted).FirstOrDefault();
-                                resolutionModel.DateWrt = DateTime.Now;
-
-                                repo.Update(resolutionModel);
-                                repo.SaveChanges();
-
-                                if (resolutionModel.ResolutionTypeId == DocumentConstants.ResolutionTypes.ResolutionForSelection)
+                                var cases = await repo.AllReadonly<DocumentResolutionCase>().Where(x => x.DocumentResolutionId == resolutionModel.Id)
+                                                    .Select(x => x.CaseId).ToListAsync();
+                                foreach (var caseId in cases)
                                 {
-                                    var cases = repo.AllReadonly<DocumentResolutionCase>().Where(x => x.DocumentResolutionId == resolutionModel.Id)
-                                                        .Select(x => x.CaseId).ToList();
-                                    foreach (var caseId in cases)
+                                    var newTask = new WorkTaskEditVM()
                                     {
-                                        var newTask = new WorkTaskEditVM()
-                                        {
-                                            SourceType = SourceTypeSelectVM.Case,
-                                            SourceId = caseId,
-                                            TaskTypeId = WorkTaskConstants.Types.SendFor_NewSelection,
-                                            UserCreatedId = resolutionModel.UserDecisionId,
-                                            UserId = resolutionModel.TaskUserId,
-                                            TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser,
-                                            DescriptionCreated = $"{resolutionModel.ResolutionType.Label} {resolutionModel.RegNumber}/{resolutionModel.RegDate:dd.MM.yyyy}"
-                                        };
+                                        SourceType = SourceTypeSelectVM.Case,
+                                        SourceId = caseId,
+                                        TaskTypeId = WorkTaskConstants.Types.SendFor_NewSelection,
+                                        UserCreatedId = resolutionModel.UserDecisionId,
+                                        UserId = resolutionModel.TaskUserId,
+                                        TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser,
+                                        DescriptionCreated = $"{resolutionModel.ResolutionType.Label} {resolutionModel.RegNumber}/{resolutionModel.RegDate:dd.MM.yyyy}"
+                                    };
 
-                                        CreateTask(newTask);
-                                    }
+                                    await CreateTask(newTask);
                                 }
-
-                                ts.Complete();
-                                return new SaveResultVM(true, "", "reload");
                             }
+
+                            //ts.Commit();
+                            return new SaveResultVM(true, "", "reload");
+                            //}
                         }
+                        return new SaveResultVM(true);
+
                     }
-                    break;
+
 
                 case WorkTaskConstants.Types.SendFor_Competency:
                     {
                         int[] tasksToDelete = { WorkTaskConstants.Types.DocumentResolution_SentToSign, WorkTaskConstants.Types.DocumentResolution_Sign };
-                        var unCompletedTasks = repo.All<WorkTask>()
+                        var unCompletedTasks = await repo.All<WorkTask>()
                                                             .Where(x => x.SourceType == model.SourceType)
                                                             .Where(x => x.SourceId == model.SourceId)
                                                             .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
                                                             .Where(x => tasksToDelete.Contains(x.TaskTypeId))
-                                                            .ToList();
+                                                            .ToListAsync();
                         if (unCompletedTasks.Any())
                         {
                             foreach (var item in unCompletedTasks)
                             {
                                 item.TaskStateId = WorkTaskConstants.States.Deleted;
                             }
-                            repo.SaveChanges();
+                            await repo.SaveChangesAsync();
+
                         }
+                        return new SaveResultVM(true);
                     }
+                case WorkTaskConstants.Types.ExecList_Sign:
+                    {
+                        var moneyService = lazyMoneyService.Service;
+                        var execList = await moneyService.ReadByIdAsync<ExecList>((int)model.SourceId);
+                        if (moneyService.ExecListSign(execList).Result)
+                        {
+                            await mqEpepService.AppendExecList(execList, EpepConstants.ServiceMethod.Add);
+                        }
+                        return new SaveResultVM(true);
+                    }
+                case WorkTaskConstants.Types.CasePersonBulletin_Sign:
+                    {
+                        var bulletinFile = await repo.GetByIdAsync<CasePersonSentenceBulletinFile>((int)(model.SubSourceId ?? 0));
+                        bulletinFile.DateSigned = DateTime.Now;
+                        mqEpepService.CAIS_SendBulletin(EpepConstants.ServiceMethod.Add, bulletinFile.Id, bulletinFile.CasePersonSentenceBulletinId);
+                        return new SaveResultVM(true);
+                    }
+                case WorkTaskConstants.Types.DocumentForGlobalAssignment:
+                    {
+                        await autoCreateMoneyObligationOnDocument(model.SourceId);
+                        await mqEpepService.EpepDocument_SendForAssignment(model.SourceId);
+                        break;
+                    }
+            }
+            return new SaveResultVM(false, "Неподдържан тип задача");
+        }
+
+        /// <summary>
+        /// Автоматично създава задължение при изпълнение на задача за Централно разпределение
+        /// </summary>
+        /// <param name="documentId"></param>
+        /// <returns></returns>
+        async Task autoCreateMoneyObligationOnDocument(long documentId)
+        {
+            var service = lazyMoneyService.Service;
+
+            if (await service.Obligation_Select(0, documentId, 0, userContext.CourtId, 0).AnyAsync())
+            {
+                //Ако има вече добавени задължения по документа - излиза
+                return;
+            }
+
+            var model = new Infrastructure.Models.ViewModels.Money.ObligationEditVM()
+            {
+                CourtId = userContext.CourtId,
+                DocumentId = documentId,
+                Person_SourceType = SourceTypeSelectVM.DocumentPerson,
+                IsActive = true
+            };
+
+            model.MoneySign = NomenclatureConstants.MoneySign.SignPlus;
+            model.MoneyTypeId = NomenclatureConstants.MoneyType.StateFee;
+
+            await service.InitNewObligationFromSource(model);
+            model.Description = "Автоматично геренерирано задължение";
+
+            //Задължението е прави само когато има изчислена сума и избрано възможно задължено лице - първия заявител
+            if (model.Amount > 0M && model.Person_SourceId > 0)
+            {
+                (bool result, string errorMessage, bool deactivate) = service.Obligation_SaveData(model);
+            }
+        }
+
+        /// <summary>
+        /// Завършва движението за изпращане за преразпределение и създава задача за преразпреление на документа от регистратура ЦР
+        /// </summary>
+        /// <param name="caseMigrationId"></param>
+        /// <returns></returns>
+        async Task manageCaseMigrationAfterSign(int caseMigrationId)
+        {
+            var migrationInfo = await repo.AllReadonly<CaseMigration>()
+                                            .Where(x => x.Id == caseMigrationId)
+                                            .Select(x => new
+                                            {
+                                                x.CaseMigrationTypeId,
+                                                x.Case.Document.DocumentRequestTypeId,
+                                                x.Case.Document.AssignmentDocumentId
+                                            }).FirstOrDefaultAsync();
+
+            //Ако движението не е за преразпределение или документа не е по бланка или няма първичен документ
+            if (!NomenclatureConstants.CaseMigrationTypes.SendCase_FromAssignment.Contains(migrationInfo.CaseMigrationTypeId)
+                || migrationInfo.DocumentRequestTypeId == null
+                || migrationInfo.AssignmentDocumentId == null)
+            {
+                return;
+            }
+
+            var mqItem = new MQEpep()
+            {
+                IntegrationTypeId = NomenclatureConstants.IntegrationTypes.EpepDocuments,
+                SourceType = SourceTypeSelectVM.Document,
+                SourceId = migrationInfo.AssignmentDocumentId.Value,
+                ParentSourceId = caseMigrationId,
+                MethodName = EpepConstants.EpepDocumentMethods.ForAssignment,
+                DateWrt = DateTime.Now,
+                UserId = ImpersonatedUserId ?? userContext.UserId,
+                ErrorCount = 0,
+                IntegrationStateId = EpepConstants.IntegrationStates.New
+            };
+            switch (migrationInfo.CaseMigrationTypeId)
+            {
+                case NomenclatureConstants.CaseMigrationTypes.SendCase_FromRandomAssignment:
+                    mqItem.MethodName = EpepConstants.EpepDocumentMethods.ForAssignment;
+                    break;
+                case NomenclatureConstants.CaseMigrationTypes.SendCase_FromAssignmentByAddress:
+                    mqItem.MethodName = EpepConstants.EpepDocumentMethods.ForAssignmentAddress;
                     break;
             }
-            return new SaveResultVM(false);
+
+            repo.Add(mqItem);
+            await repo.SaveChangesAsync();
         }
         public List<SelectListItem> GetDDL_TaskActions(int taskTypeId)
         {
@@ -988,24 +1585,26 @@ namespace IOWebApplication.Core.Services
             return 0;
         }
 
-        public bool RedirectTask(WorkTaskEditVM model)
+        public async Task<bool> RedirectTask(WorkTaskEditVM model)
         {
             try
             {
                 var currentTask = repo.GetById<WorkTask>(model.Id);
 
                 model.DescriptionCreated = currentTask.DescriptionCreated;
+
                 if (!string.IsNullOrEmpty(currentTask.DescriptionCreated) && !string.IsNullOrEmpty(model.DescriptionRedirect))
                 {
                     model.DescriptionCreated += ";" + model.DescriptionRedirect;
                 }
 
-                if (CreateTask(model))
+                if (await CreateTask(model))
                 {
                     currentTask.TaskStateId = WorkTaskConstants.States.Redirected;
                     currentTask.DateCompleted = DateTime.Now;
-                    repo.Update(currentTask);
-                    repo.SaveChanges();
+                    currentTask.Description = model.DescriptionRedirect;
+                    await repo.SaveChangesAsync();
+
                     return true;
                 }
             }
@@ -1018,33 +1617,64 @@ namespace IOWebApplication.Core.Services
 
         public List<SelectListItem> GetDDL_TaskTypes(int sourceType, long sourceId = 0)
         {
+            Expression<Func<TaskType, bool>> whereGlobalAssignment = x => x.Id != WorkTaskConstants.Types.DocumentForGlobalAssignment;
             Expression<Func<TaskType, bool>> sourceIdWhere = x => true;
+            Expression<Func<TaskType, bool>> whereDecisions = x => true;
             switch (sourceType)
             {
                 case SourceTypeSelectVM.Document:
                     {
-                        var _docKind = repo.AllReadonly<Document>()
+                        var _docInfo = repo.AllReadonly<Document>()
                                         .Include(x => x.DocumentGroup)
                                         .Where(x => x.Id == sourceId)
-                                        .Select(x => x.DocumentGroup.DocumentKindId)
+                                        .Select(x => new
+                                        {
+                                            x.CourtId,
+                                            x.DocumentGroup.DocumentKindId,
+                                            x.DocumentTypeId
+                                        })
                                         .FirstOrDefault();
-                        switch (_docKind)
+                        var hasDecisions = repo.AllReadonly<DocumentTypeDecisionType>()
+                                                .Where(x => x.DocumentTypeId == _docInfo.DocumentTypeId)
+                                                .Any();
+                        switch (_docInfo.DocumentKindId)
                         {
                             case DocumentConstants.DocumentKind.InitialDocument:
-                                int[] initialDocOnlyTasks = { WorkTaskConstants.Types.DocumentDecision };
-                                sourceIdWhere = x => !initialDocOnlyTasks.Contains(x.Id);
+                                if (_docInfo.CourtId == NomenclatureConstants.Courts.RandomAssignment)
+                                {
+                                    int[] acceptedTasks = { WorkTaskConstants.Types.ForDocumentResolution, WorkTaskConstants.Types.DocumentForGlobalAssignment };
+                                    sourceIdWhere = x => acceptedTasks.Contains(x.Id);
+                                    whereGlobalAssignment = x => true;
+                                }
+                                else
+                                {
+                                    int[] rejectedTasks = { WorkTaskConstants.Types.DocumentDecision, WorkTaskConstants.Types.DocumentForGlobalAssignment };
+                                    sourceIdWhere = x => !rejectedTasks.Contains(x.Id);
+                                }
                                 break;
                             case DocumentConstants.DocumentKind.CompliantDocument:
                                 int[] compliantDocOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.Case_ForReject };
                                 sourceIdWhere = x => !compliantDocOnlyTasks.Contains(x.Id);
+                                if (!hasDecisions)
+                                {
+                                    whereDecisions = x => x.Id != WorkTaskConstants.Types.DocumentDecision;
+                                }
                                 break;
                             case DocumentConstants.DocumentKind.InAdministrationDocument:
                                 int[] inAdministrationDocAndReportOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.Case_ForReject, WorkTaskConstants.Types.ForReport };
                                 sourceIdWhere = x => !inAdministrationDocAndReportOnlyTasks.Contains(x.Id);
+                                if (!hasDecisions)
+                                {
+                                    whereDecisions = x => x.Id != WorkTaskConstants.Types.DocumentDecision;
+                                }
                                 break;
                             default:
                                 int[] initialDocAndReportOnlyTasks = { WorkTaskConstants.Types.Case_SelectLawUnit, WorkTaskConstants.Types.Case_ForReject, WorkTaskConstants.Types.ForReport, WorkTaskConstants.Types.DocumentDecision };
                                 sourceIdWhere = x => !initialDocAndReportOnlyTasks.Contains(x.Id);
+                                if (!hasDecisions)
+                                {
+                                    whereDecisions = x => x.Id != WorkTaskConstants.Types.DocumentDecision;
+                                }
                                 break;
 
                         }
@@ -1071,6 +1701,8 @@ namespace IOWebApplication.Core.Services
                                 .Where(x => x.SourceType == sourceType)
                                 .Select(x => x.TaskType)
                                 .Where(sourceIdWhere)
+                                .Where(whereDecisions)
+                                .Where(whereGlobalAssignment)
                                 .Where(x => x.AutomatedTask == false)
                                 .OrderBy(x => x.OrderNumber)
                                 .ToSelectList();
@@ -1095,7 +1727,47 @@ namespace IOWebApplication.Core.Services
         public bool ValidateSourceCourt(int sourceType, long sourceId)
         {
             int? sourceCourtId = GetSourceCourtId(sourceType, sourceId);
-            return (sourceCourtId == userContext.CourtId) || (sourceCourtId == null);
+            return (sourceCourtId == userContext.CourtId) || (sourceCourtId == null) || (sourceCourtId == NomenclatureConstants.Courts.RandomAssignment);
+        }
+
+        public async Task<SaveResultVM> ValidateBeforeCreate(WorkTaskEditVM model)
+        {
+            switch (model.TaskTypeId)
+            {
+                case WorkTaskConstants.Types.DocumentForGlobalAssignment:
+                    bool hasOtherAssignmentTask = await repo.AllReadonly<WorkTask>()
+                                                            .Where(x => x.SourceType == model.SourceType)
+                                                            .Where(x => x.SourceId == model.SourceId)
+                                                            .Where(x => x.TaskTypeId == model.TaskTypeId)
+                                                            .Where(x => x.TaskStateId != WorkTaskConstants.States.Deleted)
+                                                            .AnyAsync();
+                    if (hasOtherAssignmentTask)
+                    {
+                        return new SaveResultVM(false, "Вече има добавена задача за Централизирано разпределение!");
+                    }
+                    bool is51_52 = await repo.AllReadonly<CaseClassification>()
+                                            .Where(x => x.Case.DocumentId == model.SourceId)
+                                            .Where(x => x.ClassificationId == NomenclatureConstants.CaseClassifications.FP_5152)
+                                            .AnyAsync();
+                    if (is51_52 == false)
+                    {
+                        bool hasRequestFile = await cdnService.Select(SourceTypeSelectVM.DocumentRequest, model.SourceId.ToString()).AnyAsync();
+                        if (!hasRequestFile)
+                        {
+                            return new SaveResultVM(false, "Моля, Въведете данни в заявлението!");
+                        }
+                    }
+                    int[] sourceTypes = { SourceTypeSelectVM.Document, SourceTypeSelectVM.DocumentFromElectronicDocument };
+                    bool hasFiles = await cdnService.Select(sourceTypes, model.SourceId.ToString())
+                                                    .Where(x => x.DateExpired == null)
+                                                    .AnyAsync();
+                    if (!hasFiles)
+                    {
+                        return new SaveResultVM(false, "Моля, прикачете поне един файл към документа!");
+                    }
+                    break;
+            }
+            return new SaveResultVM(true);
         }
 
         public int? GetSourceCourtId(int sourceType, long sourceId)
@@ -1127,12 +1799,20 @@ namespace IOWebApplication.Core.Services
             switch (sourceType)
             {
                 case SourceTypeSelectVM.Document:
+                    //var documentCaseInfo = repo.AllReadonly<Document>()
+                    //                    .Include(x => x.DocumentCaseInfo)
+                    //                    .Where(x => x.Id == sourceId)
+                    //                    .Where(x => x.DocumentCaseInfo.Any())
+                    //                    .Select(x => x.DocumentCaseInfo.FirstOrDefault())
+                    //                    .FirstOrDefault();
+
                     var documentCaseInfo = repo.AllReadonly<Document>()
-                                        .Include(x => x.DocumentCaseInfo)
-                                        .Where(x => x.Id == sourceId)
-                                        .Where(x => x.DocumentCaseInfo.Any())
-                                        .Select(x => x.DocumentCaseInfo.FirstOrDefault())
-                                        .FirstOrDefault();
+                                       .Include(x => x.DocumentCaseInfo)
+                                       .Where(x => x.Id == sourceId)
+                                       .SelectMany(x => x.DocumentCaseInfo)
+                                       .TagWith(AuditConstants.TagNet8_1)
+                                       .FirstOrDefault();
+
                     //Ако в документа има свързано дело от същия съд, задачата се насочва по подразбиране на съдия-докладчика на делото
                     if (documentCaseInfo != null && documentCaseInfo.CourtId == userContext.CourtId && documentCaseInfo.CaseId > 0)
                     {
@@ -1184,10 +1864,15 @@ namespace IOWebApplication.Core.Services
             }
             foreach (var task in tasks)
             {
+                string expireInfo = $"; Отменена на {DateTime.Now:dd.MM.yyyy HH:mm:ss} от {userContext.FullName};{description}";
                 task.TaskStateId = WorkTaskConstants.States.Deleted;
                 task.DescriptionCreated = (task.DescriptionCreated ?? "");
-                task.DescriptionCreated += $"; Отменена на {DateTime.Now:dd.MM.yyyy HH:mm:ss} от {userContext.FullName};{description}";
-                repo.Update(task);
+                task.DescriptionCreated += expireInfo;
+
+                if (WorkTaskConstants.Types.ExpireConnectedTasks.Contains(task.TaskTypeId) && task.ParentTaskId > 0)
+                {
+                    expireConnectedSignTasks(task.ParentTaskId.Value, task.Id, expireInfo);
+                }
             }
 
             repo.SaveChanges();
@@ -1195,13 +1880,27 @@ namespace IOWebApplication.Core.Services
 
         }
 
-        public bool RerouteTasks(long[] taskIds, WorkTaskManageVM model)
+        private void expireConnectedSignTasks(long parentTaskId, long currentTaskId, string description)
         {
-            var tasks = repo.All<WorkTask>()
+            var connectedTasks = repo.All<WorkTask>()
+                                     .Where(x => x.ParentTaskId == parentTaskId && x.Id != currentTaskId)
+                                     .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
+                                     .ToList();
+            foreach (var task in connectedTasks)
+            {
+                task.TaskStateId = WorkTaskConstants.States.Deleted;
+                task.DescriptionCreated = (task.DescriptionCreated ?? "");
+                task.DescriptionCreated += description;
+            }
+        }
+
+        public async Task<bool> RerouteTasks(long[] taskIds, WorkTaskManageVM model)
+        {
+            var tasks = await repo.All<WorkTask>()
                              .Where(x => taskIds.Contains(x.Id))
                              .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
                              .Where(x => !WorkTaskConstants.Types.TaskCantReroute.Contains(x.TaskTypeId))
-                             .ToList();
+                             .ToListAsync();
 
             if (!tasks.Any())
             {
@@ -1232,20 +1931,46 @@ namespace IOWebApplication.Core.Services
                     CourtOrganizationId = model.CourtOrganizationId,
                     DisableSelfAcceptCheck = true
                 };
-                if (CreateTask(newTask))
+                if (await CreateTask(newTask))
                 {
 
                     task.TaskStateId = WorkTaskConstants.States.Redirected;
                     task.DescriptionCreated = (task.DescriptionCreated ?? "");
                     task.DescriptionCreated += $"; Пренасочена на {DateTime.Now:dd.MM.yyyy HH:mm:ss} от {userContext.FullName};{model.Description}";
-                    repo.Update(task);
+                    //repo.Update(task);
                 }
             }
 
-            repo.SaveChanges();
+            await repo.SaveChangesAsync();
             return true;
         }
 
+        public async Task<string> MakeSignComfirmMessage(WorkTask taskModel)
+        {
+            switch (taskModel.SourceType)
+            {
+                case SourceTypeSelectVM.CaseSessionAct:
+                    var actInfo = await repo.AllReadonly<CaseSessionAct>()
+                                            .Where(x => x.Id == (int)taskModel.SourceId)
+                                            .Select(x => new
+                                            {
+                                                x.ActTypeId,
+                                                x.IsFinalDoc
+                                            }).FirstOrDefaultAsync();
+
+                    if (NomenclatureConstants.ActType.SignComfirmMessage1.Contains(actInfo.ActTypeId) && actInfo.IsFinalDoc)
+                    {
+                        return "Актът, който ще подпишете е отразен като ФИНАЛИЗИРАЩ, с подписването му ще бъде генериран ECLI номер и същият подлежи на публикуване в ЦУБИПСА. С приключването на задачата за подпис съдебният акт ще бъде регистриран и няма да бъде възможно редактирането на параметър „Финализиращ акт“!";
+                    }
+                    if (NomenclatureConstants.ActType.SignComfirmMessage2.Contains(actInfo.ActTypeId) && !actInfo.IsFinalDoc)
+                    {
+                        return "Актът, който ще подпишете НЕ е отразен като финализиращ, при подписването му НЯМА да бъде генериран ECLI номер и същият няма да подлежи на публикуване в ЦУБИПСА. С приключването на задачата за подпис съдебният акт ще бъде регистриран и няма да бъде възможно редактирането на параметър „Финализиращ акт“!";
+                    }
+                    //Текст по подразбиране при подписване на последната задача за подпис на акт
+                    return "С приключването на задачата за подпис съдебният акт ще бъде регистриран!";
+            }
+            return null;
+        }
 
     }
 }

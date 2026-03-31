@@ -2,6 +2,7 @@
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
@@ -24,9 +25,9 @@ namespace IOWebApplication.Infrastructure.Services
             logger = _logger;
         }
 
-        public async Task DeleteFile(string filename)
+        public Task DeleteFile(string filename)
         {
-            await cdn.MongoCdn_DeleteFiles(new CdnFileSelect()
+            return cdn.MongoCdn_DeleteFiles(new CdnFileSelect()
             {
                 SourceId = filename,
                 SourceType = SourceTypeSelectVM.TemporaryFile
@@ -35,18 +36,40 @@ namespace IOWebApplication.Infrastructure.Services
 
         public async Task<byte[]> ReadFile(string filename)
         {
-            var fileItem = cdn.Select(SourceTypeSelectVM.TemporaryFile, filename).FirstOrDefault();
-
-            if (fileItem != null)
+            string fileId = null;
+            int failedCount = 0;
+            do
             {
-                var result = await cdn.GetFileById(fileItem.FileId);
+                fileId = await cdn.GetTempFileIdByFilename(filename);
+                if (string.IsNullOrEmpty(fileId))
+                {
+                    await Task.Delay(500);
+                }
+                failedCount++;
+            } while (string.IsNullOrEmpty(fileId) && failedCount < 5);
+
+            if (!string.IsNullOrEmpty(fileId))
+            {
+
+                failedCount = 0;
+                CdnDownloadResult result = null;
+                do
+                {
+                    result = await cdn.GetFileById(fileId);
+                    if (result == null)
+                    {
+                        await Task.Delay(500);
+                    }
+                    failedCount++;
+                } while (result == null && failedCount < 5);
 
                 if (result != null)
                 {
                     return Convert.FromBase64String(result.FileContentBase64);
                 }
+                throw new FileNotFoundException($"File {filename} cannot be downloaded");
             }
-            throw new FileNotFoundException($"File { filename } not found");
+            throw new FileNotFoundException($"File {filename} not found");
         }
 
         public async Task SaveFile(string filename, byte[] data)

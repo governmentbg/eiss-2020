@@ -1,0 +1,113 @@
+﻿@model SummaryCaseInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+
+@{
+    ViewData["Title"] = "Преглед на свързано дело";
+    Integration.Epep.SummaryCase Case = Model.Case;
+    var dataTimeformat = "dd.MM.yyyy HH:mm";
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Дело</legend>
+            <div class="row">
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.CourtName,"obj",null,new{label="Съд"})
+                </div>
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.CaseKindName,"obj",null,new{label="Вид дело"})
+                </div>
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.Number,"obj",null,new{label="Номер"})
+                </div>
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.CaseYear,"obj",null,new{label="Година"})
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.DepartmentName,"obj",null,new{label="Отделение"})
+                </div>
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.PanelName,"obj",null,new{label="Състав"})
+                </div>
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.FormationDate,"date",null,new{label="Дата на образуване"})
+                </div>
+                <div class="col-lg-3">
+                    @Html.DisplayFor(x=>x.Case.Status,"obj",null,new{label="Статус"})
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Разпределения</legend>
+
+            <table class="table table-hover table-striped simple-dt">
+                <tr>
+                    <th>Дата</th>
+                    <th>Съдия</th>
+                    <th>Тип</th>
+                    <th>Разпределил</th>
+                    <th>Прикачени документи</th>
+                </tr>
+                @foreach (var assignment in Case.Assignments)
+                {
+                    <tr>
+
+                        <td>@assignment.Date.ToString(dataTimeformat)</td>
+                        <td>@assignment.JudgeName</td>
+                        <td>@assignment.Type</td>
+                        <td>@assignment.Assignor</td>
+                        <td>
+                            <partial name="_SummaryFiles" model="@assignment.Files" />
+                        </td>
+                    </tr>
+                }
+            </table>
+
+
+        </fieldset>
+    </div>
+    <div class="col-md-6">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Документи</legend>
+
+            <table class="table table-hover table-striped simple-dt">
+                <tr>
+                    <th>Направление</th>
+                    <th>Тип</th>
+                    <th>Номер</th>
+                    <th>Дата</th>
+                    <th>Прикачени документи</th>
+                </tr>
+                @foreach (var document in Case.Documents)
+                {
+                    <tr>
+                        <td>
+                            @switch (document.Direction)
+                            {
+                                case 1:
+                                    <text>Входящ</text>
+                                    break;
+                                case 2:
+                                    <text>Изходящ</text>
+                                    break;
+                            }
+                        </td>
+                        <td>@document.DocumentTypeName</td>
+                        <td>@document.Number</td>
+                        <td>@document.Date.ToString(dataTimeformat)</td>
+                        <td>
+                            <partial name="_SummaryFiles" model="@document.Files" />
+                        </td>
+                    </tr>
+                }
+            </table>
+
+
+        </fieldset>
+    </div>
+</div>

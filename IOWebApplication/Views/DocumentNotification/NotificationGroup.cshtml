@@ -1,0 +1,269 @@
+﻿@model NotificationDocGroupVM
+@using IOWebApplication.Core.Contracts
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Models.ViewModels.Delivery
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    var label = "призовки";
+    if (Model.NotificationTypeId == NomenclatureConstants.NotificationType.Message)
+    {
+        label = "съобщения";
+    }
+    if (Model.NotificationTypeId == NomenclatureConstants.NotificationType.Notification)
+    {
+        label = "уведомления";
+    }
+    ViewData["Title"] = $"Генериране на множество {label}";
+}
+
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
+    }
+}
+@if (access.CanChange)
+{
+    <div class="row">
+
+        <div class="col-lg-12 col-md-12">
+            <form id="editNotificationGroup" action="@Url.Action("NotificationGroup", "DocumentNotification")" method="post">
+                @Html.ValidationSummary()
+                <div class="notification-group">
+                    @Html.HiddenFor(x => x.DocumentId)
+                    @Html.HiddenFor(x => x.DocumentResolutionId)
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.NotificationTypeId, "GenericDropDown")</div>
+                        <div class="col-lg-6 html-template">@Html.EditorFor(x => x.HtmlTemplateId, "GenericDropDown")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.NotificationDeliveryGroupId, "GenericDropDown")</div>
+                        <div class="col-lg-6" id="DeliveryDateDiv">@Html.EditorFor(x => x.DeliveryDate, "DateTimeWithTime")</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 notification-state">@Html.EditorFor(x => x.NotificationStateId, "GenericDropDown")</div>
+                </div>
+
+                <div class="notification-item-list">
+                    @for (int i = 0; i < Model.NotificationItems.Count; i++)
+                    {
+                        <div class="notification-item">
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">
+                                    @Html.EditorFor(x => x.NotificationItems[i].IsChecked, "BooleanMultiNotification", null, new { IsSelectedReadOnly = false, label = Model.NotificationItems[i].PersonLabel, @class="is-checked"})
+                                </legend>
+                                @Html.HiddenFor(x => x.NotificationItems[i].PersonId, new {@class="person-id"})
+                                <div class="row">
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.NotificationItems[i].LinkId, "DropDown", null, new { Ddl = Model.NotificationItems[i].LinkId_Ddl, @class="link-id"})</div>
+                                    <div class="col-lg-6">@Html.EditorFor(x => x.NotificationItems[i].AddressId, "DropDownlong", null, new { Ddl = Model.NotificationItems[i].AddressId_Ddl, @class="address-id"})</div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input type="submit" value="Запис" class="btn btn-success" />
+                            @await Html.PartialAsync("_ButtonClose")
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<script>
+    var htmlTemplateArr = new Array();
+    function setReadOnly($el) {
+        $el.attr('readonly', true);
+        $el.attr("style", "pointer-events: none;");
+        if ($("label[for='" + $el.attr("id") + "']").hasClass("io-req")) {
+            $("label[for='" + $el.attr("id") + "']").addClass("io-delreq");
+            $("label[for='" + $el.attr("id") + "']").removeClass("io-req");
+        }
+    }
+    function setReadOnlyFalse($el) {
+        $el.attr('readonly', false);
+        $el.attr("style", "pointer-events: auto;");
+        if ($("label[for='" + $el.attr("id") + "']").hasClass("io-delreq")) {
+            $("label[for='" + $el.attr("id") + "']").addClass("io-req");
+            $("label[for='" + $el.attr("id") + "']").removeClass("io-delreq");
+        }
+    }
+    function setRulesAddr(elCheck, isAdd) {
+        console.log($(elCheck));
+        if ($(elCheck).length === 0)
+            return;
+        let el = $(elCheck).parents('.notification-item:first').find('.address-id');
+        let addCheck = $(elCheck).is(":checked");
+        if (isAdd && addCheck) {
+            el.rules('add', {
+                required: true,
+                range: [1, 9999999999999],
+                messages: {
+                    required: 'Изберете адрес на получаване!',
+                    range: 'Изберете адрес на получаване!'
+                }
+            })
+            $("label[for='" + el.attr("id") + "']").text("Адрес на получаване");
+            $("label[for='" + el.attr("id") + "']").addClass("io-req");
+        } else {
+            el.rules('remove', 'required');
+            el.rules('remove', 'range');
+            $("label[for='" + el.attr("id") + "']").text("Последен известен aдрес");
+            $("label[for='" + el.attr("id") + "']").removeClass("io-req");
+        }
+    }
+    function setDateDelivery(el, isAdd) {
+        if ($(el).length === 0)
+            return;
+        if (isAdd) {
+            $(el).rules('add', {
+                required: true,
+                messages: {
+                    required: 'Въведете Дата на връчване!',
+                }
+            })
+        } else {
+            $(el).rules('remove', 'required');
+        }
+    }
+    $(document).ready(function () {
+        setReadOnly($('#NotificationTypeId'));
+        $('.link-id').each(function (i, element) {
+            $(element).change(function () {
+                LinkIdChange(element);
+            });
+        });
+
+        $('#NotificationDeliveryGroupId').change(function () {
+            NotificationDeliveryGroupIdChange(true);
+        });
+        $('#DocumentPersonId').trigger('change');
+        $('#NotificationDeliveryGroupId').trigger('change');
+        $('#NotificationTypeId').trigger('change');
+    });
+    function NotificationDeliveryGroupIdChange(runAjax) {
+        var NotificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        var NotificationStateId = $("#NotificationStateId").val();
+        var stateId = "@Model.NotificationStateId";
+        var isNotificationDeliveryGroupIdOnMomment = (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnSession ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember50 ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnMember56 ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WillBeen);
+
+        if (isNotificationDeliveryGroupIdOnMomment) {
+            stateId = NotificationStateId;
+        }
+        if (runAjax) {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetDDL_NotificationStateFromDeliveryGroup", "Ajax")",
+                dataType: "json",
+                cache: false,
+                data: { notificationDeliveryGroupId: NotificationDeliveryGroupId, notificationStateId: stateId },
+                success: function (response) {
+                    fillCombo(response, $("#NotificationStateId"));
+                    $("#NotificationStateId").val(NotificationStateId);
+                    if ($("#NotificationStateId").val() != NotificationStateId || $("#NotificationStateId").val() == -1) {
+                        $("#NotificationStateId").prop("selectedIndex", 1);
+                    }
+                    $('#NotificationStateId').trigger('change');
+                },
+                complete: function () { },
+                error: log_ajax_err
+            });
+        }
+        $('#NotificationTypeId').change();
+        if (NotificationDeliveryGroupId == "@NomenclatureConstants.NotificationDeliveryGroup.WithSummons") {
+            $(".rajon-add").show();
+        } else {
+            $(".rajon-add").hide();
+        }
+        if (isNotificationDeliveryGroupIdOnMomment &&
+            NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail
+                ) {
+            $('.html-template').hide();
+        } else {
+            $('.html-template').show();
+        }
+        if (isNotificationDeliveryGroupIdOnMomment &&
+            NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail &&
+            NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnPhone) {
+            $("#DocumentPersonAddr").hide();
+        } else {
+            $("#DocumentPersonAddr").show();
+        }
+        setRulesAddrAll();
+        
+
+        if (isNotificationDeliveryGroupIdOnMomment) {
+            if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail) {
+                $(".notification-state").show();
+            } else {
+                $(".notification-state").hide();
+            }
+            $(".on-momment-hide").hide();
+            $("#DeliveryInfoDiv").show();
+            $("#DeliveryDateDiv").show();
+            $("#DeliveryDiv").hide();
+            setDateDelivery("#DeliveryDate", true);
+        } else {
+            $(".on-momment-hide").show();
+            $("#DeliveryInfoDiv").hide();
+            $("#DeliveryDateDiv").hide();
+            $("#DeliveryDiv").show();
+            setDateDelivery("#DeliveryDate", false);
+            $(".notification-state").show();
+        }
+
+        setDateDelivery("#DeliveryDate");
+        if (NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnPhone ||
+            NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail) {
+//            DocumentPersonIdChange(false);
+        }
+    };
+    function LinkIdChange(linkIdCtrl) {
+        var container = $(linkIdCtrl).parents('.notification-item:first');
+         var linkId = $(linkIdCtrl).val();
+        var addrCtrl = container.find('.address-id');
+        console.log(addrCtrl)
+
+        var personId = container.find(".person-id").val();
+        var addressId = addrCtrl.val();
+        var notificationTypeId = $("#NotificationTypeId").val();
+        var notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        requestCombo('@Url.Action("LoadAddrForPerson")',
+            {
+                documentPersonId: personId,
+                documentPersonLinkId: linkId,
+                notificationDeliveryGroupId: notificationDeliveryGroupId
+            },
+            addrCtrl,
+            addressId,
+            function () { }
+        );
+    };
+    function setRulesAddrAll() {
+        let notificationDeliveryGroupId = $("#NotificationDeliveryGroupId").val();
+        let groupAdd = true;
+        if (notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper ||
+            notificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail) 
+        {
+            groupAdd = false;
+        };
+       $('.is-checked').each(function (i, element) {
+            $(element).change(function () {
+                setRulesAddr(element, groupAdd);
+            });
+            $(element).change();
+        });
+    }
+</script>

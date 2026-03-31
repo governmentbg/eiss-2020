@@ -1,0 +1,330 @@
+﻿@model CaseSessionActSelectionProtocolVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@{
+    Layout = null;
+}
+
+<div>
+    <center>
+        <b>ПРОТОКОЛ</b>
+    </center>
+    <br />
+
+        <center>
+            <b>
+                ЗА ИЗБОР НА СЪДЕБНИ АКТОВЕ НА СЛУЧАЕН ПРИНЦИП
+
+            </b>
+        </center>
+
+
+    <br />
+    <center>
+        <b>
+            за съдия @Model.SelectedLawUnitName за периода   @Model.DateFrom.ToString("dd.MM.yyyy") - @Model.DateTo.ToString("dd.MM.yyyy")
+
+        </b>
+    </center>
+    <br />
+    <br />
+
+    <table width="100%">
+        <tr>
+            <td>
+                <b>Секция избрани три акта</b>
+
+
+           </td>
+
+        </tr>
+     
+        <tr>
+            <td>
+                <table width="100%" class="bordered" >
+
+                    <tr class="inversed-bold">
+                        <td width="20%"><b>Съдебен акт</b></td>
+                        <td align="center"><b>Дата</b></td>
+                        <td align="center"> <b>Дело</b></td>
+                        <td align="center"> <b>В законна сила</b></td>
+                        <td align="center"> <b>Инстанционен </br>контрол</b></td>
+                    </tr>
+
+                    @foreach (var item in Model.SelectionActs.Where(x => x.IsSelected).OrderBy(x => x.RegDate))
+                    {
+                        <tr>
+                            <td> @item.Vid_RegNumber</td>
+                            <td> @item.RegDate?.ToString("dd.MM.yyyy")</td>
+                            <td> @item.CaseType_CaseLabel</td>
+                            <td> @item.ActInforcedDate?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.Result</td>
+                        </tr>
+                    }
+
+
+                    <tr style="border-left:none; border-right:none">
+                        <td colspan="5"  style="border-left:none; border-right:none;">
+                            <b>Секция избор измежду актове</b>
+
+
+                        </td>
+                    </tr>
+        @*         </table>
+
+
+            </td>
+
+        </tr>
+        <tr>
+            <td>
+                <b>Секция избор измежду актове</b>
+
+
+            </td>
+
+        </tr>
+        <tr>
+            <td>
+                <table width="100%" class="bordered"> *@
+
+                    <tr class="inversed-bold">
+                        <td width="20%"><b>Съдебен акт</b></td>
+                        <td align="center"><b>Дата</b></td>
+                        <td align="center"> <b>Дело</b></td>
+                        <td align="center"> <b>В законна сила</b></td>
+                        <td align="center"> <b>Инстанционен </br>контрол</b></td>
+                    </tr>
+
+                    @foreach (var item in Model.SelectionActs.OrderBy(x => x.RegDate))
+                    {
+                        <tr>
+                            <td> @item.Vid_RegNumber</td>
+                            <td> @item.RegDate?.ToString("dd.MM.yyyy")</td>
+                            <td> @item.CaseType_CaseLabel</td>
+                            <td> @item.ActInforcedDate?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.Result</td>
+                        </tr>
+                    }
+
+                </table>
+
+
+            </td>
+
+        </tr>
+        </table>
+
+
+
+    <div>
+     @*    @Html.DisplayFor(x => x.SelectionDate, "objInline")
+        @Html.DisplayFor(x => x.RegNumber, "objInline")
+        @Html.DisplayFor(x => x.CaseTypeName, "objInline")
+        @Html.DisplayFor(x => x.CaseYear, "objInline")
+        @Html.DisplayFor(x => x.Document_Number, "objInline")
+
+        @if ((Model.ComparentmentName ?? "").Length > 0)
+        {
+            @Html.DisplayFor(x => x.ComparentmentName, "objInline")
+        }
+
+        @if (NomenclatureConstants.JudgeRole.JuriRolesList.Contains(Model.JudgeRoleId ?? 0))
+        {
+            @if (Model.NextMeatingDate.Length > 0)
+            {
+                @Html.DisplayFor(x => x.NextMeatingDate, "objInline")
+            }
+            else
+            {
+                <span class="text-bold">Следващо  ОСЗ не е насрочено. </span>
+            }
+        }
+
+        @if ((Model.JudgeRoleId != NomenclatureConstants.JudgeRole.Jury) && (Model.JudgeRoleId != NomenclatureConstants.JudgeRole.ReserveJury))
+        {
+
+            @if (Model.SelectionModeId == NomenclatureConstants.SelectionMode.SelectByDuty)
+            {
+                @Html.DisplayFor(x => x.CourtDutyName, "objInline")
+            }
+            else
+            {
+                @Html.DisplayFor(x => x.CourtGroupName, "objInline")
+            }
+
+            @Html.DisplayFor(x => x.CaseCodeName, "objInline")
+            @Html.DisplayFor(x => x.LoadGroupLinkName, "objInline")
+
+        }
+
+
+        @if (Model.SelectedLawUnitName != NomenclatureConstants.SelectionProtocolConstants.NoAvailableJudges)
+        {
+            @Html.DisplayFor(x => x.SelectedLawUnitName, "objInline", new { label = "Разпределен " + @Model.SelectedLawUnitTypeName.ToLower() + ": " })
+
+            @if (NomenclatureConstants.JudgeRole.JudgeRolesList.Contains((Model.JudgeRoleId ?? 0)))
+            {
+                if ((Model.ComparentmentName ?? "").Length > 0)
+                {
+                    @Html.DisplayFor(x => x.ComparentmentName, "objInline")
+                    ;
+                };
+
+            }
+        }
+
+        @Html.DisplayFor(x => x.SelectionModeName, "objInline")
+
+        @if (Model.SelectionModeId == NomenclatureConstants.SelectionMode.ManualSelect)
+        {
+            @Html.DisplayFor(x => x.Description, "objInline")
+        }
+        @if (Model.DismisalId != null)
+        {
+            <br />
+            @Html.DisplayFor(x => x.PrevSelectedLawUnitName, "objInline")
+            @Html.DisplayFor(x => x.PrevUserName, "objInline")
+            @Html.DisplayFor(x => x.DismisalReason, "objInline")
+        }
+    </div>
+    <br />
+    <table width="100%">
+        @if (NomenclatureConstants.JudgeRole.JudgeRolesList.Contains((Model.JudgeRoleId ?? 0)))
+
+        {
+            <tr>
+                <td colspan="3">
+                    <b>Списък на възможни съдии</b>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="3">
+                    <table width="100%" class="bordered protokol-table">
+
+                        <tr>
+                            <th width="50%"><b>Съдия</b></th>
+                            @if (Model.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                            {
+                                <th align="center"><b>Натоварване</b></th>
+                                <th align="center"> <b>Брой дела в групата</b></th>
+                            }
+                        </tr>
+
+                        @foreach (var item in Model.LawUnits.Where(x => x.StateId != NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.LawUnitFullName))
+                        {
+                            string trclass = "";
+
+                            @if (item.Id == Model.SelectedLawUnitId)
+                            {
+                                trclass = "highlight-bold";
+                            }
+                            <tr class="@trclass">
+
+
+
+
+                                <td align="left">
+                                    @item.LawUnitFullName
+                                </td>
+                                @if (Model.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter)
+                                {
+                                    @if (item.SelectedFromCaseGroup == false)
+                                    {
+
+                                        <td align="center">
+
+                                            @item.LoadIndex%
+
+                                        </td>
+                                        <td align="center"> @item.CaseCount</td>
+
+                                    }
+                                    else
+
+                                    {
+
+                                        <td></td>
+                                        <td></td>
+                                    }
+                                    /**/
+                                }
+
+                            </tr>
+                        }
+                    </table>
+                </td>
+            </tr>
+            @if (Model.SelectedLawUnitName == NomenclatureConstants.SelectionProtocolConstants.NoAvailableJudges)
+            {
+                <tr>
+                    <td colspan="3">
+                        <center>
+                            <b>Няма налични съдии в съда, които могат да бъдат избрани.</b>
+                        </center>
+                    </td>
+                </tr>
+
+            }
+
+            @if (Model.LawUnits.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).Any())
+            {
+
+                @*<tr>
+        <td colspan="3">
+
+        </td>
+        </tr>
+                <tr>
+                    <td colspan="3">
+
+                        <b>Списък на изключени съдии</b>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="3">
+                        <table width="100%" class="bordered protokol-table">
+
+                            <tr>
+                                <th width="50%"><b>Съдия</b></th>
+                                <th colspan="2"><b>Причини</b></th>
+                            </tr>
+
+                            @foreach (var item in Model.LawUnits.Where(x => x.StateId == NomenclatureConstants.SelectionProtokolLawUnitState.Exclude).OrderBy(x => x.LawUnitFullName))
+                            {
+                                <tr>
+                                    <td> @item.LawUnitFullName</td>
+
+                                    <td colspan="2">
+                                        @item.Description
+                                    </td>
+                                </tr>
+                            }
+
+                        </table>
+                    </td>
+                </tr>
+
+            }
+
+        }
+
+        <tr>
+            <td>
+                <br />
+                @Html.DisplayFor(x => x.UserName, "objInline")
+            </td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <tr>
+            <td></td>
+            <td></td>
+            <td width="30%" style="font-weight:bold">Подпис: </td>
+        </tr>
+    </table>
+ *@
+</div>

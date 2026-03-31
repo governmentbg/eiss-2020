@@ -16,5 +16,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         /// </summary>
         [Column("instance_list")]
         public string InstanceList { get; set; }
+
+        /// <summary>
+        /// comma separated case group list
+        /// </summary>
+        [Column("case_group_list")]
+        public string CaseGroupList { get; set; }
     }
 }

@@ -1,9 +1,7 @@
 ﻿using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Infrastructure.Models.ViewModels.Identity;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using static IOWebApplication.Infrastructure.Constants.AccountConstants;
 
 namespace IOWebApplication.Test.Mockups
@@ -66,6 +64,16 @@ namespace IOWebApplication.Test.Mockups
 
         public int LawUnitTypeId => throw new NotImplementedException();
 
+        public bool IsInterimPeriodEuro => throw new NotImplementedException();
+
+        public bool IsPeriodEuro => throw new NotImplementedException();
+
+        public decimal EuroExchangeRate => throw new NotImplementedException();
+
+        public string CurrentCurrencyCode => throw new NotImplementedException();
+
+        public string EnvironmentName => throw new NotImplementedException();
+
         public string ClaimValue(string claimType)
         {
             throw new NotImplementedException();
@@ -107,16 +115,6 @@ namespace IOWebApplication.Test.Mockups
             };
 
             return roles.Contains(role);
-        }
-
-        /// <summary>
-        /// Mocked value
-        /// </summary>
-        public Task<UserSettingsModel> Settings()
-        {
-            var userSettings = new UserSettingsModel();
-
-            return Task.FromResult(userSettings);
         }
 
         public bool IsSystemInFeature(string feature)

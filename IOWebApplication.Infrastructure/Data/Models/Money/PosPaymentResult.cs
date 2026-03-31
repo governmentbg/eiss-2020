@@ -73,6 +73,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Column("sender_name")]
         public string SenderName { get; set; }
 
+        [Column("amount_bgn")]
+        [Display(Name = "Сума в лева")]
+        public decimal? AmountBGN { get; set; }
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }

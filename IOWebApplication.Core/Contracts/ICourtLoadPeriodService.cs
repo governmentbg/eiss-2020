@@ -21,13 +21,17 @@ namespace IOWebApplication.Core.Contracts
     bool MakeLoadPeriodForAll();
     CourtLoadPeriod GetLoadPeriod(int? courtGroupid, int? courtDutyId);
     CaseSelectionProtokolVM CalculateAllKoef(CaseSelectionProtokolVM caseSelectionProtocol);
-    void UpdateDailyLoadPeriod(int? CourtGroupId, int? CourtDutyId, int selectedLawUnit);
+    void UpdateDailyLoadPeriod(int? CourtGroupId, int? CourtDutyId, int selectedLawUnit,int selectionMode);
     void MergeCaseSelectionProtokolAndVM(CaseSelectionProtokol caseSelectionProtokol, CaseSelectionProtokolVM caseSelectionProtokolVM);
+        void SubstitutionMergeCaseSelectionProtokolAndVM(CaseSelectionProtokolSubstitution substitutionSelectionProtokol, CaseSelectionProtokolVM caseSelectionProtokolVM);
     IQueryable<CourtLoadResetPeriod> CourtLoadResetPeriod_Select(int CourtId);
     bool CourtLoadResetPeriod_SaveData(CourtLoadResetPeriod model);
     IEnumerable<CourtLoadResetPeriod> Get_CourtLoadResetPeriod_CrossPeriod( CourtLoadResetPeriod newPeriod);
 
     void UpdateDailyLoadPeriod_RemoveByDismisal(int case_lawunit_dismisal_id);
     CourtLoadPeriodLawUnit UpdateChangedProcentAverageCases(int lawunitId, int courtGroupId, decimal newPercent);
+
+    void UpdateDailyLoadPeriod_RemoveByAutomaticDismisal(int case_lawunit_id);
+    void UpdateDailyLoadPeriod_AutomaticMassSelection(int? CourtGroupId, int? CourtDutyId, int selectedLawUnit);
   }
 }

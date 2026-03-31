@@ -11,7 +11,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Identity
                 .HasKey(role => role.Id);
 
             // Index for "normalized" role name to allow efficient lookups
-            builder.HasIndex(r => r.NormalizedName).HasName("role_name_index").IsUnique();
+            builder.HasIndex(r => r.NormalizedName).HasDatabaseName("role_name_index").IsUnique();
 
             // Each Role can have many entries in the UserRole join table
             builder.HasMany(e => e.UserRoles)
@@ -36,6 +36,15 @@ namespace IOWebApplication.Infrastructure.Data.Models.Identity
             builder.Property(p => p.NormalizedName)
                 .HasColumnName("normalized_name")
                 .HasMaxLength(256);
+            builder.Property(p => p.Code)
+                   .HasColumnName("code")
+                   .HasMaxLength(50);
+            builder.Property(p => p.Label)
+                   .HasColumnName("label")
+                   .HasMaxLength(256);
+            builder.Property(p => p.OrderNumber)
+                   .HasColumnName("order_number")
+                   .IsRequired(false);
         }
     }
 }

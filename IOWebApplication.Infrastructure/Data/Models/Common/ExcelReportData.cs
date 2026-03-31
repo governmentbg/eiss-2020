@@ -50,9 +50,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Column("cell_value_int")]
         public int? CellValueInt { get; set; }
 
-        //1 - String, 2 - Int
+        //1 - String, 2 - Int, 3 - Interval
         [Column("cell_value_type")]
         public int? CellValueType { get; set; }
+
+        [Column("cell_value_interval")]
+        public TimeSpan? CellValueInterval { get; set; }
 
         [ForeignKey(nameof(ExcelReportTemplateId))]
         public virtual ExcelReportTemplate ExcelReportTemplate { get; set; }

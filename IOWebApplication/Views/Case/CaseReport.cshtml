@@ -9,6 +9,10 @@
     ViewData["Title"] = "Разширено търсене";
 }
 
+@section titleAdd{
+    | <b><a asp-controller="CaseSessionAct" asp-action="ActSearch" class="btn btn-primary" title="Търсене на съдебни актове по съдържание">Търсене на актове</a></b>
+}
+
 @section breadcrumb{
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
@@ -33,10 +37,13 @@
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
-                    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.ProcessPriorityId, "GenericDropDown")</div>
                 </div>
                 <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
                     <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.CaseInforcedDateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.CaseInforcedDateTo, "DateTime")</div>
                 </div>
             </div>
         </fieldset>
@@ -61,12 +68,15 @@
             <legend class="casereport-legend">Актове</legend>
             <div class="legendbody">
                 <div class="row">
-                    <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
-                    <div class="col-lg-3">@Html.EditorFor(m => m.ActDate, "DateTime")</div>
-                    <div class="col-lg-3">@Html.EditorFor(x => x.ActNumber)</div>
-                    <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActRegDateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActRegDateTo, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActInforcedDateFrom, "DateTime")</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActInforcedDateTo, "DateTime")</div>
                 </div>
                 <div class="row">
+                    <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+                    <div class="col-lg-3">@Html.EditorFor(x => x.ActNumber)</div>
+                    <div class="col-lg-3">@Html.EditorFor(m => m.ActLawBaseId, "SelectActLawBase")</div>
                     <div class="col-lg-3">@Html.EditorFor(m => m.ActIsFinalDoc, "Boolean")</div>
                 </div>
             </div>

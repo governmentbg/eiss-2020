@@ -15,15 +15,18 @@
 <script>
     var onHideModalRegistered = false;
 
-    function ShowModalDialog(title, html, wide) {
-        $('.modal-dialog').removeClass('wide');
-        if (wide) {
-            $('.modal-dialog').addClass('wide');
-        }
-        $('.master-modal .modal-title').text(title);
-        $('.master-modal .modal-body').html(html);
+    function ShowModalDialog(title, html, wide,extraWide) {
+        SetModal(title, html, wide, extraWide);
+        SetBackDrop($('.master-modal'), true, true);
         $('.master-modal').modal("show");
     }
+
+    function ShowModalDialogBackdrop(title, html, wide,extraWide) {
+        SetModal(title, html, wide, extraWide);
+        SetBackDrop($('.master-modal'), false, false);
+        $('.master-modal').modal("show");
+    }
+
     function MakeBigModalDialog(container, dialogClass) {
         var _width = $(window).width() * 90 / 100;
         var _height = $(window).height() * 80 / 100;
@@ -47,4 +50,41 @@
             onHideModalRegistered = true;
         }
     }
+
+    function SetBackDrop(modal, keyboard, backdrop) {
+        if (typeof modal.data('bs.modal') === 'undefined') 
+        { // Modal did not open yet
+            modal.modal({
+                keyboard: keyboard,
+                backdrop: backdrop
+            });
+        } 
+        else 
+        { // Modal has already been opened
+            modal.data('bs.modal').options.keyboard = keyboard;
+            modal.data('bs.modal').options.backdrop = backdrop;
+
+            if (keyboard === false) 
+            { 
+                modal.off('keydown.dismiss.bs.modal'); // Disable ESC
+            }
+            else 
+            {
+                modal.data('bs.modal').escape(); // Resets ESC
+            }
+        }
+    }
+
+    function SetModal(title, html, wide, extraWide) {
+        $('.modal-dialog').removeClass('wide');
+        if (wide) {
+            $('.modal-dialog').addClass('wide');
+        }
+        if (extraWide) {
+            $('.modal-dialog').addClass('extraWide');
+        }
+        $('.master-modal .modal-title').text(title);
+        $('.master-modal .modal-body').html(html);
+    }
+
 </script>

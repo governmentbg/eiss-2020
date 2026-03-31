@@ -9,5 +9,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
         public int Id { get; set; }
         public string CaseLoadElementTypeLabel { get; set; }
         public string CaseLoadElementTypeStopLabel { get; set; }
+        public string CaseLoadElementTypeStopOrder { get; set; }
     }
 }

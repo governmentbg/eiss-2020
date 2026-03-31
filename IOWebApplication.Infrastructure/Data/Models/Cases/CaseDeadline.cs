@@ -65,6 +65,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Резултат прекратяващ срока")]
         public int? ResultExpiredId { get; set; }
 
+        /// <summary>
+        /// Група известия: 1- Общи известия,2-Известия ЗП
+        /// </summary>
+        [NotMapped]
+        public int NotificationKind { get; set; } = 1;
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 

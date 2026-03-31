@@ -55,6 +55,16 @@
                         searchable: true
                     },
                     {
+                        name: 'documentDate',
+                        data: 'documentDate',
+                        title: 'Дата изх.писмо',
+                        sortable: false,
+                    searchable: false,
+                        render: function (data) {
+                            return JsonBGdate(data);
+                        }
+                    },
+                    {
                         name: 'actions',
                         data: "id",
                         title: "",

@@ -1,0 +1,8 @@
+﻿@{
+    string message = (string)ViewBag.ShowWarning;
+}
+
+@if (message != null)
+{
+    <div style="background-color: #fef48a; border: 1px solid #e2da7d; margin-top: 5px; padding: 1px 10px; width: 100%; font-family: 'Montserrat-Bold',sans-serif; ">@message</div>
+}

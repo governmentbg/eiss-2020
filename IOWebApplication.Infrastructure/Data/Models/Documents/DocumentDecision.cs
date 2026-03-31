@@ -1,12 +1,11 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Documents
 {
@@ -14,7 +13,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
     /// Решения за Document
     /// </summary>
     [Table("document_decision")]
-    public class DocumentDecision : UserDateWRT
+    public class DocumentDecision : UserDateWRT, IHaveLongId
     {
         [Key]
         [Column("id")]

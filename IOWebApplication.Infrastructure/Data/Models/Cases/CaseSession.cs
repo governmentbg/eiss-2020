@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Заседания по делото
     /// </summary>
     [Table("case_session")]
-    public class CaseSession : BaseInfo_CaseSession, IHaveHistory<CaseSessionH>
+    public class CaseSession : BaseInfo_CaseSession, IHaveHistory<CaseSessionH>, IHaveId
     {
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -34,7 +34,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         public virtual ICollection<CasePerson> CasePersons { get; set; }
         public virtual ICollection<CaseSessionResult> CaseSessionResults { get; set; }
-        public virtual ICollection<CaseSessionH> History { get; set; }
+        public virtual ICollection<CaseSessionH>? History { get; set; }
         public virtual ICollection<CaseSessionAct> CaseSessionActs { get; set; }
 
         [InverseProperty(nameof(CaseLawUnit.CaseSession))]
@@ -47,6 +47,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual ICollection<CaseSessionDoc> CaseSessionDocs { get; set; }
         public virtual ICollection<CaseSessionMeeting> CaseSessionMeetings { get; set; }
 
+        public virtual ICollection<CaseNotification> CaseNotifications { get; set; }
+
+
         public CaseSession()
         {
             CasePersons = new HashSet<CasePerson>();
@@ -55,6 +58,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
             CaseLawUnits = new HashSet<CaseLawUnit>();
             CaseSessionMeetings = new HashSet<CaseSessionMeeting>();
             CaseSessionDocs = new HashSet<CaseSessionDoc>();
+            CaseNotifications = new HashSet<CaseNotification>();
         }
     }
 
@@ -72,6 +76,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(Id))]
         public virtual CaseSession CaseSession { get; set; }
+
+        public void ClearForeignKeys()
+        {
+            CaseSession = null;
+        }
     }
 
     public class BaseInfo_CaseSession : UserDateWRT, IExpiredInfo
@@ -138,6 +147,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Промяна на състава по делото")]
         [Column("case_lawunit_change")]
         public int? CaseLawunitChange { get; set; }
+
+        [Column("video_url")]
+        [Display(Name = "Адрес на онлайн заседание")]
+        public string VideoUrl { get; set; }
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }

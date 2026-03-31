@@ -1,0 +1,41 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessRequestVM
+@{
+    var containerId = Guid.NewGuid().ToString();
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+}
+<div class="moneyClaimList">
+    <h3 class="section-title section-title--xxs mb-3">Парично вземане</h3>
+    <div class="dynamic-form" data-reindex="true" data-container="@containerId" data-addcallback="callbackAddMoneyClaim" data-removecallback="callbackRemoveMoneyClaims">
+        <table class="fast-process-tbl" id="@containerId">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Вид</th>
+                    <th width="100px">Размер</th>
+                    <th width="100px">Валута</th>
+                    @if (isInEuro)
+                    {
+                        <th width="100px">Сума EUR</th>
+                    }
+                    else
+                    {
+                        <th width="100px">Сума лв</th>
+                    }
+                    <th width="100px">От дата</th>
+                    <th width="100px">До дата</th>
+                    <th width="30px"></th>
+                </tr>
+            </thead>
+            @for (int i = 0; i < Model.MoneyClaims.Count(); i++)
+            {
+                Model.MoneyClaims[i].Index = i;
+                ViewData.TemplateInfo.HtmlFieldPrefix = Model.MoneyClaims[i].GetPath;
+
+                <partial name="_FastProcessMoneyClaimItem" model="@Model.MoneyClaims[i]" />
+                ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+            }
+        </table>
+        <button class="btn u-btn-border cta-add-dark add-item" data-container="@containerId" data-url="@Url.Action("New_MoneyClaim")" data-index="@Model.MoneyClaims.Count()">Добави парично вземане</button>
+    </div>
+</div>

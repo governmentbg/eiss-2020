@@ -31,12 +31,15 @@
     sourceGet: rootDir + 'Ajax/Get_Source?id=',
     personRoleSearch: rootDir + 'Ajax/Get_PersonRoles?query=',
     personRoleGet: rootDir + 'Ajax/Get_PersonRoles?id=',
+    electionLawunitSearch: rootDir + 'Election/SearchLawUnit?query=',
+    balanceBankPaymentSearch: rootDir + 'Money/SearchBalanceBankPayment?query=',
+    balanceBankPaymentGet: rootDir + 'Money/GetBankPayment?id=',
 };
 
 
 function initAutoCompleteControl(control, url, query, parentControl, paramFunc) {
-    if ($(control).data('isloaded') === true) {
-        return;
+    if ($(control).hasClass('ac-isloaded')) {
+        return false;
     }
     if (!query) {
         query = '';
@@ -45,7 +48,7 @@ function initAutoCompleteControl(control, url, query, parentControl, paramFunc) 
     if ($(control).data('minlength')) {
         minLength = $(control).data('minlength');
     }
-    $(control).data('isloaded', true);
+    $(control).addClass('ac-isloaded');
     $(control).autocomplete({
         minLength: minLength,
         delay: 250,
@@ -58,22 +61,33 @@ function initAutoCompleteControl(control, url, query, parentControl, paramFunc) 
             if (paramFunc) {
                 params += paramFunc();
             }
-            $.get(url + encodeURIComponent(request.term) + query + params).done(function (success) {
-                return response(success);
-            }).fail(function (errors) {
-                console.log(errors);
-            });
-        }
-        , select: function select(event, ui) {
+            fetch(url + encodeURIComponent(request.term) + query + params)
+                .then((res) => {
+                    return res.json();
+                })
+                .then((res) => {
+                    response(res);
+                });
+
+            //    $.get(url + encodeURIComponent(request.term) + query + params).done(function (success) {
+            //        return response(success);
+            //    }).fail(function (errors) {
+            //        console.log(errors);
+            //    });
+        },
+        select: function select(event, ui) {
             //console.log(ui.item);
             let id = ui.item.value;
             ui.item.value = ui.item.label;
             let input_hidden = event.target.parentElement.querySelector('input[type="hidden"]');
             input_hidden.value = id;
             $(control).parent().find('span.description').text(ui.item.description);
+            $(control).parent().data('objkind',ui.item.objectKind);
             $(control).parent().trigger('change');
-        }, focus: function (event, ui) {
+        },
+        focus: function (event, ui) {
             $(control).val(ui.item.label);
+            $(control).parent().data('objkind', ui.item.objectKind);
             return false;
         }
     }).change(function () {
@@ -82,6 +96,7 @@ function initAutoCompleteControl(control, url, query, parentControl, paramFunc) 
             let input_hidden = input.parentElement.querySelector('input[type="hidden"]');
             input_hidden.value = '0';
             $(control).parent().find('span.description').text('');
+            $(control).parent().data('objkind', '');
         }
     }).blur(function () {
         let input = this;
@@ -89,8 +104,11 @@ function initAutoCompleteControl(control, url, query, parentControl, paramFunc) 
             let input_hidden = input.parentElement.querySelector('input[type="hidden"]');
             input_hidden.value = '0';
             $(control).parent().find('span.description').text('');
+            $(control).parent().data('objkind', '');
         }
     });
+
+    return true;
 }
 
 function initLawUnit() {
@@ -128,7 +146,7 @@ function initCase() {
         let caseControl = $(e).find('.case-control')[0];
 
         initAutoCompleteControl(caseControl, autocompleteUrls.caseSearch, null, null, function () {
-            let courtId = $(caseControl).parents('.case-container:first').data('court');
+            let courtId = $(e).data('court');
             return '&courtId=' + courtId;
         });
 
@@ -157,7 +175,9 @@ function initUserAutoComplete() {
 
         let userControl = $(e).find('.userautocomplete-control')[0];
 
-        initAutoCompleteControl(userControl, autocompleteUrls.userSearch);
+        let selectmode = $(userControl).parents('.userautocomplete-container:first').data('selectmode');
+
+        initAutoCompleteControl(userControl, autocompleteUrls.userSearch, '&selectmode=' + selectmode);
 
         let val = $(e).find('.userautocomplete-val').val();
         if (val && val !== '0') {
@@ -194,8 +214,9 @@ function initCaseCode() {
                     caseTypeId = _val;
                 }
             }
-            //debugger;
-            return '&caseTypeId=' + caseTypeId;
+            let result = '&caseTypeId=' + caseTypeId;
+           
+            return result;
         });
 
         let caseCodeVal = $(e).find('.casecode-val').val();
@@ -316,7 +337,7 @@ function initDocument() {
             if ($(e).data('docdir')) {
                 addQ += '&docDir=' + $(e).data('docdir');
             }
-            return addQ;            
+            return addQ;
         });
 
         let documentVal = $(e).find('.document-val').val();
@@ -459,9 +480,11 @@ function loadEISPPTblElement(eispptblelementControl, val) {
 function initActLawBaseAutoComplete() {
     $('.actlawbaseautocomplete-container').each(function (i, e) {
 
+        let caseId = $(e).data('caseid');
+
         let actLawBaseControl = $(e).find('.actlawbaseautocomplete-control')[0];
 
-        initAutoCompleteControl(actLawBaseControl, autocompleteUrls.actLawBaseSearch);
+        initAutoCompleteControl(actLawBaseControl, autocompleteUrls.actLawBaseSearch, '&caseid=' + caseId);
 
         let val = $(e).find('.actlawbaseautocomplete-val').val();
         if (val && val !== '0') {
@@ -577,22 +600,93 @@ function loadCaseReasons(control, val) {
 
 function initPersonRole() {
     $('.personrole-container').each(function (i, e) {
-
         let _control = $(e).find('.personrole-control')[0];
+        if (initAutoCompleteControl(_control, autocompleteUrls.personRoleSearch)) {
+            let val = $(e).find('.personrole-val').val();
+            if (val && val !== '0') {
+                if ($(e).data('label')) {
+                    $(_control).val($(e).data('label'));
+                } else
+                    loadPersonRole(_control, val);
+            }
 
-        initAutoCompleteControl(_control, autocompleteUrls.personRoleSearch);
-
-        let val = $(e).find('.personrole-val').val();
-        if (val && val !== '0') {
-            loadPersonRole(_control, val);
         }
     });
 }
 
 function loadPersonRole(autoControl, val) {
-    $.get(autocompleteUrls.personRoleGet + val)
+    if ($(autoControl).data('label')) {
+        $(autoControl).val($(autoControl).data('label'));
+        return;
+    }
+    let url = autocompleteUrls.personRoleGet + val;
+    let cacheKey = `pr-${val}`;
+    let cachedValue = autocompleteCacheManager.get(cacheKey);
+    if (cachedValue != undefined) {
+        $(autoControl).val(cachedValue.label);
+        $(autoControl).data('objkind', cachedValue.rolekind);
+    } else {
+        fetch(url)
+            .then(r => r.json())
+            .then(function (data) {
+                autocompleteCacheManager.set(cacheKey, { label: data[0].label, rolekind: data[0].objectKind });
+                $(autoControl).val(data[0].label);
+                $(autoControl).data('objkind',data[0].objectKind);
+            })
+            .catch(error => console.log(error));
+    }
+}
+
+
+function initElectionLawunit() {
+    $('.electionlawunit-container').each(function (i, e) {
+
+        let _control = $(e).find('.electionlawunit-control')[0];
+
+        if (initAutoCompleteControl(_control, autocompleteUrls.electionLawunitSearch)) {
+
+            //let val = $(e).find('.electionlawunit-val').val();
+            //if (val && val !== '0') {
+            //    loadPersonRole(_control, val);
+            //}
+        }
+    });
+}
+
+
+let autocompleteCacheManager = function () {
+    let data = {}
+    const get = function (key) {
+        return data[key]
+    }
+    const set = function (key, value) {
+        data[key] = value
+        return 0
+    }
+
+    return { get, set }
+}();
+
+function initBalanceBankPayment() {
+    $('.bankpayment-container').each(function (i, e) {
+
+        let paymentControl = $(e).find('.bankpayment-control')[0];
+
+        let amount = $(paymentControl).parents('.bankpayment-container:first').data('amount');
+
+        initAutoCompleteControl(paymentControl, autocompleteUrls.balanceBankPaymentSearch, '&amount=' + amount);
+
+        let paymentVal = $(e).find('.payment-val').val();
+        if (paymentVal && paymentVal !== '0') {
+            loadBankPayment(paymentControl, paymentVal);
+        }
+    });
+}
+
+function loadBankPayment(paymentControl, payment) {
+    $.get(autocompleteUrls.balanceBankPaymentGet + payment)
         .done(function (data) {
-            $(autoControl).val(data[0].label);
+            $(paymentControl).val(data.label);
         }).fail(function (errors) {
             console.log(errors);
         });

@@ -1,12 +1,11 @@
 ﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.DeliveryAreaAddressFilterVM
-@inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Списък групи адреси" + ViewBag.deliveryAreaLabel;
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 <form id="formFilter" asp-action="Edit" method="post" class="quick-submit">

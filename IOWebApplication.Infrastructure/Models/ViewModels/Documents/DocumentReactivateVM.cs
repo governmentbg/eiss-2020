@@ -13,11 +13,18 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public int DocumentDirectionId { get; set; }
         [Display(Name = "Номер документ")]
         public string DocumentNumber { get; set; }
-        [Required(ErrorMessage ="Въведете {0}.")]
+
+        [Required(ErrorMessage = "Въведете {0}.")]
         [Display(Name = "Дата")]
         public DateTime DocumentDate { get; set; }
+        
         [Display(Name = "Информация за документ")]
         public string DocumentInfo { get; set; }
+        
+        [Display(Name = "Документ от Централизирана Регистратура")]
+        public bool IsCRdocument { get; set; }
+
+
         public string FindMessage { get; set; }
         public bool IsActivated { get; set; }
     }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +10,20 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     public class CaseStatisticsVM
     {
         public int CourtId { get; set; }
+
+        public int CaseTypeId { get; set; }
+
+        public int DocumentTypeId { get; set; }
+
+        public int CaseCodeId { get; set; }
+
+        public int ActComplainResultId { get; set; }
+
+        public int ActTypeId { get; set; }
+
+        public int ActComplainIndexId { get; set; }
+
+        public int ActISPNReasonId { get; set; }
 
         public int Count { get; set; }
 
@@ -101,6 +117,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
                 return result;
             }
         }
+
+        public int ProcessPriorityId { get; set; }
+
+        public bool IsDuration { get; set; } = false;
+
+        public TimeSpan Duration { get; set; }
     }
 
 
@@ -108,7 +130,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     {
         public int CourtTypeId { get; set; }
 
-        public int? CaseGroupId { get; set; }
+        public string CaseGroupId { get; set; }
         public List<int> CaseGroupCaseTypeIds { get; set; }
 
         public string CaseTypeIds { get; set; }
@@ -145,6 +167,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
 
         public int Col { get; set; }
+
+        public int? SheetIndex { get; set; }
     }
 
     public class StatisticsExcelReportComplainIndexVM
@@ -166,6 +190,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
 
         public int Col { get; set; }
+
+        public string SismaIndex { get; set; }
     }
 
     public class StatisticsExcelReportCaseCodeRowVM
@@ -176,6 +202,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         public int RowIndex { get; set; }
 
+        public string CaseCodeLabel { get; set; }
+
         public int CourtTypeId { get; set; }
 
         public List<int> CaseCode
@@ -183,6 +211,16 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
             get
             {
                 return CaseCodeIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
+
+        public string ExcludeColIds { get; set; }
+
+        public List<int> ExcludeCol
+        {
+            get
+            {
+                return ExcludeColIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
             }
         }
     }
@@ -235,6 +273,16 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         }
 
         public bool IsTrue { get; set; }
+
+        public string ProcessPriorityIds { get; set; }
+
+        public List<int> ProcessPriority
+        {
+            get
+            {
+                return ProcessPriorityIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
     }
 
     public class StatisticsExcelReportCaseTypeColVM
@@ -253,6 +301,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
                 return CaseTypeIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
             }
         }
+
         public string DocumentTypeIds { get; set; }
 
         public List<int> DocumentType
@@ -274,6 +323,18 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         }
 
         public bool IsTrue { get; set; }
+
+        public string SismaIndex { get; set; }
+
+        public string ProcessPriorityIds { get; set; }
+
+        public List<int> ProcessPriority
+        {
+            get
+            {
+                return ProcessPriorityIds.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList();
+            }
+        }
     }
 
     public class StatisticsExcelReportIspnReasonVM
@@ -296,6 +357,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         public int Col { get; set; }
     }
+    
     public class StatisticsNomDataVM
     {
         public List<StatisticsExcelReportIndexVM> excelReportIndexCols { get; set; }
@@ -309,5 +371,86 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         public List<StatisticsExcelReportCaseTypeColVM> excelReportCaseTypeCols { get; set; }
 
         public List<StatisticsExcelReportIspnReasonVM> excelReportIspnReasons { get; set; }
+
+        public List<SismaIndexRecap> sismaIndexRecaps { get; set; }
+
+        public List<ExcelSismaMapping> excelSismaMappings { get; set; }
+
+        public List<Court> courts { get; set; }
+    }
+    
+    public class SismaCaseStatisticsVM
+    {
+        public string CourtCode { get; set; }
+
+        public int CaseCodeId { get; set; }
+
+        public int ActComplainResultId { get; set; }
+
+        public string SismaIndex { get; set; }
+
+        public int Count { get; set; }
+
+        public int CountRecap { set; get; }
+
+        public string SubjectCode
+        {
+            get
+            {
+                string result = "";
+                if (string.IsNullOrEmpty(CodeData) == false)
+                {
+                    string[] name = CodeData.Split(",,");
+                    if (name.Length > 0)
+                        result = name[0];
+                }
+                return result;
+            }
+        }
+
+        public string SubjectName
+        {
+            get
+            {
+                string result = "";
+                if (string.IsNullOrEmpty(CodeData) == false)
+                {
+                    string[] name = CodeData.Split(",,");
+                    if (name.Length == 2)
+                        result = name[1];
+                }
+                return result;
+            }
+        }
+
+        public string CodeData { get; set; }
+
+        public int CaseTypeId { get; set; }
+
+        public int DocumentTypeId { get; set; }
+
+        public int ProcessPriorityId { get; set; }
+    }
+
+    public class CaseIspnDuration()
+    {
+        public int CourtId { get; set; }
+
+        public int? CaseId { get; set; }
+
+        public int CaseSessionActId { get; set; }
+
+        public DateTime ActDeclaredDate { get; set; }
+    }
+
+    public class CaseRequest760Duration()
+    {
+        public int CourtId { get; set; }
+
+        public int CaseId { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime EndDate { get; set; }
     }
 }

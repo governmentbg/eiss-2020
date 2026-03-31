@@ -1,0 +1,25 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common
+@using Microsoft.Extensions.Configuration
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Core.Helper.GlobalConstants
+@model BlankEditVM
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    @if (!string.IsNullOrEmpty(Model.HtmlHeader))
+    {
+        <div>
+            @Html.Raw(Model.HtmlHeader)
+        </div>
+    }
+    @Html.Raw(Model.HtmlContent)
+    @if (!string.IsNullOrEmpty(Model.HtmlFooter))
+    {
+        <div>
+            @Html.Raw(Model.HtmlFooter)
+        </div>
+    }
+</body>
+</html>

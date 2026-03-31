@@ -6,10 +6,12 @@ using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace IOWebApplication.Controllers
@@ -31,6 +33,7 @@ namespace IOWebApplication.Controllers
         /// Експертни комисии
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult ArchiveCommittee()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveCommittee().DeleteOrDisableLast();
@@ -61,6 +64,14 @@ namespace IOWebApplication.Controllers
             SetHelpFile(HelpFileValues.Nom12);
         }
 
+        void auditInfoCourtArchiveCommittee(string operation, CourtArchiveCommittee model, string add = "")
+        {
+            if (model != null)
+            {
+                AddAuditInfo(operation, $"{model.Label}", add, "Експертни комисии");
+            }
+        }
+
         /// <summary>
         /// Добавяне на Експертни комисии
         /// </summary>
@@ -85,6 +96,7 @@ namespace IOWebApplication.Controllers
         {
             SetBreadcrumsArchiveCommittee(id);
             var model = service.GetById<CourtArchiveCommittee>(id);
+            auditInfoCourtArchiveCommittee(AuditConstants.Operations.View, model);
             return View(nameof(EditArchiveCommittee), model);
         }
 
@@ -118,6 +130,7 @@ namespace IOWebApplication.Controllers
             if (service.CourtArchiveCommittee_SaveData(model, lawUnits))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                auditInfoCourtArchiveCommittee(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditArchiveCommittee), new { id = model.Id });
             }
@@ -150,10 +163,19 @@ namespace IOWebApplication.Controllers
             return Json(data);
         }
 
+        void auditInfoCourtArchiveIndex(string operation, CourtArchiveIndexEditVM model, string add = "")
+        {
+            if (model != null)
+            {
+                AddAuditInfo(operation, $"{model.Code} - {model.Label}", add, "Номенклатурни индекси");
+            }
+        }
+
         /// <summary>
         /// Номенклатурни индекси
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult ArchiveIndex()
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ArchiveIndex().DeleteOrDisableLast();
@@ -194,6 +216,7 @@ namespace IOWebApplication.Controllers
         /// Добавяне на Номенклатурни индекси
         /// </summary>
         /// <returns></returns>
+        [DisableAudit]
         public IActionResult AddArchiveIndex()
         {
             SetViewBagArchiveIndex();
@@ -216,6 +239,7 @@ namespace IOWebApplication.Controllers
             SetViewBagArchiveIndex();
             SetBreadcrumsArchiveIndex(id);
             var model = service.GetByIdVM(id);
+            auditInfoCourtArchiveIndex(AuditConstants.Operations.View, model);
             return View(nameof(EditArchiveIndex), model);
         }
 
@@ -251,6 +275,7 @@ namespace IOWebApplication.Controllers
             if (result == true)
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                auditInfoCourtArchiveIndex(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditArchiveIndex), new { id = model.Id });
             }
@@ -280,10 +305,10 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseGroupId"></param>
         /// <returns></returns>
-        public JsonResult CodeLeftList(int caseGroupId)
+        public async Task<JsonResult> CodeLeftList(int caseGroupId)
         {
-            var data = nomService.CaseCodeForSelect_Select(caseGroupId);
-            return Json(data);
+            var data = await nomService.CaseCodeForSelect_Select(caseGroupId).ToListAsync();
+            return Json(data.OrderBy(x => x.Text));
         }
     }
 }

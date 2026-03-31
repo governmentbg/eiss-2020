@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
+using IO.RegixClient;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
@@ -13,19 +10,23 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Rotativa.Extensions;
-using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
-using IOWebApplication.Infrastructure.Extensions;
-using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Schema;
-using Rotativa.AspNetCore.Options;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+//using DocumentFormat.OpenXml.Bibliography;
 
 namespace IOWebApplication.Controllers
 {
@@ -67,8 +68,13 @@ namespace IOWebApplication.Controllers
             regixReportService = _regixReportService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.Case, null, AuditConstants.Operations.View))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран Информация за страни");
             var model = new CasePersonFilterVM();
             SetHelpFile(HelpFileValues.SidesInfo);
             return View(model);
@@ -86,6 +92,22 @@ namespace IOWebApplication.Controllers
         {
             var data = service.CasePerson_Select(caseId, caseSessionId, true, false, true);
             return request.GetResponse(data);
+        }
+
+        /// <summary>
+        /// Извличане на данни за страни по дело/заседание
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="caseId"></param>
+        /// <param name="caseSessionId"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> ListDataList(IDataTablesRequest request, int caseId, int? caseSessionId)
+        {
+            var orderColums = request.Columns.Where(x => x.Sort != null);
+
+            var data = await service.CasePersonList_Select(caseId, caseSessionId, true, false, true, request.Start, request.Length < 0 ? 1000000 : request.Length, request.GetSortedColumnsForOrderBy());
+            return request.GetResponseServerPaging(data.Records, data.TotalCount);
         }
 
         /// <summary>
@@ -109,13 +131,13 @@ namespace IOWebApplication.Controllers
         /// <param name="caseId"></param>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseId, int? caseSessionId)
+        public async Task<IActionResult> Add(int caseId, int? caseSessionId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
-            var caseModel = service.GetById<Case>(caseId);
+            var caseModel = await service.GetReadonlyAsync<Case>(caseId);
             var model = new CasePersonVM()
             {
                 CaseId = caseId,
@@ -126,7 +148,7 @@ namespace IOWebApplication.Controllers
                 IsArrested = false,
                 IsDeceased = false
             };
-            SetViewbag(caseId, caseSessionId, caseModel.CaseGroupId, model);
+            await SetViewbag(caseId, caseSessionId, caseModel.CaseGroupId, model);
 
             ViewBag.canChange = CurrentContext.CanChange;
             return View(nameof(Edit), model);
@@ -137,21 +159,22 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var model = service.CasePerson_GetById(id);
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePerson, id, AuditConstants.Operations.Update, model.CaseId))
+            var model = await service.CasePerson_GetById(id);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, id, AuditConstants.Operations.Update, model.CaseId))
             {
                 return Redirect_Denied();
             }
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
+            await SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = CurrentContext.CanChange;
             return View(nameof(Edit), model);
         }
-        public IActionResult View(int id)
+
+        public async Task<IActionResult> View(int id)
         {
-            var model = service.CasePerson_GetById(id);
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
+            var model = await service.CasePerson_GetById(id);
+            await SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = false;
             return View(nameof(Edit), model);
         }
@@ -162,6 +185,24 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         void ValidateModelCasePerson(CasePersonVM model)
         {
+            switch (model.UicTypeId)
+            {
+                case NomenclatureConstants.UicTypes.Bulstat:
+                case NomenclatureConstants.UicTypes.EIK:
+                    if (string.IsNullOrEmpty(model.FullName))
+                    {
+                        ModelState.AddModelError($"{nameof(CasePersonVM.FullName)}", "Въведете 'Наименование'.");
+                    }
+                    model.DateDeceased = null;
+                    model.IsDeceased = null;
+                    break;
+                default:
+                    if (string.IsNullOrEmpty(model.FirstName))
+                    {
+                        ModelState.AddModelError($"{nameof(CasePersonVM.FirstName)}", "Въведете поне едно име.");
+                    }
+                    break;
+            }
             if (model.DateTo != null)
             {
                 if (((DateTime)model.DateTo).Date < model.DateFrom.Date)
@@ -177,9 +218,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Edit(CasePersonVM model)
+        public async Task<IActionResult> Edit(CasePersonVM model)
         {
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
+            await SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = CurrentContext.CanChange;
             ValidateModelCasePerson(model);
             if (!ModelState.IsValid)
@@ -187,7 +228,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(Edit), model);
             }
             var currentId = model.Id;
-            (bool result, string errorMessage) = service.CasePerson_SaveData(model);
+            (bool result, string errorMessage) = await service.CasePerson_SaveData(model);
             if (result == true)
             {
                 SetAuditContext(service, SourceTypeSelectVM.CasePerson, model.Id, currentId == 0);
@@ -204,14 +245,14 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        void SetViewbag(int caseId, int? caseSessionId, int caseGroupId, CasePersonVM model)
+        private async Task SetViewbag(int caseId, int? caseSessionId, int caseGroupId, CasePersonVM model)
         {
             //ViewBag.PersonRoleId_ddl = nomService.GetDropDownList<PersonRole>(true, false, false);
-            ViewBag.PersonRolesForArrested = nomService.GetPersonRoleIdsByGroup(NomenclatureConstants.PersonRoleGroupings.RoleArrested);
+            ViewBag.PersonRolesForArrested = await nomService.GetPersonRoleIdsByGroup(NomenclatureConstants.PersonRoleGroupings.RoleArrested);
 
-            ViewBag.PersonMaturityId_ddl = nomService.GetDropDownList<PersonMaturity>();
+            ViewBag.PersonMaturityId_ddl = await nomService.GetDropDownListAsync<PersonMaturity>();
 
-            ViewBag.MilitaryRangId_ddl = nomService.GetDropDownList<MilitaryRang>();
+            ViewBag.MilitaryRangId_ddl = await nomService.GetDropDownListAsync<MilitaryRang>();
             if (!NomenclatureConstants.CourtType.MillitaryCourts.Contains(userContext.CourtTypeId))
             {
                 ViewBag.MilitaryRangs = null;
@@ -224,13 +265,22 @@ namespace IOWebApplication.Controllers
             ViewBag.isRegisterCompany = false;
             if (caseGroupId == NomenclatureConstants.CaseGroups.Company)
             {
-                ViewBag.isRegisterCompany = caseService.IsRegisterCompany(caseId);
+                ViewBag.isRegisterCompany = await caseService.IsRegisterCompany(caseId);
                 if (ViewBag.isRegisterCompany)
-                    ViewBag.CompanyTypeId_ddl = nomService.GetDropDownList<CompanyType>();
+                    ViewBag.CompanyTypeId_ddl = await nomService.GetDropDownListAsync<CompanyType>();
             }
 
             model.RegixRequestReason.RegixReasonCaseId = caseId;
             model.RegixRequestReason.RegixRequestTypeId = NomenclatureConstants.RegixRequestTypes.FromCase;
+            if (caseSessionId == null)
+            {
+                bool isRNFL = await caseService.GetPropByIdAsync<Case, int?>(x => x.Id == caseId, x => x.IspnKind) == NomenclatureConstants.IspnKinds.Rnfl;
+                if (isRNFL)
+                {
+                    ViewBag.isRNFL = true;
+                    ViewBag.RelatedActId_ddl = caseSessionActService.GetDropDownList_CaseSessionAct(caseId, false);
+                }
+            }
 
             SetHelpFile(HelpFileValues.CasePerson);
         }
@@ -240,9 +290,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult CasePersonAddressList(int casePersonId)
+        public async Task<IActionResult> CasePersonAddressList(int casePersonId)
         {
-            var casePerson = service.GetById<CasePerson>(casePersonId);
+            var casePerson = await service.GetReadonlyAsync<CasePerson>(casePersonId);
             ViewBag.casePersonId = casePerson.Id;
             ViewBag.casePersonName = casePerson.FullName;
             ViewBag.caseId = casePerson.CaseId;
@@ -266,7 +316,6 @@ namespace IOWebApplication.Controllers
         public IActionResult ListDataCasePersonAddress(IDataTablesRequest request, int casePersonId)
         {
             var data = service.CasePersonAddress_Select(casePersonId);
-
             return request.GetResponse(data);
         }
 
@@ -275,14 +324,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult AddCasePersonAdr(int casePersonId)
+        public async Task<IActionResult> AddCasePersonAdr(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonAddress, null, AuditConstants.Operations.Append, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonAddress, null, AuditConstants.Operations.Append, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = service.GetById<CasePerson>(casePersonId);
-            SetViewBagPersonAddress(casePersonId);
+            var casePerson = await service.GetReadonlyAsync<CasePerson>(casePersonId);
+            await SetViewBagPersonAddress(casePersonId);
 
             var model = new CasePersonAddress()
             {
@@ -300,14 +349,18 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditCasePersonAdr(int id)
+        public async Task<IActionResult> EditCasePersonAdr(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonAddress, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonAddress, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
             var model = service.CasePersonAddress_GetById(id);
-            SetViewBagPersonAddress(model.CasePersonId);
+            if (model == null)
+            {
+                return NotFoundError("Търсеният от Вас адрес не е намерен и/или нямате достъп до него.");
+            }
+            await SetViewBagPersonAddress(model.CasePersonId);
             return View(nameof(EditCasePersonAdr), model);
         }
 
@@ -327,22 +380,85 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        public async Task<IActionResult> CasePersonAdr_FromRegix(int casePersonId, int adrId, int addressTypeId)
+        {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonAddress, null, AuditConstants.Operations.Append, casePersonId))
+            {
+                return Redirect_Denied();
+            }
+            var personInfo = await service.GetPropByIdAsync<CasePerson, dynamic>(casePersonId,
+                    x => new
+                    {
+                        x.CaseId,
+                        CaseNumber = x.Case.RegNumber,
+                        x.CourtId,
+                        x.Uic,
+                        x.UicTypeId
+                    });
+            CasePersonAddress model = null;
+            string regixReasonDescription = string.Empty;
+            if (adrId > 0)
+            {
+                model = service.CasePersonAddress_GetById(adrId);
+                regixReasonDescription = "Редактиране данни за адрес на страна";
+            }
+            else
+            {
+                model = new CasePersonAddress()
+                {
+                    CasePersonId = casePersonId,
+                    CaseId = personInfo.CaseId,
+                    CourtId = userContext.CourtId,
+                    Address = new Address(),
+                    ForNotification = false
+                };
+                regixReasonDescription = "Добавяне на адрес на страна";
+            }
+            string baseInfo = $"Дело {personInfo.CaseNumber}";
+            switch (addressTypeId)
+            {
+                case NomenclatureConstants.AddressType.Permanent:
+                    PermanentAddressResponseType pAdres = await regixReportService.GetPermanentAddressAndSave(personInfo.Uic, null, personInfo.CaseId, regixReasonDescription, null, NomenclatureConstants.RegixRequestTypes.FromCase);
+                    model.Address = pAdres.ToEntity();
+                    if (model.Address != null)
+                        commonService.Address_LocationCorrection(model.Address);
+                    AddAuditInfo("Преглед", baseInfo, $"Проверка в НБД за постоянен адрес на лице по ЕГН {personInfo.Uic}");
+                    break;
+                case NomenclatureConstants.AddressType.Current:
+                    TemporaryAddressResponseType tAdres = await regixReportService.GetCurrentAddressAndSave(personInfo.Uic, null, personInfo.CaseId, regixReasonDescription, null, NomenclatureConstants.RegixRequestTypes.FromCase);
+                    model.Address = tAdres.ToEntity();
+                    if (model.Address != null)
+                        commonService.Address_LocationCorrection(model.Address);
+                    AddAuditInfo("Преглед", baseInfo, $"Проверка в НБД за настоящ адрес на лице по ЕГН {personInfo.Uic}");
+                    break;
+                default:
+                    {
+                        await SetViewBagPersonAddress(casePersonId);
+                        SetErrorMessage("Справка към Regix можете да направите само за постоянен или настоящ адрес!");
+                        return View(nameof(EditCasePersonAdr), model);
+                    }
+            }
+            await SetViewBagPersonAddress(casePersonId);
+            SetSuccessMessage("Данните от Regix са заредени успешно!");
+            return View(nameof(EditCasePersonAdr), model);
+        }
+
         /// <summary>
         /// запис на адрес
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditCasePersonAdr(CasePersonAddress model)
+        public async Task<IActionResult> EditCasePersonAdr(CasePersonAddress model)
         {
-            SetViewBagPersonAddress(model.CasePersonId);
+            await SetViewBagPersonAddress(model.CasePersonId);
             ValidateModel(model);
             if (!ModelState.IsValid)
             {
                 return View(nameof(EditCasePersonAdr), model);
             }
             var currentId = model.Id;
-            (bool result, string errorMessage) = service.CasePersonAddress_SaveData(model);
+            (bool result, string errorMessage) = await service.CasePersonAddress_SaveData(model);
             if (result == true)
             {
                 SetAuditContext(service, SourceTypeSelectVM.CasePersonAddress, model.Id, currentId == 0);
@@ -359,25 +475,26 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditCasePersonAdr), model);
         }
 
-        public void SetViewBagPersonAddress(int casePersonId)
+        public async Task SetViewBagPersonAddress(int casePersonId)
         {
-            ViewBag.CountriesDDL = nomService.GetCountries();
-            ViewBag.AddressTypesDDL = nomService.GetDropDownList<AddressType>();
+            ViewBag.CountriesDDL = await nomService.GetCountriesAsync();
+            ViewBag.AddressTypesDDL = await nomService.GetDropDownListAsync<AddressType>();
 
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonAddress(casePersonId);
             SetHelpFile(HelpFileValues.CasePerson);
         }
 
         [HttpPost]
-        public IActionResult CasePersonAdr_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CasePersonAdr_ExpiredInfo(ExpiredInfoVM model)
         {
-            var expireModel = service.GetById<CasePersonAddress>(model.Id);
-            var isUsed = service.CasePersonAddress_IsUsed(expireModel);
+            var expireModel = await service.GetByIdAsync<CasePersonAddress>(model.Id);
+            var isUsed = await service.CasePersonAddress_IsUsed(expireModel);
             if (isUsed.Result)
             {
                 //адреса е използван
                 return Json(new { result = false, message = isUsed.ErrorMessage });
             }
+
             if (service.SaveExpireInfo<CasePersonAddress>(model))
             {
                 SetAuditContextDelete(service, SourceTypeSelectVM.CasePersonAddress, model.Id);
@@ -396,9 +513,19 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ChangeOrderCasePerson(ChangeOrderModel model)
+        public async Task<IActionResult> ChangeOrderCasePerson(ChangeOrderModel model)
         {
-            var casePerson = service.GetById<CasePerson>(model.Id);
+            var casePerson = await service.GetByIdAsync<CasePerson>(model.Id);
+            CurrentContext_Set(await service.GetCurrentContextAsync(SourceTypeSelectVM.CasePerson, model.Id, AuditConstants.Operations.Patch));
+            var personRole = await service.GetPropByIdAsync<PersonRole, string>(x => x.Id == casePerson.PersonRoleId, x => x.Label);
+            if (model.Direction == "up")
+            {
+                CurrentContext_SetObjectInfo($"Преместване на {casePerson.FullName} ({personRole}) в списък нагоре");
+            }
+            else
+            {
+                CurrentContext_SetObjectInfo($"Преместване на {casePerson.FullName} ({personRole}) в списък надолу");
+            }
             Func<CasePerson, int?> orderProp = x => x.RowNumber;
             Expression<Func<CasePerson, int?>> setterProp = (x) => x.RowNumber;
             Expression<Func<CasePerson, bool>> predicate = x => x.CaseId == casePerson.CaseId && (x.CaseSessionId ?? 0) == (casePerson.CaseSessionId ?? 0);
@@ -418,9 +545,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ChangeOrderCasePersonNotification(ChangeOrderModel model)
+        public async Task<IActionResult> ChangeOrderCasePersonNotification(ChangeOrderModel model)
         {
-            var casePerson = service.GetById<CasePerson>(model.Id);
+            var casePerson = await service.GetByIdAsync<CasePerson>(model.Id);
             Func<CasePerson, int?> orderProp = x => x.NotificationNumber;
             Expression<Func<CasePerson, int?>> setterProp = (x) => x.NotificationNumber;
             Expression<Func<CasePerson, bool>> predicate = x => x.CaseId == casePerson.CaseId && (x.CaseSessionId ?? 0) == (casePerson.CaseSessionId ?? 0) && (x.ForNotification == true);
@@ -442,14 +569,14 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
-        public IActionResult CasePerson_SelectForCheck(int caseId, int caseSessionId, int realCaseSessionId)
+        public async Task<IActionResult> CasePerson_SelectForCheck(int caseId, int caseSessionId, int realCaseSessionId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, realCaseSessionId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, realCaseSessionId))
             {
                 return Redirect_Denied();
             }
             ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { id = realCaseSessionId });
-            var data = service.CasePerson_SelectForCheck(caseId, caseSessionId, realCaseSessionId);
+            var data = await service.CasePerson_SelectForCheck(caseId, caseSessionId, realCaseSessionId);
             return PartialView("CheckListViewVM", data);
         }
 
@@ -459,20 +586,17 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CasePerson_SelectForCheck(CheckListViewVM model)
+        //[DisableRequestSizeLimit]
+        //[RequestFormLimits(ValueCountLimit = 100000, MultipartBodyLengthLimit = int.MaxValue, ValueLengthLimit = int.MaxValue, KeyLengthLimit = 100000)]
+        //[RequestSizeLimit(2147483648)]
+        public async Task<IActionResult> CasePerson_SelectForCheck(CheckListViewVM model)
         {
-            string ids = "";
-            foreach (var item in model.checkListVMs)
-            {
-                if (item.Checked == false) continue;
-                if (ids != "")
-                    ids += ",";
-                ids += item.Value;
-            }
+            string ids = string.Join(",", model.checkListVMs.Where(x => x.Checked).Select(x => x.Value));
             if (service.CasePerson_CopyCasePerson(ids, model.CourtId, model.ObjectId))
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, model.ObjectId);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, model.ObjectId);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                this.SaveLogOperation(IO.LogOperation.Models.OperationTypes.Patch, model.ObjectId);
             }
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
@@ -524,14 +648,14 @@ namespace IOWebApplication.Controllers
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult ReloadPersonData(int caseId, int caseSessionId)
+        public async Task<JsonResult> ReloadPersonData(int caseId, int caseSessionId)
         {
             object res = null;
             (bool result, string errorMessage) = service.ReloadPersonData(caseId, caseSessionId);
 
             if (result == true)
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, caseSessionId);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, caseSessionId);
                 res = new { result = result, message = "Обновяването на данните премина успешно" };
             }
             else
@@ -544,15 +668,15 @@ namespace IOWebApplication.Controllers
             return Json(res);
         }
 
-        public IActionResult CasePersonPrint_SelectForCheck(int caseId)
+        public async Task<IActionResult> CasePersonPrint_SelectForCheck(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.View, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.View, caseId))
             {
                 return Redirect_Denied();
             }
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(caseId);
             ViewBag.backUrl = Url.Action("CasePreview", "Case", new { id = caseId });
-            var data = service.CasePersonPrint_SelectForCheck(caseId);
+            var data = await service.CasePersonPrint_SelectForCheck(caseId);
 
             if (data.checkListVMs.Count < 1)
             {
@@ -577,7 +701,7 @@ namespace IOWebApplication.Controllers
                 return RedirectToAction("CasePreview", "Case", new { id = model.CourtId });
             }
 
-            var caseVM = caseService.Case_GetById(model.CourtId);
+            var caseVM = await caseService.GetCaseInfo(model.CourtId);
 
             Print_CaseSessionNotificationListVM print_CaseSessionNotificationList = new Print_CaseSessionNotificationListVM()
             {
@@ -598,6 +722,7 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(htmlModel.SourceId);
             return View("EditTinyMCE", htmlModel);
         }
+
         [HttpPost]
         public async Task<IActionResult> EditTinyMCE(TinyMCEVM htmlModel)
         {
@@ -625,13 +750,13 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
 
             return RedirectToAction("CasePreview", "Case", new { id = htmlModel.SourceId });
-        } 
+        }
 
-        public IActionResult AddLikeAnotherPerson(int personId)
+        public async Task<IActionResult> AddLikeAnotherPerson(int personId)
         {
 
-            var model = service.CasePerson_GetById(personId);
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.Append, model.CaseId))
+            var model = await service.CasePerson_GetById(personId);
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.Append, model.CaseId))
             {
                 return Redirect_Denied();
             }
@@ -641,7 +766,7 @@ namespace IOWebApplication.Controllers
             model.PersonRoleId = 0;
             model.FromPersonId = personId;
 
-            SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
+            await SetViewbag(model.CaseId, model.CaseSessionId, model.CaseGroupId, model);
             ViewBag.canChange = true;
             return View(nameof(Edit), model);
         }
@@ -653,9 +778,9 @@ namespace IOWebApplication.Controllers
         /// <param name="sourceId"></param>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult AddInstitution(int sourceType, long sourceId, int caseId)
+        public async Task<IActionResult> AddInstitution(int sourceType, long sourceId, int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -688,7 +813,8 @@ namespace IOWebApplication.Controllers
                 model.FamilyName = lawUnit.FamilyName;
                 model.Family2Name = lawUnit.Family2Name;
             }
-            var entityData = commonService.SelectEntity_Select(sourceType, null, null, sourceId).FirstOrDefault();
+            var entityData = await commonService.SelectEntity_Select(sourceType, null, null, sourceId)
+                                                .FirstOrDefaultAsync();
             if (entityData != null)
             {
                 model.FullName = entityData.Label;
@@ -713,9 +839,54 @@ namespace IOWebApplication.Controllers
                 }
             }
 
-            SetViewbag(model.CaseId, model.CaseSessionId, 0, model);
+            await SetViewbag(model.CaseId, model.CaseSessionId, 0, model);
             ViewBag.canChange = true;
             return View(nameof(Edit), model);
+        }
+
+        public async Task<IActionResult> ActualizeFromBase(int id)
+        {
+            var casePerson = await commonService.GetByIdAsync<CasePerson>(id);
+            if (casePerson == null || !(casePerson.Person_SourceType > 0) || !(casePerson.Person_SourceId > 0))
+            {
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var actualData = await commonService.SelectEntity_Select(casePerson.Person_SourceType.Value, null, null, casePerson.Person_SourceId)
+                                                .FirstOrDefaultAsync();
+
+            if (actualData == null)
+            {
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var model = await service.CasePerson_GetById(id);
+
+            if (casePerson.Person_SourceType == SourceTypeSelectVM.LawUnit)
+            {
+                var lawUnit = await commonService.GetByIdAsync<LawUnit>((int)casePerson.Person_SourceId);
+                model.Uic = lawUnit.Uic;
+                model.FirstName = lawUnit.FirstName;
+                model.MiddleName = lawUnit.MiddleName;
+                model.FamilyName = lawUnit.FamilyName;
+                model.Family2Name = lawUnit.Family2Name;
+            }
+            model.FullName = actualData.Label;
+
+            (bool result, string errorMessage) = await service.CasePerson_SaveData(model);
+            if (result == true)
+            {
+                this.SaveLogOperation(this.ControllerName, nameof(Edit), $"Актуализиране данни от основен регистър: {actualData.Label}", IO.LogOperation.Models.OperationTypes.Patch, model.Id);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+            }
+            else
+            {
+                if (errorMessage == "")
+                    errorMessage = MessageConstant.Values.SaveFailed;
+                SetErrorMessage(errorMessage);
+            }
+
+            return RedirectToAction(nameof(Edit), new { id });
         }
 
         /// <summary>
@@ -724,21 +895,21 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CasePerson_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CasePerson_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePerson, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
-            var expireObject = service.GetById<CasePerson>(model.Id);
-            (bool result, string errorMessage) = service.CheckCasePersonExpired(expireObject);
+            var expireObject = await service.GetByIdAsync<CasePerson>(model.Id);
+            (bool result, string errorMessage) = await service.CheckCasePersonExpired(expireObject);
             if (result == false)
             {
                 return Json(new { result = false, message = errorMessage });
             }
             else
             {
-                if (service.CasePerson_SaveExpiredPlus(model))
+                if (await service.CasePerson_SaveExpiredPlus(model))
                 {
                     SetAuditContextDelete(service, SourceTypeSelectVM.CasePerson, model.Id);
                     var isExistCFP = service.IsExistFastProcess(expireObject.CaseId, expireObject.Id);
@@ -762,8 +933,7 @@ namespace IOWebApplication.Controllers
         /// <param name="personSourceType"></param>
         /// <param name="personSourceId"></param>
         /// <returns></returns>
-        public IActionResult CasePersonAddress_Search(string uic, int uicTypeId, int casePersonId, int? personSourceType,
-                        long? personSourceId)
+        public IActionResult CasePersonAddress_Search(string uic, int uicTypeId, int casePersonId, int? personSourceType, long? personSourceId)
         {
             ViewBag.uic = uic;
             ViewBag.uicTypeId = uicTypeId;
@@ -774,10 +944,10 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public JsonResult AddAddressFromSearch(int casePersonId, int addressId)
+        public async Task<JsonResult> AddAddressFromSearch(int casePersonId, int addressId)
         {
             object res = null;
-            (bool result, string errorMessage) = service.CasePersonAddress_AddFromSearch(casePersonId, addressId);
+            (bool result, string errorMessage) = await service.CasePersonAddress_AddFromSearch(casePersonId, addressId);
 
             if (result == true)
             {
@@ -798,13 +968,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult IndexInheritance(int casePersonId)
+        public async Task<IActionResult> IndexInheritance(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonInheritance, null, AuditConstants.Operations.View, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonInheritance, null, AuditConstants.Operations.View, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = service.GetById<CasePerson>(casePersonId);
+            var casePerson = await service.GetByIdAsync<CasePerson>(casePersonId);
             ViewBag.casePersonId = casePersonId;
             ViewBag.casePersonName = casePerson.FullName;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(casePerson.CaseId);
@@ -831,14 +1001,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult AddInheritance(int casePersonId)
+        public async Task<IActionResult> AddInheritance(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonInheritance, null, AuditConstants.Operations.Append, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonInheritance, null, AuditConstants.Operations.Append, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = service.GetById<CasePerson>(casePersonId);
-            SetViewbagInheritance(casePerson.CaseId, casePerson.Id);
+            var casePerson = await service.GetByIdAsync<CasePerson>(casePersonId);
+            await SetViewbagInheritance(casePerson.CaseId, casePerson.Id);
             var model = new CasePersonInheritance()
             {
                 CasePersonId = casePerson.Id,
@@ -855,14 +1025,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditInheritance(int id)
+        public async Task<IActionResult> EditInheritance(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonInheritance, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonInheritance, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CasePersonInheritance>(id);
-            SetViewbagInheritance(model.CaseId, model.CasePersonId);
+            var model = await service.GetByIdAsync<CasePersonInheritance>(id);
+            await SetViewbagInheritance(model.CaseId, model.CasePersonId);
             return View(nameof(EditInheritance), model);
         }
 
@@ -888,9 +1058,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditInheritance(CasePersonInheritance model)
+        public async Task<IActionResult> EditInheritance(CasePersonInheritance model)
         {
-            SetViewbagInheritance(model.CaseId, model.CasePersonId);
+            await SetViewbagInheritance(model.CaseId, model.CasePersonId);
 
             if (!ModelState.IsValid)
             {
@@ -905,7 +1075,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CasePersonInheritance_SaveData(model))
+            if (await service.CasePersonInheritance_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CasePersonInheritance, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -919,22 +1089,23 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditInheritance), model);
         }
 
-        void SetViewbagInheritance(int caseId, int casePersonId)
+        private async Task SetViewbagInheritance(int caseId, int casePersonId)
         {
-            ViewBag.CaseSessionActId_ddl = caseSessionActService.GetDropDownList(caseId, null, true);
-            ViewBag.CasePersonInheritanceResultId_ddl = nomService.GetDropDownList<CasePersonInheritanceResult>();
+            ViewBag.CaseSessionActId_ddl = await caseSessionActService.GetDropDownListAsync(caseId, null, true);
+            ViewBag.CasePersonInheritanceResultId_ddl = await nomService.GetDropDownListAsync<CasePersonInheritanceResult>();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonInheritance(casePersonId);
             SetHelpFile(HelpFileValues.CasePerson);
         }
 
         [HttpPost]
-        public IActionResult CasePersonInheritance_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CasePersonInheritance_ExpiredInfo(ExpiredInfoVM model)
         {
-            var expireObject = service.GetById<CasePersonInheritance>(model.Id);
+            var expireObject = await service.GetByIdAsync<CasePersonInheritance>(model.Id);
             if (service.SaveExpireInfo<CasePersonInheritance>(model))
             {
+                SetAuditContextDelete(service, SourceTypeSelectVM.CasePersonInheritance, model.Id);
                 SetSuccessMessage(MessageConstant.Values.CaseLoadIndexExpireOK);
-                return Json(new { result = true, redirectUrl = Url.Action("IndexInheritance", "CasePerson", new { casePersonId = expireObject.CaseId }) });
+                return Json(new { result = true, redirectUrl = Url.Action("IndexInheritance", "CasePerson", new { casePersonId = expireObject.CasePersonId }) });
             }
             else
             {
@@ -947,13 +1118,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult IndexCasePersonMeasure(int casePersonId)
+        public async Task<IActionResult> IndexCasePersonMeasure(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentence, null, AuditConstants.Operations.View, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentence, null, AuditConstants.Operations.View, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = service.GetById<CasePerson>(casePersonId);
+
+            var casePerson = await service.GetByIdAsync<CasePerson>(casePersonId);
             ViewBag.casePersonId = casePersonId;
             ViewBag.casePersonName = casePerson.FullName;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(casePerson.CaseId);
@@ -980,20 +1152,22 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="personId"></param>
         /// <returns></returns>
-        public IActionResult AddCasePersonMeasure(int personId)
+        public async Task<IActionResult> AddCasePersonMeasure(int personId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonMeasure, null, AuditConstants.Operations.Append, personId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonMeasure, null, AuditConstants.Operations.Append, personId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = service.GetById<CasePerson>(personId);
-            SetViewbagCasePersonMeasure(casePerson.Id);
+            var casePerson = await service.GetByIdAsync<CasePerson>(personId);
+            await SetViewbagCasePersonMeasure(casePerson.Id);
             var model = new CasePersonMeasureEditVM()
             {
                 CasePersonId = casePerson.Id,
                 CaseId = casePerson.CaseId,
                 CourtId = userContext.CourtId,
-                MeasureStatusDate = DateTime.Now
+                MeasureStatusDate = DateTime.Now,
+                MeasureType = "0",
+                Punishments = await service.CasePersonSentencePunishmentMeasure_GetPunishmentChecks(0, personId)
             };
             return View(nameof(EditCasePersonMeasure), model);
         }
@@ -1003,14 +1177,15 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditCasePersonMeasure(int id)
+        public async Task<IActionResult> EditCasePersonMeasure(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonMeasure, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonMeasure, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.CasePersonMeasure_GetById(id);
-            SetViewbagCasePersonMeasure(model.CasePersonId);
+            var model = await service.CasePersonMeasure_GetById(id);
+            model.Punishments = await service.CasePersonSentencePunishmentMeasure_GetPunishmentChecks(id, 0);
+            await SetViewbagCasePersonMeasure(model.CasePersonId);
             return View(nameof(EditCasePersonMeasure), model);
         }
 
@@ -1036,7 +1211,7 @@ namespace IOWebApplication.Controllers
             if (model.MeasureStatus == "0")
                 return "Изберете статус";
 
-            if (model.MeasureStatusDate == null)
+            if (model.MeasureStatusDate.Year < 2000)
                 return "Въведете дата на мярката";
 
             return string.Empty;
@@ -1048,9 +1223,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditCasePersonMeasure(CasePersonMeasureEditVM model)
+        public async Task<IActionResult> EditCasePersonMeasure(CasePersonMeasureEditVM model)
         {
-            SetViewbagCasePersonMeasure(model.CasePersonId);
+            await SetViewbagCasePersonMeasure(model.CasePersonId);
 
             if (ModelState.ContainsKey("MeasureInstitutionId"))
             {
@@ -1071,7 +1246,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CasePersonMeasure_SaveData(model))
+            if (await service.CasePersonMeasure_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CasePersonMeasure, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -1085,22 +1260,38 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditCasePersonMeasure), model);
         }
 
-        void SetViewbagCasePersonMeasure(int casePersonId)
+        private async Task SetViewbagCasePersonMeasure(int casePersonId)
         {
-            ViewBag.MeasureType_ddl = eisppService.GetDDL_EISPPTblElement(EISPPConstants.EisppTableCode.MeasureType);
-            ViewBag.MeasureStatus_ddl = eisppService.GetDDL_EISPPTblElement(EISPPConstants.EisppTableCode.MeasureStatus);
-            ViewBag.MeasureInstitutionTypeId_ddl = nomService.GetDropDownList<InstitutionType>();
+            ViewBag.MeasureUnit_ddl = await eisppService.GetDDL_EISPPTblElementAsync(EISPPConstants.EisppTableCode.MeasureUnit);
+            ViewBag.MeasureStatus_ddl = await eisppService.GetDDL_EISPPTblElementAsync(EISPPConstants.EisppTableCode.MeasureStatus);
+            ViewBag.MeasureInstitutionTypeId_ddl = await nomService.GetDropDownListAsync<InstitutionType>();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonMeasure(casePersonId);
+            ViewBag.MeasureKindId_ddl = nomService.GetDDL_MeasureKind();
             SetHelpFile(HelpFileValues.CasePerson);
         }
-        [HttpPost]
-        public IActionResult CasePersonMeasure_ExpiredInfo(ExpiredInfoVM model)
+
+        [HttpGet]
+        public async Task<IActionResult> GetDDLMeasureType(int measureKindId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonMeasure, model.Id, AuditConstants.Operations.Delete))
+            string _tableName = measureKindId switch
+            {
+                1 => EISPPConstants.EisppTableCode.MeasureType,
+                2 => EISPPConstants.EisppTableCode.ProbationMeasureType,
+                _ => string.Empty
+            };
+
+            var model = await eisppService.GetDDL_EISPPTblElementAsync(_tableName);
+            return Json(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CasePersonMeasure_ExpiredInfo(ExpiredInfoVM model)
+        {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonMeasure, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
-            if (eisppService.HaveEventForMeasure(model.Id))
+            if (await eisppService.HaveEventForMeasure(model.Id))
             {
                 return Json(new { result = false, message = "Има ЕИСПП събитие за тази мярка" });
             }
@@ -1121,13 +1312,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult IndexCasePersonDocument(int casePersonId)
+        public async Task<IActionResult> IndexCasePersonDocument(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonDocument, null, AuditConstants.Operations.View, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonDocument, null, AuditConstants.Operations.View, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = service.GetById<CasePerson>(casePersonId);
+            var casePerson = await service.GetByIdAsync<CasePerson>(casePersonId);
             ViewBag.casePersonId = casePersonId;
             ViewBag.casePersonName = casePerson.FullName;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(casePerson.CaseId);
@@ -1154,14 +1345,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult AddCasePersonDocument(int casePersonId)
+        public async Task<IActionResult> AddCasePersonDocument(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonDocument, null, AuditConstants.Operations.Append, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonDocument, null, AuditConstants.Operations.Append, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = service.GetById<CasePerson>(casePersonId);
-            SetViewbagCasePersonDocument(casePerson.Id);
+            var casePerson = await service.GetByIdAsync<CasePerson>(casePersonId);
+            await SetViewbagCasePersonDocument(casePerson.Id);
             var model = new CasePersonDocument()
             {
                 CasePersonId = casePerson.Id,
@@ -1177,14 +1368,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditCasePersonDocument(int id)
+        public async Task<IActionResult> EditCasePersonDocument(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonDocument, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonDocument, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CasePersonDocument>(id);
-            SetViewbagCasePersonDocument(model.CasePersonId);
+            var model = await service.GetByIdAsync<CasePersonDocument>(id);
+            await SetViewbagCasePersonDocument(model.CasePersonId);
             return View(nameof(EditCasePersonDocument), model);
         }
 
@@ -1204,7 +1395,7 @@ namespace IOWebApplication.Controllers
             if (model.DocumentNumber == string.Empty)
                 return "Въведете номер документ";
 
-            if (model.DocumentDate == null)
+            if (model.DocumentDate.Year < 1900)
                 return "Въведете дата на издаване";
 
             return string.Empty;
@@ -1216,9 +1407,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditCasePersonDocument(CasePersonDocument model)
+        public async Task<IActionResult> EditCasePersonDocument(CasePersonDocument model)
         {
-            SetViewbagCasePersonDocument(model.CasePersonId);
+            await SetViewbagCasePersonDocument(model.CasePersonId);
 
             if (!ModelState.IsValid)
             {
@@ -1233,7 +1424,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CasePersonDocument_SaveData(model))
+            if (await service.CasePersonDocument_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CasePersonDocument, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -1247,10 +1438,10 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditCasePersonDocument), model);
         }
 
-        void SetViewbagCasePersonDocument(int casePersonId)
+        private async Task SetViewbagCasePersonDocument(int casePersonId)
         {
-            ViewBag.IssuerCountryCode_ddl = nomService.GetCountries();
-            ViewBag.PersonalDocumentTypeId_ddl = eisppService.GetDDL_EISPPTblElement(EISPPConstants.EisppTableCode.PersonalDocumentType);
+            ViewBag.IssuerCountryCode_ddl = await nomService.GetCountriesAsync();
+            ViewBag.PersonalDocumentTypeId_ddl = await eisppService.GetDDL_EISPPTblElementAsync(EISPPConstants.EisppTableCode.PersonalDocumentType);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonDocument(casePersonId);
             SetHelpFile(HelpFileValues.CasePerson);
         }
@@ -1262,10 +1453,10 @@ namespace IOWebApplication.Controllers
         /// <param name="DocumentNumber"></param>
         /// <returns></returns>
         [HttpPost]
-        public JsonResult GetPersonalIdentityV2(int CasePersonId, string DocumentNumber)
+        public async Task<JsonResult> GetPersonalIdentityV2(int CasePersonId, string DocumentNumber)
         {
-            var casePerson = service.GetById<CasePerson>(CasePersonId);
-            var documentRegixVM = regixReportService.GetPersonalIdentity(DocumentNumber, casePerson.Uic);
+            var casePerson = await service.GetByIdAsync<CasePerson>(CasePersonId);
+            var documentRegixVM = await regixReportService.GetPersonalIdentity(DocumentNumber, casePerson.Uic);
             return Json(new { documentRegixVM });
         }
 
@@ -1299,7 +1490,7 @@ namespace IOWebApplication.Controllers
 
         private async Task<List<DocumentSelectPersonsVM>> casePersonsData(int caseId)
         {
-            var caseModel = caseService.GetById<Case>(caseId);
+            var caseModel = await caseService.GetByIdAsync<Case>(caseId);
             var eisppNumber = caseModel.EISSPNumber;
             var model = new List<DocumentSelectPersonsVM>();
             //Добавяне на лица и адреси по ЕИСПП номер
@@ -1325,7 +1516,7 @@ namespace IOWebApplication.Controllers
             }
 
             //Добавяне на лица и адреси по свързани дела от движение на дело
-            var caseMigrations = migService.Select(caseId).Select(x => x.CaseId).Where(x => x != caseId).Distinct().ToList();
+            var caseMigrations = await migService.Select(caseId).Select(x => x.CaseId).Where(x => x != caseId).Distinct().ToListAsync();
             foreach (var item in caseMigrations)
             {
                 var selectFromPriorCase = docService.Case_SelectPersons(item);
@@ -1344,11 +1535,89 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetDDL_CasePersonAddress(int casePersonId)
+        public async Task<IActionResult> GetDDL_CasePersonAddress(int casePersonId)
         {
-            var model = service.GetAddressByCasePerson_DropDown(casePersonId);
+            var model = await service.GetAddressByCasePerson_DropDown(casePersonId);
             return Json(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetDDL_CasePersonByActId(int actId)
+        {
+            if (actId == 0)
+            {
+                return Content("[]");
+            }
+            var actModel = await service.GetByIdAsync<CaseSessionAct>(actId);
+            var model = await service.CasePersonFast_SelectForCasePreview(actModel.CaseId ?? 0, actModel.CaseSessionId)
+                                     .Select(x => new SelectListItem
+                                     {
+                                         Value = x.Id.ToString(),
+                                         Text = $"{x.FullName} ({x.RoleName})"
+                                     })
+                                     .ToListAsync();
+
+            return Json(model);
+        }
+
+        [HttpPost]
+        public IActionResult ListDataCasePersonPrevName(IDataTablesRequest request, int casePersonId)
+        {
+            var data = service.CasePersonPrevName_Select(casePersonId);
+            return request.GetResponse(data);
+        }
+
+        public async Task<IActionResult> AddPrevName(int casePersonId)
+        {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, casePersonId, AuditConstants.Operations.Append))
+            {
+                return Redirect_Denied();
+            }
+            var model = new CasePersonPrevName()
+            {
+                CasePersonId = casePersonId
+            };
+            await setViewBagPrevName();
+            return View("EditCasePersonPrevName", model);
+        }
+
+        public async Task<IActionResult> EditPrevName(int id)
+        {
+            var model = await service.GetByIdAsync<CasePersonPrevName>(id);
+            if (model == null)
+            {
+                return NotFoundError("Търсеният от Вас име на лице не е намерено и/или нямате достъп до него.");
+            }
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePerson, model.CasePersonId, AuditConstants.Operations.Update))
+            {
+                return Redirect_Denied();
+            }
+            await setViewBagPrevName();
+            return View("EditCasePersonPrevName", model);
+        }
+
+        async Task setViewBagPrevName()
+        {
+            ViewBag.PersonPrevNamesTypeId_ddl = await nomService.GetDropDownListAsync<PersonPrevNamesType>();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPrevName(CasePersonPrevName model)
+        {
+            int currentId = model.Id;
+            var result = await service.CasePersonPrevName_SaveData(model);
+            if (result.Result)
+            {
+                this.SaveLogOperation(currentId == 0, model.Id);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+                return RedirectToAction(nameof(Edit), new { id = model.CasePersonId });
+            }
+            else
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            await setViewBagPrevName();
+            return View("EditCasePersonPrevName", model);
+        }
     }
 }

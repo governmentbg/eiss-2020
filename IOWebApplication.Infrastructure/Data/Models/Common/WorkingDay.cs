@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+﻿using IOWebApplication.Infrastructure.Data.Models.Base;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,7 +11,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
     /// Календар на почивни/извънредно работни дни
     /// </summary>
     [Table("common_working_day")]
-    public class WorkingDay 
+    public class WorkingDay : UserDateWRT
     {
         [Key]
         [Column("id")]

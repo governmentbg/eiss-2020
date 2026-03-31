@@ -46,6 +46,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 
         public bool DisableSelfAcceptCheck { get; set; }
 
+        public string SourceDescription { get; set; }
+        public string ParentDescription { get; set; }
+
 
         public void ToEntity(WorkTask entity)
         {

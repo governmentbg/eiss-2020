@@ -18,7 +18,7 @@
 
 
 }
-@section breadcrumb{
+@section breadcrumb {
     <partial name="Breadcrumbs" model="@ViewBag.breadcrumbs" />
 }
 <div class="row">
@@ -53,12 +53,20 @@
                 <div id="returnCase">
                     @Html.EditorFor(x => x.ReturnCaseId, "GenericDropDown")
                 </div>
-                <div class="form-group">
+                <div class="form-group select-sender">
                     <label class="control-label">Изберете получател на делото</label>
                     <div>
                         <label>@Html.RadioButtonFor(x => x.SendToTypeId, NomenclatureConstants.CaseMigrationSendTo.Court, new { @class = "toCourt" }) Към съд</label>
                         &nbsp;&nbsp;&nbsp;
                         <label>@Html.RadioButtonFor(x => x.SendToTypeId, NomenclatureConstants.CaseMigrationSendTo.Institution, new { @class = "toInstitution" }) Към институция</label>
+                    </div>
+                </div>
+                <div id="textNoCourt">
+                    <div class="form-group select-sender">
+                        <label class="control-label">Забележка:</label>
+                        <div>
+                            Избраното движение не изисква избор на съд
+                        </div>
                     </div>
                 </div>
                 <div id="sendToCourt">
@@ -89,14 +97,14 @@
     </div>
 </div>
 
-@section scripts{
+@section scripts {
     <script>
         $(function () {
             initCourts();
             initInstitution();
             $('input[name="SendToTypeId"]').click(function () {
                 if ($(this).is(':checked')) {
-                    if ($(this).val() == @NomenclatureConstants.CaseMigrationSendTo.Court) {
+                    if ($(this).val() == @(NomenclatureConstants.CaseMigrationSendTo.Court)) {
                         $('#sendToCourt').show();
                         $('#sendToInstitution').hide();
                     } else {
@@ -109,6 +117,8 @@
                 $('#actToApeal').hide();
                 $('#actAll').hide();
                 $('#returnCase').hide();
+                $('#textNoCourt').hide();
+                $('input[name="SendToTypeId"]:checked').trigger('click')
                 switch ($(this).val()) {
                     case '@(NomenclatureConstants.CaseMigrationTypes.SendNextLevel)':
                         $('#actToApeal').show().find('select').trigger('change');
@@ -119,7 +129,16 @@
                     case '@(NomenclatureConstants.CaseMigrationTypes.ReturnCase_AfterComplain)':
                     case '@(NomenclatureConstants.CaseMigrationTypes.ReturnCase_ForAdmin)':
                     case '@(NomenclatureConstants.CaseMigrationTypes.ReturnCase_ForUse)':
+                    case '@(NomenclatureConstants.CaseMigrationTypes.SendCase_ch80PAS)':
                         $('#returnCase').show();
+                        break;
+                             break;
+                    case '@(NomenclatureConstants.CaseMigrationTypes.SendCase_FromRandomAssignment)':
+                        $('input:radio[name="SendToTypeId"]:first').prop('checked',true);
+                        $('input[name="SendToTypeId"]:checked').trigger('click')
+                        $('#sendToCourt').hide();
+                        $('#textNoCourt').show();
+                        $('#actAll').show().find('select').trigger('change');
                         break;
                 }
             }).trigger('change');
@@ -136,7 +155,7 @@
             }).trigger('change');
 
             $('#ReturnCaseId').change(function () {
-                requestGET_Json('@Url.Action("Get_CaseInfo","Ajax")', { caseId: $(this).val() }, function (info) {
+                requestGET_Json('@Url.Action("Get_CaseInfo", "Ajax")', { caseId: $(this).val() }, function (info) {
                     if (info) {
                         var control = $('#SendToCourtId').val(info.courtId).parents('.court-container:first').find('.court-control:first');
                         loadCourts(control, info.courtId);

@@ -12,7 +12,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
     /// Забрана за начисляване ако съществуват добавените елементи
     /// </summary>
     [Table("nom_case_load_element_type_stop")]
-    public class CaseLoadElementTypeStop : IExpiredInfo
+    public class CaseLoadElementTypeStop : IExpiredInfo, IHaveId
     {
         [Column("id")]
         [Key]

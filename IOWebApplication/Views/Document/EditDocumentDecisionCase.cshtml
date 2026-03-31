@@ -4,30 +4,47 @@
 @inject IUserContext userContext
 
 <div class="row">
-    <div class="col-md-10">
-        <form asp-action="EditDocumentDecisionCase" method="post" id="cmModalForm">
-            @Html.HiddenFor(x => x.Id)
-            @Html.HiddenFor(x => x.DocumentDecisionId)
+    <div class="col-md-6">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Данни за решението</legend>
+            <form asp-action="EditDocumentDecisionCase" method="post" id="cmModalForm">
+                @Html.HiddenFor(x => x.Id)
+                @Html.HiddenFor(x => x.DocumentDecisionId)
 
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div id="saveContainer">
-                <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                @Html.EditorFor(x => x.DecisionRequestTypeId, "GenericDropDown")
-                @Html.EditorFor(x => x.CaseId, "SelectCase", new { courtId = userContext.CourtId })
-                @Html.EditorFor(x => x.DecisionTypeId, "GenericDropDown")
-                @Html.EditorFor(x => x.Description)
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
-                @*@if (Model.Id > 0)
-                {
-                    <div class="pull-right">
-                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    <div class="row">
+                        <div class="col-lg-12">
+                            @Html.EditorFor(x => x.DecisionRequestTypeId, "GenericDropDown")
+                        </div>
                     </div>
-                }*@
-            </div>
-        </form>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            @Html.EditorFor(x => x.CaseId, "SelectCase", new { onChange = "selectCaseChange();",courtId = userContext.CourtId })
+                        </div>
+                    </div>
+                    @Html.EditorFor(x => x.DecisionTypeId, "GenericDropDown")
+                    @Html.EditorFor(x => x.Description)
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                    @*@if (Model.Id > 0)
+                    {
+                    <div class="pull-right">
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                    }*@
+                </div>
+            </form>
+        </fieldset>
+    </div>
+    <div class="col-md-6">
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Достъп до електронно дело</legend>
+            <table id="tblEpepUsers" class="table table-hover table-striped"></table>
+        </fieldset>
     </div>
 </div>
 
@@ -36,6 +53,9 @@
 
 <script>
     $(function () {
+        initCase();
+
+
         attachAjaxForm('#cmModalForm', function (data) {
             if (data.responseJSON.result == true) {
                 refreshTable('#documentDecisionCaseMainTable');
@@ -46,10 +66,46 @@
             }
         });
     })
+
+    function selectCaseChange() {
+        if ($.fn.dataTable.isDataTable('#tblEpepUsers')) {
+            refreshTable('#tblEpepUsers');
+        }
+        else {
+           $('#tblEpepUsers').DataTable({
+                ajax: {
+                    "url": "@Url.Action("EpepUserAssignments_SelectByCase","Epep")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = $('#CaseId').val();
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'epepUserFullName',
+                        data: 'epepUserFullName',
+                        title: 'Потребител',
+                        sortable: true,
+                        searchable: false,
+                        render: function (a, b, row, c) {
+                            return row.epepUserInfo
+                        }
+                    },
+                    {
+                        name: 'sideFullName',
+                        data: 'sideFullName',
+                        title: 'Страна по делото',
+                        sortable: true,
+                        searchable: false,
+                        render: function (a, b, row, c) {
+                            return row.sideInfo
+                        }
+                    }]
+            });
+        }
+    }
 </script>
 
-<script>
-    $(function () {
-        initCase();
-    });
-</script>
+

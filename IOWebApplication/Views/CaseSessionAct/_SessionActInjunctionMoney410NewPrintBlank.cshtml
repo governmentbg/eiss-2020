@@ -1,0 +1,188 @@
+﻿@model CaseSessionActCommandVM
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Extensions
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@inject IUserContext userContext
+@{
+    Layout = null;
+}
+
+<style>
+    div.just {
+    text-align: justify;
+    text-justify: inter-word;
+    text-rendering: geometricPrecision;
+    }
+</style>
+
+<div style="font-family: 'Times New Roman'">
+    <center>
+        @if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+        {
+            <b>Разпореждане № @Model.CaseSessionActPrint.ActRegNumber</b><br />
+        }
+        else
+        {
+            <b>РАЗПОРЕЖДАНЕ</b><br />
+        }
+        <b>ЗА ИЗПЪЛНЕНИЕ НА ПАРИЧНО ЗАДЪЛЖЕНИЕ</b><br />
+        <b>по чл. 410 от ГПК</b><br />
+        @if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+        {
+            <p>@Model.CaseSessionActPrint.CourtCity, @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") г.</p><br />
+        }
+        else
+        {
+            <p>гр. @Model.CaseSessionActPrint.CourtCity</p>
+
+            <br />
+        }
+
+    </center>
+    <div class="just">
+        @Model.CaseSessionActPrint.CourtName, @Model.CaseSessionActPrint.DepartmentName в проведеното на @Model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") г. закрито разпоредително заседание по @(Model.CaseSessionActPrint.CaseTypeName.ToLower()) № @Model.CaseSessionActPrint.CaseRegShortNumber по описа на съда за @Model.CaseSessionActPrint.CaseRegYear г., докладвано от @Model.CaseSessionActPrint.JudgeReporter, районен съдия, като разгледа подаденото заявление за издаване на заповед за изпълнение по реда на чл. 410 и сл. ГПК срещу<br />
+    </div>
+    <br />
+
+    @if (Model.JointDistribution)
+    {
+        @Html.Raw("<div class='just'>")
+        @Html.Raw(Model.CaseSessionActPrint.LeftWithOutRoleRightSide_410_417 + ", " + Model.SumJointDistribution + "<br />")
+        @Html.Raw("</div>")
+        <br />
+        <br />
+    }
+
+    @if (!Model.JointDistribution)
+    {
+        @if (Model.SumIsNotJointDistribution.Length > 0)
+        {
+            @foreach (var sumPerson in Model.SumIsNotJointDistribution)
+            {
+                @Html.Raw("<div class='just'>");
+                @Html.Raw(sumPerson + " <br />");
+                @Html.Raw("</div>");
+                <br />
+            }
+        }
+        <br />
+    }
+
+    @if (Model.FastProcessRequest != null)
+    {
+        @if (Model.FastProcessRequest.ItemSubstitutionClaims != null && Model.FastProcessRequest.ItemSubstitutionClaims.Count() > 0)
+        {
+            @Html.Raw("и да върне:<br />");
+            @Html.Raw("<div class='just'>");
+            @foreach (var item in Model.FastProcessRequest.ItemSubstitutionClaims)
+            {
+                @Html.Raw($"{item.TypeName} {item.QuantityText} {(Model.IsInEuro ? item.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : item.TotalAmountBGN.ToString("### ### ##0.00") + " BGN")}");
+                <br />
+            }
+            @Html.Raw("</div>");
+            <br />
+            <br />
+        }
+
+        @if (Model.FastProcessRequest.ItemClaim != null && !string.IsNullOrEmpty(Model.FastProcessRequest.ItemClaim.Description))
+        {
+            @Html.Raw("и да върне:<br />");
+            @Html.Raw("<div class='just'>");
+            @Html.Raw($"{Model.FastProcessRequest.ItemClaim.Description} на стойност {(Model.IsInEuro ? Model.FastProcessRequest.ItemClaim.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : Model.FastProcessRequest.ItemClaim.TotalAmountBGN.ToString("### ### ##0.00") + " BGN")}");
+            @Html.Raw("</div>");
+            <br />
+            <br />
+        }
+
+        @if (Model.JointDistribution)
+        {
+            @if (Model.FastProcessRequest.Expenses.Any())
+            {
+                @Html.Raw("<div class='just'>");
+                @* @Html.Raw(Model.CaseSessionActPrint.LeftRightSide_410_417_Expenses + "<br />");
+                <br /> *@
+                @Html.Raw("Претендират се и направените в производството разноски за заплатена/заплатени:")
+                <br />
+                @foreach (var expence in Model.FastProcessRequest.Expenses)
+                {
+                    string _row = $"{expence.Index + 1}. {Model.getNomenclature(NomenclatureConstants.FPaliases.FP_ExpenseTypes, expence.ExpenseTypeCode)} в размер на: {"<b>" + (Model.IsInEuro ? expence.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : expence.TotalAmountBGN.ToString("### ### ##0.00") + " BGN") + "</b>"}";
+                    @Html.Raw(_row);
+                    <br />
+                }
+                @Html.Raw("</div>");
+                <br />
+                <br />
+            }
+        }
+    }
+
+    <div class='just'>
+    &nbsp;&nbsp;Съдът като съобрази, че се претендира вземане за парична сума, за което искът е подсъден на районния съд, подаденото заявление отговаря на изискванията за редовност по смисъла на чл. 410, ал. 2 във вр. чл. 127, ал. 1 и 3 и чл. 128, т. 1 и 2 ГПК и че липсват данни за визираните в разпоредбата на чл. 411, ал. 2, т. 2, 3 и 4 ГПК отрицателни предпоставки, намира, че искането следва да бъде уважено.<br />
+    &nbsp;&nbsp;В полза на заявителя следва да бъдат присъдени сторените разноски.<br />
+    &nbsp;&nbsp;Воден от горното, съдът<br />
+    </div>
+
+    <center>
+        <b>РАЗПОРЕДИ:</b><br />
+    </center>
+    <br />
+
+     @{
+        string _polza = " <b>срещу длъжника</b> ";
+        if (Model.CaseSessionActPrint.RightSide_410_417_Count > 1)
+            _polza = " <b>срещу длъжниците</b> ";
+
+        string _zaiavitel = " заявителя ";
+        @if (Model.CaseSessionActPrint.LeftSide_410_417_Count > 1)
+            _zaiavitel = " заявители ";
+
+        @Html.Raw("<div class='just'>");
+        @Html.Raw("<b>ДА СЕ ИЗДАДЕ</b> заповед за изпълнение на парично задължение по реда на чл. 410 ГПК <b>в полза на</b>" + _zaiavitel + Model.CaseSessionActPrint.LeftSidesWithAddress + _polza + Model.CaseSessionActPrint.RightSidesWithAddress + ", съгласно която");
+        @Html.Raw("</div>");
+        <br />
+    }
+
+    <br />
+    @if (Model.JointDistribution)
+    {
+        @Html.Raw("<div class='just'>");
+        @Html.Raw(Model.CaseSessionActPrint.LeftWithOutRoleRightSide_410_417 + ", " + Model.SumJointDistribution + "<br />");
+        @Html.Raw("</div>");
+    }
+
+    @if (!Model.JointDistribution)
+    {
+        @if (Model.SumIsNotJointDistribution.Length > 0)
+        {
+            @foreach (var sumPerson in Model.SumIsNotJointDistribution)
+            {
+                @Html.Raw("<div class='just'>")
+                @Html.Raw(sumPerson + " <br />");
+                @Html.Raw("</div>")
+                <br />
+            }
+        }
+        <br />
+    }
+
+    @if (Model.JointDistribution)
+    {
+        @if (Model.FastProcessRequest.Expenses.Any())
+        {
+            @Html.Raw("<div class='just'>");
+            string _row = string.Join(", ", Model.FastProcessRequest.Expenses.Select(x => $"{(Model.getNomenclature(NomenclatureConstants.FPaliases.FP_ExpenseTypes, x.ExpenseTypeCode)).ToLower()} в размер на: {"<b>" + (Model.IsInEuro ? x.TotalAmountEUR.ToString("### ### ##0.00") + " EUR" : x.TotalAmountBGN.ToString("### ### ##0.00") + " BGN") + "</b>"}"));
+            @Html.Raw("Както и направените в производството разноски за: " + _row + ".");
+            @Html.Raw("</div>");
+            <br />
+        }
+    }
+
+    Препис от заповедта за изпълнение да се връчи на длъжника, с указания за възможността за възражение, и на заявителя за сведение.<br />
+    <br />
+    <div align="right">
+        Разпореждането е подписано с квалифициран електронен подпис от районен съдия:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;( @Model.CaseSessionActPrint.JudgeReporter )
+    </div>
+</div>
+

@@ -1,0 +1,149 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model ExecListFilterFatsProcessVM
+
+@{
+    ViewData["Title"] = "Справка изпълнителни листове по дела по чл. 410 ГПК и чл. 417 ГПК";
+    ViewData["ShowMenuCounts"] = true;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.ExecListSignDateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.ExecListSignDateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtId, "GenericSelect2")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.ExecListRegNumber)</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseRegNumber)</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#CourtId').select2({ language: "bg" });
+        });
+    </script>
+}
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataExecListFatsProcess")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            ExecListSignDateFrom: $("#ExecListSignDateFrom").val(),
+                            ExecListSignDateTo: $("#ExecListSignDateTo").val(),
+                            ExecListRegNumber: $("#ExecListRegNumber").val(),
+                            CaseRegNumber: $("#CaseRegNumber").val(),
+                            CourtId: $("#CourtId").val()
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'execListRegNumber',
+                        data: 'execListRegNumber',
+                        title: 'Номер на изпълнителен лист',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("EpepShowExecProcess", "Epep", new { actId = 666 }))';
+                            url = url.replace('666', row.execListId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Партида' href=" + url + ">" + row.execListRegNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: "text-center",
+                        name: 'execListDateSign',
+                        data: 'execListDateSign',
+                        title: 'Дата на подписване',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-4',
+                        name: 'execListTypeLabel',
+                        data: 'execListTypeLabel',
+                        title: 'Вид изпълнителен лист',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'execListCourtLabel',
+                        data: 'execListCourtLabel',
+                        title: 'Съд в който е издаден',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-2',
+                        name: 'caseRegNum',
+                        data: 'caseRegNum',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            }).order([[1, "asc"]]);
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+    </div>
+</script>

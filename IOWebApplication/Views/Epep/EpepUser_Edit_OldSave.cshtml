@@ -1,0 +1,222 @@
+﻿@model EpepUser
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на потребител в ЕПЕП";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на потребител в ЕПЕП";
+    }
+    var docInfo = (EpepDocumentInfoVM)ViewBag.documentInfo;
+    var hasEpepUserOtherType = ViewBag.hasEpepUserOtherType == true;
+    var formAction = "EpepUser_Edit";
+    formAction = "";
+}
+@section breadcrumb{
+    @if (ViewBag.breadcrumbs != null)
+    {
+        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+    }
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="@formAction" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.DocumentId)
+            @Html.HiddenFor(x => x.DocumentDecisionId)
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Основни данни</legend>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                @if (docInfo != null)
+                {
+                    <div class="row">
+                        <div class="col-lg-6">@Html.DisplayFor(x => docInfo.CourtName, "obj")</div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                @Html.LabelFor(x => docInfo.DocumentInfo)
+                                <div>
+                                    @if (userContext.CourtId == docInfo.CourtId)
+                                    {
+                                        <a href="@Url.Action("View","Document",new { id=docInfo.DocumentId})" target="_blank">
+                                            @docInfo.DocumentInfo
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span>@docInfo.DocumentInfo</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    <div class="row">
+                        <div class="col-lg-6">
+                            @if (Model.Id > 0)
+                            {
+                                @Html.HiddenFor(x => x.EpepUserTypeId)
+                                @Html.DisplayFor(x => x.EpepUserTypeId, "objVal", new { value = ViewBag.epepUserType })
+                            }
+                            else
+                            {
+                                @Html.EditorFor(x => x.EpepUserTypeId, "GenericDropDown")
+                            }
+                        </div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.BirthDate)</div>
+                    </div>
+                    <div id="lawyerControls">
+                        <div class="row">
+                            <div class="col-lg-12">@Html.EditorFor(x => x.LawyerLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Lawyer })</div>
+                        </div>
+                    </div>
+                    <div id="personControls">
+                        <div class="row">
+                            <div class="col-lg-6">@Html.EditorFor(x => x.Uic)</div>
+                            <div class="col-lg-6">@Html.EditorFor(x => x.FullName)</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(x => x.Address)</div>
+                        <div class="col-lg-6">@Html.EditorFor(x => x.Email)</div>
+                    </div>
+                    @Html.EditorFor(x => x.Description)
+                </div>
+            </fieldset>
+            <div class="form-group">
+                <a asp-action="EpepUser" class="btn btn-danger">Назад</a>
+
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), IconOnly = true })
+                        <span>&nbsp;</span>
+                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.EpepUser, SourceId = Model.Id })" />
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+    @if (Model.Id > 0)
+    {
+        <div class="col-md-6">
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Участие в дела</legend>
+                <div class="pull-right">
+                    <a asp-controller="Epep" asp-action="EpepUserAssignment_Add" asp-route-epepUserId="@Model.Id" class="btn btn-success btn-sm">
+                        <i class="fa fa-plus"></i>
+                        Добави
+                    </a>
+                </div>
+                <table id="dtAssignments" class="table table-hover table-striped"></table>
+            </fieldset>
+        </div>
+    }
+</div>
+@section scripts{
+    <script>
+        $(function () {
+            $('#EpepUserTypeId').change(function () {
+                switch ($(this).val()) {
+                    case '@EpepConstants.UserTypes.Person':
+                        $('#lawyerControls').hide();
+                        $('#personControls').show();
+                        break;
+                    case '@EpepConstants.UserTypes.Lawyer':
+                        $('#lawyerControls').show();
+                        $('#personControls').hide();
+                        break;
+                    default:
+                }
+            }).trigger('change');
+        @if (Model.Id > 0)
+        {
+            <text>loadAssignments(); </text>
+        }
+                initLawUnit();
+        @if (hasEpepUserOtherType)
+        {
+            <text>
+                    swalConfirm('Съществува създаден потребител от друг тип в ЕПЕП с тази електронна поща. Желаете ли да заредите съществуващите данни?', function () {
+                        document.location.href = '@Url.Action("EpepUser_AddFromEmail",new { email = Model.Email})';
+                    });
+            </text>
+        }
+                                });
+        function loadAssignments() {
+            $('#dtAssignments').DataTable({
+                ajax: {
+                    "url": "@Url.Action("EpepUserAssignment_ListData")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.epepUserId = @(Model.Id);
+                    }
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'courtName',
+                        data: 'courtName',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseInfo',
+                        data: 'caseInfo',
+                        title: 'Дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'sideInfo',
+                        data: null,
+                        title: 'Страна',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (a, b, item, c) {
+                            return TemplateToHtml('#templateSide', item);
+                        }
+                    }
+                    ,
+                    {
+                        name: 'actions',
+                        data: null,
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (a, b, item, c) {
+                            return TemplateToHtml('#templateEdit', item);
+                        }
+                    }
+                ]
+            });
+        }
+    </script>
+    <script id="templateSide" type="text/x-handlebars-template">
+        {{sideInfo}}
+        {{#if canSummon}}
+        &nbsp;
+        <i class="text-yellow fa fa-bell" title="Разрешено призоваване чрез ЕПЕП"></i>
+        {{/if}}
+         {{#if isLawyer}}
+        &nbsp;
+        <i class="text-orange fa fa-user" title="В качеството на адвокат"></i>
+        {{/if}}
+    </script>
+    <script id="templateEdit" type="text/x-handlebars-template">
+        {{#if canChange}}
+        <a href="@Url.Action("EpepUserAssignment_Edit")/{{id}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+        {{/if}}
+    </script>
+}

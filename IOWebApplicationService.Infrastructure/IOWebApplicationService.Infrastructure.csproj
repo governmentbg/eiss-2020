@@ -1,21 +1,78 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
-    <!--<TargetFramework>netstandard2.0</TargetFramework>-->
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="IO.SignTools" Version="1.0.29" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.Design" Version="1.1.6" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="2.2.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\IOWebApplication.Core\IOWebApplication.Core.csproj" />
-    <ProjectReference Include="..\IOWebApplication.Infrastructure\IOWebApplication.Infrastructure.csproj" />
-  </ItemGroup>
-
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<!--<TargetFramework>netstandard2.0</TargetFramework>-->
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="Migrations\20200413083308_MsInitMigration.cs" />
+	  <Compile Remove="Migrations\20200413083308_MsInitMigration.Designer.cs" />
+	  <Compile Remove="Migrations\20200413123748_DW_DocumentCaseInfo20200413.cs" />
+	  <Compile Remove="Migrations\20200413123748_DW_DocumentCaseInfo20200413.Designer.cs" />
+	  <Compile Remove="Migrations\20200413145525_DW_DocumentPerson20200413.cs" />
+	  <Compile Remove="Migrations\20200413145525_DW_DocumentPerson20200413.Designer.cs" />
+	  <Compile Remove="Migrations\20200414103051_DW_CaseSessionResult20200414.cs" />
+	  <Compile Remove="Migrations\20200414103051_DW_CaseSessionResult20200414.Designer.cs" />
+	  <Compile Remove="Migrations\20200414103515_DW_CaseSessionResult20200414_1.cs" />
+	  <Compile Remove="Migrations\20200414103515_DW_CaseSessionResult20200414_1.Designer.cs" />
+	  <Compile Remove="Migrations\20200414120600_DW_DocumentLinkt20200414.cs" />
+	  <Compile Remove="Migrations\20200414120600_DW_DocumentLinkt20200414.Designer.cs" />
+	  <Compile Remove="Migrations\20200414120804_DW_DocumentLinkt20200414_1.cs" />
+	  <Compile Remove="Migrations\20200414120804_DW_DocumentLinkt20200414_1.Designer.cs" />
+	  <Compile Remove="Migrations\20200415084628_DW_DocumentDecision20200415.cs" />
+	  <Compile Remove="Migrations\20200415084628_DW_DocumentDecision20200415.Designer.cs" />
+	  <Compile Remove="Migrations\20200417105547_DW_SelectionProtocol20200417.cs" />
+	  <Compile Remove="Migrations\20200417105547_DW_SelectionProtocol20200417.Designer.cs" />
+	  <Compile Remove="Migrations\20200420100518_DW_CaseSessionActDivorce20200420.cs" />
+	  <Compile Remove="Migrations\20200420100518_DW_CaseSessionActDivorce20200420.Designer.cs" />
+	  <Compile Remove="Migrations\20200422085318_DW_CourtBase_20200422.cs" />
+	  <Compile Remove="Migrations\20200422085318_DW_CourtBase_20200422.Designer.cs" />
+	  <Compile Remove="Migrations\20200423102402_DW_CourtBase_20200423.cs" />
+	  <Compile Remove="Migrations\20200423102402_DW_CourtBase_20200423.Designer.cs" />
+	  <Compile Remove="Migrations\20200424134225_FieldsAdded.cs" />
+	  <Compile Remove="Migrations\20200424134225_FieldsAdded.Designer.cs" />
+	  <Compile Remove="Migrations\20200427101639_DW_Case_LawUnit20200427.cs" />
+	  <Compile Remove="Migrations\20200427101639_DW_Case_LawUnit20200427.Designer.cs" />
+	  <Compile Remove="Migrations\20200427104133_DW_Case_LawUnit20200427_1.cs" />
+	  <Compile Remove="Migrations\20200427104133_DW_Case_LawUnit20200427_1.Designer.cs" />
+	  <Compile Remove="Migrations\20200428091023_DW_Case_LawUnit_Court_20200428.cs" />
+	  <Compile Remove="Migrations\20200428091023_DW_Case_LawUnit_Court_20200428.Designer.cs" />
+	  <Compile Remove="Migrations\20200428132937_DW_Case_SessionAct_20200428.cs" />
+	  <Compile Remove="Migrations\20200428132937_DW_Case_SessionAct_20200428.Designer.cs" />
+	  <Compile Remove="Migrations\20200429063453_DW_Case_SessionActComplain_20200429.cs" />
+	  <Compile Remove="Migrations\20200429063453_DW_Case_SessionActComplain_20200429.Designer.cs" />
+	  <Compile Remove="Migrations\20200429092608_DW_Case_SessionActComplain_20200429_1.cs" />
+	  <Compile Remove="Migrations\20200429092608_DW_Case_SessionActComplain_20200429_1.Designer.cs" />
+	  <Compile Remove="Migrations\20200430113156_Act_Correction_20200430.cs" />
+	  <Compile Remove="Migrations\20200430113156_Act_Correction_20200430.Designer.cs" />
+	  <Compile Remove="Migrations\20200430134019_Act_Correction_20200430_1.cs" />
+	  <Compile Remove="Migrations\20200430134019_Act_Correction_20200430_1.Designer.cs" />
+	  <Compile Remove="Migrations\20200502210924_DW_Session20200503.cs" />
+	  <Compile Remove="Migrations\20200502210924_DW_Session20200503.Designer.cs" />
+	  <Compile Remove="Migrations\20200504102405_DW_Case20200504.cs" />
+	  <Compile Remove="Migrations\20200504102405_DW_Case20200504.Designer.cs" />
+	  <Compile Remove="Migrations\20200509210105_DW_CaseLifecycle20200510.cs" />
+	  <Compile Remove="Migrations\20200509210105_DW_CaseLifecycle20200510.Designer.cs" />
+	  <Compile Remove="Migrations\20200513062918_DW_CaseSessionAct_20200513.cs" />
+	  <Compile Remove="Migrations\20200513062918_DW_CaseSessionAct_20200513.Designer.cs" />
+	  <Compile Remove="Migrations\20200517213212_DW_CasePerson.cs" />
+	  <Compile Remove="Migrations\20200517213212_DW_CasePerson.Designer.cs" />
+	  <Compile Remove="Migrations\20200517214108_DW_CasePerson1.cs" />
+	  <Compile Remove="Migrations\20200517214108_DW_CasePerson1.Designer.cs" />
+	  <Compile Remove="Migrations\20200518141102_DW_CasePerson_20200518.cs" />
+	  <Compile Remove="Migrations\20200518141102_DW_CasePerson_20200518.Designer.cs" />
+	  <Compile Remove="Migrations\20200518145159_DW_CasePerson_20200518_1.cs" />
+	  <Compile Remove="Migrations\20200518145159_DW_CasePerson_20200518_1.Designer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Services\EpepService.cs~RFf6e8b6a.TMP" />
+	</ItemGroup>
+	<ItemGroup>
+		<!--<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\IOWebApplication.Core\IOWebApplication.Core.csproj" />
+		<ProjectReference Include="..\IOWebApplication.Infrastructure\IOWebApplication.Infrastructure.csproj" />
+	</ItemGroup>
 </Project>

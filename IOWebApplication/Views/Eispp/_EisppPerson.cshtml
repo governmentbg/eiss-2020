@@ -52,7 +52,7 @@
                 <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.PersonRole, "EisppDropDown", null, new { Ddl = ViewBag.PStatusPersonRoleDDL })</div>
                 <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.Status, "EisppDropDown", null, new { Ddl = ViewBag.PStatusDDL })</div>
                 @* <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.StatusDateVM, "EisppDateTime")</div>*@
-                <div class="col-lg-3">@Html.EditorFor(x => x.PersonCPStatus.StatusReason, "EisppDropDown", null, new { Ddl = ViewBag.PStatusStatusReasonDDL })</div>
+                <div class="col-lg-6">@Html.EditorFor(x => x.PersonCPStatus.StatusReason, "EisppDropDown", null, new { Ddl = ViewBag.PStatusStatusReasonDDL })</div>
             </div>
         }
         @if ((Model.Addresses?.Length ?? 0) > 0)

@@ -1,0 +1,144 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model MigrationReportFilterVM
+
+@{
+    ViewData["Title"] = "Движение на делата";
+}
+
+@section breadcrumb{
+<ol class="breadcrumb">
+    <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+    <li class="active">@ViewData["Title"]</li>
+</ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.DocumentRegDateFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DocumentRegDateTo, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.MigrationDateWrtFrom, "DateTime")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.MigrationDateWrtTo, "DateTime")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.MigrationTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SendToCourtId, "GenericSelect2")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseMigrationReport", "Report")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.filter = {
+                            DocumentRegDateFrom: $("#DocumentRegDateFrom").val(),
+                            DocumentRegDateTo: $("#DocumentRegDateTo").val(),
+                            MigrationDateWrtFrom: $("#MigrationDateWrtFrom").val(),
+                            MigrationDateWrtTo: $("#MigrationDateWrtTo").val(),
+                            MigrationTypeId: $("#MigrationTypeId").val(),
+                            SendToCourtId: $("#SendToCourtId").val(),
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'caseInfo',
+                        data: 'caseInfo',
+                        title: 'Дело номер',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseInfo + "</a>";
+                        }
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид дело',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        className: "text-center",
+                        name: 'documentRegDate',
+                        data: 'documentRegDate',
+                        title: 'Дата на изпращане',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: "text-center",
+                        name: 'migrationDateWrt',
+                        data: 'migrationDateWrt',
+                        title: 'Дата на връщане от насрещния съд',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'migrationTypeLabel',
+                        data: 'migrationTypeLabel',
+                        title: 'Вид движение',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'sendToCourtLabel',
+                        data: 'sendToCourtLabel',
+                        title: 'Насрещен съд',
+                        sortable: true,
+                        searchable: false,
+                    },
+                    {
+                        name: 'description',
+                        data: 'description',
+                        title: 'Описание',
+                        sortable: true,
+                        searchable: false,
+                    },
+                ]
+            });
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#SendToCourtId').select2({ language: "bg" });
+    });
+</script>

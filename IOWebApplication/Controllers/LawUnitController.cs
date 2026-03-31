@@ -1,15 +1,17 @@
-﻿using System;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
+using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using IOWebApplication.Components;
-using IOWebApplication.Infrastructure.Constants;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace IOWebApplication.Controllers
@@ -55,11 +57,13 @@ namespace IOWebApplication.Controllers
         /// <param name="lawUnitType"></param>
         /// <returns></returns>
         [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult Index(int lawUnitType)
         {
             ViewBag.lawUnitType = commonService.GetById<LawUnitType>(lawUnitType);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForLawUnit(lawUnitType).DeleteOrDisableLast();
             ViewBag.SpecialityId_ddl = nomService.GetDDL_SpecialityForFilter(lawUnitType);
+            ViewBag.CourtId_ddl = nomService.GetCourts().AddAllItem("Всички").ToList();
             LawUnitFilterVM model = new LawUnitFilterVM();
             model.SpecialityId = -1;
             SetHelpByLawUnitType(lawUnitType);
@@ -78,10 +82,10 @@ namespace IOWebApplication.Controllers
         /// <param name="showFree"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request, int lawUnitType, DateTime? fromDate, DateTime? toDate, string fullName, int specialityId, bool showFree)
+        public IActionResult ListData(IDataTablesRequest request, int lawUnitType, DateTime? fromDate, DateTime? toDate, string fullName, int specialityId, int? courtId, bool showFree)
         {
 
-            var data = commonService.LawUnit_Select(lawUnitType, fullName, fromDate, toDate, specialityId, showFree);
+            var data = commonService.LawUnit_Select(lawUnitType, fullName, fromDate, toDate, specialityId, showFree, courtId);
 
             return request.GetResponse(data);
         }
@@ -110,6 +114,7 @@ namespace IOWebApplication.Controllers
                 LawUnitTypeId = lawUnitType,
                 DateFrom = DateTime.Now
             };
+            addToAudit(AuditConstants.Operations.Append, model);
             return View(nameof(Edit), model);
         }
 
@@ -123,7 +128,7 @@ namespace IOWebApplication.Controllers
         {
             var model = commonService.GetById<LawUnit>(id);
             SetBreadcrums(model.LawUnitTypeId, id);
-
+            addToAudit(AuditConstants.Operations.View, model);
             return View(model);
         }
 
@@ -145,6 +150,7 @@ namespace IOWebApplication.Controllers
             var currentId = model.Id;
             if (commonService.LawUnit_SaveData(model))
             {
+                addToAudit((currentId > 0) ? AuditConstants.Operations.Update : AuditConstants.Operations.Append, model);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
@@ -156,6 +162,68 @@ namespace IOWebApplication.Controllers
             }
         }
 
+        void addToAudit(string operation, LawUnit model)
+        {
+            var lawunitType = commonService.GetById<LawUnitType>(model.LawUnitTypeId).Label;
+            AddAuditInfo(operation, lawunitType, model.FullName, lawunitType);
+        }
+
+        /// <summary>
+        /// Корекция на типа на лице
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
+        public IActionResult TypeChange(int id)
+        {
+            if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+            {
+                SetErrorMessage("Непозволена операция");
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var model = commonService.GetById<LawUnit>(id);
+            if (!NomenclatureConstants.LawUnitTypes.ChangeableTypes.Contains(model.LawUnitTypeId))
+            {
+                SetErrorMessage("Непозволен тип лице за смяна");
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForLawUnitAdd(model.LawUnitTypeId).DeleteOrDisableLast();
+            ViewBag.LawUnitTypeId_ddl = new List<SelectListItem>()
+            {
+                new SelectListItem("Съдия",NomenclatureConstants.LawUnitTypes.Judge.ToString()),
+                new SelectListItem("Служител",NomenclatureConstants.LawUnitTypes.OtherEmployee.ToString()),
+                new SelectListItem("Призовкар",NomenclatureConstants.LawUnitTypes.MessageDeliverer.ToString()),
+                new SelectListItem("Заседател",NomenclatureConstants.LawUnitTypes.Jury.ToString())
+            };
+            addToAudit(AuditConstants.Operations.View, model);
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
+        public IActionResult TypeChange(LawUnit model)
+        {
+            if (!NomenclatureConstants.LawUnitTypes.ChangeableTypes.Contains(model.LawUnitTypeId))
+            {
+                SetErrorMessage("Непозволен тип лице за смяна");
+                return RedirectToAction(nameof(Edit), new { id = model.Id });
+            }
+            var result = commonService.LawUnit_ChangeLawunitType(model.Id, model.LawUnitTypeId);
+            if (result.Result)
+            {
+                var lt = commonService.GetPropById<LawUnitType, string>(x => x.Id == model.LawUnitTypeId, x => x.Label);
+
+                SaveLogOperation("lawunit", "edit", $"Промяна на типа на лицето: <b>{lt}</b>.", IO.LogOperation.Models.OperationTypes.Patch, model.Id);
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+            }
+            else
+            {
+                SetErrorMessage(result.ErrorMessage);
+            }
+            return RedirectToAction(nameof(Edit), new { id = model.Id });
+        }
+
         /// <summary>
         /// Валидация на лице преди запис
         /// </summary>
@@ -165,6 +233,10 @@ namespace IOWebApplication.Controllers
             if (!string.IsNullOrEmpty(model.Code))
             {
                 model.Code = model.Code.Trim();
+            }
+            if (!string.IsNullOrEmpty(model.Uic))
+            {
+                model.Uic = model.Uic.Trim();
             }
 
             switch (model.LawUnitTypeId)
@@ -180,7 +252,7 @@ namespace IOWebApplication.Controllers
                     }
                     break;
                 default:
-                    if (model.DateTo == null)
+                    if (model.DateTo == null || model.Id == 0)
                     {
                         if (!NomenclatureConstants.LawUnitTypes.NoApointmentPersons.Contains(model.LawUnitTypeId))
                         {
@@ -214,7 +286,7 @@ namespace IOWebApplication.Controllers
             var valMessage = commonService.LawUnit_Validate(model);
             if (!string.IsNullOrEmpty(valMessage))
             {
-                ModelState.AddModelError(nameof(model.Code), valMessage);
+                ModelState.AddModelError("", valMessage);
             }
 
             //if (!string.IsNullOrEmpty(model.Uic))
@@ -263,6 +335,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         [Authorize(Policy = AdminOnlyPolicyRequirement.Name)]
         [HttpGet]
+        [DisableAudit]
         public IActionResult LawUnitSpeciality(int lawUnitId)
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForSpeciality(lawUnitId).DeleteOrDisableLast();
@@ -278,12 +351,18 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
+        [DisableAudit]
         public IActionResult LawUnitSpeciality(CheckListViewVM model)
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForSpeciality(model.CourtId).DeleteOrDisableLast();
 
             if (commonService.LawUnitSpeciality_SaveData(model))
+            {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                var lUnit = commonService.GetById<LawUnit>(model.ObjectId);
+                var lType = commonService.GetNomLabelById<LawUnitType>(lUnit.LawUnitTypeId);
+                AddAuditInfo(AuditConstants.Operations.Update, lUnit.FullName, "Промяна на специалности", lType);
+            }
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
 
@@ -431,7 +510,7 @@ namespace IOWebApplication.Controllers
             ViewBag.lawUnitName = lawUnit.FullName;
 
             ViewBag.CountriesDDL = nomService.GetCountries();
-            ViewBag.AddressTypesDDL = nomService.GetDropDownList<AddressType>();
+            ViewBag.AddressTypesDDL = nomService.GetDropDownList<Infrastructure.Data.Models.Nomenclatures.AddressType>();
 
             SetHelpByLawUnitType(lawUnit.LawUnitTypeId);
         }

@@ -1,0 +1,76 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseMediatorVM
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на медиатор към дело";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на медиатор към дело";
+    }
+
+    string d = ViewBag.desc;
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("IndexCaseMediation", "Mediation")">Съдебни дела подлежащи на медиация</a></li>
+        <li><a href="@Url.Action("CasePreviewMediation", "Mediation", new { id = Model.CaseId } )">Съдебно дело - медиация</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditMediationCaseMediator" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-7">@Html.EditorFor(x => x.MediationMediatorId, "GenericSelect2")</div>
+                    <div class="col-lg-5">@Html.EditorFor(x => x.MediationTypeChoiceMediatorId, "GenericDropDown")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTimeDivided")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                <a asp-controller="Mediation" asp-action="CasePreviewMediation" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                @if (Model.Id > 0)
+                {
+                    <div class="pull-right">
+                        @if (Model.AllowedExpired)
+                        {
+                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на медиатор", ExpireSubmitUrl = Url.Action("MediationCaseMediator_ExpiredInfo") })
+                            <span>&nbsp;</span>
+                        }
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#MediationMediatorId').select2({ language: "bg" });
+        });
+    </script>
+}

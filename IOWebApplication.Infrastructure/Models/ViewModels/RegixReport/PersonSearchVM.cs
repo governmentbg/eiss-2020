@@ -1,7 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Base;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
 {

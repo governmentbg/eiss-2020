@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,7 +17,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public int? CourtId { get; set; }
         public string CourtLabel { get; set; }
         public string DocumentTemplateLabel { get; set; }
+        public string DocumentTemplateDescription { get; set; }
         public string DocumentPersonLabel { get; set; }
         public virtual ICollection<DocumentResolutionListVM> DocumentResolutions { get; set; }
+        public virtual ICollection<WorkTaskReportVM> WorkTasks { get; set; }
     }
 }

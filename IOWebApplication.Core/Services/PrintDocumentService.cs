@@ -8,6 +8,7 @@ using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Money;
@@ -21,15 +22,14 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Money;
 using iText.Kernel.Numbering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NPOI.SS.Formula.Functions;
-using NPOI.SS.Util;
+using NetBarcode;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using ZXing;
-using ZXing.QrCode;
+using System.Threading.Tasks;
+using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants;
 
 namespace IOWebApplication.Core.Services
 {
@@ -40,6 +40,10 @@ namespace IOWebApplication.Core.Services
         private readonly ICaseMigrationService caseMigrationService;
         private readonly ICaseNotificationService caseNotificationService;
         private readonly ICaseFastProcessService caseFastProcessService;
+        /// <summary>
+        /// Управление на попълването на номер и дата на документа за preview на бланка.
+        /// </summary>
+        public bool PreviewModel { get; set; }
         public PrintDocumentService(
         ILogger<PrintDocumentService> _logger,
         IRepository _repo,
@@ -58,6 +62,7 @@ namespace IOWebApplication.Core.Services
             caseMigrationService = _caseMigrationService;
             caseNotificationService = _caseNotificationService;
             caseFastProcessService = _caseFastProcessService;
+            PreviewModel = false;
         }
 
         #region Fill Key Value Pair
@@ -77,6 +82,13 @@ namespace IOWebApplication.Core.Services
             return keyValuePairs;
         }
 
+        private IList<KeyValuePairVM> fillList_MediationNotificationDELIVERER(MediationNotification notification)
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+            var delivererName = notification.ToCourtId == notification.CourtId ? notification.LawUnit?.FullName_MiddleNameInitials ?? "" : "";
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_DELIVERER}", Label = "Име П. Фамилия на съдебния призовкар", Value = delivererName });
+            return keyValuePairs;
+        }
         private void AddConnectsEisspNumber(Case model, List<KeyValuePairVM> keyValuePairs)
         {
             keyValuePairs.Add(new KeyValuePairVM()
@@ -87,27 +99,43 @@ namespace IOWebApplication.Core.Services
                          (string.IsNullOrEmpty(model.EISSPNumber) == false ? (", " + model.EISSPNumber) : "")
             });
         }
+        public string GetCourtAddrOnCaseGroup(Court court, int caseGroupId)
+        {
+            var addr = court?.CourtCaseGroupAddrs?.Where(x => x.CaseGroupId == caseGroupId).FirstOrDefault();
+            return addr?.Address ?? court?.Address;
+        }
+        public string GetCourtAddrOnCaseGroup(Case model)
+        {
+            return GetCourtAddrOnCaseGroup(model.Court, model.CaseGroupId);
+        }
 
         private IList<KeyValuePairVM> fillList_Case(Case model, string documentSenderPerson)
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
 
             AddConnectsEisspNumber(model, keyValuePairs);
+            var courtLabel = model.Court?.Label;
+            if (model.Court?.CourtCaseGroupAddrs != null)
+            {
+                courtLabel += " " + (model.Court?.CourtCaseGroupAddrs.Where(x => x.CaseGroupId == model.CaseGroupId).Select(x => x.Address).FirstOrDefault() ?? "");
+            }
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_GOD}", Label = "г.", Value = "г." });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_KIND}", Label = "Вид на делото (точен)", Value = model.CaseType?.Label });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_KIND}", Label = "Вид на делото (точен)", Value = model.CaseType?.Code });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO}", Label = "Номер на делото", Value = model.RegNumber });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO_SHORT}", Label = "Номер на делото", Value = model.ShortNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_YEAR}", Label = "Година на делото", Value = model.RegDate.Year.ToString() });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT}", Label = "Съд", Value = model.Court?.Label });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_ADDRESS}", Label = "Адрес на съда", Value = model.Court?.Address });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT}", Label = "Съд", Value = courtLabel });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_ADDRESS}", Label = "Адрес на съда", Value = GetCourtAddrOnCaseGroup(model) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_PHONE}", Label = "< Телефонен номер на съда>", Value = model.Court?.PhoneNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_EMAIL}", Label = "E-mail адрес на съд", Value = model.Court?.Email });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_UCLP}", Label = "Населено място, в което се намира съда", Value = model.Court?.CityName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_QUICK}", Label = "Бързо производство", Value = (model.ProcessPriorityId == NomenclatureConstants.ProcessPriority.Quick) ? "Бързо производство" : "" });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_TYPE}", Label = "Точен вид дело", Value = model.CaseType.Label });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUBJECT}", Label = "< Статистически код / описание на предмета на делото>", Value = model.CaseCode?.Code + " / " + model.CaseCode?.Label });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUBJECT}", Label = "< Статистически код / описание на предмета на делото>", Value = model.CaseCode?.Code + " " + model.CaseCode?.Label });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_TEXT}", Label = "< Допълнителен текст към делото>", Value = model.Description });
-
-            string F_TRANSCRIPT_SENDERS = documentSenderPerson;
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_410_417}", Label = "Електронно заповедно дело", Value = model.IsFastProcess == true ? $"<b>{NomenclatureConstants.DeliveryItemMessage.FastProcess}</b>" : string.Empty });
+            var F_TRANSCRIPT_SENDERS = documentSenderPerson;
+            var attourney = string.Empty;
 
             if (model.Document != null)
             {
@@ -134,7 +162,6 @@ namespace IOWebApplication.Core.Services
                 keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FLOOR_LAWSUIT}", Label = "Дела на прокуратура", Value = caseAttourney });
 
 
-                string attourney = "";
                 if (model.Document.DocumentGroupId == NomenclatureConstants.DocumentGroup.Protest)
                 {
                     if (model.Document.DocumentInstitutionCaseInfo != null)
@@ -151,6 +178,9 @@ namespace IOWebApplication.Core.Services
                 keyValuePairs.Add(new KeyValuePairVM() { Key = "{Attourney}", Label = "Дела на прокуратура", Value = attourney });
             }
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TRANSCRIPT_SENDERS}", Label = "Подател на входящия документ", Value = F_TRANSCRIPT_SENDERS });
+            var F_TRANSCRIPT_SENDERS_OR_ATTORNEY = (!string.IsNullOrEmpty(attourney)) ? attourney :
+                                                   ((!string.IsNullOrEmpty(F_TRANSCRIPT_SENDERS)) ? "на " + F_TRANSCRIPT_SENDERS : string.Empty);
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TRANSCRIPT_SENDERS_OR_ATTORNEY}", Label = "Подател на входящия документ ВКС", Value = F_TRANSCRIPT_SENDERS_OR_ATTORNEY });
 
             if (model.CaseType.CaseInstanceId == NomenclatureConstants.CaseInstanceType.FirstInstance)
                 keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_PRESENSE_REQUIRED}", Label = "< Допълнителен текст към писмото>", Value = ", тъй като присъствието му е задължително" });
@@ -315,6 +345,48 @@ namespace IOWebApplication.Core.Services
                 keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LRECEIVER_ADDRESS}", Label = "Адрес на получателя", Value = addressName });
                 keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAST_KNOWN_ADDRESS}", Label = "Адрес на получателя", Value = addressName });
             }
+
+            string allPersons = "";
+            foreach (var item in model.DocumentPersons)
+            {
+                if (string.IsNullOrEmpty(allPersons) == false)
+                    allPersons += "<br>";
+                allPersons += item.FullName;
+                string addressName = string.Empty;
+                if (item.Addresses.Any())
+                {
+                    addressName = commonService.GetFullAddress(item.Addresses.FirstOrDefault()?.Address, false);
+                    allPersons += string.IsNullOrEmpty(addressName) == false ? ("<br>" + addressName) : "";
+                }
+            }
+            if (string.IsNullOrEmpty(allPersons) == false)
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_LIST}", Label = "Получатели", Value = allPersons });
+
+            return keyValuePairs;
+        }
+        private IList<KeyValuePairVM> fillList_DocumentBeforeReg()
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+
+            if (!PreviewModel)
+            {
+                return keyValuePairs;
+            }
+
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_OUTREG_NO}", Label = "Изходящ номер", Value = "::БЕЗ НОМЕР::" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_OUTREG_DATE}", Label = "Дата", Value = DateTime.Now.ToString("dd.MM.yyyy") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TODAY}", Label = "Дата", Value = DateTime.Now.ToString("dd.MM.yyyy") });
+
+            //този параметър го има само за Европейското наследство и е F_TODAY + 6 месеца. Ако трябва да го има и другаде с различна стойност да е друг параметър
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_VALID_DATE}", Label = "Дата валидност", Value = DateTime.Now.AddMonths(6).ToString("dd.MM.yyyy") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER}", Label = "Получател", Value = "::ПОЛУЧАТЕЛ::" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LRECEIVER}", Label = "Получател", Value = "::ПОЛУЧАТЕЛ::" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_UCN}", Label = "ЕГН Получател", Value = "::ЕГН::" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INVOLVEMENT}", Label = "Качество", Value = "::КАЧЕСТВО::" });
+            string addressName = "::Адреса на получателя ще бъде заменен с този от избраното лице при регистриране::";
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_ADDRESS}", Label = "Адрес на получателя", Value = addressName });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LRECEIVER_ADDRESS}", Label = "Адрес на получателя", Value = addressName });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAST_KNOWN_ADDRESS}", Label = "Адрес на получателя", Value = addressName });
 
             return keyValuePairs;
         }
@@ -518,20 +590,37 @@ namespace IOWebApplication.Core.Services
 
             return F_RECEIVER;
         }
-        private IList<KeyValuePairVM> fillList_Notification(CaseNotification model, List<CaseSessionNotificationListVM> caseSessionNotificationLists, int courtId)
+        private IList<KeyValuePairVM> fillList_Notification(CaseNotification model, Case caseModel)
         {
-            string position = lawUnitService.GetLawUnitPosition(courtId, model.User?.LawUnitId ?? 0);
+            string position = lawUnitService.GetLawUnitPosition(caseModel.CourtId, model.User?.LawUnitId ?? 0);
             if (string.IsNullOrEmpty(position))
                 position = "Служител";
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
             string F_RECEIVER = GetPersonNotification(model);
-
-            var caseSessionNotifications = caseSessionNotificationLists != null ? caseSessionNotificationLists.Where(x => x.PersonId == (model.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson ? model.CasePersonId : model.CaseLawUnitId)).FirstOrDefault() : null;
-
+            int rowNumber = 0;
+            if (model.CaseSessionId > 0)
+            {
+                if (model.CasePersonId > 0)
+                {
+                    rowNumber = repo.AllReadonly<CaseSessionNotificationList>()
+                                    .Where(x => x.CaseSessionId == model.CaseSessionId)
+                                    .Where(x => x.CasePersonId != null &&
+                                                x.CasePersonId == model.CasePersonId)
+                                    .FirstOrDefault()?.RowNumber ?? 0;
+                }
+                if (model.CaseLawUnitId > 0)
+                {
+                    rowNumber = repo.AllReadonly<CaseSessionNotificationList>()
+                                    .Where(x => x.CaseSessionId == model.CaseSessionId)
+                                    .Where(x => x.CaseLawUnitId != null &&
+                                                x.CaseLawUnitId == model.CaseLawUnitId)
+                                    .FirstOrDefault()?.RowNumber ?? 0;
+                }
+            }
             string F_SESSION_RESULT = "";
             if (model.CaseSessionId > 0)
             {
-                var sessionResults = repo.AllReadonly<CaseSessionResult>()
+                var sessionResults = repo.AllReadonly<Infrastructure.Data.Models.Cases.CaseSessionResult>()
                                          .Where(x => x.CaseSessionId == model.CaseSessionId)
                                          .Include(x => x.SessionResult)
                                          .ToList();
@@ -541,7 +630,7 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER}", Label = "Име Презиме Фамилия на Получателя", Value = F_RECEIVER });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_INVOLVEMENT}", Label = "Процесуално качество на получателя", Value = model.NotificationPersonDuty });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INVOLVEMENT}", Label = "Качеството на лицето в съдебния процес", Value = model.NotificationPersonDuty });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SIDE_NO}", Label = "Номер на страната в списъка на лицата за призоваване", Value = (caseSessionNotifications != null ? caseSessionNotifications.RowNumber.ToString() : string.Empty) });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SIDE_NO}", Label = "Номер на страната в списъка на лицата за призоваване", Value = rowNumber > 0 ? rowNumber.ToString() : string.Empty });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_NOTIFIEDS}", Label = "Получатели (Име Презиме Фамилия на получатели)", Value = F_RECEIVER });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_ADDRESS}", Label = "Адрес на връчване", Value = model.NotificationAddress?.FullAddressNotification() });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_ADDITIONAL_TEXT}", Label = "Допълнителен текст - указания", Value = model.Description });
@@ -549,9 +638,9 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_USER_NAME}", Label = "И.(инициал на първо име)Фамилия", Value = model.User?.LawUnit?.FullName_MiddleNameInitials });
             var toCourt = repo.AllReadonly<Court>()
                               .Where(x => x.Id == model.ToCourtId)
-                              .FirstOrDefault() ?? model.Court;
+                              .FirstOrDefault() ?? model?.Court;
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TO_COURT}", Label = "Съд за разнос", Value = toCourt?.Label });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TO_COURT_ADDRESS}", Label = "Адрес на съда", Value = toCourt?.Address });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TO_COURT_ADDRESS}", Label = "Адрес на съда", Value = GetCourtAddrOnCaseGroup(toCourt, caseModel.CaseGroupId) });
 
             var F_USER_INITIALS = model.User?.LawUnit?.FullName_Initials ?? "";
 
@@ -580,7 +669,7 @@ namespace IOWebApplication.Core.Services
             return keyValuePairs;
         }
 
-        private IList<KeyValuePairVM> fillList_DocumentNotification(DocumentNotification model, int courtId)
+        private IList<KeyValuePairVM> fillList_DocumentNotification(DocumentNotification model, int courtId, int caseGroupId)
         {
             string position = lawUnitService.GetLawUnitPosition(courtId, model.User?.LawUnitId ?? 0);
             if (string.IsNullOrEmpty(position))
@@ -603,7 +692,7 @@ namespace IOWebApplication.Core.Services
                               .Where(x => x.Id == model.ToCourtId)
                               .FirstOrDefault() ?? model.Court;
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TO_COURT}", Label = "Съд за разнос", Value = toCourt?.Label });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TO_COURT_ADDRESS}", Label = "Адрес на съда", Value = toCourt?.Address });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TO_COURT_ADDRESS}", Label = "Адрес на съда", Value = GetCourtAddrOnCaseGroup(toCourt, caseGroupId) });
 
             var F_USER_INITIALS = model.User?.LawUnit?.FullName_Initials ?? "";
 
@@ -684,6 +773,10 @@ namespace IOWebApplication.Core.Services
             {
                 keyValuePairs.AddRange(fillList_Document(modelDocument));
             }
+            else
+            {
+                keyValuePairs.AddRange(fillList_DocumentBeforeReg());
+            }
             keyValuePairs.AddRange(fillList_DocumentResolution(documentResolution, null, string.Empty));
             return keyValuePairs;
         }
@@ -691,7 +784,7 @@ namespace IOWebApplication.Core.Services
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_NO}", Label = "<Номер на съдебен акт>", Value = model.RegNumber });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_KIND}", Label = "<Номер на съдебен акт>", Value = "разпореждане" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_KIND}", Label = "<Номер на съдебен акт>", Value = "разпореждане".FirstCharToUpper() });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_DATE}", Label = "<Дата насъдебен акт>", Value = model.RegDate?.ToString(FormattingConstant.NormalDateFormat) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RETURNED}", Label = "<Дата на обявяване на съдебния акт>", Value = model.DeclaredDate?.ToString(FormattingConstant.NormalDateFormat) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INREG_KIND}", Label = "Вид на документа от входящ регистър", Value = model.Document?.DocumentType?.Label });
@@ -701,18 +794,22 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TRANSCRIPT_YEAR}", Label = "Номер на документа от входящ регистър", Value = model.Document?.DocumentDate.Year.ToString() });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TRANSCRIPT_DATE}", Label = "Номер на документа от входящ регистър", Value = model.Document?.DocumentDate.ToString(FormattingConstant.NormalDateFormat) });
             var connects = string.Empty;
-            if (model.Document?.Cases != null)
+            var connects_court = string.Empty;
+            if (model.Document?.DocumentCaseInfo != null)
             {
-                var caseId = model.Document?.Cases.FirstOrDefault()?.Id;
+                var caseId = model.Document?.DocumentCaseInfo.FirstOrDefault()?.CaseId;
                 if (caseId != null)
                 {
                     var aCase = repo.AllReadonly<Case>()
+                                    .Include(x => x.Court)
                                     .Where(x => x.Id == caseId)
                                     .FirstOrDefault();
                     connects = aCase.RegNumber;
+                    connects_court = aCase.Court.Label;
                 }
             }
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_CONNECTS}", Label = "– номер на свързаното дело", Value = connects });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_CONNECTS_COURT}", Label = "– съд на свързаното дело", Value = connects_court });
             // Обезпеченията на ВКС
             if (!string.IsNullOrEmpty(html) || html.Contains("{F_COLLATERAL}"))
             {
@@ -728,7 +825,6 @@ namespace IOWebApplication.Core.Services
                                         x.UicTypeId == notificationCasePerson.UicTypeId &&
                                         x.MoneyTypeId == NomenclatureConstants.MoneyType.Collateral)
                                         .Select(x => x.Amount)
-                                        .DefaultIfEmpty(0)
                                         .Sum();
                 var collateralText = string.Empty;
                 foreach (var obligation in obligations.Where(x => x.Uic == notificationCasePerson.Uic &&
@@ -755,13 +851,13 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COLLEGE}", Label = "Отделение на зам. председателя подписал разпореждането по документа", Value = college });
             return keyValuePairs;
         }
-        private IList<KeyValuePairVM> fillList_SessionAct(CaseSessionAct model, ActComplainResult actComplainResult)
+        private IList<KeyValuePairVM> fillList_SessionAct(CaseSessionAct model, ActComplainResult actComplainResult, bool insertDispositiv)
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
-
+            var dispositiv = insertDispositiv ? $"{model.ActType?.Label} {model.RegNumber} - Диспозитив: {model.Description}" : string.Empty;
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_NO}", Label = "<Номер на съдебен акт>", Value = model.RegNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_DATE}", Label = "<Дата насъдебен акт>", Value = model.RegDate?.ToString(FormattingConstant.NormalDateFormat) });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_KIND}", Label = "<Вид на съдебен акт>", Value = model.ActType?.Label });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_KIND}", Label = "<Вид на съдебен акт>", Value = model.ActType?.Label?.FirstCharToUpper() });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RETURNED}", Label = "<Дата на обявяване на съдебния акт>", Value = model.ActDeclaredDate?.ToString(FormattingConstant.NormalDateFormat) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RETURNED_MOTIVES}", Label = "<Дата на обявяване на мотивите>", Value = model.ActMotivesDeclaredDate?.ToString(FormattingConstant.NormalDateFormat) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_APPEAL}", Label = "<Указания за възможността за обжалване>", Value = model.CanAppeal == true ? " подлежи на обжалване" : " не подлежи на обжалване" });
@@ -770,7 +866,7 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_TEXT}", Label = "<Диспозитив на събния акт>", Value = model.Description });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FORCE_DATE}", Label = "<Дата на влизане в законна сила>", Value = model.ActInforcedDate?.ToString(FormattingConstant.NormalDateFormat) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_STATUS}", Label = "<Резултат от разпорежне  по докумет от входящ регистър>", Value = actComplainResult?.Label });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_DISPOSITIV}", Label = "{вид и номер на акта} - Диспозитив: {текста от диспозитива на съответния акт}", Value = $"{model.ActType?.Label} {model.RegNumber} - Диспозитив: {model.Description}" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_DISPOSITIV}", Label = "{вид и номер на акта} - Диспозитив: {текста от диспозитива на съответния акт}", Value = dispositiv });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_REASON}", Label = "Основание по ТЗ", Value = model.ActISPNReason?.Label });
             return keyValuePairs;
         }
@@ -803,6 +899,27 @@ namespace IOWebApplication.Core.Services
             string F_INREG_SENDER = string.Join(" ", model.CasePersons.Select(x => x.CasePerson.FullName));
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INREG_SENDER}", Label = "Подател на входящия документ", Value = F_INREG_SENDER });
 
+            return keyValuePairs;
+        }
+
+        private IList<KeyValuePairVM> fillList_SessionActMulti(List<CaseNotificationAct> notificationActs, bool insertDispositiv)
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+            var value = string.Empty;
+            var value2 = string.Empty;
+            var dispositiv = string.Empty;
+            foreach (var item in notificationActs)
+            {
+                value += $"{item.CaseSessionAct.ActType.Label} {item.CaseSessionAct.RegNumber}/{item.CaseSessionAct.RegDate:dd.MM.yyyy}<br>";
+                value2 += $"{item.CaseSessionAct.ActType.Label} {item.CaseSessionAct.RegNumber}/{item.CaseSessionAct.RegDate:dd.MM.yyyy}";
+                if (insertDispositiv)
+                {
+                    dispositiv += $"<div>{item.CaseSessionAct.ActType?.Label} {item.CaseSessionAct.RegNumber} - Диспозитив: {item.CaseSessionAct.Description}</div><br>";
+                }
+            }
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_MULTI_ACT}", Label = "Вид на документа от входящ регистър", Value = value });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_MULTI_ACT2}", Label = "Вид на документа от входящ регистър", Value = value2 });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_DISPOSITIV}", Label = "{вид и номер на акта} - Диспозитив: {текста от диспозитива на съответния акт}", Value = dispositiv });
             return keyValuePairs;
         }
 
@@ -852,7 +969,9 @@ namespace IOWebApplication.Core.Services
                         caseSessionActComplainText += $" срещу {sessionAct.ActType.Label}  № {sessionAct.RegNumber}/{sessionAct.RegDate:dd.MM.yyyy}  <br>";
                     sessionAct = model.CaseSessionAct;
                 }
-                string F_INREG_SENDER = string.Join(" ", model.CasePersons.Select(x => x.CasePerson.FullName));
+                var F_INREG_SENDER = string.Empty;
+                if (model.ComplainDocument?.DocumentPersons != null)
+                    F_INREG_SENDER = string.Join(" ", model.ComplainDocument.DocumentPersons.Select(x => x.FullName));
                 caseSessionActComplainText += $"{model.ComplainDocument.DocumentType.Label}  № {model.ComplainDocument.DocumentNumber}/{model.ComplainDocument.DocumentDate:dd.MM.yyyy} г. от {F_INREG_SENDER},";
             }
             if (sessionAct != null)
@@ -889,15 +1008,15 @@ namespace IOWebApplication.Core.Services
                 if (sessionAct == null || sessionAct.Id != model.CaseSessionActId)
                 {
                     if (sessionAct != null)
-                        caseSessionActComplainText += $" № {sessionAct.RegNumber}/{sessionAct.RegDate:dd.MM.yyyy}  <br>";
+                        caseSessionActComplainText += $" {sessionAct.ActType.Label} № {sessionAct.RegNumber}/{sessionAct.RegDate:dd.MM.yyyy}  <br>";
                     sessionAct = model.CaseSessionAct;
                 }
-                caseSessionActComplainText += $"{model.ComplainDocument.DocumentType.Label}  № {model.ComplainDocument.DocumentNumber}/{model.ComplainDocument.DocumentDate.Year} от {model.ComplainDocument.DocumentDate:dd.MM.yyyy} г., {model.ComplainState.Label}";
+                caseSessionActComplainText += $"{model.ComplainDocument.DocumentType.Label}  № {model.ComplainDocument.DocumentNumber}/{model.ComplainDocument.DocumentDate.Year} от {model.ComplainDocument.DocumentDate:dd.MM.yyyy} г., {model.ComplainState.Label} ";
             }
             if (sessionAct != null)
-                caseSessionActComplainText += $"  № {sessionAct.ActType.Label} {sessionAct.RegNumber}/{sessionAct.RegDate:dd.MM.yyyy} <br>";
+                caseSessionActComplainText += $" {sessionAct.ActType.Label} № {sessionAct.RegNumber}/{sessionAct.RegDate:dd.MM.yyyy} <br>";
 
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_MULTI_COMPLAIN_RESULT}", Label = "Лист Жалби", Value = caseSessionActComplainText });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_MULTI_COMPLAIN_RESULT}", Label = "Лист Жалби", Value = $"<div>{caseSessionActComplainText}</div>" });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INREG_RESULT}", Label = "Резултат от разпорежне  по документ от входящ регистър>", Value = inregResult });
             return keyValuePairs;
         }
@@ -935,6 +1054,8 @@ namespace IOWebApplication.Core.Services
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
             var college = model?.Label ?? "";
+            if (model?.DepartmentTypeId == NomenclatureConstants.DepartmentType.Napravlenie)
+                college = "";
             if (model == null && lawUnitId > 0 && userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS)
             {
                 var vksModel = commonService.Read_LawUnitOtdelenieSystav(lawUnitId ?? 0);
@@ -967,16 +1088,12 @@ namespace IOWebApplication.Core.Services
 
         #region Fill String From Alias And List Key Value Pair
 
-        public List<KeyValuePairVM> KeyValuePairVMFromNotification(CaseNotification caseNotification, HtmlTemplate htmlTemplate)
+        public async Task<List<KeyValuePairVM>> KeyValuePairVMFromNotification(CaseNotification caseNotification, HtmlTemplate htmlTemplate, bool insertDispositiv)
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
-            var caseCase = Read_Case(caseNotification.CaseId);
+            var caseModel = await Read_Case(caseNotification.CaseId);
 
-            List<CaseSessionNotificationListVM> caseSessionNotificationLists = null;
-            if (caseNotification.CaseSessionId > 0)
-                caseSessionNotificationLists = caseNotificationService.CaseSessionNotificationList_Select(caseNotification.CaseSessionId ?? 0, (caseNotification.NotificationTypeId == NomenclatureConstants.NotificationType.Subpoena ? SourceTypeSelectVM.CaseSessionNotificationList : (caseNotification.NotificationTypeId == NomenclatureConstants.NotificationType.Message ? SourceTypeSelectVM.CaseSessionNotificationListMessage : SourceTypeSelectVM.CaseSessionNotificationListNotification))).ToList();
-
-            keyValuePairs.AddRange(fillList_Notification(caseNotification, caseSessionNotificationLists, caseCase?.CourtId ?? 0));
+            keyValuePairs.AddRange(fillList_Notification(caseNotification, caseModel));
             string html = string.Empty;
             string documentSenderPerson = string.Empty;
 
@@ -994,17 +1111,17 @@ namespace IOWebApplication.Core.Services
             var caseSessionActComplain = Read_CaseSessionActComplain(caseNotification.CaseSessionActComplainId ?? 0);
             if (caseNotification.CaseId > 0)
             {
-                keyValuePairs.AddRange(fillList_Case(caseCase, documentSenderPerson));
+                keyValuePairs.AddRange(fillList_Case(caseModel, documentSenderPerson));
 
                 var caseMigrations = Read_CaseMigration(caseNotification.CaseId);
                 keyValuePairs.AddRange(fillList_CaseMigration(caseMigrations));
 
                 if (html == "" || html.Contains("{F_BUDGET_") || html.Contains("{F_DEPOSITS_"))
-                    keyValuePairs.AddRange(fillList_BankAccounts(caseCase.CourtId));
+                    keyValuePairs.AddRange(fillList_BankAccounts(caseModel.CourtId));
                 if (html == "" || html.Contains("{F_TAX_SUM}"))
                     keyValuePairs.AddRange(fillList_CaseFastProcess(caseNotification.CaseId, caseNotification.MoneyObligationId));
                 if (html == "" || html.Contains("{F_INREG_RECEIVER}") || html.Contains("{F_INSTANCE_III}"))
-                    keyValuePairs.AddRange(fillList_UpperCourt(caseCase.CourtId, caseSessionActComplain));
+                    keyValuePairs.AddRange(fillList_UpperCourt(caseModel.CourtId, caseSessionActComplain));
                 if (html == "" || html.Contains("{F_LOWER_"))
                     keyValuePairs.AddRange(fillList_CaseLower(caseNotification.CaseId));
             }
@@ -1016,18 +1133,102 @@ namespace IOWebApplication.Core.Services
                 keyValuePairs.AddRange(fillList_Session(caseSession));
             }
 
-            if ((caseNotification.CaseSessionActId ?? 0) != 0)
+            keyValuePairs.AddRange(await KeyValuePairVMFromNotificationActs(
+                caseNotification,
+                htmlTemplate,
+                insertDispositiv,
+                html,
+                caseSessionActComplain));
+
+            if (htmlTemplate?.HaveInstitutionDocument == true)
             {
-                var caseSessionAct = Read_CaseSessionAct(caseNotification.CaseSessionActId ?? 0);
+                keyValuePairs.AddRange(fillList_InstitutionDocument(caseNotification.InstitutionDocumentId, caseNotification.CaseId));
+            }
+
+            var casePersons = Read_CasePersons(caseNotification.CaseId, caseNotification.CaseSessionId);
+            keyValuePairs.AddRange(fillList_CasePersons(casePersons, caseNotification.CasePersonId, caseModel.CaseTypeId));
+
+            var caseLawUnits = Read_CaseLawUnit(caseNotification.CaseId, caseNotification.CaseSessionId);
+            keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, false));
+
+            if ((caseNotification.CaseSessionId ?? 0) != 0)
+            {
+                var caseSessionNotificationList = Read_CaseSessionNotificationList((caseNotification.CaseSessionId ?? 0), caseNotification.NotificationPersonType, (caseNotification.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ? (caseNotification.CasePersonId ?? 0) : (caseNotification.CaseLawUnitId ?? 0));
+                keyValuePairs.AddRange(fillList_SessionNotificationList(caseSessionNotificationList));
+            }
+            keyValuePairs.AddRange(fillList_NotificationIspnReason(caseNotification));
+
+            keyValuePairs.AddRange(fillList_All());
+            keyValuePairs.AddRange(fillList_CaseNotificationDELIVERER(caseNotification));
+            keyValuePairs.AddRange(fillList_MoneyNT_VOLEX(caseNotification, htmlTemplate));
+
+            return keyValuePairs;
+        }
+
+        public async Task<List<KeyValuePairVM>> KeyValuePairVMFromNotificationActs(
+            CaseNotification caseNotification,
+            HtmlTemplate htmlTemplate,
+            bool insertDispositiv,
+            string html,
+            CaseSessionActComplain caseSessionActComplain)
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+            var notificationActs = new List<CaseNotificationAct>();
+
+            if (htmlTemplate != null && htmlTemplate.HaveSessionMultiAct == true)
+            {
+                notificationActs = await repo.AllReadonly<CaseNotificationAct>()
+                                 .Include(x => x.CaseSessionAct)
+                                 .ThenInclude(x => x.ActType)
+                                 .Include(x => x.CaseSessionAct)
+                                 .ThenInclude(x => x.ActISPNReason)
+                                 .Where(x => x.CaseNotificationId == caseNotification.Id &&
+                                             x.IsChecked)
+                                 .ToListAsync();
+
+            }
+            var sameKeyInMulti = new string[] { "{F_DISPOSITIV}" };
+            if (notificationActs.Count > 1)
+            {
+                keyValuePairs.AddRange(fillList_SessionActMulti(notificationActs, insertDispositiv));
+                var caseSessionAct = new CaseSessionAct();
+                var actComplainResult = new ActComplainResult();
+                if (notificationActs.Count == 2 &&
+                    notificationActs.Where(x => x.CaseSessionAct.ActTypeId != NomenclatureConstants.ActType.CommandmentForExec).Count() == 1
+                )
+                {
+                    caseSessionAct = notificationActs.Where(x => x.CaseSessionAct.ActTypeId != NomenclatureConstants.ActType.CommandmentForExec).First().CaseSessionAct;
+                    actComplainResult = Read_ActComplainResult(caseSessionAct.ActComplainResultId ?? 0);
+                }
+                var actParam = fillList_SessionAct(caseSessionAct, actComplainResult, insertDispositiv);
+                actParam = actParam.Where(x => !sameKeyInMulti.Contains(x.Key)).ToList();
+                keyValuePairs.AddRange(actParam);
+            }
+
+            if (notificationActs.Count == 1 || (caseNotification.CaseSessionActId ?? 0) != 0)
+            {
+
+                CaseSessionAct caseSessionAct = null;
+                if (notificationActs.Count == 1)
+                {
+                    caseSessionAct = notificationActs.Single().CaseSessionAct;
+                }
+                else
+                {
+                    caseSessionAct = Read_CaseSessionAct(caseNotification.CaseSessionActId ?? 0);
+                }
                 var actComplainResult = Read_ActComplainResult(caseSessionAct.ActComplainResultId ?? 0);
-                keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, actComplainResult));
+                keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, actComplainResult, insertDispositiv));
+                var multiActParam = fillList_SessionActMulti(new List<CaseNotificationAct>(), insertDispositiv);
+                multiActParam = multiActParam.Where(x => !sameKeyInMulti.Contains(x.Key)).ToList();
+                keyValuePairs.AddRange(multiActParam);
 
                 //Обезпеченията на ВКС
                 if (html.Contains("{F_COLLATERAL}"))
                 {
                     var obligations = repo.AllReadonly<Obligation>()
                                  .Where(x => (x.IsActive ?? true) == true)
-                                 .Where(x => x.CaseSessionActId == caseNotification.CaseSessionActId)
+                                 .Where(x => x.CaseSessionActId == caseSessionAct.Id)
                                  .ToList();
 
                     var notificationCasePerson = repo.AllReadonly<CasePerson>()
@@ -1037,7 +1238,6 @@ namespace IOWebApplication.Core.Services
                                             x.UicTypeId == notificationCasePerson.UicTypeId &&
                                             x.MoneyTypeId == NomenclatureConstants.MoneyType.Collateral)
                                             .Select(x => x.Amount)
-                                            .DefaultIfEmpty(0)
                                             .Sum();
                     var collateralText = string.Empty;
                     foreach (var obligation in obligations.Where(x => x.Uic == notificationCasePerson.Uic &&
@@ -1053,6 +1253,7 @@ namespace IOWebApplication.Core.Services
                     keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COLLATERAL_TEXT}", Label = "Поле Описание на обезпечението ", Value = collateralText });
                 }
             }
+
             if (htmlTemplate != null && htmlTemplate.HaveMultiActComplain != true)
             {
                 if (caseNotification.CaseSessionActComplainId > 0)
@@ -1064,6 +1265,7 @@ namespace IOWebApplication.Core.Services
                     keyValuePairs.AddRange(fillList_SessionActComplainEmpty());
                 }
             }
+
             if (htmlTemplate?.HaveMultiActComplain == true)
             {
                 var caseSessionActComplains = Read_CaseSessionActComplainMulti(caseNotification.Id);
@@ -1077,26 +1279,6 @@ namespace IOWebApplication.Core.Services
                     keyValuePairs.AddRange(fillList_SessionActComplainResultMultiEmpty());
                 }
             }
-            if (htmlTemplate?.HaveInstitutionDocument == true)
-            {
-                keyValuePairs.AddRange(fillList_InstitutionDocument(caseNotification.InstitutionDocumentId, caseNotification.CaseId));
-            }
-
-            var casePersons = Read_CasePersons(caseNotification.CaseId, caseNotification.CaseSessionId);
-            keyValuePairs.AddRange(fillList_CasePersons(casePersons, caseNotification.CasePersonId, caseCase.CaseTypeId));
-
-            var caseLawUnits = Read_CaseLawUnit(caseNotification.CaseId, caseNotification.CaseSessionId);
-            keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, false));
-
-            if ((caseNotification.CaseSessionId ?? 0) != 0)
-            {
-                var caseSessionNotificationList = Read_CaseSessionNotificationList((caseNotification.CaseSessionId ?? 0), caseNotification.NotificationPersonType, (caseNotification.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ? (caseNotification.CasePersonId ?? 0) : (caseNotification.CaseLawUnitId ?? 0));
-                keyValuePairs.AddRange(fillList_SessionNotificationList(caseSessionNotificationList));
-            }
-            keyValuePairs.AddRange(fillList_NotificationIspnReason(caseNotification));
-
-            keyValuePairs.AddRange(fillList_All());
-            keyValuePairs.AddRange(fillList_CaseNotificationDELIVERER(caseNotification));
             return keyValuePairs;
         }
 
@@ -1106,6 +1288,7 @@ namespace IOWebApplication.Core.Services
             var document = repo.AllReadonly<Document>()
                 .Include(x => x.DocumentType)
                 .Include(x => x.Court)
+                .ThenInclude(x => x.CourtCaseGroupAddrs)
                 .Include(x => x.DocumentGroup)
                 .Include(x => x.DocumentPersons)
                 .ThenInclude(x => x.Person)
@@ -1132,11 +1315,15 @@ namespace IOWebApplication.Core.Services
                     break;
                 }
             }
-            keyValuePairs.AddRange(fillList_DocumentNotification(documentNotification, document?.CourtId ?? 0));
+            keyValuePairs.AddRange(fillList_DocumentNotification(documentNotification, document?.CourtId ?? 0, 0));
 
             if (documentNotification.DocumentId > 0)
             {
                 keyValuePairs.AddRange(fillList_Document(document));
+            }
+            else
+            {
+                keyValuePairs.AddRange(fillList_DocumentBeforeReg());
             }
 
 
@@ -1153,15 +1340,44 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.AddRange(fillList_DocumentNotificationDELIVERER(documentNotification));
             return keyValuePairs;
         }
-        public List<KeyValuePairVM> KeyValuePairVMFromNotification_ForLetter(CaseNotification caseNotification, List<KeyValuePairVM> kvFromDoc)
+
+        public async Task<List<KeyValuePairVM>> KeyValuePairVMFromMediationNotification(MediationNotification mediationNotification, HtmlTemplate htmlTemplate)
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+            var caseModel = await Read_Case(mediationNotification.CaseId);
+            string html = string.Empty;
+            if (htmlTemplate != null)
+            {
+                html = HtmlTemplateContentAsString(htmlTemplate);
+            }
+
+            foreach (var item in keyValuePairs)
+            {
+                if (item.Key == "{F_TODAY}")
+                {
+                    item.Value = mediationNotification.RegDate.ToString(FormattingConstant.NormalDateFormat);
+                    break;
+                }
+            }
+            // TODO: keyValuePairs.AddRange(fillList_DocumentNotification(documentNotification, document?.CourtId ?? 0, 0));
+            var casePersons = Read_CasePersons(mediationNotification.CaseId, null);
+            keyValuePairs.AddRange(fillList_CasePersons(casePersons, mediationNotification.CasePersonId, caseModel.CaseTypeId));
+
+
+            keyValuePairs.AddRange(fillList_All());
+            keyValuePairs.AddRange(fillList_MediationNotificationDELIVERER(mediationNotification));
+            return keyValuePairs;
+        }
+
+        public async Task<List<KeyValuePairVM>> KeyValuePairVMFromNotification_ForLetter(CaseNotification caseNotification, List<KeyValuePairVM> kvFromDoc)
         {
             var caseSessionActComplain = Read_CaseSessionActComplain(caseNotification.CaseSessionActComplainId ?? 0);
             var keyValuePairs = new List<KeyValuePairVM>();
             var caseLawUnits = Read_CaseLawUnit(caseNotification.CaseId, caseNotification.CaseSessionId);
             keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, false));
-            keyValuePairs.AddRange(fillList_Court(caseNotification.CourtId ?? 0));
+            keyValuePairs.AddRange(fillList_Court(caseNotification.CourtId ?? 0, caseNotification.Case?.CaseGroupId ?? 0));
 
-            var caseCase = Read_Case(caseNotification.CaseId);
+            var caseCase = await Read_Case(caseNotification.CaseId);
             keyValuePairs.AddRange(fillList_CaseXORIGIN(caseCase));
             keyValuePairs.AddRange(fillList_Notification_ForLetter(caseNotification));
             if ((caseNotification.CaseSessionId ?? 0) != 0)
@@ -1173,7 +1389,7 @@ namespace IOWebApplication.Core.Services
             {
                 var caseSessionAct = Read_CaseSessionAct(caseNotification.CaseSessionActId ?? 0);
                 var actComplainResult = Read_ActComplainResult(caseSessionAct.ActComplainResultId ?? 0);
-                keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, actComplainResult));
+                keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, actComplainResult, true));
             }
             keyValuePairs.AddRange(fillList_UpperCourt(caseCase.CourtId, caseSessionActComplain));
             keyValuePairs.AddRange(fillList_NotificationIspnReason(caseNotification));
@@ -1194,12 +1410,13 @@ namespace IOWebApplication.Core.Services
 
         #region Read Data From Data Base
 
-        private Case Read_Case(int caseId)
+        private async Task<Case> Read_Case(int caseId)
         {
-            return repo.AllReadonly<Case>()
+            return await repo.AllReadonly<Case>()
                 .Include(x => x.CaseType)
                 .Include(x => x.CaseCode)
                 .Include(x => x.Court)
+                .ThenInclude(x => x.CourtCaseGroupAddrs)
                 .Include(x => x.Document)
                 .ThenInclude(x => x.DocumentGroup)
                 .Include(x => x.Document)
@@ -1214,8 +1431,8 @@ namespace IOWebApplication.Core.Services
                 .ThenInclude(x => x.DocumentInstitutionCaseInfo)
                 .ThenInclude(x => x.InstitutionCaseType)
                 .Where(x => x.Id == caseId)
-                .FirstOrDefault();
-
+                .AsSplitQuery()
+                .FirstOrDefaultAsync();
         }
 
         private List<CaseMigrationVM> Read_CaseMigration(int CaseId)
@@ -1256,7 +1473,7 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<DocumentResolution>()
                 .Include(x => x.Document)
-                .ThenInclude(x => x.Cases)
+                .ThenInclude(x => x.DocumentCaseInfo)
                 .Include(x => x.Document.DocumentType)
                 .Where(x => x.Id == documentResolutionId)
                 .FirstOrDefault();
@@ -1287,6 +1504,7 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.CasePersons)
                 .ThenInclude(x => x.CasePerson)
                 .Where(x => x.Id == caseSessionActComplainId)
+                .AsSplitQuery()
                 .FirstOrDefault();
         }
         private List<CaseSessionActComplain> Read_CaseSessionActComplainMulti(int caseNotificationId)
@@ -1299,6 +1517,8 @@ namespace IOWebApplication.Core.Services
             return repo.AllReadonly<CaseSessionActComplain>()
                .Include(x => x.ComplainDocument)
                .ThenInclude(x => x.DocumentType)
+               .Include(x => x.ComplainDocument)
+               .ThenInclude(x => x.DocumentPersons)
                .Include(x => x.ComplainState)
                .Include(x => x.CasePersons)
                .ThenInclude(x => x.CasePerson)
@@ -1308,9 +1528,10 @@ namespace IOWebApplication.Core.Services
                .ToList();
         }
 
-        private CaseNotification Read_CaseNotification(int caseNotificationId)
+        private async Task<CaseNotification> Read_CaseNotification(int caseNotificationId)
         {
-            return repo.AllReadonly<CaseNotification>()
+            return await repo.AllReadonly<CaseNotification>()
+                .Include(x => x.Case)
                 .Include(x => x.NotificationAddress)
                 .Include(x => x.HtmlTemplate)
                 .Include(x => x.CaseNotificationMLinks)
@@ -1318,8 +1539,10 @@ namespace IOWebApplication.Core.Services
                 .ThenInclude(x => x.LawUnit)
                 .Include(x => x.LawUnit)
                 .Include(x => x.NotificationIspnReason)
+                .Include(x => x.CasePerson)
                 .Where(x => x.Id == caseNotificationId)
-                .FirstOrDefault();
+                .AsSplitQuery()
+                .FirstOrDefaultAsync();
         }
 
         private DocumentNotification Read_DocumentNotification(int documentNotificationId)
@@ -1332,12 +1555,22 @@ namespace IOWebApplication.Core.Services
                 .Include(x => x.LawUnit)
                 .Include(x => x.DocumentNotificationMLinks)
                 .Where(x => x.Id == documentNotificationId)
+                .AsSplitQuery()
                 .FirstOrDefault();
         }
 
-        private List<CaseSessionNotificationListVM> Read_CaseNotificationList(int CaseSessionId)
+        private MediationNotification Read_MediationNotification(int mediationNotificationId)
         {
-            return caseNotificationService.CaseSessionNotificationList_Select(CaseSessionId, SourceTypeSelectVM.CaseSessionNotificationList).ToList();
+            return repo.AllReadonly<MediationNotification>()
+                .Include(x => x.NotificationAddress)
+                .Include(x => x.HtmlTemplate)
+                .Include(x => x.User)
+                .ThenInclude(x => x.LawUnit)
+                .Include(x => x.LawUnit)
+                .Include(x => x.MediationNotificationMLinks)
+                .Where(x => x.Id == mediationNotificationId)
+                .AsSplitQuery()
+                .FirstOrDefault();
         }
 
         private CaseSessionNotificationList Read_CaseSessionNotificationList(int caseSessionId, int NotificationPersonType, int PersonId)
@@ -1365,72 +1598,97 @@ namespace IOWebApplication.Core.Services
             return Source.Replace(Find, Replace);
         }
 
-        public TinyMCEVM FillHtmlTemplateNotification(int caseNotificationId)
+        public async Task<(TinyMCEVM, CaseNotification)> FillHtmlTemplateNotification(int caseNotificationId)
         {
-            var caseNotification = Read_CaseNotification(caseNotificationId);
+            var caseNotification = await Read_CaseNotification(caseNotificationId);
 
             int htmlTemplateId = caseNotification.HtmlTemplateId ?? 0;
-            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).DefaultIfEmpty(null).FirstOrDefault();
+            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).FirstOrDefault();
 
-            var keyValuePairs = KeyValuePairVMFromNotification(caseNotification, html);
+            var keyValuePairs = await KeyValuePairVMFromNotification(caseNotification, html, caseNotification?.HaveDispositiv == true);
             if ((caseNotification.HtmlTemplateId ?? 0) == 0)
-                return null;
-            return FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, caseNotification?.HaveDispositiv == true);
+                return (null, null);
+            return (FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, caseNotification?.HaveDispositiv == true), caseNotification);
         }
         public TinyMCEVM FillHtmlTemplateDocumentNotification(int documentNotificationId)
         {
             var documentNotification = Read_DocumentNotification(documentNotificationId);
 
             int htmlTemplateId = documentNotification.HtmlTemplateId ?? 0;
-            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).DefaultIfEmpty(null).FirstOrDefault();
+            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).FirstOrDefault();
 
             var keyValuePairs = KeyValuePairVMFromDocumentNotification(documentNotification, html);
             if ((documentNotification.HtmlTemplateId ?? 0) == 0)
                 return null;
             return FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, false);
         }
-        public TinyMCEVM GetHtmlTemplateNull(int caseNotificationId)
+
+        public async Task<TinyMCEVM> FillHtmlTemplateMediationNotification(int mediationNotificationId)
+        {
+            var mediationNotification = Read_MediationNotification(mediationNotificationId);
+
+            int htmlTemplateId = mediationNotification.HtmlTemplateId ?? 0;
+            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).FirstOrDefault();
+
+            var keyValuePairs = await KeyValuePairVMFromMediationNotification(mediationNotification, html);
+            if ((mediationNotification.HtmlTemplateId ?? 0) == 0)
+                return null;
+            return FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, false);
+        }
+        public TinyMCEVM GetHtmlTemplateNull(int caseNotificationId, int documentNotificationId)
         {
             var tinyMCEVM = new TinyMCEVM();
-            var caseNotification = repo.AllReadonly<CaseNotification>()
-                                       .Where(x => x.Id == caseNotificationId)
-                                       .FirstOrDefault();
+            int htmlTemplateId = 0;
+            if (documentNotificationId > 0)
+            {
+                var documentNotification = repo.AllReadonly<DocumentNotification>()
+                                           .Where(x => x.Id == documentNotificationId)
+                                           .FirstOrDefault();
 
-            int htmlTemplateId = caseNotification.HtmlTemplateId ?? 0;
-            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).DefaultIfEmpty(null).FirstOrDefault();
-            if ((caseNotification.HtmlTemplateId ?? 0) == 0)
+                htmlTemplateId = documentNotification.HtmlTemplateId ?? 0;
+            }
+            if (caseNotificationId > 0)
+            {
+                var caseNotification = repo.AllReadonly<CaseNotification>()
+                                           .Where(x => x.Id == caseNotificationId)
+                                           .FirstOrDefault();
+
+                htmlTemplateId = caseNotification.HtmlTemplateId ?? 0;
+            }
+            if (htmlTemplateId == 0)
                 return tinyMCEVM;
+            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).FirstOrDefault();
             tinyMCEVM = ConvertToTinyMCVM(html, false, null);
             tinyMCEVM.Style = "";
             tinyMCEVM.Text = "";
             return tinyMCEVM;
         }
 
-        public TinyMCEVM FillHtmlTemplateNotificationTestOne(int caseNotificationId, int htmlTemplateId)
+        public async Task<TinyMCEVM> FillHtmlTemplateNotificationTestOne(int caseNotificationId, int htmlTemplateId)
         {
-            var caseNotification = Read_CaseNotification(caseNotificationId);
+            var caseNotification = await Read_CaseNotification(caseNotificationId);
             if (htmlTemplateId == 0)
                 htmlTemplateId = caseNotification.HtmlTemplateId ?? 0;
-            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).DefaultIfEmpty(null).FirstOrDefault();
+            var html = await repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).FirstOrDefaultAsync();
 
-            var keyValuePairs = KeyValuePairVMFromNotification(caseNotification, html);
+            var keyValuePairs = await KeyValuePairVMFromNotification(caseNotification, html, true);
             if (html == null)
                 return null;
             return FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, false);
         }
 
-        public TinyMCEVM FillHtmlTemplateNotificationTest(int caseNotificationId)
+        public async Task<TinyMCEVM> FillHtmlTemplateNotificationTest(int caseNotificationId)
         {
-            var caseNotification = Read_CaseNotification(caseNotificationId);
-            var keyValuePairs = KeyValuePairVMFromNotification(caseNotification, caseNotification.HtmlTemplate);
+            var caseNotification = await Read_CaseNotification(caseNotificationId);
+            var keyValuePairs = await KeyValuePairVMFromNotification(caseNotification, caseNotification.HtmlTemplate, true);
             // 11 призовка 
             // 22 Съобщение
             // 23 Уведомление
-            var htmls = repo.AllReadonly<HtmlTemplate>()
+            var htmls = await repo.AllReadonly<HtmlTemplate>()
                 .Where(x => x.HtmlTemplateTypeId == 11 || x.HtmlTemplateTypeId == 22 || x.HtmlTemplateTypeId == 23)
                 .OrderBy(x => x.HtmlTemplateTypeId)
                 .ThenBy(x => x.Id)
-                .ToList();
+                .ToListAsync();
             string errors = "";
             //Dictionary<string>
             foreach (var item in htmls)
@@ -1461,14 +1719,16 @@ namespace IOWebApplication.Core.Services
             result.Text = errors;
             return result;
         }
-        public void FillHtmlTemplateNotificationHaveSaveTest(int caseNotificationId)
+        public async Task FillHtmlTemplateNotificationHaveSaveTest(int caseNotificationId)
         {
-            var caseNotification = Read_CaseNotification(caseNotificationId);
+            var caseNotification = await Read_CaseNotification(caseNotificationId);
             // var keyValuePairs = KeyValuePairVMFromNotification(caseNotification);
             // 11 призовка 
             // 22 Съобщение
             // 23 Уведомление
-            var htmls = repo.AllReadonly<HtmlTemplate>().Where(x => x.HtmlTemplateTypeId == 11 || x.HtmlTemplateTypeId == 22 || x.HtmlTemplateTypeId == 23).ToList();
+            var htmls = repo.AllReadonly<HtmlTemplate>()
+                            .Where(x => x.HtmlTemplateTypeId == 11 || x.HtmlTemplateTypeId == 22 || x.HtmlTemplateTypeId == 23)
+                            .ToList();
             foreach (var item in htmls)
             {
                 var tiny = ConvertToTinyMCVM(item, false);
@@ -1486,50 +1746,122 @@ namespace IOWebApplication.Core.Services
             }
             repo.SaveChanges();
         }
+
+        public void FillHtmlTemplate_F_DISPOSITIV()
+        {
+            // var keyValuePairs = KeyValuePairVMFromNotification(caseNotification);
+            // 11 призовка 
+            // 22 Съобщение
+            // 23 Уведомление
+
+            return;
+            var htmls = repo.All<HtmlTemplate>()
+                            .Where(x => x.HtmlTemplateTypeId == 11 || x.HtmlTemplateTypeId == 22 || x.HtmlTemplateTypeId == 23)
+                            .Where(x => x.HaveSessionAct == true && x.Id < 1000)
+                            .ToList();
+            var cnt = 0;
+            foreach (var item in htmls)
+            {
+                var tiny = ConvertToTinyMCVM(item, true);
+                var newstr = HtmlTemplateContentAsString(item);
+                if (!newstr.Contains("<html>"))
+                {
+                    var old = repo.All<HtmlTemplate>()
+                            .Where(x => x.Id == item.Id + 1000)
+                            .FirstOrDefault();
+                    if (old == null)
+                        continue;
+
+                    var oldstr = HtmlTemplateContentAsString(old);
+                    var body_i = oldstr.IndexOf("<body lang=BG>");
+                    var body_str = oldstr.Substring(0, body_i + "<body lang=BG>".Length);
+                    if (body_i < 0)
+                    {
+                        body_i = oldstr.IndexOf("<body lang=BG style='tab-interval:35.4pt'>");
+                        body_str = oldstr.Substring(0, body_i + "<body lang=BG style='tab-interval:35.4pt'>".Length);
+                    }
+                    if (body_i < 0)
+                    {
+                        body_i = oldstr.IndexOf("<body>");
+                        body_str = oldstr.Substring(0, body_i + "<body>".Length);
+                    }
+                    if (body_i < 0)
+                    {
+                        body_str = "";
+                    }
+                    item.Content = Encoding.UTF8.GetBytes(body_str + Environment.NewLine + tiny.Text + Environment.NewLine + $"</body>{Environment.NewLine}</html>{Environment.NewLine}");
+                    repo.SaveChanges();
+                    cnt++;
+
+                }
+
+            }
+
+        }
         public void HtmlTemplateNotificationHave_F_FIRST_SET_NO_YEAR()
         {
-            var htmls = repo.AllReadonly<HtmlTemplate>().Where(x => x.HtmlTemplateTypeId == 11 || x.HtmlTemplateTypeId == 22 || x.HtmlTemplateTypeId == 23).ToList();
+            var htmls = repo.AllReadonly<HtmlTemplate>()
+                             //.Where(x => x.HtmlTemplateTypeId == 11 || x.HtmlTemplateTypeId == 22 || x.HtmlTemplateTypeId == 23)
+                             .ToList();
             var result = new List<HtmlTemplate>();
             foreach (var item in htmls)
             {
                 var tiny = ConvertToTinyMCVM(item, false);
-                if (tiny.Text.Contains("{F_FIRST_SET_NO_YEAR}"))
+                //  if (tiny.Text.Contains("{F_FIRST_SET_NO_YEAR}"))
+                //      result.Add(item);
+                if (tiny.Text.Contains("{F_COURT_ADDRESS_1}") || tiny.Text.Contains("{F_COURT_ADDRESS_2}"))
                     result.Add(item);
             }
+            result = result.ToList();
         }
+
+        /// <summary>
+        /// Генерира баркод без да използва System.Drawing
+        /// </summary>
+        /// <param name="barcodeData"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        string generateBarcode2D(string barcodeData, int width, int height)
+        {
+            var barcode = new Barcode(barcodeData, NetBarcode.Type.Code39, false, width, height);
+            return barcode.GetBase64Image() ?? string.Empty;
+        }
+
         private string GenerateBarcode(string barcode)
         {
-            var writer = new BarcodeWriterPixelData
-            {
-                Format = BarcodeFormat.CODE_39,
-                Options = new QrCodeEncodingOptions { Width = 200, Height = 40, Margin = 1 }
-            };
+            return generateBarcode2D(barcode, 200, 40);
+            //var writer = new BarcodeWriterPixelData
+            //{
+            //    Format = BarcodeFormat.CODE_39,
+            //    Options = new QrCodeEncodingOptions { Width = 200, Height = 40, Margin = 1 }
+            //};
 
-            var result = writer.Write(barcode);
-            var base64str = string.Empty;
+            //var result = writer.Write(barcode);
+            //var base64str = string.Empty;
 
-            using (var bitmap = new System.Drawing.Bitmap(result.Width, result.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
-            {
-                using (var ms = new System.IO.MemoryStream())
-                {
-                    var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, result.Width, result.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
-                    try
-                    {
-                        // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
-                        System.Runtime.InteropServices.Marshal.Copy(result.Pixels, 0, bitmapData.Scan0, result.Pixels.Length);
-                    }
-                    finally
-                    {
-                        bitmap.UnlockBits(bitmapData);
-                    }
+            //using (var bitmap = new System.Drawing.Bitmap(result.Width, result.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
+            //{
+            //    using (var ms = new System.IO.MemoryStream())
+            //    {
+            //        var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, result.Width, result.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            //        try
+            //        {
+            //            // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
+            //            System.Runtime.InteropServices.Marshal.Copy(result.Pixels, 0, bitmapData.Scan0, result.Pixels.Length);
+            //        }
+            //        finally
+            //        {
+            //            bitmap.UnlockBits(bitmapData);
+            //        }
 
-                    // PNG or JPEG or whatever you want
-                    bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                    base64str = Convert.ToBase64String(ms.ToArray());
-                }
-            }
+            //        // PNG or JPEG or whatever you want
+            //        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            //        base64str = Convert.ToBase64String(ms.ToArray());
+            //    }
+            //}
 
-            return base64str;
+            //return base64str;
         }
 
         private string HtmlTemplateContentAsString(HtmlTemplate htmlTemplate)
@@ -1627,11 +1959,11 @@ namespace IOWebApplication.Core.Services
             }
             HtmlTemplate htmlTemplateFrame = null;
             if (htmlTemplate.FrameTemplateId != null)
-                htmlTemplateFrame = repo.GetById<HtmlTemplate>(htmlTemplate.FrameTemplateId);
+                htmlTemplateFrame = GetReadonly<HtmlTemplate>(htmlTemplate.FrameTemplateId ?? 0);
 
             HtmlTemplate htmlTemplateStyle = null;
             if (htmlTemplate.StyleTemplateId != null)
-                htmlTemplateStyle = repo.GetById<HtmlTemplate>(htmlTemplate.StyleTemplateId);
+                htmlTemplateStyle = GetReadonly<HtmlTemplate>(htmlTemplate.StyleTemplateId ?? 0);
 
             TinyMCEVM htmlModel = new TinyMCEVM();
             htmlModel.Id = htmlTemplate.Id;
@@ -1673,9 +2005,10 @@ namespace IOWebApplication.Core.Services
             htmlText = htmlText.Replace("{F_LAWSUIT_NO}/{F_LAWSUIT_YEAR}г.", "{F_LAWSUIT_NO}");
             htmlText = ReplaceImageHr(htmlText, "image001.gif", "<hr class=\"hr1line\"/>");
             htmlText = ReplaceImageHr(htmlText, "image002.gif", "<hr class=\"hr2line\"/>");
+
             //htmlText = replacePageBreak(htmlText);
-            if (insertDispositiv)
-                htmlText = InsertDispositiv(htmlText);
+            //if (insertDispositiv)
+            //    htmlText = InsertDispositiv(htmlText);
             htmlModel.Text = htmlText;
             if (htmlTemplateFrame != null)
             {
@@ -1718,13 +2051,26 @@ namespace IOWebApplication.Core.Services
             var html = repo.AllReadonly<HtmlTemplate>()
                            .Where(x => x.Alias.ToUpper() == alias.ToUpper() &&
                                        (x.DateFrom <= dateTimeNow && dateTimeNow <= (x.DateTo ?? dateTimeAddOneYear)))
-                           .DefaultIfEmpty(null)
                            .FirstOrDefault();
             return FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, false, preparedBlank);
         }
+
+        public async Task<TinyMCEVM> GetTinyMCEVMFromHtmlTemplatesAsync(string alias, IList<KeyValuePairVM> keyValuePairs, string preparedBlank = null)
+        {
+            var dateTimeNow = DateTime.Now;
+            var dateTimeAddOneYear = DateTime.Now.AddYears(1);
+           
+            var html = await repo.AllReadonly<HtmlTemplate>()
+                                 .Where(x => x.Alias.ToUpper() == alias.ToUpper() &&
+                                             (x.DateFrom <= dateTimeNow && dateTimeNow <= (x.DateTo ?? dateTimeAddOneYear)))
+                                 .FirstOrDefaultAsync();
+
+            return FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, false, preparedBlank);
+        }
+
         public TinyMCEVM GetTinyMCEVMFromHtmlTemplates(int htmlTemplateId, IList<KeyValuePairVM> keyValuePairs, string preparedBlank = null)
         {
-            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).DefaultIfEmpty(null).FirstOrDefault();
+            var html = repo.AllReadonly<HtmlTemplate>().Where(x => x.Id == htmlTemplateId).FirstOrDefault();
             return FillHtmlTmplateToTinyMCEVM(html, keyValuePairs, html.HaveSessionAct == true, preparedBlank);
         }
 
@@ -1746,31 +2092,41 @@ namespace IOWebApplication.Core.Services
             if (activeObligationPayments.Count > 0)
             {
                 var documentIds = activeObligationPayments.Where(x => x.Obligation.DocumentId != null).Select(x => x.Obligation.DocumentId).Distinct().ToList();
+                var actIds = activeObligationPayments.Where(x => x.Obligation.CaseSessionActId != null).Select(x => x.Obligation.CaseSessionActId).Distinct().ToList();
+                var sessionIds = activeObligationPayments.Where(x => x.Obligation.CaseSessionId != null).Select(x => x.Obligation.CaseSessionId).Distinct().ToList();
                 if (documentIds.Count > 0)
                 {
                     var documentData = repo.AllReadonly<Document>()
                             .Include(x => x.DocumentType)
                             .Where(x => documentIds.Contains(x.Id))
-                            .Select(x => x.DocumentType.Label + " " + x.DocumentNumber)
+                            .Select(x => x.DocumentType.Label + " " + x.DocumentNumber + " " +
+                            (x.Cases.Any() ? x.Cases.Where(a => a.CaseStateId != NomenclatureConstants.CaseState.Draft).Select(a => a.CaseType.Label + " " + a.RegNumber).FirstOrDefault() :
+                            x.DocumentCaseInfo.Where(a => a.Case.CaseStateId != NomenclatureConstants.CaseState.Draft).Select(a => a.Case.CaseType.Label + " " + a.Case.RegNumber).FirstOrDefault())
+                            )
                             .ToList();
                     keyData = String.Join(", ", documentData);
                 }
-                else
+                else if (actIds.Count > 0)
                 {
-                    var actIds = activeObligationPayments.Where(x => x.Obligation.CaseSessionActId != null).Select(x => x.Obligation.CaseSessionActId).Distinct().ToList();
                     var caseData = repo.AllReadonly<CaseSessionAct>()
-                            .Include(x => x.CaseSession)
-                            .Include(x => x.CaseSession.Case)
-                            .Include(x => x.CaseSession.Case.CaseType)
                             .Where(x => actIds.Contains(x.Id))
-                            .Select(x => x.CaseSession.Case.CaseType.Label + " " + x.CaseSession.Case.RegNumber)
+                            .Select(x => x.Case.CaseType.Label + " " + x.Case.RegNumber)
+                            .Distinct()
+                            .ToList();
+                    keyData = String.Join(", ", caseData);
+                }
+                else if (sessionIds.Count > 0)
+                {
+                    var caseData = repo.AllReadonly<CaseSession>()
+                            .Where(x => sessionIds.Contains(x.Id))
+                            .Select(x => x.Case.CaseType.Label + " " + x.Case.RegNumber)
                             .Distinct()
                             .ToList();
                     keyData = String.Join(", ", caseData);
                 }
 
                 var moneyTypeIds = activeObligationPayments.Select(x => x.Obligation.MoneyTypeId).Distinct().ToList();
-                moneyTypeData = String.Join(", ", repo.AllReadonly<MoneyType>()
+                moneyTypeData = String.Join(", ", repo.AllReadonly<Infrastructure.Data.Models.Nomenclatures.MoneyType>()
                                                         .Where(x => moneyTypeIds.Contains(x.Id))
                                                         .Select(x => x.Label)
                                                         .Distinct()
@@ -1790,7 +2146,24 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TERM_ID}", Label = "Терминал", Value = posData.Tid });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_AUTH_ID}", Label = "Авторизационен код", Value = posData.Authcode });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_ACCOUNT}", Label = "Сметка", Value = model.CourtBankAccount.Iban });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM}", Label = "Сума", Value = model.Amount.ToString("0.00") });
+
+            if (userContext.IsInterimPeriodEuro == false)
+            {
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM}", Label = "Сума", Value = model.Amount.ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_WORDS}", Label = "Словом", Value = MoneyExtensions.MoneyToString(model.Amount, Utils.GetCurrency(userContext.IsPeriodEuro)) });
+            }
+            else
+            {
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM}", Label = "Сума", Value = model.Amount.ToString("0.00") + ", левова равностойност " + (model.AmountBGN ?? 0).ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM()
+                {
+                    Key = "{F_SUM_WORDS}",
+                    Label = "Словом",
+                    Value = MoneyExtensions.MoneyToString(model.Amount, Utils.GetCurrency(userContext.IsPeriodEuro)) + ", левова равностойност " +
+                                       MoneyExtensions.MoneyToString(model.AmountBGN ?? 0, NomenclatureConstants.Currency.BGN)
+                });
+            }
+
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_PERSONS}", Label = "Платец", Value = model.SenderName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_CARD_ID}", Label = "Номер на карта", Value = posData.Cardid });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_KEY}", Label = "Вид дело/документ, номер, година", Value = keyData });
@@ -1798,7 +2171,6 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TEXT}", Label = "Пояснение", Value = model.Description });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_USER_NAME}", Label = "Потребител", Value = model.User.LawUnit.FullName_MiddleNameInitials });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_USER_POST}", Label = "Длъжност", Value = position });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_WORDS}", Label = "Словом", Value = MoneyExtensions.MoneyToString(model.Amount) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TRANS_ID}", Label = "Транзакция", Value = posData.Rrn });
 
             return GetTinyMCEVMFromHtmlTemplates("Payments", keyValuePairs);
@@ -1867,8 +2239,8 @@ namespace IOWebApplication.Core.Services
             }
 
             string persons = String.Join(", ", activeObligationPayments.Select(x => x.Obligation.FullName).Distinct().ToList());
-            decimal sum1 = activeObligationPayments.Where(x => (x.Obligation.MoneyType.IsEarning ?? false) == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
-            decimal sum2 = activeObligationPayments.Where(x => (x.Obligation.MoneyType.IsTransport ?? false) == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            decimal sum1 = activeObligationPayments.Where(x => (x.Obligation.MoneyType.IsEarning ?? false) == true).Select(x => x.Amount).Sum();
+            decimal sum2 = activeObligationPayments.Where(x => (x.Obligation.MoneyType.IsTransport ?? false) == true).Select(x => x.Amount).Sum();
             var courtLawUnit = lawUnitService.GetCourtLawUnitAllDatabyLawUnitId(model.CourtId, model.User.LawUnitId);
             string college = "";
             if (courtLawUnit != null && courtLawUnit.CourtOrganization != null)
@@ -1891,81 +2263,212 @@ namespace IOWebApplication.Core.Services
             return GetTinyMCEVMFromHtmlTemplates("RKO2", keyValuePairs);
         }
 
+        /// <summary>
+        /// Метод извличащ ExpenseOrder
+        /// </summary>
+        /// <param name="orderId">Идентификатор на записа</param>
+        /// <returns></returns>
+        private ExpenseOrder GetExpenseOrder(int orderId)
+        {
+            return repo.AllReadonly<ExpenseOrder>()
+                       .Include(x => x.User)
+                       .Include(x => x.User.LawUnit)
+                       .Include(x => x.Court)
+                       .Include(x => x.ExpenseOrderObligations)
+                       .ThenInclude(x => x.Obligation)
+                       .ThenInclude(x => x.CaseSessionAct)
+                       .Include(x => x.ExpenseOrderObligations)
+                       .ThenInclude(x => x.Obligation)
+                       .ThenInclude(x => x.MoneyType)
+                       .ThenInclude(x => x.MoneyGroup)
+                       .Include(x => x.LawUnitSign)
+                       .Include(x => x.ExpenseOrderObligations)
+                       .ThenInclude(x => x.Obligation)
+                       .ThenInclude(x => x.UicType)
+                       .Where(x => x.Id == orderId)
+                       .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Метод връщащ идентификатори на заседание
+        /// </summary>
+        /// <param name="model">ExpenseOrder</param>
+        /// <returns></returns>
+        private List<int?> GetExpenseOrder_SessionIds(ExpenseOrder model)
+        {
+            return model.ExpenseOrderObligations
+                        .Where(x => x.Obligation.CaseSessionId != null || 
+                                    x.Obligation.CaseSessionActId != null)
+                        .Select(x => (int?)(x.Obligation.CaseSessionId ?? x.Obligation.CaseSessionAct.CaseSessionId))
+                        .Distinct()
+                        .ToList();
+        }
+
+        /// <summary>
+        /// Метод връщащ данни за заседания
+        /// </summary>
+        /// <param name="sessionIds">Идентификатор на заседания</param>
+        /// <returns></returns>
+        private string GetExpenseOrder_SessionData(List<int?> sessionIds)
+        {
+            return string.Join(", ", repo.AllReadonly<CaseSession>()
+                                         .Where(x => sessionIds.Contains(x.Id))
+                                         .Select(x => x.SessionType.Label + "/" + x.DateFrom.ToString("dd.MM.yyyy HH:mm") + " г. по " +
+                                                 x.Case.CaseType.Label + "  № " + x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"))
+                                         .Distinct()
+                                         .ToList());
+        }
+
+        /// <summary>
+        /// Метод връщащ данни за CourtDepartment
+        /// </summary>
+        /// <param name="sessionIds">Идентификатор на заседания</param>
+        /// <returns></returns>
+        private string GetExpenseOrder_CourtDepartmentName(List<int?> sessionIds)
+        {
+            return repo.AllReadonly<CaseLawUnit>()
+                       .Where(x => sessionIds.Contains(x.CaseSessionId))
+                       .Where(x => x.DateFrom <= x.CaseSession.DateFrom && (x.DateTo ?? x.CaseSession.DateFrom.AddDays(1)) >= x.CaseSession.DateFrom)
+                       .Where(x => x.CourtDepartmentId != null)
+                       .Where(x => !NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId))
+                       .Select(x => x.CourtDepartment.DepartmentType.Label + " " + x.CourtDepartment.Label)
+                       .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Метод връщащ идентификатори на срещи за медиация
+        /// </summary>
+        /// <param name="model">ExpenseOrder</param>
+        /// <returns></returns>
+        private int?[] GetExpenseOrder_MediationSessionIds(ExpenseOrder model)
+        {
+            return model.ExpenseOrderObligations
+                        .Where(x => x.Obligation.MediationCaseSessionId != null)
+                        .Select(x => x.Obligation.MediationCaseSessionId)
+                        .Distinct()
+                        .ToArray();
+        }
+
+        /// <summary>
+        /// Метод връщащ данни за срещи по медиация
+        /// </summary>
+        /// <param name="mediationSessionIds">Идентификатори на срещи по медиация</param>
+        /// <returns></returns>
+        private string GetExpenseOrder_MediationSessionData(int?[] mediationSessionIds)
+        {
+            return string.Join(", ", repo.AllReadonly<MediationCaseSession>()
+                                         .Where(x => mediationSessionIds.Contains(x.Id))
+                                         .Select(x => x.MediationType.Label + "/" + x.DateFrom.ToString("dd.MM.yyyy HH:mm") + " г. по " +
+                                                      x.Case.CaseType.Label + "  № " + x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"))
+                                         .Distinct()
+                                         .ToList());
+        }
+
+        /// <summary>
+        /// Метод връщащ ролята на лицето
+        /// </summary>
+        /// <param name="firstObligation">ExpenseOrderObligation</param>
+        /// <returns></returns>
+        private string GetExpenseOrder_PersonRole(ExpenseOrderObligation firstObligation)
+        {
+            if (firstObligation != null)
+            {
+                if (firstObligation.Obligation.MediationCaseSessionId == null)
+                {
+                    int personSourceId = (int)(firstObligation.Obligation.Person_SourceId ?? 0);
+                    if (firstObligation.Obligation.Person_SourceType == SourceTypeSelectVM.CaseLawUnit)
+                    {
+                        return repo.AllReadonly<CaseLawUnit>().Where(x => x.Id == personSourceId).Select(x => x.JudgeRole.Label).FirstOrDefault();
+                    }
+                    else if (firstObligation.Obligation.Person_SourceType == SourceTypeSelectVM.CasePerson)
+                    {
+                        return repo.AllReadonly<CasePerson>().Where(x => x.Id == personSourceId).Select(x => x.PersonRole.Label).FirstOrDefault();
+                    }
+                }
+                else
+                    return "Медиатор";
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Извличане на кординатор
+        /// </summary>
+        /// <param name="model">ExpenseOrder</param>
+        /// <returns></returns>
+        private string GetExpenseOrder_Cordinator(ExpenseOrder model)
+        {
+            DateTime dateTime = DateTime.Now;
+
+            return repo.AllReadonly<MediationCoordinator>()
+                       .Where(x => x.DateFrom <= dateTime)
+                       .Where(x => (x.DateTo ?? dateTime) >= dateTime)
+                       .Where(x => x.Centers.Any(c => c.Center.Courts.Any(cc => cc.CourtId == model.CourtId)))
+                       .Select(x => x.LawUnit.FullName)
+                       .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Метод създаващ файл за разходен ордер
+        /// </summary>
+        /// <param name="orderId">Идентификатор на ордера</param>
+        /// <returns></returns>
         public (TinyMCEVM result, string errorMessage) FillHtmlTemplateExpenseOrder(int orderId)
         {
-            var model = repo.AllReadonly<ExpenseOrder>()
-                .Include(x => x.User)
-                .Include(x => x.User.LawUnit)
-                .Include(x => x.Court)
-                .Include(x => x.ExpenseOrderObligations)
-                .ThenInclude(x => x.Obligation)
-                .ThenInclude(x => x.CaseSessionAct)
-                .Include(x => x.ExpenseOrderObligations)
-                .ThenInclude(x => x.Obligation)
-                .ThenInclude(x => x.MoneyType)
-                .ThenInclude(x => x.MoneyGroup)
-                .Include(x => x.LawUnitSign)
-                .Include(x => x.ExpenseOrderObligations)
-                .ThenInclude(x => x.Obligation)
-                .ThenInclude(x => x.UicType)
-                .Where(x => x.Id == orderId)
-                .FirstOrDefault();
+            ExpenseOrder model = GetExpenseOrder(orderId);
 
-            string courtBankAccountName = "";
-            string sessionData = "";
-            string courtDepartmentName = "";
-            if (model != null)
-            {
-                if (model.LawUnitSignId == null)
-                {
-                    return (result: null, errorMessage: "Въведете съдия");
-                }
-                var sessions = model.ExpenseOrderObligations
-                                        .Where(x => x.Obligation.CaseSessionId != null || x.Obligation.CaseSessionActId != null)
-                                        .Select(x => x.Obligation.CaseSessionId ?? x.Obligation.CaseSessionAct.CaseSessionId).Distinct().ToList();
-
-
-                sessionData = String.Join(", ", repo.AllReadonly<CaseSession>()
-                                            .Include(x => x.SessionType)
-                                            .Include(x => x.Case)
-                                            .Include(x => x.Case.CaseType)
-                                            .Where(x => sessions.Contains(x.Id))
-                                            .Select(x => x.SessionType.Label + "/" + x.DateFrom.ToString("dd.MM.yyyy HH:mm") + " г. по " +
-                                                    x.Case.CaseType.Label + "  № " + x.Case.RegNumber + "/" + x.Case.RegDate.ToString("dd.MM.yyyy"))
-                                            .Distinct()
-                                            .ToList());
-
-                if (sessions.Count == 1)
-                {
-                    courtDepartmentName = repo.AllReadonly<CaseLawUnit>()
-                                                .Include(x => x.CaseSession)
-                                                .Include(x => x.CourtDepartment)
-                                                .Include(x => x.CourtDepartment.DepartmentType)
-                                                .Where(x => sessions.Contains(x.CaseSessionId ?? 0))
-                                                .Where(x => x.DateFrom <= x.CaseSession.DateFrom && (x.DateTo ?? x.CaseSession.DateFrom.AddDays(1)) >= x.CaseSession.DateFrom)
-                                                .Where(x => x.CourtDepartmentId != null)
-                                                .Where(x => !NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId))
-                                                .Select(x => x.CourtDepartment.DepartmentType.Label + " " + x.CourtDepartment.Label)
-                                                .DefaultIfEmpty("")
-                                                .FirstOrDefault();
-                }
-
-                int moneyTypeId = model.ExpenseOrderObligations.Select(x => x.Obligation.MoneyTypeId).FirstOrDefault();
-                string moneyGroupName = model.ExpenseOrderObligations.Select(x => x.Obligation.MoneyType.MoneyGroup.Label).FirstOrDefault();
-                var courtBankAccount = commonService.GetCourtBankAccountForMoneyType(moneyTypeId);
-                courtBankAccountName = (courtBankAccount == null ? courtBankAccount.Iban : "") + " по сметка " + moneyGroupName;
-            }
-            else
-            {
+            if (model == null)
                 return (result: null, errorMessage: "");
+
+            string sessionData = string.Empty;
+            string mediationSessionData = string.Empty;
+            string courtDepartmentName = string.Empty;
+            string cordinatorName = string.Empty;
+
+            if (model.LawUnitSignId == null)
+            {
+                return (result: null, errorMessage: "Въведете съдия");
             }
 
-            string personName = model.ExpenseOrderObligations.Select(x => x.Obligation.FullName + " " +
-                                x.Obligation.UicType.Label + " " + x.Obligation.Uic).DefaultIfEmpty("").FirstOrDefault();
+            List<int?> sessionIds = GetExpenseOrder_SessionIds(model);
+            if (sessionIds != null && sessionIds.Count > 0)
+            {
+                sessionData = GetExpenseOrder_SessionData(sessionIds);
+                courtDepartmentName = GetExpenseOrder_CourtDepartmentName(sessionIds);
+            }
+
+            int?[] mediationSessionIds = GetExpenseOrder_MediationSessionIds(model);
+            if (mediationSessionIds != null && mediationSessionIds.Length > 0)
+            {
+                mediationSessionData = GetExpenseOrder_MediationSessionData(mediationSessionIds);
+                cordinatorName = GetExpenseOrder_Cordinator(model);
+            }
+
+            string personRole = GetExpenseOrder_PersonRole(model.ExpenseOrderObligations.FirstOrDefault());
+
+            int moneyTypeId = model.ExpenseOrderObligations.Select(x => x.Obligation.MoneyTypeId).FirstOrDefault();
+            string moneyGroupName = model.ExpenseOrderObligations.Select(x => x.Obligation.MoneyType.MoneyGroup.Label).FirstOrDefault();
+            var courtBankAccount = commonService.GetCourtBankAccountForMoneyType(moneyTypeId);
+            string courtBankAccountName = (courtBankAccount == null ? courtBankAccount.Iban : "") + " по сметка " + moneyGroupName;
+
+            string personName = model.ExpenseOrderObligations
+                                     .Select(x => x.Obligation.FullName + " " +
+                                                  x.Obligation.UicType.Label + " " + x.Obligation.Uic)
+                                     .DefaultIfEmpty("")
+                                     .FirstOrDefault();
+
             decimal sum1 = model.ExpenseOrderObligations
-                         .Where(x => (x.Obligation.MoneyType.IsEarning ?? false) == true)
-                         .Select(x => x.Obligation.Amount).DefaultIfEmpty(0).Sum();
-            decimal sum2 = model.ExpenseOrderObligations.Where(x => (x.Obligation.MoneyType.IsTransport ?? false) == true).Select(x => x.Obligation.Amount).DefaultIfEmpty(0).Sum();
+                                .Where(x => (x.Obligation.MoneyType.IsEarning ?? false) == true)
+                                .Select(x => x.Obligation.Amount)
+                                .DefaultIfEmpty(0)
+                                .Sum();
+
+            decimal sum2 = model.ExpenseOrderObligations
+                                .Where(x => (x.Obligation.MoneyType.IsTransport ?? false) == true)
+                                .Select(x => x.Obligation.Amount)
+                                .DefaultIfEmpty(0)
+                                .Sum();
 
             string college = "";
             if ((model.LawUnitSignId ?? 0) > 0)
@@ -1995,46 +2498,73 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COLLEGE_DATA}", Label = "Състав", Value = courtDepartmentName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_DATE}", Label = "Дата", Value = model.RegDate.ToString("dd.MM.yyyy") });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_NUMBER}", Label = "Дата", Value = model.RegNumber });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_DATA}", Label = "Заседание", Value = sessionData });
+
+            if (mediationSessionIds != null && mediationSessionIds.Length > 0)
+            {
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_DATA}", Label = "Срещи за медиация", Value = mediationSessionData });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_Mediator_court}", Label = "Съд медиатора", Value = model.Court.Label });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_Coordinator}", Label = "Кординатор", Value = cordinatorName });
+            }
+            else
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_DATA}", Label = "Заседание", Value = sessionData });
+
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_ACCOUNT}", Label = "Сметка", Value = courtBankAccountName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER}", Label = "Работник", Value = personName });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_1}", Label = "Сума", Value = sum1.ToString("0.00") });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_2}", Label = "Сума", Value = sum2.ToString("0.00") });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM}", Label = "Сума", Value = (sum1 + sum2).ToString("0.00") });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_USER_NAME}", Label = "Потребител", Value = model.User.LawUnit.FullName_MiddleNameInitials });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_JUDGE}", Label = "Съдия", Value = model.LawUnitSign?.FullName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_USER_INITIALS}", Label = "Инициали потребител", Value = userInitials });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_JUDGE_INITIALS}", Label = "Инициали съдия", Value = judgeInitials });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_TEXT}", Label = "Словом", Value = MoneyExtensions.MoneyToString(sum1 + sum2) });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_REGION}", Label = "Регион", Value = model.RegionName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FIRM_NAME}", Label = "Служител при", Value = model.FirmName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FIRM_CITY}", Label = "Служител при населено място", Value = model.FirmCity });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_IBAN}", Label = "Банкова сметка", Value = iban });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_USER_POST}", Label = "Длъжност на лице, което съставя документа в съда", Value = position });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INVOLVEMENT}", Label = "Качество", Value = personRole });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_1}", Label = "Сума", Value = sum1.ToString("0.00") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_2}", Label = "Сума", Value = sum2.ToString("0.00") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM}", Label = "Сума", Value = (sum1 + sum2).ToString("0.00") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_TEXT}", Label = "Словом", Value = MoneyExtensions.MoneyToString(sum1 + sum2, Utils.GetCurrency(userContext.IsPeriodEuro)) });
+            keyValuePairs.AddRange(fillList_CurrencyTxt());
 
-            return (result: GetTinyMCEVMFromHtmlTemplates("RKO2", keyValuePairs), errorMessage: "");
+            if (userContext.IsInterimPeriodEuro == true)
+            {
+                decimal sum1BGN = model.ExpenseOrderObligations
+                             .Where(x => (x.Obligation.MoneyType.IsEarning ?? false) == true)
+                             .Select(x => x.Obligation.AmountBGN ?? 0).DefaultIfEmpty(0).Sum();
+                decimal sum2BGN = model.ExpenseOrderObligations.Where(x => (x.Obligation.MoneyType.IsTransport ?? false) == true).Select(x => x.Obligation.AmountBGN ?? 0).DefaultIfEmpty(0).Sum();
+
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_1_BGN}", Label = "Сума", Value = sum1BGN.ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_2_BGN}", Label = "Сума", Value = sum2BGN.ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_BGN}", Label = "Сума", Value = (sum1BGN + sum2BGN).ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUM_TEXT_BGN}", Label = "Словом", Value = MoneyExtensions.MoneyToString(sum1BGN + sum2BGN, NomenclatureConstants.Currency.BGN) });
+            }
+
+            if (mediationSessionIds != null && mediationSessionIds.Length > 0)
+                return (result: GetTinyMCEVMFromHtmlTemplates("RKO_med", keyValuePairs), errorMessage: "");
+            else
+                return (result: GetTinyMCEVMFromHtmlTemplates(userContext.IsInterimPeriodEuro == false ? "RKO2" : "RKO2EURBGN", keyValuePairs), errorMessage: "");
         }
 
-        private IList<KeyValuePairVM> fillList_DocumentGeneral(DocumentTemplate model)
+        private async Task<IList<KeyValuePairVM>> fillList_DocumentGeneral(DocumentTemplate model)
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
 
-            keyValuePairs.AddRange(fillList_Court(model.CourtId));
+            keyValuePairs.AddRange(fillList_Court(model.CourtId, model.Case?.CaseGroupId ?? 0));
 
             Case caseModel = null;
             if (model.CaseId != null)
             {
-                caseModel = Read_Case(model.CaseId ?? 0);
+                caseModel = await Read_Case(model.CaseId ?? 0);
                 keyValuePairs.AddRange(fillList_Case(caseModel, ""));
 
                 var casePersons = Read_CasePersons(model.CaseId ?? 0, null);
                 keyValuePairs.AddRange(fillList_CasePersons(casePersons, null, caseModel.CaseTypeId));
 
-                var caseSession = repo.AllReadonly<CaseSession>()
+                var caseSession = await repo.AllReadonly<CaseSession>()
                                    .Where(x => x.CaseId == model.CaseId && x.DateExpired == null)
                                    .Where(x => x.SessionType.SessionTypeGroup == NomenclatureConstants.CaseSessionTypeGroup.PublicSession)
                                    .OrderBy(x => x.DateFrom)
-                                   .FirstOrDefault();
+                                   .FirstOrDefaultAsync();
 
                 if (caseSession != null)
                     keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SCHEDULE_SESSION}", Label = "Дата на насрочване", Value = caseSession.DateFrom.ToString(FormattingConstant.NormalDateFormatHHMM) });
@@ -2043,7 +2573,7 @@ namespace IOWebApplication.Core.Services
             Document documentModel = null;
             if (model.DocumentId > 0)
             {
-                documentModel = repo.AllReadonly<Document>()
+                documentModel = await repo.AllReadonly<Document>()
                                             .Include(x => x.DocumentPersons)
                                             .ThenInclude(x => x.Addresses)
                                             .ThenInclude(x => x.Address)
@@ -2052,21 +2582,26 @@ namespace IOWebApplication.Core.Services
                                             .Include(x => x.User)
                                             .Include(x => x.User.LawUnit)
                                             .Where(x => x.Id == model.DocumentId)
-                                            .FirstOrDefault();
+                                            .AsSplitQuery()
+                                            .FirstOrDefaultAsync();
                 keyValuePairs.AddRange(fillList_Document(documentModel));
 
                 if (!string.IsNullOrEmpty(model.AuthorId))
                 {
-                    var authorUser = repo.AllReadonly<ApplicationUser>()
+                    var authorUser = await repo.AllReadonly<ApplicationUser>()
                                             .Include(x => x.LawUnit)
                                             .Where(x => x.Id == model.AuthorId)
-                                            .FirstOrDefault();
+                                            .FirstOrDefaultAsync();
                     keyValuePairs.AddRange(fillList_UserData(authorUser, documentModel.CourtId));
                 }
                 else
                 {
                     keyValuePairs.AddRange(fillList_UserData(documentModel.User, documentModel.CourtId));
                 }
+            }
+            else
+            {
+                keyValuePairs.AddRange(fillList_DocumentBeforeReg());
             }
 
             if (NomenclatureConstants.HtmlTemplateAlias.HeritageLetters.Contains(model.HtmlTemplate.Alias))
@@ -2076,10 +2611,10 @@ namespace IOWebApplication.Core.Services
             // Ako писмото е закачено към призовка/съобщение
             if (model.SourceType == SourceTypeSelectVM.CaseNotification)
             {
-                var caseNotification = Read_CaseNotification((int)model.SourceId);
+                var caseNotification = await Read_CaseNotification((int)model.SourceId);
                 if (caseNotification != null)
                 {
-                    keyValuePairs = KeyValuePairVMFromNotification_ForLetter(caseNotification, keyValuePairs);
+                    keyValuePairs = await KeyValuePairVMFromNotification_ForLetter(caseNotification, keyValuePairs);
                 }
             }
             // Ako писмото е закачено към Уведомление/Съобщение към разпореждане
@@ -2097,7 +2632,7 @@ namespace IOWebApplication.Core.Services
                 var caseSessionAct = Read_CaseSessionAct((int)model.SourceId);
                 if (caseSessionAct != null)
                 {
-                    keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, null));
+                    keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, null, true));
 
                     var caseSession = Read_CaseSession(caseSessionAct.CaseSessionId);
                     keyValuePairs.AddRange(fillList_Session(caseSession));
@@ -2116,9 +2651,10 @@ namespace IOWebApplication.Core.Services
 
             return keyValuePairs;
         }
-        public TinyMCEVM FillHtmlTemplateDocumentTemplate(int id, string preparedBlank = null)
+        public async Task<TinyMCEVM> FillHtmlTemplateDocumentTemplate(int id, string preparedBlank = null)
         {
-            var model = repo.AllReadonly<DocumentTemplate>()
+            var model = await repo.AllReadonly<DocumentTemplate>()
+                             .Include(x => x.Case)
                              .Include(x => x.HtmlTemplate)
                              .Include(x => x.DocumentType)
                              .Include(x => x.Author)
@@ -2127,7 +2663,8 @@ namespace IOWebApplication.Core.Services
                              .Include(x => x.CasePersonAddress)
                              .Include(x => x.CasePersonAddress.Address)
                              .Where(x => x.Id == id)
-                             .FirstOrDefault();
+                             .AsSplitQuery()
+                             .FirstOrDefaultAsync();
 
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
 
@@ -2142,11 +2679,11 @@ namespace IOWebApplication.Core.Services
 
             if (model.HtmlTemplate.Alias == "BANCCERT_" && (model.CaseId ?? 0) > 0)
             {
-                var acts = repo.AllReadonly<CaseSessionAct>()
+                var acts = await repo.AllReadonly<CaseSessionAct>()
                             .Include(x => x.ActISPNReason)
                             .Where(x => x.CaseId == model.CaseId)
                             .Where(x => x.DateExpired == null)
-                            .ToList();
+                            .ToListAsync();
                 string rowData = "";
                 foreach (var item in acts)
                 {
@@ -2158,14 +2695,14 @@ namespace IOWebApplication.Core.Services
             if ((model.CaseId ?? 0) > 0)
             {
                 //Първото насрочено заседание
-                var caseSessionLabel = repo.AllReadonly<CaseSession>()
+                var caseSessionLabel = await repo.AllReadonly<CaseSession>()
                                   .Where(x => x.CaseId == model.CaseId)
                                   .Where(x => x.DateExpired == null)
                                   .Where(x => x.DateFrom > DateTime.Now)
                                   .Where(x => x.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno)
                                   .OrderBy(x => x.DateFrom)
                                   .Select(x => x.SessionType.Label + " " + x.DateFrom.ToString(FormattingConstant.NormalDateFormatHHMM))
-                                  .FirstOrDefault();
+                                  .FirstOrDefaultAsync();
                 keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_OPT_SCHEDULE_SESSION}", Label = "Първото насрочено заседание", Value = caseSessionLabel });
             }
 
@@ -2179,7 +2716,7 @@ namespace IOWebApplication.Core.Services
                     keyValuePairs.AddRange(fillList_DocumentExecList(model));
                     break;
                 case SourceTypeSelectVM.CaseMigration:
-                    keyValuePairs.AddRange(fillList_CaseMigration(model));
+                    keyValuePairs.AddRange(await fillList_CaseMigration(model));
                     break;
                 case SourceTypeSelectVM.CasePersonSentence:
                     keyValuePairs.AddRange(fillList_DocumentSentence(model));
@@ -2188,13 +2725,13 @@ namespace IOWebApplication.Core.Services
                     keyValuePairs.AddRange(fillList_DocumentDivorce(model));
                     break;
                 case SourceTypeSelectVM.CaseLawyerHelp:
-                    keyValuePairs.AddRange(fillList_LawyerHelp((int)model.SourceId));
+                    keyValuePairs.AddRange(fillList_LawyerHelp(model));
                     break;
                 case SourceTypeSelectVM.DocumentResolution:
                     keyValuePairs.AddRange(fillList_DocumentResolution(model));
                     break;
                 default:
-                    keyValuePairs.AddRange(fillList_DocumentGeneral(model));
+                    keyValuePairs.AddRange(await fillList_DocumentGeneral(model));
                     break;
 
             }
@@ -2227,7 +2764,7 @@ namespace IOWebApplication.Core.Services
             string countryCode = "";
             if (string.IsNullOrEmpty(model.CountryCode) == false)
             {
-                countryCode = repo.AllReadonly<EkCountry>().Where(x => x.Code == model.CountryCode).Select(x => x.Name).DefaultIfEmpty("").FirstOrDefault();
+                countryCode = repo.AllReadonly<EkCountry>().Where(x => x.Code == model.CountryCode).Select(x => x.Name).FirstOrValue("");
             }
 
             var cityName = "";
@@ -2255,11 +2792,12 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_GOD}", Label = "г.", Value = "г." });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_TYPE}", Label = "Точен вид дело", Value = model.CaseSessionAct.CaseSession.Case.CaseType.Label });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO}", Label = "Номер на делото", Value = model.CaseSessionAct.CaseSession.Case.RegNumber });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO_SHORT}", Label = "Номер на делото", Value = model.CaseSessionAct.CaseSession.Case.ShortNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_YEAR}", Label = "година на образуване на делото", Value = model.CaseSessionAct.CaseSession.Case.RegDate.Year.ToString() });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{FREG_NUMBER}", Label = "Номер", Value = model.RegNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_UCLP}", Label = "наименование на населеното място", Value = cityName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_REGION}", Label = "наименование на общината", Value = regionName });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_AREA}", Label = "наименование на областта", Value = regionName });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_AREA}", Label = "наименование на областта", Value = areaName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_NO}", Label = "номер на съдебния акт", Value = model.CaseSessionAct.RegNumber });
             keyValuePairs.Add(new KeyValuePairVM()
             {
@@ -2351,7 +2889,7 @@ namespace IOWebApplication.Core.Services
                                .Where(x => x.Id == documentTemplate.SourceId)
                                .FirstOrDefault();
 
-            keyValuePairs.AddRange(fillList_Court(model.CourtId ?? 0));
+            keyValuePairs.AddRange(fillList_Court(model.CourtId ?? 0, documentTemplate.Case?.CaseGroupId ?? 0));
 
             keyValuePairs.AddRange(fillList_OnlyCaseData(model.Case));
 
@@ -2359,7 +2897,7 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, false));
 
             var caseSessionAct = Read_CaseSessionAct(model.CaseSessionActId);
-            keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, null));
+            keyValuePairs.AddRange(fillList_SessionAct(caseSessionAct, null, true));
 
             keyValuePairs.AddRange(fillList_DocumentUser(documentTemplate));
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_GOD}", Label = "г.", Value = "г." });
@@ -2387,7 +2925,10 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_DEBTORS}", Label = "Длъжници", Value = debtors });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_REGARD_SUBPOENA_KIND}", Label = "Тип на ИЛ", Value = model.ExecListType?.Label });
             decimal sum = model.ExecListObligations.Select(x => x.Amount ?? 0).Sum();
-            string sumStr = sum.ToString("0.00") + " лв. (словом: " + MoneyExtensions.MoneyToString(sum) + " )";
+            decimal sumBgn = model.ExecListObligations.Select(x => x.AmountBGN ?? 0).Sum();
+            string sumStrBgn = userContext.IsInterimPeriodEuro == false ? "" : ", левова стойност " + sumBgn.ToString("0.00") + " (словом: " + MoneyExtensions.MoneyToString(sumBgn, NomenclatureConstants.Currency.BGN) + ")";
+
+            string sumStr = sum.ToString("0.00") + " " + Utils.GetCurrencyStr(userContext.IsPeriodEuro) + " (словом: " + MoneyExtensions.MoneyToString(sum, Utils.GetCurrency(userContext.IsPeriodEuro)) + " )" + sumStrBgn;
             keyValuePairs.Add(new KeyValuePairVM()
             {
                 Key = "{F_EXEC_SUMS}",
@@ -2415,7 +2956,7 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        public TinyMCEVM FillHtmlTemplateExecList(int execListId)
+        public async Task<TinyMCEVM> FillHtmlTemplateExecList(int execListId)
         {
             var model = repo.AllReadonly<ExecList>()
                               .Include(x => x.Court)
@@ -2428,12 +2969,13 @@ namespace IOWebApplication.Core.Services
 
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
 
+            var ids = model.ExecListObligations.Select(a => a.ObligationId).ToArray();
             var obligations = repo.AllReadonly<Obligation>()
                               .Include(x => x.CaseSessionAct)
                               .Include(x => x.CaseSessionAct.ActType)
                               .Include(x => x.ObligationReceives)
                               .ThenInclude(x => x.UicType)
-                              .Where(x => model.ExecListObligations.Select(a => a.ObligationId).Contains(x.Id))
+                              .Where(x => ids.Contains(x.Id))
                               .ToList();
 
             int caseId = obligations.Select(x => x.CaseSessionAct.CaseId ?? 0).FirstOrDefault();
@@ -2488,6 +3030,8 @@ namespace IOWebApplication.Core.Services
                 }
             }
 
+            var isNewExecProcessCase = await IsNewExecProcessCase(model.CaseId);
+
             var caseLawUnits = Read_CaseLawUnit(caseId, caseSessionId);
             keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, false));
             keyValuePairs.AddRange(fillList_ExecList(model));
@@ -2503,13 +3047,14 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FORCE_DATE}", Label = "Влязал в сила", Value = actForce });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FORCE_DATE_TEXT}", Label = "Влязал в сила", Value = ", влязло в законна сила на " + actForce });
 
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_KIND}", Label = "Вид на делото (точен)", Value = caseModel.CaseType.Label });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_KIND}", Label = "Вид на делото (точен)", Value = caseModel.CaseType.Code });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO}", Label = "Номер на делото", Value = caseModel.RegNumber });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO_SHORT}", Label = "Номер на делото", Value = caseModel.ShortNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_YEAR}", Label = "Година на делото", Value = caseModel.RegDate.Year.ToString() });
 
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECIPIENT}", Label = "В полза на", Value = receiveName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECIPIENTS}", Label = "В полза на", Value = receiveName });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_JUDGE_TYPE}", Label = "Съдия", Value = "СЪДИЯ при " + model.Court.Label.ToUpper() });
+
             if (model.LawUnitSignId != null)
             {
                 AddEditKey("{F_JUDGE}", "Съдия", model.LawUnitSign.FullName_MiddleNameInitials, keyValuePairs);
@@ -2518,7 +3063,21 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EXECUTION}", Label = "Съдия", Value = "изпълнение" });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_ACCOMPLY}", Label = "Основание", Value = model.ExecListLawBase?.Label });
 
-            string alias = model.ExecListTypeId == NomenclatureConstants.ExecListTypes.Country ? "ACTEX_E__" : "ACTEX_E_";
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EXEC_LIST_NET}", Label = "Ел. партида", Value = ((model.GenerateExecProcess ?? false) == true ? "ЕЛЕКТРОННА ПАРТИДА НА ИЛ" : "") });
+
+            string alias = "";
+
+            if (isNewExecProcessCase == false)
+            {
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_JUDGE_TYPE}", Label = "Съдия", Value = "СЪДИЯ при " + model.Court.Label.ToUpper() });
+                alias = model.ExecListTypeId == NomenclatureConstants.ExecListTypes.Country ? "ACTEX_E__" : "ACTEX_E_";
+            }
+            else
+            {
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_JUDGE_TYPE}", Label = "Съдия", Value = "Изпълнителният лист е подписан с квалифициран електронен подпис от съдия" });
+                alias = model.ExecListTypeId == NomenclatureConstants.ExecListTypes.Country ? "ACTEX_E__I" : "ACTEX_E_I";
+            }
+
             return GetTinyMCEVMFromHtmlTemplates(alias, keyValuePairs);
         }
 
@@ -2555,17 +3114,15 @@ namespace IOWebApplication.Core.Services
                             .Where(x => !NomenclatureConstants.JudgeRole.ManualRoles.Contains(x.JudgeRoleId))
                             .ToList();
 
-            var actComplainResult = Read_ActComplainResult(casepersonSentence.CaseSessionAct.ActComplainResultId ?? 0);
             string position = lawUnitService.GetLawUnitPosition(model.CourtId ?? 0, model.User?.LawUnitId ?? 0);
             if (string.IsNullOrEmpty(position))
                 position = "Служител";
 
             string lawBase = (model.IsAdministrativePunishment ?? false) ? "за наложено административно наказание по чл.78а НК" : "";
             keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, true));
-            keyValuePairs.AddRange(fillList_SessionAct(casepersonSentence.CaseSessionAct, actComplainResult));
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{LawBase}", Label = "Чл.", Value = lawBase });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER}", Label = "Лице", Value = model.CasePerson.FullName.ToUpper() });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FAMILY_MARRIAGE}", Label = "Фамилно име, придобито при сключване на граждански брак", Value = model.FamilyMarriage });
+            //keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_FAMILY_MARRIAGE}", Label = "Фамилно име, придобито при сключване на граждански брак", Value = model.FamilyMarriage });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_BIRTHDAY_PLACE}", Label = "Месторождение", Value = model.BirthDayPlace });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_BIRTHDAY}", Label = "Ден, месец и година на раждане", Value = model.BirthDay.ToString("dd.MM.yyyy") });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_UCN}", Label = "ЕГН/ЛНЧ", Value = model.CasePerson.Uic });
@@ -2573,9 +3130,6 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_FATHER}", Label = "Баща", Value = model.FatherName });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_RECEIVER_MOTHER}", Label = "Майка", Value = model.MotherName });
 
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_KIND}", Label = "Вид на делото (точен)", Value = model.CasePerson.Case.CaseType.Code });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO}", Label = "Номер на делото", Value = model.CasePerson.Case.RegNumber });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_YEAR}", Label = "Година на делото", Value = model.CasePerson.Case.RegDate.Year.ToString() });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT}", Label = "Съд", Value = model.CasePerson.Case.Court.Label });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_ADDITIONAL_TEXT}", Label = "Присъда", Value = model.SentenceDescription });
 
@@ -2623,7 +3177,7 @@ namespace IOWebApplication.Core.Services
                                .Where(x => x.Id == documentTemplate.SourceId)
                                .FirstOrDefault();
 
-            keyValuePairs.AddRange(fillList_Court(model.CasePerson.Case.CourtId));
+            keyValuePairs.AddRange(fillList_Court(model.CasePerson.Case.CourtId, model.CasePerson.Case.CaseGroupId));
             keyValuePairs.AddRange(fillList_OnlyCaseData(model.CasePerson.Case));
 
             var caseLawUnits = Read_CaseLawUnit(model.CasePerson.CaseId, null);
@@ -2661,11 +3215,12 @@ namespace IOWebApplication.Core.Services
             return keyValuePairs;
         }
 
-        private IList<KeyValuePairVM> fillList_Court(int courtId)
+        private IList<KeyValuePairVM> fillList_Court(int courtId, int caseGroupId)
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
 
             var model = repo.AllReadonly<Court>()
+                         .Include(x => x.CourtCaseGroupAddrs)
                          .Where(x => x.Id == courtId)
                          .FirstOrDefault();
 
@@ -2679,7 +3234,7 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_LOGO}", Label = "Лого", Value = "<div id='courtlogo-holder' name='courtlogo-holder'></div>" });
             var courtLogo_css = "#courtlogo-holder { margin - bottom: 10px; width: 200px;height: 100px; background: url('" + model.CourtLogo + "') 100% 100% no-repeat;}";
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_LOGO_CSS}", Label = "Лого", Value = courtLogo_css });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_ADDRESS}", Label = "Адрес на съда", Value = model.Address });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_ADDRESS}", Label = "Адрес на съда", Value = GetCourtAddrOnCaseGroup(model, caseGroupId) });
             var courtAddress = $"{model.CityName} {model.Address}";
             if (!string.IsNullOrEmpty(model.PhoneNumber))
             {
@@ -2704,10 +3259,11 @@ namespace IOWebApplication.Core.Services
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
 
             AddConnectsEisspNumber(model, keyValuePairs);
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_KIND}", Label = "Вид на делото (точен)", Value = model.CaseType?.Label });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_KIND}", Label = "Вид на делото (точен)", Value = model.CaseType?.Code });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO}", Label = "Номер на делото", Value = model.RegNumber });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_NO_SHORT}", Label = "Номер на делото", Value = model.ShortNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_YEAR}", Label = "Година на делото", Value = model.RegDate.Year.ToString() });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUBJECT}", Label = "< Статистически код / описание на предмета на делото>", Value = model.CaseCode?.Code + " / " + model.CaseCode?.Label });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SUBJECT}", Label = "< Статистически код / описание на предмета на делото>", Value = model.CaseCode?.Code + " " + model.CaseCode?.Label });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LAWSUIT_TEXT}", Label = "< Допълнителен текст към делото>", Value = model.Description });
 
             return keyValuePairs;
@@ -2799,46 +3355,87 @@ namespace IOWebApplication.Core.Services
                               .Include(x => x.OutDocument)
                               .Include(x => x.OutDocument.DocumentPersons)
                               .Where(x => x.Id == id)
+                              .AsSplitQuery()
                               .FirstOrDefault();
 
             int[] permanentAddress = { NomenclatureConstants.AddressType.Permanent, NomenclatureConstants.AddressType.CompanyPermanent };
-            var execList = repo.AllReadonly<ExchangeDocExecList>()
+
+            //Всички ИЛ в протокола
+            var execListData = repo.AllReadonly<ExchangeDocExecList>()
+                              .Include(x => x.ExecList)
+                              .Include(x => x.ExecList.ExecListObligations)
                               .Where(x => x.ExchangeDocId == id)
-                              .Select(x => new ExecListPrintVM()
-                              {
-                                  Id = x.ExecListId,
-                                  Debtor = string.Join("<br>", x.ExecList.ExecListObligations.Select(a => a.Obligation.FullName).Distinct()),
-                                  DebtorAddress = string.Join("<br>", repo.AllReadonly<CasePerson>()
-                                                  .Where(a => a.CaseId == x.ExecList.ExecListObligations.Select(b => b.Obligation.CaseSessionAct.CaseId).FirstOrDefault() &&
-                                                    x.ExecList.ExecListObligations.Select(b => b.Obligation.Person_SourceId).Contains(a.Id))
-                                                  .Select(a => a.Addresses.Where(b => permanentAddress.Contains(b.Address.AddressTypeId))
+                              .ToList();
+
+            //Задълженията за всички ИЛ
+            var obligationIds = execListData.SelectMany(x => x.ExecList.ExecListObligations).Select(x => x.ObligationId).ToArray();
+            var obligations = repo.AllReadonly<Obligation>()
+                               .Include(x => x.CaseSessionAct)
+                               .Include(x => x.CaseSessionAct.ActType)
+                               .Include(x => x.CaseSessionAct.Case)
+                               .Include(x => x.CaseSessionAct.Case.CaseType)
+                               .Include(x => x.CaseSessionAct.CaseSession)
+                               .Include(x => x.CaseSessionAct.CaseSession.CaseLawUnits.Where(b => b.CourtDepartmentId != null)) //Не ми трябват тези без състав
+                               .ThenInclude(x => x.CourtDepartment)
+                               .Where(x => obligationIds.Contains(x.Id))
+                               .ToList();
+
+            //Хората за всички ИЛ
+            var caseIds = obligations.Select(x => x.CaseSessionAct.CaseId).ToList();
+            var personSourceIds = obligations.Select(x => (int)x.Person_SourceId).ToArray(); //Насилствено е
+            var casePersons = repo.AllReadonly<CasePerson>()
+                               .Include(x => x.Addresses)
+                               .ThenInclude(x => x.Address)
+                               .Where(x => caseIds.Contains(x.CaseId) && personSourceIds.Contains(x.Id))
+                               .Where(x => x.CaseSessionId == null)
+                               .ToList();
+
+
+            List<ExecListPrintVM> execLists = new List<ExecListPrintVM>();
+            foreach (var item in execListData)
+            {
+                //Задълженията за този ИЛ
+                var obligationsForExecList = obligations.Where(x => item.ExecList.ExecListObligations.Select(x => x.ObligationId).ToList().Contains(x.Id)).ToList();
+
+                //Хората за задълженията от този ИЛ
+                var casePersonsForExecList = casePersons.Where(x => obligationsForExecList.Select(x => x.Person_SourceId).ToList().Contains(x.Id)).ToList();
+
+                var add = new ExecListPrintVM()
+                {
+                    Id = item.ExecListId,
+                    Debtor = string.Join("<br>", obligationsForExecList.Select(a => a.FullName).Distinct()),
+                    DebtorAddress = string.Join("<br>", casePersonsForExecList.Select(a => a.Addresses.Where(b => permanentAddress.Contains(b.Address.AddressTypeId))
                                                               .Select(b => b.Address.FullAddress).FirstOrDefault()).Distinct()),
-                                  Uic = string.Join("<br>", x.ExecList.ExecListObligations
-                                                    .Where(a => a.Obligation.Uic != null).Select(a => a.Obligation.Uic).Distinct()),
-                                  CaseTypeName = x.ExecList.ExecListObligations
-                                                   .Select(a => a.Obligation.CaseSessionAct.Case.CaseType.Label).FirstOrDefault(),
-                                  CaseNumber = x.ExecList.ExecListObligations
-                                                   .Select(a => a.Obligation.CaseSessionAct.Case.RegNumber).FirstOrDefault(),
-                                  Composition = x.ExecList.ExecListObligations
-                                                   .Where(a => a.Obligation.CaseSessionAct.CaseSession.CaseLawUnits
-                                                          .Where(b => (b.DateTo ?? a.Obligation.CaseSessionAct.CaseSession.DateFrom) >= a.Obligation.CaseSessionAct.CaseSession.DateFrom &&
-                                                                     b.CourtDepartmentId != null).Any())
-                                                   .Select(a => a.Obligation.CaseSessionAct.CaseSession.CaseLawUnits.Select(c => c.CourtDepartment.Label).FirstOrDefault()).FirstOrDefault(),
-                                  EventData = string.Join("<br>", x.ExecList.ExecListObligations
-                                                    .Select(a => a.Obligation.CaseSessionAct.ActType.Label + "<br>" +
-                                                            a.Obligation.CaseSessionAct.RegNumber + " от " +
-                                                            (a.Obligation.CaseSessionAct.ActDate != null ?
-                                                            ((DateTime)a.Obligation.CaseSessionAct.ActDate).ToString("dd.MM.yyyy") : "") +
+                    Uic = string.Join("<br>", obligationsForExecList.Where(a => a.Uic != null).Select(a => a.Uic).Distinct()),
+                    CaseTypeName = obligationsForExecList.Select(a => a.CaseSessionAct.Case.CaseType.Label).FirstOrDefault(),
+                    CaseNumber = obligationsForExecList.Select(a => a.CaseSessionAct.Case.RegNumber).FirstOrDefault(),
+                    Composition = obligationsForExecList.Where(a => a.CaseSessionAct.CaseSession.CaseLawUnits
+                                                   .Where(b => (b.DateTo ?? a.CaseSessionAct.CaseSession.DateFrom) >= a.CaseSessionAct.CaseSession.DateFrom && b.CourtDepartmentId != null).Any())
+                                                   .Select(a => a.CaseSessionAct.CaseSession.CaseLawUnits.Where(c => c.CourtDepartmentId != null).Select(c => c.CourtDepartment.Label).FirstOrDefault()).FirstOrDefault(),
+                    EventData = string.Join("<br>", obligationsForExecList
+                                                    .Select(a => a.CaseSessionAct.ActType.Label + "<br>" +
+                                                            a.CaseSessionAct.RegNumber + " от " +
+                                                            (a.CaseSessionAct.ActDate != null ?
+                                                            ((DateTime)a.CaseSessionAct.ActDate).ToString("dd.MM.yyyy") : "") +
                                                             "<br>" +
-                                                            (a.Obligation.CaseSessionAct.ActInforcedDate != null ?
-                                                            "В законна сила от " + ((DateTime)a.Obligation.CaseSessionAct.ActInforcedDate).ToString("dd.MM.yyyy") : ""))
+                                                            (a.CaseSessionAct.ActInforcedDate != null ?
+                                                            "В законна сила от " + ((DateTime)a.CaseSessionAct.ActInforcedDate).ToString("dd.MM.yyyy") : ""))
                                                     .Distinct()),
-                                  Amount = string.Join("<br>", x.ExecList.ExecListObligations.Select(a => a.Obligation.Amount.ToString("0.00") + " лв.")),
-                              }).ToList();
+                    Amount = string.Join("<br>", obligationsForExecList.Select(a => a.Amount.ToString("0.00") + " " + Utils.GetCurrencyStr(userContext.IsPeriodEuro))),
+                };
+
+                if (userContext.IsInterimPeriodEuro == true)
+                {
+                    add.Amount += "<br>" + "левова стойност" + "<br>" +
+                                  string.Join("<br>", obligationsForExecList.Select(a => (a.AmountBGN ?? 0).ToString("0.00") + " лв."));
+                }
+
+                execLists.Add(add);
+            }
 
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
 
-            keyValuePairs.AddRange(fillList_Court(model.CourtId));
+            keyValuePairs.AddRange(fillList_Court(model.CourtId, 0));
 
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_OUT_NO}", Label = "Изходящ номер", Value = model.OutDocument?.DocumentNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_OUT_YEAR}", Label = "Дата", Value = model.OutDocument?.DocumentDate.Year.ToString() });
@@ -2854,7 +3451,7 @@ namespace IOWebApplication.Core.Services
 
             string rowData = "";
             int index = 1;
-            foreach (var item in execList)
+            foreach (var item in execLists)
             {
                 rowData += PrintRowExchangeDoc(index, item.Debtor, item.Uic, item.DebtorAddress, item.CaseTypeName,
                            item.CaseNumber, item.Composition, item.EventData, item.Amount);
@@ -2876,6 +3473,7 @@ namespace IOWebApplication.Core.Services
                                .ThenInclude(x => x.CaseSessionAct)
                                .ThenInclude(x => x.ActType)
                                .Where(x => x.Id == documentTemplate.SourceId)
+                               .AsSplitQuery()
                                .FirstOrDefault();
 
             var caseId = model.ExecListObligations.Select(x => x.Obligation.CaseSessionAct.CaseId).FirstOrDefault();
@@ -2899,6 +3497,7 @@ namespace IOWebApplication.Core.Services
                                    .Include(x => x.User)
                                    .Include(x => x.User.LawUnit)
                                    .Where(x => x.Id == documentTemplate.DocumentId)
+                                   .AsSplitQuery()
                                    .FirstOrDefault();
 
                 string institutionCode = "";
@@ -2916,10 +3515,12 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
+                keyValuePairs.AddRange(fillList_DocumentBeforeReg());
+
                 keyValuePairs.AddRange(fillList_UserData(documentTemplate.Author, documentTemplate.CourtId));
             }
 
-            keyValuePairs.AddRange(fillList_Court(model.CourtId));
+            keyValuePairs.AddRange(fillList_Court(model.CourtId, documentTemplate.Case?.CaseGroupId ?? 0));
             keyValuePairs.AddRange(fillList_OnlyCaseData(modelCase));
 
             var caseLawUnits = Read_CaseLawUnit(modelCase.Id, null);
@@ -2939,7 +3540,7 @@ namespace IOWebApplication.Core.Services
             return keyValuePairs;
         }
 
-        private IList<KeyValuePairVM> fillList_CaseMigration(DocumentTemplate documentTemplate)
+        private async Task<IList<KeyValuePairVM>> fillList_CaseMigration(DocumentTemplate documentTemplate)
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
             var model = repo.AllReadonly<CaseMigration>()
@@ -2953,6 +3554,7 @@ namespace IOWebApplication.Core.Services
 
             var modelCase = repo.AllReadonly<Case>()
                            .Include(x => x.CaseType)
+                           .Include(x => x.CaseCode)
                            .Where(x => x.Id == model.CaseId)
                            .FirstOrDefault();
 
@@ -2966,8 +3568,8 @@ namespace IOWebApplication.Core.Services
                                .Where(x => x.InitialCaseId == model.InitialCaseId)
                                .Where(x => x.Case.Document.DocumentInstitutionCaseInfo.Any())
                                .Select(x => string.Join(", ", x.Case.Document.DocumentInstitutionCaseInfo
-                                            .Select(a => a.CaseNumber + "/" + a.CaseYear).Distinct()))
-                               .Distinct());
+                                            .Select(a => a.CaseNumber + "/" + a.CaseYear)))
+                               .ToList().Distinct());
             if (string.IsNullOrEmpty(allCases) == false && string.IsNullOrEmpty(allInstitutionCases) == false)
                 allCases += ", " + allInstitutionCases;
             else
@@ -2982,6 +3584,7 @@ namespace IOWebApplication.Core.Services
                                    .Include(x => x.User)
                                    .Include(x => x.User.LawUnit)
                                    .Where(x => x.Id == documentTemplate.DocumentId)
+                                   .AsSplitQuery()
                                    .FirstOrDefault();
 
                 keyValuePairs.AddRange(fillList_UserData(documentTemplate.AuthorId != null ? documentTemplate.Author : modelDocument.User, documentTemplate.CourtId));
@@ -2989,10 +3592,12 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
+                keyValuePairs.AddRange(fillList_DocumentBeforeReg());
+
                 keyValuePairs.AddRange(fillList_UserData(documentTemplate.Author, documentTemplate.CourtId));
             }
 
-            keyValuePairs.AddRange(fillList_Court(modelCase.CourtId));
+            keyValuePairs.AddRange(fillList_Court(modelCase.CourtId, documentTemplate.Case?.CaseGroupId ?? 0));
             keyValuePairs.AddRange(fillList_OnlyCaseData(modelCase));
 
             var caseLawUnits = Read_CaseLawUnit(modelCase.Id, null);
@@ -3023,6 +3628,7 @@ namespace IOWebApplication.Core.Services
                                  .Where(x => x.SendToCourtId == modelCase.CourtId)
                                  .Where(x => x.Id < model.Id)
                                  .OrderByDescending(x => x.Id)
+                                 .AsSplitQuery()
                                  .FirstOrDefault();
                 if (prevCase != null)
                 {
@@ -3033,10 +3639,33 @@ namespace IOWebApplication.Core.Services
                     keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_LOWER_YEAR}", Label = "дело", Value = prevCase.Case.RegDate.Year.ToString() });
                 }
             }
+            DocumentInstitutionCaseInfo documentInstitutionCaseInfoCHSI = null;
+            var chsiInstitutionCaseTypeLabel = string.Empty;
+            var documentInstitutionCaseInfoList = repo.AllReadonly<Case>()
+                                                      .Include(x => x.Document)
+                                                      .ThenInclude(x => x.DocumentInstitutionCaseInfo)
+                                                      .ThenInclude(x => x.InstitutionCaseType)
+                                                      .Where(x => x.Id == model.InitialCaseId)
+                                                      .Select(x => x.Document.DocumentInstitutionCaseInfo)
+                                                      .FirstOrDefault();
+            if (documentInstitutionCaseInfoList != null)
+            {
+                documentInstitutionCaseInfoCHSI = documentInstitutionCaseInfoList
+                                                          .Where(x => x.InstitutionCaseTypeId == NomenclatureConstants.InstitutionCaseTypes.ExecutiveCase)
+                                                          .FirstOrDefault();
+                if (documentInstitutionCaseInfoCHSI != null)
+                    chsiInstitutionCaseTypeLabel = repo.AllReadonly<InstitutionCaseType>()
+                                                       .Where(x => x.Id == documentInstitutionCaseInfoCHSI.InstitutionCaseTypeId)
+                                                       .FirstOrDefault()?.Label;
+            }
+
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INST_CASE_CHSI_KIND}", Label = "Вид дело", Value = chsiInstitutionCaseTypeLabel ?? "" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INST_CASE_CHSI_NO}", Label = "Номер дело", Value = documentInstitutionCaseInfoCHSI?.CaseNumber ?? "" });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INST_CASE_CHSI_YEAR}", Label = "дело", Value = documentInstitutionCaseInfoCHSI?.CaseYear.ToString() ?? "" });
 
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_GOD}", Label = "г.", Value = "г." });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EISPP_NMR}", Label = "EISPP_NMR", Value = modelCase.EISSPNumber });
-            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_KIND}", Label = "Акт", Value = model.CaseSessionAct?.ActType.Label });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_KIND}", Label = "Акт", Value = model.CaseSessionAct?.ActType.Label?.FirstCharToUpper() });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_NO}", Label = "Акт", Value = model.CaseSessionAct?.RegNumber });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_EVENT_DATE}", Label = "Акт", Value = model.CaseSessionAct?.RegDate?.ToString("dd.MM.yyyy") });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INREG_DOCS}", Label = "Документи за обжалване", Value = actDocs });
@@ -3052,7 +3681,7 @@ namespace IOWebApplication.Core.Services
                 keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_JURICONF}", Label = "Вид", Value = "компетентност" });
             }
 
-            var caseModel = Read_Case(model.CaseId);
+            var caseModel = await Read_Case(model.CaseId);
             keyValuePairs.AddRange(fillList_Case(caseModel, ""));
 
             return keyValuePairs;
@@ -3107,9 +3736,9 @@ namespace IOWebApplication.Core.Services
                             .FirstOrDefault();
 
             keyValuePairs.AddRange(fillList_DocumentUser(model));
-            keyValuePairs.AddRange(fillList_Court(model.CourtId));
+            keyValuePairs.AddRange(fillList_Court(model.CourtId, model.Case?.CaseGroupId ?? 0));
             keyValuePairs.AddRange(fillList_OnlyCaseData(sentence.CaseSessionAct.Case));
-            keyValuePairs.AddRange(fillList_SessionAct(sentence.CaseSessionAct, null));
+            keyValuePairs.AddRange(fillList_SessionAct(sentence.CaseSessionAct, null, true));
 
             var caseLawUnits = Read_CaseLawUnit(model.CaseId ?? 0, null);
             keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, false));
@@ -3145,13 +3774,15 @@ namespace IOWebApplication.Core.Services
             }
             else
             {
+                keyValuePairs.AddRange(fillList_DocumentBeforeReg());
+
                 keyValuePairs.AddRange(fillList_UserData(model.Author, model.CourtId));
             }
 
             return keyValuePairs;
         }
 
-        private IList<KeyValuePairVM> fillList_LawyerHelp(int lawyerHelpId)
+        private IList<KeyValuePairVM> fillList_LawyerHelp(DocumentTemplate documentTemplate)
         {
             List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
             var model = repo.AllReadonly<CaseLawyerHelp>()
@@ -3172,25 +3803,32 @@ namespace IOWebApplication.Core.Services
                             .ThenInclude(x => x.PersonRole)
                             .Include(x => x.CaseLawyerHelpPersons)
                             .ThenInclude(x => x.SpecifiedLawyerLawUnit)
-                            .Where(x => x.Id == lawyerHelpId)
+                            .Include(x => x.CaseLawyerHelpPersons)
+                            .ThenInclude(x => x.CasePersonAddress)
+                            .ThenInclude(x => x.Address)
+                            .Where(x => x.Id == (int)documentTemplate.SourceId)
                             .FirstOrDefault();
 
-            keyValuePairs.AddRange(fillList_Court(model.CourtId ?? 0));
+            keyValuePairs.AddRange(fillList_Court(model.CourtId ?? 0, model.Case?.CaseGroupId ?? 0));
             keyValuePairs.AddRange(fillList_OnlyCaseData(model.Case));
-            keyValuePairs.AddRange(fillList_SessionAct(model.CaseSessionAct, null));
+            keyValuePairs.AddRange(fillList_SessionAct(model.CaseSessionAct, null, true));
 
             var caseLawUnits = Read_CaseLawUnit(model.CaseId, model.CaseSessionAct.CaseSessionId);
             keyValuePairs.AddRange(fillList_CaseLawUnitFull(caseLawUnits, false));
+            keyValuePairs.AddRange(fillList_DocumentUser(documentTemplate));
 
             string persons = string.Join("; ", model.CaseLawyerHelpPersons
                              .Where(x => x.CasePerson.DateExpired == null)
                              .Select(x => x.CasePerson.FullName + ", " + x.CasePerson.UicTypeLabel + " " +
-                                          x.CasePerson.Uic + " " + x.CasePerson.Addresses
+                                          x.CasePerson.Uic + " " +
+                                          (x.CasePersonAddressId != null ?
+                                          x.CasePersonAddress.Address.FullAddress :
+                                          x.CasePerson.Addresses
                                                          .Where(a => a.DateExpired == null)
                                                          .Where(a => a.Address.AddressTypeId == NomenclatureConstants.AddressType.Permanent)
                                                          .Select(a => a.Address.FullAddress)
                                                          .DefaultIfEmpty("")
-                                                         .FirstOrDefault() + " - " +
+                                                         .FirstOrDefault()) + " - " +
                                         x.CasePerson.PersonRole.Label));
 
             string otherLawyer = string.Join("; ", model.CaseLawyerHelpOtherLawyers
@@ -3205,6 +3843,7 @@ namespace IOWebApplication.Core.Services
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_OTHER_AUTORIZE_LAWYER}", Label = "Други адвокати", Value = otherLawyer });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SPECIFIED_LAWYER}", Label = "оглед чл. 25, ал. 6 ЗПП за адвокат е посочен", Value = specifiedLawyer });
             keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TODAY}", Label = "Дата на изготвяне - Текуща дата", Value = DateTime.Now.ToString("dd.MM.yyyy") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_GOD}", Label = "г.", Value = "г." });
             keyValuePairs.Add(new KeyValuePairVM()
             {
                 Key = "{F_SCHEDULE_SESSION}",
@@ -3221,5 +3860,92 @@ namespace IOWebApplication.Core.Services
             return keyValuePairs;
         }
 
+        //Попълва параметри от парите когато е Удостоверение за доброволно изпълнение
+        private IList<KeyValuePairVM> fillList_MoneyNT_VOLEX(CaseNotification caseNotification, HtmlTemplate htmlTemplate)
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+
+            if (htmlTemplate != null && NomenclatureConstants.HtmlTemplateAlias.NtVolexs.Contains(htmlTemplate.Alias))
+            {
+                var obligations = repo.AllReadonly<Obligation>()
+                                   .Where(x => (x.IsActive ?? true) == true)
+                                   .Where(x => x.CaseId == caseNotification.CaseId)
+                                   .Where(x => x.CaseSessionActId == caseNotification.CaseSessionActId)
+                                   .Where(x => x.UicTypeId == caseNotification.CasePerson.UicTypeId)
+                                   .Where(x => x.Uic == caseNotification.CasePerson.Uic)
+                                   .Where(x => x.ObligationReceives.Where(a => a.ExecListTypeId == NomenclatureConstants.ExecListTypes.ThirdPerson).Any() == false) // без в полза на трети лица
+                                   .ToList();
+
+                int[] moneyTypeGroups = { NomenclatureConstants.MoneyTypeGroupings.NtVolexStateFee,
+                                          NomenclatureConstants.MoneyTypeGroupings.NtVolexFine,
+                                          NomenclatureConstants.MoneyTypeGroupings.NtVolexExpense,
+                                          NomenclatureConstants.MoneyTypeGroupings.NtVolexEarning,
+                                        };
+                var moneyTypes = repo.AllReadonly<MoneyTypeGrouping>()
+                                       .Where(x => moneyTypeGroups.Contains(x.MoneyTypeGroup))
+                                       .ToList();
+
+                var stateFee = GetSumByMoneyTypes(obligations, moneyTypes.Where(x => x.MoneyTypeGroup == NomenclatureConstants.MoneyTypeGroupings.NtVolexStateFee).Select(x => x.MoneyTypeId).ToArray());
+                var fine = GetSumByMoneyTypes(obligations, moneyTypes.Where(x => x.MoneyTypeGroup == NomenclatureConstants.MoneyTypeGroupings.NtVolexFine).Select(x => x.MoneyTypeId).ToArray());
+                var earning = GetSumByMoneyTypes(obligations, moneyTypes.Where(x => x.MoneyTypeGroup == NomenclatureConstants.MoneyTypeGroupings.NtVolexEarning).Select(x => x.MoneyTypeId).ToArray());
+                var expense = GetSumByMoneyTypes(obligations, moneyTypes.Where(x => x.MoneyTypeGroup == NomenclatureConstants.MoneyTypeGroupings.NtVolexExpense).Select(x => x.MoneyTypeId).ToArray());
+                var all = stateFee + fine + earning + expense;
+
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{Money_State_Fee}", Label = "държавна такса", Value = stateFee.ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{Money_Fine}", Label = "глоби", Value = fine.ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{Money_Expense}", Label = "разноски", Value = expense.ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{Money_Earning}", Label = "възнаграждения", Value = earning.ToString("0.00") });
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{Money_All}", Label = "общо", Value = all.ToString("0.00") });
+            }
+
+            return keyValuePairs;
+        }
+
+        private decimal GetSumByMoneyTypes(List<Obligation> obligations, int[] moneyTypes)
+        {
+            return obligations.Where(x => moneyTypes.Contains(x.MoneyTypeId)).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+        }
+
+        private IList<KeyValuePairVM> fillList_CurrencyTxt()
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+
+            if (userContext.IsPeriodEuro == true)
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_CURRENCY_TXT}", Label = "Валута", Value = "евро" });
+            else
+                keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_CURRENCY_TXT}", Label = "Валута", Value = "лв." });
+
+            return keyValuePairs;
+        }
+
+        /// <summary>
+        /// Метод връщащ обект попълнен с данни за разпореждане за заповедно производство
+        /// </summary>
+        /// <param name="alias">Име на бланка</param>
+        /// <param name="model">Модел с данни за акта за който се генерира бланка</param>
+        /// <returns></returns>
+        public async Task<TinyMCEVM> GetActFastProcess(string alias, CaseSessionActCommandVM model)
+        {
+            List<KeyValuePairVM> keyValuePairs = new List<KeyValuePairVM>();
+
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_CITY}", Label = "града на съда", Value = model.CaseSessionActPrint.CourtCity });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_SESSION_DATE_410_417}", Label = "града на съда", Value = model.CaseSessionActPrint.SessionDate.ToString("dd.MM.yyyy") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COURT_410}", Label = "съд", Value = model.CaseSessionActPrint.CourtName });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_COLLEGE}", Label = "колегия", Value = model.CaseSessionActPrint.DepartmentName });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_CASE_YEAR_410_417}", Label = "година на делото", Value = model.CaseSessionActPrint.CaseRegYear.ToString() });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_JUDGE_410_417}", Label = "съдия докладчик на делото", Value = model.CaseSessionActPrint.JudgeReporter });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_CASE_410_417}", Label = "кратък номер на делото", Value = model.CaseSessionActPrint.CaseRegShortNumber });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_NUM_ACT_Z}", Label = "номер на заповедта за изпълнение", Value = model.CaseSessionActPrint.F_NUM_ACT_Z });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_DEBTOR_410_417_DELIVERY_DATA}", Label = "Име на длъжник и дата на връчване на приzовка", Value = model.CaseSessionActPrint.F_DEBTOR_410_417_DELIVERY_DATA });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_AssignmentDocument_Num_V}", Label = "номер на съпровождащ документ от тип възражение", Value = model.CaseSessionActPrint.F_AssignmentDocument_Num_V });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_AssignmentDocument_Num_V_414a}", Label = "име на заявител/и", Value = model.CaseSessionActPrint.F_AssignmentDocument_Num_V_414a });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_APPLICANT}", Label = "номер на съпровождащ документ от точен тип възражение", Value = string.Join(", ", model.CaseSessionActPrint.LeftSideOnlyName) });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_DEBTOR}", Label = "имена на длъжник/ци", Value = string.Join(", ", model.CaseSessionActPrint.RightSidesOnlyName) });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INFO_MONEYCLAIMS}", Label = "Изавличане на данни за парични вземания", Value = model.CaseSessionActPrint.LeftWithOutRoleRightSide_410_417 + ", " + model.SumJointDistribution });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_TAX}", Label = "Държавни такси", Value = model.FastProcessRequest.TaxAmount.ToString("0.00") });
+            keyValuePairs.Add(new KeyValuePairVM() { Key = "{F_INSTANCE_III}", Label = "Насрещна инстанция", Value = model.CaseSessionActPrint.CourtParent });
+
+            return await GetTinyMCEVMFromHtmlTemplatesAsync(alias, keyValuePairs);
+        }
     }
 }

@@ -36,6 +36,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         public string DeliveryInfo { get; set; }
         public int NotificationStateId { get; set; }
 
-
+        public bool HaveLocation { get; set; }
     }
 }

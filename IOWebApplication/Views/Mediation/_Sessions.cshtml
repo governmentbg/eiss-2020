@@ -1,0 +1,116 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseNavigationVM
+
+@{
+   
+}
+
+<div id="myDiv">
+    @Html.HiddenFor(x => x.CaseId)
+
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="Mediation" asp-action="AddMediationCaseSession" asp-route-caseId="@Model.CaseId" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави среща
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <table id="sessionMainTable" class="table table-hover table-striped"></table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#sessionMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSessions", "Mediation")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            CaseId: $("#CaseId").val()
+                        };
+                    }
+                },
+                dom: 'rt',
+                deferLoading: deferLoadingOnTab('#sessionMainTable'),
+                columns: [
+                    {
+                        className: 'col-md-4',
+                        name: 'mediationTypeLabel',
+                        data: 'mediationTypeLabel',
+                        title: 'Вид среща',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-4',
+                        name: 'mediationLocationLabel',
+                        data: 'mediationLocationLabel',
+                        title: 'Място на което се провежда',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: 'text-center',
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        className: 'text-center',
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'mediationStateLabel',
+                        data: 'mediationStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#sessionTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+</script>
+
+<script id="sessionTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("SessionPreviewMediation", "Mediation")/{{this}}" class="btn btn-def btn-sm" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+

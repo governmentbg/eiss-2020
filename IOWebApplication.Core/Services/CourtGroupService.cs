@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
@@ -29,12 +30,13 @@ namespace IOWebApplication.Core.Services
             loadPeriodService = _loadPeriodService;
         }
 
-        public IQueryable<CourtGroupVM> CourtGroup_Select(int courtId, int caseGroupId)
+        public IQueryable<CourtGroupVM> CourtGroup_Select(int courtId, int caseGroupId, int groupKind)
         {
 
             return repo.AllReadonly<CourtGroup>()
            .Include(x => x.CaseGroup)
            .Where(x => x.CourtId == courtId && (x.CaseGroupId == caseGroupId || caseGroupId <= 0))
+           .Where(x => x.GroupKind == groupKind)
            .Select(x => new CourtGroupVM()
            {
                Id = x.Id,
@@ -58,6 +60,7 @@ namespace IOWebApplication.Core.Services
                 Label = courtGroup.Label,
                 OrderNumber = courtGroup.OrderNumber,
                 CaseGroupLabel = caseGroup.Label,
+                GroupKind = courtGroup.GroupKind,
                 DateFrom = courtGroup.DateFrom,
                 DateTo = courtGroup.DateTo,
             };
@@ -81,7 +84,7 @@ namespace IOWebApplication.Core.Services
                 else
                 {
                     //Insert
-                    model.OrderNumber = CourtGroup_Select(model.CourtId, 0).Max(p => (int?)p.OrderNumber) ?? 0;
+                    model.OrderNumber = CourtGroup_Select(model.CourtId, 0, model.GroupKind).Max(p => (int?)p.OrderNumber) ?? 0;
                     model.OrderNumber++;
                     repo.Add<CourtGroup>(model);
                     repo.SaveChanges();
@@ -92,7 +95,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtGroup Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtGroup Id={model.Id}");
                 return false;
             }
         }
@@ -100,8 +103,9 @@ namespace IOWebApplication.Core.Services
         public IQueryable<MultiSelectTransferPercentVM> CourtGroupForSelect_Select(int courtId, int caseGroupId)
         {
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
-            return repo.AllReadonly<CourtGroup>().Where(x => x.CourtId == courtId && (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date && 
+            return repo.AllReadonly<CourtGroup>().Where(x => x.CourtId == courtId && (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date &&
                                                          (caseGroupId <= 0 || x.CaseGroupId == caseGroupId))
+                        .Where(x=>x.GroupKind == NomenclatureConstants.CourtGroupKinds.JudgeSelection)
                 .Select(x => new MultiSelectTransferPercentVM()
                 {
                     Id = x.Id,
@@ -116,10 +120,11 @@ namespace IOWebApplication.Core.Services
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
 
             var result = repo.AllReadonly<CourtGroupCode>()
-                .Include(x=>x.CourtGroup)
+                .Include(x => x.CourtGroup)
                 .Where(x => x.CaseCodeId == CaseCodeId && x.CourtGroup.CourtId == courtId &&
                           (x.DateTo ?? dateTomorrow).Date >= DateTime.Now.Date &&
                           (x.CourtGroup.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
+                .Where(x => x.CourtGroup.GroupKind == NomenclatureConstants.CourtGroupKinds.JudgeSelection)
                  .OrderBy(x => x.CourtGroup.Label)
                                  .Select(x => new SelectListItem()
                                  {
@@ -132,5 +137,6 @@ namespace IOWebApplication.Core.Services
 
             return result;
         }
+
     }
 }

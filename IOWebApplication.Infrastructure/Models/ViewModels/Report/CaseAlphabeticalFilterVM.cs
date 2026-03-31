@@ -22,6 +22,12 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
         [Display(Name = "Основен вид дело")]
         public int CaseGroupId { get; set; }
 
+        [Display(Name = "Точен вид дело")]
+        public int CaseTypeId { get; set; }
+
+        [Display(Name = "Шифър")]
+        public int CaseCodeId { get; set; }
+
         [Display(Name = "Буква/букви")]
         public string Alphabet { get; set; }
 

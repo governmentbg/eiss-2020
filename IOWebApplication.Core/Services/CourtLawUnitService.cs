@@ -1,5 +1,4 @@
-﻿using AutoMapper.QueryableExtensions;
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
@@ -11,9 +10,14 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Nest;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants;
 
 namespace IOWebApplication.Core.Services
 {
@@ -22,13 +26,15 @@ namespace IOWebApplication.Core.Services
         private readonly ICommonService commonService;
         private readonly IRelationManyToManyDateService relationService;
         private readonly ICaseLawUnitService caseLawUnitService;
-        public CourtLawUnitService(
-            ILogger<CourtLawUnitService> _logger,
-            ICommonService _commonService,
-            ICaseLawUnitService _caseLawUnitService,
-            IRepository _repo,
-            IUserContext _userContext,
-            IRelationManyToManyDateService _relationService)
+        private readonly IWorkNotificationService workNotificationService;
+
+        public CourtLawUnitService(ILogger<CourtLawUnitService> _logger,
+                                   ICommonService _commonService,
+                                   ICaseLawUnitService _caseLawUnitService,
+                                   IRepository _repo,
+                                   IUserContext _userContext,
+                                   IRelationManyToManyDateService _relationService,
+                                   IWorkNotificationService _workNotificationService)
         {
             logger = _logger;
             repo = _repo;
@@ -36,18 +42,36 @@ namespace IOWebApplication.Core.Services
             commonService = _commonService;
             caseLawUnitService = _caseLawUnitService;
             relationService = _relationService;
+            workNotificationService = _workNotificationService;
         }
 
-        public IQueryable<CourtLawUnitVM> CourtLawUnit_Select(int courtId, int periodType, int lawUnitType)
+        public IQueryable<CourtLawUnitVM> CourtLawUnit_Select(int courtId, CourtLawUnitFilter filter)
         {
+            Expression<Func<CourtLawUnit, bool>> filterName = x => true;
+            if (!string.IsNullOrEmpty(filter.Fullname))
+            {
+                filterName = x => EF.Functions.ILike(x.LawUnit.FullName, filter.Fullname.ToPaternSearch());
+            }
+            Expression<Func<CourtLawUnit, bool>> filterDateFrom = x => true;
+            if (filter.DateFrom.HasValue)
+            {
+                filterDateFrom = x => (x.DateTo ?? DateTime.MaxValue) > filter.DateFrom.Value;
+            }
+            Expression<Func<CourtLawUnit, bool>> filterDateTo = x => true;
+            if (filter.DateTo.HasValue)
+            {
+                filterDateTo = x => x.DateFrom <= filter.DateTo.Value.MakeEndDate();
+            }
             return repo.AllReadonly<CourtLawUnit>()
-                .Include(x => x.LawUnit)
-                .Include(x => x.CourtOrganization)
-                .Include(x => x.LawUnitPosition)
                 .Where(x => x.CourtId == courtId &&
                             x.DateExpired == null &&
-                            x.PeriodTypeId == periodType &&
-                            x.LawUnit.LawUnitTypeId == lawUnitType)
+                            x.PeriodTypeId == filter.PeriodTypeId &&
+                            x.LawUnit.LawUnitTypeId == filter.LawUnitTypeId)
+                .Where(filterName)
+                .Where(filterDateFrom)
+                .Where(filterDateTo)
+                .OrderBy(x => x.LawUnit.FullName)
+                .ThenByDescending(x => x.DateFrom)
                 .Select(x => new CourtLawUnitVM()
                 {
                     Id = x.Id,
@@ -56,7 +80,8 @@ namespace IOWebApplication.Core.Services
                     CourtOrganizationName = x.CourtOrganization.Label,
                     LawUnitPositionName = x.LawUnitPosition.Label,
                     DateFrom = x.DateFrom,
-                    DateTo = x.DateTo
+                    DateTo = x.DateTo,
+                    MandateDateTo = x.MandateDateTo
                 }).AsQueryable();
         }
 
@@ -90,12 +115,31 @@ namespace IOWebApplication.Core.Services
                        }).AsQueryable();
         }
 
+        /// <summary>
+        /// Метод извличащ данни за асистент/помощник/секретар
+        /// </summary>
+        /// <param name="filter">Филтър попълнен от потребител</param>
+        /// <returns></returns>
+        public IQueryable<CourtLawUnitAssistantViewModel> CourtLawUnitAssistant_Select(CourtLawUnitAssistantFilterViewModel filter)
+        {
+            return repo.AllReadonly<CourtLawUnitAssistant>()
+                       .Where(x => x.CourtLawUnitId == filter.CourtLawUnitId)
+                       .Where(x => x.DateExpired == null)
+                       .Select(x => new CourtLawUnitAssistantViewModel()
+                       {
+                           Id = x.Id,
+                           LawUnitFullName = x.LawUnit.FullName,
+                           JudgeRoleLabel = x.JudgeRole.Label
+                       });
+        }
+
         public (bool result, string errorMessage) CourtLawUnit_SaveData(CourtLawUnit model)
         {
             try
             {
                 //Проверка за припокриване на периоди
                 DateTime dateNow = DateTime.Now.Date;
+                DateTime dateFuture = DateTime.Now.AddYears(100);
                 List<int> periods = new List<int>();
                 if (model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Holiday || model.PeriodTypeId == NomenclatureConstants.PeriodTypes.Ill)
                 {
@@ -104,12 +148,18 @@ namespace IOWebApplication.Core.Services
                 }
                 else
                     periods.Add(model.PeriodTypeId);
+                //var exists = repo.AllReadonly<CourtLawUnit>()
+                //                 .Where(x => x.Id != model.Id && x.CourtId == model.CourtId && periods.Contains(x.PeriodTypeId) &&
+                //                             x.LawUnitId == model.LawUnitId && x.DateExpired == null &&
+                //                             ((x.DateTo ?? dateNow).Date >= model.DateFrom.Date && (x.DateTo ?? dateNow).Date <= (model.DateTo ?? dateNow).Date ||
+                //                             (model.DateTo ?? dateNow).Date >= x.DateFrom.Date && (model.DateTo ?? dateNow).Date <= (x.DateTo ?? dateNow).Date))
+                //                 .Any();
                 var exists = repo.AllReadonly<CourtLawUnit>()
-                                 .Where(x => x.Id != model.Id && x.CourtId == model.CourtId && periods.Contains(x.PeriodTypeId) &&
-                                             x.LawUnitId == model.LawUnitId && x.DateExpired == null &&
-                                             ((x.DateTo ?? dateNow).Date >= model.DateFrom.Date && (x.DateTo ?? dateNow).Date <= (model.DateTo ?? dateNow).Date ||
-                                             (model.DateTo ?? dateNow).Date >= x.DateFrom.Date && (model.DateTo ?? dateNow).Date <= (x.DateTo ?? dateNow).Date))
-                                 .Any();
+                 .Where(x => x.Id != model.Id && x.CourtId == model.CourtId && periods.Contains(x.PeriodTypeId) &&
+                             x.LawUnitId == model.LawUnitId && x.DateExpired == null &&
+                             ((x.DateTo ?? dateFuture).Date >= model.DateFrom.Date && (x.DateTo ?? dateFuture).Date <= (model.DateTo ?? dateFuture).Date ||
+                             (model.DateTo ?? dateFuture).Date >= x.DateFrom.Date && (model.DateTo ?? dateFuture).Date <= (x.DateTo ?? dateFuture).Date))
+                 .Any();
 
                 if (exists == true)
                 {
@@ -126,6 +176,10 @@ namespace IOWebApplication.Core.Services
                 model.CourtOrganizationId = (model.CourtOrganizationId ?? 0) <= 0 ? null : model.CourtOrganizationId;
                 model.LawUnitPositionId = (model.LawUnitPositionId ?? 0) <= 0 ? null : model.LawUnitPositionId;
 
+                if (model.MandateDateTo.HasValue)
+                {
+                    model.MandateDateTo = model.MandateDateTo.ForceEndDate();
+                }
                 if (model.Id > 0)
                 {
                     //Update
@@ -133,6 +187,7 @@ namespace IOWebApplication.Core.Services
                     saved.LawUnitId = model.LawUnitId;
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
+                    saved.MandateDateTo = model.MandateDateTo;
                     saved.CourtOrganizationId = model.CourtOrganizationId;
                     saved.LawUnitPositionId = model.LawUnitPositionId;
                     saved.Description = model.Description;
@@ -149,8 +204,110 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtLawUnit Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtLawUnit Id={model.Id}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
+            }
+        }
+
+        /// <summary>
+        /// Извличане на данни за редакция на CourtLawUnitAssistant
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public async Task<CourtLawUnitAssistantEditViewModel> GetCourtLawUnitAssistantById(int id)
+        {
+            return await repo.AllReadonly<CourtLawUnitAssistant>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CourtLawUnitAssistantEditViewModel()
+                             {
+                                 Id = x.Id,
+                                 CourtLawUnitId = x.CourtLawUnitId,
+                                 CourtId = x.CourtLawUnit.CourtId,
+                                 LawUnitId = x.LawUnitId,
+                                 JudgeRoleId = x.JudgeRoleId,
+                             })
+                             .FirstAsync();
+        }
+
+        /// <summary>
+        /// Запис на CourtLawUnitAssistant
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        public async Task<bool> CourtLawUnitAssistant_SaveData(CourtLawUnitAssistantEditViewModel model)
+        {
+            try
+            {
+                CourtLawUnitAssistant save = model.Id > 0 ? await repo.All<CourtLawUnitAssistant>()
+                                                                  .Where(x => x.Id == model.Id)
+                                                                  .FirstAsync() : new()
+                                                                  {
+                                                                      CourtLawUnitId = model.CourtLawUnitId,
+                                                                      LawUnitId = model.LawUnitId,
+                                                                      JudgeRoleId = model.JudgeRoleId,
+                                                                      DateFrom = DateTime.Now,
+                                                                  };
+
+                if (model.Id > 0)
+                {
+                    save.LawUnitId = model.LawUnitId;
+                    save.JudgeRoleId = model.JudgeRoleId;
+                }
+                else
+                    await repo.AddAsync(save);
+
+                await repo.SaveChangesAsync();
+                model.Id = save.Id;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на CourtLawUnitAssistant Id={model.Id}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Метод проверяващ за съществуващ запис за този служител
+        /// </summary>
+        /// <param name="courtLawUnitId">Идентификатор на записа за съдията</param>
+        /// <param name="lawUnitId">Идентификатор на служителя</param>
+        /// <param name="id">Идентификатор на записа за служителя</param>
+        /// <returns></returns>
+        public async Task<bool> IsExistsCourtLawUnitAssistant(int courtLawUnitId, int lawUnitId, int id)
+        {
+            Expression<Func<CourtLawUnitAssistant, bool>> idWhere = x => true;
+            if (id > 0)
+                idWhere = x => x.Id != id;
+
+            return await repo.AllReadonly<CourtLawUnitAssistant>()
+                             .Where(x => x.CourtLawUnitId == courtLawUnitId)
+                             .Where(x => x.DateExpired == null)
+                             .Where(idWhere)
+                             .AnyAsync(x => x.LawUnitId == lawUnitId);
+        }
+
+        /// <summary>
+        /// Сторниране на секретар към съдия
+        /// </summary>
+        /// <param name="id">Идентификатор на запис за секретар към съдия</param>
+        /// <returns></returns>
+        public async Task<bool> CourtLawUnitAssistantExpired(int id)
+        {
+            try
+            {
+                CourtLawUnitAssistant expiredAssistant = await repo.All<CourtLawUnitAssistant>()
+                                                                   .Where(x => x.Id == id)
+                                                                   .FirstAsync();
+
+                expiredAssistant.DateExpired = DateTime.Now;
+                await repo.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при сторно на CourtLawUnitAssistant Id={id}");
+                return false;
             }
         }
 
@@ -162,6 +319,7 @@ namespace IOWebApplication.Core.Services
                        .Where(x => x.CourtId == courtId &&
                                    x.LawUnitId == lawUnitId &&
                                    (x.DateTo ?? dateTomorrow).Date > DateTime.Now)
+                       .Where(x => x.CourtGroup.GroupKind == NomenclatureConstants.CourtGroupKinds.JudgeSelection)
                        .Select(x => new MultiSelectTransferPercentVM()
                        {
                            Id = x.CourtGroupId,
@@ -171,11 +329,12 @@ namespace IOWebApplication.Core.Services
                        }).AsQueryable();
         }
 
-        public bool CourtLawUnitGroup_SaveData(int courtId, int lawUnitId, List<MultiSelectTransferPercentVM> codeGroups)
+        public async Task<bool> CourtLawUnitGroup_SaveData(int courtId, int lawUnitId, List<MultiSelectTransferPercentVM> codeGroups)
         {
-            return relationService.SaveDataPercent<CourtLawUnitGroup>(lawUnitId, codeGroups,
-                x => x.CourtId == courtId,
+            return await relationService.SaveDataPercent<CourtLawUnitGroup>(lawUnitId, codeGroups,
+                x => x.CourtId == courtId && x.CourtGroup.GroupKind == NomenclatureConstants.CourtGroupKinds.JudgeSelection,
                 x => x.LawUnitId,
+                x => x.LawUnitId == lawUnitId && x.DateTo == null,
                 x => x.CourtGroupId,
                 x => x.DateFrom,
                 x => x.DateTo,
@@ -185,7 +344,7 @@ namespace IOWebApplication.Core.Services
                     x.CourtId = courtId;
                     return true;
                 }
-           ,true);
+           , true);
         }
 
         //public IQueryable<CompartmentVM> Compartment_Select(int courtId, int lawUnitId)
@@ -223,7 +382,7 @@ namespace IOWebApplication.Core.Services
                     select new MultiSelectTransferVM()
                     {
                         Id = item.Id,
-                        Order = 0,
+                        OrderInt = 0,
                         Text = item.FullName
                     }).AsQueryable();
         }
@@ -245,7 +404,7 @@ namespace IOWebApplication.Core.Services
                                           c.DateExpired == null);
 
             var result = repo.AllReadonly<LawUnit>()
-                             .Where(x => x.LawUnitTypeId == lawUnitType &&
+                             .Where(x => (lawUnitType <= 0 || x.LawUnitTypeId == lawUnitType) &&
                                     ((x.DateTo ?? dateSelect.Date) >= dateSelect.Date) &&
                                     courtLawUnit.Where(c => c.LawUnitId == x.Id).Any() &&
                                     (!noIllHoliday || !courtLawUnitIllHoliday.Where(c => c.LawUnitId == x.Id).Any())
@@ -336,7 +495,7 @@ namespace IOWebApplication.Core.Services
                PeriodTypeId = x.PeriodTypeId,
                CaseGroupId = -1,
                LawUnitTypeId = x.LawUnit.LawUnitTypeId
-           }).DefaultIfEmpty(null).FirstOrDefault();
+           }).FirstOrDefault();
         }
 
         public CourtLawUnit GetCourtLawUnitById_WithLawUnit(int id)
@@ -367,17 +526,15 @@ namespace IOWebApplication.Core.Services
             DateTime dateEnd = dateNow.AddDays(1);
 
             return repo.AllReadonly<CourtLawUnit>()
-                                .Include(x => x.LawUnitPosition)
                                 .Where(x => x.CourtId == courtId && x.DateExpired == null)
                                 .Where(x => x.LawUnitId == lawUnitId && dateNow >= x.DateFrom && dateNow <= (x.DateTo ?? dateEnd))
                                 .Select(x => x.LawUnitPosition.Label)
-                                .DefaultIfEmpty("")
-                                .FirstOrDefault();
+                                .FirstOrValue("");
         }
 
         public IQueryable<CourtLawUnitVM> CourtLawUnitOrder_Select(int courtId)
         {
-            return repo.AllReadonly<CourtLawUnitOrder>()
+            var result = repo.AllReadonly<CourtLawUnitOrder>()
                                 .Include(x => x.LawUnit)
                                 .Where(x => x.CourtId == courtId)
                                 .OrderBy(x => x.OrderNumber)
@@ -387,8 +544,36 @@ namespace IOWebApplication.Core.Services
                                     OrderNumber = x.OrderNumber,
                                     LawUnitId = x.LawUnitId,
                                     LawUnitName = x.LawUnit.FullName
-                                })
-                                .AsQueryable();
+                                }).ToArray();
+
+            for (int i = 1; i <= result.Length; i++)
+            {
+                result[i - 1].RowNo = i;
+            }
+
+            return result.AsQueryable();
+        }
+
+        public SaveResultVM CourtLawUnitOrder_ComboSave(CourtLawunitOrderComboVM model)
+        {
+            var items = CourtLawUnitOrder_Select(userContext.CourtId);
+            if (model.NewRowNo <= 0 || model.NewRowNo > items.Count())
+            {
+                return new SaveResultVM(false, "Невалидна нова позиция на съдия");
+            }
+
+            var id = items.Where(x => x.RowNo == model.CurrentRowNo).Select(x => x.Id).FirstOrDefault();
+            if (id == 0)
+            {
+                return new SaveResultVM(false, "Невалиден съдия");
+            }
+            for (int i = 1; i <= Math.Abs(model.NewRowNo - model.CurrentRowNo); i++)
+            {
+                Func<CourtLawUnitOrder, int?> orderProp = x => x.OrderNumber;
+                Expression<Func<CourtLawUnitOrder, int?>> setterProp = (x) => x.OrderNumber;
+                var result = ChangeOrder<CourtLawUnitOrder>(id, model.NewRowNo < model.CurrentRowNo, orderProp, setterProp, x => x.CourtId == userContext.CourtId);
+            }
+            return new SaveResultVM(true);
         }
 
         public bool CourtLawUnitOrder_Actualize(int courtId)
@@ -404,6 +589,7 @@ namespace IOWebApplication.Core.Services
                                         .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge)
                                         .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(x.PeriodTypeId))
                                         .Where(x => dateNow >= x.DateFrom && dateNow <= (x.DateTo ?? dateEnd))
+                                        .Where(x => (x.MandateDateTo ?? dateEnd) >= dateNow)
                                         .Select(x => x.LawUnitId)
                                         .Distinct()
                                         .ToArray();
@@ -416,6 +602,11 @@ namespace IOWebApplication.Core.Services
                 repo.Delete(item);
 
                 hasChange = true;
+            }
+
+            if (hasChange)
+            {
+                repo.SaveChanges();
             }
 
             //Добавят се всички, които не съществуват в записите с подредбата
@@ -442,6 +633,7 @@ namespace IOWebApplication.Core.Services
         {
             var dtNow = DateTime.Now;
 
+
             var caseLawunits = repo.AllReadonly<CaseLawUnit>()
                                   .Where(x => x.CaseId == caseId)
                                   .Where(x => x.CaseSessionId == null)
@@ -451,8 +643,11 @@ namespace IOWebApplication.Core.Services
                                              {
                                                  x.Id,
                                                  x.JudgeDepartmentRoleId,
-                                                 x.LawUnitId
+                                                 x.LawUnitId,
+                                                 CourtDepartmentId = (x.RealCourtDepartmentId ?? 0)
                                              }).ToList();
+
+
             int[] caseJudges = caseLawunits.Select(lu => lu.LawUnitId).ToArray();
 
             var lawunitOrder = CourtLawUnitOrder_Select(userContext.CourtId)
@@ -463,6 +658,31 @@ namespace IOWebApplication.Core.Services
                                     x.OrderNumber
                                 })
                                 .ToList();
+
+            //Ако няма запис за старшинство, но е само 1 съдия - да го добави като отбележи като Председател на състава
+            if (caseLawunits.Count == 1 && !lawunitOrder.Any())
+            {
+                lawunitOrder.Add(new { LawUnitId = caseLawunits.First().LawUnitId, OrderNumber = 1 });
+            }
+
+            var caseLawunitDepartment = caseLawunits.Select(x => x.CourtDepartmentId).Distinct();
+            //При ново разпределяне, и наличие на състав, председателя по делото се определя от състава, не по старшинство
+            if (caseLawunitDepartment.Count() == 1 && caseLawunitDepartment.FirstOrDefault() > 0)
+            {
+                var JudicalCompositionId = caseLawunitDepartment.FirstOrDefault();
+                int DepartmentPredsedatel = repo.AllReadonly<CourtDepartmentLawUnit>()
+                             .Where(x => x.CourtDepartmentId == JudicalCompositionId
+                             && x.JudgeDepartmentRoleId == NomenclatureConstants.JudgeDepartmentRole.Predsedatel)
+                             .Where(x => caseJudges.Contains(x.LawUnitId))
+                             .Select(x => x.LawUnitId)
+                             .FirstOrDefault();
+
+                if (DepartmentPredsedatel > 0)
+                {
+                    lawunitOrder.Clear();
+                    lawunitOrder.Add(new { LawUnitId = DepartmentPredsedatel, OrderNumber = 1 });
+                }
+            }
 
             if (!lawunitOrder.Any())
             {
@@ -489,7 +709,7 @@ namespace IOWebApplication.Core.Services
 
             if ((newPredsedatel.LawUnitId == 0) || (casePredsedatels.Count == 1 && casePredsedatels.FirstOrDefault() == newPredsedatel.LawUnitId))
             {
-                return new SaveResultVM(false, "Няма промяна в предстедателя на състава.");
+                return new SaveResultVM(false, "Няма промяна в председателя на състава.");
             }
 
             if (
@@ -523,20 +743,35 @@ namespace IOWebApplication.Core.Services
                             .Where(x => x.DateTo >= (filter.DateFrom ?? DateTime.MinValue))
                             .Where(FilterExpireInfo<CourtLawUnitSubstitution>(false))
                             .OrderByDescending(x => x.DateFrom)
-                            .ProjectTo<CourtLawUnitSubstitutionVM>(CourtLawUnitSubstitutionVM.GetMapping())
+                            .Select(x => new CourtLawUnitSubstitutionVM
+                            {
+                                Id = x.Id,
+                                DateFrom = x.DateFrom,
+                                DateTo = x.DateTo,
+                                LawUnitId = x.LawUnitId,
+                                LawUnitName = x.LawUnit.FullName,
+                                Description = x.Description,
+                                SubstituteLawUnitId = x.SubstituteLawUnitId,
+                                SubstituteLawUnitName = x.SubstituteLawUnit.FullName
+                            })
                             .AsQueryable();
         }
 
-        public string CourtLawUnitSubstitution_Validate(CourtLawUnitSubstitution model)
+        /// <summary>
+        /// Проверка за валиден запис на заместване
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<string> CourtLawUnitSubstitution_Validate(CourtLawUnitSubstitution model)
         {
-            if (repo.AllReadonly<CourtLawUnitSubstitution>()
-                                .Where(x => x.CourtId == userContext.CourtId && x.LawUnitId == model.LawUnitId && x.Id != model.Id)
-                                .Where(x => x.DateFrom <= model.DateTo && x.DateTo >= model.DateFrom)
-                                .Where(x => x.SubstituteLawUnitId == model.SubstituteLawUnitId)
-                                .Where(FilterExpireInfo<CourtLawUnitSubstitution>(false))
-                                .Any())
+            if (await repo.AllReadonly<CourtLawUnitSubstitution>()
+                          .Where(x => x.CourtId == userContext.CourtId && x.LawUnitId == model.LawUnitId && x.Id != model.Id)
+                          .Where(x => x.DateFrom <= model.DateTo && x.DateTo >= model.DateFrom)
+                          .Where(x => x.SubstituteLawUnitId == model.SubstituteLawUnitId)
+                          .Where(FilterExpireInfo<CourtLawUnitSubstitution>(false))
+                          .AnyAsync())
             {
-                var lawunitName = repo.GetById<LawUnit>(model.LawUnitId).FullName;
+                var lawunitName = (await repo.GetByIdAsync<LawUnit>(model.LawUnitId)).FullName;
                 return $"За избрания период вече съществува заместващо лице за {lawunitName}";
             }
 
@@ -547,14 +782,23 @@ namespace IOWebApplication.Core.Services
             return null;
         }
 
-        public bool CourtLawUnitSubstitution_SaveData(CourtLawUnitSubstitution model)
+        /// <summary>
+        /// Метод за запис на заместване
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        public async Task<bool> CourtLawUnitSubstitution_SaveData(CourtLawUnitSubstitution model)
         {
             try
             {
                 model.DateTo = model.DateTo.ForceEndDate();
+
                 if (model.Id > 0)
                 {
-                    var saved = repo.GetById<CourtLawUnitSubstitution>(model.Id);
+                    CourtLawUnitSubstitution saved = await repo.All<CourtLawUnitSubstitution>()
+                                                               .Where(x => x.Id == model.Id)
+                                                               .FirstAsync();
+
                     saved.LawUnitId = model.LawUnitId;
                     saved.SubstituteLawUnitId = model.SubstituteLawUnitId;
                     saved.DateFrom = model.DateFrom;
@@ -563,32 +807,275 @@ namespace IOWebApplication.Core.Services
                     saved.UserId = userContext.UserId;
                     saved.DateWrt = DateTime.Now;
 
-                    repo.Update(saved);
-                    repo.SaveChanges();
+                    await workNotificationService.TurnOffNotificationForSubstituteJudgeReporter(saved.LawUnitId, saved.SubstituteLawUnitId, saved.DateTo);
                 }
                 else
                 {
                     model.CourtId = userContext.CourtId;
                     model.UserId = userContext.UserId;
                     model.DateWrt = DateTime.Now;
-
-                    repo.Add(model);
-                    repo.SaveChanges();
+                    await repo.AddAsync(model);
                 }
 
+                await repo.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CourtLawUnitSubstitution Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CourtLawUnitSubstitution Id={model.Id}");
                 return false;
             }
         }
 
-        
+        #region Група Централизирано разпределение ГД
 
-        
+        /// <summary>
+        /// Извличане на данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public IQueryable<CourtLawUnitGroupCCDataVM> GetDataCentralDistributionCC(CourtLawUnitGroupCCFilterVM filter)
+        {
+            Expression<Func<CourtLawUnitGroup, bool>> courtGroupWhere = x => x.CourtGroup.GroupKind == filter.CourtGroupKind;
 
+            Expression<Func<CourtLawUnitGroup, bool>> lawUnitNameWhere = x => true;
+            if (!string.IsNullOrEmpty(filter.LawUnitName))
+                lawUnitNameWhere = x => EF.Functions.ILike(x.LawUnit.FullName, filter.LawUnitName.ToPaternSearch());
 
+            Expression<Func<CourtLawUnitGroup, bool>> courtIdWhere = x => true;
+            if (filter.CourtId != null && filter.CourtId > 0)
+                courtIdWhere = x => x.CourtId == filter.CourtId;
+
+            int userCourtId = userContext.CourtId;
+
+            return repo.AllReadonly<CourtLawUnitGroup>()
+                       .Where(courtGroupWhere)
+                       .Where(lawUnitNameWhere)
+                       .Where(courtIdWhere)
+                       .Select(x => new CourtLawUnitGroupCCDataVM()
+                       {
+                           Id = x.Id,
+                           CourtId = x.CourtId,
+                           CourtName = x.Court.Label,
+                           LawUnitId = x.LawUnitId,
+                           CourtDepartmentLabel = x.CourtDepartment.Label,
+                           LawUnitName = x.LawUnit.FullName,
+                           DateFrom = x.DateFrom,
+                           DateTo = x.DateTo,
+                           IsEdit = x.CourtId == userCourtId,
+                           LoadIndex = x.LoadIndex
+                       });
+        }
+
+        /// <summary>
+        /// Извличане на данни за редакция на служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public async Task<CourtLawUnitGroupCCEditVM> GetCentralDistributionCCEditById(int id)
+        {
+            return await repo.AllReadonly<CourtLawUnitGroup>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CourtLawUnitGroupCCEditVM()
+                             {
+                                 Id = x.Id,
+                                 CourtId = x.CourtId,
+                                 LawUnitId = x.LawUnitId,
+                                 DateFrom = x.DateFrom,
+                                 DateTo = x.DateTo,
+                                 CourtDepartmentId = x.CourtDepartmentId,
+                                 DateToDescription = x.DateToDescription,
+                                 CourtGroupKind = x.CourtGroup.GroupKind,
+                                 LoadIndex = x.LoadIndex,
+                                 LoadIndexOld = x.LoadIndex,
+                                 LoadIndexDescription = x.LoadIndexDescription,
+                                 LoadIndexDescriptionOld = x.LoadIndexDescription
+                             })
+                             .FirstAsync();
+        }
+
+        /// <summary>
+        /// Попълване на обект за добавяне за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        private async Task<CourtLawUnitGroup> FillCourtLawUnitGroupCentralDistributionCC(CourtLawUnitGroupCCEditVM model)
+        {
+            int courtGroupId = await repo.AllReadonly<CourtGroup>()
+                                          .Where(g => g.GroupKind == model.CourtGroupKind)
+                                          .Select(g => g.Id)
+                                          .FirstOrDefaultAsync();
+
+            return new()
+            {
+                CourtId = model.CourtId,
+                LawUnitId = model.LawUnitId,
+                DateFrom = model.DateFrom.ForceStartDate(),
+                DateTo = model.DateTo != null ? model.DateTo.ForceEndDate() : null,
+                CourtGroupId = courtGroupId,
+                CourtDepartmentId = model.CourtDepartmentId.NumberEmptyToNull(),
+                DateToDescription = model.DateToDescription,
+                LoadIndex = model.LoadIndex,
+                LoadIndexDescription = model.LoadIndexDescription
+            };
+        }
+
+        /// <summary>
+        /// Попълване на данни за редакция за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <param name="modelSave">Модел за редакция</param>
+        private static void SetEditFieldsCourtLawUnitGroupCentralDistributionCC(CourtLawUnitGroupCCEditVM model, CourtLawUnitGroup modelSave)
+        {
+            modelSave.CourtId = model.CourtId;
+            modelSave.LawUnitId = model.LawUnitId;
+            modelSave.DateFrom = model.DateFrom.ForceStartDate();
+            modelSave.DateTo = model.DateTo != null ? model.DateTo.ForceEndDate() : null;
+            modelSave.CourtDepartmentId = model.CourtDepartmentId.NumberEmptyToNull();
+            modelSave.DateToDescription = model.DateToDescription;
+            modelSave.LoadIndex = model.LoadIndex;
+            modelSave.LoadIndexDescription = model.LoadIndexDescription;
+        }
+
+        /// <summary>
+        /// Добавяне/редакция на данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        public async Task<int?> SavelCourtLawUnitGroupCentralDistributionCC(CourtLawUnitGroupCCEditVM model)
+        {
+            try
+            {
+                CourtLawUnitGroup modelSave = (model.Id > 0) ? await repo.All<CourtLawUnitGroup>()
+                                                                         .Where(x => x.Id == model.Id)
+                                                                         .FirstAsync() : await FillCourtLawUnitGroupCentralDistributionCC(model);
+
+                if (model.Id > 0)
+                {
+                    SetEditFieldsCourtLawUnitGroupCentralDistributionCC(model, modelSave);
+                }
+                else
+                {
+                    if (modelSave.CourtGroupId == 0)
+                    {
+                        return null;
+                    }
+                    repo.Add(modelSave);
+                }
+                await repo.SaveChangesAsync();
+                return modelSave.Id;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при запис на служител в група Централизирано разпределение ГД с id = {model.Id}; kind={model.CourtGroupKind};courtId:{model.CourtId}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Метод връщащ основното кюери за зареждане на служители за Група Централизирано разпределение ГД 
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <returns></returns>
+        private IQueryable<CourtLawUnit> GetCourtLawUnitsQueryable(int courtId)
+        {
+            Expression<Func<CourtLawUnit, bool>> courtIdWhere = x => true;
+            if (courtId > 0)
+                courtIdWhere = x => x.CourtId == courtId;
+
+            return repo.AllReadonly<CourtLawUnit>()
+                       .Where(courtIdWhere)
+                       .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyCourtActions.Contains(x.PeriodTypeId));
+        }
+
+        /// <summary>
+        /// Добавяне на избраната стойност в падащият списък ако служителя е с конфигурирана дата до
+        /// </summary>
+        /// <param name="models">Списък със служители</param>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="lawUnitId">Служител за редакция и да се провери дали го има в списъка, ако е с конфигурирана дата до</param>
+        /// <returns></returns>
+        private async Task AddCourtLawUnitMissing(List<SelectListItem> models, int courtId, int? lawUnitId = null)
+        {
+            if (lawUnitId != null && lawUnitId > 0)
+            {
+                if (!models.Any(x => x.Value == lawUnitId.ToString()))
+                {
+                    DateTime dateNow = DateTime.Now;
+                    Expression<Func<CourtLawUnit, bool>> lawUnitIdWhere = x => x.LawUnitId == lawUnitId;
+
+                    SelectListItem courtLawUnitMissing = await GetCourtLawUnitsQueryable(courtId).Where(lawUnitIdWhere)
+                                                                                                  .Select(x => new SelectListItem()
+                                                                                                  {
+                                                                                                      Text = x.LawUnit.FullName + (x.DateTo != null ? " - дата до: " + (x.DateTo ?? dateNow).ToString("dd.MM.yyyy") : string.Empty),
+                                                                                                      Value = x.LawUnitId.ToString()
+                                                                                                  })
+                                                                                                  .FirstOrDefaultAsync();
+
+                    if (courtLawUnitMissing != null)
+                        models.Insert(0, courtLawUnitMissing);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Метод за зареждане на списък с налични служители в съд
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="lawUnitId">Служител за редакция и да се провери дали го има в списъка, ако е с конфигурирана дата до</param>
+        /// <param name="addDefaultElement">Флаг за добавяне на елемент Избери</param>
+        /// <param name="addAllElement">Флаг за добавяне на елемент Всички</param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> GetDDL_CommonCourtLawUnitCentralDistributionCC(int courtId, int? lawUnitId = null, bool addDefaultElement = true, bool addAllElement = false)
+        {
+            DateTime dateNow = DateTime.Now;
+            DateTime dateNowAdd10Year = DateTime.Now.AddYears(10);
+
+            List<SelectListItem> results = await GetCourtLawUnitsQueryable(courtId).Where(x => (x.DateTo ?? dateNowAdd10Year) >= dateNow)
+                                                                                   .Where(x => x.LawUnit.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Judge)
+                                                                                   .Select(x => new SelectListItem()
+                                                                                   {
+                                                                                       Text = x.LawUnit.FullName,
+                                                                                       Value = x.LawUnitId.ToString()
+                                                                                   })
+                                                                                   .OrderBy(x => x.Text)
+                                                                                   .ToListAsync() ?? new List<SelectListItem>();
+
+            await AddCourtLawUnitMissing(results, courtId, lawUnitId);
+
+            if (addDefaultElement)
+                results.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+
+            if (addAllElement)
+                results.Insert(0, new SelectListItem() { Text = "Всички", Value = "-2" });
+
+            return results;
+        }
+
+        /// <summary>
+        /// Проверка дали служителят е вече добавен в групата, без значение съда
+        /// </summary>
+        /// <param name="lawUnitId">Идентификатор на служител</param>
+        /// <param name="courtGroupKind">Kind на група</param>
+        /// <param name="idSave">Идентификатор на запис</param>
+        /// <returns></returns>
+        public async Task<bool> IsExistLawUnitCentralDistributionCC(int lawUnitId, int courtGroupKind, int? idSave = null)
+        {
+            Expression<Func<CourtLawUnitGroup, bool>> idSaveWhere = x => true;
+            if (idSave != null)
+                idSaveWhere = x => x.Id != idSave;
+
+            DateTime dtNow = DateTime.Now;
+            DateTime dtTomorow = DateTime.Now.AddDays(1);
+
+            return await repo.AllReadonly<CourtLawUnitGroup>()
+                             .Where(idSaveWhere)
+                             .AnyAsync(x => x.LawUnitId == lawUnitId &&
+                                            x.CourtGroup.GroupKind == courtGroupKind &&
+                                            x.DateFrom < dtNow &&
+                                            (x.DateTo ?? dtTomorow) > dtNow);
+        }
+
+        #endregion
     }
 }

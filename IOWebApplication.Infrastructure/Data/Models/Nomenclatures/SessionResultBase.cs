@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
 {
@@ -13,5 +14,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
 
         [ForeignKey(nameof(SessionResultGroupId))]
         public virtual SessionResultGroup SessionResultGroup { get; set; }
+
+        public virtual ICollection<SessionResultBaseRule> ResultBaseRules { get; set; }
+
+        public SessionResultBase()
+        {
+            ResultBaseRules = new HashSet<SessionResultBaseRule>();
+        }
     }
 }

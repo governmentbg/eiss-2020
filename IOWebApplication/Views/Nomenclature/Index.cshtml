@@ -6,7 +6,7 @@
     ViewData["Title"] = TempData.Peek("Title");
     string tableId = (string)TempData.Peek("NomenclatureName") ?? "nomenclatureListTable";
 }
-@section breadcrumb{
+@section breadcrumb {
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
         <li class="active">@ViewData["Title"]</li>
@@ -99,19 +99,19 @@
 
                 element.setAttribute("disabled", "");
 
-                 $.ajax({
-                        method: "POST",
-                        url: '@Url.Action("ChangeOrder")',
-                        dataType: "json",
-                        data: data
-                    }).fail(function (jqXHR, status, message) {
-                            if (jqXHR.responseText) {
-                                //messageHelper.ShowErrorMessage(jqXHR.responseText);
-                            }
-                    }).always(function () {
-                        table.draw( false );
-                    });
-             }
+                $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("ChangeOrder")',
+                    dataType: "json",
+                    data: data
+                }).fail(function (jqXHR, status, message) {
+                    if (jqXHR.responseText) {
+                        //messageHelper.ShowErrorMessage(jqXHR.responseText);
+                    }
+                }).always(function () {
+                    table.draw(false);
+                });
+            }
         });
     </script>
 

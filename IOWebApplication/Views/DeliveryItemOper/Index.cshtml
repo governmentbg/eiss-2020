@@ -1,5 +1,4 @@
 ﻿@model int
-@inject IViewLocalizer Localizer
 @using IOWebApplication.Core.Helper.GlobalConstants;
 @{
     int deliveryItemId = @Model;
@@ -10,7 +9,7 @@
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 @Html.HiddenFor(x => deliveryItemId)
@@ -128,8 +127,8 @@
                         searchable: false,
                         width: 90,
                         className: "text-center noExport",
-                        "render": function (value) {
-                            return TemplateToHtml('#templateEdit', value);
+                        "render": function (item, type, row, meta) {
+                            return TemplateToHtml('#templateEdit', row);
                         }
                     }
                 ]
@@ -138,14 +137,16 @@
 
     </script>
     <script id="templateEdit" type="text/x-handlebars-template">
-        <a onclick="EditDeliveryItemOper({{this}})" class="btn btn-warning btn-sm" title="Редакция на посещение">
+        <a onclick="EditDeliveryItemOper({{id}})" class="btn btn-warning btn-sm" title="Редакция на посещение">
             <i class="fa fa-edit"></i>
             <span class="hidden-sm hidden-xs"></span>
         </a>
-        <a onclick="DeliveryItemOperLocation({{this}})" class="btn btn-def btn-sm" title="Кординати">
+        {{#if haveLocation}}
+        <a onclick="DeliveryItemOperLocation({{id}})" class="btn btn-def btn-sm" title="Кординати">
             <i class="fa fa-location-arrow"></i>
             <span class="hidden-sm hidden-xs"></span>
         </a>
+        {{/if}}
     </script>
 
 }

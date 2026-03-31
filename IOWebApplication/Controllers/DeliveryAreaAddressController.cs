@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using Microsoft.AspNetCore.Mvc;
-using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Core.Helper.GlobalConstants;
-using DataTables.AspNet.Core;
 using IOWebApplication.Extensions;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Delivery;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
-using Newtonsoft.Json;
-using IOWebApplication.Infrastructure.Constants;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace IOWebApplication.Controllers
 {

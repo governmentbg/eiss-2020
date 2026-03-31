@@ -1,0 +1,104 @@
+﻿@{
+    ViewData["Title"] = "Статистика темплейти";
+}
+
+<div class="row">
+    <div class="col-md-12 text-right pb-15">
+        <a asp-controller="Common" asp-action="AddExcelReportTemplate" class="btn btn-success btn-sm">
+            <i class="fa fa-plus"></i>
+            Добави
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="excelReportTemplateMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#excelReportTemplateMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ExcelReportTemplateListData", "Common")",
+                    "type": "POST",
+                    "datatype": "json",
+                },
+                filter: false,
+                columns: [
+                    {
+                        name: 'courtTypeLabel',
+                        data: 'courtTypeLabel',
+                        title: 'Вид съд',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        name: 'reportTypeLabel',
+                        data: 'reportTypeLabel',
+                        title: 'Вид статистика',
+                        sortable: true,
+                        searchable: true,
+                    },
+                    {
+                        name: 'label',
+                        data: 'label',
+                        title: 'Наименование',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'fileName',
+                        data: 'fileName',
+                        title: 'Файл',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: "text-center",
+                        name: 'dateFrom',
+                        data: 'dateFrom',
+                        title: 'От',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                        }
+                    },
+                    {
+                        className: "text-center",
+                        name: 'dateTo',
+                        data: 'dateTo',
+                        title: 'До',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return (data != null) ? moment(data).format("DD.MM.YYYY HH:mm") : data;
+                        }
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#excelReportTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+
+
+        });
+</script>
+
+<script id="excelReportTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditExcelReportTemplate", "Common")?id={{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+</script>
+
+
+

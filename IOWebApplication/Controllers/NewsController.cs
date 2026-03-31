@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
-using DnsClient.Internal;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -30,12 +25,14 @@ namespace IOWebApplication.Controllers
             logger = _logger;
         }
 
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         [HttpGet]
         public IActionResult IndexUser()
         {
@@ -54,9 +51,9 @@ namespace IOWebApplication.Controllers
             return View();
         }
 
-        public IActionResult SetAsRead(int id)
+        public async Task<IActionResult> SetAsRead(int id)
         {
-            newsService.SetAsRead(id, userContext.UserId);
+            await newsService.SetAsRead(id, userContext.UserId);
 
             return Ok();
         }
@@ -65,7 +62,7 @@ namespace IOWebApplication.Controllers
         public IActionResult LatestNews()
         {
             NewsViewModel model = newsService.GetLatest();
-            
+
             return View();
         }
 
@@ -75,21 +72,37 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
+        void auditInfo(string operation, NewsViewModel model, string add = "")
+        {
+            if (model != null)
+            {
+                if (model.PublishDate.Year > 2000)
+                {
+                    AddAuditInfo(operation, $"Заглавие: {model.Title}  - непубликувана", add, "Новини");
+                }
+                else
+                {
+                    AddAuditInfo(operation, $"Заглавие: {model.Title} публикувана на: {model.PublishDate.ToString("dd.MM.yyyy")}", add, "Новини");
+                }
+            }
+        }
+
         [HttpGet]
         [Authorize(Roles = AccountConstants.Roles.GlobalAdministrator)]
-        public IActionResult Add() 
+        [DisableAudit]
+        public IActionResult Add()
         {
             var model = new NewsViewModel();
 
             return View("Edit", model);
-        } 
-        
+        }
+
         [HttpGet]
         [Authorize(Roles = AccountConstants.Roles.GlobalAdministrator)]
         public IActionResult Edit(int id)
         {
             NewsViewModel model = newsService.GetById(id);
-
+            auditInfo(AuditConstants.Operations.View, model);
             return View(model);
         }
 
@@ -103,8 +116,11 @@ namespace IOWebApplication.Controllers
                 return View(model);
             }
 
+            var currentId = model.Id;
             if (newsService.SaveNews(model, userContext.UserId))
             {
+                this.SaveLogOperation(currentId == 0, model.Id);
+                auditInfo(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model);
                 TempData[MessageConstant.SuccessMessage] = MessageConstant.Values.SaveOK;
             }
             else
@@ -122,9 +138,11 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public JsonResult ReadNews(NewsViewModel model)
+        public async Task<JsonResult> ReadNews(NewsViewModel model)
         {
-            newsService.SetAsRead(model.Id, userContext.UserId);
+            await newsService.SetAsRead(model.Id, userContext.UserId);
+            var newsViewModel = newsService.GetById(model.Id);
+            auditInfo(AuditConstants.Operations.Update, newsViewModel, "Маркиране като прочетена");
             return Json(new { result = 1 });
         }
 

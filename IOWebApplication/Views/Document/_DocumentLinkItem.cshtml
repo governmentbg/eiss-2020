@@ -8,7 +8,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="pull-right legacy-document-check" style="margin-top:-20px;">
-                    @Html.CheckBoxFor(x => x.IsLegacyDocument)
+                    @Html.EditorFor(x => x.IsLegacyDocument, "BooleanPlain")
                     @Html.LabelFor(x => x.IsLegacyDocument, new { @class = "text-muted" })
                 </div>
             </div>
@@ -20,13 +20,13 @@
             <div class="col-lg-3 doc-link-direction">
                 @Html.EditorFor(x => x.DocumentDirectionId, "DropDown", null, new { Ddl = (IEnumerable<SelectListItem>)ViewBag.DocumentDirectionDDL, @class = "link-doc-dir" })
             </div>
-            <div class="col-lg-2 legacy-document-edit" @if (!Model.IsLegacyDocument) { <text> style="display:none;" </text> }>
+            <div class="col-lg-2 legacy-document-edit" @if (!(Model.IsLegacyDocument ?? false)) { <text> style="display:none;" </text> }>
                 @Html.EditorFor(x => x.PrevDocumentNumber)
             </div>
-            <div class="col-lg-2 legacy-document-edit" @if (!Model.IsLegacyDocument) { <text> style="display: none;" </text> }>
+            <div class="col-lg-2 legacy-document-edit" @if (!(Model.IsLegacyDocument ?? false)) { <text> style="display: none;" </text> }>
                 @Html.EditorFor(x => x.PrevDocumentDate, "DateTime")
             </div>
-            <div class="col-lg-4 document-link-edit" @if (Model.IsLegacyDocument) { <text> style="display: none;" </text> }>
+            <div class="col-lg-4 document-link-edit" @if ((Model.IsLegacyDocument ?? false)) { <text> style="display: none;" </text> }>
                 @Html.EditorFor(x => x.PrevDocumentId, "SelectDocument")
             </div>
         </div>

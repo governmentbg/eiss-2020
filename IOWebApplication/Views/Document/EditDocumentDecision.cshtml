@@ -5,7 +5,7 @@
     var cndEditMode = "none";
     if (Model.Id > 0)
     {
-        cndEditMode = "append";
+        cndEditMode = "edit";
     }
     if (Model.RegNumber != null)
     {
@@ -71,17 +71,20 @@
                 @if (Model.Id > 0)
                 {
                     <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.DocumentDecision" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
+                    if (ViewBag.epepView)
+                    {
                     <div class="pull-right">
                         @if (epepUserId > 0)
                         {
-                            <a href="@Url.Action("EpepUser_Edit","Epep",new { id=epepUserId})" target="_blank" class="btn btn-primary">Потребител ЕПЕП</a>
+                            <a href="@Url.Action("EpepUser_Edit", "Epep", new { id = epepUserId })" target="_blank" class="btn btn-primary">Потребител ЕПЕП</a>
                         }
                         else
                         {
-                            <a href="@Url.Action("EpepUser_Add","Epep",new { documentId=Model.DocumentId})" target="_blank" class="btn btn-warning">Добави потребител в ЕПЕП</a>
+                            <a href="@Url.Action("EpepUser", "Epep")" target="_blank" class="btn btn-warning">Търсене на потребител ЕПЕП</a>
                         }
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { IconOnly = true, ObjectKey = Model.Id.ToString() })
                     </div>
+                    }
                 }
             </div>
         </form>

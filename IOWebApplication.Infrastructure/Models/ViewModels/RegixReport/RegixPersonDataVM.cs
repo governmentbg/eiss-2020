@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.RegixReport
 {

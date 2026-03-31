@@ -1,6 +1,5 @@
 ﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
@@ -13,8 +12,10 @@ using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Rotativa.Extensions;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -43,8 +44,10 @@ namespace IOWebApplication.Controllers
         }
         public IActionResult Index()
         {
-            ViewBag.breadcrumbs = commonService.Breadcrumbs_DocumentResolution(0);
+            var bc = commonService.Breadcrumbs_DocumentResolution(0);
+            ViewBag.breadcrumbs = bc;
             SetHelpFile(HelpFileValues.RegisteredDocumentsDisposition);
+            AddAuditInfo(AuditConstants.Operations.List, bc?.LastOrDefault()?.Title, "", SourceTypeSelectVM.DocumentResolution);
             return View();
         }
 
@@ -71,9 +74,9 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public IActionResult Add(long documentId)
+        public async Task<IActionResult> Add(long documentId)
         {
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, null, AuditConstants.Operations.Append, documentId))
             {
                 return Redirect_Denied();
             }
@@ -84,47 +87,66 @@ namespace IOWebApplication.Controllers
                 UserDecisionId = userContext.UserId,
                 JudgeDecisionCount = 1
             };
-            SetViewBag(model);
+            await SetViewBag(model);
             return View(nameof(Edit), model);
         }
 
-        public IActionResult Edit(long id)
+        public async Task<IActionResult> Edit(long id)
         {
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = drService.GetById<DocumentResolution>(id);
+            var model = await drService.ReadByIdAsync<DocumentResolution>(id);
             if (model.DateExpired != null)
             {
-                throw new NotFoundException(MessageConstant.Values.ObjectWasDeleted);
+                return NotFoundError(MessageConstant.Values.ObjectWasDeleted);
             }
-            SetViewBag(model);
+            await SetViewBag(model);
             return View(nameof(Edit), model);
         }
 
         [HttpPost]
-        public IActionResult Edit(DocumentResolution model)
+        public async Task<IActionResult> Edit(DocumentResolution model)
         {
             ValidateModel(model);
             if (!ModelState.IsValid)
             {
-                SetViewBag(model);
+                await SetViewBag(model);
                 return View(nameof(Edit), model);
             }
             long currentId = model.Id;
-            var saveResult = drService.SaveData(model);
+            var saveResult = await drService.SaveData(model);
             if (saveResult.Result)
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+
+                addAuditInfo(currentId == 0, model);
+
                 return RedirectToAction(nameof(Edit), new { id = model.Id });
             }
             else
             {
                 SetSuccessMessage(saveResult.ErrorMessage);
-                SetViewBag(model);
+                await SetViewBag(model);
                 return View(nameof(Edit), model);
+            }
+        }
+
+        private void addAuditInfo(bool isInsert, DocumentResolution model)
+        {
+
+            if (CurrentContext_IsSame(SourceTypeSelectVM.DocumentResolution, model.Id))
+            {
+                if (isInsert)
+                {
+                    AddAuditInfo(AuditConstants.Operations.Append, CurrentContext?.Info?.BaseObject, CurrentContext?.Info?.ObjectInfo, SourceTypeSelectVM.DocumentResolution);
+                }
+                else
+                {
+                    AddAuditInfo(AuditConstants.Operations.Update, CurrentContext?.Info?.BaseObject, CurrentContext?.Info?.ObjectInfo, SourceTypeSelectVM.DocumentResolution);
+                }
             }
         }
 
@@ -156,7 +178,7 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        private void SetViewBag(DocumentResolution model)
+        private async Task SetViewBag(DocumentResolution model)
         {
             ViewBag.ResolutionTypeId_ddl = nomService.GetDropDownList<ResolutionType>().SingleOrChoose();
             if (model.Id > 0)
@@ -175,7 +197,15 @@ namespace IOWebApplication.Controllers
                 ViewBag.docInfo = bc.LastOrDefault()?.Title;
             }
 
-            ViewBag.hasActFile = cdnService.Select(SourceTypeSelectVM.DocumentResolutionPdf, model.Id.ToString()).Any();
+            ViewBag.hasActFile = await cdnService.Select(SourceTypeSelectVM.DocumentResolutionPdf, model.Id.ToString()).AnyAsync();
+
+            if (model.DeclaredDate != null)
+            {
+                if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CaseSessionActCorrection))
+                {
+                    ViewBag.canCorrectAfterDeclare = false;
+                }
+            }
 
             SetHelpFile(userContext.CourtTypeId == NomenclatureConstants.CourtType.VKS ? HelpFileValues.Scheduletask : HelpFileValues.DispositionTask);
         }
@@ -190,6 +220,15 @@ namespace IOWebApplication.Controllers
             }
 
             var actModel = drService.Select(0, id).FirstOrDefault();
+
+            if (actModel.DeclaredDate != null)
+            {
+                if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CaseSessionActCorrection))
+                {
+                    SetErrorMessage("Съдебният акт е постановен. Не можете да извършвате корекция по него.");
+                    return RedirectToAction("Edit", new { id = id });
+                }
+            }
 
             int sourceType = SourceTypeSelectVM.DocumentResolutionBlank;
             string html = await cdnService.LoadHtmlFileTemplate(new CdnFileSelect() { SourceType = sourceType, SourceId = id.ToString() });
@@ -233,6 +272,11 @@ namespace IOWebApplication.Controllers
             {
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 drService.UpdateActCreator(long.Parse(model.SourceId));
+
+                var context = await drService.GetCurrentContextAsync(SourceTypeSelectVM.DocumentResolution, long.Parse(model.SourceId), AuditConstants.Operations.View);
+                AddAuditInfo("Изготвяне", CurrentContext?.Info?.BaseObject, CurrentContext?.Info?.ObjectInfo, SourceTypeSelectVM.DocumentResolution);
+
+
                 if (!string.IsNullOrEmpty(btnPreview))
                 {
                     return await blankPreview(model);
@@ -248,9 +292,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult Resolution_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> Resolution_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(drService, SourceTypeSelectVM.DocumentResolution, model.LongId, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(drService, SourceTypeSelectVM.DocumentResolution, model.LongId, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
@@ -259,12 +303,18 @@ namespace IOWebApplication.Controllers
                 return Json(new { result = false, message = MessageConstant.Values.DescriptionExpireRequired });
             }
 
+            var resolution = await drService.GetByIdAsync<DocumentResolution>(model.LongId);
+            if (resolution.DeclaredDate != null || !CurrentContext.CanChangeFull)
+            {
+                return Json(new { result = false, message = "Разпореждането не може да бъде премахнато." });
+            }
+
             var expResult = drService.ResolutionExpire(model);
             if (expResult.Result)
             {
                 SetAuditContextDelete(drService, SourceTypeSelectVM.DocumentResolution, model.LongId);
                 SetSuccessMessage(MessageConstant.Values.DocumentResolutionExpireOK);
-                var docRes = drService.GetById<DocumentResolution>(model.LongId);
+                var docRes = await drService.GetByIdAsync<DocumentResolution>(model.LongId);
                 return Json(new { result = true, redirectUrl = Url.Action(nameof(ResolutionsByDocument), new { documentId = docRes.DocumentId }) });
             }
             else
@@ -286,7 +336,7 @@ namespace IOWebApplication.Controllers
                 Inline = true,
                 FileName = "documentResolution.pdf"
             };
-            Response.Headers.Add("Content-Disposition", contentDispositionHeader.ToString());
+            Response.Headers.Append(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("Content-Disposition", contentDispositionHeader.ToString()));
             return File(pdfBytes, NomenclatureConstants.ContentTypes.Pdf);
         }
 
@@ -334,7 +384,7 @@ namespace IOWebApplication.Controllers
                 TaskTypeId = WorkTaskConstants.Types.DocumentResolution_SentToSign,
                 TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser
             };
-            if (taskService.CreateTask(newSendForSignTask))
+            if (await taskService.CreateTask(newSendForSignTask))
             {
                 return RedirectToAction(nameof(DoTask_SentForSign), new { id = newSendForSignTask.Id });
             }
@@ -350,6 +400,17 @@ namespace IOWebApplication.Controllers
                 case SourceTypeSelectVM.DocumentResolution:
                     var actId = task.SourceId;
                     var actModel = drService.Select(0, actId).FirstOrDefault();
+
+                    if (actModel.DeclaredDate != null)
+                    {
+                        if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CaseSessionActCorrection))
+                        {
+                            taskService.ExpireTasks(new List<long>() { id }.ToArray(), "");
+
+                            SetErrorMessage("Съдебният акт е постановен. Не можете да извършвате корекция по него.");
+                            return RedirectToAction("Edit", new { id = actId });
+                        }
+                    }
 
                     string actHTML = await GetActHTML(actModel);
                     if (string.IsNullOrEmpty(actHTML))
@@ -382,7 +443,7 @@ namespace IOWebApplication.Controllers
                             UserId = actModel.JudgeUser2Id,
                         };
 
-                        if (taskService.CreateTask(newTask) && taskService.CreateTask(newTask2))
+                        if ((await taskService.CreateTask(newTask)) && (await taskService.CreateTask(newTask2)))
                         {
                             SetSuccessMessage("Задачите за подпис са създадени успешно.");
                             isOk = true;
@@ -390,7 +451,7 @@ namespace IOWebApplication.Controllers
                     }
                     else
                     {
-                        if (taskService.CreateTask(newTask))
+                        if (await taskService.CreateTask(newTask))
                         {
                             SetSuccessMessage("Задачата за подпис е създадена успешно.");
                             isOk = true;
@@ -399,7 +460,7 @@ namespace IOWebApplication.Controllers
 
                     if (isOk)
                     {
-                        taskService.CompleteTask(id);
+                        await taskService.CompleteTask(id);
                     }
                     else
                     {
@@ -414,8 +475,13 @@ namespace IOWebApplication.Controllers
 
         public async Task<IActionResult> SendForSign(long id, long taskId)
         {
-            Uri urlSuccess = new Uri(Url.Action(nameof(SignedOk), new { taskId }), UriKind.Relative);
-            Uri url = new Uri(Url.Action("Edit", new { id = id }), UriKind.Relative);
+            if (CheckDoublePostback("ress"))
+            {
+                return RedirectToAction("Edit", new { id });
+            }
+
+            Uri urlSuccess = new Uri(Url.Action(nameof(SignedOk), new { id }), UriKind.Relative);
+            Uri url = new Uri(Url.Action("Edit", new { id }), UriKind.Relative);
 
             var model = new SignPdfInfo()
             {
@@ -426,26 +492,31 @@ namespace IOWebApplication.Controllers
                 Reason = "Подписване на разпореждане",
                 SuccessUrl = urlSuccess,
                 CancelUrl = url,
-                ErrorUrl = url
+                ErrorUrl = url,
+                WorkTaskId = taskId
             };
 
             var docResolution = drService.GetById<DocumentResolution>(id);
 
-            var registerResult = drService.Register(docResolution);
-            if (!registerResult.Result)
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
             {
-                SetErrorMessage(registerResult.ErrorMessage);
-                return RedirectToAction("Edit", new { id = id });
-            }
-            else
-            {
-                if (registerResult.SaveMethod == "register")
+                var registerResult = drService.Register(docResolution);
+                if (!registerResult.Result)
                 {
-                    var actModel = drService.Select(0, id).FirstOrDefault();
+                    SetErrorMessage(registerResult.ErrorMessage);
+                    return RedirectToAction("Edit", new { id });
+                }
+                else
+                {
+                    if (registerResult.SaveMethod == "register")
+                    {
+                        var actModel = drService.Select(0, id).FirstOrDefault();
 
-                    string actHTML = await GetActHTML(actModel);
-                    await PrepareActFile(actModel, actHTML);
-                    return RedirectToAction(nameof(SendForSign), new { id, taskId });
+                        string actHTML = await GetActHTML(actModel);
+                        await PrepareActFile(actModel, actHTML);
+                        ClearCheckDoublePostback("ress");
+                        return RedirectToAction(nameof(SendForSign), new { id, taskId });
+                    }
                 }
             }
 
@@ -459,30 +530,11 @@ namespace IOWebApplication.Controllers
             return View("_SignPdf", model);
         }
 
-        public IActionResult SignedOk(long taskId)
+        public IActionResult SignedOk(int id)
         {
-            var task = taskService.Select_ById(taskId);
-            if (task != null && task.TaskStateId != WorkTaskConstants.States.Completed)
-            {
-                switch (task.TaskTypeId)
-                {
-                    case WorkTaskConstants.Types.DocumentResolution_Sign:
-                        taskService.CompleteTask(taskId);
-                        var saveResult = taskService.UpdateAfterCompleteTask(task);
-                        if (saveResult.Result)
-                        {
-                            SetSuccessMessage("Подписването на документа премина успешно.");
-                        }
-                        break;
-                    case WorkTaskConstants.Types.CaseSessionAct_Coordinate:
-                        break;
+            SetSuccessMessage("Подписването на документа премина успешно.");
+            return RedirectToAction(nameof(Edit), new { id });
 
-                }
-
-                return RedirectToAction(nameof(Edit), new { id = task.SourceId });
-            }
-
-            return RedirectToAction("Index", "Home");
         }
 
         [HttpPost]

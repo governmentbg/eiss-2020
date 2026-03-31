@@ -3,7 +3,7 @@ using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Http;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplicationService.Infrastructure.Contracts;
@@ -36,7 +36,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                 IHttpClientFactory _clientFactory,
                 IConfiguration _configuration,
                 EproCryptoHelper _cryptoHelper,
-                ILogger<CubipsaService> _logger)
+                ILogger<EproService> _logger)
         {
             repo = _repo;
             cdnService = _cdnService;
@@ -46,15 +46,16 @@ namespace IOWebApplicationService.Infrastructure.Services
             clientFactory = _clientFactory;
             this.IntegrationTypeId = NomenclatureConstants.IntegrationTypes.EPRO;
         }
-        protected override async Task<bool> InitChanel()
+        protected override Task<bool> InitChanel()
         {
             uploadUrl = new Uri(configuration.GetValue<string>("EPRO:URI"));
             client = clientFactory.CreateClient("eproHttpClient");
-            return true;
+            return Task.FromResult(true);
         }
 
         protected override async Task CloseChanel()
         {
+            await Task.Yield();
         }
 
         protected override async Task SendMQ(MQEpep mq)
@@ -77,20 +78,9 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         private async Task SendDismissal(MQEpep mq)
         {
-            var info = repo.AllReadonly<CaseLawUnitDismisal>()
-                                .Include(x => x.Case)
-                                .ThenInclude(x => x.Court)
-                                .Include(x => x.Document)
-                                .Include(x => x.CaseSessionAct)
-                                .Include(x => x.CaseSessionAct.CaseSession)
-                                .Include(x => x.CaseSessionAct.CaseSession.SessionType)
-                                .Include(x => x.CaseLawUnit)
-                                .Include(x => x.CaseLawUnit.LawUnit)
-                                .Include(x => x.Document)
-                                .Include(x => x.Document.DocumentType)
-                                .Include(x => x.DocumentPerson)
-                                .Include(x => x.DocumentPerson.PersonRole)
+            var info = await repo.AllReadonly<CaseLawUnitDismisal>()
                                 .Where(x => x.Id == mq.SourceId)
+                                .Where(x => x.CaseSessionActId > 0)
                                 .Select(x => new
                                 {
                                     CourtId = x.Case.CourtId,
@@ -98,7 +88,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                                     CaseType = x.Case.CaseTypeId.ToString(),
                                     CaseNumber = x.Case.RegNumber,
                                     CaseYear = x.Case.RegDate.Year,
-                                    JudgeRole = x.CaseLawUnit.JudgeRoleId.ToString(),
+                                    JudgeRole = x.CaseLawUnit.JudgeRoleId,
                                     DismissalTypeId = x.DismisalTypeId,
                                     x.Description,
                                     //----JudgeModel
@@ -113,13 +103,24 @@ namespace IOWebApplicationService.Infrastructure.Services
                                     //----ObjectionModel
                                     ObjectionUpheld = (x.DismissalStateId ?? NomenclatureConstants.DismissalStates.Confirmed) == NomenclatureConstants.DismissalStates.Confirmed,
                                     DismissalStateId = x.DismissalStateId,
+                                    DismissalRequestType = x.DismissalRequestType ?? NomenclatureConstants.DismissalRequestTypes.Document,
                                     DocumentType = (x.Document != null) ? x.Document.DocumentType.Label : "",
                                     DocumentNumber = (x.Document != null) ? x.Document.DocumentNumberValue ?? 0 : 0,
                                     DocumentDate = (x.Document != null) ? x.Document.DocumentDate : (DateTime?)null,
-                                    PersonName = (x.DocumentPerson != null) ? x.DocumentPerson.FullName : null,
-                                    PersonRole = (x.DocumentPerson != null) ? x.DocumentPerson.PersonRole.Label : null
+                                    DocumentPersonName = (x.DocumentPerson != null) ? x.DocumentPerson.FullName : null,
+                                    DocumentPersonRole = (x.DocumentPerson != null) ? x.DocumentPerson.PersonRole.Label : null,
+
+                                    DismissalActType = (x.DismissalSessionAct != null) ? x.DismissalSessionAct.ActType.Label : "",
+                                    DismissalActNumber = (x.DismissalSessionAct != null) ? x.DismissalSessionAct.RegNumber : "",
+                                    DismissalActDate = (x.DismissalSessionAct != null) ? x.DismissalSessionAct.ActDeclaredDate : (DateTime?)null,
+                                    DismissalPersonName = (x.DismissalCasePerson != null) ? x.DismissalCasePerson.FullName : (string)null,
+                                    DismissalPersonRole = (x.DismissalCasePerson != null) ? x.DismissalCasePerson.PersonRole.Label : (string)null
                                 })
-                                .FirstOrDefault();
+                                .FirstOrDefaultAsync();
+            if (info == null)
+            {
+                SetErrorToMQ(mq, EpepConstants.IntegrationStates.MissingObjectEISS, "Ненамерен отвод или отвод без избран акт.");
+            }
 
             var data = new DismissalRegistrationRequest()
             {
@@ -128,9 +129,9 @@ namespace IOWebApplicationService.Infrastructure.Services
                 DismissalType = info.DismissalTypeId.ToString(),
                 CaseNumber = info.CaseNumber,
                 CaseYear = info.CaseYear,
-                CaseRole = info.JudgeRole,
+                CaseRole = GetNomValue(EpepConstants.Nomenclatures.EPRO_CaseRole, info.JudgeRole),
                 ObjectionUpheld = info.ObjectionUpheld,
-                DismissalReason = info.Description,
+                DismissalReason = info.Description.TrimLength(4000),
                 Judge = new JudgeModel()
                 {
                     IsChairman = info.IsChairman,
@@ -142,22 +143,36 @@ namespace IOWebApplicationService.Infrastructure.Services
                     HearingType = info.HearingType,
                     ActDeclaredDate = info.ActDeclaredDate,
                     ActNumber = int.Parse(info.ActNumber),
-                    ActType = GetNomValue(EpepConstants.Nomenclatures.ActTypes, info.ActTypeId)
+                    ActType = GetNomValue(EpepConstants.Nomenclatures.EPRO_ActType, info.ActTypeId)
                 }
             };
-            if (info.DismissalTypeId == NomenclatureConstants.DismisalType.Otvod && info.DocumentDate != null)
+            if (info.DismissalTypeId == NomenclatureConstants.DismisalType.Otvod)
             {
-                data.Objection = new ObjectionModel()
+                if (info.DismissalRequestType == NomenclatureConstants.DismissalRequestTypes.Document && info.DocumentDate != null)
                 {
-                    DocumentType = info.DocumentType,
-                    DocumentNumber = info.DocumentNumber,
-                    DocumentDate = info.DocumentDate.Value,
-                    SideName = info.PersonName,
-                    SideInvolmentKind = info.PersonRole
-                };
+                    data.Objection = new ObjectionModel()
+                    {
+                        DocumentType = info.DocumentType,
+                        DocumentNumber = info.DocumentNumber,
+                        DocumentDate = info.DocumentDate.Value,
+                        SideName = info.DocumentPersonName,
+                        SideInvolmentKind = info.DocumentPersonRole
+                    };
+                }
+                if (info.DismissalRequestType == NomenclatureConstants.DismissalRequestTypes.Session && info.DismissalActDate != null)
+                {
+                    data.Objection = new ObjectionModel()
+                    {
+                        DocumentType = info.DismissalActType,
+                        DocumentNumber = int.Parse(info.DismissalActNumber),
+                        DocumentDate = info.DismissalActDate.Value,
+                        SideName = info.DismissalPersonName ?? " ",
+                        SideInvolmentKind = info.DismissalPersonRole ?? " "
+                    };
+                }
             }
 
-
+            data.DecodeTexts();
             var response = await sendDataToEPRO<DismissalRegistrationResponse>(info.CourtId, "DismissalInsert", data);
             if (response != null && response.DismissalId.HasValue)
             {
@@ -172,9 +187,7 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         private async Task SendReplaceJudge(MQEpep mq)
         {
-            var info = repo.AllReadonly<CaseLawUnit>()
-                                .Include(x => x.CaseSelectionProtokol)
-                                .Include(x => x.LawUnit)
+            var info = await repo.AllReadonly<CaseLawUnit>()
                                 .Where(x => x.CaseSelectionProtokolId == mq.SourceId && x.CaseSession == null)
                                 .OrderBy(x => x.Id)
                                 .Select(x => new
@@ -185,7 +198,7 @@ namespace IOWebApplicationService.Infrastructure.Services
                                     ReplaceJudgeName = x.LawUnit.FullName,
                                     IsChairman = x.JudgeDepartmentRoleId == NomenclatureConstants.JudgeDepartmentRole.Predsedatel
                                 })
-                                .FirstOrDefault();
+                                .FirstOrDefaultAsync();
 
             var data = new ReplaceDismissalRequest()
             {
@@ -265,13 +278,13 @@ namespace IOWebApplicationService.Infrastructure.Services
 
         private async Task<Tresponse> sendDataToEPRO<Tresponse>(int courtId, string methodName, object data) where Tresponse : class, IBaseEproResponseModel
         {
-            var apiKey = repo.AllReadonly<CourtApiKey>()
+            var apiKey = await repo.AllReadonly<CourtApiKey>()
                                     .Where(x => x.CourtId == courtId)
                                     .Select(x => new
                                     {
                                         x.Key,
                                         x.Secret
-                                    }).FirstOrDefault();
+                                    }).FirstOrDefaultAsync();
             if (apiKey == null)
             {
                 return null;
@@ -293,7 +306,14 @@ namespace IOWebApplicationService.Infrastructure.Services
             }
             else
             {
-                throw new Exception($"Response Error : {response.StatusCode.ToString()}");
+                var resError = Activator.CreateInstance<Tresponse>();
+                resError.Error = new ErrorModel()
+                {
+                    ErrorType = "Response Error",
+                    Reason = response.StatusCode.ToString()
+                };
+                return resError;
+                //throw new Exception($"Response Error : {response.StatusCode.ToString()}");
             }
         }
     }

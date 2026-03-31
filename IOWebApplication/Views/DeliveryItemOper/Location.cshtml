@@ -5,15 +5,18 @@
     var filterJson = ViewBag.filterJson;
     var hereMaps_ApiKey = ViewBag.hereMaps_ApiKey;
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
+<div id="map" style="min-height:500px;min-width:600px">
+</div>
+
 <div class="row">
     <div class="col-md-12 col-lg-12">
-        <img src="https://image.maps.ls.hereapi.com/mia/1.6/mapview?apiKey=@hereMaps_ApiKey&c=@Model.Lat,@Model.Long&t=0&z=15&w=600&h=600">
+        @* <img src="https://image.maps.ls.hereapi.com/mia/1.6/mapview?apiKey=@hereMaps_ApiKey&c=@Model.Lat,@Model.Long&t=0&z=15&w=600&h=600"> *@
     </div>
 </div>
 <div class="row">
@@ -30,12 +33,62 @@
     @Html.HiddenFor(x => x.DeliveryItemId)
 </form>
 
-    @section scripts {
-        <script>
+@section scripts {
+    <script src="/lib/maplibre/maplibre-gl.js"></script>
+    <link href="/lib/maplibre/maplibre-gl.css" rel="stylesheet" />
+    <script>
             function postToFilterDeliveryItems() {
                 $("#formPostFilter").submit();
             }
-        </script>
-    }
+        var map = new maplibregl.Map({
+                container: 'map', // container id
+                style: {
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
+                },
+                // Use a different source for terrain and hillshade layers, to improve render quality
+                terrainSource: {
+                    type: 'raster-dem',
+                    url: '/lib/maplibre/tiles.json',
+                    tileSize: 256
+                },
+                hillshadeSource: {
+                    type: 'raster-dem',
+                    url: '/lib/maplibre/tiles.json',
+                    tileSize: 256
+                }
+            },
+            layers: [
+                {
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm'
+                },
+                {
+                    id: 'hills',
+                    type: 'hillshade',
+                    source: 'hillshadeSource',
+                    layout: {visibility: 'visible'},
+                    paint: {'hillshade-shadow-color': '#473B24'}
+                }
+            ],
+            terrain: {
+                source: 'terrainSource',
+                exaggeration: 1
+            },
+            sky: {}
+        },
+                center: [@Model.Long, @Model.Lat], // starting position [lng, lat]
+                zoom: 16 // starting zoom
+            });        // Target's GPS coordinates.
+           new maplibregl.Marker().setLngLat([@Model.Long, @Model.Lat]).addTo(map);
+    </script>
+}
 
 

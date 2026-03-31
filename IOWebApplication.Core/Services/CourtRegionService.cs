@@ -40,7 +40,7 @@ namespace IOWebApplication.Core.Services
                 {
                     Id = x.Id,
                     Label = x.Label,
-                    ParentLabel = (x.ParentRegion != null) ? x.ParentRegion.Label : "Главен елемент",
+                    ParentLabel = (x.ParentId != null) ? x.ParentRegion.Label : "Главен елемент",
                 })
                 .AsQueryable();
         }
@@ -56,7 +56,7 @@ namespace IOWebApplication.Core.Services
             result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
             return result;
         }
-        
+
 
         public bool CourtRegion_SaveData(CourtRegion model)
         {
@@ -86,7 +86,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Съдебен район Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Съдебен район Id={model.Id}");
                 return false;
             }
         }
@@ -109,7 +109,7 @@ namespace IOWebApplication.Core.Services
         {
             var ekDistricts = repo.AllReadonly<EkDistrict>().AsQueryable();
             var ekMunincipalities = repo.AllReadonly<EkMunincipality>().AsQueryable();
-          
+
             return repo.AllReadonly<CourtRegionArea>()
                 .Where(x => x.CourtRegionId == CourtRegionId)
                 .Select(x => new CourtRegionAreaVM()
@@ -151,7 +151,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Съдебен район Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Съдебен район Id={model.Id}");
                 return false;
             }
         }

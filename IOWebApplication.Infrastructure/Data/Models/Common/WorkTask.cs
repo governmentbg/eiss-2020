@@ -1,4 +1,5 @@
-﻿using IOWebApplication.Infrastructure.Data.Models.Identity;
+﻿using IOWebApplication.Infrastructure.Contracts;
+using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -10,7 +11,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
     /// Движение/задачи 
     /// </summary>
     [Table("common_worktask")]
-    public class WorkTask
+    public class WorkTask : IHaveLongId
     {
         [Key]
         [Column("id")]

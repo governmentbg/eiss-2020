@@ -16,7 +16,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Вертикално движение на дело - между институциите
     /// </summary>
     [Table("case_migration")]
-    public class CaseMigration : UserDateWRT, IExpiredInfo
+    public class CaseMigration : UserDateWRT, IExpiredInfo, IHaveId
     {
         [Key]
         [Column("id")]
@@ -75,6 +75,16 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Column("out_case_migration_id")]
         public int? OutCaseMigrationId { get; set; }
 
+
+        [Column("migration_kind")]
+        public int? MigrationKind { get; set; }
+
+        /// <summary>
+        /// Обработка на изходящите писма: 1-Стартира опашка по входиране в насрещен съд
+        /// </summary>
+        [Column("document_process_type")]
+        public int? DocumentProcessType { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 
@@ -124,6 +134,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [InverseProperty(nameof(OutCaseMigration))]
         public virtual ICollection<CaseMigration> InCaseMigrations { get; set; }
+
+        public virtual ICollection<CaseMigrationDocument> CaseMigrationDocuments { get; set; }
 
         public CaseMigration()
         {

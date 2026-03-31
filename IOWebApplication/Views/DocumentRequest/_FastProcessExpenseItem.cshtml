@@ -1,0 +1,37 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessExpenseVM
+@{
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+}
+
+<tr data-index="@Model.Index" class="item-template">
+    <td class="item-number" data-gid="@Model.Gid">
+        @(Model.Index + 1)
+    </td>
+    <td>
+        <select asp-for="@Model.ExpenseTypeCode" class="form-control" asp-items="@ViewBag.ExpenseTypesDDL"></select>
+        <span class="text-danger" asp-validation-for="ExpenseTypeCode"></span>
+    </td>
+    <td>
+        <input class="form-control" asp-for="@Model.Description" type="text" />
+    </td>
+    @if (isInEuro)
+    {
+        <td>
+            @Html.EditorFor(x => x.TotalAmountEUR, "DecimalInline")
+        </td>
+    }
+    else
+    {
+        <td>
+            @Html.EditorFor(x => x.TotalAmountBGN, "DecimalInline")
+
+        </td>
+    }
+    <td>
+        <a class="btn remove-item" aria-label="Премахни" title="Премахни разноска" data-alert="Потвърди премахването на разноската!"><i class="fa fa-remove"></i></a>
+        @Html.HiddenFor(x => x.Gid)
+        <input type="hidden" class="item-index" name="@(nameof(FastProcessRequestVM.Expenses)).Index" value="@Model.Index" />
+    </td>
+</tr>
+

@@ -26,6 +26,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("is_transport")]
         public bool? IsTransport { get; set; }
 
+        //Ако е друго излиза поле за свбоден текст в парите
+        [Column("is_other")]
+        public bool? IsOther { get; set; }
+
         [ForeignKey(nameof(MoneyGroupId))]
         public virtual MoneyGroup MoneyGroup { get; set; }
     }

@@ -16,7 +16,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         [Display(Name = "Акт номер")]
         public string ActNumber { get; set; }
         [Display(Name = "Акт дата")]
-        public DateTime ActDate { get; set; }
+        public DateTime? ActDate { get; set; }
         [Display(Name = "Дата на задачата")]
         public DateTime TaskDate { get; set; }
         [Display(Name = "Дата на промяната")]

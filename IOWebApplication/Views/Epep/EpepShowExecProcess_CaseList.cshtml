@@ -1,0 +1,116 @@
+﻿@model ExecProcessInfoVM
+@using IOWebApplication.Infrastructure.Models.ViewModels.Epep;
+@using RestEpep = IOWebApplication.Infrastructure.Models.Integrations.EpepRest;
+@{
+    RestEpep.ExecProcessDetailsVM execProcess = Model.Data;
+}
+
+
+@if (execProcess.ExecCases.Length > 0)
+{
+    for (int i = 0; i < execProcess.ExecCases.Length; i++)
+    {
+        var caseInfo = execProcess.ExecCases[i];
+
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">Изпълнително дело @caseInfo.Number, @caseInfo.UserName</legend>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => caseInfo.Number, "obj", null, new { label = "Номер" })
+                </div>
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => caseInfo.DateRegister, "date", null, new { label = "Дата" })
+                </div>
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => caseInfo.StateName, "obj", null, new { label = "Статус" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => caseInfo.ListDeliveryDate, "date", null, new { label = "Дата на връчване на Изпълнителен лист" })
+                </div>
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => caseInfo.Redirect427Date, "date", null, new { label = "Дата на пренасочване по чл.427" })
+                </div>
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => caseInfo.ListTerminateDate, "date", null, new { label = "Дата на прекратяване на Изпълнителен лист" })
+                </div>
+                <div class="col-md-3">
+                    @Html.DisplayFor(x => caseInfo.CaseTerminateDate, "date", null, new { label = "Дата на прекратяване на Изпълнителното дело" })
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+
+                    @if (caseInfo.Payments.Length > 0)
+                    {
+                        @for (int p = 0; p < caseInfo.Payments.Length; p++)
+                        {
+                            var paymentInfo = caseInfo.Payments[p];
+                            var obligationInfo = execProcess.ObligationList.Where(o => o.Gid == paymentInfo.ObligationGid).FirstOrDefault();
+                            var beneficiarySide = execProcess.SideList.Where(s => s.Gid == obligationInfo.BeneficiaryGid).FirstOrDefault();
+                            var debtorSide = execProcess.SideList.Where(s => s.Gid == paymentInfo.DebtorGid).FirstOrDefault();
+                            <fieldset class="is-fieldset">
+                                <legend class="legend_1">Плащане</legend>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        @Html.DisplayFor(x => beneficiarySide.SideName, "obj", null, new { label = beneficiarySide.SideRoleName })
+                                    </div>
+                                    <div class="col-md-6">
+                                        @Html.DisplayFor(x => debtorSide.SideName, "obj", null, new { label = debtorSide.SideRoleName })
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        @{
+                                            string amountText = $"{obligationInfo.ObligationTypeName}: {paymentInfo.Amount:N2} {paymentInfo.CurrencyCode}";
+                                        }
+                                        @Html.DisplayFor(x => paymentInfo.Amount, "objVal", null, new { label = "Вид/размер", value = amountText })
+                                    </div>
+                                    <div class="col-md-4">
+                                        @Html.DisplayFor(x => paymentInfo.PaymentDate, "date", null, new { label = "Платено на" })
+                                    </div>
+                                    <div class="col-md-4">
+                                        @Html.DisplayFor(x => paymentInfo.Description, "obj", null, new { label = "Описание" })
+                                    </div>
+                                </div>
+                            </fieldset>
+                        }
+                    }
+                    else
+                    {
+                        <p>Няма въведени плащания.</p>
+                    }
+                </div>
+                <div class="col-md-4">
+                    @if (caseInfo.Files.Length > 0)
+                    {
+                        <fieldset class="is-fieldset">
+                            <legend class="legend_1">Документи</legend>
+
+                            @for (int f = 0; f < caseInfo.Files.Length; f++)
+                            {
+                                var fileInfo = caseInfo.Files[f];
+                                <p>
+                                    <a href="@(ViewBag.EPEP_FILE_PATH)@(fileInfo.Gid)" title="Изтегли документа">
+                                        @(fileInfo.FileTitle ?? fileInfo.FileName)
+                                    </a>
+                                </p>
+                            }
+
+                        </fieldset>
+                    }
+                    else
+                    {
+                        <p>Няма въведени документи.</p>
+                    }
+                </div>
+            </div>
+        </fieldset>
+    }
+}
+else
+{
+    <p> Няма въведени изпълнителни дела.</p>
+}

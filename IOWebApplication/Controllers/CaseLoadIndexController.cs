@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -12,9 +7,12 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
-using Microsoft.AspNetCore.Mvc;
-using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -27,8 +25,8 @@ namespace IOWebApplication.Controllers
         private readonly ICaseSessionActService caseSessionActService;
         private readonly ICourtDepartmentService courtDepartmentService;
 
-        public CaseLoadIndexController(ICaseLoadIndexService _service, 
-                                       INomenclatureService _nomService, 
+        public CaseLoadIndexController(ICaseLoadIndexService _service,
+                                       INomenclatureService _nomService,
                                        ICaseLawUnitService _caseLawUnitService,
                                        ICommonService _commonService,
                                        ICourtDepartmentService _courtDepartmentService,
@@ -49,9 +47,10 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id">Ид на делото</param>
         /// <returns></returns>
-        public IActionResult Index(int id)
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
+        public async Task<IActionResult> Index(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLoadIndex, null, AuditConstants.Operations.View, id))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLoadIndex, null, AuditConstants.Operations.View, id))
             {
                 return Redirect_Denied();
             }
@@ -73,19 +72,35 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        [HttpPost]
+        public IActionResult ListDataNew(IDataTablesRequest request, int caseId, int? caseSessionId)
+        {
+            var data = service.CaseLoadIndexNew_Select(caseId, caseSessionId);
+            return request.GetResponseFetched(data);
+        }
+
+        void auditInfoCaseLoadIndex(string operation, int id, string add = "")
+        {
+            var caseLoadIndex = service.CaseLoadIndexVM_ByID(id);
+            if (caseLoadIndex != null)
+            {
+                AddAuditInfo(operation, $"Име: {caseLoadIndex.LawUnitName} дейност: {caseLoadIndex.NameActivity} основна натовареност: {caseLoadIndex.IsMainActivityText}", add, $"Натовареност по дело {caseLoadIndex.CaseName}");
+            }
+        }
+
         /// <summary>
         /// Добавяне на Натовареност по дела: основни и допълнителни дейности
         /// </summary>
         /// <param name="caseId"></param>
         /// <param name="isMainActivity"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseId, int? CaseSessionId, bool isMainActivity, bool isFromCase)
+        public async Task<IActionResult> Add(int caseId, int? CaseSessionId, bool isMainActivity, bool isFromCase)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLoadIndex, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLoadIndex, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
-            var caseLawUnit = caseLawUnitService.CaseLawUnit_Select(caseId, null).Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).FirstOrDefault();
+            var caseLawUnit = await caseLawUnitService.CaseLawUnit_Select(caseId, null).Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter).FirstOrDefaultAsync();
             var judgeReporterId = (caseLawUnit != null) ? caseLawUnit.LawUnitId : 0;
             var model = new CaseLoadIndex()
             {
@@ -106,18 +121,19 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id, bool isFromCase)
+        public async Task<IActionResult> Edit(int id, bool isFromCase)
         {
-            var model = service.GetById<CaseLoadIndex>(id);
+            var model = await service.GetByIdAsync<CaseLoadIndex>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLoadIndex, id, AuditConstants.Operations.Update, model.CaseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLoadIndex, id, AuditConstants.Operations.Update, model.CaseId))
             {
                 return Redirect_Denied();
             }
             SetViewbag(model.CaseId, model.CaseSessionId, model.IsMainActivity, isFromCase);
+            auditInfoCaseLoadIndex(AuditConstants.Operations.View, id);
             model.ActTypeId = isFromCase ? 1 : (int?)null;
             return View(nameof(Edit), model);
         }
@@ -154,7 +170,7 @@ namespace IOWebApplication.Controllers
             if (model.LawUnitId < 1)
                 return "Изберете съдия";
 
-            if (model.DateActivity == null)
+            if (model.DateActivity.Year < 2000)
                 return "Въведете дата";
 
             if (model.CaseSessionActId < 1)
@@ -213,6 +229,7 @@ namespace IOWebApplication.Controllers
             if (service.CaseLoadIndex_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseLoadIndex, model.Id, currentId == 0);
+                auditInfoCaseLoadIndex(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model.Id);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
 
@@ -234,7 +251,7 @@ namespace IOWebApplication.Controllers
         {
             service.RecalcCaseLoadIndexByCase(CaseId);
             SetSuccessMessage(MessageConstant.Values.SaveOK);
-            return RedirectToAction("Index", "CaseLoadIndex",  new { id = CaseId });
+            return RedirectToAction("Index", "CaseLoadIndex", new { id = CaseId });
         }
 
         public IActionResult RecalcCaseLoadIndexAllCase()
@@ -250,6 +267,7 @@ namespace IOWebApplication.Controllers
             var expireObject = service.GetById<CaseLoadIndex>(model.Id);
             if (service.SaveExpireInfo<CaseLoadIndex>(model))
             {
+                auditInfoCaseLoadIndex(AuditConstants.Operations.Delete, model.Id);
                 SetSuccessMessage(MessageConstant.Values.CaseLoadIndexExpireOK);
                 return model.OtherBool ? Json(new { result = true, redirectUrl = Url.Action("Index", "CaseLoadIndex", new { id = expireObject.CaseId }) }) : Json(new { result = true, redirectUrl = Url.Action("Preview", "CaseSession", new { id = expireObject.CaseSessionId }) });
             }
@@ -267,8 +285,13 @@ namespace IOWebApplication.Controllers
         /// Страница с Вид група за натовареност по дела - основни дейности
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = AuditConstants.Operations.List)]
         public IActionResult IndexElementGroupe()
         {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CriticalDataChange))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
             return View();
         }
 
@@ -284,18 +307,28 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        void auditInfoCaseLoadElementGroup(string operation, int Id, string add = "")
+        {
+            var caseLoadElementGroup = service.CaseLoadElementGroupVM_ById(Id);
+            if (caseLoadElementGroup != null)
+            {
+                AddAuditInfo(operation, $"Наказателно дело: {caseLoadElementGroup.IsNDLabel} инстанция: {caseLoadElementGroup.CaseInstanceLabel} име: {caseLoadElementGroup.Label}", add, "Вид група за натовареност по дела - основни дейности");
+            }
+        }
+
         /// <summary>
         /// Добавяне на Вид група за натовареност по дела - основни дейности
         /// </summary>
         /// <returns></returns>
-        public IActionResult AddElementGroupe()
+        public async Task<IActionResult> AddElementGroupe()
         {
             var model = new CaseLoadElementGroup()
             {
                 DateStart = DateTime.Now,
-                IsActive = true
+                IsActive = true,
+                IsAdditional = false
             };
-            SetViewbagElementGroupe();
+            await SetViewbagElementGroupe();
             return View(nameof(EditElementGroupe), model);
         }
 
@@ -304,10 +337,15 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditElementGroupe(int id)
+        public async Task<IActionResult> EditElementGroupe(int id)
         {
             var model = service.GetById<CaseLoadElementGroup>(id);
-            SetViewbagElementGroupe();
+
+            if (!string.IsNullOrEmpty(model.DocumentTypeIds))
+                model.ArrayDocumentTypeIds = model.DocumentTypeIds.Split(",").Select(x => int.Parse(x).ToString()).ToArray();
+
+            await SetViewbagElementGroupe();
+            auditInfoCaseLoadElementGroup(AuditConstants.Operations.View, id);
             return View(nameof(EditElementGroupe), model);
         }
 
@@ -321,8 +359,8 @@ namespace IOWebApplication.Controllers
             if (model.CaseInstanceId < 1)
                 return "Изберете инстанция";
 
-            if (model.CaseTypeId < 1)
-                return "Изберете точен вид дело";
+            //if (model.CaseTypeId < 1)
+            //    return "Изберете точен вид дело";
 
             if (model.Label == string.Empty)
                 return "Въведете име";
@@ -336,9 +374,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditElementGroupe(CaseLoadElementGroup model)
+        public async Task<IActionResult> EditElementGroupe(CaseLoadElementGroup model)
         {
-            SetViewbagElementGroupe();
+            await SetViewbagElementGroupe();
             if (!ModelState.IsValid)
             {
                 return View(nameof(EditElementGroupe), model);
@@ -355,6 +393,7 @@ namespace IOWebApplication.Controllers
             if (service.CaseLoadElementGroup_SaveData(model))
             {
                 this.SaveLogOperation(currentId == 0, model.Id);
+                auditInfoCaseLoadElementGroup(currentId == 0 ? AuditConstants.Operations.Append : AuditConstants.Operations.Update, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditElementGroupe), new { id = model.Id });
             }
@@ -365,12 +404,15 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditElementGroupe), model);
         }
 
-        void SetViewbagElementGroupe()
+        async Task SetViewbagElementGroupe()
         {
-            ViewBag.CaseInstanceId_ddl = nomService.GetDropDownList<CaseInstance>();
-            ViewBag.CaseTypeId_ddl = nomService.GetDropDownList<CaseType>();
-            ViewBag.DocumentTypeId_ddl = nomService.GetDDL_DocumentTypeSortByName();
-            ViewBag.ProcessPriorityId_ddl = nomService.GetDropDownList<ProcessPriority>();
+            ViewBag.CaseInstanceId_ddl = await nomService.GetDropDownListAsync<CaseInstance>();
+            ViewBag.CaseTypeId_ddl = await nomService.GetDropDownListAsync<CaseType>();
+            //ViewBag.DocumentTypeId_ddl = nomService.GetDDL_DocumentTypeSortByName();
+            ViewBag.ArrayDocumentTypeIds_ddl = await nomService.GetDDL_DocumentTypeSortByName();
+            ViewBag.ProcessPriorityId_ddl = await nomService.GetDropDownListAsync<ProcessPriority>();
+            ViewBag.CourtId_ddl = await nomService.GetCourtsAsync();
+            ViewBag.CourtTypeId_ddl = await nomService.GetDropDownListAsync<CourtType>();
         }
 
         /// <summary>
@@ -507,7 +549,10 @@ namespace IOWebApplication.Controllers
                 IsActive = true,
                 Code = CaseLoadElementTypeId.ToString(),
                 Label = caseLoad.Label,
-                DateStart = DateTime.Now
+                DateStart = DateTime.Now,
+                IsCreateCase = false,
+                IsCreateMotive = false,
+                IsSpecialOpinion = false
             };
             SetViewbagElementTypeRule(model.CaseLoadElementTypeId);
             return View(nameof(EditElementTypeRule), model);
@@ -530,6 +575,12 @@ namespace IOWebApplication.Controllers
 
             //if (model.ActTypeId < 1)
             //    return "Изберете вид акт";
+
+            if (model.DateEnd != null)
+            {
+                if (model.DateStart > model.DateEnd)
+                    return "Началната дата не може да е по-голяма от крайната";
+            }
 
             return string.Empty;
         }
@@ -609,7 +660,7 @@ namespace IOWebApplication.Controllers
             {
                 CaseLoadElementTypeId = CaseLoadElementTypeId,
             };
-            
+
             SetViewbagElementTypeStop(model.CaseLoadElementTypeId);
             return View(nameof(EditElementTypeStop), model);
         }
@@ -677,11 +728,11 @@ namespace IOWebApplication.Controllers
 
         public IActionResult ElementTypeStop_ExpiredInfo(ExpiredInfoVM model)
         {
-            var expireObject = service.GetById<CaseLoadElementTypeStop>(model.Id);
+            var caseLoadElementTypeId = service.GetPropById<CaseLoadElementTypeStop, int>(model.Id, x => x.CaseLoadElementTypeId);
             if (service.ElementTypeStop_Expired(model))
             {
                 SetSuccessMessage(MessageConstant.Values.CaseSessionExpireOK);
-                return Json(new { result = true, redirectUrl = Url.Action("EditElementType", "CaseLoadIndex", new { id = expireObject.CaseLoadElementTypeId }) });
+                return Json(new { result = true, redirectUrl = Url.Action("EditElementType", "CaseLoadIndex", new { id = caseLoadElementTypeId }) });
             }
             else
             {
@@ -699,6 +750,10 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult IndexLoadAddActivity()
         {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CriticalDataChange))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
             return View();
         }
 
@@ -791,7 +846,7 @@ namespace IOWebApplication.Controllers
 
         void SetViewbagLoadAddActivity()
         {
-            
+
         }
 
         /// <summary>
@@ -1147,7 +1202,12 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult IndexCourtLawUnitActivity()
         {
-            return View();
+            ViewBag.JudgeLoadActivityId_ddl = nomService.GetDropDownList<JudgeLoadActivity>();
+            CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
+            {
+                Year = DateTime.Now.Year
+            };
+            return View(model);
         }
 
         /// <summary>
@@ -1156,9 +1216,9 @@ namespace IOWebApplication.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataCourtLawUnitActivity(IDataTablesRequest request)
+        public IActionResult ListDataCourtLawUnitActivity(IDataTablesRequest request, CaseLoadIndexFilterVM model)
         {
-            var data = service.CourtLawUnitActivity_Select(userContext.CourtId);
+            var data = service.CourtLawUnitActivity_Select(userContext.CourtId, model);
             return request.GetResponse(data);
         }
 
@@ -1203,7 +1263,7 @@ namespace IOWebApplication.Controllers
             if (model.JudgeLoadActivityId < 1)
                 return "Няма избрана дейност";
 
-            if (model.ActivityDate == null)
+            if (model.ActivityDate.Year < 2000)
                 return "Няма въведена дата";
 
             if (model.DateTo == null)
@@ -1267,7 +1327,7 @@ namespace IOWebApplication.Controllers
 
         void SetViewbagCourtLawUnitActivity()
         {
-            ViewBag.JudgeLoadActivityId_ddl = nomService.GetDropDownList<JudgeLoadActivity>(); 
+            ViewBag.JudgeLoadActivityId_ddl = nomService.GetDropDownList<JudgeLoadActivity>();
         }
 
         [HttpPost]
@@ -1289,27 +1349,41 @@ namespace IOWebApplication.Controllers
 
         #region Report
 
+        #region Натовареност по дела: основни и допълнителни дейности
+
         /// <summary>
         /// Справка за Натовареност по дела: основни и допълнителни дейности
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexSpr()
         {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за справка за Натовареност по дела: основни и допълнителни дейности");
             CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
             {
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
-
-            ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
-            ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
-            ViewBag.CourtDepartmentOtdelenieId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
-            ViewBag.SessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
-            ViewBag.SessionResultId_ddl = nomService.GetDropDownList<SessionResult>();
-            ViewBag.ActTypeId_ddl = nomService.GetDropDownList<ActType>();
-
+            ViewBagIndexSpr();
             SetHelpFile(HelpFileValues.Report24);
+            return View(model);
+        }
 
+        /// <summary>
+        /// Справка за Натовареност по дела: основни и допълнителни дейности - със съд
+        /// </summary>
+        /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
+        public IActionResult IndexSprWithCourt()
+        {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за справка за Натовареност по дела: основни и допълнителни дейности");
+            CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
+            {
+                DateFrom = DateTime.Now.AddMonths(-1),
+                DateTo = DateTime.Now
+            };
+            ViewBagIndexSpr();
+            SetHelpFile(HelpFileValues.Report24);
             return View(model);
         }
 
@@ -1317,23 +1391,89 @@ namespace IOWebApplication.Controllers
         /// Извличане на данни за Натовареност по дела: основни и допълнителни дейности
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="DateFrom"></param>
-        /// <param name="DateTo"></param>
-        /// <param name="LawUnitId"></param>
+        /// <param name="filter">Филтър попълнен от потребител</param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataSpr(IDataTablesRequest request, CaseLoadIndexFilterVM model)
+        public IActionResult ListDataSpr(IDataTablesRequest request, CaseLoadIndexFilterVM filter)
         {
-            var data = service.CaseLoadIndexSpr_Select(model);
+            var data = service.CaseLoadIndexSpr_Select(filter);
             return request.GetResponse(data);
         }
 
         /// <summary>
-        /// Справка за Натоварване на съдии извън дело
+        /// Зареждане на номенклатури за натовареност по дела: основни и допълнителни дейности
+        /// </summary>
+        private void ViewBagIndexSpr()
+        {
+            ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
+            ViewBag.CourtId_ddl = nomService.GetDropDownList<Court>();
+            ViewBag.CourtDepartmentId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
+            ViewBag.CourtDepartmentOtdelenieId_ddl = courtDepartmentService.Department_SelectDDL(userContext.CourtId, NomenclatureConstants.DepartmentType.Otdelenie);
+            ViewBag.SessionTypeId_ddl = nomService.GetDropDownList<SessionType>();
+            ViewBag.SessionResultId_ddl = nomService.GetDDL_SessionResult();
+            ViewBag.ActTypeId_ddl = nomService.GetDropDownList<ActType>();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Натовареност по групи: основни и допълнителни дейности
         /// </summary>
         /// <returns></returns>
+        public IActionResult IndexCourtGroupSpr()
+        {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за натовареност по групи: основни и допълнителни дейности");
+            CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
+            {
+                DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
+                DateTo = new DateTime(DateTime.Now.Year, 12, 31)
+            };
+
+            ViewBag.CourtGroupId_ddl = nomService.GetDDL_CourtGroup(userContext.CourtId);
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Натовареност по групи: основни и допълнителни дейности
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> IndexCourtGroupSprWithCourt()
+        {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за натовареност по групи: основни и допълнителни дейности");
+            CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
+            {
+                DateFrom = DateTime.Now.AddMonths(-1),
+                DateTo = DateTime.Now
+            };
+
+            ViewBag.CourtGroupId_ddl = nomService.GetDDL_CourtGroup(userContext.CourtId);
+            ViewBag.CourtId_ddl = await nomService.GetDropDownListAsync<Court>();
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Извличане на данни за натовареност по групи: основни и допълнителни дейности
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="model">Филтър попълнен от потребител</param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ListDataCourtGroupeSpr(IDataTablesRequest request, CaseLoadIndexFilterVM model)
+        {
+            var data = service.CaseLoadIndexCourtGroupSpr_Select(model);
+            return request.GetResponse(data);
+        }
+
+        /// <summary>
+        /// Справка за натоварване на съдии извън дело
+        /// </summary>
+        /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexCourtLawUnitActivitySpr()
         {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за справка за натоварване на съдии извън дело");
             CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
             {
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
@@ -1354,23 +1494,44 @@ namespace IOWebApplication.Controllers
         /// <param name="LawUnitId"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataCourtLawUnitActivitySpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId, int JudgeLoadActivityId)
+        public IActionResult ListDataCourtLawUnitActivitySpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId, int JudgeLoadActivityId, int? CourtId)
         {
-            var data = service.CourtLawUnitActivitySpr_Select(DateFrom ?? DateTime.Now, DateTo ?? DateTime.Now, LawUnitId, JudgeLoadActivityId);
+            var data = service.CourtLawUnitActivitySpr_Select(DateFrom ?? DateTime.Now.AddYears(-100), DateTo ?? DateTime.Now.AddYears(100), LawUnitId, JudgeLoadActivityId, CourtId);
             return request.GetResponse(data);
         }
 
         /// <summary>
-        /// Справка за Натовареност - извън и в дело
+        /// Справка за натовареност - извън и в дело
         /// </summary>
         /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexLawUnitActivitySprSpr()
         {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за справка за натовареност - извън и в дело");
             CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
             {
                 DateFrom = new DateTime(DateTime.Now.Year, 1, 1),
                 DateTo = new DateTime(DateTime.Now.Year, 12, 31)
             };
+            SetHelpFile(HelpFileValues.Report26);
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// Справка за натовареност - извън и в дело - със съд
+        /// </summary>
+        /// <returns></returns>
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
+        public async Task<IActionResult> IndexLawUnitActivitySprSprWithCourt()
+        {
+            CurrentContext_SetObjectInfo("Търсене в списъчен екран за справка за натовареност - извън и в дело");
+            CaseLoadIndexFilterVM model = new CaseLoadIndexFilterVM()
+            {
+                DateFrom = DateTime.Now.AddMonths(-1),
+                DateTo = DateTime.Now
+            };
+            ViewBag.CourtId_ddl = await nomService.GetDropDownListAsync<Court>();
             SetHelpFile(HelpFileValues.Report26);
 
             return View(model);
@@ -1385,9 +1546,9 @@ namespace IOWebApplication.Controllers
         /// <param name="LawUnitId"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult ListDataLawUnitActivitySprSpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId)
+        public IActionResult ListDataLawUnitActivitySprSpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, int? LawUnitId, int? CourtId)
         {
-            var data = service.LawUnitActivitySpr_Select(DateFrom ?? DateTime.Now, DateTo ?? DateTime.Now, LawUnitId);
+            var data = service.LawUnitActivitySpr_Select(DateFrom ?? DateTime.Now.AddYears(-100), DateTo ?? DateTime.Now.AddYears(100), LawUnitId, CourtId);
             return request.GetResponse(data);
         }
 

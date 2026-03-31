@@ -1,4 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.EISPP;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -22,6 +23,7 @@ namespace IOWebApplication.Core.Contracts
         void ConvertEisppPersonToDocumentPerson(EisppTSActualDataPersonVM source, DocumentPersonVM target, int personIndex);
         IQueryable<EisppTblElement> EisppTblElement_Select(string EisppTblCode);
         List<SelectListItem> GetDDL_EISPPTblElement(string EisppTblCode, bool addDefaultElement = true, bool addAllElement = false);
+        Task<List<SelectListItem>> GetDDL_EISPPTblElementAsync(string eisppTblCode, bool addDefaultElement = true, bool addAllElement = false);
         List<SelectListItem> GetDDL_CountriesForEISPP(bool addDefaultElement = true, bool addAllElement = false);
         Task<EisppPackage> GeneratePackage(EisppEventVM model);
         bool SaveCasePackageData(EisppPackage model, int? eventFromId);
@@ -31,7 +33,7 @@ namespace IOWebApplication.Core.Contracts
         EisppDropDownVM GetDDL_EISPPTblElementWithRules(string EisppTblCode, int eventType, string rulePath);
         string CheckSum(string code);
         (List<SelectListItem>, EisppBaseCase[]) GetDDL_ConnectedCases(int caseId, int eventType, bool addDefaultElement = true, bool addInstitutionName = false);
-        Task<bool> SaveCaseMigration(EisppEventVM model);
+        Task<int> SaveCaseMigration(EisppEventVM model);
         IQueryable<EisppEventItemVM> GetPackages(EisppEventFilterVM filter);
         List<SelectListItem> GetLinkTypeDDL(bool addDefaultElement = true);
         List<SelectListItem> CaseSessionActDDL(int caseId, int? eventTypeId, DateTime? DateFrom, DateTime? DateTo, string defaultText = "Избери");
@@ -43,13 +45,13 @@ namespace IOWebApplication.Core.Contracts
         Task<CdnDownloadResult> GetNPCard(int id);
         Task<CdnDownloadResult> GetEisppResponse(int id);
         byte[] GetEisppRequest(int id);
-        List<SelectListItem> GetPersonProceduralCoercionMeasure(int casePersonId, bool isOld, int eventId, bool addDefaultElement = true);
+        EisppEventVM GetPersonProceduralCoercionMeasure(int casePersonId,  int eventId);
         CasePersonSentence GetSentence(int? casePersonId, int? caseSessionActId);
         EisppChangeVM GeneratePackageFrom(int eventFromId);
         int GeneratePackageDelete(int eventId);
         EisppChangeVM GetPackageChange(int packageId);
         string GetPbcMeasureUnit(int pbcMeasureTypeId);
-        int GetSentencePersonId(int? caseSessionActId);
+        int GetSentencePersonId(int? caseSessionActId, int caseId);
         EisppDropDownVM GetDDL_EISPPTblElementWithRules_DloOsnExactType(string EisppTblCode, int eventType, string rulePath, string caseType, int caseCharacterId, bool addDefaultElement = true);
         EisppDropDownVM GetDDL_EISPPTblElementNomWithRules(int eventType, string rulePath, string nomRulePath);
         Task<(execTSAKTSTSResponse1, string)> GetTSAKTSTSResponse(string eisppNumber);
@@ -60,7 +62,7 @@ namespace IOWebApplication.Core.Contracts
         bool MakeEisppNumberPNE(CaseCrime caseCrime, int courtId);
         bool MakeEisppNumberNP(Case caseCurrent);
         List<SelectListItem> GetIntegrationStateDDL();
-        bool HaveEventForMeasure(int measureId);
+        Task<bool> HaveEventForMeasure(int measureId);
         bool HaveEventForPunishment(int casePersonSentencePunishmentId);
         bool HaveEventForCrime(int caseCrimeId);
         List<SelectListItem> GetDDL_CaseMigrations(int caseId);
@@ -77,5 +79,16 @@ namespace IOWebApplication.Core.Contracts
         Task<List<EisppCrimePersonVM>> GetCrimePersonDiff(EisppPackage package);
         List<EisppPersonRegIXVM> GetPersonRegIXDiff(EisppPackage package);
         bool CanExpireError(int eventId, int caseId);
+
+        //К.Борисов, 09.09.2021
+        /// <summary>
+        /// Проверка за събития, допустими преди събитие 871 - Образуване на съдебно дело
+        /// </summary>
+        /// <param name="eventType"></param>
+        /// <returns></returns>
+        bool EventIsBeforeCreateCase(int eventType);
+        EisppEventItem GetEisppEventItem(int id);
+        bool IsComplainInputDocument(int caseId);
+        bool CanGenerateEisppNumForCrime(Case caseCurrent);
     }
 }

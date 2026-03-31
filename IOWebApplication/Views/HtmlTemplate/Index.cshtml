@@ -8,38 +8,38 @@
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
-<form id="formFilter" asp-action="Edit" method="post">
-    <div class="row">
-        <div class="col-md-5">
-            @Html.EditorFor(x => x.HtmlTemplateTypeId, "GenericDropDown")
-        </div>
-        <div class="col-md-2 text-right pb-15">
-            <br>
-            <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadHtmlTemplate()" value="Филтриране" title="Филтриране">
-                Филтриране
-                <i class="fa fa-search" title="Търсене"></i>
-            </button>
-        </div>
+    <form id="formFilter" asp-action="Edit" method="post">
+        <div class="row">
+            <div class="col-md-5">
+                @Html.EditorFor(x => x.HtmlTemplateTypeId, "GenericDropDown")
+            </div>
+            <div class="col-md-2 text-right pb-15">
+                <br>
+                <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadHtmlTemplate()" value="Филтриране" title="Филтриране">
+                    Филтриране
+                    <i class="fa fa-search" title="Търсене"></i>
+                </button>
+            </div>
 
-    </div>
+        </div>
+        <div class="row">
+            <hr>
+        </div>
+    </form>
     <div class="row">
-        <hr>
+        <div class="col-md-12 text-right pb-15">
+            <a asp-action="Add" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Добави
+            </a>
+            <a asp-action="AddHtmlTemplateCreate" class="btn btn-success">
+                <i class="fa fa-plus"></i>
+                Създаване на бланка
+            </a>
+        </div>
     </div>
-</form>
-<div class="row">
-    <div class="col-md-12 text-right pb-15">
-        <a asp-action="Add" class="btn btn-success">
-            <i class="fa fa-plus"></i>
-            Добави
-        </a>
-        <a asp-action="AddHtmlTemplateCreate" class="btn btn-success">
-            <i class="fa fa-plus"></i>
-            Създаване на бланка
-        </a>
-    </div>
-</div>
 
-@*<div class="row">
+    @*<div class="row">
         <div class="col-md-12 text-right pb-15">
             <a asp-action="ImportHtmlParam" class="btn btn-success">
                 <i class="fa fa-plus"></i>
@@ -48,15 +48,15 @@
         </div>
     </div>*@
 
-<div class="row">
-    <div class="col-md-12">
-        <table id="mainTable" class="table table-hover table-striped"></table>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="mainTable" class="table table-hover table-striped"></table>
+        </div>
     </div>
-</div>
-<form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
-    <input type="hidden" id="filterJson" name="filterJson" value="">
-</form>
-@section scripts {
+    <form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
+        <input type="hidden" id="filterJson" name="filterJson" value="">
+    </form>
+    @section scripts {
     <script>
         $(function () {
             var table = $('#mainTable').DataTable({
@@ -66,7 +66,7 @@
                     "datatype": "json",
                     data: function (d) {
                         if ($('#filterJson').val() == "") {
-                           $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
+                            $('#filterJson').val(JSON.stringify(getFormData($('#formFilter'))));
                         }
                         d.filterData = JSON.parse($('#filterJson').val());
                     }
@@ -98,7 +98,7 @@
                         data: 'fileName',
                         title: 'Име на файл',
                         "render": function (item, type, row, meta) {
-                            var url = '@(Url.Action("DownloadFile", "HtmlTemplate",new { id = 666}))';
+                            var url = '@(Url.Action("DownloadFile", "HtmlTemplate", new { id = 666 }))';
                             url = url.replace('666', row.id);
                             return "<a style='cursor: pointer;' data-toggle='tooltip' title='Сваляне на файл' href=" + url + "><i class='fa fa fa-file-code-o'></i> " + row.fileName + "</a>";
                         },
@@ -116,7 +116,13 @@
                             return TemplateToHtml('#templateEdit', row);
                         }
                     }
-                ]
+                ],
+                "createdRow": function (row, data, index) {
+                    if (data.isActive == false) {
+                        $(row).css("background-color", "#ffe0e0");
+                        $(row).css("color", "#d80000");
+                    }
+                }
             });
 
 
@@ -129,11 +135,11 @@
             $('#mainTable').DataTable().ajax.reload();
         }
         function EditHtmlTemplate(id) {
-            $('#formPostEdit').attr('action', '@Url.Action("Edit")/'+ id);
+            $('#formPostEdit').attr('action', '@Url.Action("Edit")/' + id);
             $("#formPostEdit").submit();
         }
         function EditHtmlTinyMCE(id) {
-            $('#formPostEdit').attr('action', '@Url.Action("EditTinyMCE")?sourceId='+ id);
+            $('#formPostEdit').attr('action', '@Url.Action("EditTinyMCE")?sourceId=' + id);
             $("#formPostEdit").submit();
         }
         function IndexLinkHtmlTemplate(id) {

@@ -1,0 +1,14 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@model CaseSessionActPrintVM
+@{
+    bool showExecProcessText = NomenclatureConstants.ActType.ExecListActs.Contains(Model.ActTypeId) && Model.GenerateExecProcess;
+}
+@if (showExecProcessText)
+{
+    <div align="right" style="font-size: 10.0pt;">
+        <b><i>ЕЛЕКТРОННА ПАРТИДА НА ИЛ</i></b>
+        <br />
+        <br />
+    </div>
+}

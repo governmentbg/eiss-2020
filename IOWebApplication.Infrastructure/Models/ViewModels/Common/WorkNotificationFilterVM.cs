@@ -1,15 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 {
-   public class WorkNotificationFilterVM
+    public class WorkNotificationFilterVM
     {
+        /// <summary>
+        /// Идентификатор на записа
+        /// </summary>
+        public int? Id { get; set; }
+
         public const int ReadTypeUnRead = 1;
         public const int ReadTypeRead = 2;
         public const int ReadTypeAll = 3;
+        
         [Display(Name = "Вид известие")]
         public int WorkNotificationTypeId { get; set; }
 
@@ -24,9 +28,21 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         
         [Display(Name = "Към дата")]
         public DateTime? DateCreate { get; set; }
+
+        [Display(Name = "Състав")]
+        public int? UserCourtDepartmentId { get; set; }
+
         public string UserId { get; set; }
         public int CourtId { get; set; }
         public int SourceType { get; set; }
         public long SourceId { get; set; }
-   }
+
+        /// <summary>
+        /// Група известия: 1- Общи известия,2-Известия ЗП
+        /// </summary>
+        public int? NotificationKind { get; set; }
+
+        [Display(Name = "Номер на дело")]
+        public string CaseRegNumber { get; set; }
+    }
 }

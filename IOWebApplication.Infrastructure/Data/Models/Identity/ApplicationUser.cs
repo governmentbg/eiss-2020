@@ -1,5 +1,4 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;

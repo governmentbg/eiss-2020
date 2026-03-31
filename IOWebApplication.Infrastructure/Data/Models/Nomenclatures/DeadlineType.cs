@@ -25,8 +25,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Display(Name = "Срок сложни дела в дни")]
         [Column("deadline_special_days")]
         public int? DeadlineSpecialDays { get; set; }
-        [Display(Name = "Срок сложни дела")]
 
+        [Display(Name = "Срок сложни дела")]
         [Column("deadline_special_working_days")]
         public int? DeadlineSpecialWorkingDays { get; set; }
 
@@ -36,6 +36,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("deadline_group_id")]
         public int DeadlineGroupId { get; set; }
 
+        [Display(Name = "Колко дни преди края на срока да се показва нотификацията")]
+        [Column("show_notification_befor_end_deadline_days")]
+        public int? ShowNotificationBeforEndDeadlineDays { get; set; }
 
         [ForeignKey(nameof(DeadlineGroupId))]
         public virtual DeadlineGroup DeadlineGroup { get; set; }

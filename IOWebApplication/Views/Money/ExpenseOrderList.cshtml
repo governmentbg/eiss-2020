@@ -1,4 +1,5 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@inject IOWebApplication.Infrastructure.Contracts.IUserContext userContext;
 @model ExpenseOrderFilterVM
 
 @{
@@ -96,6 +97,25 @@
                                 return "0.00";
                         }
                     },
+                    @if (userContext.IsInterimPeriodEuro)
+                    {
+                        <text>
+                                         {
+                                            className: "text-right",
+                                            name: 'amountBGN',
+                                            data: 'amountBGN',
+                                            title: 'Сума в лева',
+                                            sortable: true,
+                                            searchable: false,
+                                            "render": function (value) {
+                                                if (value)
+                                                    return parseFloat(value).toFixed(2);
+                                                else
+                                                    return "0.00";
+                                            }
+                                         },
+                        </text>
+                    }
                     {
                         name: 'moneyGroupName',
                         data: 'moneyGroupName',
@@ -139,23 +159,5 @@
 
     <script id="templateEdit" type="text/x-handlebars-template">
         <a href="@Url.Action("EditExpenseOrder")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
-        <a href="#" class="btn btn-sm btn-danger" onclick="StornoOrder('{{this}}');"><i class="fa fa-remove"></i></a>
-    </script>
-
-    <script>
-        function StornoOrder(id) {
-            swalConfirm('Потвърди деактивирането на ордера!', function () {
-                postContent('@Url.Action("StornoExpenseOrder","Money")'
-                    , { id: id }
-                    , function (data) {
-                        if (data.result == true) {
-                            refreshTable('#mainTable');
-                            messageHelper.ShowSuccessMessage(data.message);
-                        } else {
-                            messageHelper.ShowErrorMessage(data.message);
-                        }
-                    });
-            });
-        }
     </script>
 }

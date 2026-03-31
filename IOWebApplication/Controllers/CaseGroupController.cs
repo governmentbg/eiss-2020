@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
@@ -15,6 +11,10 @@ using IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 namespace IOWebApplication.Controllers
 {
     public class CaseGroupController : GlobalAdminBaseController
@@ -33,7 +33,10 @@ namespace IOWebApplication.Controllers
         //основен вид дело
         public IActionResult Index()
         {
-
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CriticalDataChange))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
             return View();
         }
 
@@ -104,7 +107,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult ChangeOrder(ChangeOrderModel model)
         {
-            var caseGroup = service.GetById<CaseGroup>(model.Id);
+            //var caseGroup = service.GetById<CaseGroup>(model.Id);
             Func<CaseGroup, int?> orderProp = x => x.OrderNumber;
             Expression<Func<CaseGroup, int?>> setterProp = (x) => x.OrderNumber;
             bool result = service.ChangeOrder(model.Id, model.Direction == "up", orderProp, setterProp, null);
@@ -120,7 +123,11 @@ namespace IOWebApplication.Controllers
         //Точен вид дело
         public IActionResult CaseTypeList(int caseGroupId)
         {
-            var casegroup = service.GetById<CaseGroup>(caseGroupId);
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CriticalDataChange))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
+            var casegroup = service.GetReadonly<CaseGroup>(caseGroupId);
             ViewBag.caseGroupId = casegroup.Id;
             ViewBag.caseGrouplabel = casegroup.Label;
             ViewBag.breadcrumbs = new List<BreadcrumbsVM>()
@@ -234,6 +241,10 @@ namespace IOWebApplication.Controllers
         //Списък шифри
         public IActionResult CaseCodeList()
         {
+            if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.CriticalDataChange))
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), HomeController.ControlerName);
+            }
             ViewBag.breadcrumbs = commonService.Breadcrumbs_CaseCode().DeleteOrDisableLast();
 
             ViewBag.filterCaseTypeId_ddl = nomService.GetDropDownList<CaseType>();
@@ -327,7 +338,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public IActionResult ChangeOrderCaseCode(ChangeOrderModel model)
         {
-            var caseCode = service.GetById<CaseCode>(model.Id);
+            //var caseCode = service.GetById<CaseCode>(model.Id);
             Func<CaseCode, int?> orderProp = x => x.OrderNumber;
             Expression<Func<CaseCode, int?>> setterProp = (x) => x.OrderNumber;
             bool result = service.ChangeOrder(model.Id, model.Direction == "up", orderProp, setterProp, null);
@@ -433,7 +444,7 @@ namespace IOWebApplication.Controllers
             var model = service.GetById_CaseTypeUnit(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
             }
             return View(nameof(EditTypeUnit), model);
         }

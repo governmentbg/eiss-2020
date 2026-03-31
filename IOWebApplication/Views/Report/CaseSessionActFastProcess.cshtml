@@ -1,0 +1,151 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model CaseSessionActFastProcessFilterVM
+
+@{
+    ViewData["Title"] = "Справка за актове по дела по чл. 410 ГПК и чл. 417 ГПК";
+    ViewData["ShowMenuCounts"] = true;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+<div class="filter-form">
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(m => m.ActDateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.ActDateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 text-left pb-15">
+            <button type="button" class="btn btn-primary filter-button" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+                Филтриране
+                <i class="fa fa-search" title="Търсене"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            
+        });
+    </script>
+}
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCaseSessionActFastProcess")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            ActDateFrom: $("#ActDateFrom").val(),
+                            DateTime: $("#DateTime").val(),
+                            ActTypeId: $("#ActTypeId").val(),
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'caseCourtLabel',
+                        data: 'caseCourtLabel',
+                        title: 'Съд',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseRegNum',
+                        data: 'caseRegNum',
+                        title: 'Номер на дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case", new { id = 666 }))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' title='Преглед' href=" + url + ">" + row.caseRegNum + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseRegDate',
+                        data: 'caseRegDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'caseCode',
+                        data: 'caseCode',
+                        title: 'Шифър',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actRegNum',
+                        data: 'actRegNum',
+                        title: 'Номер на акт',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actTypeLabel',
+                        data: 'actTypeLabel',
+                        title: 'Тип на акт',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actRegDate',
+                        data: 'actRegDate',
+                        title: 'Дата на акт',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actDeclarDate',
+                        data: 'actDeclarDate',
+                        title: 'Дата на обявяване на акта',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                ]
+            }).order([[2, "asc"]]);
+        }
+    }
+</script>

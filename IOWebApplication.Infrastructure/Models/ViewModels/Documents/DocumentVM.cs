@@ -1,13 +1,9 @@
-﻿using AutoMapper;
-using IOWebApplication.Infrastructure.Attributes;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
+﻿using IOWebApplication.Infrastructure.Attributes;
 using IOWebApplication.Infrastructure.Models.ViewModels.Documents;
 using IOWebApplication.Infrastructure.Models.ViewModels.RegixReport;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels
 {
@@ -21,10 +17,21 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Деловодна регистратура")]
         public int? CourtOrganizationId { get; set; }
 
+        /// <summary>
+        /// Код на заявление от ЕПЕП/Централна регистратура
+        /// </summary>
+        public int? RequestTypeId { get; set; }
+        public string RequestTypeCode { get; set; }
+
         public bool CanChange { get; set; }
         public long Id { get; set; }
         public int CourtId { get; set; }
         public int TemplateId { get; set; }
+        public long? ElectronicDocumentId { get; set; }
+        public long? AssignmentDocumentId { get; set; }
+        public string AssignmentDocumentNumber { get; set; }
+        public DateTime AssignmentDocumentDate { get; set; }
+        public string AssignmentDocumentCourt { get; set; }
 
         [Display(Name = "Стар номер")]
         public string DocumentNumber { get; set; }
@@ -64,12 +71,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public int DocumentKindId { get; set; }
 
         [Display(Name = "Основен вид документ")]
-        [Range(0, 9999999, ErrorMessage = "Изберете '{0}'.")]
+        [Range(1, 9999999, ErrorMessage = "Изберете '{0}'.")]
         [IORequired]
         public int DocumentGroupId { get; set; }
 
         [Display(Name = "Точен вид документ")]
         [Required(ErrorMessage = "Изберете '{0}'.")]
+        [Range(1, 9999999, ErrorMessage = "Изберете '{0}'.")]
         public int? DocumentTypeId { get; set; }
 
         /// <summary>
@@ -96,7 +104,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         [Display(Name = "Секретен документ")]
         public bool IsSecret { get; set; }
 
-        [Display(Name = "Въвеждане на стар номер")]
+        [Display(Name = "Въвеждане на стар номер от друга система")]
         public bool IsOldNumber { get; set; }
 
 
@@ -155,6 +163,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         public DateTime? DateExpired { get; set; }
 
+        /// <summary>
+        /// Изключва транзакцията при добявяне на документ при регистриране от електронен документ
+        /// </summary>
+        public bool DisableTransaction { get; set; } = false;
+
         public DocumentVM()
         {
             DocumentDate = DateTime.Now;
@@ -167,15 +180,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
             IsMultiNumber = false;
             MultiDocumentCounter = 1;
             RegixRequestReason = new RegixRequestReasonVM();
-        }
-
-        public static MapperConfiguration GetMapping()
-        {
-            return new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<Document, DocumentVM>();
-            });
-
         }
     }
 }

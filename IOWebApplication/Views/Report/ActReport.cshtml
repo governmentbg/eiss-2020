@@ -1,0 +1,270 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseSessionActReportFilterVM
+
+@{
+    ViewData["Title"] = "Справка за съдебни актове";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.DateTo, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.ActInforcedDateFrom, "DateTime")
+    </div>
+    <div class="col-lg-3">
+        @Html.EditorFor(m => m.ActInforcedDateTo, "DateTime")
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActTypeId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActComplainResultId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActStateId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.CaseTypeId, "GenericDropDown")</div>
+    <div class="col-lg-6">@Html.EditorFor(m => m.CaseCodeIds, "GenericDropDownMultipleArray")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ProcessPriorityId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.SessionResultId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DocumentGroupId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.DocumentTypeId, "GenericDropDown")</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.IsFinalDoc, "Boolean")</div>
+    <div class="col-lg-3">@Html.EditorFor(m => m.CanAppeal, "Boolean")</div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="LoadTable()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataActReport")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            ActInforcedDateFrom: $("#ActInforcedDateFrom").val(),
+                            ActInforcedDateTo: $("#ActInforcedDateTo").val(),
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            ActTypeId: $("#ActTypeId").val(),
+                            ActStateId: $("#ActStateId").val(),
+                            SessionResultId: $("#SessionResultId").val(),
+                            ProcessPriorityId: $("#ProcessPriorityId").val(),
+                            DocumentGroupId: $("#DocumentGroupId").val(),
+                            DocumentTypeId: $("#DocumentTypeId").val(),
+                            ActComplainResultId: $("#ActComplainResultId").val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val(),
+                            IsFinalDoc: $("#IsFinalDoc").is(":checked"),
+                            CanAppeal: $("#CanAppeal").is(":checked"),
+                        };
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'actRegNumYear',
+                        data: 'actRegNumYear',
+                        title: 'Номер/Година на съдебен акт',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("Edit", "CaseSessionAct", new { id = 666}))';
+                            url = url.replace('666', row.id);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' target='_blank' title='Преглед' href=" + url + ">" + row.actRegNumYear + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actTypeLabel',
+                        data: 'actTypeLabel',
+                        title: 'Вид съдебен акт',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата на акта',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'returnDate',
+                        data: 'returnDate',
+                        title: 'Дата на постановяване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actInforcedDate',
+                        data: 'actInforcedDate',
+                        title: 'В законна сила',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'dateAnnouncementDecision',
+                        data: 'dateAnnouncementDecision',
+                        title: 'Дата на обявяване за решаване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            if (value)
+                                return moment(value).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Вид дело',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseNumber',
+                        data: 'caseNumber',
+                        title: 'Номер дело',
+                        "render": function (item, type, row, meta) {
+                            var url = '@(Url.Action("CasePreview", "Case",new { id = 666}))';
+                            url = url.replace('666', row.caseId);
+                            return "<a style='cursor: pointer;' data-toggle='tooltip' target='_blank' title='Преглед' href=" + url + ">" + row.caseNumber + "</a>";
+                        },
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'judgeReport',
+                        data: 'judgeReport',
+                        title: 'Съдия-докладчик',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'documentDate',
+                        data: 'documentDate',
+                        title: 'Документ',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            return row.documentInfo;
+                        },
+                    },
+                    {
+                        name: 'actComplainResultLabel',
+                        data: 'actComplainResultLabel',
+                        title: 'Резултат/степен на уважаване на иска',
+                        sortable: true,
+                        searchable: true,
+                        visible: false
+                    },
+                    {
+                        name: 'actStateName',
+                        data: 'actStateName',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (data, type, row) {
+                            return TemplateToHtml('#templateEdit', row);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+        <a href="@Url.Action("CasePreview", "Case")/{{caseId}}" class="btn btn-def btn-sm" title="Дело"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
+    </div>
+</script>
+
+<script>
+    $(document).ready(function () {
+        initLawUnit();
+        $('#CaseGroupId').trigger('change');
+        $('#DocumentGroupId').trigger('change');
+        $('#CaseCodeIds').select2({ language: "bg" });
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId, function () { $('#CaseTypeId').trigger('change') });
+    });
+
+    $('#DocumentGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_DocumentTypeByCourt", "Ajax")', { documentGroupId: $(this).val(), addDefaultElement: true }, '#DocumentTypeId', '@(Model.DocumentTypeId)', function () { $('#DocumentTypeId').trigger('change') });
+    });
+
+    $('#CaseTypeId').change(function () {
+        requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $(this).val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
+    });
+</script>

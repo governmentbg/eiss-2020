@@ -1,12 +1,10 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -67,5 +65,8 @@ namespace IOWebApplication.Core.Contracts
         string Counter_GetCaseEisppNumber(int courtId);
         string Counter_GetCrimeEisppNumber(int courtId);
         bool Counter_GetNotificationCounter(DocumentNotification model, int courtId);
+        bool Counter_GetCasePersonInheritanceCounter(CasePersonInheritance model, int courtId);
+        bool Counter_GetCaseBulletinFileCounter(CasePersonSentenceBulletinFile model, int courtId);
+        bool Counter_GetNotificationCounter(MediationNotification model, int courtId);
     }
 }

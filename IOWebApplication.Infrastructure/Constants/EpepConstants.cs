@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace IOWebApplication.Infrastructure.Constants
+﻿namespace IOWebApplication.Infrastructure.Constants
 {
     public class EpepConstants
     {
         public class UserTypes
         {
             public const int Person = 1;
+
             public const int Lawyer = 2;
+
+            public const int Organization = 3;
+
+            public const int ProcesutorOffice = 13;
+
+            public static int[] AutoEpepUserAccess = { ProcesutorOffice };
         }
         /// <summary>
         /// Константи за поле "alias" от таблица "nom_code_mapping"
@@ -47,6 +50,22 @@ namespace IOWebApplication.Infrastructure.Constants
             public const string PersonRoles = "epep_personrole";
 
             /// <summary>
+            /// Видове лица - обратен мапинг от ЕПЕП
+            /// </summary>
+            public const string PersonRolesFromEPEP = "epep_personrole_fromepep";
+
+
+            /// <summary>
+            /// Видове адреси
+            /// </summary>
+            public const string AddressTypes = "epep_address_types";
+
+            /// <summary>
+            /// Видове адреси - обратен мапинг от ЕПЕП
+            /// </summary>
+            public const string AddressTypesFromEPEP = "epep_addresstypes_fromepep";
+
+            /// <summary>
             /// Видове актове
             /// </summary>
             public const string ActTypes = "epep_acttype";
@@ -66,6 +85,33 @@ namespace IOWebApplication.Infrastructure.Constants
             /// </summary>
             public const string SessionActAppealDocType = "epep_appeal_doctype";
 
+            /// <summary>
+            /// ЕПРО - Роля на съдия в дело
+            /// </summary>
+            public const string EPRO_CaseRole = "epro_case_role";
+
+
+            /// <summary>
+            /// ЕПРО - Вид акт
+            /// </summary>
+            public const string EPRO_ActType = "epro_acttype";
+
+
+
+            /// <summary>
+            /// Вид движение на дело
+            /// </summary>
+            public const string CaseMigrationType = "epep_case_migration_type";
+
+            /// <summary>
+            /// Кодове на съдилища, обработвани в ЕИСС
+            /// </summary>
+            public const string CaseMigrationCourts = "epep_courts_with_eiss";
+
+
+            public const string ExecProcessObligation = "epep_execprocess_obligation";
+            public const string ExecListMoneyType = "epep_execlist_moneytype";
+
             public class PunishmentActivity
             {
             }
@@ -82,6 +128,10 @@ namespace IOWebApplication.Infrastructure.Constants
             public const string Add = "add";
             public const string Update = "update";
             public const string Delete = "delete";
+            public const string Manage = "manage";
+            public const string Restart = "restart";
+            public const string Result = "result";
+            public const string DataChange = "datachange";
 
             public static string[] EditMethods = { Add, Update };
 
@@ -99,6 +149,35 @@ namespace IOWebApplication.Infrastructure.Constants
                         return string.Empty;
                 }
             }
+
+            public static ServiceMethod GetMethod(string methodName)
+            {
+                switch (methodName)
+                {
+                    case Add: return ServiceMethod.Add;
+                    case Update: return ServiceMethod.Update;
+                    case Delete: return ServiceMethod.Delete;
+                    default:
+                        return ServiceMethod.Update;
+                }
+            }
+        }
+        public class AttachedDocumentTypes
+        {
+            public const int IncommingDocument = 1;
+            public const int OutgoingDocument = 2;
+            public const int ActCoordination = 3;
+            public const int ActCoordinationPublic = 4;
+            public const int ActManualFile = 41;
+            public const int SessionFastDocument = 5;
+            public const int Summon = 10;
+            public const int ElectronicDocument = 7;
+            public const int ElectronicDocumentMain = 71;
+            public const int ElectronicDocumentTimestamp = 72;
+            /// <summary>
+            /// json заявка от ЕПЕП
+            /// </summary>
+            public const int ElectronicDocumentRequest = 73;
         }
         public const int IntegrationMaxErrorCount = 20;
         public class IntegrationStates
@@ -123,7 +202,47 @@ namespace IOWebApplication.Infrastructure.Constants
             public static int?[] UnfinishedMQStatesNulls = { New, WaitForParentIdError, TransferError, TransferErrorLimitExceeded };
         }
 
-        public const string SummonTypeCode_Prizovka = "4";
+        public const string SummonTypeCode_CasesessionAct = "1";
+        public const string SummonTypeCode_CaseSession = "4";
         public const string SummonKind_Generic = "1";
+
+        public class AssignmentRoles
+        {
+            public const int Lawyer = 1;
+            public const int Side = 2;
+        }
+
+        public class EpepDocumentMethods
+        {
+            /// <summary>
+            /// Първоначално разпределяне, гледа компетенция
+            /// </summary>
+            public const string InitAssignment = "initassign";
+
+            /// <summary>
+            /// Централно Разпределение от движение
+            /// </summary>
+            public const string ForAssignment = "assign";
+
+            /// <summary>
+            /// Разпределение по компетенция от движение
+            /// </summary>
+            public const string ForAssignmentAddress = "assignadr";
+
+            public static string[] RandomAssignmentMethods = { InitAssignment, ForAssignment, ForAssignmentAddress };
+            public static string[] CheckCompetanceMethods = { InitAssignment, ForAssignmentAddress };
+        }
+
+        public class ExecProcessKinds
+        {
+            public const int FromExecList = 1;
+            public const int FromCaseSessionAct = 2;
+        }
+
+        public class SubjectKinds
+        {
+            public const int Person = 1;
+            public const int Entity = 2;
+        }
     }
 }

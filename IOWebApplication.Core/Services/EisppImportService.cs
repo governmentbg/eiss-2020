@@ -34,15 +34,15 @@ namespace IOWebApplication.Core.Services
             repo = _repo;
             logger = _logger;
         }
-        public List<EisppImportEktte> GetEktteFromExcel(byte[] excelContent, int fromRow)
+        public List<EisppEktte> GetEktteFromExcel(byte[] excelContent, int fromRow)
         {
             NPoiExcelService excelService = new NPoiExcelService(excelContent, 0);
             int row = fromRow;
             bool haveData = true;
-            var ektteItems = new List<EisppImportEktte>();
+            var ektteItems = new List<EisppEktte>();
             while (haveData)
             {
-                var item = new EisppImportEktte();
+                var item = new EisppEktte();
                 item.Row = row;
                 excelService.rowIndex = row;
                 excelService.colIndex = 0;
@@ -64,7 +64,7 @@ namespace IOWebApplication.Core.Services
             }
             return ektteItems;
         }
-        public bool ImportEktteRajon(List<EisppImportEktte> ektteItems)
+        public bool ImportEktteRajon(List<EisppEktte> ektteItems)
         {
             foreach (var item in ektteItems.Where(x => !string.IsNullOrEmpty(x.Rajon)))
             {

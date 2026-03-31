@@ -11,20 +11,13 @@ namespace IOWebApplication.ModelBinders
     /// </summary>
     public class DecimalModelBinderProvider : IModelBinderProvider
     {
-        private readonly ILoggerFactory loggerFactory;
-
-        public DecimalModelBinderProvider(ILoggerFactory logFactory)
-        {
-            loggerFactory = logFactory;
-        }
-
         public IModelBinder GetBinder(ModelBinderProviderContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
 
             if (context.Metadata.ModelType == typeof(Decimal) || context.Metadata.ModelType == typeof(Decimal?))
             {
-                return new DecimalModelBinder(loggerFactory);
+                return new DecimalModelBinder();
             }
 
             return null;

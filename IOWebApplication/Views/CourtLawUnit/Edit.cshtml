@@ -3,8 +3,6 @@
 @using IOWebApplication.Infrastructure.Constants
 
 @{
-    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
-
     if (Model.Id > 0)
     {
         ViewData["Title"] = $"Редакция на {ViewBag.lawUnitTypeName} - {ViewBag.periodTypeName}";
@@ -16,10 +14,10 @@
     string selectMode = NomenclatureConstants.LawUnitSelectMode.Current;
     if (NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(Model.PeriodTypeId))
     {
-        selectMode = NomenclatureConstants.LawUnitSelectMode.All;       
+        selectMode = NomenclatureConstants.LawUnitSelectMode.All;
     }
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -34,46 +32,120 @@
             @Html.HiddenFor(x => x.PeriodTypeId)
             @Html.HiddenFor(x => x.MasterLawUnitTypeId)
 
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div id="saveContainer">
-                <partial name="_SaveFormContent" model="@("#saveContainer")" />
-                @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = selectMode, label = ViewBag.lawUnitTypeName, lawUnitType = Model.MasterLawUnitTypeId })
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Основни данни</legend>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div id="saveContainer">
+                    <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                    @Html.EditorFor(x => x.LawUnitId, "LawUnit", null, new { selectMode = selectMode, label = ViewBag.lawUnitTypeName, lawUnitType = Model.MasterLawUnitTypeId })
 
-                @if (NomenclatureConstants.PeriodTypes.CurrentlyCourtActions.Contains(Model.PeriodTypeId))
-                {
-                    @Html.EditorFor(x => x.CourtOrganizationId, "GenericDropDown")
-                    @Html.EditorFor(x => x.LawUnitPositionId, "GenericDropDown")
-                }
+                    @if (NomenclatureConstants.PeriodTypes.CurrentlyCourtActions.Contains(Model.PeriodTypeId))
+                    {
+                        @Html.EditorFor(x => x.CourtOrganizationId, "GenericDropDown")
+                        @Html.EditorFor(x => x.LawUnitPositionId, "GenericDropDown")
+                    }
 
-                <div class="row">
-                    <div class="col-lg-6">@Html.EditorFor(m => m.DateFrom)</div>
-                    <div class="col-lg-6">@Html.EditorFor(m => m.DateTo)</div>
-                </div>
-                @Html.EditorFor(x => x.Description, "Textarea")
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Запис" class="btn btn-success" />
-                <a asp-action="Index" asp-route-periodType="@Model.PeriodTypeId" asp-route-lawUnitType="@Model.MasterLawUnitTypeId" class="btn btn-danger">Назад</a>
-                @if (Model.Id > 0)
-                {
-                    <div class="pull-right">
-                        @if (Model.DateFrom > DateTime.Now)
-                        {
-                            @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, OtherId = Model.MasterLawUnitTypeId, DialogTitle = "Премахване", ExpireSubmitUrl = Url.Action("CourtLawUnit_ExpiredInfo") })
-                            <span>&nbsp;</span>
-                        }
-
-                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    <div class="row">
+                        <div class="col-lg-6">@Html.EditorFor(m => m.DateFrom)</div>
+                        <div class="col-lg-6">@Html.EditorFor(m => m.DateTo)</div>
                     </div>
-                }
-            </div>
+                    @if (NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(Model.PeriodTypeId) &&
+                    NomenclatureConstants.LawUnitTypes.CaseSelectable.Contains(Model.MasterLawUnitTypeId))
+                    {
+                        <div class="row">
+                            <div class="col-lg-6">@Html.EditorFor(m => m.MandateDateTo)</div>
+                        </div>
+                    }
+                    @Html.EditorFor(x => x.Description, "Textarea")
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Запис" class="btn btn-success" />
+                    <a asp-action="Index" asp-route-periodType="@Model.PeriodTypeId" asp-route-lawUnitType="@Model.MasterLawUnitTypeId" class="btn btn-danger">Назад</a>
+                    @if (Model.Id > 0)
+                    {
+                        <div class="pull-right">
+                            @if (Model.DateFrom > DateTime.Now)
+                            {
+                                @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, OtherId = Model.MasterLawUnitTypeId, DialogTitle = "Премахване", ExpireSubmitUrl = Url.Action("CourtLawUnit_ExpiredInfo") })
+                                <span>&nbsp;</span>
+                            }
+
+                            @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                        </div>
+                    }
+                </div>
+            </fieldset>
         </form>
     </div>
+    @if (Model.Id > 0 && Model.MasterLawUnitTypeId == 1)
+    {
+        <div class="col-md-6">
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Съдебен служител</legend>
+                <div class="text-right">
+                    <a asp-action="AddCourtLawUnitAssistant" asp-route-courtLawUnitId="@Model.Id" asp-route-courtId="@Model.CourtId" class="btn btn-success">
+                        @* <i class="fa fa-address-card"></i> *@
+                        Добави съдебен служител
+                    </a>
+                </div>
+                <table id="mainTable" class="table table-hover table-striped"></table>
+            </fieldset>
+        </div>
+    }
 </div>
 
-<script>
-    $(function () {
-        initLawUnit();
-    });
-</script>
+@section scripts {
+    <script>
+        $(function () {
+            initLawUnit();
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataCourtLawUnitAssistant", "CourtLawUnit")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.filter = {
+                            courtLawUnitId: @Model.Id
+                        };
+                    }
+                },
+                dom: 'rt',
+                columns: [
+                    {
+                        className: 'col-md-8',
+                        name: 'lawUnitFullName',
+                        data: 'lawUnitFullName',
+                        title: 'Съдебен служител',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-3',
+                        name: 'judgeRoleLabel',
+                        data: 'judgeRoleLabel',
+                        title: 'Роля',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#courtLawUnitAssistantTemplateEdit', value);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script id="courtLawUnitAssistantTemplateEdit" type="text/x-handlebars-template">
+        <a href="@Url.Action("EditCourtLawUnitAssistant", "CourtLawUnit")?id={{this}}" class="btn btn-warning btn-sm m-b-5" title="Редакция"><i class="fa fa-edit"></i><span class="hidden-sm hidden-xs"></span></a>
+    </script>
+}

@@ -291,13 +291,13 @@ function initEisppEkatteCrime() {
             var input = this;
             if (!input.value || input.value < 2) {
                 var input_hidden = input.parentElement.querySelector('input[type="hidden"]');
-                input_hidden.value = '';
+                input_hidden.value = '0';
             }
         }).blur(function () {
             var input = this;
             if (!input.value || input.value < 2) {
                 var input_hidden = input.parentElement.querySelector('input[type="hidden"]');
-                input_hidden.value = '';
+                input_hidden.value = '0';
             }
         });
 

@@ -66,6 +66,8 @@
                 @if (Model.Id > 0)
                 {
                     <div class="pull-right">
+                        @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Деактивиране на разходен ордер", ExpireSubmitUrl = Url.Action("StornoExpenseOrder") })
+                        <span>&nbsp;</span>
                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
                     </div>
                 }
@@ -76,7 +78,7 @@
 
 <partial name="_CdnScript" />
 
-<div id="modalMessageContainer">
+<div id="modalMessageContainerPopUp">
 </div>
 
 <script>
@@ -88,7 +90,7 @@
                     HideModal();
                     messageHelper.ShowSuccessMessage('Записът премина успешно.');
                 } else {
-                    messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+                    messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainerPopUp');
                 }
             });
         }

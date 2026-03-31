@@ -1,11 +1,14 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Contracts
+@inject IUserContext userContext
 @model CaseSelectionProtokoLUGrouplFilterVM
 
 @{
     ViewData["Title"] = "Разпределени дела в група";
 }
 
-@section breadcrumb{
+@section breadcrumb {
     <ol class="breadcrumb">
         <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
         <li class="active">@ViewData["Title"]</li>
@@ -13,9 +16,9 @@
 }
 
 <div class="row">
+    <div class="col-lg-3">@Html.EditorFor(x => x.ResetPeriodId, "GenericDropDown")</div>
     <div class="col-lg-3">@Html.EditorFor(x => x.GroupId, "GenericDropDown")</div>
-    <div class="col-lg-6"> @Html.EditorFor(x => x.LawUnitID, "LawUnit", null, new { lawUnitTypes = "1" })   </div>
-
+    <div class="col-lg-6">@Html.EditorFor(x => x.LawUnitID, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
 </div>
 
 
@@ -32,7 +35,7 @@
 </div>
 <div class="row">
     <div class="col-md-12">
-        <h3  id="total"></h3>
+        <h3 id="total"></h3>
     </div>
 </div>
 
@@ -56,7 +59,8 @@
                     "datatype": "json",
                     data: function (d) {
                         d.model = {
-                                   GroupId: $('#GroupId ').val(),
+                            ResetPeriodId: $('#ResetPeriodId').val(),
+                            GroupId: $('#GroupId').val(),
                             LawUnitID: $('#LawUnitID').val()
 
                         };
@@ -76,8 +80,8 @@
                     }
                 },
                 filter: false,
-             
-            
+
+
                 columns: [
                     {
                         name: 'lawUnitFullName',
@@ -97,20 +101,38 @@
                             return JsonBGdate(value);
                         }
                     },
+                    {
+                        className: 'col-md-1',
+                        name: 'toDateInGROUP',
+                        data: 'toDateInGROUP',
+                        title: 'До дата',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdate(value);
+                        }
+                    },
+                    {
+                        name: 'loadIndex',
+                        data: 'loadIndex',
+                        title: 'Натоварване за периода (%)',
+                        sortable: true,
+                        searchable: true
+                    },
 
 
                     {
                         name: 'caseCount',
                         data: 'caseCount',
-                        title: 'Брой дела в група',
+                        title: 'Брой дела в група за периода ',
                         sortable: true,
                         searchable: true
                     },
 
-                     {
-                        name: 'loadIndex',
-                        data: 'loadIndex',
-                        title: 'Текущо натоварване (%)',
+                    {
+                        name: 'lawUnitTotalCount',
+                        data: 'lawUnitTotalCount',
+                        title: 'Брой дела в група общо ',
                         sortable: true,
                         searchable: true
                     }
@@ -125,13 +147,9 @@
 </script>
 
 <script>
-
-
     $(function () {
         initLawUnit();
     })
-
- 
 
     $('#GroupId').change(function () {
         changeTitle();

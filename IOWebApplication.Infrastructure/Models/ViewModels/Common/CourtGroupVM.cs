@@ -12,6 +12,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
         public string CaseGroupLabel { get; set; }
         public DateTime DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
+        public int GroupKind { get; set; }
 
         public int CountCode { get; set; }
         public int CountLawUnit { get; set; }

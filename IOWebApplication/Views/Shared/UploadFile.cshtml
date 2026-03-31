@@ -13,6 +13,10 @@
             <span class="text-muted">Максимално допустимия размер е @Model.MaxFileSize MB</span>
         }
         @Html.EditorFor(x => x.Title)
+        @if (ViewBag.MongoFileTypeId_ddl != null)
+        {
+            @Html.EditorFor(x => x.MongoFileTypeId, "GenericDropDown")
+        }
         <input type="submit" value="Прикачи" id="cdnUploadButton" />
         &nbsp;
         <span id="uploadProgress"></span>
@@ -51,6 +55,12 @@ else
                         break;
                     case "max_size":
                         swalOk("Надвишен максимален размер на файл!");
+                        break;
+                    case "inv_ext":
+                        swalOk("Избрали сте непозволен вид файл!");
+                        break;
+                    case "inv_mt":
+                        swalOk("Изберете вид документ!");
                         break;
                     default:
                 }

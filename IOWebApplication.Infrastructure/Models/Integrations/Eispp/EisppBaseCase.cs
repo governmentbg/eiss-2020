@@ -15,7 +15,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         /// за събития, различни от 913 „Получаване на дело“ – стойност 853
         /// </summary>
         [XmlAttribute("dlovid")]
-        [Display(Name="Вид дело")]
+        [Display(Name = "Вид дело")]
         public int CaseType { get; set; } = 853;
 
         /// <summary>
@@ -48,12 +48,13 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [Display(Name = "Точен вид дело")]
         public int CaseTypeId { get; set; }
 
-        [XmlIgnore]
-        [Display(Name = "Характер на дело")]
+
         /// <summary>
         /// Характер на дело
         /// за стари дела в основание
         /// </summary>
+        [XmlIgnore]
+        [Display(Name = "Характер на дело")]
         public int CaseCharacterId { get; set; }
 
         /// <summary>
@@ -115,7 +116,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [XmlIgnore]
         [Display(Name = "Вид дело основание")]
         public string InstitutionCaseTypeName { get; set; }
-        
+
         [XmlIgnore]
         [Display(Name = "Дело от")]
         public string InstitutionName { get; set; }
@@ -123,7 +124,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [XmlIgnore]
         [Display(Name = "Вид институция")]
         public string InstitutionTypeName { get; set; }
-        
+
         [XmlIgnore]
         public string CaseTypeName { get; set; }
 
@@ -139,7 +140,7 @@ namespace IOWebApplication.Infrastructure.Models.Integrations.Eispp
         [XmlIgnore]
         [Display(Name = "Свързано дело")]
         public string ConnectedCaseId { get; set; }
-        
+
         [XmlIgnore]
         [Display(Name = "Свързано дело")]
         public bool IsSelected { get; set; }

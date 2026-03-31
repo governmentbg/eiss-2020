@@ -6,11 +6,9 @@ using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -24,13 +22,13 @@ namespace IOWebApplication.Core.Services
     {
         private readonly IUrlHelper urlHelper;
         private readonly IWorkTaskService taskService;
-        private readonly ICaseSessionService caseSessionService;
+        //private readonly ICaseSessionService caseSessionService;
         public CalendarService(
-            ILogger<DocumentService> _logger,
+            ILogger<CalendarService> _logger,
             IRepository _repo,
             IUserContext _userContext,
             IWorkTaskService _taskService,
-            ICaseSessionService _caseSessionService,
+            //  ICaseSessionService _caseSessionService,
             IUrlHelper _url)
         {
             logger = _logger;
@@ -38,7 +36,7 @@ namespace IOWebApplication.Core.Services
             userContext = _userContext;
             urlHelper = _url;
             taskService = _taskService;
-            caseSessionService = _caseSessionService;
+            //caseSessionService = _caseSessionService;
         }
 
         /// <summary>
@@ -47,7 +45,7 @@ namespace IOWebApplication.Core.Services
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public IEnumerable<CalendarVM> SelectByPerson(DateTime start, DateTime end)
+        public IEnumerable<CalendarVM> SelectByPerson(DateTime start, DateTime end, int caseMode = 0)
         {
             List<CalendarVM> result = new List<CalendarVM>();
 
@@ -89,29 +87,31 @@ namespace IOWebApplication.Core.Services
 
             result.AddRange(currentTasks);
 
-            var lawUnitId = repo.GetById<ApplicationUser>(userContext.UserId)?.LawUnitId;
+            var lawUnitId = repo.GetPropById<ApplicationUser, int>(x => x.Id == userContext.UserId, x => x.LawUnitId);
+
+            Expression<Func<CaseLawUnit, bool>> filterCaseMode = x => true;
+            if (caseMode == 2)
+            {
+                filterCaseMode = x => (x.Case.IsFastProcess ?? false) == true;
+            }
+
             //Зареждане на насрочени заседания
             var sessions = repo.AllReadonly<CaseLawUnit>()
-                                    .Include(x => x.Case)
-                                    .ThenInclude(x => x.CaseType)
-                                    .Include(x => x.CaseSession)
-                                    .ThenInclude(x => x.SessionType)
-                                    .Include(x => x.CaseSession)
-                                    .ThenInclude(x => x.CourtHall)
                                     .Where(x => x.Case.CourtId == userContext.CourtId)
                                     .Where(x => x.LawUnitId == lawUnitId && x.CaseSessionId > 0)
                                     .Where(x => (x.DateTo ?? x.CaseSession.DateFrom.AddYears(100)) >= x.CaseSession.DateFrom)
                                     .Where(x => x.CaseSession.DateFrom >= start && x.CaseSession.DateFrom <= end)
                                     .Where(x => x.CaseSession.DateExpired == null)
-                                    .Where(x => x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno)
+                                    .Where(x => (x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno || x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Provedeno))
+                                    .Where(filterCaseMode)
                                     .Select(x => new CalendarVM
                                     {
                                         id = x.CaseSessionId,
                                         title = x.CaseSession.SessionType.Label,
                                         start = x.CaseSession.DateFrom,
                                         end = x.CaseSession.DateTo,
-                                        color = "#00c0ef",
-                                        pop_content = $"{x.Case.CaseType.Code} {x.Case.RegNumber} " + ((x.CaseSession.CourtHall != null) ? $"; {x.CaseSession.CourtHall.Name} {x.CaseSession.CourtHall.Location}" : ""),
+                                        color = (x.CaseSession.SessionStateId == NomenclatureConstants.SessionState.Nasrocheno ? "#00c0ef" : "#c3c6c7"),
+                                        pop_content = $"{x.Case.CaseType.Code} {x.Case.ShortNumber}/{x.Case.RegDate.ToString("yyyy")} " + ((x.CaseSession.CourtHall != null) ? $"; {x.CaseSession.CourtHall.Name} {x.CaseSession.CourtHall.Location}" : ""),
                                         pop_title = "Дело"
                                     }).ToList();
             foreach (var item in sessions)
@@ -119,6 +119,38 @@ namespace IOWebApplication.Core.Services
                 item.url = urlHelper.Action("Preview", "CaseSession", new { id = item.id });
             }
             result.AddRange(sessions);
+
+
+            if (caseMode == 2)
+            {
+                //Зареждане на известия
+                DateTime dateNow = DateTime.Now.ForceEndDate();
+
+                var notifications = repo.AllReadonly<WorkNotification>()
+                                        .Where(x => x.CourtId == userContext.CourtId)
+                                        .Where(x => x.UserId == userContext.UserId)
+                                        .Where(x => x.NotificationKind == NomenclatureConstants.NotificationKinds.FastProcess)
+                                        .Where(x => x.DateCreated >= start && x.DateCreated <= dateNow)
+                                        .Where(x => x.DateExpired == null)
+                                        .Where(x => x.DateTurnOff == null)
+                                        .Select(x => new CalendarVM
+                                        {
+                                            id = x.Id,
+                                            title = x.Title,
+                                            start = x.DateCreated,
+                                            end = x.DateCreated,
+                                            color = x.WorkNotificationType.CalendarColor != null ? x.WorkNotificationType.CalendarColor : "#f39c12",
+                                            pop_content = x.Description,
+                                            pop_title = x.Title
+                                        }).ToList();
+                
+                foreach (var item in notifications)
+                {
+                    item.url = urlHelper.Action("Index", "WorkNotification", new { id = item.id });
+                }
+                result.AddRange(notifications);
+
+            }
 
             var holidays = repo.AllReadonly<WorkingDay>()
                                 .Where(x => x.DayTypeId == CommonContants.WorkingDays.NotWorkDay)
@@ -130,42 +162,50 @@ namespace IOWebApplication.Core.Services
                                     //title = "Почивен ден",
                                     title = x.Description ?? "Почивен ден",
                                     start = x.Day,
-                                    allDay = true,
+                                    allDay = false,
                                     color = "#F5A9A9",
-                                    pop_title = x.Description
+                                    pop_title = x.Description,
+                                    url = "#hide"
                                 }).ToList();
+
+
+            foreach (var day in holidays)
+            {
+                day.end = day.start.MakeEndDate();
+
+            }
 
             result.AddRange(holidays);
             return result;
         }
 
-        /// <summary>
-        /// Извличане на данни за заетост на зали
-        /// </summary>
-        /// <param name="CourtHallId"></param>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <returns></returns>
-        public IEnumerable<CalendarVM> SelectSessionHallUse(int CourtHallId, DateTime start, DateTime end)
-        {
-            List<CalendarVM> result = new List<CalendarVM>();
-            var caseSessionHallUseVMs = caseSessionService.CaseSessionHallUse_Select(userContext.CourtId, CourtHallId, start, end, null);
-            foreach (var caseSessionHallUse in caseSessionHallUseVMs)
-            {
-                var calendarVM = new CalendarVM()
-                {
-                    id = caseSessionHallUse.CourtHallId,
-                    title = caseSessionHallUse.CourtHallName,
-                    start = caseSessionHallUse.DateFrom,
-                    end = caseSessionHallUse.DateTo,
-                    pop_content = $"{caseSessionHallUse.CaseName} {caseSessionHallUse.SessionLabel}",
-                    pop_title = "Дело"
-                };
+        ///// <summary>
+        ///// Извличане на данни за заетост на зали
+        ///// </summary>
+        ///// <param name="CourtHallId"></param>
+        ///// <param name="start"></param>
+        ///// <param name="end"></param>
+        ///// <returns></returns>
+        //public IEnumerable<CalendarVM> SelectSessionHallUse(int CourtHallId, DateTime start, DateTime end)
+        //{
+        //    List<CalendarVM> result = new List<CalendarVM>();
+        //    var caseSessionHallUseVMs = caseSessionService.CaseSessionHallUse_Select(userContext.CourtId, CourtHallId, start, end, null);
+        //    foreach (var caseSessionHallUse in caseSessionHallUseVMs)
+        //    {
+        //        var calendarVM = new CalendarVM()
+        //        {
+        //            id = caseSessionHallUse.CourtHallId,
+        //            title = caseSessionHallUse.CourtHallName,
+        //            start = caseSessionHallUse.DateFrom,
+        //            end = caseSessionHallUse.DateTo,
+        //            pop_content = $"{caseSessionHallUse.CaseName} {caseSessionHallUse.SessionLabel}",
+        //            pop_title = "Дело"
+        //        };
 
-                result.Add(calendarVM);
-            }
+        //        result.Add(calendarVM);
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
     }
 }

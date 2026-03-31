@@ -1,8 +1,10 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,9 +40,33 @@ namespace IOWebApplication.Components
                     }
                 case "NotificationCount":
                     {
-                        var notifications = workNotificationService.SelectWorkNotifications(filter).ToList();
-                        int modelCnt = notifications.Count();
+                        int modelCnt = await workNotificationService.SelectWorkNotifications(filter).CountAsync();
                         return await Task.FromResult<IViewComponentResult>(View(view, modelCnt));
+                    }
+                case "FPnotifications":
+                    {
+                        var model = await workNotificationService.SelectWorkNotifications(new WorkNotificationFilterVM()
+                                                                  {
+                                                                      CourtId = userContext.CourtId,
+                                                                      UserId = userContext.UserId,
+                                                                      DateCreate = DateTime.Now,
+                                                                      ReadTypeId = WorkNotificationFilterVM.ReadTypeUnRead,
+                                                                      NotificationKind = NomenclatureConstants.NotificationKinds.FastProcess
+                                                                  })
+                                                                  .Select(x => new
+                                                                  {
+                                                                      x.WorkNotificationTypeId,
+                                                                      x.WorkNotificationTypeLabel
+                                                                  })
+                                                                  .GroupBy(x => new { x.WorkNotificationTypeId, x.WorkNotificationTypeLabel })
+                                                                  .Select(x => new WorkNotificationWidgetVM
+                                                                  {
+                                                                      NotificationTypeId = x.Key.WorkNotificationTypeId,
+                                                                      NotificationTypeName = x.Key.WorkNotificationTypeLabel,
+                                                                      Count = x.Count()
+                                                                  })
+                                                                  .ToListAsync();
+                        return await Task.FromResult<IViewComponentResult>(View(view, model));
                     }
                 default:
                     return null;

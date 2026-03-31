@@ -10,7 +10,11 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 
         public decimal HourFee { get; set; }
 
+        public decimal HourFeeEUR { get; set; }
+
         public decimal MinDayFee { get; set; }
+
+        public decimal MinDayFeeEUR { get; set; }
 
         public DateTime DateFrom { get; set; }
 

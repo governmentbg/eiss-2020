@@ -19,10 +19,16 @@
         <div class="col-lg-2">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
         <div class="col-lg-2">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
         <div class="col-lg-4">@Html.EditorFor(m => m.CaseGroupId, "GenericDropDown")</div>
-        <div class="col-lg-4">@Html.EditorFor(m => m.Alphabet)</div>
+        <div class="col-lg-4">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
     </div>
     <div class="row">
+        <div class="col-lg-4">
+            @Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })
+        </div>
+        <div class="col-lg-4">@Html.EditorFor(m => m.Alphabet)</div>
         <div class="col-lg-4">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitTypes = NomenclatureConstants.LawUnitTypes.Judge.ToString(), courtId = userContext.CourtId })</div>
+    </div>
+    <div class="row">
         <div class="col-lg-4">@Html.EditorFor(m => m.DepartmentId, "GenericDropDown")</div>
         <div class="col-lg-4">@Html.EditorFor(m => m.NumberFrom, "Int32Nullable")</div>
     </div>
@@ -39,8 +45,19 @@
     </div>
 </form>
 
+<script>
+    $(document).ready(function () {
+        $('#CaseGroupId').trigger('change');
+    });
+
+    $('#CaseGroupId').change(function () {
+        requestCombo('@Url.Action("GetDDL_CaseTypeFromCourtType", "Ajax")', { CaseGroupId: $(this).val() }, '#CaseTypeId', @Model.CaseTypeId);
+    });
+</script>
+
 @section scripts {
     <script>
         initLawUnit();
+        initCaseCode();
     </script>
 }

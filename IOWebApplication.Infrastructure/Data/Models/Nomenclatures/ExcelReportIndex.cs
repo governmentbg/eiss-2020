@@ -32,12 +32,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         public string ActComplainIndex { get; set; }
 
         [Column("case_group_id")]
-        public int? CaseGroupId { get; set; }
+        public string CaseGroupId { get; set; }
+
+        [Column("sheet_index")]
+        public int? SheetIndex { get; set; }
 
         [ForeignKey(nameof(CourtTypeId))]
         public virtual CourtType CourtType { get; set; }
-
-        [ForeignKey(nameof(CaseGroupId))]
-        public virtual CaseGroup CaseGroup { get; set; }
     }
 }

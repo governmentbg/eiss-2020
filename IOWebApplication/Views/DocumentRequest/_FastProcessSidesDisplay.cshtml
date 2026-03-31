@@ -1,0 +1,90 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model IBaseRequestVM
+@{
+    ViewData["LeftSideName"] = "Заявител";
+    ViewData["RightSideName"] = "Длъжник";
+}
+
+@for (int a = 0; a < Model.LeftSide.Length; a++)
+{
+    <div class="row">
+        <div class="col-lg-6">
+            <h3 class="section-title section-title--xs mb-3" id="fp-applicant">1.@(a + 1) @ViewData["LeftSideName"]</h3>
+            @Html.HiddenFor(x => x.LeftSide[a].PersonGid)
+            <div class="row">
+                <div class="col-lg-4">@Html.DisplayFor(x => x.LeftSide[a].FullName, "objHidden")</div>
+                <div class="col-lg-4">@Html.DisplayFor(x => x.LeftSide[a].Identifier, "objHidden")</div>
+                <div class="col-lg-4">@Html.DisplayFor(x => x.LeftSide[a].RoleName, "objHidden")</div>
+            </div>
+            @foreach (var addr in Model.LeftSide[a].Addresses)
+            {
+                <div class="text-sm">
+                    @addr.AddressTypeName: @addr.FullAddress
+                </div>
+            }
+        </div>
+        <div class="col-lg-6">
+            @if (Model.LeftSide[a].Representatives != null)
+                if (Model.LeftSide[a].Representatives.Any())
+                {
+                    <h3 class="section-title section-title--xs mb-3">Представител</h3>
+                    @for (int ar = 0; ar < Model.LeftSide[a].Representatives.Length; ar++)
+                    {
+                        <div class="row">
+                            <div class="col-lg-4">@Html.DisplayFor(x => Model.LeftSide[a].Representatives[ar].FullName, "objHidden")</div>
+                            <div class="col-lg-4">@Html.DisplayFor(x => Model.LeftSide[a].Representatives[ar].Identifier, "objHidden")</div>
+                            <div class="col-lg-4">@Html.DisplayFor(x => Model.LeftSide[a].Representatives[ar].RoleName, "objHidden")</div>
+                        </div>
+                    }
+                }
+        </div>
+    </div>
+}
+@if (Model.LeftSide.Length > 1)
+{
+    <div>
+        <strong>Активна солидарност</strong>
+    </div>
+}
+
+@for (int d = 0; d < Model.RightSide.Length; d++)
+{
+    <div class="row">
+        <div class="col-lg-6">
+            <h3 class="section-title section-title--xs mb-3">2.@(d + 1) @ViewData["RightSideName"]</h3>
+            @Html.HiddenFor(x => Model.RightSide[d].PersonGid)
+            <div class="row">
+                <div class="col-lg-4">@Html.DisplayFor(x => Model.RightSide[d].FullName, "objHidden")</div>
+                <div class="col-lg-4">@Html.DisplayFor(x => Model.RightSide[d].Identifier, "objHidden")</div>
+                <div class="col-lg-4">@Html.DisplayFor(x => Model.RightSide[d].RoleName, "objHidden")</div>
+            </div>
+            @foreach (var addr in Model.RightSide[d].Addresses)
+            {
+                <div class="text-sm">
+                    @addr.AddressTypeName: @addr.FullAddress
+                </div>
+            }
+        </div>
+        <div class="col-lg-6">
+            @if (Model.RightSide[d].Representatives != null)
+                if (Model.RightSide[d].Representatives.Any())
+                {
+                    <h3 class="section-title section-title--xs mb-3">Представител на длъжника</h3>
+                    @for (int dr = 0; dr < Model.RightSide[d].Representatives.Length; dr++)
+                    {
+                        <div class="row">
+                            <div class="col-lg-4">@Html.DisplayFor(x => Model.RightSide[d].Representatives[dr].FullName, "objHidden")</div>
+                            <div class="col-lg-4">@Html.DisplayFor(x => Model.RightSide[d].Representatives[dr].Identifier, "objHidden")</div>
+                            <div class="col-lg-4">@Html.DisplayFor(x => Model.RightSide[d].Representatives[dr].RoleName, "objHidden")</div>
+                        </div>
+                    }
+                }
+        </div>
+    </div>
+}
+@if (Model.HasRepresentatives && Model.DocumentId > 0)
+{
+    <div class="pull-right">
+        <a href="#" onclick="updateRepresentatives();return false;">Актуализиране на представители</a>
+    </div>
+}

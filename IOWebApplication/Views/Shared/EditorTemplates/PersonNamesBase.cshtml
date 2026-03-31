@@ -4,6 +4,7 @@
 @{
     bool egnOnly = (bool)(ViewData["egnOnly"] ?? false);
     bool readonlyEgn = (bool)(ViewData["readonlyEgn"] ?? false);
+    bool viewLatinGender = (bool)(ViewData["viewLatinGender"] ?? false);
 
     var uicTypes = new List<SelectListItem>() {
      new SelectListItem("ЕГН","1")
@@ -14,9 +15,16 @@
         uicTypes.Add(new SelectListItem("ЕИК", "3"));
         uicTypes.Add(new SelectListItem("Дата на раждане", "4"));
         uicTypes.Add(new SelectListItem("БУЛСТАТ", "5"));
+        uicTypes.Add(new SelectListItem("ЛН", "6"));
     }
     var label = (string)ViewData["label"] ?? "Идентификация";
     bool showDeceasedFields = (bool)(ViewData["deceased"] ?? false);
+
+    var gender = new List<SelectListItem>() {
+        new SelectListItem("Избери","-1"),
+        new SelectListItem("Жена","1"),
+        new SelectListItem("Мъж","2"),
+    };
 }
 <input type="hidden" asp-for="@Model.PersonId" />
 @if (Model.Person != null)
@@ -79,6 +87,21 @@
                 @Html.EditorFor(x => x.Family2Name, "StringInline")
             </div>
         </div>
+        @if (viewLatinGender)
+        {
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label asp-for="LatinName"></label>
+                    @Html.EditorFor(x => x.LatinName, "StringInline")
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label asp-for="GenderId" class="io-req"></label>
+                    @Html.DropDownListFor(model => model.GenderId, gender.SetSelected(Model.GenderId), new { @class = "form-control gender-id" })
+                </div>
+            </div>
+        }
     </div>
     <div class="row entity--names">
         <div class="col-md-12">

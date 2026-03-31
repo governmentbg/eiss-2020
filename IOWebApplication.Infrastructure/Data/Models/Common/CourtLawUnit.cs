@@ -1,8 +1,9 @@
 ﻿using IOWebApplication.Infrastructure.Contracts;
-using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -12,7 +13,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
     /// Лица към съдилища
     /// </summary>
     [Table("common_court_lawunit")]
-    public class CourtLawUnit: IExpiredInfo
+    public class CourtLawUnit : IExpiredInfo
     {
         [Key]
         [Column("id")]
@@ -50,9 +51,17 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
         [Display(Name = "Дата до")]
         public DateTime? DateTo { get; set; }
 
+        [Column("mandate_date_to")]
+        [Display(Name = "Дата на активност/мандат до")]
+        public DateTime? MandateDateTo { get; set; }
+
         [Column("description")]
         [Display(Name = "Забележка")]
         public string Description { get; set; }
+
+        [Column("secretary_user_id")]
+        [Display(Name = "Секретар по подразбиране")]
+        public string SecretaryUserId { get; set; }
 
         [Column("date_expired")]
         [Display(Name = "Дата на анулиране")]
@@ -85,6 +94,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [ForeignKey(nameof(LawUnitTypeId))]
         public virtual LawUnitType LawUnitType { get; set; }
+
+        [ForeignKey(nameof(SecretaryUserId))]
+        public virtual ApplicationUser SecretaryUser { get; set; }
+
+        /// <summary>
+        /// Списък с асистент/помощник/секретар
+        /// </summary>
+        public virtual ICollection<CourtLawUnitAssistant> CourtLawUnitAssistants { get; set; }
 
         [NotMapped]
         public int MasterLawUnitTypeId { get; set; }

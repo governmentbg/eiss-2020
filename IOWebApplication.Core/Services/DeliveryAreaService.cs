@@ -17,7 +17,8 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
-using IOWebApplication.Infrastructure.Constants;
+using System.Threading.Tasks;
+
 
 namespace IOWebApplication.Core.Services
 {
@@ -174,13 +175,27 @@ namespace IOWebApplication.Core.Services
             result.Insert(0, new Select2ItemVM() { Text = "Избери", Id = -1 });
             return result;
         }
+
+        public async Task<List<Select2ItemVM>> GetCourtForDelivery_Select2Data()
+        {
+            var result =await repo.AllReadonly<Court>()
+                       .Where(x => x.IsActive)
+                       .OrderBy(x => x.Label)
+                       .Select(x => new Select2ItemVM
+                       {
+                           Id = x.Id,
+                           Text = x.Label,
+                       }).ToListAsync();
+            return result;
+        }
         public List<Select2ItemVM> DeliveryAreaListToDdlSelect2(List<DeliveryArea> deliveryAreaList)
         {
             var result = deliveryAreaList
                        .Select(x => new Select2ItemVM()
                        {
+                           Id = x.Id,
                            Text = x.Description,
-                           Id = x.Id
+                           MasterId = x.CourtId,
                        }).ToList() ?? new List<Select2ItemVM>();
             if (result.Count > 0)
                 result.Insert(0, new Select2ItemVM() { Text = "Избери", Id = -1 });

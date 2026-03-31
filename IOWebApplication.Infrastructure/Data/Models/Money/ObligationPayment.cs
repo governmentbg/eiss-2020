@@ -38,6 +38,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Column("user_disabled")]
         public string UserDisabledId { get; set; }
 
+        [Column("amount_bgn")]
+        [Display(Name = "Сума в лева")]
+        public decimal? AmountBGN { get; set; }
+
         [ForeignKey(nameof(ObligationId))]
         public virtual Obligation Obligation { get; set; }
 

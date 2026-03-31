@@ -5,7 +5,10 @@ using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.IndexService;
 using IOWebApplicationService.Infrastructure.Contracts;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace IOWebApplicationService.Infrastructure.Services
@@ -17,28 +20,31 @@ namespace IOWebApplicationService.Infrastructure.Services
         public ElasticIndexService(
                 IRepository _repo,
                 IElasticService _elasticService,
-                ILogger<CubipsaService> _logger)
+                ILogger<ElasticIndexService> _logger)
         {
             repo = _repo;
             elasticService = _elasticService;
             logger = _logger;
             this.IntegrationTypeId = NomenclatureConstants.IntegrationTypes.ElasticService;
         }
-        protected override async Task<bool> InitChanel()
+
+        //protected override IEnumerable<MQEpep> FetchHighPriorityItems(int fetchCount)
+        //{
+        //    return null;
+        //}
+
+        protected override  Task<bool> InitChanel()
         {
-            //var ttt = elasticService.Search(45, "повик");
-            return true;
+            return  Task.FromResult(true);
         }
 
         protected override async Task CloseChanel()
         {
+            await Task.Yield();
         }
 
         protected override async Task SendMQ(MQEpep mq)
         {
-
-           
-
             switch (mq.MethodName)
             {
                 case EpepConstants.Methods.Add:
@@ -48,9 +54,32 @@ namespace IOWebApplicationService.Infrastructure.Services
                 case EpepConstants.Methods.Delete:
                     await Delete(mq);
                     break;
+                case EpepConstants.Methods.Manage:
+                    await Manage(mq);
+                    break;
+                case "select":
+                    await Select(mq);
+                    break;
                 default:
                     break;
             }
+        }
+
+        private async Task Select(MQEpep mq)
+        {
+            var filter = JsonConvert.DeserializeObject<SearchFilterModel>(System.Text.Encoding.UTF8.GetString(mq.Content));
+            filter.Skip = 0;
+            filter.Take = 1;
+            var result = (await elasticService.Search(filter))?.Items?.FirstOrDefault();
+            if (result != null)
+            {
+                mq.ErrorDescription = $"id={result.ActId} {result.ActNumber}/{result.ActDeclaredDate:dd.MM.yyyy} {result.Highlights.FirstOrDefault()}";
+            }
+            else
+            {
+                mq.ErrorDescription = "No results";
+            }
+            UpdateMQ(mq, true);
         }
 
         private async Task Add(MQEpep mq)
@@ -119,6 +148,25 @@ namespace IOWebApplicationService.Infrastructure.Services
             else
             {
                 SetErrorToMQ(mq, EpepConstants.IntegrationStates.DataContentError, delResponse.ErrorMessage);
+                return;
+            }
+        }
+
+        private async Task Manage(MQEpep mq)
+        {
+            var manageResponse = await elasticService.ManageIndex(new IndexRequestModel()
+            {
+                Method = EpepConstants.Methods.Manage
+            });
+
+            if (manageResponse.SendOk)
+            {
+                mq.ErrorDescription = manageResponse.ErrorMessage;
+                UpdateMQ(mq, true);
+            }
+            else
+            {
+                SetErrorToMQ(mq, EpepConstants.IntegrationStates.DataContentError, manageResponse.ErrorMessage);
                 return;
             }
         }

@@ -1,0 +1,10 @@
+﻿@model SummaryFile[]
+@using Integration.Epep;
+@foreach (var item in Model)
+{
+    <div>
+        <a href="@(ViewBag.EPEP_FILE_PATH)@(item.Gid)" title="Изтегли документа">
+            @(item.FileTitle ?? item.FileName)
+        </a>
+    </div>
+}

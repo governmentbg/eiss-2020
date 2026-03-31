@@ -2,18 +2,18 @@
 using IO.SignTools.Contracts;
 using IO.SignTools.Services;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Contracts.Integration;
 using IOWebApplication.Core.Services;
-using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models;
-using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.UserContext;
 using IOWebApplication.Infrastructure.Http;
+using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Services;
+using IOWebApplicationService.Infrastructure.Services.Intergation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -33,9 +33,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Регистрира услугите на приложението в  IoC контейнера
         /// </summary>
         /// <param name="services">Регистрирани услуги</param>
-        public static void AddApplicationServices(this IServiceCollection services)
+        public static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationClaimsPrincipalFactory>();
+
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
@@ -53,11 +53,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.MultipartBoundaryLengthLimit = int.MaxValue;
                 options.MultipartHeadersCountLimit = int.MaxValue;
                 options.MultipartHeadersLengthLimit = int.MaxValue;
+                options.KeyLengthLimit = int.MaxValue;
             });
             services.AddScoped<IIOSignToolsService, IOSignToolsService>();
             services.AddScoped<ICommonService, CommonService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<IUserContext, UserContext>();
+            services.AddScoped<IDBUserContext, DBUserContext>();
             services.AddScoped<ILogOperationService<ApplicationDbContext>, LogOperationService<ApplicationDbContext>>();
             services.AddScoped<ICdnService, CdnService>();
             services.AddScoped<IBaseCdnService, BaseCdnService>();
@@ -88,6 +90,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<ICaseLoadCorrectionService, CaseLoadCorrectionService>();
             services.AddScoped<ICaseSessionActComplainService, CaseSessionActComplainService>();
             services.AddScoped<ICaseSessionActService, CaseSessionActService>();
+            services.AddScoped<ICaseSessionActSelectionService, CaseSessionActSelectionService>();
             services.AddScoped<ICasePersonLinkService, CasePersonLinkService>();
             services.AddScoped<ICaseNotificationService, CaseNotificationService>();
             services.AddScoped<ICaseSessionActLawBaseService, CaseSessionActLawBaseService>();
@@ -95,6 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<ICaseMoneyService, CaseMoneyService>();
             services.AddScoped<ICaseSessionDocService, CaseSessionDocService>();
             services.AddScoped<ICaseSelectionProtokolService, CaseSelectionProtokolService>();
+            services.AddScoped<ICaseSelectionProtocolSubstitutionService, CaseSelectionProtocolSubstitutionService>();
             services.AddScoped<IPrintDocumentService, PrintDocumentService>();
             services.AddScoped<ICourtLoadPeriodService, CourtLoadPeriodService>();
             services.AddScoped<ICaseEvidenceService, CaseEvidenceService>();
@@ -109,7 +113,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IReportViewerService, ReportViewerService>();
             services.AddScoped<ICaseSessionMeetingService, CaseSessionMeetingService>();
-            services.AddScoped<IMoneyService, MoneyService>();
+            //services.AddScoped<IMoneyService, MoneyService>();
+            services.AddLazybleService<IMoneyService, MoneyService>();
             services.AddScoped<ICourtRegionService, CourtRegionService>();
             services.AddScoped<ICaseMigrationService, CaseMigrationService>();
             services.AddScoped<ICaseArchiveService, CaseArchiveService>();
@@ -129,7 +134,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IEpepConnectionService, EpepConnectionService>();
             services.AddScoped<IExcelReportService, ExcelReportService>();
             services.AddScoped<IMigrationDataService, MigrationDataService>();
-            //services.AddScoped<IOAuditLogDataProvider, IOAuditLogDataProvider>();
             services.AddScoped<ITempFileHandler, TempFileHandler>();
             services.AddScoped<ICaseLawUnitTaskChangeService, CaseLawUnitTaskChangeService>();
             services.AddScoped<IDocumentResolutionService, DocumentResolutionService>();
@@ -144,6 +148,24 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IDocumentNotificationService, DocumentNotificationService>();
             services.AddScoped<IVksNotificationService, VksNotificationService>();
             services.AddScoped<IElasticService, ElasticService>();
+            services.AddScoped<IBlankTemplateService, BlankTemplateService>();
+            services.AddScoped<ICaseSelectionChangeService, CaseSelectionChangeService>();
+            services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<IElectionService, ElectionService>();
+            services.AddScoped<IProxyEissService, ProxyEissService>();
+            services.AddScoped<ICaisBuletinService, CaisBuletinService>();
+            services.AddScoped<ICaisMapperService, CaisMapperService>();
+            services.AddScoped<ICourtStampCertificateService, CourtStampCertificateService>();
+            services.AddScoped<IDocumentRequestService, DocumentRequestService>();
+            services.AddScoped<IFastProcessSelectionCourtService, FastProcessSelectionCourtService>();
+            services.AddScoped<IMediationCommonService, MediationCommonService>();
+            services.AddScoped<IMediationService, MediationService>();
+            services.AddScoped<IMediationNotificationService, MediationNotificationService>();
+            services.AddScoped<IInterestRateService, InterestRateService>();
+
+            services.Configure<CdnConfigVM>(configuration);
+            services.AddLazybleService<IIOSignToolsService, IOSignToolsService>();
+
         }
 
         /// <summary>
@@ -153,11 +175,30 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="Configuration">Настройки на приложението</param>
         public static void AddAppDbContext(this IServiceCollection services, IConfiguration Configuration)
         {
+            string connString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), m => m.MigrationsAssembly("IOWebApplication.Infrastructure"))
+            {
+                options.UseNpgsql(connString, m => m.MigrationsAssembly("IOWebApplication.Infrastructure")).EnableSensitiveDataLogging(Configuration.GetValue<bool>("Logging:SensitiveDataLogging", false));
+            }
             );
+            //int dbContextMaxPoolSize = Configuration.GetValue<int>("DbContextMaxPoolSize", 100);
+            //services.AddDbContextPool<ApplicationDbContext>(options =>
+            //{
+            //    options.UseNpgsql(connString, m => m.MigrationsAssembly("IOWebApplication.Infrastructure")).EnableSensitiveDataLogging(Configuration.GetValue<bool>("Logging:SensitiveDataLogging", false));
+            //}, dbContextMaxPoolSize
+            //);
 
             services.AddScoped(typeof(IRepository), typeof(Repository));
+
+            string readonlyDbConnString = Configuration.GetConnectionString("ReadonlyConnection") ?? connString;
+            services.AddDbContext<ReadonlyDbContext>(options =>
+               options.UseNpgsql(readonlyDbConnString, m => m.MigrationsAssembly(null))
+           );
+            //  services.AddDbContextPool<ReadonlyDbContext>(options =>
+            //    options.UseNpgsql(readonlyDbConnString, m => m.MigrationsAssembly(null)), dbContextMaxPoolSize
+            //);
+
+            services.AddScoped(typeof(IReadonlyRepository), typeof(ReadonlyRepository));
 
             services.AddSingleton<IMongoClient>(s =>
                 new MongoClient(Configuration.GetConnectionString("MongoDbConnection"))

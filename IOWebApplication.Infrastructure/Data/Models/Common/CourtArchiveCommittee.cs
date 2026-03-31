@@ -39,5 +39,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Common
 
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
+
+
+        public virtual ICollection<CourtArchiveCommitteeLawUnit> LawUnits { get; set; }
     }
 }

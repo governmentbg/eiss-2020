@@ -1,0 +1,112 @@
+﻿@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case.Mediation
+@model MediationCaseSessionVM
+
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция на среща към дело";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне на среща към дело";
+    }
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("IndexCaseMediation", "Mediation")">Съдебни дела подлежащи на медиация</a></li>
+        <li><a href="@Url.Action("CasePreviewMediation", "Mediation", new { id = Model.CaseId } )">Съдебно дело - медиация</a></li>
+        @if (Model.Id > 0)
+        {
+            <li><a href="@Url.Action("SessionPreviewMediation", "Mediation", new { id = Model.Id } )">Среща за медиация</a></li>
+        }
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditMediationCaseSession" method="post">
+            @Html.HiddenFor(x => x.Id)
+            @Html.HiddenFor(x => x.CaseId)
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.MediationTypeId, "GenericDropDown")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.MediationLocationId, "GenericDropDown")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.MediationLocationDescription)</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTimeDivided")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTimeDivided")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-4">@Html.EditorFor(x => x.MediationStateId, "GenericDropDown")</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.Description, "Textarea")</div>
+                </div>
+
+                <div class="row" id="divLinkCase">
+                    <div class="col-lg-12">@Html.EditorFor(x => x.LinkCaseIds, "GenericDropDownMultipleArray")</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Запис" class="btn btn-success single-click-submit" />
+                @if (Model.Id < 1)
+                {
+                    <a asp-controller="Mediation" asp-action="CasePreviewMediation" asp-route-id="@Model.CaseId" class="btn btn-danger">Назад</a>
+                }
+                else
+                {
+                    <a asp-controller="Mediation" asp-action="SessionPreviewMediation" asp-route-id="@Model.Id" class="btn btn-danger">Назад</a>
+                    <div class="pull-right">
+                        @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на среща", ExpireSubmitUrl = Url.Action("MediationCaseSession_ExpiredInfo") })
+                        <span>&nbsp;</span>
+                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#LinkCaseIds').select2({ language: "bg" });
+            SH_LinkCase();
+
+            cStr = '@Model.StringLinkCaseIds';
+            var cSelectedValues = cStr.split(",");
+            $('#LinkCaseIds').val(cSelectedValues).trigger('change');
+
+            $('#MediationTypeId').change(function () {
+                SH_LinkCase();
+            });
+        });
+
+        function SH_LinkCase() {
+            var mediationTypeId = $("#MediationTypeId").val();
+            if ((mediationTypeId == @NomenclatureConstants.MediationTypeConstants.GeneralMediationInformationMeeting) ||
+                (mediationTypeId == @NomenclatureConstants.MediationTypeConstants.GeneralMediationMeeting)) {
+                $("#divLinkCase").show();
+            }
+            else {
+                $("#divLinkCase").hide();
+            }
+        }
+    </script>
+}

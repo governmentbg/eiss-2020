@@ -18,7 +18,7 @@ namespace IOWebApplicationService.Infrastructure.Models.EPRO
 
         public string GetErrorDescription()
         {
-            return $"{ErrorType} {Reason} (Поле {FaultyAttribute})";
+            return $"{ErrorType} {Reason} (Поле {FaultyAttribute});{Description}";
         }
     }
 }

@@ -1,0 +1,220 @@
+﻿@model CaseSessionActSelectionProtocolFilterVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+
+@{
+    ViewData["Title"] = "Случаен избор на актове за атестация";
+    ViewData["ShowMenuCounts"] = true;
+}
+
+@section breadcrumb {
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index","CaseSessionActSelection")" title="Потоколи от направени случаен избор на актове за атестация">Потоколи от направени случаен избор на три съдебни акта</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+
+   
+
+        @using (Html.BeginForm("CreateSelection", "CaseSessionActSelection", FormMethod.Post, new { id = "filterForm", autocomplete = "off" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+            <div class="row">
+                <div class="col-lg-3">
+                    @Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new
+                        {
+                            selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS,
+                            lawUnitType = NomenclatureConstants.LawUnitTypes.Judge
+                        })
+                </div>
+                <div class="col-lg-3">
+                    @Html.EditorFor(m => m.DateFrom, "DateTime")
+                </div>
+                <div class="col-lg-3">
+                    @Html.EditorFor(m => m.DateTo, "DateTime")
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3">@Html.EditorFor(m => m.IsFinal, "Boolean")</div>
+                <div class="col-lg-3">@Html.EditorFor(m => m.IsCanceling, "Boolean")</div>
+                <div class="col-lg-3">
+                    @Html.EditorFor(m => m.IsBeacameFinal, "Boolean")<br />
+                    <div class="col-lg-12">@Html.EditorFor(x => x.ActResultId, "GenericDropDown")</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 text-left pb-15">
+                    <button type="button" class="btn btn-primary" id="btnFilter" title="Филтриране">
+                        Филтриране <i class="fa fa-search" title="Търсене"></i>
+                    </button>
+
+                    <button type="submit" class="btn btn-success single-click-submit" id="btnGenerateProtocol" title="Генерирай протокол">
+                        Генерирай протокол <i class="fa fa-action" title="Генерирай протокол"></i>
+                    </button>
+                </div>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-12">
+                <table id="caseSessionActMainTable" class="table table-hover table-striped"></table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script id="caseSessionActTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("Edit", "CaseSessionAct")?id={{this}}" class="btn btn-def btn-sm" title="Преглед">
+        <i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span>
+    </a>
+</script>
+
+<script id="caseSelectionProtokolTemplateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("PreviewDoc", "CaseSessionActSelection")?id={{this}}" target="_blank" class="btn btn-dropbox btn-sm" title="Протокол от разпределение">
+        <i class="fa fa-random"></i><span class="hidden-sm hidden-xs"></span>
+    </a>
+</script>
+
+<script>
+    function getAntiForgeryToken() {
+        return $('input[name="__RequestVerificationToken"]').val();
+    }
+
+    function markFiltersDirty() {
+        $('#btnGenerateProtocol').hide();
+        $('#btnFilter').show();
+    }
+
+    function LoadTableCaseSessionAct() {
+        if ($("#JudgeReporterId").val() == 0) {
+            return messageHelper.ShowErrorMessage('Попълнете съдия', messageContainer);
+        }
+
+        if ($.fn.dataTable.isDataTable('#caseSessionActMainTable')) {
+            refreshTable('#caseSessionActMainTable');
+            return;
+        }
+
+        $('#caseSessionActMainTable').DataTable({
+            ajax: {
+                url: "@Url.Action("ListDataActsForSelection", "CaseSessionActSelection")",
+                type: "POST",
+                datatype: "json",
+                headers: {
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                data: function (d) {
+                    d.model = {
+                        DateFrom: $('#DateFrom').val(),
+                        DateTo: $('#DateTo').val(),
+                        JudgeReporterId: $('#JudgeReporterId').val(),
+                        IsFinal: $("#IsFinal").is(":checked"),
+                        IsCanceling: $("#IsCanceling").is(":checked"),
+                        IsBeacameFinal: $("#IsBeacameFinal").is(":checked"),
+                            ActResultId: $('#ActResultId').val()
+                    };
+                }
+            },
+            columns: [
+                { name: 'vid_RegNumber',
+                  data: 'vid_RegNumber', 
+                  title: 'Съдебен акт', 
+                  sortable: true,
+                  searchable: true 
+                },
+                {
+                    name: 'regDate',
+                    data: 'regDate',
+                    title: 'Дата', 
+                    sortable: true, 
+                    searchable: false,
+                    render: function (value) { return value ? moment(value).format("DD.MM.YYYY") : ""; 
+                    }
+                },
+                { name: 'caseType_CaseLabel',
+                data: 'caseType_CaseLabel', 
+                title: '',
+                sortable: true,
+                searchable: true },
+                {
+                    name: 'actInforcedDate',
+                    data: 'actInforcedDate',
+                    title: 'В законна сила', 
+                    sortable: true, searchable: false,
+                    render: function (value) { return value ? moment(value).format("DD.MM.YYYY") : ""; }
+                },
+                { name: 'result',
+                data: 'result', 
+                title: 'Инстанционен контрол',
+                sortable: false, searchable: true 
+                }
+            ]
+        }).order([[1, "desc"]]);
+    }
+
+    $(function () {
+        if (typeof initLawUnit === "function") {
+            initLawUnit();
+        }
+
+        // Стартово състояние
+        $('#btnGenerateProtocol').hide();
+        $('#btnFilter').show();
+
+        // Клик на "Филтриране"
+        $('#btnFilter').on('click', function () {
+            if ($("#JudgeReporterId").val() > 0) {
+                $('#btnFilter').hide();
+                $('#btnGenerateProtocol').show();
+                LoadTableCaseSessionAct();
+            } else {
+                messageHelper.ShowErrorMessage('Попълнете съдия', messageContainer);
+            }
+        });
+
+       
+
+        $(document).on('change keyup input', '#JudgeReporterId, #IsFinal, #IsCanceling, #IsBeacameFinal', markFiltersDirty);
+
+    
+
+        const dateSelectors = '#DateFrom, #DateTo, [name="DateFrom"], [name="DateTo"]';
+        $(document).on('change keyup input blur', dateSelectors, markFiltersDirty);
+        $(document).on('dp.change apply.daterangepicker cancel.daterangepicker', dateSelectors, markFiltersDirty);
+        $(document).on('change input', '#ActResultId', markFiltersDirty);
+    
+
+        $(document).on('change keyup input blur dp.change apply.daterangepicker cancel.daterangepicker',
+            '.datetimepicker-input[data-target="#DateFrom"], .datetimepicker-input[data-target="#DateTo"]',
+            markFiltersDirty
+        );
+     
+
+        $('#filterForm').on('submit', function (e) {
+            if ($("#JudgeReporterId").val() == 0) {
+                e.preventDefault();
+                messageHelper.ShowErrorMessage('Попълнете съдия', messageContainer);
+            }
+        });
+        function toggleActResult() {
+            var show = $("#IsBeacameFinal").is(":checked");
+
+            var $target = $("#ActResultId").closest(".col-lg-12");
+            if ($target.length === 0) { $target = $("#ActResultId"); }
+            $target.toggle(show);
+        }
+
+        $("#IsBeacameFinal").on("change", toggleActResult);
+
+
+        toggleActResult();
+    });
+</script>

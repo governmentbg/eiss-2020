@@ -1,0 +1,831 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: SimSun;
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Arial Narrow";
+			panose-1: 2 11 6 6 2 2 2 3 2 4;
+		}
+
+		@font-face {
+			font-family: "\@SimSun";
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h1 {
+			mso-style-name: "Heading 1\,Headline 1";
+			mso-style-link: "Heading 1 Char\,Headline 1 Char";
+			margin-top: 6.0pt;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 21.6pt;
+			text-align: justify;
+			text-indent: -21.6pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+			font-variant: small-caps;
+			color: #1F497D;
+		}
+
+		h3 {
+			mso-style-link: "Heading 3 Char";
+			margin-top: 2.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 36.0pt;
+			text-align: justify;
+			text-indent: -36.0pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #1F3763;
+			font-weight: normal;
+		}
+
+		h4 {
+			mso-style-name: "Heading 4\,Level 2 - a\,h4\,H4\,4 dash\,d\,3\,Titlu paragraf\,Heading 4 Char Char\,Heading 4 Char1\,Heading 4 Char Char Char\,Heading 4 Char1 Char\,Heading 4 Char Char1";
+			mso-style-link: "Heading 4 Char\,Level 2 - a Char\,h4 Char\,H4 Char\,4 dash Char\,d Char\,3 Char\,Titlu paragraf Char\,Heading 4 Char Char Char1\,Heading 4 Char1 Char1\,Heading 4 Char Char Char Char\,Heading 4 Char1 Char Char\,Heading 4 Char Char1 Char";
+			margin-top: 12.0pt;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 206.25pt;
+			text-align: justify;
+			text-indent: -43.2pt;
+			line-height: 150%;
+			page-break-after: avoid;
+			font-size: 12.0pt;
+			font-family: "Arial Narrow",sans-serif;
+			font-variant: small-caps;
+			color: #1F497D;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		h5 {
+			mso-style-name: "Heading 5\,Level 3 - i\,H5";
+			mso-style-link: "Heading 5 Char\,Level 3 - i Char\,H5 Char";
+			margin-top: 12.0pt;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 50.4pt;
+			text-align: justify;
+			text-indent: -50.4pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Calibri",sans-serif;
+			font-weight: normal;
+			font-style: italic;
+		}
+
+		span.Heading3Char {
+			mso-style-name: "Heading 3 Char";
+			mso-style-link: "Heading 3";
+			font-family: "Calibri Light",sans-serif;
+			color: #1F3763;
+		}
+
+		p.Style4, li.Style4, div.Style4 {
+			mso-style-name: Style4;
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 3.0pt;
+			margin-left: 108.0pt;
+			text-align: justify;
+			text-indent: -18.0pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5, li.EISSStyle5, div.EISSStyle5 {
+			mso-style-name: "EISS Style5 ЕИСС";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 8.0pt;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpFirst, li.EISSStyle5CxSpFirst, div.EISSStyle5CxSpFirst {
+			mso-style-name: "EISS Style5 ЕИССCxSpFirst";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpMiddle, li.EISSStyle5CxSpMiddle, div.EISSStyle5CxSpMiddle {
+			mso-style-name: "EISS Style5 ЕИССCxSpMiddle";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 0cm;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.EISSStyle5CxSpLast, li.EISSStyle5CxSpLast, div.EISSStyle5CxSpLast {
+			mso-style-name: "EISS Style5 ЕИССCxSpLast";
+			mso-style-link: "EISS Style5 ЕИСС Char";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 8.0pt;
+			margin-left: 58.5pt;
+			text-align: justify;
+			text-indent: -25.25pt;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.EISSStyle5Char {
+			mso-style-name: "EISS Style5 ЕИСС Char";
+			mso-style-link: "EISS Style5 ЕИСС";
+			font-family: "Times New Roman",serif;
+		}
+
+		p.NormalIO, li.NormalIO, div.NormalIO {
+			mso-style-name: "Normal IO";
+			margin-top: 0cm;
+			margin-right: 0cm;
+			margin-bottom: 10.0pt;
+			margin-left: 0cm;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			line-height: 12.0pt;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=BG style='word-wrap:break-word'>
+
+	<div class=WordSection1>
+
+		<h3>
+			<a name="_Toc147497528">
+				8.11.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;
+				</span>Масово преразпределение
+			</a>
+		</h3>
+
+		<h3 style='margin-left:99.95pt;text-indent:-64.5pt'>
+			8.11.1.1<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span> <a name="_Toc147497529">
+				Принципи на масовото преразпределение от един
+				текущ към един нов Съдия
+			</a> - докладчик
+		</h3>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				Функционалността за масово
+				преразпределение (един към друг съдия -докладчик) се използва за последващо
+				преразпределение на множество дела в една група за случайно разпределение от
+				един съдия на друг съдия. При разпределение броят получени съдебни дела се отчита
+				в съответната съдебната група за разпределение чрез премахване на броя
+				преразпределени дела от досегашния съдия и натрупване на брой дела на новия
+				съдия. На текущия съдия се добавя един брой среднодневни дела, а на новия минус
+				1 един брой среднодневни дела.  По този начин не са променя общия брой дела в
+				групата за случайно разпределение нито на текущия, нито на новия съдия и това
+				не се отразява на алгоритъма за случайно разпределение, т.е. този брой дела не
+				се отчита от алгоритъма и не оказва влияние при последващо ново случайно
+				разпределение през стандартния режим за автоматично случайно разпределение.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<b><span style='line-height:115%'>Забележка:</span></b><span style='line-height:115%'>
+				Ако текущият съдия -докладчик има разпределени дела
+				чрез режим по дежурство, броят на делата, които се премахват от общия брой
+				разпределени дела в групата на този съдия включва само разпределените чрез
+				автоматичен и ръжен режим на разпределение, а броят дела, които се добавят на
+				новия съдия - докладчик включва всички дела, които му се преразпределят
+				(включително и тези, които са били първоначално разпределени по дежурство).
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span style='line-height:115%'>
+				Функционалността за масово
+				последващо преразпределение се използва за преразпределение на свършени дела за
+				администриране, при прехвърляне масово на дела от младши съдии на нови младши
+				съдии и др. според необходимостта обоснована в акт на административния
+				ръководител на съда (заповед или вътрешни правила), който е необходимо
+				задължително да бъде посочен като основание при преразпределение.
+			</span>
+		</p>
+
+		<p class=MsoNormal>Този начин за преразпределение е приложим само за:</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Тип на разпределение – избор на съдия-докладчик;
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Начин на разпределение – ръчно.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<span style='line-height:115%'>
+				Екранът
+				за масово преразпределение се достъпва през меню Съдебни дела -&gt; Управление
+				на дела -&gt; Масово преразпределение на съдия-докладчик.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'><span style='line-height:115%'>&nbsp;</span></p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt'>
+			<span lang=EN-US style='font-family:"Calibri Light",sans-serif;
+color:#2F5496'>
+				<img width=543 height=156 id="Picture 2016263877"
+					 src="massredistribution_files/image001.png">
+			</span><span style='line-height:
+115%'>
+				Менюто е достъпно за потребител с роля Разпределение и Супервайзор в
+				комбинация или само Администратор и екранът изглежда по следния начин:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt'>
+			<span lang=EN-US style='font-family:"Calibri Light",sans-serif;
+color:#2F5496'>
+				<img width=551 height=117 id="Picture 2016263879"
+					 src="massredistribution_files/image002.png">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<span lang=EN-US style='font-family:
+"Calibri Light",sans-serif;color:#2F5496'>&nbsp;</span>
+		</p>
+
+		<h3 style='margin-left:92.15pt;text-indent:-2.0cm'>
+			<a name="_Hlk147504589">
+				8.11.1.2<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span><span lang=EN-US style='color:#2F5496'> </span>
+			</a><a name="_Toc147497530">
+				Извършване на ново масово преразпределение от един текущ
+				към един нов съдия
+			</a>
+		</h3>
+
+		<p class=MsoNormal>
+			Извършване на ново преразпределение става посредством избор
+			на бутон <img width=103 height=21 id="Picture 143845"
+					src="massredistribution_files/image003.jpg">в дясната част на екрана. Зарежда
+			се нов екран за въвеждане на критерии за търсене на дела, които ще се
+			преразпределят.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=535 height=127
+				 id="Picture 141510" src="massredistribution_files/image004.jpg">
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>От дата – начална дата за период, в който са образувани делата;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>До дата – крайна дата за период, в който са образувани делата;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Съдия – текущ съдия по делата. Полето е с функция за автоматично
+			въвеждане на имена по минимум три символа;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Група за разпределение – съдебна група за разпределение, в която са
+			делата. Избор от списък;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Нов съдия – нов съдия, на когото да се преразпределят делата. Избор от
+			списък на съдии, които са добавени в съдебната група за преразпределение.
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Нов състав – възможност за избор на състав при смяна на състава по
+			делата. Заредената стойност по подразбиране в полето е „Без промяна на състава
+			по делото“, чрез която се запазва състава, в който е разглеждано делото до
+			момента на преразпределение.
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Основание – задължително поле, в което се въвежда основание за
+			извършване на масово преразпределение на дела. Текстът, въведен в полето се
+			извежда в протокол от преразпределение.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=515 height=123
+				 id="Picture 141691" src="massredistribution_files/image005.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			След избор на бутон <img width=101 height=30
+									 id="Picture 141701" src="massredistribution_files/image006.jpg">се зареждат
+			всички дела, в статус различен от анулирано, които са на съдия-докладчик избра
+			в поле Съдия.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=529 height=257
+				 id="Picture 141737" src="massredistribution_files/image007.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			С маркиране на чек-бокса пред номера на всяко дело, което
+			трябва да бъде преразпределено се избират делата, които ще бъдат
+			преразпределени.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=537 height=262
+				 id="Picture 141740" src="massredistribution_files/image008.jpg">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<span lang=EN-US style='font-family:
+"Calibri Light",sans-serif;color:#2F5496'>&nbsp;</span>
+		</p>
+
+		<p class=MsoNormal style='text-indent:0cm'>
+			<b>Забележка:</b> Максималният брой
+			дела за преразпределение е 20 дела.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След маркиране на необходимите
+			дела, потребителят избира бутон <img width=125 height=31 id="Picture 141785"
+												 src="massredistribution_files/image009.jpg">. След успешно преразпределение се
+			зарежда протокол от масово преразпределение за всички избрани дела.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=508 height=251
+				 id="Picture 141800" src="massredistribution_files/image010.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Разпределящият потребител избира
+			бутон <img width=74 height=31 id="Picture 141802"
+					src="massredistribution_files/image011.jpg">в долния десен ъгъл на екрана, за
+			да подпише с КЕП генерирания протокол. Зарежда се екран за избор на сертификат.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=541 height=251
+				 id="Picture 141822" src="massredistribution_files/image012.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След избор на сертификат, с който
+			да бъде подписан протокола, се избира бутон <span lang=EN-US>OK</span> и се
+			въвежда ПИН на КЕП. Визуализира се следния екран:
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=548 height=226
+				 id="Picture 141826" src="massredistribution_files/image013.jpg">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			С активните бутон до електронния
+			документ има възможност за преглед с бутон <img width=29 height=33
+												   id="Picture 141863" src="massredistribution_files/image014.png">или директен
+			печат с бутон <img width=33 height=31 id="Picture 141896"
+					  src="massredistribution_files/image015.png">на електронно подписания файл.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<span style='font-family:"Calibri Light",sans-serif;
+color:#2F5496'>
+				<img width=543 height=189 id="Picture 2016263880"
+					 src="massredistribution_files/image016.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			С преразпределението автоматично съдията-докладчик по
+			избраното дело се извежда и на негово място по делото се отразява избрания нов
+			съдия-докладчик. Причина за извеждане на досегашния съдия е от тип
+			Преразпределение.
+		</p>
+
+		<p class=MsoNormal>
+			В информация за преразпределение за предходния
+			съдия-докладчик се извежда информация за тип –  преразпределение и мотив –
+			информация въведена при масовото преразпределение в поле „Основание за масово
+			преразпределение“.
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<img width=560 height=106
+				 id="Picture 141995" src="massredistribution_files/image017.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Протоколът от случайно разпределение се добавя в ел. папки
+			на всички дела, за които е направено преразпределение.
+		</p>
+
+		<p class=MsoNormal>
+			Протоколът се публикува и в публичния портал за протоколи от
+			случайно разпределение.
+		</p>
+
+		<p class=MsoNormal>
+			Ако п реди подписване или по време на подписван,
+			потребителят прекъсне работа със системата или възникне грешка при изчитане на
+			смарт картата на КЕП, има възможност чрез търсене на преразпределение
+			(изпълняват с стъпките в 8.11.4.3), потребителят избира бутон <img width=81
+																			   height=31 id="Picture 141996" src="massredistribution_files/image018.jpg">и
+			преминава към стъпките за подписване на протокол, описани по-горе.
+		</p>
+
+		<p class=MsoNormal>
+			Ако по време на запис на преразпределението, възникне грешка
+			при запис, потребителят има възможност чрез търсене на преразпределение
+			(изпълняват с стъпките в 8.11.4.3), да повтори записа на преразпределението. В
+			екрана с данните за преразпределението се извежда следното съобщение:
+		</p>
+
+		<p class=MsoNormal>
+			<img width=454 height=173 id="Picture 142001"
+				 src="massredistribution_files/image019.jpg"> 
+		</p>
+
+		<p class=MsoNormal>
+			Чрез избор на бутон <img width=171 height=30
+									 id="Picture 142012" src="massredistribution_files/image020.jpg">потребителят
+			преминава към стъпките за презаписване на преразпредението.
+		</p>
+
+		<h3 style='margin-left:3.0cm;text-indent:-43.2pt'>
+			<a name="_Ref91844199"></a><a name="_Toc147497531">
+				<span style='font-family:"Times New Roman",serif'>
+					8.11.1.3<span style='font:7.0pt "Times New Roman"'>&nbsp; </span>
+				</span><span style='font-family:"Times New Roman",serif'>
+					Търсене на предходно масово
+					преразпределение от един текущ към един нов съдия
+				</span>
+			</a>
+		</h3>
+
+		<p class=NormalIO style='text-indent:35.4pt'>
+			При наличие на извършени предходни
+			преразпределения те се извеждат в списък в табличен вид.
+		</p>
+
+		<p class=NormalIO style='text-indent:35.4pt'>
+			Възможните филтри за търсене на
+			предходно масово преразпределение са:
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Вид преразпределение – възможност за избор на „масово преразпределение“.
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>От дата – начална дата на период, в който е извършено преразпределение;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>До дата – крайна дата на период, в който е извършено преразпределение;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Съдия – предходен съдия по делата. Полето е с функция за автоматично
+			въвеждане на имена по минимум три символа;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Група за разпределение – съдебна група за разпределение, в която са били
+			преразпределените дела към момента на преразпределение. Избор от списък;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Нов съдия – нов съдия, на когото са преразпределени делата. Избор от
+			списък на съдии, които са налични в съдебната група за преразпределение.
+		</p>
+
+		<p class=EISSStyle5CxSpLast>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Нов състав – възможност за избор на състав при смяна на състава по
+			делата. Заредената стойност по подразбиране в полето е „Без промяна на състава
+			по делото“, чрез която се запазва състава, в който е разглеждано делото до
+			момента на преразпределение.
+		</p>
+
+		<p class=NormalIO style='text-indent:35.4pt'>
+			След избор на необходимите филтри
+			се избира бутон <img width=101 height=37 id="Picture 142033"
+						src="massredistribution_files/image021.jpg">, с което се филтрират търсените
+			резултати.
+		</p>
+
+		<p class=NormalIO style='text-indent:35.4pt'>
+			<img width=522 height=159
+				 id="Picture 142047" src="massredistribution_files/image022.jpg">
+		</p>
+
+		<p class=NormalIO style='text-indent:35.4pt'>
+			С бутон <img width=32 height=33
+				   id="Picture 142048" src="massredistribution_files/image023.jpg">има възможност
+			да се прегледа генерирания протокол и преразпределените дела със съответното
+			преразпределение.
+		</p>
+
+		<h3>
+			8.11.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp; </span>Масово
+			преразпределение на съдия – член на състав
+		</h3>
+
+		<h3 style='margin-left:70.9pt;text-indent:-43.2pt'>
+			8.11.2.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span>Извършване на масово
+			преразпределение на съдия - член на състав
+		</h3>
+
+		<p class=MsoNormal>
+			Екранът за масово преразпределение на съдия-член на състав
+			се достъпва през меню Съдебни дела -&gt; Управление на дела -&gt; Масово
+			преразпределение на съдия-член на състав.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=459 height=335 id="Picture 2016263882"
+				 src="massredistribution_files/image024.png">
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'>
+			<span style='line-height:115%'>
+				Менюто
+				е достъпно за потребител с роля Разпределение и Супервайзор в комбинация или
+				само Администратор и екранът изглежда по следния начин:
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0cm'><span style='line-height:115%'>&nbsp;</span></p>
+
+		<p class=MsoNormal>
+			<img width=553 height=120 id="Picture 2016263883"
+				 src="massredistribution_files/image025.png">
+		</p>
+
+		<p class=MsoNormal>
+			Извършване на ново преразпределение става посредством избор
+			на бутон <img width=138 height=23 id="Picture 2016263885"
+					src="massredistribution_files/image026.png"> в дясната част на екрана. Зарежда
+			се нов екран за въвеждане на критерии за търсене на дела, които ще се
+			преразпределят.
+		</p>
+
+		<p class=MsoNormal>
+			<img width=557 height=143 id="Picture 2016263886"
+				 src="massredistribution_files/image027.png">
+		</p>
+
+		<p class=EISSStyle5CxSpFirst>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>От дата;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span> До дата<span lang=EN-US>;</span>
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Съдия – въвеждат се имената на текущ съдия-член на състав. Полето е с
+			функция за автоматично въвеждане на имена по минимум три символа;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span> Група за разпределение – посредством падащо меню се избора конкретната
+			съдебна група за разпределение;
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle>
+			-<span style='font:7.0pt "Times New Roman"'>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>Нов – въвеждат се имената на новия съдия-член на състав, на когото да се
+			преразпределят делата. Избор на съдия, предварително добавен в съдебния състав
+			от структурата на съда.
+		</p>
+
+		<p class=EISSStyle5CxSpMiddle style='margin-left:33.25pt;text-indent:0cm'>&nbsp;</p>
+
+		<p class=EISSStyle5CxSpMiddle style='text-indent:0cm'>
+			<img width=543
+				 height=122 id="Picture 2016263887" src="massredistribution_files/image028.png">
+		</p>
+
+		<p class=EISSStyle5CxSpLast style='text-indent:0cm'>&nbsp;</p>
+
+		<p class=MsoNormal>
+			След въвеждане на горепосочените критерии за търсене на дела
+			се избира бутон <img width=101 height=30 id="Picture 2016263884"
+						src="massredistribution_files/image029.jpg">и се зареждат всички дела, в статус
+			различен от анулирано, които са на текущия съдия-член на състав избран в поле „Съдия“.
+		</p>
+
+		<p class=EISSStyle5 align=center style='margin-left:0cm;text-align:center;
+text-indent:0cm'>
+			<img width=605 height=215 id="Picture 2016263888"
+				 src="massredistribution_files/image030.png">
+		</p>
+
+		<p class=MsoNormal>
+			Делата, които трябва да бъдат преразпределени се избират
+			чрез чекбкса пред тях, след което се избира бутон <img width=125 height=31
+																id="Picture 2016263889" src="massredistribution_files/image031.jpg">.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			След успешно преразпределение се
+			зарежда протокол от масово преразпределение за всички избрани дела.
+		</p>
+
+		<p class=MsoNormal style='margin-left:35.4pt;text-indent:0cm'>
+			<img width=484
+				 height=309 id="Picture 2016263890" src="massredistribution_files/image032.png">
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			Разпределящият потребител избира
+			бутон <img width=88 height=36 id="Picture 2016263892"
+					src="massredistribution_files/image033.jpg">в долния десен ъгъл на екрана, за
+			да подпише с КЕП генерирания протокол. След подписване на протокола той се
+			визуализира в горния десен ъгъл.
+		</p>
+
+		<p class=MsoNormal style='text-indent:35.4pt'>
+			<img width=604 height=185
+				 id="Picture 2016263893" src="massredistribution_files/image034.jpg">
+		</p>
+
+		<p class=MsoNormal>
+			Причина за извеждане на досегашния съдия-член на състав е от
+			тип Преразпределение.
+		</p>
+
+		<p class=MsoNormal>
+			В информация за преразпределение за предходния съдия-член на
+			състав се извежда информация за тип –  преразпределение и мотив – информация
+			въведена при масовото преразпределение в поле „Основание“.
+		</p>
+
+		<p class=MsoNormal>
+			Протоколът от случайно разпределение се добавя в ел. папки
+			на всички дела, за които е направено преразпределение.
+		</p>
+
+		<p class=MsoNormal>
+			Протоколът се публикува и в публичния портал за протоколи от
+			случайно разпределение.
+		</p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

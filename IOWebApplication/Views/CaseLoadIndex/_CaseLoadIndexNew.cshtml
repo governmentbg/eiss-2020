@@ -1,0 +1,177 @@
+﻿@model CaseMainDataVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using Microsoft.Extensions.Configuration
+@using IOWebApplication.Infrastructure.Constants
+@inject IConfiguration configuration;
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    var boolRecalcVisible = ((configuration.GetValue<string>("Environment:Name") != NomenclatureConstants.Environments.Test) &&
+                             (configuration.GetValue<string>("Environment:Name") != NomenclatureConstants.Environments.Production));
+}
+
+@if (access.CanChange)
+{
+    <div class="row">
+        <div class="col-md-12 text-right pb-15">
+            <a asp-controller="CaseLoadCorrection" asp-action="Add" asp-route-caseId="@Model.Id" asp-route-isMainActivity="@true" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i>
+                Добави коригиращ коефициент
+            </a>
+            @if (Model.IsND)
+            {
+                @if (boolRecalcVisible)
+                {
+                    <a asp-controller="CaseLoadIndex" asp-action="RecalcCaseLoadIndexByCase" asp-route-caseId="@Model.Id" class="btn btn-danger btn-sm">
+                        <i class="fa fa-refresh"></i>
+                        Преизчисляване
+                    </a>
+                }
+            }
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="caseLoadIndexMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+
+<script>
+        $(function () {
+            var table = $('#caseLoadIndexMainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataNew", "CaseLoadIndex")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (d) {
+                        d.caseId = @Model.Id;
+                        d.caseSessionId = '@Model.CaseSessionId';
+                    }
+
+                },
+                deferLoading: deferLoadingOnTab('#caseLoadIndexMainTable'),
+                columns: [
+                    {
+                        className: 'col-md-1',
+                        name: 'dateActivity',
+                        data: 'dateActivity',
+                        title: 'Дата на начисляване',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            return moment(data).format("DD.MM.YYYY");
+                        }
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'lawUnitName',
+                        data: 'lawUnitName',
+                        title: 'Име',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'nameActivityType',
+                        data: 'nameActivityType',
+                        title: 'Вид дейност',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'nameActivity',
+                        data: 'nameActivity',
+                        title: 'Дейност',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'caseLoadIndexBegin',
+                        data: 'caseLoadIndexBegin',
+                        title: 'Първоначален коефициент за тежест (1)',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'caseLoadCorrectionIdex',
+                        data: 'caseLoadCorrectionIdex',
+                        title: 'Коригиращ коефициент (2)',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'baseIndex',
+                        data: 'baseIndex',
+                        title: 'Текущ коефициент  (3)=(1)*(2)',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'loadValue',
+                        data: 'loadValue',
+                        title: 'Стойност на ПрЕтап/ДопДейн (4)',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'calcValueText',
+                        data: 'calcValueText',
+                        title: 'Изчислено за ПрЕтап/ДопДейн (5)=(3)*(4)',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'calcValueLawUnitText',
+                        data: 'calcValueLawUnitText',
+                        title: 'Общо на съдията',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        className: 'col-md-1',
+                        name: 'calcValueCaseText',
+                        data: 'calcValueCaseText',
+                        title: 'Общо по делото',
+                        sortable: true,
+                        searchable: true
+                    },
+                    //{
+                    //    name: 'actions',
+                    //    data: "id",
+                    //    title: "",
+                    //    sortable: false,
+                    //    searchable: false,
+                    //    className: "text-center noExport",
+                    //    "render": function (data, type, row) {
+                    //        return TemplateToHtml('#caseLoadIndexTemplateEdit', row);
+                    //    }
+                    //}
+                ]
+            }).order([[0, "asc"]]);
+        });
+</script>
+
+<script id="caseLoadIndexTemplateEdit" type="text/x-handlebars-template">
+    
+</script>
+
+<script>
+    function RecalcCaseLoadIndex() {
+        var caseId = @Model.Id;
+        postContent('@Url.Action("RecalcCaseLoadIndexByCase", "CaseLoadIndex")'
+            , { CaseId: caseId }
+            , function (data) {
+            });
+    }
+</script>
+
+

@@ -27,11 +27,17 @@ namespace IOWebApplication.Core.Contracts
         /// <summary>
         /// CaseType multiselect за CaseCode
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="caseCodeId"></param>
         /// <returns></returns>
         IQueryable<MultiSelectTransferVM> CaseTypeForSelect_Select(int caseCodeId);
 
+        /// <summary>
+        /// Извличане на състави по точен вид дело
+        /// </summary>
+        /// <param name="caseTypeId"></param>
+        /// <returns></returns>
         IQueryable<CaseTypeUnitVM> CaseTypeUnit_Select(int caseTypeId);
+
         CaseTypeUnitEditVM GetById_CaseTypeUnit(int id);
         ICollection<ListNumberVM> GetList_CaseTypeUnitCounts();
         bool CaseTypeUnit_SaveData(CaseTypeUnitEditVM model);

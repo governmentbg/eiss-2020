@@ -57,5 +57,8 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(EvidenceMovementTypeId))]
         public virtual EvidenceMovementType EvidenceMovementType { get; set; }
+
+        [ForeignKey(nameof(CaseSessionActId))]
+        public virtual CaseSessionAct CaseSessionAct { get; set; }
     }
 }

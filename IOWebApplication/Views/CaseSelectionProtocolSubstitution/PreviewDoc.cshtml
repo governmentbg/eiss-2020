@@ -1,0 +1,84 @@
+﻿@model CaseSelectionProtocolSubstitutionVM
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@using IOWebApplication.Infrastructure.Constants
+@{
+    ViewData["Title"] = "Преглед на протокол";
+    Layout = "~/Views/Shared/_MasterLayout.cshtml";
+}
+@section menuHeader {
+    <header class="main-header">
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.MainMenuComponent))
+    </header>
+}
+@section contentHeader {
+    <section class="content-header">
+        <h1>
+            @ViewData["Title"]
+        </h1>
+        @if (ViewBag.breadcrumbs != null)
+        {
+            <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        }
+    </section>
+}
+
+
+  
+        <!-- /.box-header -->
+    @if (Model.SelectionProtocolStateId == NomenclatureConstants.SelectionProtokolState.Signed)
+    {
+        <div class="box box-default">
+            <div class="box-header with-border">
+                <h3 class="box-title">Прикачени документи</h3>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body" style="">
+            <div class="cdn-files" data-label="hidden" data-sourcetype="@SourceTypeSelectVM.CaseSelectionProtokolSubstitution" data-sourceid="@Model.Id" data-editmode="none"></div>
+            <a asp-controller="CaseSelectionProtocolSubstitution" asp-action="Index"  class="btn btn-danger">Назад</a>
+            </div>
+            <!-- /.box-body -->
+        </div>
+        <partial name="_CdnScript" />
+
+    } 
+    else{
+    <div class="box box-default">
+        <div class="box-header with-border">
+            <h3 class="box-title">Подписване на протокол</h3>
+        </div>
+
+        <div class="box-body" style="">
+            <form asp-action="SignDoc" method="get">
+                @Html.HiddenFor(x => x.Id)
+                <div class="form-group">
+
+                    @if (Model.SelectionProtocolStateId != NomenclatureConstants.SelectionProtokolState.Signed)
+                    {
+                        <input type="submit" value="Подписване" class="btn btn-success single-click-submit" />
+
+                        <text>&nbsp;</text>
+                    }
+                    <a asp-controller="CaseSelectionProtocolSubstitution" asp-action="Index" class="btn btn-danger">Назад</a>
+                </div>
+            </form>
+        </div>
+        <!-- /.box-body -->
+    </div>
+
+    }
+<div class="box box-default">
+    <div class="box-header with-border">
+        <h3 class="box-title">Протокол</h3>
+        <div class="box-tools pull-right">
+    
+        </div>
+
+    <!-- /.box-header -->
+    <div class="box-body" style="">
+
+
+    <partial name="Preview" model="@Model" />
+    
+</div>
+    </div>
+</div>

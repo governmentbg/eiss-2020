@@ -6,19 +6,57 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
     public interface ICourtLawUnitService : IBaseService
     {
-        IQueryable<CourtLawUnitVM> CourtLawUnit_Select(int courtId, int periodType, int lawUnitType);
+        IQueryable<CourtLawUnitVM> CourtLawUnit_Select(int courtId, CourtLawUnitFilter filter);
         IQueryable<CourtLawUnitVM> CourtLawUnitSpr_Select(int LawUnitId, int PeriodTypeId, DateTime? DateFrom, DateTime? DateTo);
+
+        /// <summary>
+        /// Метод извличащ данни за асистент/помощник/секретар
+        /// </summary>
+        /// <param name="filter">Филтър попълнен от потребител</param>
+        /// <returns></returns>
+        IQueryable<CourtLawUnitAssistantViewModel> CourtLawUnitAssistant_Select(CourtLawUnitAssistantFilterViewModel filter);
 
         (bool result, string errorMessage) CourtLawUnit_SaveData(CourtLawUnit model);
 
+        /// <summary>
+        /// Извличане на данни за редакция на CourtLawUnitAssistant
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        Task<CourtLawUnitAssistantEditViewModel> GetCourtLawUnitAssistantById(int id);
+
+        /// <summary>
+        /// Запис на CourtLawUnitAssistant
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        Task<bool> CourtLawUnitAssistant_SaveData(CourtLawUnitAssistantEditViewModel model);
+
+        /// <summary>
+        /// Метод проверяващ за съществуващ запис за този служител
+        /// </summary>
+        /// <param name="courtLawUnitId">Идентификатор на записа за съдията</param>
+        /// <param name="lawUnitId">Идентификатор на служителя</param>
+        /// <param name="id">Идентификатор на записа за служителя</param>
+        /// <returns></returns>
+        Task<bool> IsExistsCourtLawUnitAssistant(int courtLawUnitId, int lawUnitId, int id);
+
+        /// <summary>
+        /// Сторниране на секретар към съдия
+        /// </summary>
+        /// <param name="id">Идентификатор на запис за секретар към съдия</param>
+        /// <returns></returns>
+        Task<bool> CourtLawUnitAssistantExpired(int id);
+
         IQueryable<MultiSelectTransferPercentVM> CourtLawUnitGroup_Select(int courtId, int lawUnitId);
 
-        bool CourtLawUnitGroup_SaveData(int courtId, int lawUnitId, List<MultiSelectTransferPercentVM> codeGroups);
+        Task<bool> CourtLawUnitGroup_SaveData(int courtId, int lawUnitId, List<MultiSelectTransferPercentVM> codeGroups);
 
         //IQueryable<CompartmentVM> Compartment_Select(int courtId, int lawUnitId);
 
@@ -81,13 +119,59 @@ namespace IOWebApplication.Core.Contracts
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        string CourtLawUnitSubstitution_Validate(CourtLawUnitSubstitution model);
+        Task<string> CourtLawUnitSubstitution_Validate(CourtLawUnitSubstitution model);
 
         /// <summary>
-        /// Запис на данни за заместване
+        /// Метод за запис на заместване
         /// </summary>
-        /// <param name="model"></param>
+        /// <param name="model">Модел попълнен от потребител</param>
         /// <returns></returns>
-        bool CourtLawUnitSubstitution_SaveData(CourtLawUnitSubstitution model);        
+        Task<bool> CourtLawUnitSubstitution_SaveData(CourtLawUnitSubstitution model);
+        
+        SaveResultVM CourtLawUnitOrder_ComboSave(CourtLawunitOrderComboVM model);
+
+        #region Група Централизирано разпределение ГД
+
+        /// <summary>
+        /// Извличане на данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        IQueryable<CourtLawUnitGroupCCDataVM> GetDataCentralDistributionCC(CourtLawUnitGroupCCFilterVM filter);
+
+        /// <summary>
+        /// Извличане на данни за редакция на служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        Task<CourtLawUnitGroupCCEditVM> GetCentralDistributionCCEditById(int id);
+
+        /// <summary>
+        /// Добавяне/редакция на данни за служители в Група Централизирано разпределение ГД
+        /// </summary>
+        /// <param name="model">Модел попълнен от потребител</param>
+        /// <returns></returns>
+        Task<int?> SavelCourtLawUnitGroupCentralDistributionCC(CourtLawUnitGroupCCEditVM model);
+
+        /// <summary>
+        /// Метод за зареждане на списък с налични служители в съд
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <param name="lawUnitId">Служител за редакция и да се провери дали го има в списъка, ако е с конфигурирана дата до</param>
+        /// <param name="addDefaultElement">Флаг за добавяне на елемент Избери</param>
+        /// <param name="addAllElement">Флаг за добавяне на елемент Всички</param>
+        /// <returns></returns>
+        Task<List<SelectListItem>> GetDDL_CommonCourtLawUnitCentralDistributionCC(int courtId, int? lawUnitId = null, bool addDefaultElement = true, bool addAllElement = false);
+
+        /// <summary>
+        /// Проверка дали служителят е вече добавен в групата, без значение съда
+        /// </summary>
+        /// <param name="lawUnitId">Идентификатор на служител</param>
+        /// <param name="courtGroupKind">Kind на група</param>
+        /// <param name="idSave">Идентификатор на запис</param>
+        /// <returns></returns>
+        Task<bool> IsExistLawUnitCentralDistributionCC(int lawUnitId, int courtGroupKind, int? idSave = null);
+
+        #endregion
     }
 }

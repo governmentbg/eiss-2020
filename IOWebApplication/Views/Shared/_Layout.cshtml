@@ -13,8 +13,10 @@
     <section class="content-header">
         <h1>
             @ViewBag.Title
+            @RenderSection("titleAdd", required: false)
         </h1>
         @RenderSection("breadcrumb", required: false)
+        @RenderSection("titleInfo", required: false)
     </section>
 }
 

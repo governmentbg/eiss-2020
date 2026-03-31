@@ -3,7 +3,6 @@
 @using IOWebApplication.Core.Helper.GlobalConstants;
 @using IOWebApplication.Extensions
 @model DeliveryItemChangeLawUnitVM;
-@inject IViewLocalizer Localizer
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
@@ -100,6 +99,7 @@
     $(function () {
         var table = $('#mainTable').DataTable({
             data: dataSet,
+            processing: false,
             serverSide: false,
             'order': [[1, 'asc']],
             "paging": false,
@@ -238,6 +238,8 @@
                 var table = $('#mainTable').DataTable();
                 table.clear();
                 table.rows.add(dataSet).draw();
+                setMarkedLabel();
+
             },
             complete: function () { },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -246,7 +248,6 @@
                 console.log({ errorThrown: errorThrown });
             }
         });
-        setMarkedLabel();
     }
 
     function getMarkedDeliveryItemIds() {
@@ -337,7 +338,6 @@
       });
     function getToCourtLawUnitAndArea(toCourtId, deliveryAreaId, lawUnitId) {
         lawUnitType = $('#NewLawUnitType').val();
-        console.log(lawUnitType);
         $.ajax({
             type: "POST",
             url: '@Url.Action("LoadDataLawUnitAndAreaNew", "CaseNotification")',
@@ -379,8 +379,40 @@
             error: log_ajax_err
         });
     }
+
+    function getToCourtLawUnitAndArea2(toCourtId, lawUnitId) {
+        lawUnitType = '6';
+        $('#NewLawUnitType').val(lawUnitType);
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("LoadDataLawUnitAndAreaNew", "CaseNotification")',
+            dataType: "json",
+            cache: false,
+            data: { toCourtId: toCourtId, lawUnitType: lawUnitType },
+            success: function (response) {
+                $('#NewLawUnitId').empty().trigger("change");
+                $('#NewLawUnitId').select2({
+                    language: "bg",
+                    data: response.lawUnitDdl
+                });
+                var arrSelect = response.lawUnitDdl.filter(function (el) {
+                    if (el.id == lawUnitId)
+                        return true;
+                    else
+                        return false;
+                });
+                if (arrSelect.length <= 0)
+                    lawUnitId = -1;
+                $('#NewLawUnitId').val(lawUnitId).trigger('change');
+            },
+            complete: function () { },
+            error: log_ajax_err
+        });
+    }
+
     function DeliveryAreaIdChange() {
         var deliveryAreaId = $("#NewDeliveryAreaId").val();
+        
         $.ajax({
             type: "POST",
             url: "@Url.Action("getLawUnitId", "DeliveryArea")",
@@ -388,16 +420,18 @@
             cache: false,
             data: { deliveryAreaId: deliveryAreaId },
             success: function (response) {
-                $("#NewLawUnitId").val(response.lawUnitId).trigger('change');
+                debugger
+                if ($("#NewLawUnitType").val() == '6') {
+                   $("#NewLawUnitId").val(response.lawUnitId).trigger('change');
+                } else {
+                   getToCourtLawUnitAndArea2($('#NewCourtId').val(), response.lawUnitId);
+                }
             },
             complete: function () { },
             error: log_ajax_err
         });
     };
-    function printNotificationRaw(id) {
-        window.open('@Url.Action("PrintPdf", "CaseNotification")/' + id, '_blank');
-    };
-
+   
     $( document ).ready(function() {
         $("#showCheckOnRegNum").trigger("change");
 

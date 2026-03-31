@@ -1,34 +1,83 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Core.Services;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
     public class WorkNotificationController : BaseController
     {
         private readonly IWorkNotificationService service;
-        public WorkNotificationController(IWorkNotificationService _service)
+        private readonly ICourtDepartmentService courtDepartmentService;
+
+        public WorkNotificationController(IWorkNotificationService _service,
+                                          ICourtDepartmentService _courtDepartmentService)
         {
             service = _service;
+            courtDepartmentService = _courtDepartmentService;
         }
-        public IActionResult Index()
-        {
 
+        /// <summary>
+        /// Зареждане на страница със нотификации
+        /// </summary>
+        /// <param name="id">Идентификатор на нотификация</param>
+        /// <param name="wnTypeId">Тип на нотификация</param>
+        /// <returns></returns>
+        public async Task<IActionResult> Index(int? id, int? wnTypeId, int? nKind)
+        {
+            CurrentContext_SetObjectInfo("Преглед на регистрирани нотификации");
             ViewBag.WorkNotificationTypeId_ddl = service.GetDDL_WorkNotificationTypes(0);
             ViewBag.ReadTypeId_ddl = service.ReadTypeId_SelectDDL();
+            ViewBag.UserCourtDepartmentId_ddl = await courtDepartmentService.Department_SelectDDLAsync(userContext.CourtId, NomenclatureConstants.DepartmentType.Systav);
             WorkNotificationFilterVM model = service.MakeDefaultFilter();
+            model.Id = id;
+            model.WorkNotificationTypeId = wnTypeId ?? -1;
+            model.NotificationKind = nKind;
+
             return View(model);
         }
-       
+
+        /// <summary>
+        /// Метод променящ дата на визуализация на нотификацията
+        /// </summary>
+        /// <param name="id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public IActionResult EditDateCreated(int id)
+        {
+            CurrentContext_SetObjectInfo("Зареждане на данни за редакция на дата за визуализация на нотификация");
+            WorkNotificationEditDateVM model = new() { NotificationId = id };
+            return View(nameof(EditDateCreated), model);
+        }
+
+        /// <summary>
+        /// Запис на дата на визуализация на нотификацията
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> EditDateCreated(WorkNotificationEditDateVM model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(EditDateCreated), model);
+            }
+
+            if (await service.EditDateCreatedWNFastProcess(model))
+                SetSuccessMessage(MessageConstant.Values.SaveOK);
+            else
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+
+            return RedirectToAction(nameof(Index), new { id = model.NotificationId });
+        }
+
         public IActionResult Dashboard()
         {
             ViewBag.WorkNotificationTypeId_ddl = service.GetDDL_WorkNotificationTypes(0);
@@ -49,7 +98,7 @@ namespace IOWebApplication.Controllers
         }
         public JsonResult SaveReaded(long id)
         {
-            bool result = (service.SaveWorkNotificationRead(id) != null);
+            bool result = (service.SaveWorkNotificationReadAll(id) != null);
             return Json(result);
         }
 
@@ -84,6 +133,20 @@ namespace IOWebApplication.Controllers
                         else
                             return RedirectToAction("Preview", "CaseSession", new { id = model.SourceId, tab = "#tabPersonNotification" });
                     }
+                case SourceTypeSelectVM.CaseLawyerHelp:
+                    return RedirectToAction("Edit", "CaseLawyerHelp", new { id = model.SourceId });
+                case SourceTypeSelectVM.Document:
+                        return RedirectToAction("Edit", "Document", new { id = model.SourceId });
+                case SourceTypeSelectVM.CaseSessionAct:
+                    {
+                        if ((model.WorkNotificationTypeId == NomenclatureConstants.WorkNotificationType.ActInforcedAnotherInstanceFastProcess) ||
+                            (model.WorkNotificationTypeId == NomenclatureConstants.WorkNotificationType.N11))
+                            return RedirectToAction("CaseTimeLinePreview", "Case", new { id = model.CaseId });
+                        else
+                            return RedirectToAction("Edit", "CaseSessionAct", new { id = model.SourceId });
+                    }
+                case SourceTypeSelectVM.ExecList:
+                    return RedirectToAction("EditExecList", "Money", new { id = model.SourceId });
                 default:
                     return RedirectToAction("Index");
             }

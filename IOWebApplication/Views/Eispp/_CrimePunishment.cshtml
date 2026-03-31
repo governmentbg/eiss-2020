@@ -16,7 +16,7 @@
 
             @Html.HiddenFor(x => x.CrimePunishmentId)
             <div class="row">
-                <div class="col-lg-3">
+                <div class="col-lg-3 crime-kind-container">
                     @Html.EditorFor(x => x.PunishmentKind, "EisppDropDown", null, new { Ddl = ViewBag.PunishmentKindDDL, @class = "crime-punishment-kind" })
                     <div class="punishment-kind-error" style="display:none; margin-bottom:15px;">
                         <label class="control-label">@MessageConstant.Values.EisppPunismentMpsNotSend</label>

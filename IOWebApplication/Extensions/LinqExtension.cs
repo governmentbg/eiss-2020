@@ -1,10 +1,12 @@
 ﻿using IOWebApplication.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using IOWebApplication.Infrastructure.Extensions;
+using DataTables.AspNet.AspNetCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace IOWebApplication.Extensions
 {
@@ -57,9 +59,18 @@ namespace IOWebApplication.Extensions
             {
                 return new SelectList(new List<SelectListItem>());
             }
-            string dataName = ExpressionHelper.GetExpressionText(dataValueField);
-            string textName = ExpressionHelper.GetExpressionText(dataTextField);
+
+            //NET8-TEST!!!
+            string dataName = dataValueField.GetName();
+            string textName = dataTextField.GetName();
+            //string dataName = ExpressionHelper.GetExpressionText(dataValueField);
+            //string textName = ExpressionHelper.GetExpressionText(dataTextField);
             return new SelectList(source, dataName, textName, selected);
+
+
+            //string dataName = ExpressionHelper.GetExpressionText(dataValueField);
+            //string textName = ExpressionHelper.GetExpressionText(dataTextField);
+            //return new SelectList(source, dataName, textName, selected);
         }
 
         /// <summary>
@@ -184,9 +195,9 @@ namespace IOWebApplication.Extensions
 
             var parameter = Expression.Parameter(source.ElementType, "x");
             Expression predicate = Expression.Constant(false, typeof(Boolean));
-            string lowerQuery = query.ToLower();
+            Expression<Func<string>> lowerQuery = () => query.ToLower();
 
-            foreach (var item in searchModel)
+            foreach (var item in searchModel.Where(c => c.IsSearchable))
             {
                 var selector = Expression.PropertyOrField(parameter, item.Name);
                 Expression filter = null;
@@ -206,7 +217,77 @@ namespace IOWebApplication.Extensions
 
                 //Expression filter = Expression.Call(selector, selector.Type.GetMethod("ToString", Type.EmptyTypes));
                 filter = Expression.Call(filter, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
-                filter = Expression.Call(filter, typeof(string).GetMethod("Contains", new Type[] { typeof(string) }), Expression.Constant(lowerQuery));
+                filter = Expression.Call(filter, typeof(string).GetMethod("Contains", new Type[] { typeof(string) }), lowerQuery.Body);
+                predicate = Expression.OrElse(predicate, filter);
+            }
+
+            MethodCallExpression whereCallExpression = Expression.Call(
+                typeof(Queryable),
+                "Where",
+                new Type[] { source.ElementType },
+                source.Expression,
+                Expression.Lambda<Func<T, bool>>(predicate, new ParameterExpression[] { parameter }));
+
+            return source.Provider.CreateQuery<T>(whereCallExpression);
+        }
+
+        /// <summary>
+        /// Търсене в DataTables
+        /// </summary>
+        /// <typeparam name="T">Тип на изходните данни</typeparam>
+        /// <param name="source">Пълен сет данни</param>
+        /// <param name="searchModel">Модел с колони, по които се търси</param>
+        /// <param name="query">Стойност на полето за търсене</param>
+        /// <returns></returns>
+        public static IQueryable<T> SearchForNet8<T>(this IQueryable<T> source, IEnumerable<DataTables.AspNet.Core.IColumn> searchModel, string query)
+        {
+            if (searchModel?.Count() == 0 || String.IsNullOrEmpty(query))
+            {
+                return source;
+            }
+
+            var parameter = Expression.Parameter(source.ElementType, "x");
+            Expression predicate = Expression.Constant(false, typeof(Boolean));
+            Expression<Func<string>> lowerQuery = () => $"%{query}%";
+
+            foreach (var item in searchModel.Where(c => c.IsSearchable))
+            {
+                var selector = Expression.PropertyOrField(parameter, item.Name);
+
+                if (selector.Type != typeof(string))
+                {
+                    continue;
+                }
+
+
+                Expression filter = null;
+
+                if (Nullable.GetUnderlyingType(selector.Type) != null || selector.Type == typeof(string))
+                {
+                    filter = Expression.Condition(
+                    Expression.NotEqual(selector, Expression.Constant(null, selector.Type)),
+                    Expression.Call(selector, selector.Type.GetMethod("ToString", Type.EmptyTypes)),
+                    Expression.Constant(String.Empty)
+                    );
+                }
+                else
+                {
+                    filter = Expression.Call(selector, selector.Type.GetMethod("ToString", Type.EmptyTypes));
+                }
+
+                //Expression filter = Expression.Call(selector, selector.Type.GetMethod("ToString", Type.EmptyTypes));
+                filter = Expression.Call(filter, typeof(string).GetMethod("ToLower", System.Type.EmptyTypes));
+
+                // var property = Expression.Property(param, "Name");
+                filter = Expression.Call(
+                          typeof(NpgsqlDbFunctionsExtensions),
+                          nameof(NpgsqlDbFunctionsExtensions.ILike),
+                          Type.EmptyTypes,
+                          Expression.Property(null, typeof(EF), nameof(EF.Functions)),
+                          selector,
+                          lowerQuery.Body);
+
+                //filter = Expression.Call(filter, typeof(string).GetMethod("Contains", new Type[] { typeof(string) }), Expression.Constant(lowerQuery));
                 predicate = Expression.OrElse(predicate, filter);
             }
 

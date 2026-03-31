@@ -65,11 +65,16 @@
                         <a href="@Model.CancelUrl" class="btn btn-danger">Назад</a>
                         <a href="#" id="btnFinalize" class="btn btn-primary">Публикувай</a>
                         <a href="#" id="btnEdit" class="btn btn-warning pull-right">Редакция</a>
+                        @if (!string.IsNullOrEmpty(Model.ResetUrl))
+                        {
+                            <a href="#" onclick="swalConfirm('Потвърдете обновяването на съдържанието от оригиналната бланка!', function () { document.location.href = '@Model.ResetUrl'; });" class="btn btn-danger" title="Обновяване на данните от оригинално съдържание"><i class="fa fa-recycle"></i></a>
+                        }
                     </div>
                 </form>
                 <div id="editButtons" class="hidden">
                     <a href="#" id="btnEditSave" class="btn btn-success">Запази редакцията</a>
                     <a href="#" id="btnEditCancel" class="btn btn-danger">Откажи редакцията</a>
+                    
                 </div>
             </div>
 
@@ -128,6 +133,7 @@
 
 @section scripts{
     <script>
+        String.prototype.isNumber = function () { return /^\d+$/.test(this); }
         window.onload = function () {
             const documentContent = document.querySelector('.docPage');
             const searchButton = document.getElementById('btnSearch');
@@ -158,6 +164,7 @@
                 "ordering": false,
                 pageLength: 5,
                 serverSide: false,
+                processing: false,
                 dom: 'rtip',
                 columns: [
                     {
@@ -190,6 +197,7 @@
                     "filter": false,
                     "ordering": false,
                     pageLength: 5,
+                    processing: false,
                     serverSide: false,
                     dom: 'rtip',
                     data: historyData,
@@ -402,7 +410,24 @@
                 }
             }
 
+            function validateReplace() {
+                let val = $('#searchField').val();
+                if (!val) {
+                    return false;
+                }
+
+                if (val.isNumber() && val.length <= 2) {
+                    swalOk('Не можете да обезличавата числа с дължина под 2 символа!');
+                    return false;
+                }
+
+                return true;
+            }
+
             function replaceAll() {
+                if (!validateReplace()) {
+                    return;
+                }
                 swalConfirm('Всички намерени съвпадения ще бъдат заменени!', function () {
                     const highlights = document.querySelectorAll('span.keyword');
                     let replaceText = document.getElementById('replaceField').value;
@@ -454,6 +479,9 @@
             }
 
             function replace(e) {
+                if (!validateReplace()) {
+                    return;
+                }
                 e.stopPropagation();
                 const el = e.currentTarget;
                 let rowIndex = el.dataset.rowindex;

@@ -1,0 +1,104 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Identity
+@using IOWebApplication.Infrastructure.Models.ViewModels
+@inject IOWebApplication.Infrastructure.Contracts.IDBUserContext dbUserContext;
+@model CaseSessionFilterVM
+@{
+    string calendar_addr = Url.Action("ListDataSprCalendar", "CaseSession");
+}
+
+<script type="text/javascript">
+    var userSettings = JSON.parse('@Html.Raw((await dbUserContext.Settings()).AsText())');
+</script>
+
+<link href="~/lib/fullcalendar/fullcalendar.min.css" rel="stylesheet" />
+<link href="~/lib/fullcalendar/fullcalendar.print.css" rel="stylesheet" media="print" />
+<script src="~/lib/fullcalendar/lib/moment.min.js"></script>
+<script src="~/lib/fullcalendar/fullcalendar.min.js"></script>
+<script src="~/lib/fullcalendar/bg.js"></script>
+<div>
+    @*<div class="box-header with-border ">
+    <h3 class="box-title">Календар на заседания</h3>
+    </div>*@
+    <div class="box-body">
+        <div id="calendar" class="calendar-person"></div>
+    </div>
+</div>
+
+<script>
+
+    $(function () {
+        $('#calendar').fullCalendar({
+            header: {
+                left: 'prev,next',
+                center: 'title',
+                right: 'month,listWeek,agendaDay'
+            },
+            editable: true,
+            eventLimit: true, // allow "more" link when too many events
+            timezone: "local",
+            defaultView: userSettings.CalendarStyle,
+            weekNumbers: false,
+            eventRender: function (eventObj, $el) {
+                $el.popover({
+                    title: eventObj.pop_title,
+                    content: eventObj.pop_content,
+                    trigger: 'hover',
+                    placement: 'top',
+                    container: 'body'
+                });
+            },
+            events: {
+                url: '@calendar_addr',
+                type: 'POST',
+                data: {
+                    DateFrom: '@Model.DateFrom?.ToString("dd.MM.yyyy HH:mm")',
+                    DateTo: '@Model.DateTo?.ToString("dd.MM.yyyy HH:mm")',
+                    Year: '@Model.Year',
+                    CaseSessionTypeId: '@Model.CaseSessionTypeId',
+                    HallId: '@Model.HallId',
+                    SecretaryUserId: '@Model.SecretaryUserId',
+                    CaseGroupIds_text: '@Model.CaseGroupIds_text',
+                    CaseTypeIds_text: '@Model.CaseTypeIds_text',
+                    RegNumber: '@Model.RegNumber',
+                    SessionResultId: '@Model.SessionResultId',
+                    SessionStateId: '@Model.SessionStateId',
+                    JudgeReporterId: '@Model.JudgeReporterId',
+                    CourtDepartmentId: '@Model.CourtDepartmentId',
+                    CourtDepartmentOtdelenieId: '@Model.CourtDepartmentOtdelenieId',
+                    CaseSessionTypeIds_text: '@Model.CaseSessionTypeIds_text',
+                    SessionResultIds_text: '@Model.SessionResultIds_text'
+                },
+                error: function () {
+                    $('#script-warning').show();
+                }
+            },
+            timeFormat: 'HH:mm',
+            viewRender: (function () {
+                var lastViewName;
+                return function (view) {
+                    var view = $('#calendar').fullCalendar('getView');
+                    //console.log(view);
+                    //alert('The new title of the view is ' + view.type);
+                    if (view.type != userSettings.CalendarStyle)
+                        updateUserSetting('@UserSettingsModel.Set.CalendarStyle', view.type);
+
+                }
+            })(),
+
+        });
+    });
+</script>
+<style>
+    .fc-widget-content .fc-sat, .fc-widget-content .fc-sun {
+        color: #999;
+        background-color: #f5f5f5;
+    }
+
+    .fc-widget-content .fc-other-month {
+        background-color: #fcfcfc;
+    }
+
+    a[href="#hide"] .fc-time {
+        display: none;
+    }
+</style>

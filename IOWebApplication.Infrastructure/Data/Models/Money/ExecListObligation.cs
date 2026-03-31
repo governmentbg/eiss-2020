@@ -28,6 +28,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Money
         [Column("amount")]
         public decimal? Amount { get; set; }
 
+        /// <summary>
+        /// Дължима сума в лева в момента на изготвяне - това е заради частично платените
+        /// </summary>
+        [Column("amount_bgn")]
+        public decimal? AmountBGN { get; set; }
+
         [ForeignKey(nameof(ObligationId))]
         public virtual Obligation Obligation { get; set; }
 

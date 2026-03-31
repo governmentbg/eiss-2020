@@ -1,14 +1,13 @@
 ﻿@model IOWebApplication.Infrastructure.Models.ViewModels.Delivery.DeliveryAreaFilterVM
 @using IOWebApplication.Extensions
 @using IOWebApplication.Infrastructure.Constants
-@inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Списък райони";
 }
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 

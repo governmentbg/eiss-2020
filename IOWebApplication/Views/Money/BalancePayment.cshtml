@@ -56,13 +56,13 @@
             $("#AmountPay").val(0);
         }
         else {
-            postContent('@Url.Action("GetBalancePayment","Money")'
+            requestGET_Json('@Url.Action("GetBalancePayment","Money")'
                 , { paymentId: $("#Id").val() }
                 , function (data) {
                     if (data != null) {
                         $("#Amount").val(data.amount);
                         $("#AmountObligationPay").val(data.amountObligationPay);
-                        var paysum = Math.min(parseFloat($("#AmountForPay").val()), data.amount - data.amountObligationPay);
+                        var paysum = Math.min(parseFloat($("#AmountForPay").val().replace(',', '.')), data.amount - data.amountObligationPay);
                         $("#AmountPay").val(paysum);
                     } else {
                     }

@@ -96,6 +96,12 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Причина за анулиране")]
         public string DescriptionExpired { get; set; }
 
+        [Column("is_created_motive")]
+        public bool IsCreatedMotive { get; set; }
+
+        [Column("is_special_opinion")]
+        public bool IsSpecialOpinion { get; set; }
+
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
 

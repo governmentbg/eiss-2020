@@ -48,6 +48,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         //eispp_tbl_code = 254
         public string PersonalDocumentTypeLabel { get; set; }
 
+        [Column("personal_document_type_note")]
+        [Display(Name = "Описание")]
+        //eispp_tbl_code = 254
+        public string PersonalDocumentTypeNote { get; set; }
+
         [Column("document_number")]
         [Display(Name = "Номер документ")]
         [Required(ErrorMessage = "Въведете {0}.")]
@@ -59,11 +64,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public DateTime DocumentDate { get; set; }
 
         [Column("document_date_to")]
-        [Display(Name = "Валидност")]
+        [Display(Name = "Дата на валидност")]
         public DateTime? DocumentDateTo { get; set; }
 
         [Column("issuer_name")]
-        [Display(Name = "Издаден от")]
+        [Display(Name = "Орган по издаването")]
         public string IssuerName { get; set; }
 
         [ForeignKey(nameof(CourtId))]

@@ -32,5 +32,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Case
         public string LabelWithoutFirstPerson { get; set; }
         public string LabelWithoutSecondRel { get; set; }
         public bool isXFirst { get; set; }
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
     }
 }

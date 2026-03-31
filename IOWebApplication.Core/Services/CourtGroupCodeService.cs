@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -31,15 +32,17 @@ namespace IOWebApplication.Core.Services
             List<int> caseCodeIds = CourtGroupCodeForSelect_Select(courtId, caseGroupId, -1).Select(x => x.Id).ToList();
 
             return repo.AllReadonly<CourtGroupCode>()
-           .Where(x => x.CourtGroupId == courtGroupId &&
-                       (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date &&
-                       (caseCodeIds.IndexOf(x.CaseCodeId) >= 0))
-           .Select(x => new MultiSelectTransferVM()
-           {
-               Id = x.CaseCodeId,
-               Order = x.CaseCode.OrderNumber,
-               Text = $"{x.CaseCode.Code} {x.CaseCode.Label}"
-           }).AsQueryable();
+                        .Where(x => x.CourtGroupId == courtGroupId &&
+                                    (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date &&
+                                    (caseCodeIds.Contains(x.CaseCodeId)))
+                        .Where(x => x.CaseCode.IsActive)
+                        //.OrderBy(x => x.CaseCode.Code)
+                        .Select(x => new MultiSelectTransferVM()
+                        {
+                            Id = x.CaseCodeId,
+                            OrderText = x.CaseCode.Code,
+                            Text = $"{x.CaseCode.Code} {x.CaseCode.Label}"
+                        }).AsQueryable();
         }
 
         public IQueryable<MultiSelectTransferVM> CourtGroupCodeForSelect_Select(int courtId, int caseGroupId, int caseTypeId)
@@ -55,21 +58,29 @@ namespace IOWebApplication.Core.Services
                                        (x.CaseType.CaseGroupId == caseGroupId) &&
                                        typesForCourt.Any(t => t.CaseTypeId == x.CaseTypeId)
                            )
+                           .Where(x => x.CaseCode.IsActive)
                            .Select(x => x.CaseCode)
-                           .GroupBy(x => x.Id)
-                           .Select(g => g.First())
+                           .GroupBy(x => new { x.Id, x.Code, x.Label })
+                           .Select(g => new
+                           {
+                               g.Key.Id,
+                               g.Key.Code,
+                               g.Key.Label
+                           })
                            .Select(x => new MultiSelectTransferVM()
                            {
                                Id = x.Id,
-                               Order = x.OrderNumber,
+                               OrderText = x.Code,
                                Text = $"{x.Code} {x.Label}"
-                           }).AsQueryable();
+                           })
+                           .AsQueryable();
         }
 
-        public bool CourtGroupCode_SaveData(int courtGroupId, List<int> codes)
+        public async Task<bool> CourtGroupCode_SaveData(int courtGroupId, List<int> codes)
         {
-            return relationService.SaveData<CourtGroupCode>(courtGroupId, codes,
+            return await relationService.SaveData<CourtGroupCode>(courtGroupId, codes,
                  x => x.CourtGroupId,
+                 x => x.CourtGroupId == courtGroupId,
                  x => x.CaseCodeId,
                  x => x.DateFrom,
                  x => x.DateTo,

@@ -17,6 +17,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
 
         [Display(Name = "Институция")]
         public int InstitutionId { get; set; }
+        public string InstitutionName { get; set; }
 
         [Display(Name = "Вид дело")]
         public int? InstitutionCaseTypeId { get; set; }

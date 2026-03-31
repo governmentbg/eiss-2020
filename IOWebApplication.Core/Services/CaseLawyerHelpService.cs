@@ -3,6 +3,7 @@ using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
@@ -16,18 +17,27 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
     public class CaseLawyerHelpService : BaseService, ICaseLawyerHelpService
     {
+
+        private readonly IMQEpepService mqEpepService;
+        private readonly ICasePersonService casePersonService;
+
         public CaseLawyerHelpService(ILogger<CaseLawyerHelpService> _logger,
                                      IRepository _repo,
-                                     IUserContext _userContext)
+                                     IUserContext _userContext,
+                                     IMQEpepService _mqEpepService,
+                                     ICasePersonService _casePerson)
         {
             logger = _logger;
             repo = _repo;
             userContext = _userContext;
+            mqEpepService = _mqEpepService;
+            casePersonService = _casePerson;
         }
 
         public CaseLawyerHelpEditVM CaseLawyerHelp_GetById(int Id)
@@ -39,8 +49,11 @@ namespace IOWebApplication.Core.Services
                                          Id = x.Id,
                                          CourtId = x.CourtId,
                                          CaseId = x.CaseId,
+                                         CaseName = x.Case.CaseType.Code + " " + x.Case.ShortNumber + "/" + x.Case.RegDate.ToString("yyyy"),
                                          LawyerHelpBaseId = x.LawyerHelpBaseId,
+                                         LawyerHelpBaseLabel = x.LawyerHelpBase.Label,
                                          LawyerHelpTypeId = x.LawyerHelpTypeId,
+                                         LawyerHelpTypeLabel = x.LawyerHelpType.Label,
                                          CaseSessionActId = x.CaseSessionActId,
                                          HasInterestConflict = x.HasInterestConflict,
                                          PrevDefenderName = x.PrevDefenderName,
@@ -94,7 +107,7 @@ namespace IOWebApplication.Core.Services
                                    (x.CaseSessionId == null) &&
                                    (x.DateExpired == null) &&
                                    (NomenclatureConstants.PersonKinds.ListLeftRightSide.Contains(x.PersonRole.RoleKindId) ||
-                                    NomenclatureConstants.PersonRole.ListForLawyerHelp_Person.Contains(x.PersonRoleId)) &&
+                                    x.PersonRole.ForLawyerHelp) &&
                                    ((x.DateTo ?? DateTime.Now.AddYears(1)) >= DateTime.Now))
                        .Select(x => new CheckListVM()
                        {
@@ -108,6 +121,10 @@ namespace IOWebApplication.Core.Services
 
         public IQueryable<CaseLawyerHelpVM> CaseLawyerHelp_Select(int CaseId)
         {
+            var documentTemplateQuery = repo.AllReadonly<DocumentTemplate>()
+                                            .Where(d => d.SourceType == SourceTypeSelectVM.CaseLawyerHelp &&
+                                                        d.DateExpired == null);
+
             return repo.AllReadonly<CaseLawyerHelp>()
                        .Where(x => x.CaseId == CaseId &&
                                    x.DateExpired == null)
@@ -117,7 +134,11 @@ namespace IOWebApplication.Core.Services
                            CourtId = x.CourtId,
                            CaseId = x.CaseId,
                            LawyerHelpBaseText = x.LawyerHelpBase.Label,
-                           LawyerHelpTypeText = x.LawyerHelpType.Label
+                           LawyerHelpTypeText = x.LawyerHelpType.Label,
+                           DocumentDateFromDb = documentTemplateQuery.Where(d => d.SourceId == x.Id)
+                                                                     .Select(d => d.Document.DocumentDate)
+                                                                     .OrderByDescending(d => d)
+                                                                     .FirstOrDefault()
                        })
                        .AsQueryable();
         }
@@ -141,21 +162,41 @@ namespace IOWebApplication.Core.Services
             };
         }
 
-        public bool CaseLawyerHelp_SaveData(CaseLawyerHelpEditVM model)
+        public async Task<bool> CaseLawyerHelp_SaveData(CaseLawyerHelpEditVM model)
         {
             model.CaseSessionToGoId = model.CaseSessionToGoId.NumberEmptyToNull();
             model.ActAppointmentId = model.ActAppointmentId.NumberEmptyToNull();
             model.LawyerHelpBasisAppointmentId = model.LawyerHelpBasisAppointmentId.NumberEmptyToNull();
             var modelSave = FillCaseLawyerHelp(model);
-            var caseLawyerHelpOtherLawyers = new List<CaseLawyerHelpOtherLawyer>();
 
             try
             {
                 if (modelSave.Id > 0)
                 {
-                    caseLawyerHelpOtherLawyers = repo.AllReadonly<CaseLawyerHelpOtherLawyer>()
-                                                     .Where(x => x.CaseLawyerHelpId == model.Id)
-                                                     .ToList();
+                    if (model.CaseLawyerHelpOtherLawyers != null)
+                    {
+                        List<CaseLawyerHelpOtherLawyer> caseLawyerHelpOtherLawyers = await repo.AllReadonly<CaseLawyerHelpOtherLawyer>()
+                                                                                               .Where(x => x.CaseLawyerHelpId == model.Id)
+                                                                                               .ToListAsync();
+
+                        foreach (var checkList in model.CaseLawyerHelpOtherLawyers)
+                        {
+                            var caseLawyerHelpOtherLawyer = caseLawyerHelpOtherLawyers.Where(x => x.CasePersonId == int.Parse(checkList.Value))
+                                                                                      .FirstOrDefault();
+
+                            if (checkList.Checked && caseLawyerHelpOtherLawyer == null)
+                            {
+                                repo.Add(new CaseLawyerHelpOtherLawyer()
+                                {
+                                    CaseLawyerHelpId = modelSave.Id,
+                                    CasePersonId = int.Parse(checkList.Value),
+                                });
+                            }
+
+                            if (!checkList.Checked && caseLawyerHelpOtherLawyer != null)
+                                repo.Delete(caseLawyerHelpOtherLawyer);
+                        }
+                    }
 
                     //Update
                     var saved = repo.GetById<CaseLawyerHelp>(modelSave.Id);
@@ -177,55 +218,35 @@ namespace IOWebApplication.Core.Services
                     //Insert
                     modelSave.DateWrt = DateTime.Now;
                     modelSave.UserId = userContext.UserId;
-                    repo.Add<CaseLawyerHelp>(modelSave);
 
-                    if (model.CaseLawyerHelpPeople != null)
+                    if (model.CaseLawyerHelpPeople != null && model.CaseLawyerHelpPeople.Any(x => x.Checked))
                     {
-                        foreach (var checkListVM in model.CaseLawyerHelpPeople.Where(x => x.Checked))
+                        foreach (var person in model.CaseLawyerHelpPeople.Where(x => x.Checked))
                         {
-                            var caseLawyerHelpPerson = new CaseLawyerHelpPerson()
+                            modelSave.CaseLawyerHelpPersons.Add(new CaseLawyerHelpPerson()
                             {
-                                CaseLawyerHelpId = modelSave.Id,
-                                CasePersonId = int.Parse(checkListVM.Value)
-                            };
-
-                            repo.Add(caseLawyerHelpPerson);
+                                CasePersonId = int.Parse(person.Value),
+                                CasePersonAddressId = await repo.AllReadonly<CasePersonAddress>()
+                                                                 .Where(p => p.CasePersonId == int.Parse(person.Value) &&
+                                                                             p.DateExpired == null)
+                                                                 .OrderBy(p => p.Address.AddressTypeId)
+                                                                 .Select(p => (int?)p.Id)
+                                                                 .FirstOrDefaultAsync()
+                            });
                         }
                     }
+
+                    repo.Add(modelSave);
                 }
 
-                if (model.CaseLawyerHelpOtherLawyers != null)
-                {
-                    foreach (var checkList in model.CaseLawyerHelpOtherLawyers)
-                    {
-                        var caseLawyerHelpOtherLawyer = caseLawyerHelpOtherLawyers.Where(x => x.CasePersonId == int.Parse(checkList.Value)).FirstOrDefault();
-
-                        if ((checkList.Checked) && (caseLawyerHelpOtherLawyer == null))
-                        {
-                            var caseLawyerHelpOtherLawyerSave = new CaseLawyerHelpOtherLawyer()
-                            {
-                                CaseLawyerHelpId = modelSave.Id,
-                                CasePersonId = int.Parse(checkList.Value),
-                            };
-
-                            repo.Add(caseLawyerHelpOtherLawyerSave);
-                        }
-
-                        if ((!checkList.Checked) && (caseLawyerHelpOtherLawyer != null))
-                        {
-                            repo.Delete(caseLawyerHelpOtherLawyer);
-                        }
-                    }
-                }
-
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
 
                 model.Id = modelSave.Id;
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Искане за Правна помощ Id={ modelSave.Id }");
+                logger.LogError(ex, $"Грешка при запис на Искане за Правна помощ Id={modelSave.Id}");
                 return false;
             }
         }
@@ -239,9 +260,26 @@ namespace IOWebApplication.Core.Services
                        {
                            Id = x.Id,
                            CasePersonText = x.CasePerson.FullName + " (" + x.CasePerson.PersonRole.Label + ")",
-                           AssignedLawyerText = x.AssignedLawyer.FullName
+                           AssignedLawyerText = x.AssignedLawyer.FullName,
+                           SpecifiedLawyerLawUnitLabel = x.SpecifiedLawyerLawUnit.FullName,
+                           DescriptionExpired = (x.EesppPersonStateId == NomenclatureConstants.EesppPersonState.Declined && x.DescriptionExpired != null && x.DateExpired == null) ? x.DescriptionExpired : (string)null
                        })
                        .AsQueryable();
+        }
+
+        public CaseLawyerHelpPersonVM CaseLawyerHelpPerson_GetById(int Id)
+        {
+            return repo.AllReadonly<CaseLawyerHelpPerson>()
+                       .Where(x => x.Id == Id)
+                       .Select(x => new CaseLawyerHelpPersonVM()
+                       {
+                           Id = x.Id,
+                           CasePersonText = x.CasePerson.FullName + " (" + x.CasePerson.PersonRole.Label + ")",
+                           AssignedLawyerText = x.AssignedLawyer.FullName,
+                           SpecifiedLawyerLawUnitLabel = x.SpecifiedLawyerLawUnit.FullName,
+                           CaseName = x.CaseLawyerHelp.Case.CaseType.Code + " " + x.CaseLawyerHelp.Case.ShortNumber + "/" + x.CaseLawyerHelp.Case.RegDate.ToString("yyyy")
+                       })
+                       .FirstOrDefault();
         }
 
         public List<SelectListItem> GetDDL_LeftRightSide(int CaseLawyerHelpId, int? CasePersonId, bool addDefaultElement = true)
@@ -259,12 +297,12 @@ namespace IOWebApplication.Core.Services
                                                   x.CaseSessionId == null &&
                                                   x.DateExpired == null &&
                                                   (NomenclatureConstants.PersonKinds.ListLeftRightSide.Contains(x.PersonRole.RoleKindId) ||
-                                                   NomenclatureConstants.PersonRole.ListForLawyerHelp_Person.Contains(x.PersonRoleId)) &&
+                                                   x.PersonRole.ForLawyerHelp) &&
                                                   ((x.DateTo ?? DateTime.Now.AddYears(1)) >= DateTime.Now) &&
                                                   (caseLawyerHelpPeople.Count > 0 ? !caseLawyerHelpPeople.Contains(x.Id) : true))
                                       .Select(x => new SelectListItem()
                                       {
-                                          Text = x.FullName + (x.PersonRoleId != null ? " (" + x.PersonRole.Label + ")" : string.Empty),
+                                          Text = x.FullName + " (" + x.PersonRole.Label + ")",
                                           Value = x.Id.ToString()
                                       })
                                       .ToList();
@@ -310,6 +348,7 @@ namespace IOWebApplication.Core.Services
         {
             model.AssignedLawyerId = model.AssignedLawyerId.NumberEmptyToNull();
             model.SpecifiedLawyerLawUnitId = model.SpecifiedLawyerLawUnitId.NumberEmptyToNull();
+            model.CasePersonAddressId = model.CasePersonAddressId.NumberEmptyToNull();
 
             try
             {
@@ -320,6 +359,7 @@ namespace IOWebApplication.Core.Services
                     saved.CasePersonId = model.CasePersonId;
                     saved.AssignedLawyerId = model.AssignedLawyerId;
                     saved.SpecifiedLawyerLawUnitId = model.SpecifiedLawyerLawUnitId;
+                    saved.CasePersonAddressId = model.CasePersonAddressId;
                     repo.Update(saved);
                 }
                 else
@@ -333,7 +373,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на лица, за които се иска правна помощ Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на лица, за които се иска правна помощ Id={model.Id}");
                 return false;
             }
         }
@@ -404,7 +444,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на лица, за които се иска правна помощ Id={ model.CaseLawyerHelpId }");
+                logger.LogError(ex, $"Грешка при запис на лица, за които се иска правна помощ Id={model.CaseLawyerHelpId}");
                 return false;
             }
         }
@@ -423,6 +463,174 @@ namespace IOWebApplication.Core.Services
                                  x.SourceId == Id &&
                                  x.Document.DateExpired == null &&
                                  x.DateExpired == null);
+        }
+
+        public IQueryable<CaseLawyerHelpAssignedLawyerVM> CaseLawyerHelpAssignedLawyer_Select(int CaseLawyerHelpId)
+        {
+            var lawyersQuery = repo.AllReadonly<LawUnit>().Where(l => l.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Lawyer);
+            return repo.AllReadonly<CaseLawyerHelpAssignedLawyer>()
+                       .Where(x => x.CaseLawyerHelpId == CaseLawyerHelpId)
+                       .Select(x => new CaseLawyerHelpAssignedLawyerVM()
+                       {
+                           Id = x.Id,
+                           Lawyer = x.LawyerNumber + " " + x.LawyerName + (lawyersQuery.Any(l => l.Code == x.LawyerNumber) ? "" : " (Не е намерен в списъка в ЕИСС)"),
+                           People = string.Join(", ", x.Persons.Select(p => p.CaseLawyerHelpPerson.CasePerson.FullName + " (" + p.CaseLawyerHelpPerson.CasePerson.PersonRole.Label + ")")),
+                           LawyerStateLabel = x.LawyerState.Label,
+                           IsEdit = x.LawyerStateDate == null,
+                           IsFinish = (x.LawyerStateDate == null && x.LawyerStateId != NomenclatureConstants.EesppLawyerState.Assigned),
+                           CaseName = x.CaseLawyerHelp.Case.CaseType.Code + " " + x.CaseLawyerHelp.Case.ShortNumber + "/" + x.CaseLawyerHelp.Case.RegDate.ToString("yyyy"),
+                           CaseId = x.CaseLawyerHelp.CaseId
+                       })
+                       .AsQueryable();
+        }
+
+        private CasePersonVM FillCasePerson(int CaseId, LawUnit lawUnit, DateTime dateFrom)
+        {
+            CasePersonVM model = new CasePersonVM();
+            model.CaseId = CaseId;
+            model.CourtId = userContext.CourtId;
+            model.DateFrom = dateFrom;
+            model.Person_SourceType = SourceTypeSelectVM.LawUnit;
+            model.Person_SourceId = lawUnit.Id;
+            model.PersonRoleId = NomenclatureConstants.PersonRole.OfficialDefender;
+            model.Uic = lawUnit.Uic;
+            model.UicTypeId = lawUnit.UicTypeId;
+            model.FirstName = lawUnit.FirstName;
+            model.MiddleName = lawUnit.MiddleName;
+            model.FamilyName = lawUnit.FamilyName;
+            model.Family2Name = lawUnit.Family2Name;
+            model.FullName = lawUnit.FullName;
+            return model;
+        }
+
+        public async Task<bool> CaseLawyerHelpAssignedLawyer_ChangeState(int CaseId, int Id, int? LawyerStateId, DateTime? dateTime)
+        {
+            try
+            {
+                //Update
+                var saved = repo.GetById<CaseLawyerHelpAssignedLawyer>(Id);
+                saved.LawyerStateId = (LawyerStateId ?? saved.LawyerStateId);
+
+                if (dateTime != null)
+                {
+                    int? laweyrId = null;
+
+                    var lawUnits = repo.AllReadonly<LawUnit>()
+                                       .Where(x => x.Code == saved.LawyerNumber &&
+                                                   x.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Lawyer)
+                                       .FirstOrDefault();
+
+                    var casePerson = lawUnits != null ? repo.AllReadonly<CasePerson>()
+                                                            .Where(x => x.Person_SourceType == SourceTypeSelectVM.LawUnit &&
+                                                                        x.Person_SourceId == lawUnits.Id)
+                                                            .Where(x => x.CaseId == CaseId && x.CaseSessionId == null)
+                                                            .FirstOrDefault() : null;
+
+                    var caseSessionAct = repo.AllReadonly<CaseSessionAct>()
+                                             .Where(x => x.Id == saved.CaseSessionActAssignedId)
+                                             .FirstOrDefault();
+
+                    saved.LawyerStateDate = caseSessionAct.ActDeclaredDate ?? DateTime.Now;
+
+                    if (saved.LawyerStateId == NomenclatureConstants.EesppLawyerState.Confirmed)
+                    {
+                        if ((lawUnits != null) && (casePerson == null))
+                        {
+                            var casePersonVM = FillCasePerson(CaseId, lawUnits, caseSessionAct.ActDeclaredDate ?? DateTime.Now);
+                            (bool result, string errorMessage) = await casePersonService.CasePerson_SaveData(casePersonVM);
+                            if (!result)
+                            {
+                                return false;
+                            }
+                            laweyrId = casePersonVM.Id;
+                        }
+
+                        if (casePerson != null)
+                        {
+                            laweyrId = casePerson.Id;
+                        }
+                    }
+
+                    var caseLawyerHelpPeople = repo.AllReadonly<CaseLawyerHelpAssignedLawyerPerson>()
+                                                                 .Include(x => x.CaseLawyerHelpPerson)
+                                                                 .Where(x => x.CaseLawyerAssignedLawyerId == saved.Id)
+                                                                 .Select(x => x.CaseLawyerHelpPerson)
+                                                                 .ToList();
+
+                    foreach (var _person in caseLawyerHelpPeople)
+                    {
+                        _person.EesppPersonStateId = (saved.LawyerStateId == NomenclatureConstants.EesppLawyerState.Confirmed) ? NomenclatureConstants.EesppPersonState.Confirmed : NomenclatureConstants.EesppPersonState.Sent;
+                        _person.AssignedLawyerId = laweyrId;
+                        repo.Update(_person);
+                    }
+                }
+
+                repo.SaveChanges();
+                if (saved.LawyerStateId == NomenclatureConstants.EesppLawyerState.Confirmed)
+                {
+                    mqEpepService.EESPP_AppendLawyerAssignment(saved.Id);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при сетване на статус на Върнати адвокати по заявка за правна помощ от ЕЕСПП Id={Id}");
+                return false;
+            }
+        }
+
+        public CaseLawyerHelpAssignedLawyerVM CaseLawyerHelpAssignedLawyerVM_GetById(int Id)
+        {
+            return repo.AllReadonly<CaseLawyerHelpAssignedLawyer>()
+                       .Where(x => x.Id == Id)
+                       .Select(x => new CaseLawyerHelpAssignedLawyerVM()
+                       {
+                           Id = x.Id,
+                           Lawyer = x.LawyerNumber + " " + x.LawyerName + (repo.AllReadonly<LawUnit>().Any(l => l.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Lawyer && l.Code == x.LawyerNumber) ? "" : " (Не е намерен в списъка в ЕИСС)"),
+                           People = string.Join(", ", x.Persons.Select(p => p.CaseLawyerHelpPerson.CasePerson.FullName + " (" + p.CaseLawyerHelpPerson.CasePerson.PersonRole.Label + ")")),
+                           LawyerStateLabel = x.LawyerState.Label,
+                           IsEdit = x.LawyerStateDate == null,
+                           IsFinish = (x.LawyerStateDate == null && x.LawyerStateId != NomenclatureConstants.EesppLawyerState.Assigned),
+                           CaseName = x.CaseLawyerHelp.Case.CaseType.Code + " " + x.CaseLawyerHelp.Case.ShortNumber + "/" + x.CaseLawyerHelp.Case.RegDate.ToString("yyyy"),
+                           CaseId = x.CaseLawyerHelp.CaseId
+                       })
+                       .FirstOrDefault();
+
+
+        }
+
+        public CaseLawyerHelpAssignedLawyerEditVM CaseLawyerHelpAssignedLawyerEditVM_GetById(int Id)
+        {
+            return repo.AllReadonly<CaseLawyerHelpAssignedLawyer>()
+                       .Where(x => x.Id == Id)
+                       .Select(x => new CaseLawyerHelpAssignedLawyerEditVM()
+                       {
+                           Id = x.Id,
+                           CaseLawyerHelpId = x.CaseLawyerHelpId,
+                           CaseSessionActAssignedId = x.CaseSessionActAssignedId,
+                           LawyerStateId = x.LawyerStateId,
+                           CaseId = x.CaseLawyerHelp.CaseId
+                       })
+                       .FirstOrDefault();
+        }
+
+        public bool CaseLawyerHelpAssignedLawyer_SaveData(CaseLawyerHelpAssignedLawyerEditVM model)
+        {
+            try
+            {
+                //Update
+                var saved = repo.GetById<CaseLawyerHelpAssignedLawyer>(model.Id);
+                saved.LawyerStateId = model.LawyerStateId;
+                saved.CaseSessionActAssignedId = model.CaseSessionActAssignedId;
+
+                repo.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Грешка при сетване на статус на Върнати адвокати по заявка за правна помощ от ЕЕСПП Id={model.Id}");
+                return false;
+            }
         }
     }
 }

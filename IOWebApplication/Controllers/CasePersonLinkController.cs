@@ -1,27 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper.GlobalConstants;
-using IOWebApplication.Core.Models;
-using IOWebApplication.Core.Services;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using IOWebApplication.Infrastructure.Models;
-using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -48,9 +41,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Index(int id)
+        public async Task<IActionResult> Index(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.View, id))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.View, id))
             {
                 return Redirect_Denied();
             }
@@ -79,9 +72,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseId)
+        public async Task<IActionResult> Add(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -102,9 +95,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult AddSide(int caseId)
+        public async Task<IActionResult> AddSide(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
@@ -120,9 +113,9 @@ namespace IOWebApplication.Controllers
             return View(nameof(AddSide), model);
         }
         [HttpPost]
-        public IActionResult AddSide(CasePersonLinkSideVM model, string personIdsJson)
+        public async Task<IActionResult> AddSide(CasePersonLinkSideVM model, string personIdsJson)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, model.CaseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonLink, null, AuditConstants.Operations.Append, model.CaseId))
             {
                 return Redirect_Denied();
             }
@@ -146,13 +139,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonLink, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CasePersonLink>(id);
+            var model = await service.GetByIdAsync<CasePersonLink>(id);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonLinkEdit(model.CaseId, model.Id).DeleteOrDisableLast();
             SetViewbag(model.CaseId, model.CasePersonId, model.LinkDirectionId);
             return View(nameof(Edit), model);
@@ -202,6 +195,8 @@ namespace IOWebApplication.Controllers
                 ModelState.AddModelError(nameof(CasePersonLink.CasePersonSecondRelId), "Трябва да е различно лице от Страна");
             if (model.CasePersonRelId == model.CasePersonId)
                 ModelState.AddModelError(nameof(CasePersonLink.CasePersonRelId), "Трябва да е различно лице от Страна");
+            if (service.HaveSameLink(model))
+                ModelState.AddModelError(nameof(CasePersonLink.CasePersonId), "Вече има въведена връзка между тези две лица");
         }
 
 
@@ -254,9 +249,9 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult CasPersonLink_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CasPersonLink_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonLink, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonLink, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }

@@ -10,6 +10,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
     /// </summary>
     public class SentenceListReportVM
     {
+        public int CaseId { get; set; }
+
         [Display(Name = "Точен вид дело")]
         public string CaseTypeName { get; set; }
 
@@ -28,6 +30,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Резултат от заседанието")]
         public string SessionResultName { get; set; }
+        public string SessionResultNameFirst { get; set; }
 
         [Display(Name = "Резултат от съдебното производство")]
         public string SentenceResultTypeName { get; set; }
@@ -61,5 +64,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Report
 
         [Display(Name = "Резултат от съдебното производство")]
         public int SentenceResultTypeId { get; set; }
+
+        [Display(Name = "Шифър")]
+        public string[] CaseCodeIds { get; set; }
     }
 }

@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Резултати по заседание към делото
     /// </summary>
     [Table("case_session_result")]
-    public class CaseSessionResult : IExpiredInfo
+    public class CaseSessionResult : IExpiredInfo, IHaveId
     {
         [Column("id")]
         public int Id { get; set; }

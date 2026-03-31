@@ -1,11 +1,12 @@
-﻿using Audit.Core;
-using Audit.PostgreSql.Configuration;
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Services;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.UserContext;
+using IOWebApplicationApi.Contracts;
+using IOWebApplicationApi.Services;
+using IOWebApplicationApi.Services.Mocks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -13,13 +14,6 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
-using IOWebApplicationApi.Services;
-using IOWebApplicationApi.Contracts;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -36,7 +30,8 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            services.AddScoped<IUrlHelper>(x => {
+            services.AddScoped<IUrlHelper>(x =>
+            {
                 var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;
                 var factory = x.GetRequiredService<IUrlHelperFactory>();
                 return factory.GetUrlHelper(actionContext);
@@ -55,16 +50,26 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.AddScoped(typeof(IRepository), typeof(Repository));
 
-            services.AddScoped<IUserContext, UserContext>();
+            services.AddScoped<IUserContext, MobileUserContext>();
+            services.AddScoped<IDBUserContext, DBUserContext>();
             services.AddScoped<ICommonService, CommonService>();
             services.AddScoped<INomenclatureService, NomenclatureService>();
             services.AddScoped<ICourtLawUnitService, CourtLawUnitService>();
             services.AddScoped<IDeliveryItemService, DeliveryItemService>();
-            services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
             services.AddScoped<IRelationManyToManyDateService, RelationManyToManyDateService>();
+
+            services.AddScoped<ICourtLoadPeriodService, CourtLoadPeriodService>();
+            services.AddScoped<ICaseLawUnitService, CaseLawUnitService>();
+            services.AddScoped<IMQEpepService, MQEpepService>();
+            services.AddScoped<ICdnService, MockCdnService>();
+
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IWorkingDaysService, WorkingDaysService>();
             services.AddScoped<IMobileFileService, MobileFileService>();
+            services.AddScoped<IWorkNotificationService, WorkNotificationService>();
+            services.AddScoped<ICaseDeadlineService, CaseDeadlineService>();
+            services.AddScoped<IProxyEissService, ProxyEissService>();
+
             // Настройки на Одит лога 
             //Audit.Core.Configuration.Setup()
             //.UsePostgreSql(config => config

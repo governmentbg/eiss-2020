@@ -1,0 +1,90 @@
+﻿@{
+    ViewData["Title"] = "Необработени електронни документи";
+    ViewData["ShowWaitingElectronicDocs"] = true;
+}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+<script>
+    $(function(){
+        LoadTable();
+    });
+
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            var table = $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("NewElectronicDocuments_ListData")",
+                    "type": "POST",
+                    "datatype": "json"
+                },
+                filter: true,
+                columns: [
+                    {
+                        name: 'applyNumber',
+                        data: 'applyNumber',
+                        title: 'Номер',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'applyDate',
+                        data: 'applyDate',
+                        title: 'Дата и час на подаване',
+                        sortable: true,
+                        searchable: false,
+                        "render": function (value) {
+                            return JsonBGdateTime(value);
+                        }
+                    },
+                    {
+                        name: 'documentKind',
+                        data: 'documentKind',
+                        title: 'Тип',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'documentGroup',
+                        data: 'documentGroup',
+                        title: 'Основен вид',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'epepUserName',
+                        data: 'epepUserName',
+                        title: 'Подаден от',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'editBy',
+                        data: 'editBy',
+                        title: 'Обработва се от',
+                        sortable: true,
+                        searchable: true
+                    }
+                ]
+            });
+            table.order([0, 'asc']);
+        }
+    }
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <a href="@Url.Action("EditDocumentDecision")/{{this}}" class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i></a>
+</script>
+<script id="templateDocumentNumber" type="text/x-handlebars-template">
+    <a href="@Url.Action("View")/{{documentId}}" title="Преглед">{{documentNumber}}</a>
+</script>
+
+

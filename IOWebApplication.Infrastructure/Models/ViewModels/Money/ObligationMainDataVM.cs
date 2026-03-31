@@ -11,5 +11,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
         public int? CaseSessionId { get; set; }
 
         public long? DocumentId { get; set; }
+
+        public long? AssignmentDocumentId { get; set; }
     }
 }

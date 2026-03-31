@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -13,6 +8,9 @@ using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -23,18 +21,21 @@ namespace IOWebApplication.Controllers
         private readonly ICommonService commonService;
         private readonly ICasePersonService casePersonService;
         private readonly ICaseSessionService caseSessionService;
+        private readonly IMQEpepService mqService;
 
         public CaseSessionFastDocumentController(ICaseSessionFastDocumentService _service,
                                                  INomenclatureService _nomService,
                                                  ICommonService _commonService,
                                                  ICasePersonService _casePerson,
-                                                 ICaseSessionService _caseSessionService)
+                                                 ICaseSessionService _caseSessionService,
+                                                 IMQEpepService _mqService)
         {
             service = _service;
             nomService = _nomService;
             commonService = _commonService;
             casePersonService = _casePerson;
             caseSessionService = _caseSessionService;
+            this.mqService = _mqService;
         }
 
         /// <summary>
@@ -80,13 +81,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseSessionId"></param>
         /// <returns></returns>
-        public IActionResult Add(int caseSessionId)
+        public async Task<IActionResult> Add(int caseSessionId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionFastDocument, null, AuditConstants.Operations.Append, caseSessionId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionFastDocument, null, AuditConstants.Operations.Append, caseSessionId))
             {
                 return Redirect_Denied();
             }
-            var modelSession = service.GetById<CaseSession>(caseSessionId);
+            var modelSession = await service.GetByIdAsync<CaseSession>(caseSessionId);
             var model = new CaseSessionFastDocument()
             {
                 CourtId = modelSession.CourtId ?? 0,
@@ -102,16 +103,16 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionFastDocument, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionFastDocument, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CaseSessionFastDocument>(id);
+            var model = await service.GetByIdAsync<CaseSessionFastDocument>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсенata от Вас сесия не е намерен и/или нямате достъп до нея.");
+                return NotFoundError("Търсенata от Вас сесия не е намерен и/или нямате достъп до нея.");
             }
             SetViewbag(model.CaseSessionId);
             return View(nameof(Edit), model);
@@ -178,18 +179,19 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CaseSessionFastDocument_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseSessionFastDocument_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionFastDocument, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionFastDocument, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
-            var expireObject = service.GetById<CaseSessionFastDocument>(model.Id);
+            var expireObject = await service.GetByIdAsync<CaseSessionFastDocument>(model.Id);
             if (service.SaveExpireInfo<CaseSessionFastDocument>(model))
             {
+                mqService.AppendCaseSessionFastDocument(expireObject, EpepConstants.ServiceMethod.Delete);
                 SetAuditContextDelete(service, SourceTypeSelectVM.CaseSessionFastDocument, model.Id);
                 SetSuccessMessage(MessageConstant.Values.CaseSessionExpireOK);
-                return Json(new { result = true, redirectUrl = Url.Action("Index", "CaseSessionFastDocument", new { CaseSessionId = expireObject.CaseSessionId }) });
+                return Json(new { result = true, redirectUrl = Url.Action("Preview", "CaseSession", new { Id = expireObject.CaseSessionId }) });
             }
             else
             {
@@ -202,14 +204,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseSessionToId"></param>
         /// <returns></returns>
-        public IActionResult CopyCaseSessionFastDocument(int caseSessionToId)
+        public async Task<IActionResult> CopyCaseSessionFastDocument(int caseSessionToId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionFastDocument, null, AuditConstants.Operations.ChoiceByList, caseSessionToId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionFastDocument, null, AuditConstants.Operations.ChoiceByList, caseSessionToId))
             {
                 return Redirect_Denied();
             }
 
-            ViewBag.breadcrumbsEdit = commonService.Breadcrumbs_GetCaseSessionFastDocument(caseSessionToId);
+            ViewBag.breadcrumbsEdit = commonService.Breadcrumbs_GetForCaseSession(caseSessionToId); /*commonService.Breadcrumbs_GetCaseSessionFastDocument(caseSessionToId);*/
             SetHelpFile(HelpFileValues.SessionDoc);
             return View("CopyCaseSessionFastDocument", caseSessionToId);
         }
@@ -222,7 +224,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public IActionResult CaseSessionFastDocument_SelectForSessionCheck(int caseSessionFromId, int caseSessionToId)
         {
-            ViewBag.backUrl = Url.Action("Index", "CaseSessionFastDocument", new { CaseSessionId = caseSessionToId });
+            ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { Id = caseSessionToId });
             var data = service.CaseSessionFastDocument_SelectForSessionCheck(caseSessionFromId, caseSessionToId);
             return PartialView("CheckListViewVM", data);
         }
@@ -252,7 +254,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult CaseSessionFastDocument_SelectForSessionCheck(CheckListViewVM model)
+        public async Task<IActionResult> CaseSessionFastDocument_SelectForSessionCheck(CheckListViewVM model)
         {
             string _isvalid = IsValidCopyCaseSessionFastDocument(model);
             if (_isvalid != string.Empty)
@@ -260,16 +262,16 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(_isvalid);
                 return View("CopyCaseSessionFastDocument", model.ObjectId);
             }
-            
+
             if (service.CaseSessionFastDocument_SaveSelectForSessionCheck(model))
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, model.ObjectId);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionPerson, null, AuditConstants.Operations.Update, model.ObjectId);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
             }
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
 
-            return RedirectToAction("Index", "CaseSessionFastDocument", new { CaseSessionId = model.ObjectId });
+            return RedirectToAction("Preview", "CaseSession", new { Id = model.ObjectId });
         }
 
         /// <summary>

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
 {
@@ -12,10 +10,19 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Nomenclatures
         public string IsNDLabel { get; set; }
         public string CaseInstanceLabel { get; set; }
         public string CaseTypeLabel { get; set; }
-        
+
         [Display(Name = "Начална дата")]
         public DateTime DateStart { get; set; }
         [Display(Name = "Крайна дата")]
         public DateTime? DateEnd { get; set; }
+        public string IsAdditionalText { get; set; }
+
+        public bool IsValid
+        {
+            get
+            {
+                return (DateEnd ?? DateTime.MaxValue) > DateTime.Now;
+            }
+        }
     }
 }

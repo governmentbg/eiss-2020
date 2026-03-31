@@ -1,8 +1,6 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Identity;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Base
 {
@@ -10,6 +8,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
     {
         [Column("user_id")]
         public string UserId { get; set; }
+
         [Column("date_wrt")]
         public DateTime DateWrt { get; set; }
 
@@ -19,5 +18,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Base
         [ForeignKey(nameof(UserId))]
         public virtual ApplicationUser User { get; set; }
 
+        public UserDateWRT()
+        {
+            DateWrt = DateTime.Now;
+        }
     }
 }

@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Nest;
+using System.ComponentModel.DataAnnotations;
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
 {
@@ -16,6 +19,14 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         
         [Column("case_group_id")]
         public int CaseGroupId { get; set; }
+
+        [Display(Name = "Начална дата")]
+        [Column("date_start")]
+        public DateTime? DateStart { get; set; }
+
+        [Display(Name = "Крайна дата")]
+        [Column("date_end")]
+        public DateTime? DateEnd { get; set; }
 
         [ForeignKey(nameof(ActComplainIndexId))]
         public virtual ActComplainIndex ActComplainIndex { get; set; }

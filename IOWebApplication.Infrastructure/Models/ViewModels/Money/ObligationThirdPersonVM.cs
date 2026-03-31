@@ -21,6 +21,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Money
 
         public decimal Amount { get; set; }
 
+        public decimal AmountBGN { get; set; }
+
         public string ObligationInfo { get; set; }
 
         public string CaseData { get; set; }

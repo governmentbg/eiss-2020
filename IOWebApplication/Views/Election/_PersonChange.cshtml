@@ -1,0 +1,33 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Election;
+@model ElectionPersonChangeVM
+
+<form id="frmChange" action="@Url.Action("PersonChange")" method="post">
+    <fieldset class="is-fieldset">
+        <legend class="legend_1">Промяна на участие</legend>
+        @Html.HiddenFor(x=>x.Id)
+        @Html.EditorFor(x=>x.ElectionPersonStateId,"GenericDropDown")
+        @Html.EditorFor(x=>x.DescriptionState)
+        @Html.EditorFor(x=>x.ElectionPersonDismissalTypeId,"GenericDropDown")
+        @Html.EditorFor(x=>x.DescriptionRemoved)
+        <div class="form-group">
+            <input type="submit" value="Запис" class="btn btn-success" />
+            <a asp-action="PersonView" asp-route-id="@Model.Id" class="btn btn-danger">Отказ</a>
+        </div>
+
+        <div id="modalMessageContainer">
+        </div>
+    </fieldset>
+</form>
+
+<script>
+    $(function () {
+        attachAjaxForm('#frmChange', function (data) {
+            if (data.responseJSON.result == true) {
+                messageHelper.ShowSuccessMessage(data.responseJSON.message);
+                document.location.href = '@Url.Action("PersonView",new{id=Model.Id})';
+            } else {
+                messageHelper.ShowErrorMessage(data.responseJSON.errorMessage, '#modalMessageContainer');
+            }
+        });
+    });
+</script>

@@ -29,7 +29,9 @@
             <div id="saveContainer">
                 <partial name="_SaveFormContent" model="@("#saveContainer")" />
                 @Html.EditorFor(x => x.HourFee)
+                @Html.EditorFor(x => x.HourFeeEUR)
                 @Html.EditorFor(x => x.MinDayFee)
+                @Html.EditorFor(x => x.MinDayFeeEUR)
                 @Html.EditorFor(x => x.DateFrom)
                 @Html.EditorFor(x => x.DateTo)
             </div>

@@ -34,7 +34,15 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         public string PersonName { get; set; }
 
         [Display(Name = "Адрес на лицето")]
-        public string Address { get; set; }
+        public string Address 
+        { 
+            get
+            {
+                return FullAddress.Replace($",тел: {AddressPhone}", "")
+                                  .Replace($",факс: {AddressFax}", "")
+                                  .Replace($",e-mail: {AddressEmail}", "");
+            }
+        }
 
         [Display(Name = "Статус")]
         public string StateName  { get; set; }
@@ -48,20 +56,33 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
         [Display(Name = "Дата на доставка")]
         public DateTime? DeliveryDate { get; set; }
 
-        [Display(Name = "Изготвена на дата")]
-        public DateTime? DateReady { get; set; }
-        
+       [Display(Name = "Изготвил")]
+        public string PreparedBy { get; set; }
+
         public bool CheckRow { get; set; }
 
         public string CaseInfo { get; set; }
 
-        public int NotificationDeliveryGroupId { get; set; }
+        public int? NotificationDeliveryGroupId { get; set; }
 
         public string CheckRowOrder { get; set; }
 
         public string NotificationType { get; set; }
 
         public int? CaseNotificationId { get; set; }
+
         public int? DocumentNotificationId { get; set; }
+
+        public string DepartmentLabel { get; set; }
+
+        public string FullAddress { get; set; }
+
+        public string AddressPhone { get; set; }
+
+        public string AddressFax { get; set; }
+
+        public string AddressEmail { get; set; }
+
+        public string FastCaseInfo { get; set; }
     }
 }

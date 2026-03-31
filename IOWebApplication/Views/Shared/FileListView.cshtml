@@ -6,6 +6,13 @@
         @foreach (var item in Model)
         {
             <li>
+                @if (item.CanPreview)
+                {
+                    <a class="btn btn-xs btn-default" href="@(Url.Action("Preview", "Files",new { id=item.FileId}))" title="Преглед на файла" target="_blank"><i class="fa fa-eye"></i></a>
+                    <a class="btn btn-xs btn-default" href="#" onclick="printPdfFile('@(Url.Action("Preview", "Files",new { id=item.FileId}))'); return false;" title="Печат на файла" target="_blank"><i class="fa fa-print"></i></a>
+                    <text>&nbsp;</text>
+                }
+
                 <a href="@Url.Action("Download", "Files", new { id = item.FileId })" title="Изтегли файла">@(item.Title ?? item.FileName)</a>
             </li>
         }

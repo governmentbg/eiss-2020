@@ -1,12 +1,14 @@
 ﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Helper;
+using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
+using IOWebApplication.Infrastructure.Data.Models;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.EISPP;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
-using IOWebApplication.Infrastructure.Models.Eispp.ActualData;
 using IOWebApplication.Infrastructure.Models.Integrations.Eispp;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
@@ -25,20 +27,22 @@ namespace IOWebApplication.Core.Services
     {
         private readonly INomenclatureService nomenclatureService;
         private readonly IEisppService eisppService;
+        private readonly IWorkTaskService taskService;
+
         public CasePersonSentenceService(
         ILogger<CasePersonSentenceService> _logger,
         IRepository _repo,
         INomenclatureService _nomenclatureService,
         IEisppService _eisppService,
-        AutoMapper.IMapper _mapper,
-        IUserContext _userContext)
+        IUserContext _userContext,
+        IWorkTaskService taskService)
         {
             logger = _logger;
             repo = _repo;
-            mapper = _mapper;
             userContext = _userContext;
             nomenclatureService = _nomenclatureService;
             eisppService = _eisppService;
+            this.taskService = taskService;
         }
 
         /// <summary>
@@ -49,26 +53,16 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CasePersonSentenceVM> CasePersonSentence_Select(int CasePersonId)
         {
             return repo.AllReadonly<CasePersonSentence>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.DecreedCourt)
-                       .Include(x => x.SentenceResultType)
-                       .Include(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.ActType)
-                       .Include(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.CaseSession)
-                       .ThenInclude(x => x.Case)
-                       .ThenInclude(x => x.CaseType)
-                       .ThenInclude(x => x.CaseInstance)
                        .Where(x => x.CasePersonId == CasePersonId)
                        .Select(x => new CasePersonSentenceVM()
                        {
                            Id = x.Id,
                            CaseId = x.CaseId,
                            CasePersonName = x.CasePerson.FullName,
-                           SentenceResultTypeLabel = x.SentenceResultType != null ? x.SentenceResultType.Label : string.Empty,
-                           CaseSessionActLabel = x.CaseSessionAct != null ? x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate != null ? (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty) : string.Empty,
+                           SentenceResultTypeLabel = x.SentenceResultType.Label,
+                           CaseSessionActLabel = x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate != null ? x.CaseSessionAct.RegDate.Value.ToString("dd.MM.yyyy") : string.Empty),
                            CourtLabel = x.DecreedCourt.Label,
-                           InstanceLabel = x.CaseSessionAct.CaseSession.Case.CaseType.CaseInstance.Code,
+                           InstanceLabel = x.Case.CaseType.CaseInstance.Code,
                            IsActive = x.IsActive,
                            IsActiveText = (x.IsActive ?? false) ? NomenclatureConstants.AnswerQuestionTextBG.Yes : NomenclatureConstants.AnswerQuestionTextBG.No
                        })
@@ -125,9 +119,9 @@ namespace IOWebApplication.Core.Services
         /// <summary>
         /// Запис на Присъда по лице в дело
         /// </summary>
-        /// <param name="model"></param>
+        /// <param name="model">модел попълнен от потребител</param>
         /// <returns></returns>
-        public bool CasePersonSentence_SaveData(CasePersonSentenceEditVM model)
+        public async Task<bool> CasePersonSentence_SaveData(CasePersonSentenceEditVM model)
         {
             try
             {
@@ -163,13 +157,24 @@ namespace IOWebApplication.Core.Services
                     saved.UserId = userContext.UserId;
                     saved.DateWrt = DateTime.Now;
                     repo.Update(saved);
+
                     var casePersonSentenceLawbasesDelete = GetCasePersonSentenceLawbases(modelSave.Id);
                     if (casePersonSentenceLawbasesDelete.Count > 0)
                         repo.DeleteRange(casePersonSentenceLawbasesDelete);
+
+                    var casePersonSentencesSave = FillCasePersonSentences(model.LawBases, modelSave.Id, modelSave.CaseId);
+                    if (casePersonSentencesSave.Count > 0)
+                        repo.AddRange(casePersonSentencesSave);
                 }
                 else
                 {
-                    var casePersonSentencesUpdate = repo.AllReadonly<CasePersonSentence>().Where(x => x.CaseId == model.CaseId && x.CasePersonId == model.CasePersonId && x.IsActive == true).ToList();
+                    var casePersonSentencesUpdate = await repo.AllReadonly<CasePersonSentence>()
+                                                              .Where(x => x.CaseId == model.CaseId &&
+                                                                          x.CasePersonId == model.CasePersonId &&
+                                                                          x.IsActive == true)
+                                                              .ToListAsync()
+                                                              .ConfigureAwait(false);
+
                     foreach (var personSentence in casePersonSentencesUpdate)
                     {
                         personSentence.IsActive = false;
@@ -178,14 +183,13 @@ namespace IOWebApplication.Core.Services
 
                     modelSave.UserId = userContext.UserId;
                     modelSave.DateWrt = DateTime.Now;
-                    repo.Add<CasePersonSentence>(modelSave);
+
+                    modelSave.CasePersonSentenceLawbases = FillCasePersonSentences(model.LawBases, modelSave.Id, modelSave.CaseId);
+
+                    repo.Add(modelSave);
                 }
 
-                var casePersonSentencesSave = FillCasePersonSentences(model.LawBases, modelSave.Id, modelSave.CaseId);
-                if (casePersonSentencesSave.Count > 0)
-                    repo.AddRange<CasePersonSentenceLawbase>(casePersonSentencesSave);
-
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
 
                 if (model.Id < 1)
                     model.Id = modelSave.Id;
@@ -194,7 +198,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Присъда по лице в дело Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Присъда по лице в дело Id={model.Id}");
                 return false;
             }
         }
@@ -330,7 +334,7 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CaseCrimeVM> CaseCrime_Select(int CaseId)
         {
             var caseCrimes = repo.AllReadonly<CaseCrime>()
-                                 .Where(x => x.CaseId == CaseId && 
+                                 .Where(x => x.CaseId == CaseId &&
                                              x.DateExpired == null)
                                  .Select(x => new CaseCrimeVM()
                                  {
@@ -351,21 +355,29 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public bool CaseCrime_SaveData(CaseCrime model)
+        public async Task<bool> CaseCrime_SaveData(CaseCrime model)
         {
             try
             {
-                model.StartDateType = model.StartDateType.EmptyToNull(0);
-                model.CompletitionDegree = model.CompletitionDegree.EmptyToNull(0);
-                model.Status = model.Status.EmptyToNull(0);
+                model.StartDateType = model.StartDateType.NumberEmptyToNull();
+                model.CompletitionDegree = model.CompletitionDegree.NumberEmptyToNull();
+                model.Status = model.Status.NumberEmptyToNull();
+                model.CategoryDeedId = model.CategoryDeedId.NumberEmptyToNull();
+                model.CategoryCommonDeedId = model.CategoryCommonDeedId.NumberEmptyToNull();
+                model.CrimeSceneCountryId = model.CrimeSceneCountryId.NumberEmptyToNull();
+                model.CrimeSceneCityId = model.CrimeSceneCityId.NumberEmptyToNull();
+                model.CrimeSceneCityEisppId = model.CrimeSceneCityEisppId.NumberEmptyToNull();
+                model.FormGuiltId = model.FormGuiltId.NumberEmptyToNull();
 
                 if (model.Id > 0)
                 {
                     //Update
-                    var saved = repo.GetById<CaseCrime>(model.Id);
+                    var saved = await repo.All<CaseCrime>()
+                                          .Where(c => c.Id == model.Id)
+                                          .FirstAsync();
+
                     saved.CaseId = model.CaseId;
                     saved.EISSId = model.EISSId;
-                    saved.EISSPNumber = model.EISSPNumber;
 
                     if (saved.CrimeCode != model.CrimeCode)
                     {
@@ -375,40 +387,66 @@ namespace IOWebApplication.Core.Services
 
                     saved.StartDateType = model.StartDateType;
                     saved.CompletitionDegree = model.CompletitionDegree;
+
+                    saved.DescriptionOffence = model.DescriptionOffence;
+                    saved.CategoryDeedId = model.CategoryDeedId;
+                    saved.CategoryCommonDeedId = model.CategoryCommonDeedId;
+                    saved.LegalQualificationText = model.LegalQualificationText;
+                    saved.CrimeSceneCountryId = model.CrimeSceneCountryId;
+                    saved.CrimeSceneCityId = model.CrimeSceneCityId;
+                    saved.CrimeSceneCityEisppId = model.CrimeSceneCityEisppId;
+                    saved.CrimeSceneStreetName = model.CrimeSceneStreetName;
+                    saved.CrimeSceneSettlementAbroad = model.CrimeSceneSettlementAbroad;
+                    saved.CrimeSceneBuilding = model.CrimeSceneBuilding;
+                    saved.CrimeSceneNumber = model.CrimeSceneNumber;
+                    saved.CrimeSceneEntrance = model.CrimeSceneEntrance;
+                    saved.CrimeSceneFloor = model.CrimeSceneFloor;
+                    saved.CrimeSceneAppartment = model.CrimeSceneAppartment;
+                    saved.CrimeSceneLocalization = model.CrimeSceneLocalization;
+                    saved.CrimeSceneText = model.CrimeSceneText;
+                    saved.FormGuiltId = model.FormGuiltId;
+                    saved.HasPriorProbation = model.HasPriorProbation;
+                    saved.ActPriorProbation = model.ActPriorProbation;
+
                     saved.Status = model.Status;
                     saved.StatusDate = model.StatusDate;
                     saved.DateFrom = model.DateFrom;
                     saved.DateTo = model.DateTo;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
-                    repo.Update(saved);
-                    repo.SaveChanges();
+
+                    await repo.SaveChangesAsync();
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(model.EISSPNumber))
                     {
-                        var caseModel = GetById<Case>(model.CaseId);
+                        var caseModel = await GetByIdAsync<Case>(model.CaseId);
+                        if (model.IsGeneratedEisppNumber == true || eisppService.IsForEisppNum(caseModel))
+                        {
+                            eisppService.MakeEisppNumberPNE(model, caseModel.CourtId);
+                        }
                         if (eisppService.IsForEisppNum(caseModel))
                         {
                             if (string.IsNullOrEmpty(caseModel.EISSPNumber))
                             {
                                 eisppService.MakeEisppNumberNP(caseModel);
                             }
-                            eisppService.MakeEisppNumberPNE(model, caseModel.CourtId);
                         }
                     }
+
                     model.CrimeName = nomenclatureService.GetByCode_EISPPTblElement(model.CrimeCode).Label;
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
-                    repo.Add<CaseCrime>(model);
-                    repo.SaveChanges();
+
+                    repo.Add(model);
+                    await repo.SaveChangesAsync();
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Престъпления по НД по дело Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Престъпления по НД по дело Id={model.Id}");
                 return false;
             }
         }
@@ -515,6 +553,7 @@ namespace IOWebApplication.Core.Services
                     saved.CaseCrimeId = model.CaseCrimeId;
                     saved.RecidiveTypeId = model.RecidiveTypeId;
                     saved.PersonRoleInCrimeId = model.PersonRoleInCrimeId;
+                    saved.NotPunished = model.NotPunished;
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
                     repo.Update(saved);
@@ -531,7 +570,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Престъпления към лица Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Престъпления към лица Id={model.Id}");
                 return false;
             }
         }
@@ -564,6 +603,10 @@ namespace IOWebApplication.Core.Services
                                     .FirstOrDefault();
                 (var eisppModel, var xmlResponse) = await eisppService.GetTSAKTSTSResponse(caseModel.EISSPNumber).ConfigureAwait(false);
                 xml = xmlResponse;
+                if (eisppModel?.execTSAKTSTSResponse?.sNPRAKTSTS?.sPNE == null)
+                {
+                    return false;
+                }
                 var pne = eisppModel.execTSAKTSTSResponse.sNPRAKTSTS.sPNE.FirstOrDefault(x => x.pnenmr == pnenmr);
                 var caseCrime = new CaseCrime()
                 {
@@ -578,11 +621,28 @@ namespace IOWebApplication.Core.Services
                     DateTo = pne.pnedtadod != Crime.defaultDate ? (DateTime?)pne.pnedtadod : null,
                     Status = pne.PNESTA?.pnests.ToInt(),
                     StatusDate = pne.PNESTA?.pnestsdta != Crime.defaultDate ? (DateTime?)pne.PNESTA?.pnestsdta : null,
-                    CompletitionDegree = pne.PNESTA?.pnestpdvs.ToInt(), 
+                    CompletitionDegree = pne.PNESTA?.pnestpdvs.ToInt(),
                     DateWrt = DateTime.Now,
-                    UserId = userContext.UserId
                 };
+                var addr = pne.ADR.FirstOrDefault();
+                if (addr != null) {
+                    var country = repo.AllReadonly<EkCountry>().Where(x => x.EISPPCode == addr.adrdrj).FirstOrDefault();
+                    caseCrime.CrimeSceneCountryId = country?.CountryId ?? 0;
+                    if (country.Code == NomenclatureConstants.CountryBG && !string.IsNullOrEmpty(addr.adrnsmbgr))
+                    {
+                        caseCrime.CrimeSceneCityEisppId = repo.AllReadonly<EisppEktteCode>().Where(x => x.Code == addr.adrnsmbgr).FirstOrDefault()?.Id;
+                    }
 
+                    caseCrime.CrimeSceneStreetName = addr.adrkrdtxt;
+                    caseCrime.CrimeSceneSettlementAbroad = addr.adrnsmchj;
+                    caseCrime.CrimeSceneBuilding = addr.adrblk;
+                    caseCrime.CrimeSceneNumber = addr.adrnmr;
+                    caseCrime.CrimeSceneEntrance = addr.adrvhd;
+                    caseCrime.CrimeSceneFloor = addr.adretj;
+                    caseCrime.CrimeSceneAppartment = addr.adrapr;
+                    caseCrime.CrimeSceneLocalization = addr.adrloc?.ToInt() ?? 0;
+                    caseCrime.CrimeSceneText = addr.adrmsttxt;
+                }
                 caseCrime.CasePersonCrimes = new List<CasePersonCrime>();
 
                 if (eisppModel.execTSAKTSTSResponse.sNPRAKTSTS.sFZL != null)
@@ -625,7 +685,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Престъпление от ЕИСПП Id={ caseId } {pnenmr} "+xml);
+                logger.LogError(ex, $"Грешка при запис на Престъпление от ЕИСПП Id={caseId} {pnenmr} " + xml);
 
                 return false;
             }
@@ -640,7 +700,7 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<CasePersonSentencePunishment>()
                 .Include(x => x.SentenceType)
-                .Where(x => x.CasePersonSentenceId == CasePersonSentenceId && 
+                .Where(x => x.CasePersonSentenceId == CasePersonSentenceId &&
                             x.DateExpired == null)
                 .Select(x => new CasePersonSentencePunishmentVM()
                 {
@@ -693,6 +753,8 @@ namespace IOWebApplication.Core.Services
             {
                 model.SentenceTypeId = model.SentenceTypeId.NumberEmptyToNull();
                 model.SentenceRegimeTypeId = model.SentenceRegimeTypeId.NumberEmptyToNull();
+                model.PunishmentGeneralCategoryId = model.PunishmentGeneralCategoryId.NumberEmptyToNull();
+                model.SentenseMoneyBGN = userContext.IsInterimPeriodEuro ? Utils.GetAmountBGN(model.SentenseMoney, true, userContext.EuroExchangeRate) : 0;
 
                 if (model.Id > 0)
                 {
@@ -702,11 +764,17 @@ namespace IOWebApplication.Core.Services
                     saved.CasePersonSentenceId = model.CasePersonSentenceId;
                     saved.IsSummaryPunishment = model.IsSummaryPunishment;
                     saved.SentenceTypeId = model.SentenceTypeId;
+                    saved.PunishmentGeneralCategoryId = model.PunishmentGeneralCategoryId;
                     saved.SentenseMoney = model.SentenseMoney;
+                    saved.SentenseMoneyBGN = model.SentenseMoneyBGN;
                     saved.SentenseDays = model.SentenseDays;
                     saved.SentenseWeeks = model.SentenseWeeks;
                     saved.SentenseMonths = model.SentenseMonths;
                     saved.SentenseYears = model.SentenseYears;
+                    saved.PreliminaryDetentionDays = model.PreliminaryDetentionDays;
+                    saved.PreliminaryDetentionWeeks = model.PreliminaryDetentionWeeks;
+                    saved.PreliminaryDetentionMonths = model.PreliminaryDetentionMonths;
+                    saved.PreliminaryDetentionYears = model.PreliminaryDetentionYears;
                     saved.SentenceText = model.SentenceText;
                     saved.SentenceRegimeTypeId = model.SentenceRegimeTypeId;
                     saved.DateFrom = model.DateFrom;
@@ -733,21 +801,21 @@ namespace IOWebApplication.Core.Services
 
                     saved.DateWrt = DateTime.Now;
                     saved.UserId = userContext.UserId;
-                    repo.Update(saved);
+
                     repo.SaveChanges();
                 }
                 else
                 {
                     model.DateWrt = DateTime.Now;
                     model.UserId = userContext.UserId;
-                    repo.Add<CasePersonSentencePunishment>(model);
+                    repo.Add(model);
                     repo.SaveChanges();
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Наложени наказания към присъда Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Наложени наказания към присъда Id={model.Id}");
                 return false;
             }
         }
@@ -760,18 +828,18 @@ namespace IOWebApplication.Core.Services
         public IQueryable<CasePersonSentencePunishmentCrimeVM> CasePersonSentencePunishmentCrime_Select(int CasePersonSentencePunishmentId)
         {
             return repo.AllReadonly<CasePersonSentencePunishmentCrime>()
-                .Include(x => x.CaseCrime)
-                .Include(x => x.PersonRoleInCrime)
-                .Include(x => x.RecidiveType)
-                .Where(x => x.CasePersonSentencePunishmentId == CasePersonSentencePunishmentId)
-                .Select(x => new CasePersonSentencePunishmentCrimeVM()
-                {
-                    Id = x.Id,
-                    CaseCrimeLabel = x.CaseCrime.CrimeName,
-                    PersonRoleInCrimeLabel = x.PersonRoleInCrime.Label,
-                    RecidiveTypeLabel = x.RecidiveType.Label
-                })
-                .AsQueryable();
+                       .Where(x => x.CasePersonSentencePunishmentId == CasePersonSentencePunishmentId)
+                       .Where(x => x.DateExpired == null)
+                       .Select(x => new CasePersonSentencePunishmentCrimeVM()
+                       {
+                           Id = x.Id,
+                           CaseCrimeLabel = x.CaseCrime.CrimeName,
+                           PersonRoleInCrimeLabel = x.PersonRoleInCrime.Label,
+                           RecidiveTypeLabel = x.RecidiveType.Label,
+                           EisppNumber = x.CaseCrime.EISSPNumber,
+                           EisppNumberCSS = x.CaseCrime.IsGeneratedEisppNumber == true? "eispp-number-generated": string.Empty ,
+                       })
+                       .AsQueryable();
         }
 
         /// <summary>
@@ -792,11 +860,14 @@ namespace IOWebApplication.Core.Services
                                                       x.CaseCrimeId == casePersonSentence.CasePersonId &&
                                                       x.DateExpired == null)
                                           .FirstOrDefault();
+
+                model.SentenseMoneyBGN = userContext.IsInterimPeriodEuro ? Utils.GetAmountBGN(model.SentenseMoney, true, userContext.EuroExchangeRate) : 0;
+
                 if (model.Id > 0)
                 {
                     //Update
                     var saved = repo.All<CasePersonSentencePunishmentCrime>()
-                                    .Where(x => x.Id ==  model.Id)
+                                    .Where(x => x.Id == model.Id)
                                     .FirstOrDefault();
                     saved.CasePersonSentencePunishmentId = model.CasePersonSentencePunishmentId;
                     saved.CaseCrimeId = model.CaseCrimeId;
@@ -804,6 +875,7 @@ namespace IOWebApplication.Core.Services
                     saved.RecidiveTypeId = model.RecidiveTypeId;
                     saved.SentenceTypeId = model.SentenceTypeId;
                     saved.SentenseMoney = model.SentenseMoney;
+                    saved.SentenseMoneyBGN = model.SentenseMoneyBGN;
                     saved.SentenseDays = model.SentenseDays;
                     saved.SentenseWeeks = model.SentenseWeeks;
                     saved.SentenseMonths = model.SentenseMonths;
@@ -824,8 +896,33 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Наложени наказания към присъда Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Наложени наказания към присъда Id={model.Id}");
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Изтриване на Наложени наказания към присъда
+        /// </summary>
+        /// <param name="Id">Идентификатор на записа</param>
+        /// <returns></returns>
+        public async Task<bool> CasePersonSentencePunishmentCrime_DeleteData(int Id)
+        {
+            try
+            {
+                var casePersonSentencePunishmentCrime = await repo.All<CasePersonSentencePunishmentCrime>()
+                                                                  .Where(x => x.Id == Id)
+                                                                  .FirstAsync();
+
+                casePersonSentencePunishmentCrime.DateExpired = DateTime.Now;
+                casePersonSentencePunishmentCrime.UserExpiredId = userContext.UserId;
+                await repo.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "CasePersonSentencePunishmentCrime_DeleteData id={0}", Id);
+                return false; ;
             }
         }
 
@@ -886,29 +983,105 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public CasePersonSentenceBulletinEditVM CasePersonSentenceBulletin_GetById(int id)
+        public async Task<CasePersonSentenceBulletinEditVM> CasePersonSentenceBulletin_GetById(int id)
         {
-            return repo.AllReadonly<CasePersonSentenceBulletin>()
-                                .Select(x => new CasePersonSentenceBulletinEditVM()
-                                {
-                                    Id = x.Id,
-                                    CaseId = x.CaseId,
-                                    CourtId = x.CourtId,
-                                    CasePersonId = x.CasePersonId,
-                                    BirthDayPlace = x.BirthDayPlace,
-                                    BirthDay = x.BirthDay,
-                                    Nationality = x.Nationality,
-                                    FamilyMarriage = x.FamilyMarriage,
-                                    FatherName = x.FatherName,
-                                    MotherName = x.MotherName,
-                                    CaseTypeId = x.Case.CaseTypeId,
-                                    IsAdministrativePunishment = x.IsAdministrativePunishment,
-                                    SentenceDescription = x.SentenceDescription,
-                                    IsConvicted = x.IsConvicted ?? false,
-                                    LawUnitSignId = x.LawUnitSignId ?? 0,
-                                })
-                                .Where(x => x.Id == id)
-                                .FirstOrDefault();
+            return await repo.AllReadonly<CasePersonSentenceBulletin>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CasePersonSentenceBulletinEditVM()
+                             {
+                                 Id = x.Id,
+                                 CaseId = x.CaseId,
+                                 CourtId = x.CourtId,
+                                 CasePersonId = x.CasePersonId,
+                                 IssuingCountryId = x.IssuingCountryId,
+                                 BirthDayPlace = x.BirthDayPlace,
+                                 BirthDayPlaceCountryId = x.BirthDayPlaceCountryId,
+                                 BirthDayPlaceCityId = x.BirthDayPlaceCityId,
+                                 BirthDayPlaceCityText = x.BirthDayPlaceCityText,
+                                 BirthDay = x.BirthDay,
+                                 Nationality = x.Nationality,
+                                 NationalityCountryOneId = x.NationalityCountryOneId,
+                                 NationalityCountryTwoId = x.NationalityCountryTwoId,
+                                 FatherName = x.FatherName,
+                                 FatherNameLatin = x.FatherNameLatin,
+                                 MotherName = x.MotherName,
+                                 MotherNameLatin = x.MotherNameLatin,
+                                 CaseTypeId = x.Case.CaseTypeId,
+                                 IsAdministrativePunishment = x.IsAdministrativePunishment,
+                                 SentenceDescription = x.SentenceDescription,
+                                 IsConvicted = x.IsConvicted ?? false,
+                                 LawUnitSignId = x.LawUnitSignId ?? 0,
+                                 NumberAFIS = x.NumberAFIS,
+                                 BirthDayPlaceDescriptionCir = x.BirthDayPlaceDescriptionCir,
+                                 BirthDayPlaceDescriptionLat = x.BirthDayPlaceDescriptionLat,
+                                 OtherUic = x.OtherUic,
+                                 OtherUicIssuingCountryId = x.OtherUicIssuingCountryId,
+                                 OtherUicPlaceCityId = x.OtherUicPlaceCityId
+                             })
+                             .FirstAsync();
+        }
+
+        private CasePersonSentenceBulletin FillCasePersonSentenceBulletin(CasePersonSentenceBulletinEditVM model)
+        {
+            return new CasePersonSentenceBulletin()
+            {
+                CourtId = model.CourtId,
+                CaseId = model.CaseId,
+                CasePersonId = model.CasePersonId,
+                BirthDayPlace = model.BirthDayPlace,
+                BirthDay = model.BirthDay,
+                Nationality = model.Nationality,
+                FatherName = model.FatherName,
+                FatherNameLatin = model.FatherNameLatin,
+                MotherName = model.MotherName,
+                MotherNameLatin = model.MotherNameLatin,
+                IsAdministrativePunishment = model.IsAdministrativePunishment,
+                SentenceDescription = model.SentenceDescription,
+                IsConvicted = model.IsConvicted,
+                LawUnitSignId = model.LawUnitSignId,
+                IssuingCountryId = model.IssuingCountryId,
+                BirthDayPlaceCountryId = model.BirthDayPlaceCountryId,
+                BirthDayPlaceCityId = model.BirthDayPlaceCityId,
+                BirthDayPlaceCityText = model.BirthDayPlaceCityText,
+                NumberAFIS = model.NumberAFIS,
+                NationalityCountryOneId = model.NationalityCountryOneId,
+                NationalityCountryTwoId = model.NationalityCountryTwoId,
+                BirthDayPlaceDescriptionCir = model.BirthDayPlaceDescriptionCir,
+                BirthDayPlaceDescriptionLat = model.BirthDayPlaceDescriptionLat,
+                OtherUic = model.OtherUic,
+                OtherUicIssuingCountryId = model.OtherUicIssuingCountryId,
+                OtherUicPlaceCityId = model.OtherUicPlaceCityId
+            };
+        }
+
+        private void SetFieldsCasePersonSentenceBulletin(CasePersonSentenceBulletin modelSave, CasePersonSentenceBulletinEditVM model)
+        {
+            modelSave.CourtId = model.CourtId;
+            modelSave.CaseId = model.CaseId;
+            modelSave.CasePersonId = model.CasePersonId;
+            modelSave.BirthDayPlace = model.BirthDayPlace;
+            modelSave.BirthDay = model.BirthDay;
+            modelSave.Nationality = model.Nationality;
+            modelSave.FatherName = model.FatherName;
+            modelSave.FatherNameLatin = model.FatherNameLatin;
+            modelSave.MotherName = model.MotherName;
+            modelSave.MotherNameLatin = model.MotherNameLatin;
+            modelSave.IsAdministrativePunishment = model.IsAdministrativePunishment;
+            modelSave.SentenceDescription = model.SentenceDescription;
+            modelSave.IsConvicted = model.IsConvicted;
+            modelSave.LawUnitSignId = model.LawUnitSignId;
+            modelSave.IssuingCountryId = model.IssuingCountryId;
+            modelSave.BirthDayPlaceCountryId = model.BirthDayPlaceCountryId;
+            modelSave.BirthDayPlaceCityId = model.BirthDayPlaceCityId;
+            modelSave.BirthDayPlaceCityText = model.BirthDayPlaceCityText;
+            modelSave.NumberAFIS = model.NumberAFIS;
+            modelSave.NationalityCountryOneId = model.NationalityCountryOneId;
+            modelSave.NationalityCountryTwoId = model.NationalityCountryTwoId;
+            modelSave.BirthDayPlaceDescriptionCir = model.BirthDayPlaceDescriptionCir;
+            modelSave.BirthDayPlaceDescriptionLat = model.BirthDayPlaceDescriptionLat;
+            modelSave.OtherUic = model.OtherUic;
+            modelSave.OtherUicIssuingCountryId = model.OtherUicIssuingCountryId;
+            modelSave.OtherUicPlaceCityId = model.OtherUicPlaceCityId;
         }
 
         /// <summary>
@@ -916,65 +1089,52 @@ namespace IOWebApplication.Core.Services
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public (bool result, string errorMessage) CasePersonSentenceBulletin_SaveData(CasePersonSentenceBulletinEditVM model)
+        public async Task<(bool result, string errorMessage)> CasePersonSentenceBulletin_SaveData(CasePersonSentenceBulletinEditVM model)
         {
             try
             {
                 if (model.Id == 0)
                 {
-                    var exists = repo.AllReadonly<CasePersonSentenceBulletin>()
-                                       .Where(x => x.Id != model.Id)
-                                       .Where(x => x.CasePersonId == model.CasePersonId)
-                                       .Any();
+                    var exists = await repo.AllReadonly<CasePersonSentenceBulletin>()
+                                           .Where(x => x.Id != model.Id)
+                                           .Where(x => x.CasePersonId == model.CasePersonId)
+                                           .AnyAsync();
+
                     if (exists == true)
                     {
                         return (result: false, errorMessage: "Вече има въведени данни");
                     }
                 }
-                CasePersonSentenceBulletin saved = null;
+
+                model.IssuingCountryId = model.IssuingCountryId.NumberEmptyToNull();
+                model.BirthDayPlaceCountryId = model.BirthDayPlaceCountryId.NumberEmptyToNull();
+                model.BirthDayPlaceCityId = model.BirthDayPlaceCityId.NumberEmptyToNull();
+                model.NationalityCountryOneId = model.NationalityCountryOneId.NumberEmptyToNull();
+                model.NationalityCountryTwoId = model.NationalityCountryTwoId.NumberEmptyToNull();
+                model.OtherUicIssuingCountryId = model.OtherUicIssuingCountryId.NumberEmptyToNull();
+                model.OtherUicPlaceCityId = model.OtherUicPlaceCityId.NumberEmptyToNull();
+
+                CasePersonSentenceBulletin saved = (model.Id > 0) ? await repo.All<CasePersonSentenceBulletin>()
+                                                                              .Where(x => x.Id == model.Id)
+                                                                              .FirstAsync() : FillCasePersonSentenceBulletin(model);
+
                 if (model.Id > 0)
                 {
                     //Update
-                    saved = repo.GetById<CasePersonSentenceBulletin>(model.Id);
-                    repo.Update(saved);
+                    SetFieldsCasePersonSentenceBulletin(saved, model);
                 }
                 else
                 {
-                    saved = new CasePersonSentenceBulletin();
-                    saved.CasePersonId = model.CasePersonId;
-                    saved.CaseId = model.CaseId;
-                    saved.CourtId = model.CourtId;
+                    repo.Add(saved);
                 }
 
-                saved.BirthDayPlace = model.BirthDayPlace;
-                saved.BirthDay = model.BirthDay;
-                saved.Nationality = model.Nationality;
-                saved.FamilyMarriage = model.FamilyMarriage;
-                saved.FatherName = model.FatherName;
-                saved.MotherName = model.MotherName;
-                saved.SentenceDescription = model.SentenceDescription;
-                saved.UserId = userContext.UserId;
-                saved.DateWrt = DateTime.Now;
-                saved.IsAdministrativePunishment = model.IsAdministrativePunishment;
-                saved.IsConvicted = model.IsConvicted;
-                saved.LawUnitSignId = model.LawUnitSignId;
-                
-                if (model.Id > 0)
-                {
-                    repo.Update(saved);
-                }
-                else
-                {
-                    repo.Add<CasePersonSentenceBulletin>(saved);
-                }
-
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
                 model.Id = saved.Id;
                 return (result: true, errorMessage: "");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на CasePersonSentenceBulletin Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на CasePersonSentenceBulletin Id={model.Id}");
                 return (result: false, errorMessage: Helper.GlobalConstants.MessageConstant.Values.SaveFailed);
             }
         }
@@ -996,7 +1156,7 @@ namespace IOWebApplication.Core.Services
         public bool IsEISPPNumberExists(int caseId, string eisppNumber)
         {
             return repo.AllReadonly<CaseCrime>()
-                                .Where(x => x.CaseId == caseId && 
+                                .Where(x => x.CaseId == caseId &&
                                             x.DateExpired == null &&
                                             x.EISSPNumber == eisppNumber)
                                 .Any();
@@ -1010,5 +1170,105 @@ namespace IOWebApplication.Core.Services
                                  x.DateExpired == null &&
                                  (WithoutId != null ? x.Id != WithoutId : true));
         }
+
+        private CasePersonSentence GetDataForBulletin(int sentenceId)
+        {
+            return repo.AllReadonly<CasePersonSentence>()
+                                 .Include(x => x.CaseSessionAct)
+                                 .Include(x => x.CaseSessionAct.ActType)
+                                 .Include(x => x.CaseSessionAct.Court)
+                                 .Include(x => x.CaseSessionAct.Case)
+                                 .Include(x => x.CaseSessionAct.Case.CaseType)
+                                 .Include(x => x.CaseSessionAct.CaseSession)
+                                 .Include(x => x.CaseSessionAct.CaseSession.CaseLawUnits)
+                                 .ThenInclude(x => x.CourtDepartment)
+                                 .Where(x => x.Id == sentenceId)
+                                 .FirstOrDefault();
+        }
+
+        public string GetTextNewBulletin(int sentenceId, int? sentenceChangeId)
+        {
+            CasePersonSentence sentenceMain = null;
+            CasePersonSentence sentence = null;
+
+            //Тука е...
+            if ((sentenceChangeId ?? 0) > 0)
+            {
+                sentenceMain = GetDataForBulletin(sentenceChangeId ?? 0);
+                sentence = GetDataForBulletin(sentenceId);
+            }
+            else
+            {
+                sentenceMain = GetDataForBulletin(sentenceId);
+            }
+
+            string composition = sentenceMain.CaseSessionAct.CaseSession.CaseLawUnits.Where(x => x.JudgeRoleId == NomenclatureConstants.JudgeRole.JudgeReporter &&
+                                 (x.DateTo ?? sentenceMain.CaseSessionAct.CaseSession.DateFrom) >= sentenceMain.CaseSessionAct.CaseSession.DateFrom &&
+                                 x.CourtDepartmentId != null).Select(x => x.CourtDepartment.Label).FirstOrDefault();
+            string result = "ИЗВЛЕЧЕНИЕ ОТ ВЛЯЗЛА(О) В СИЛА " + sentenceMain.CaseSessionAct.ActType.Label + " № " +
+                             sentenceMain.CaseSessionAct.RegNumber + "/" + sentenceMain.CaseSessionAct.RegDate?.ToString(FormattingConstant.NormalDateFormat) +
+                             " по " + sentenceMain.CaseSessionAct.Case.CaseType.Code + " № " + sentenceMain.CaseSessionAct.Case.RegNumber + " по описа на " +
+                             sentenceMain.CaseSessionAct.Court.Label + " " + composition;
+
+            if (sentence != null)
+            {
+                result += "<br>" + "Присъдата е ИЗМЕНЕНА/ОТМЕНЕНА с " + sentence.CaseSessionAct.ActType.Label + " № " +
+                     sentence.CaseSessionAct.RegNumber + "/" + sentence.CaseSessionAct.RegDate?.ToString(FormattingConstant.NormalDateFormat) +
+                     " по " + sentence.CaseSessionAct.Case.CaseType.Code + " № " + sentence.CaseSessionAct.Case.RegNumber + " по описа на " +
+                     sentence.CaseSessionAct.Court.Label;
+            }
+
+            return result;
+        }
+
+        public async Task<SaveResultVM> SendBuletinForSign_Init(int caseBuletinId, int buletinFileId, long taskId)
+        {
+            SaveResultVM result = new SaveResultVM();
+            var buletinJudgeSignId = await GetPropByIdAsync<CasePersonSentenceBulletin, int?>(caseBuletinId, x => x.LawUnitSignId);
+            if (buletinJudgeSignId == null)
+            {
+                return new SaveResultVM(false, "Изберете съдия");
+            }
+
+            var model = new List<CaseLawUnit>()
+                {
+                    new CaseLawUnit()
+                    {
+                        LawUnitId = buletinJudgeSignId.Value
+                    }
+                };
+
+
+            foreach (var caseLawUnit in model)
+            {
+                caseLawUnit.LawUnitUserId = GetUserIdByLawUnitId(caseLawUnit.LawUnitId);
+            }
+
+            if (model.Any(x => string.IsNullOrEmpty(x.LawUnitUserId)))
+            {
+                result.Result = false;
+                result.ErrorMessage = "Съществуват лица с неактивен/липсващ потребител!";
+                return result;
+            }
+
+            foreach (var caseLawUnit in model)
+            {
+                var newTask = new WorkTaskEditVM()
+                {
+                    ParentTaskId = taskId,
+                    SourceType = SourceTypeSelectVM.CasePersonBulletin,
+                    SourceId = caseBuletinId,
+                    SubSourceId = buletinFileId,
+                    TaskTypeId = WorkTaskConstants.Types.CasePersonBulletin_Sign,
+                    TaskExecutionId = WorkTaskConstants.TaskExecution.ByUser,
+                    UserId = caseLawUnit.LawUnitUserId,
+                };
+                result.Result = await taskService.CreateTask(newTask);
+            }
+
+
+            return result;
+        }
+
     }
 }

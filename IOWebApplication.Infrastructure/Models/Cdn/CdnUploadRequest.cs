@@ -38,6 +38,10 @@ namespace IOWebApplication.Infrastructure.Models.Cdn
 
         public int MaxFileSize { get; set; }
 
+        [Display(Name = "Вид прикачен документ")]
+        public int? MongoFileTypeId { get; set; }
+
+
         public CdnUploadRequest()
         {
             SignituresCount = 0;

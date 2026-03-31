@@ -1,12 +1,8 @@
-﻿using AutoMapper;
-using IOWebApplication.Infrastructure.Constants;
+﻿using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Data.Models.Common;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels
 {
@@ -18,20 +14,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
         public DateTime DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
         public string[] CourtList { get; set; }
-
-        public static MapperConfiguration GetMapping()
-        {
-            var dtNow = DateTime.Now;
-            return new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<LawUnit, LawUnitVM>()
-                    .ForMember(dest => dest.CourtList, s => s.MapFrom(m => m.Courts.AsQueryable()
-                    .Where(x => NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtended.Contains(x.PeriodTypeId))
-                    .Where(x => x.DateFrom <= dtNow && (x.DateTo ?? DateTime.MaxValue) >= dtNow)
-                    .Select(x => $"{x.Court.Label} ({x.PeriodType.Code}{((x.PeriodTypeId == NomenclatureConstants.PeriodTypes.ActAs) ? " " + x.LawUnitType.Label : "")})")));
-                ;
-            });
-        }
     }
 
     public class LawUnitFilterVM
@@ -50,6 +32,9 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Показване на неназначени лица")]
         public bool ShowFree { get; set; }
+
+        [Display(Name = "Назначен/командирован в съд")]
+        public int? CourtId { get; set; }
     }
 
     public class JuryYearDays

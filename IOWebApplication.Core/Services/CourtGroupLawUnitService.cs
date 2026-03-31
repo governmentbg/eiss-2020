@@ -10,6 +10,9 @@ using System.Linq;
 using System.Text;
 using IOWebApplication.Core.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using IOWebApplication.Infrastructure.Constants;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -28,53 +31,84 @@ namespace IOWebApplication.Core.Services
             commonService = _commonService;
             relationService = _relationService;
         }
-        public IQueryable<MultiSelectTransferPercentVM> CourtGroupLawUnitSaved(int courtId, int courtGroupId)
+        public IQueryable<MultiSelectTransferPercentVM> CourtGroupLawUnitSaved(int courtId, int courtGroupId, int groupKind)
         {
 
             DateTime dateSelect = DateTime.Now;
             var lawUnitGroup = repo.AllReadonly<CourtLawUnitGroup>()
                                    .Where(x => x.CourtGroupId == courtGroupId && (x.DateTo ?? dateSelect) >= dateSelect);
-        
-            var query = commonService
-                .LawUnit_JudgeByCourtDate(courtId, DateTime.Now)
-                .Join(lawUnitGroup, l => l.Id, r => r.LawUnitId, (l, r) => new {l, r})
-                .Select(x => new MultiSelectTransferPercentVM(){ 
-                    Id = x.r.LawUnitId,
-                    Order = 0,
-                    Text = x.l.FullName,
-                    Percent = x.r.LoadIndex
-                });
-            String sql = query.ToSql();
-            return query;
+
+            switch (groupKind)
+            {
+                default:
+                    return commonService
+                       .LawUnit_JudgeByCourtDate(courtId, DateTime.Now)
+                       .Join(lawUnitGroup, l => l.Id, r => r.LawUnitId, (l, r) => new { l, r })
+                       .Select(x => new MultiSelectTransferPercentVM()
+                       {
+                           Id = x.r.LawUnitId,
+                           Order = 0,
+                           Text = x.l.FullName,
+                           Percent = x.r.LoadIndex
+                       });
+                case NomenclatureConstants.CourtGroupKinds.SpecialAccess:
+                    return commonService
+                       .LawUnit_JudgeAndUserByCourtDate(courtId, DateTime.Now)
+                       .Join(lawUnitGroup, l => l.Id, r => r.LawUnitId, (l, r) => new { l, r })
+                       .Select(x => new MultiSelectTransferPercentVM()
+                       {
+                           Id = x.r.LawUnitId,
+                           Order = 0,
+                           Text = x.l.FullName,
+                           Percent = x.r.LoadIndex
+                       });
+            }
+
         }
 
-        public IQueryable<MultiSelectTransferPercentVM> CourtGroupLawUnitForSelect(int courtId)
+        public IQueryable<MultiSelectTransferPercentVM> CourtGroupLawUnitForSelect(int courtId, int groupKind)
         {
-            return commonService
-                .LawUnit_JudgeByCourtDate(courtId, DateTime.Now)
-                .Select(x => new MultiSelectTransferPercentVM()
-                {
-                    Id = x.Id,
-                    Order = 0,
-                    Text = x.FullName,
-                    Percent = 100
-                });
+            switch (groupKind)
+            {
+                default:
+                    return commonService
+                        .LawUnit_JudgeByCourtDate(courtId, DateTime.Now)
+                        .Select(x => new MultiSelectTransferPercentVM()
+                        {
+                            Id = x.Id,
+                            Order = 0,
+                            Text = x.FullName,
+                            Percent = 100
+                        });
+                case NomenclatureConstants.CourtGroupKinds.SpecialAccess:
+                    return commonService
+                        .LawUnit_JudgeAndUserByCourtDate(courtId, DateTime.Now)
+                        .Select(x => new MultiSelectTransferPercentVM()
+                        {
+                            Id = x.Id,
+                            Order = 0,
+                            Text = x.FullName,
+                            Percent = 100
+                        });
+            }
         }
 
-        public bool CourtGroupLawUnitSaveData(int courtId, int courtGroupId, List<MultiSelectTransferPercentVM> lawUnits)
+        public async Task<bool> CourtGroupLawUnitSaveData(int courtId, int courtGroupId, List<MultiSelectTransferPercentVM> lawUnits)
         {
-            return relationService.SaveDataPercent<CourtLawUnitGroup>(courtGroupId, lawUnits,
+            return await relationService.SaveDataPercent<CourtLawUnitGroup>(courtGroupId, lawUnits,
                 x => x.CourtId == courtId,
                 x => x.CourtGroupId,
+                x => x.CourtGroupId == courtGroupId && x.DateTo == null,
                 x => x.LawUnitId,
                 x => x.DateFrom,
                 x => x.DateTo,
                 x => x.LoadIndex,
-                (x) => { 
+                (x) =>
+                {
                     x.CourtId = courtId;
-                    return true; 
+                    return true;
                 }
-           ,false );
+           , false);
         }
         public IQueryable<CourtLawUnitLoadVM> CourtGroup_LawUnitsHistory_Select(int courtGroupId)
         {
@@ -90,6 +124,27 @@ namespace IOWebApplication.Core.Services
                            LoadIndex = x.LoadIndex
                        }).AsQueryable();
         }
+
+        public List<SelectListItem> GetLawUnitsByCourtGroup(int courtGroupId)
+        {
+            DateTime dtNow = DateTime.Now;
+            return repo.AllReadonly<CourtLawUnitGroup>()
+                       .Where(x => x.CourtGroupId == courtGroupId)
+                       .Where(x => (x.DateFrom <= dtNow) && ((x.DateTo ?? DateTime.MaxValue) >= dtNow))
+                       .Where(x => (x.LawUnit.DateFrom <= dtNow) && ((x.LawUnit.DateTo ?? DateTime.MaxValue) >= dtNow))
+                       .Where(x => x.LawUnit.Courts.Any(c => c.DateFrom <= dtNow &&
+                            (c.DateTo ?? DateTime.MaxValue) >= dtNow &&
+                            (c.MandateDateTo ?? DateTime.MaxValue) >= dtNow &&
+                            c.CourtId == x.CourtId &&
+                            NomenclatureConstants.PeriodTypes.CurrentlyAvailable.Contains(c.PeriodTypeId)))
+                       .Select(x => new SelectListItem()
+                       {
+                           Value = x.LawUnitId.ToString(),
+                           Text = x.LawUnit.FullName
+                       }).OrderBy(x => x.Text).ToList();
+        }
+
+
     }
 }
 

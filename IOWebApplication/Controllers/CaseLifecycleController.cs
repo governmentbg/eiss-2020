@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
@@ -12,6 +7,8 @@ using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -19,22 +16,24 @@ namespace IOWebApplication.Controllers
     {
         private readonly ICaseLifecycleService service;
         private readonly INomenclatureService nomService;
+        private readonly ICaseService caseService;
 
-        public CaseLifecycleController(ICaseLifecycleService _service, INomenclatureService _nomService)
+        public CaseLifecycleController(ICaseLifecycleService _service, INomenclatureService _nomService, ICaseService _caseService)
         {
             service = _service;
             nomService = _nomService;
+            caseService = _caseService;
         }
 
-        public IActionResult Index(int id)
+        public async Task<IActionResult> Index(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLifecycle, null, AuditConstants.Operations.View, id))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLifecycle, null, AuditConstants.Operations.View, id))
             {
                 return Redirect_Denied();
             }
-            var tcase = service.GetById<Case>(id);
+            var tcase = await caseService.GetCaseInfo(id);
             ViewBag.caseId = id;
-            ViewBag.CaseName = tcase.RegNumber;
+            ViewBag.CaseName = tcase.CaseTypeCodeShortNumberRegDate;
             SetHelpFile(HelpFileValues.CaseLifecycle);
 
             return View();
@@ -47,7 +46,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public IActionResult Add(int caseId)
+        public async Task<IActionResult> Add(int caseId)
         {
             if (!CheckAccess(service, SourceTypeSelectVM.CaseLifecycle, null, AuditConstants.Operations.Append, caseId))
             {
@@ -58,7 +57,7 @@ namespace IOWebApplication.Controllers
                 CaseId = caseId,
                 CourtId = userContext.CourtId
             };
-            SetViewbag(caseId);
+            await SetViewbag(caseId);
             return View(nameof(Edit), model);
         }
 
@@ -67,27 +66,28 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseLifecycle, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseLifecycle, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CaseLifecycle>(id);
+            var model = await service.GetByIdAsync<CaseLifecycle>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеният от Вас интервал не е намерен и/или нямате достъп до него.");
             }
-            SetViewbag(model.CaseId);
+            await SetViewbag(model.CaseId);
             return View(nameof(Edit), model);
         }
 
-        void SetViewbag(int caseId)
+        private async Task SetViewbag(int caseId)
         {
-            ViewBag.LifecycleTypeId_ddl = nomService.GetDropDownList<LifecycleType>().Where(x => x.Value != NomenclatureConstants.LifecycleType.InProgress.ToString()).ToList();
+            ViewBag.LifecycleTypeId_ddl = (await nomService.GetDropDownListAsync<LifecycleType>()).Where(x => x.Value != NomenclatureConstants.LifecycleType.InProgress.ToString())
+                                                                                                  .ToList();
 
-            var caseCase = service.GetById<Case>(caseId);
-            ViewBag.CaseName = caseCase.RegNumber;
+            var caseCase = await caseService.GetCaseInfo(caseId);
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
             SetHelpFile(HelpFileValues.CaseLifecycle);
         }
 
@@ -101,7 +101,7 @@ namespace IOWebApplication.Controllers
             if (model.LifecycleTypeId < 0)
                 return "Няма избран вид";
 
-            if (model.DateFrom == null)
+            if (model.DateFrom.Year < 2000)
                 return "Няма въведена начална дата";
 
             if (model.DateTo != null)
@@ -148,7 +148,9 @@ namespace IOWebApplication.Controllers
                         if (caseLifecycles.Any(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.Stop && x.DateTo == null))
                             return "Има спиране в което не е въведен крайният срок.";
 
-                        model.Iteration = caseLifecycles.Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress && x.DateTo == null).FirstOrDefault().Iteration;
+                        var caseLifecycle = caseLifecycles.Where(x => x.LifecycleTypeId == NomenclatureConstants.LifecycleType.InProgress && x.DateTo == null).FirstOrDefault();
+                        model.Iteration = caseLifecycle.Iteration;
+                        model.ParentId = caseLifecycle.Id;
                     }
                 }
                 else
@@ -187,9 +189,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Edit(CaseLifecycle model)
+        public async Task<IActionResult> Edit(CaseLifecycle model)
         {
-            SetViewbag(model.CaseId);
+            await SetViewbag(model.CaseId);
             if (!ModelState.IsValid)
             {
                 return View(nameof(Edit), model);
@@ -203,7 +205,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CaseLifecycle_SaveData(model))
+            if (await service.CaseLifecycle_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseLifecycle, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);

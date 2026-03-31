@@ -1,14 +1,5 @@
-﻿using DataTables.AspNet.Core;
-using IOWebApplication.Core.Contracts;
-using IOWebApplication.Extensions;
-using IOWebApplication.Infrastructure.Constants;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Models.ViewModels.Report;
+﻿using IOWebApplication.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
-using System;
-using System.Linq;
 using Microsoft.Extensions.Configuration;
 
 namespace IOWebApplication.Controllers

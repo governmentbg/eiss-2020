@@ -1,38 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.Cdn;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+using iText.Kernel.Pdf;
+using iText.Kernel.Utils;
+using iText.Layout;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
-using Rotativa.Extensions;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
-using System.IO;
-using iText.Kernel.Utils;
 using Newtonsoft.Json.Converters;
 using Rotativa.AspNetCore.Options;
+using Rotativa.Extensions;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+using System.Threading.Tasks;
+
 
 namespace IOWebApplication.Controllers
 {
@@ -55,6 +55,7 @@ namespace IOWebApplication.Controllers
         private readonly ICaseSessionActService caseSessionActService;
         private readonly ICaseSessionActComplainService caseSessionActComplainService;
         private readonly IVksNotificationService vksNotificationService;
+        private readonly IDocumentNotificationService documentNotificationService;
 
         public CaseNotificationController(
             ICaseNotificationService _service,
@@ -73,7 +74,8 @@ namespace IOWebApplication.Controllers
             IDeliveryItemService _deliveryItemService,
             ICaseSessionActService _caseSessionActService,
             ICaseSessionActComplainService _caseSessionActComplainService,
-            IVksNotificationService _vksNotificationService)
+            IVksNotificationService _vksNotificationService,
+            IDocumentNotificationService _documentNotificationService)
         {
             service = _service;
             nomService = _nomService;
@@ -92,6 +94,7 @@ namespace IOWebApplication.Controllers
             caseSessionActService = _caseSessionActService;
             caseSessionActComplainService = _caseSessionActComplainService;
             vksNotificationService = _vksNotificationService;
+            documentNotificationService = _documentNotificationService;
         }
         //public async Task<JsonResult> PintNotPrintedEPEP()
         //{
@@ -104,23 +107,23 @@ namespace IOWebApplication.Controllers
         //    }
         //    return Json(new { result = "Ок" });
         //}
-        public IActionResult Index(int id, int? caseSessionId, int? caseSessionActId)
+        public async Task<IActionResult> Index(int id, int? caseSessionId, int? caseSessionActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseNotification, null, AuditConstants.Operations.View, id))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, null, AuditConstants.Operations.View, id))
             {
                 return Redirect_Denied();
             }
             ViewBag.caseId = id;
             ViewBag.caseSessionId = caseSessionId;
             ViewBag.caseSessionActId = caseSessionActId;
-            SetViewbagCaption(id, caseSessionId, caseSessionActId);
+            await SetViewbagCaption(id, caseSessionId, caseSessionActId);
             return View();
         }
 
         [HttpPost]
-        public IActionResult ListData(IDataTablesRequest request, int caseId, int? caseSessionId, int? caseSessionActId)
+        public async Task<IActionResult> ListData(IDataTablesRequest request, int caseId, int? caseSessionId, int? caseSessionActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseNotification, null, AuditConstants.Operations.View, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, null, AuditConstants.Operations.View, caseId))
             {
                 return Redirect_Denied();
             }
@@ -128,35 +131,35 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        private bool CheckAccessAdd(int caseId, int? caseSessionId, int? caseSessionActId, string operation)
+        private async Task<bool> CheckAccessAdd(int caseId, int? caseSessionId, int? caseSessionActId, string operation)
         {
             if (caseSessionActId != null)
-                return CheckAccess(service, SourceTypeSelectVM.CaseSessionActNotification, null, operation, caseSessionActId);
+                return await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActNotification, null, operation, caseSessionActId);
             else
             {
                 if (caseSessionId != null)
-                    return CheckAccess(service, SourceTypeSelectVM.CaseSessionNotification, null, operation, caseSessionId);
+                    return await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotification, null, operation, caseSessionId);
                 else
-                    return CheckAccess(service, SourceTypeSelectVM.CaseNotification, null, operation, caseId);
+                    return await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, null, operation, caseId);
             }
         }
 
-        private bool CheckAccessWithId(int id, int caseId, int? caseSessionId, int? caseSessionActId, string operation)
+        private async Task<bool> CheckAccessWithId(int id, int caseId, int? caseSessionId, int? caseSessionActId, string operation)
         {
             if (caseSessionActId != null)
-                return CheckAccess(service, SourceTypeSelectVM.CaseSessionActNotification, id, operation);
+                return await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActNotification, id, operation);
             else
             {
                 if (caseSessionId != null)
-                    return CheckAccess(service, SourceTypeSelectVM.CaseSessionNotification, id, operation);
+                    return await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotification, id, operation);
                 else
-                    return CheckAccess(service, SourceTypeSelectVM.CaseNotification, id, operation);
+                    return await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, id, operation);
             }
         }
 
-        public IActionResult Add(int caseId, int? caseSessionId, int? caseSessionActId, int notificationPersonType, int notificationTypeId)
+        public async Task<IActionResult> Add(int caseId, int? caseSessionId, int? caseSessionActId, int notificationPersonType, int notificationTypeId)
         {
-            if (!CheckAccessAdd(caseId, caseSessionId, caseSessionActId, AuditConstants.Operations.Append))
+            if (!await CheckAccessAdd(caseId, caseSessionId, caseSessionActId, AuditConstants.Operations.Append))
             {
                 return Redirect_Denied();
             }
@@ -174,20 +177,20 @@ namespace IOWebApplication.Controllers
                 IsOfficialNotification = true
             };
 
-            SetViewbag(model);
-            SetViewbagCaption(caseId, caseSessionId, caseSessionActId);
+            await SetViewbag(model);
+            await SetViewbagCaption(caseId, caseSessionId, caseSessionActId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, 0).DeleteOrDisableLast();
             SetHelpFile(HelpFileValues.SessionNotification);
             return View(nameof(Edit), model);
         }
 
-        public IActionResult AddWithParent(int caseId, int? caseSessionId, int? caseSessionActId, int? caseParentId)
+        public async Task<IActionResult> AddWithParent(int caseId, int? caseSessionId, int? caseSessionActId, int? caseParentId)
         {
-            if (!CheckAccessAdd(caseId, caseSessionId, caseSessionActId, AuditConstants.Operations.Append))
+            if (!await CheckAccessAdd(caseId, caseSessionId, caseSessionActId, AuditConstants.Operations.Append))
             {
                 return Redirect_Denied();
             }
-            var caseNotification = service.ReadById(caseParentId);
+            var caseNotification = await service.ReadNotificationByIdAsync(caseParentId);
             var model = new CaseNotification()
             {
                 CaseId = caseId,
@@ -202,51 +205,51 @@ namespace IOWebApplication.Controllers
                 IsOfficialNotification = true
             };
 
-            SetViewbag(caseNotification);
-            SetViewbagCaption(caseId, caseSessionId, caseSessionActId);
+            await SetViewbag(caseNotification);
+            await SetViewbagCaption(caseId, caseSessionId, caseSessionActId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, 0).DeleteOrDisableLast();
             return View(nameof(Edit), model);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var model = service.ReadById(id);
-            if (model.DeliveryDateCC == null)
-                model.DeliveryDateCC = DateTime.Now;
+            var model = await service.ReadNotificationByIdAsync(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас уведомление не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас уведомление не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccessWithId(id, model.CaseId, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Update))
+            if (!await CheckAccessWithId(id, model.CaseId, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            SetViewbag(model);
-            SetViewbagCaption(model.CaseId, model.CaseSessionId, model.CaseSessionActId);
-            var listNotificationTypeId = NomenclatureConstants.NotificationType.ToListType(model.NotificationTypeId);
-            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, listNotificationTypeId).DeleteOrDisableLast();
+            if (model.DeliveryDateCC == null)
+                model.DeliveryDateCC = DateTime.Now;
+            await SetViewbag(model);
+            await SetViewbagCaption(model.CaseId, model.CaseSessionId, model.CaseSessionActId);
+            //var listNotificationTypeId = NomenclatureConstants.NotificationType.ToListType(model.NotificationTypeId);
+            //ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, listNotificationTypeId).DeleteOrDisableLast();
             SetHelpFile(HelpFileValues.SessionNotification);
 
             return View(nameof(Edit), model);
         }
 
-        private void SetViewbagCaption(int caseId, int? caseSessionId, int? caseSessionActId)
+        private async Task SetViewbagCaption(int caseId, int? caseSessionId, int? caseSessionActId)
         {
             if (caseSessionId != null)
             {
-                var caseSession = sessionService.CaseSessionById(caseSessionId ?? 0);
+                var caseSession = await sessionService.CaseSessionByIdAsync(caseSessionId ?? 0);
                 ViewBag.CaseSessionName = caseSession.SessionType?.Label + " " + caseSession.DateFrom.ToString("dd.MM.yyyy");
                 ViewBag.caseSessionId = caseSessionId;
             }
 
-            var caseCase = service.GetById<Case>(caseId);
-            ViewBag.CaseName = caseCase.RegNumber;
+            var caseCase = await caseService.GetCaseInfo(caseId);
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
             ViewBag.CaseId = caseCase.Id;
 
             if (caseSessionActId != null)
             {
-                var caseAct = service.GetById<CaseSessionAct>(caseSessionActId ?? 0);
-                var actType = nomService.GetById<ActType>(caseAct.ActTypeId);
+                var caseAct = await service.GetReadonlyAsync<CaseSessionAct>(caseSessionActId ?? 0);
+                var actType = await nomService.GetReadonlyAsync<ActType>(caseAct.ActTypeId);
                 ViewBag.CaseActName = $"{actType.Label} {caseAct.RegNumber} / {caseAct.RegDate:dd.MM.yyyy}";
             }
 
@@ -265,16 +268,91 @@ namespace IOWebApplication.Controllers
                 }
         }
 
-        private void ValidateModel(CaseNotification model, int[] complainIds)
+        private void AddValidateAddressError(CaseNotification model)
         {
-            var requireAddr = (!NomenclatureConstants.NotificationDeliveryGroup.OnMoment(model.NotificationDeliveryGroupId) &&
+            var errorMsg = NomenclatureConstants.NotificationAddressError.Message;
+            if (model.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)
+            {
+                ModelState.AddModelError(nameof(CaseNotification.CasePersonAddressId), errorMsg);
+            }
+            else
+            {
+                ModelState.AddModelError(nameof(CaseNotification.LawUnitAddressId), errorMsg);
+            }
+
+        }
+
+        private async Task<bool> IsValidAddreess(int casePersonAddressId, long lawUnitAddressId)
+        {
+            Address address = null;
+            if (casePersonAddressId > 0)
+            {
+                address = casePersonService.CasePersonAddress_GetById(casePersonAddressId)?.Address;
+            }
+            if (lawUnitAddressId > 0)
+            {
+                address = commonService.GetById<Address>(lawUnitAddressId);
+            }
+            if (address == null)
+            {
+                return true;
+            }
+            if (!string.IsNullOrEmpty(address?.CityCode))
+            {
+                if (!string.IsNullOrEmpty(address?.StreetCode) && (address?.StreetNumber > 0))
+                {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(address?.StreetCode) && (address?.Block > 0))
+                {
+                    return true;
+                }
+                if (!string.IsNullOrEmpty(address?.ResidentionAreaCode) &&
+                    ((address?.StreetNumber > 0) || (address?.Block > 0)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        private async Task ValidateAddress(CaseNotification model)
+        {
+            if (model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.WithSummons)
+            {
+                return;
+            }
+            int casePersonAddressId = 0;
+            long lawUnitAddressId = 0;
+            if (model.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)
+            {
+                if (model.CasePersonAddressId != null)
+                {
+                    casePersonAddressId = model.CasePersonAddressId ?? 0;
+                }
+            }
+            else
+            {
+                if (model.CaseLawUnitId != null && model.LawUnitAddressId != null)
+                {
+                    lawUnitAddressId = model.LawUnitAddressId ?? 0;
+                }
+            }
+            //if (!(await IsValidAddreess(casePersonAddressId, lawUnitAddressId))) {
+            //    AddValidateAddressError(model);
+            //}
+        }
+
+        private async Task ValidateModel(CaseNotification model)
+        {
+
+            var requireAddr = (!NomenclatureConstants.NotificationDeliveryGroup.OnMomentWithOutMail(model.NotificationDeliveryGroupId) &&
                                model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.WithGovernmentPaper);
             if (model.NotificationTypeId < 0)
                 ModelState.AddModelError(nameof(CaseNotification.NotificationTypeId), "Въведете вид известие.");
             if (model.Id == 0)
             {
-                var _session = service.GetById<CaseSession>(model.CaseSessionId);
-                if (_session.DateExpired != null)
+                var _sessionDateExpired = service.GetPropById<CaseSession, DateTime?>(x => x.Id == model.CaseSessionId, x => x.DateExpired);
+                if (_sessionDateExpired != null)
                 {
                     string err = "Заседанието е изтрито. Проверете данните по делото.";
                     if (model.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)
@@ -303,7 +381,7 @@ namespace IOWebApplication.Controllers
                 if (model.LawUnitAddressId < 1 && requireAddr)
                     ModelState.AddModelError(nameof(CaseNotification.LawUnitAddressId), "Няма избран адрес");
             }
-
+            await ValidateAddress(model);
             if (model.NotificationStateId < 0)
                 ModelState.AddModelError(nameof(CaseNotification.NotificationStateId), "Няма избран статус");
             if (model.Id == 0 && model.IsMultiLink != true && (model.CasePersonLinkId ?? 0) <= 0)
@@ -313,14 +391,9 @@ namespace IOWebApplication.Controllers
                     ModelState.AddModelError(nameof(CaseNotification.CasePersonId), "Лицето е починало, не може да бъде уведомено!");
                 }
             }
-            if (model.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCityHall ||
-               model.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCourier)
+            if (@NomenclatureConstants.NotificationDeliveryGroup.WithCourierLike(model.NotificationDeliveryGroupId))
             {
-                if (model.NotificationStateId == @NomenclatureConstants.NotificationState.Delivered ||
-                   model.NotificationStateId == @NomenclatureConstants.NotificationState.Delivered47 ||
-                   model.NotificationStateId == @NomenclatureConstants.NotificationState.Delivered50 ||
-                   model.NotificationStateId == @NomenclatureConstants.NotificationState.Delivered51 ||
-                   model.NotificationStateId == @NomenclatureConstants.NotificationState.UnDelivered)
+                if (NomenclatureConstants.NotificationState.NotificationEndState().Contains(model.NotificationStateId))
                 {
                     if (model.DeliveryDateCC < model.RegDate.Date)
                     {
@@ -332,11 +405,22 @@ namespace IOWebApplication.Controllers
                     }
                 }
             }
-            if (NomenclatureConstants.NotificationDeliveryGroup.OnMoment(model.NotificationDeliveryGroupId))
+            if (NomenclatureConstants.NotificationDeliveryGroup.OnMoment(model.NotificationDeliveryGroupId) &&
+                model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.OnSession &&
+                model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.OnMember56)
             {
-                if (model.DeliveryDate < model.RegDate.Date)
+                var regDate = model.RegDate.Date;
+                if (model.Id > 0)
                 {
-                    ModelState.AddModelError(nameof(model.DeliveryDate), $"{MessageConstant.ValidationErrors.DeliveryDateBeforeRegDate} {model.RegDate.ToString(FormattingConstant.NormalDateFormat)}");
+                    var notification = service.GetReadonly<CaseNotification>(model.Id);
+                    if (notification != null)
+                        regDate = notification.RegDate.Date;
+                }
+                if (regDate < (new DateTime(2019, 1, 1)))
+                    regDate = DateTime.Now.Date;
+                if (model.DeliveryDate < regDate)
+                {
+                    ModelState.AddModelError(nameof(model.DeliveryDate), $"{MessageConstant.ValidationErrors.DeliveryDateBeforeRegDate} {regDate.ToString(FormattingConstant.NormalDateFormat)}");
                 }
                 if (model.DeliveryDate > DateTime.Now.AddMinutes(10))
                 {
@@ -345,39 +429,72 @@ namespace IOWebApplication.Controllers
             }
             if (model.HtmlTemplateId > 0)
             {
-                var htmlTemplate = service.GetById<HtmlTemplate>(model.HtmlTemplateId);
-                if (htmlTemplate?.HaveMultiActComplain == true && htmlTemplate?.RequiredSessionActComplain == true && complainIds.Length == 0)
+                var htmlTemplate = service.GetReadonly<HtmlTemplate>(model.HtmlTemplateId.Value);
+                if (htmlTemplate?.HaveMultiActComplain == true && htmlTemplate?.RequiredSessionActComplain == true)
                 {
-                    ModelState.AddModelError(nameof(model.MultiComplainIdVM), "Изберете поне една жалба");
+                    var complainIds = Array.Empty<int>();
+                    if (!string.IsNullOrEmpty(model.MultiComplainIdResultVM))
+                    {
+                        complainIds = model.MultiComplainIdResultVM.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Int32.Parse).ToArray();
+                        complainIds = complainIds.Where(x => x > 0).ToArray();
+                    }
+                    if (complainIds.Length <= 0)
+                    {
+                        ModelState.AddModelError(nameof(model.MultiComplainIdVM), "Изберете поне една жалба");
+                    }
+                }
+                if (htmlTemplate.HaveSessionMultiAct == true)
+                {
+                    model.CaseSessionActId = null;
+                    ModelState.Remove(nameof(model.CaseSessionActId));
                 }
             }
+            //Добавена проверка призовките през ЕПЕП да могат да се записват само когато има валиден потребител за лицето
+            //К.Борисов, 08.09.2021
+            if (model.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+            {
+                var epepInfo = casePersonLinkService.GetEpepSummonInfo(model);
+                if (epepInfo == null || !epepInfo.CanSummonByEpep)
+                {
+                    ModelState.AddModelError(nameof(model.CasePersonId), "За избраното лице няма разрешен достъп през ЕПЕП");
+                }
+
+                model.EpepCasePersonId = epepInfo.CasePersonId;
+            }
+            else
+            {
+                model.EpepCasePersonId = null;
+            }
+
         }
 
         [HttpPost]
         [DisableRequestSizeLimit]
-        public IActionResult Edit(CaseNotification model, [AllowHtml] string casePersonLinksJson)
+        public async Task<IActionResult> Edit(CaseNotification model, [AllowHtml] string casePersonLinksJson)
         {
-            var complainIds = Array.Empty<int>();
-            if (!string.IsNullOrEmpty(model.MultiComplainIdResultVM))
+            var logVM = new DeliveryLogVM()
             {
-                complainIds = model.MultiComplainIdResultVM.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Int32.Parse).ToArray();
-                complainIds = complainIds.Where(x => x > 0).ToArray();
-            }
-            var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
-            List<CaseNotificationMLink> casePersonLinks = JsonConvert.DeserializeObject<List<CaseNotificationMLink>>(casePersonLinksJson, dateTimeConverter);
+                Action = model.Id > 0 ? "Редакция" : "Добавяне",
+                PageLabel = "Призовки/съобщения",
+                PageUrl = "CaseNotification/Edit"
+            };
 
-            SetViewbag(model);
-            var listNotificationTypeId = NomenclatureConstants.NotificationType.ToListType(model.NotificationTypeId);
-            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, listNotificationTypeId).DeleteOrDisableLast();
+            var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
+            model.CaseNotificationMLinks = JsonConvert.DeserializeObject<List<CaseNotificationMLink>>(casePersonLinksJson, dateTimeConverter);
+
             SetHelpFile(HelpFileValues.SessionNotification);
 
             if (@NomenclatureConstants.NotificationDeliveryGroup.OnMoment(model.NotificationDeliveryGroupId))
             {
-                if (model.DatePrint == null && model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail)
+                if (model.DatePrint == null &&
+                    model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail &&
+                    model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.ByRNFL)
+                {
                     model.DatePrint = DateTime.Now;
-
+                }
                 if (model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnPhone &&
-                        model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail)
+                    model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail &&
+                    model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.ByRNFL)
                 {
                     if (!ModelState.IsValid)
                     {
@@ -387,7 +504,8 @@ namespace IOWebApplication.Controllers
                     model.LawUnitAddressId = null;
                     model.CasePersonAddressId = null;
                 }
-                if (model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail)
+                if (model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail &&
+                    model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.ByRNFL)
                 {
                     if (!ModelState.IsValid)
                     {
@@ -396,26 +514,38 @@ namespace IOWebApplication.Controllers
                     model.HtmlTemplateId = null;
                 }
             }
+            else
+            {
+                //Ако начина на доставка не е от видовете Доставка Веднага се премахва DeliveryDate
+                model.DeliveryDate = null;
+            }
 
-            if (model.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCityHall ||
-                model.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithCourier)
+            if ((@NomenclatureConstants.NotificationDeliveryGroup.WithCourierLike(model.NotificationDeliveryGroupId)) &&
+                 model.NotificationStateId != @NomenclatureConstants.NotificationState.Ready)
             {
                 model.DeliveryDate = model.DeliveryDateCC;
                 model.DeliveryInfo = model.DeliveryInfoCC;
             }
 
-            ValidateModel(model, complainIds);
+            await ValidateModel(model);
             if (!ModelState.IsValid)
             {
+                await SetViewbag(model);
+                return View(nameof(Edit), model);
+            }
+            if (((model.ToCourtId ?? 0) <= 0 && model.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.WithSummons))
+            {
+                await SetViewbag(model);
+                ViewData["RajonAlert"] = true;
                 return View(nameof(Edit), model);
             }
             var currentId = model.Id;
-            if (service.CaseNotification_SaveData(model, casePersonLinks, complainIds))
+            if (await service.CaseNotification_SaveData(model, logVM))
             {
                 if (currentId == 0)
-                    CheckAccessAdd(model.CaseId, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Append);
+                    await CheckAccessAdd(model.CaseId, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Append);
                 else
-                    CheckAccessWithId(model.Id, model.CaseId, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Update);
+                    await CheckAccessWithId(model.Id, model.CaseId, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Update);
 
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
@@ -425,6 +555,7 @@ namespace IOWebApplication.Controllers
             {
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
+            await SetViewbag(model);
             return View(nameof(Edit), model);
         }
 
@@ -442,7 +573,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public async Task<IActionResult> PrintNotificationByTemplate(int sourceId)
         {
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateNotification(sourceId);
+            (TinyMCEVM htmlModel, _) = await printDocumentService.FillHtmlTemplateNotification(sourceId);
             var pdfBytes = await new ViewAsPdfByteWriter("~/Views/Shared/PreviewRaw.cshtml", htmlModel)
             {
                 PageOrientation = (Orientation)htmlModel.PageOrientation,
@@ -459,11 +590,11 @@ namespace IOWebApplication.Controllers
             var htmlModel = new TinyMCEVM();
             if (sourceType == SourceTypeSelectVM.CaseNotificationPrint)
             {
-                if (!CheckAccess(service, SourceTypeSelectVM.CaseNotification, sourceId, AuditConstants.Operations.Update))
+                if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, sourceId, AuditConstants.Operations.Update))
                 {
                     return Redirect_Denied();
                 }
-                htmlModel = printDocumentService.FillHtmlTemplateNotification(sourceId);
+                (htmlModel, _) = await printDocumentService.FillHtmlTemplateNotification(sourceId);
                 htmlModel.SourceId = sourceId;
                 htmlModel.SourceType = SourceTypeSelectVM.CaseNotificationPrint;
                 var caseNotification = service.ReadWithMlinkById(sourceId);
@@ -471,12 +602,12 @@ namespace IOWebApplication.Controllers
             }
             else
             {
-                if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionNotificationListPersonLawUnit, null, AuditConstants.Operations.GeneratingFile, sourceId))
+                if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotificationListPersonLawUnit, null, AuditConstants.Operations.GeneratingFile, sourceId))
                 {
                     return Redirect_Denied();
                 }
-                var session = sessionService.CaseSessionVMById(sourceId);
-                var caseCase = caseService.Case_GetById(session.CaseId);
+                var session = await sessionService.CaseSessionVMById(sourceId);
+                var caseCase = await caseService.Case_GetByIdForNotification(session.CaseId);
                 var typeList = "призованите";
                 switch (sourceType)
                 {
@@ -487,13 +618,13 @@ namespace IOWebApplication.Controllers
                         typeList = "уведомените";
                         break;
                 }
-
+                (var notificationLists, _) = await service.CaseSessionNotificationList_Select(sourceId, sourceType, 0, -1, null, string.Empty);
                 Print_CaseSessionNotificationListVM print_CaseSessionNotificationList = new Print_CaseSessionNotificationListVM()
                 {
-                    Title = "Списък на " + typeList + " лица по " + caseCase.CaseTypeCode + " " + caseCase.RegNumber + "/" + caseCase.RegDate.ToString("dd.MM.yyyy"),
+                    Title = "Списък на " + typeList + " лица по " + caseCase.CaseTypeCode + " " + caseCase.RegNumber + "/" + caseCase.RegDate.ToString("dd.MM.yyyy") + (!string.IsNullOrEmpty(caseCase.DepartmentOtdelenieText) ? " - " + caseCase.DepartmentOtdelenieText : string.Empty),
                     NameReport = "",
                     SessionTitle = session.SessionTypeLabel + " от " + session.DateFrom.ToString("dd.MM.yyyy HH:mm"),
-                    NotificationLists = service.CaseSessionNotificationList_Select(sourceId, sourceType).ToList()
+                    NotificationLists = notificationLists
                 };
 
                 string html = await this.RenderPartialViewAsync("~/Views/CaseNotification/", "_NotificationListBlank.cshtml", print_CaseSessionNotificationList, true);
@@ -508,12 +639,9 @@ namespace IOWebApplication.Controllers
 
             return View("EditTinyMCE", htmlModel);
         }
-        [HttpPost]
-        [DisableRequestSizeLimit]
-        public async Task<IActionResult> DraftTinyMCE(TinyMCEVM htmlModel)
+
+        private void SetDraftNotification(TinyMCEVM htmlModel)
         {
-            if (string.IsNullOrEmpty(htmlModel.Style))
-                htmlModel.Style = FormattingConstant.TinyMceTableDefStyle + FormattingConstant.PrintTableDefStyle;
             htmlModel.Style += @"#background {
                position: absolute;
                display: block;
@@ -533,6 +661,18 @@ namespace IOWebApplication.Controllers
                background-color: transparent;
            }";
             htmlModel.Text = "<div id=\"background\"> <p id = \"bg-text\">Draft Draft Draft</p> </div>" + htmlModel.Text;
+        }
+
+
+        [HttpPost]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> DraftTinyMCE(TinyMCEVM htmlModel)
+        {
+            if (string.IsNullOrEmpty(htmlModel.Style))
+                htmlModel.Style = FormattingConstant.TinyMceTableDefStyle + FormattingConstant.PrintTableDefStyle;
+
+            SetDraftNotification(htmlModel);
+
             var pdfBytes = await new ViewAsPdfByteWriter("~/Views/Shared/PreviewRaw.cshtml", htmlModel)
             {
                 PageOrientation = (Orientation)htmlModel.PageOrientation,
@@ -553,7 +693,12 @@ namespace IOWebApplication.Controllers
         public async Task<IActionResult> EditTinyMCE(TinyMCEVM htmlModel)
         {
             string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
-
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Генериране",
+                PageLabel = "Печат на призовка/съобщение",
+                PageUrl = "EditTinyMCE"
+            };
             var htmlRequest = new CdnUploadRequest()
             {
                 SourceType = htmlModel.SourceType,
@@ -576,10 +721,14 @@ namespace IOWebApplication.Controllers
                 {
                     var caseNotification = service.ReadWithMlinkById(htmlModel.SourceId);
                     caseNotification.DatePrint = DateTime.Now;
-                    service.CaseNotification_SaveData(caseNotification, caseNotification.CaseNotificationMLinks?.ToList(), null);
-                    if (caseNotification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+                    caseNotification.DeliveryOperId = NomenclatureConstants.NotificationState.Ready;
+                    caseNotification.SkipSaveLists = true;
+                    await service.CaseNotification_SaveData(caseNotification, logVM);
+                    if (!NomenclatureConstants.NotificationDeliveryGroup.OnMoment(caseNotification.NotificationDeliveryGroupId) ||
+                        caseNotification.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.OnEMail ||
+                        caseNotification.NotificationDeliveryGroupId == @NomenclatureConstants.NotificationDeliveryGroup.ByRNFL)
                     {
-                        _ = await makePrintAndSavePdf(caseNotification.Id);
+                        _ = await makePrintAndSavePdf(caseNotification.Id, false);
                     }
                 }
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
@@ -600,11 +749,11 @@ namespace IOWebApplication.Controllers
         #region test 
         public async Task<IActionResult> PreviewRaw(int id, int htmlTemplateId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseNotification, id, AuditConstants.Operations.View))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, id, AuditConstants.Operations.View))
             {
                 return Redirect_Denied();
             }
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateNotificationTestOne(id, htmlTemplateId);
+            TinyMCEVM htmlModel = await printDocumentService.FillHtmlTemplateNotificationTestOne(id, htmlTemplateId);
             // return View("PreviewRaw", htmlModel);
             var pdfBytes = await new ViewAsPdfByteWriter("~/Views/Shared/PreviewRaw.cshtml", htmlModel)
             {
@@ -618,7 +767,7 @@ namespace IOWebApplication.Controllers
 
         public async Task<IActionResult> PreviewRawDoc(int id)
         {
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateDocumentTemplate(id);
+            TinyMCEVM htmlModel = await printDocumentService.FillHtmlTemplateDocumentTemplate(id);
             string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
             return View("PreviewRaw", htmlModel);
         }
@@ -627,9 +776,14 @@ namespace IOWebApplication.Controllers
             printDocumentService.HtmlTemplateNotificationHave_F_FIRST_SET_NO_YEAR();
             return View("PreviewRaw", null);
         }
-        public IActionResult HaveSaveTest(int id)
+        public async Task<IActionResult> HaveSaveTest(int id)
         {
-            printDocumentService.FillHtmlTemplateNotificationHaveSaveTest(id);
+            await printDocumentService.FillHtmlTemplateNotificationHaveSaveTest(id);
+            return View("PreviewRaw", null);
+        }
+        public IActionResult FillHtmlTemplate_F_DISPOSITIV()
+        {
+            printDocumentService.FillHtmlTemplate_F_DISPOSITIV();
             return View("PreviewRaw", null);
         }
         #endregion test 
@@ -682,20 +836,25 @@ namespace IOWebApplication.Controllers
             }
             return memoryStreamNew.ToArray();
         }
-        private async Task<(byte[] pdfBytes, string FileName)> makePrintAndSavePdf(int id)
+        private async Task<(byte[] pdfBytes, string FileName)> makePrintAndSavePdf(int id, bool epepIsDraft)
         {
             var cdnResult = await service.ReadPrintedFile(id);
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateNotification(id);
+            (TinyMCEVM htmlModel, var notification) = await printDocumentService.FillHtmlTemplateNotification(id);
+            byte[] pdfBytesC;
             if (cdnResult == null)
             {
                 if (htmlModel == null)
                 {
-                    return (null, "");
+                    return (null, string.Empty);
                 }
                 var cdnResultDraft = await service.ReadDraftFile(id);
                 if (cdnResultDraft != null)
                 {
                     htmlModel.Text = Encoding.UTF8.GetString(Convert.FromBase64String(cdnResultDraft.FileContentBase64));
+                }
+                if (epepIsDraft && notification.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+                {
+                    SetDraftNotification(htmlModel);
                 }
                 var pdfBytes = await new ViewAsPdfByteWriter("~/Views/Shared/PreviewRaw.cshtml", htmlModel)
                 {
@@ -705,23 +864,48 @@ namespace IOWebApplication.Controllers
                     CustomSwitches = htmlModel.SmartShrinkingPDF ? "" : "--disable-smart-shrinking"
                 }.GetByte(this.ControllerContext);
                 pdfBytes = await ZoomIfHave3Pages(htmlModel, pdfBytes);
-                await service.SavePrintedFile(id, pdfBytes);
-                cdnResult = await service.ReadPrintedFile(id);
+                pdfBytesC = pdfBytes;
+                if (!epepIsDraft || notification.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+                {
+                    //КБорисов - изчистване на тракера преди запис на файла - траква погрешно потребител и се опитва да прави keyviolation
+                    if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.FearProtectsVineyard))
+                    {
+                        try
+                        {
+                            service.ClearEntityTracker();
+                        }
+                        catch (Exception ex)
+                        {
 
+                        }
+                    }
+
+                    await service.SavePrintedFile(id, pdfBytes);
+                }
+                if (notification.DatePrint == null && notification.CourierTrackNum == "M" &&
+                    notification.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.ByEPEP
+                    )
+                {
+
+
+                    await service.SaveDatePrintMulti(notification.Id);
+                }
             }
-
-            var pdfBytesC = Convert.FromBase64String(cdnResult.FileContentBase64);
+            else
+            {
+                pdfBytesC = Convert.FromBase64String(cdnResult.FileContentBase64);
+            }
             if ((Orientation)htmlModel.PageOrientation == Orientation.Landscape)
             {
                 pdfBytesC = RotateSecondPage180(pdfBytesC);
             }
-            return (pdfBytesC, cdnResult.FileName);
+            return (pdfBytesC, cdnResult?.FileName ?? service.GetFileNameNotification(notification));
         }
 
         private async Task<byte[]> ZoomIfHave3Pages(TinyMCEVM htmlModel, byte[] pdfBytes)
         {
-            var hmlTemplate = service.GetById<HtmlTemplate>(htmlModel.Id);
-            decimal defaultZoom = hmlTemplate?.DefaultZoom ?? 1;
+            var hmlTemplateDefaultZoom = await service.GetPropByIdAsync<HtmlTemplate, decimal?>(htmlModel.Id, x => x.DefaultZoom);
+            decimal defaultZoom = hmlTemplateDefaultZoom ?? 1;
             decimal zoom = defaultZoom;
             for (int i = 0; i <= 6; i++)
             {
@@ -753,36 +937,49 @@ namespace IOWebApplication.Controllers
 
         public async Task<IActionResult> PrintPdf(int id)
         {
-            var caseNotification = service.GetById<CaseNotification>(id);
-            CheckAccessWithId(caseNotification.Id, caseNotification.CaseId, caseNotification.CaseSessionId, caseNotification.CaseSessionActId, AuditConstants.Operations.Print);
-            (var pdfBytesR, var FileName) = await makePrintAndSavePdf(id);
-            if (pdfBytesR == null) {
-                pdfBytesR = await NoDataPrintPdf();
-                FileName = $"{caseNotification.RegNumber}.pdf";
-            }
-            return File(pdfBytesR, System.Net.Mime.MediaTypeNames.Application.Pdf, FileName);
+            var caseNotification = await service.GetReadonlyAsync<CaseNotification>(id);
+            await CheckAccessWithId(caseNotification.Id, caseNotification.CaseId, caseNotification.CaseSessionId, caseNotification.CaseSessionActId, AuditConstants.Operations.Print);
+            AddAuditInfo(AuditConstants.Operations.Print,
+                      CurrentContext?.Info?.BaseObject,
+                      CurrentContext?.Info?.ObjectInfo,
+                      SourceTypeSelectVM.CaseNotification,
+                      true);
+            //(var pdfBytesR, var FileName) = await makePrintAndSavePdf(id, true);
+            //if (pdfBytesR == null)
+            //{
+            //    pdfBytesR = await NoDataPrintPdf();
+            //    FileName = $"{caseNotification.RegNumber}.pdf";
+            //}
+            //return File(pdfBytesR, System.Net.Mime.MediaTypeNames.Application.Pdf, FileName);
+            List<NotificationPrintIdVM> notificationIds = new() { new NotificationPrintIdVM { CaseNotificationId = id } };
+            return await PrintPdfs(notificationIds);
         }
 
         [HttpPost]
-        public IActionResult ListDataNotificationList(IDataTablesRequest request, int caseSessionId, int NotificationListTypeId)
+        public async Task<IActionResult> ListDataNotificationList(IDataTablesRequest request, int caseSessionId, int NotificationListTypeId)
         {
-            var data = service.CaseSessionNotificationList_Select(caseSessionId, NotificationListTypeId);
-            return request.GetResponse(data);
+            (var data, var totalCount) = await service.CaseSessionNotificationList_Select(caseSessionId, NotificationListTypeId, request.Start, request.Length, request.GetSortedColumnsForOrderBy(), request.Search.Value);
+            return request.GetResponseServerPaging(data, totalCount);
         }
 
         [HttpPost]
         public IActionResult ChangeOrderNotificationList(ChangeOrderModel model)
         {
-            var caseSessionNotificationList = service.GetById<CaseSessionNotificationList>(model.Id);
+            var caseSessionNotificationList = service.GetReadonly<CaseSessionNotificationList>(model.Id);
             if (caseSessionNotificationList == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Проблем не намира реда за смяна");
             }
             if (caseSessionNotificationList != null)
             {
-                var caseSession = service.GetById<CaseSession>(caseSessionNotificationList.CaseSessionId);
-                var caseNotifications = service.CaseNotification_Select(caseSession.CaseId, caseSessionNotificationList.CaseSessionId, null).ToList();
-                if (caseNotifications.Any(x => caseSessionNotificationList.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList ? x.NotificationTypeId == NomenclatureConstants.NotificationType.Subpoena : (caseSessionNotificationList.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListMessage ? x.NotificationTypeId == NomenclatureConstants.NotificationType.Message : x.NotificationTypeId == NomenclatureConstants.NotificationType.Notification)))
+                var caseSessionCaseId = service.GetPropById<CaseSession, int>(caseSessionNotificationList.CaseSessionId, x => x.CaseId);
+                var caseNotifications = service.CaseNotification_Select(caseSessionCaseId, caseSessionNotificationList.CaseSessionId, null).ToList();
+                if (caseNotifications.Any(x => (caseSessionNotificationList.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList ||
+                                                caseSessionNotificationList.NotificationListTypeId == null) ?
+                                               (x.NotificationTypeId == NomenclatureConstants.NotificationType.Subpoena || x.NotificationTypeId == null) :
+                                               (caseSessionNotificationList.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationListMessage ?
+                                               x.NotificationTypeId == NomenclatureConstants.NotificationType.Message :
+                                               x.NotificationTypeId == NomenclatureConstants.NotificationType.Notification)))
                 {
                     return Ok();
                 }
@@ -790,7 +987,7 @@ namespace IOWebApplication.Controllers
 
             Func<CaseSessionNotificationList, int?> orderProp = x => x.RowNumber;
             Expression<Func<CaseSessionNotificationList, int?>> setterProp = (x) => x.RowNumber;
-            Expression<Func<CaseSessionNotificationList, bool>> predicate = x => (x.CaseSessionId == caseSessionNotificationList.CaseSessionId) && 
+            Expression<Func<CaseSessionNotificationList, bool>> predicate = x => (x.CaseSessionId == caseSessionNotificationList.CaseSessionId) &&
                                                                                  (x.NotificationListTypeId == caseSessionNotificationList.NotificationListTypeId);
             if (caseSessionNotificationList.NotificationListTypeId == SourceTypeSelectVM.CaseSessionNotificationList)
             {
@@ -810,24 +1007,25 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpGet]
-        public IActionResult CasePersonNotificationList(int caseId, int caseSessionId, int NotificationListTypeId)
+        public async Task<IActionResult> CasePersonNotificationList(int caseId, int caseSessionId, int NotificationListTypeId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionNotificationListPerson, null, AuditConstants.Operations.ChoiceByList, caseSessionId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotificationListPerson, null, AuditConstants.Operations.ChoiceByList, caseSessionId))
             {
                 return Redirect_Denied();
             }
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSession(caseSessionId);
             ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { @id = caseSessionId, notifListTypeId = NotificationListTypeId });
             SetHelpFile(HelpFileValues.SessionPersonNotification);
-            return View("CheckListViewVM", service.Person_SelectForCheck(caseId, caseSessionId, NotificationListTypeId, true));
+            var model = await service.Person_SelectForCheck(caseId, caseSessionId, NotificationListTypeId, true);
+            return View("CheckNotificationListViewVM", model);
         }
 
         [HttpPost]
-        public IActionResult CasePersonNotificationList(CheckListViewVM model)
+        public async Task<IActionResult> CasePersonNotificationList(CheckListViewVM model)
         {
             if (service.CaseNotificationList_Save(model, true))
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionNotificationListPerson, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotificationListPerson, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction("Preview", "CaseSession", new { @id = model.ObjectId, notifListTypeId = model.OtherId });
             }
@@ -837,27 +1035,27 @@ namespace IOWebApplication.Controllers
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSession(model.ObjectId);
             ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { @id = model.ObjectId, notifListTypeId = model.OtherId });
             SetHelpFile(HelpFileValues.SessionPersonNotification);
-            return View("CheckListViewVM", model);
+            return View("CheckNotificationListViewVM", model);
         }
 
         [HttpGet]
-        public IActionResult CaseLawUnitNotificationList(int caseId, int caseSessionId, int notificationListTypeId)
+        public async Task<IActionResult> CaseLawUnitNotificationList(int caseId, int caseSessionId, int notificationListTypeId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionNotificationListLawUnit, null, AuditConstants.Operations.ChoiceByList, caseSessionId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotificationListLawUnit, null, AuditConstants.Operations.ChoiceByList, caseSessionId))
             {
                 return Redirect_Denied();
             }
             ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { @id = caseSessionId, notifListTypeId = notificationListTypeId });
             SetHelpFile(HelpFileValues.SessionPersonNotification);
-            return View("CheckListViewVM", service.Person_SelectForCheck(caseId, caseSessionId, notificationListTypeId, false));
+            return View("CheckNotificationListViewVM", await service.Person_SelectForCheck(caseId, caseSessionId, notificationListTypeId, false));
         }
 
         [HttpPost]
-        public IActionResult CaseLawUnitNotificationList(CheckListViewVM model)
+        public async Task<IActionResult> CaseLawUnitNotificationList(CheckListViewVM model)
         {
             if (service.CaseNotificationList_Save(model, false))
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionNotificationListLawUnit, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotificationListLawUnit, null, AuditConstants.Operations.ChoiceByList, model.ObjectId);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction("Preview", "CaseSession", new { @id = model.ObjectId, notifListTypeId = model.OtherId });
             }
@@ -866,10 +1064,11 @@ namespace IOWebApplication.Controllers
 
             ViewBag.backUrl = Url.Action("Preview", "CaseSession", new { @id = model.ObjectId, notifListTypeId = model.OtherId });
             SetHelpFile(HelpFileValues.SessionPersonNotification);
-            return View("CheckListViewVM", model);
+            return View("CheckNotificationListViewVM", model);
         }
 
         [HttpPost]
+        [HttpGet]
         public JsonResult LoadDataLawUnitAndArea(int toCourtId)
         {
             var lawUnitDdl = courtLawUnitService.LawUnitForCourt_Select2Data(NomenclatureConstants.LawUnitTypes.MessageDeliverer, toCourtId);
@@ -903,34 +1102,34 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
-        public IActionResult EditNotificationList(int id)
+        public async Task<IActionResult> EditNotificationList(int id)
         {
             var model = service.GetById<CaseSessionNotificationList>(id);
             if (model == null)
             {
-                throw new NotFoundException("Търсеното от Вас уведомление не е намерен и/или нямате достъп до него.");
+                return NotFoundError("Търсеното от Вас уведомление не е намерено и/или нямате достъп до него.");
             }
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionNotificationList, model.Id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotificationList, model.Id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
 
             ViewBag.NotificationAddressId_ddl = (model.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)
-                                                 ? casePersonService.GetDDL_AddressByCasePersonAddress(model.CasePersonId ?? 0)
-                                                 : commonService.LawUnitAddress_SelectDDL_ByCaseLawUnitId(model.CaseLawUnitId ?? 0);
-            var caseSession = service.GetById<CaseSession>(model.CaseSessionId);
+                                                 ? await casePersonService.GetDDL_AddressByCasePersonAddressAsync(model.CasePersonId ?? 0)
+                                                 : await commonService.LawUnitAddress_SelectDDL_ByCaseLawUnitIdAsync(model.CaseLawUnitId ?? 0);
+            var caseSession = await service.GetByIdAsync<CaseSession>(model.CaseSessionId);
 
-            SetViewbagCaption(caseSession.CaseId, caseSession.Id, null);
+            await SetViewbagCaption(caseSession.CaseId, caseSession.Id, null);
             SetHelpFile(HelpFileValues.SessionPersonNotification);
 
             return View(nameof(EditNotificationList), model);
         }
 
         [HttpPost]
-        public IActionResult EditNotificationList(CaseSessionNotificationList model)
+        public async Task<IActionResult> EditNotificationList(CaseSessionNotificationList model)
         {
-            var caseSession = service.GetById<CaseSession>(model.CaseSessionId);
-            SetViewbagCaption(caseSession.CaseId, caseSession.Id, null);
+            var caseSession = await service.GetByIdAsync<CaseSession>(model.CaseSessionId);
+            await SetViewbagCaption(caseSession.CaseId, caseSession.Id, null);
             SetHelpFile(HelpFileValues.SessionPersonNotification);
 
             if (!ModelState.IsValid)
@@ -941,7 +1140,7 @@ namespace IOWebApplication.Controllers
             var currentId = model.Id;
             if (service.CaseNotificationList_SaveData(model))
             {
-                CheckAccess(service, SourceTypeSelectVM.CaseSessionNotificationList, model.Id, AuditConstants.Operations.Update);
+                await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionNotificationList, model.Id, AuditConstants.Operations.Update);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditNotificationList), new { id = model.Id });
@@ -951,15 +1150,15 @@ namespace IOWebApplication.Controllers
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
             }
             ViewBag.NotificationAddressId_ddl = (model.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson)
-                                             ? casePersonService.GetDDL_AddressByCasePersonAddress(model.CasePersonId ?? 0)
-                                             : commonService.LawUnitAddress_SelectDDL_ByCaseLawUnitId(model.CaseLawUnitId ?? 0);
+                                             ? await casePersonService.GetDDL_AddressByCasePersonAddressAsync(model.CasePersonId ?? 0)
+                                             : await commonService.LawUnitAddress_SelectDDL_ByCaseLawUnitIdAsync(model.CaseLawUnitId ?? 0);
             return View(nameof(EditNotificationList), model);
         }
 
-        public IActionResult AddNotificationFromNotificationList(int caseNotificationListId)
+        public async Task<IActionResult> AddNotificationFromNotificationList(int caseNotificationListId)
         {
-            var sessionNotificationList = service.GetById<CaseSessionNotificationList>(caseNotificationListId);
-            var caseSession = service.GetById<CaseSession>(sessionNotificationList.CaseSessionId);
+            var sessionNotificationList = await service.GetByIdAsync<CaseSessionNotificationList>(caseNotificationListId);
+            var caseSession = await service.GetByIdAsync<CaseSession>(sessionNotificationList.CaseSessionId);
 
             var model = new CaseNotification()
             {
@@ -973,57 +1172,170 @@ namespace IOWebApplication.Controllers
                 NotificationPersonType = sessionNotificationList.NotificationPersonType,
                 CasePersonId = sessionNotificationList.CasePersonId,
                 CaseLawUnitId = sessionNotificationList.CaseLawUnitId,
-                LawUnitAddressId = (sessionNotificationList.NotificationAddressId != null) ? ((sessionNotificationList.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit) ? sessionNotificationList.NotificationAddressId : null) : null,
-                CasePersonAddressId = (sessionNotificationList.NotificationAddressId != null) ? ((sessionNotificationList.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ? casePersonService.Get_CasePersonAddress(sessionNotificationList.CasePersonId ?? 0).Where(x => x.AddressId == sessionNotificationList.NotificationAddressId).FirstOrDefault().Id : (int?)null) : null,
+                LawUnitAddressId = (sessionNotificationList.NotificationAddressId != null) ?
+                                   ((sessionNotificationList.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit) ? sessionNotificationList.NotificationAddressId : null) :
+                                   null,
+                CasePersonAddressId = (sessionNotificationList.NotificationAddressId != null) ?
+                                      (
+                                        (sessionNotificationList.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CasePerson) ?
+                                        casePersonService.Get_CasePersonAddress(sessionNotificationList.CasePersonId ?? 0)
+                                        .Where(x => x.AddressId == sessionNotificationList.NotificationAddressId).FirstOrDefault()?.Id :
+                                        (int?)null
+                                      ) :
+                                      null,
                 NotificationTypeId = NomenclatureConstants.NotificationType.FromListType(sessionNotificationList.NotificationListTypeId),
                 IsOfficialNotification = true
             };
 
-            if (!CheckAccessAdd(model.CaseId, model.CaseSessionId, null, AuditConstants.Operations.Append))
+            if (!await CheckAccessAdd(model.CaseId, model.CaseSessionId, null, AuditConstants.Operations.Append))
             {
                 return Redirect_Denied();
             }
 
-            SetViewbag(model);
-            SetViewbagCaption(caseSession.CaseId, caseSession.Id, null);
+            await SetViewbag(model);
+            await SetViewbagCaption(caseSession.CaseId, caseSession.Id, null);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, sessionNotificationList?.NotificationListTypeId ?? 0).DeleteOrDisableLast();
             SetHelpFile(HelpFileValues.SessionPersonNotification);
 
             return View(nameof(Edit), model);
         }
 
-        
+
         public async Task<IActionResult> PrintPdfsFromDeliveryItemIds([AllowHtml] string deliveryItemIdsJson)
         {
             var dateTimeConverter = new IsoDateTimeConverter() { DateTimeFormat = FormattingConstant.NormalDateFormat };
             int[] deliveryIdArr = JsonConvert.DeserializeObject<int[]>(deliveryItemIdsJson, dateTimeConverter);
-            List<int> notificationIds = new List<int>();
+            var notificationIds = new List<NotificationPrintIdVM>();
+            AddAuditInfo(AuditConstants.Operations.Print,
+                        "Печат на маркираните",
+                        $"{deliveryIdArr.Length} бр. Уведомления",
+                        SourceTypeSelectVM.CaseNotification);
             foreach (int itemId in deliveryIdArr)
             {
                 var delivery = deliveryItemService.getDeliveryItem(itemId);
                 if (delivery.CaseNotificationId == null)
                     continue;
                 int id = delivery.CaseNotificationId ?? 0;
-                notificationIds.Add(id);
+                notificationIds.Add(new NotificationPrintIdVM
+                {
+                    CaseNotificationId = delivery.CaseNotificationId,
+                    DocumentNotificationId = delivery.DocumentNotificationId
+                });
             }
             return await PrintPdfs(notificationIds);
         }
+
+        public async Task<JsonResult> GetPrintNotificationInListCount(int? CaseId, int? caseSessionId, int? caseSessionActId, bool isList, int? notificationListTypeId)
+        {
+            var filter = new NotificationPrintFilterVM
+            {
+                CaseId = CaseId,
+                CaseSessionId = caseSessionId,
+                CaseSessionActId = caseSessionActId,
+                IsList = isList,
+                NotificationListTypeId = notificationListTypeId
+            };
+            List<int> notificationIds = await service.NotificationIdSelect(filter);
+            return Json(new { count = notificationIds.Count });
+        }
+
         public async Task<IActionResult> PrintNotificationInList(int? CaseId, int? caseSessionId, int? caseSessionActId, bool isList, int? notificationListTypeId)
         {
-            CheckAccessAdd(CaseId ?? 0, caseSessionId, caseSessionActId, AuditConstants.Operations.Print);
-            List<int> notificationIds = service.NotificationIdSelect(CaseId, caseSessionId, caseSessionActId, isList, notificationListTypeId);
-            return await PrintPdfs(notificationIds);
+            await CheckAccessAdd(CaseId ?? 0, caseSessionId, caseSessionActId, AuditConstants.Operations.Print);
+            var filter = new NotificationPrintFilterVM
+            {
+                CaseId = CaseId,
+                CaseSessionId = caseSessionId,
+                CaseSessionActId = caseSessionActId,
+                IsList = isList,
+                NotificationListTypeId = notificationListTypeId
+            };
+
+            List<int> notificationIds = await service.NotificationIdSelect(filter);
+            return await PrintPdfs(notificationIds.Select(x => new NotificationPrintIdVM { CaseNotificationId = x }).ToList());
         }
-        public async Task<IActionResult> PrintPdfs(IEnumerable<int> notificationIds)
+        [HttpGet]
+        public IActionResult NotificationPrintFilter(int? CaseId, int? caseSessionId, int? caseSessionActId, bool isList, int? notificationListTypeId, int fromRowNumber, int toRowNumber)
+        {
+            var filter = new NotificationPrintFilterVM
+            {
+                CaseId = CaseId,
+                CaseSessionId = caseSessionId,
+                CaseSessionActId = caseSessionActId,
+                IsList = isList,
+                NotificationListTypeId = notificationListTypeId,
+                FromRowNumber = fromRowNumber,
+                ToRowNumber = toRowNumber
+            };
+            return PartialView("_NotificationPrintFilter", filter);
+        }
+        [HttpPost]
+        public async Task<IActionResult> PrintNotificationInListOnFilter(NotificationPrintFilterVM model)
+        {
+            await CheckAccessAdd(model.CaseId ?? 0, model.CaseSessionId, model.CaseSessionActId, AuditConstants.Operations.Print);
+            List<int> notificationIds = await service.NotificationIdSelect(model);
+            return await PrintPdfs(notificationIds.Select(x => new NotificationPrintIdVM { CaseNotificationId = x }).ToList());
+        }
+        private async Task<byte[]> FillFilesInArchive(List<NotificationFileVM> files)
+        {
+            // create a working memory stream
+            using (var memoryStream = new MemoryStream())
+            {
+                // create a zip
+                using (ZipArchive zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var file in files)
+                    {
+                        ZipArchiveEntry zipItem = zip.CreateEntry(file.FileName);
+                        // add the item bytes to the zip entry by opening the original file and copying the bytes
+                        using (var originalFileMemoryStream = new MemoryStream(file.Content))
+                        {
+                            using (Stream entryStream = zipItem.Open())
+                            {
+                                await originalFileMemoryStream.CopyToAsync(entryStream);
+                            }
+                        }
+                    }
+                }
+                return memoryStream.ToArray();
+            }
+        }
+
+        public async Task<IActionResult> PrintPdfs(List<NotificationPrintIdVM> notificationIds)
         {
             MemoryStream memoryStreamUnion = new MemoryStream();
             PdfDocument pdfDoc = new PdfDocument(new PdfWriter(memoryStreamUnion));
             PdfMerger merger = new PdfMerger(pdfDoc);
             bool isWrite = false;
-
-            foreach (var id in notificationIds)
+            var FileName = string.Empty;
+            var noPdfFiles = new List<NotificationFileVM>();
+            foreach (var notificationId in notificationIds)
             {
-                (var pdfBytesR, var FileName) = await makePrintAndSavePdf(id);
+                if (notificationId.DocumentNotificationId != null)
+                {
+                    (var pdfBytesRDoc, FileName) = await makePrintAndSavePdf(notificationId.DocumentNotificationId ?? 0, true);
+                    if (pdfBytesRDoc != null)
+                    {
+                        using (MemoryStream memoryStream = new MemoryStream(pdfBytesRDoc))
+                        {
+                            using (PdfDocument newDoc = new PdfDocument(new PdfReader(memoryStream)))
+                            {
+                                var numberOfPages = newDoc.GetNumberOfPages();
+                                merger.Merge(newDoc, 1, numberOfPages);
+                                newDoc.Close();
+                                if ((numberOfPages % 2) == 1)
+                                {
+                                    await PrintBlankPage(merger, notificationId.CaseNotificationId ?? 0, notificationId.DocumentNotificationId ?? 0);
+                                }
+                            }
+                        }
+                    }
+                    isWrite = true;
+                    continue;
+                }
+
+                var id = notificationId.CaseNotificationId ?? 0;
+                (var pdfBytesR, FileName) = await makePrintAndSavePdf(id, true);
                 if (pdfBytesR != null)
                 {
                     using (MemoryStream memoryStream = new MemoryStream(pdfBytesR))
@@ -1033,45 +1345,78 @@ namespace IOWebApplication.Controllers
                             var numberOfPages = newDoc.GetNumberOfPages();
                             merger.Merge(newDoc, 1, numberOfPages);
                             newDoc.Close();
-                            if (numberOfPages == 1)
+                            if ((numberOfPages % 2) == 1)
                             {
-                                await PrintBlankPage(merger, id);
+                                await PrintBlankPage(merger, notificationId.CaseNotificationId ?? 0, notificationId.DocumentNotificationId ?? 0);
                             }
                         }
                     }
                     isWrite = true;
-
-                    var linkDocuments = await service.GetLinkDocument(id);
-                    foreach (var linkDocument in linkDocuments)
+                    if (!await service.IsNotificationOnFastProcess(id))
                     {
-                        using (MemoryStream memoryStreamLink = new MemoryStream(linkDocument))
-                        {
-                            using (PdfDocument newDocLink = new PdfDocument(new PdfReader(memoryStreamLink)))
-                            {
-                                var numberOfPages = newDocLink.GetNumberOfPages();
-                                merger.Merge(newDocLink, 1, newDocLink.GetNumberOfPages());
-                                newDocLink.Close();
-                                if (numberOfPages == 1)
-                                {
-                                    await PrintBlankPage(merger, id);
-                                }
-                            }
-                        }
+                        continue;
                     }
+                    var linkDocuments = await service.GetLinkDocument(id);
+                    await PrintNotificationDocuments(merger, noPdfFiles, notificationId, linkDocuments);
+
+                    var actAndComplains = await service.GetActAndComplainDocument(id);
+                    await PrintNotificationDocuments(merger, noPdfFiles, notificationId, actAndComplains);
+
+                    var mongoFiles = await service.GetCaseNotificationMongoFiles(id);
+                    await PrintNotificationDocuments(merger, noPdfFiles, notificationId, mongoFiles);
+
+                    var caseNotificationDocuments = await service.GetCaseNotificationDocuments(id);
+                    await PrintNotificationDocuments(merger, noPdfFiles, notificationId, caseNotificationDocuments);
                 }
+
             }
+            string FileNameU = notificationIds.Count() == 1 ? FileName : DateTime.Now.ToString("yyyyMMdd_hhmm") + ".pdf";
+
             if (isWrite)
             {
                 pdfDoc.Close();
                 var pdfBytes = memoryStreamUnion.ToArray();
-                string FileNameU = DateTime.Now.ToString("yyyyMMdd_hhmm") + ".pdf";
-                return File(pdfBytes, System.Net.Mime.MediaTypeNames.Application.Pdf, FileNameU);
+                if (!noPdfFiles.Any())
+                {
+                    return File(pdfBytes, System.Net.Mime.MediaTypeNames.Application.Pdf, FileNameU);
+                }
+                else
+                {
+                    noPdfFiles.Insert(0, new NotificationFileVM
+                    {
+                        FileName = FileNameU,
+                        Content = pdfBytes
+                    });
+                    var zip = await FillFilesInArchive(noPdfFiles);
+                    FileNameU = FileNameU.Replace(".pdf", ".zip");
+                    return File(zip, System.Net.Mime.MediaTypeNames.Application.Zip, FileNameU);
+                }
             }
             else
             {
                 byte[] pdfBytes = await NoDataPrintPdf();
-                string FileNameU = DateTime.Now.ToString("yyyyMMdd_hhmm") + ".pdf";
                 return File(pdfBytes, System.Net.Mime.MediaTypeNames.Application.Pdf, FileNameU);
+            }
+        }
+
+        private async Task PrintNotificationDocuments(PdfMerger merger, List<NotificationFileVM> noPdfFiles, NotificationPrintIdVM notificationId, List<NotificationFileVM> linkDocuments)
+        {
+            noPdfFiles.AddRange(linkDocuments.Where(x => !x.IsPdf));
+            foreach (var linkDocument in linkDocuments.Where(x => x.IsPdf))
+            {
+                using (MemoryStream memoryStreamLink = new MemoryStream(linkDocument.Content))
+                {
+                    using (PdfDocument newDocLink = new PdfDocument(new PdfReader(memoryStreamLink)))
+                    {
+                        var numberOfPages = newDocLink.GetNumberOfPages();
+                        merger.Merge(newDocLink, 1, newDocLink.GetNumberOfPages());
+                        newDocLink.Close();
+                        if ((numberOfPages % 2) == 1)
+                        {
+                            await PrintBlankPage(merger, notificationId.CaseNotificationId ?? 0, notificationId.DocumentNotificationId ?? 0);
+                        }
+                    }
+                }
             }
         }
 
@@ -1090,9 +1435,9 @@ namespace IOWebApplication.Controllers
             return pdfBytes;
         }
 
-        private async Task PrintBlankPage(PdfMerger merger, int id)
+        private async Task PrintBlankPage(PdfMerger merger, int caseNotificationId, int documentNotificationId)
         {
-            var htmlBlank = printDocumentService.GetHtmlTemplateNull(id);
+            var htmlBlank = printDocumentService.GetHtmlTemplateNull(caseNotificationId, documentNotificationId);
             var pdfBytesBlank = await new ViewAsPdfByteWriter("~/Views/Shared/PreviewRaw.cshtml", htmlBlank)
             {
                 PageOrientation = (Orientation)htmlBlank.PageOrientation,
@@ -1110,30 +1455,12 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        private List<SelectListItem> GetAddrForPerson(List<CaseNotificationLinkVM> linkListVM, int casePersonId, int casePersonLinkId, int notificationDeliveryGroupId)
-        {
-            List<SelectListItem> addrList;
-            if (casePersonLinkId > 0 && linkListVM.Any(x => x.Id == casePersonLinkId))
-            {
-                int casePersonAddrId = casePersonId;
-                var casePersonLink = linkListVM.FirstOrDefault(x => x.Id == casePersonLinkId);
-                if (casePersonLink != null)
-                {
-                    casePersonAddrId = (casePersonLink.PersonSecondRelId ?? 0) != 0 ? (casePersonLink.PersonSecondRelId ?? 0) :
-                                       (casePersonLink.isXFirst ? casePersonLink.PersonRelId : casePersonLink.PersonId);
-                }
-                addrList = casePersonService.GetDDL_CasePersonAddress(casePersonAddrId, notificationDeliveryGroupId);
-            }
-            else
-            {
-                addrList = casePersonService.GetDDL_CasePersonAddress(casePersonId, notificationDeliveryGroupId);
-            }
-            return addrList;
-        }
-        public JsonResult LoadDropDownListForPerson(int casePersonId, int casePersonLinkId, int notificationTypeId, int notificationDeliveryGroupId)
+
+        public JsonResult LoadDropDownListForPerson(int casePersonId, int casePersonLinkId, int notificationTypeId, int notificationDeliveryGroupId, int? caseSessionId)
         {
             var linkListVM = casePersonLinkService.GetLinkForPerson(casePersonId, NomenclatureConstants.FilterPersonOnNotification, notificationTypeId, null);
-            List<SelectListItem> addrList = GetAddrForPerson(linkListVM, casePersonId, casePersonLinkId, notificationDeliveryGroupId);
+            linkListVM = service.FilterLinkOnSession(linkListVM, caseSessionId, null);
+            List<SelectListItem> addrList = service.GetAddrForPerson(linkListVM, casePersonId, casePersonLinkId, notificationDeliveryGroupId);
             var linkList = casePersonLinkService.ListForPersonToDropDown(linkListVM, casePersonId);
             return Json(new { linkList, addrList });
         }
@@ -1145,7 +1472,7 @@ namespace IOWebApplication.Controllers
             {
                 var oldLinks = new List<int>() { casePersonLinkId };
                 var linkListVM = casePersonLinkService.GetLinkForPerson(casePersonId, false, 0, oldLinks);
-                addrList = GetAddrForPerson(linkListVM, casePersonId, casePersonLinkId, notificationDeliveryGroupId);
+                addrList = service.GetAddrForPerson(linkListVM, casePersonId, casePersonLinkId, notificationDeliveryGroupId);
             }
             else
             {
@@ -1154,22 +1481,23 @@ namespace IOWebApplication.Controllers
             return Json(addrList);
         }
 
-        public JsonResult LoadMLinkForPerson(int caseNotificationId, int casePersonId, int notificationTypeId, int notificationDeliveryGroupId)
+        public JsonResult LoadMLinkForPerson(int caseNotificationId, int casePersonId, int notificationTypeId, int notificationDeliveryGroupId, int? caseSessionId)
         {
-            var linkList = service.CasePersonLinksByNotificationId(caseNotificationId, casePersonId, NomenclatureConstants.FilterPersonOnNotification, notificationTypeId).Where(x => x.IsActive).ToList();
+            var linkList = service.CasePersonLinksByNotificationId(caseNotificationId, casePersonId, NomenclatureConstants.FilterPersonOnNotification, notificationTypeId, caseSessionId)
+                                  .Where(x => x.IsActive).ToList();
             var addrList = casePersonService.GetDDL_CasePersonAddress(casePersonId, notificationDeliveryGroupId);
             return Json(new { linkList, addrList });
         }
 
         [HttpPost]
-        public IActionResult CaseNotification_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseNotification_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseNotification, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
-            var caseNotification = service.GetById<CaseNotification>(model.Id);
-            if (!CheckAccessWithId(caseNotification.Id, caseNotification.CaseId, caseNotification.CaseSessionId, caseNotification.CaseSessionActId, AuditConstants.Operations.Delete))
+            var caseNotification = service.GetReadonly<CaseNotification>(model.Id);
+            if (!await CheckAccessWithId(caseNotification.Id, caseNotification.CaseId, caseNotification.CaseSessionId, caseNotification.CaseSessionActId, AuditConstants.Operations.Delete))
                 return Json(new { result = false, message = MessageConstant.Values.SaveFailed });
 
             if (service.SaveExpireInfoPlus(model))
@@ -1187,14 +1515,21 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public JsonResult CaseSessionActComplainDDL(int caseId, int caseSessionActId, int htmlTemplateId)
         {
-            return Json(caseSessionActComplainService.GetDropDownListForAct(caseId, caseSessionActId, htmlTemplateId));
+            return Json(caseSessionActComplainService.GetDropDownListForAct(caseId, [caseSessionActId], htmlTemplateId));
         }
 
-        public JsonResult CaseSessionActComplainMultiDDL(int caseId, int caseNotificationId, int caseSessionActId, int htmlTemplateId)
+        public JsonResult CaseSessionActComplainMultiDDL(int caseId, int caseNotificationId, string caseSessionActIdsStr, int htmlTemplateId)
         {
+            var caseSessionActIds = Array.Empty<int>();
+            if (!string.IsNullOrEmpty(caseSessionActIdsStr))
+            {
+                caseSessionActIds = caseSessionActIdsStr.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Int32.Parse).ToArray();
+                caseSessionActIds = caseSessionActIds.Where(x => x > 0).ToArray();
+            }
+
             var caseNotification = service.ReadById(caseNotificationId);
             service.InitCaseNotificationComplains(caseNotification);
-            var result = caseSessionActComplainService.GetDropDownListForAct(caseId, caseSessionActId, htmlTemplateId);
+            var result = caseSessionActComplainService.GetDropDownListForAct(caseId, caseSessionActIds, htmlTemplateId);
             if (caseNotification != null)
             {
                 foreach (var item in result)
@@ -1207,11 +1542,17 @@ namespace IOWebApplication.Controllers
             return Json(result);
         }
 
-        void SetViewbag(CaseNotification model)
+        private async Task SetViewbag(CaseNotification model)
         {
             int caseId = model.CaseId;
             int? caseSessionId = model.CaseSessionId;
-            int? caseSessionActId = model.CaseSessionActId;
+            var caseSessionActIds = Array.Empty<int>();
+            if ((model.CaseSessionActId ?? 0) > 0)
+                caseSessionActIds = new int[] { model.CaseSessionActId ?? 0 };
+            if (model.CaseNotificationActs?.Any() == true)
+            {
+                caseSessionActIds = model.CaseNotificationActs?.Select(x => x.CaseSessionActId).ToArray() ?? caseSessionActIds;
+            }
             int notificationStateId = model.NotificationStateId;
             int notificationGroupId = model.NotificationDeliveryGroupId ?? 0;
             int personId = model.CasePersonId ?? 0;
@@ -1220,6 +1561,10 @@ namespace IOWebApplication.Controllers
             int toCourtId = model.ToCourtId ?? 0;
             int caseLawUnitId = model.CaseLawUnitId ?? 0;
 
+            var caseCase = await caseService.GetCaseInfo(model.CaseId);
+            //var caseCase = await caseService.Case_GetById(model.CaseId);
+            ViewBag.CaseName = caseCase.CaseTypeCodeShortNumberRegDate;
+
             ViewBag.NotificationTypeId_ddl = nomService.GetDropDownList<NotificationType>();
             ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(notificationGroupId, notificationStateId);
 
@@ -1227,9 +1572,10 @@ namespace IOWebApplication.Controllers
             if (model.CaseNotificationMLinks != null)
                 oldLinks.AddRange(model.CaseNotificationMLinks.Select(x => x.CasePersonLinkId ?? 0).ToList());
             var linkListVM = casePersonLinkService.GetLinkForPerson(personId, NomenclatureConstants.FilterPersonOnNotification, model.NotificationTypeId ?? 0, oldLinks);
-            List<SelectListItem> addrList = GetAddrForPerson(linkListVM, personId, personLinkId, model.NotificationDeliveryGroupId ?? 0);
+            linkListVM = service.FilterLinkOnSession(linkListVM, model.CaseSessionId, oldLinks);
             ViewBag.CasePersonLinkId_ddl = casePersonLinkService.ListForPersonToDropDown(linkListVM, personId); // casePersonLink.GetDropDownListForPerson(personId);
             ViewBag.CasePersonId_ddl = casePersonService.GetDropDownList(caseId, caseSessionId, true, model.NotificationTypeId, model.CasePersonId, NomenclatureConstants.FilterPersonOnNotification);
+            List<SelectListItem> addrList = service.GetAddrForPerson(linkListVM, personId, personLinkId, model.NotificationDeliveryGroupId ?? 0);
             ViewBag.CasePersonAddressId_ddl = addrList;
 
             //List<SelectListItem> notificationDeliveryGroups = nomService.GetDropDownList<NotificationDeliveryGroup>();
@@ -1240,7 +1586,7 @@ namespace IOWebApplication.Controllers
             ViewBag.NotificationTypeSummonsJson = JsonConvert.SerializeObject(NotificationTypeId_ddl.Where(x => x.value != NomenclatureConstants.NotificationType.GovernmentPaper.ToString()).ToList());
             ViewBag.NotificationTypeGovernmentJson = JsonConvert.SerializeObject(NotificationTypeId_ddl.Where(x => x.value == NomenclatureConstants.NotificationType.GovernmentPaper.ToString()).ToList());
 
-            var HtmlTemplateId_ddl = nomService.GetDDL_HtmlTemplate(notificationTypeId, caseId);
+            var HtmlTemplateId_ddl = nomService.GetDDL_HtmlTemplate(notificationTypeId, caseId, model.HtmlTemplateId);
             ViewBag.HtmlTemplateId_ddl = HtmlTemplateId_ddl.Select(x => new SelectListItem() { Value = x.Value, Text = x.Text }).ToList();
             ViewBag.HtmlTemplateId_json = JsonConvert.SerializeObject(HtmlTemplateId_ddl);
 
@@ -1249,7 +1595,8 @@ namespace IOWebApplication.Controllers
             ViewBag.CourtId = userContext.CourtId;
 
             ViewBag.CaseLawUnitId_ddl = caseLawUnitService.CaseLawUnit_SelectForDropDownList(caseId, caseSessionId);
-            ViewBag.LawUnitAddressId_ddl = commonService.LawUnitAddress_SelectDDL_ByCaseLawUnitId(caseLawUnitId);
+            var lawUnitAddressId_ddl = commonService.LawUnitAddress_SelectDDL_ByCaseLawUnitId(caseLawUnitId);
+            ViewBag.LawUnitAddressId_ddl = lawUnitAddressId_ddl;
 
             ViewBag.DeliveryOperId_ddl = serviceDeliveryOper.DeliveryOperForNotificationStateSelect(notificationStateId);
             ViewBag.DeliveryReasonId_ddl = nomService.GetDropDownList<DeliveryReason>();
@@ -1257,13 +1604,26 @@ namespace IOWebApplication.Controllers
             ViewBag.LawUnitId_ddl = courtLawUnitService.LawUnitForCourt_SelectDDL(NomenclatureConstants.LawUnitTypes.MessageDeliverer, toCourtId);
             ViewBag.DeliveryAreaId_ddl = areaService.DeliveryAreaSelectDDL(toCourtId, false);
             if (caseSessionId != null)
-                ViewBag.CaseSessionActId_ddl = caseSessionActService.GetDropDownList_CaseSessionActEnforced(caseId);/* caseSessionActService.GetDropDownListBySessionId(caseSessionId ?? 0);*/
-            if (caseSessionActId != null)
-                ViewBag.CaseSessionActComplainId_ddl = caseSessionActComplainService.GetDropDownListForAct(caseId, caseSessionActId ?? 0, model.HtmlTemplateId ?? 0);
+            {
+                var ddl = await caseSessionActService.GetDropDownList_CaseSessionActEnforced(caseId);/* caseSessionActService.GetDropDownListBySessionId(caseSessionId ?? 0);*/
+                ViewBag.CaseSessionActId_ddl = ddl;
+                ViewBag.MultiActIdVM_ddl = ddl;
+            }
+            if (caseSessionActIds.Any())
+                ViewBag.CaseSessionActComplainId_ddl = caseSessionActComplainService.GetDropDownListForAct(caseId, caseSessionActIds, model.HtmlTemplateId ?? 0);
             ViewBag.DocumentSenderPersonId_ddl = service.DocumentSenderPersonDDL(model.CaseId);
             ViewBag.InstitutionDocumentId_ddl = service.GetDDL_ConnectedCases(model.CaseId);
             ViewBag.MoneyObligationId_ddl = service.GetMoneyObligationDDL(model.CasePersonId ?? 0, model.CasePersonLinkId ?? 0, model.CaseSessionActId ?? 0);
             ViewBag.NotificationIspnReasonId_ddl = service.GetNotificationIspnReasonDDL();
+
+            var listNotificationTypeId = NomenclatureConstants.NotificationType.ToListType(model.NotificationTypeId);
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, listNotificationTypeId).DeleteOrDisableLast();
+            ViewBag.DocumentsVM_ddl = await service.GetDocumentsDDL(caseId);
+
+            if (model.EpepCasePersonId > 0)
+            {
+                ViewBag.EpepCasePersonName = await service.GetPropByIdAsync<CasePerson, string>(x => x.Id == model.EpepCasePersonId.Value, x => x.FullName);
+            }
         }
 
         /// <summary>
@@ -1290,17 +1650,10 @@ namespace IOWebApplication.Controllers
             return Json(model);
         }
 
-
-        public JsonResult InsertDeliveryItem(int? courtId)
-        {
-            var result = service.InsertDeliveryItem(courtId);
-            return Json(new { result });
-        }
-
         [HttpPost]
-        public JsonResult IsNotificationDeliveryGroupByEpep(int caseId, int casePersonId, string casePersonLinkIds)
+        public async Task<JsonResult> IsNotificationDeliveryGroupByEpep(int caseId, int? caseSessionId, int casePersonId, string casePersonLinkIds)
         {
-            var result = service.IsNotificationDeliveryGroupByEpep(caseId, casePersonId, casePersonLinkIds);
+            var result = await service.IsNotificationDeliveryGroupByEpep(caseId, caseSessionId, casePersonId, casePersonLinkIds);
 
             return Json(new { result = result });
         }
@@ -1335,6 +1688,202 @@ namespace IOWebApplication.Controllers
         {
             var model = vksNotificationService.GetNotificationItem(caseSessionId);
             return PartialView(nameof(VksNotificationList), model);
+        }
+
+        [HttpGet]
+        public JsonResult GetDDL_NotificationStateFromDeliveryGroup(int notificationDeliveryGroupId, int notificationStateId, int caseSessionId)
+        {
+            var datePrevSess = service.GetDatePrevSession(caseSessionId);
+            var notificationStates = nomService.GetDDL_NotificationStateFromDeliveryGroup(notificationDeliveryGroupId, notificationStateId);
+            return Json(new { datePrevSess = datePrevSess?.ToString(FormattingConstant.NormalDateFormat + " HH:mm"), notificationStates });
+        }
+        [HttpGet]
+        public async Task<IActionResult> NotificationGroup(int caseId, int caseSessionId, int notificationListTypeId)
+        {
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseNotification, null, AuditConstants.Operations.View, caseId))
+            {
+                return Redirect_Denied();
+            }
+
+            int notificationTypeId = NomenclatureConstants.NotificationType.FromListType(notificationListTypeId);
+            await SetViewBagNotificationGroup(notificationTypeId, caseId, caseSessionId, null);
+            var model = service.GenerateNotificationGroup(caseId, caseSessionId, notificationListTypeId);
+            await service.LoadNotificationGroupList(model);
+            return View(model);
+        }
+
+        [HttpPost]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> NotificationGroup(NotificationGroupVM model)
+        {
+            await SetViewBagNotificationGroup(model.NotificationTypeId, model.CaseId, model.CaseSessionId, null);
+            model.NotificationItems = new();
+            await service.LoadNotificationGroupList(model);
+            ModelState.Clear();
+            return View(nameof(NotificationGroup), model);
+        }
+        async Task SetViewBagNotificationGroup(int? notificationTypeId, int caseId, int caseSessionId, int? htmlTemplateId)
+        {
+            ViewBag.NotificationTypeId_ddl = (await nomService.GetDropDownListAsync<NotificationType>()).Where(x => x.Value != NomenclatureConstants.NotificationType.GovernmentPaper.ToString()).ToList();
+            var HtmlTemplateId_ddl = nomService.GetDDL_HtmlTemplate(notificationTypeId ?? 0, caseId, htmlTemplateId);
+            ViewBag.HtmlTemplateId_ddl = HtmlTemplateId_ddl.Select(x => new SelectListItem() { Value = x.Value, Text = x.Text }).ToList();
+            ViewBag.HtmlTemplateId_json = JsonConvert.SerializeObject(HtmlTemplateId_ddl);
+            ViewBag.NotificationDeliveryGroupId_ddl = service.NotificationDeliveryGroupDDL(notificationTypeId ?? 0, caseId);
+            var ddl = await caseSessionActService.GetDropDownList_CaseSessionActEnforced(caseId);
+            ViewBag.CaseSessionActId_ddl = ddl;
+            ViewBag.MultiActIdVM_ddl = ddl;
+
+
+            ViewBag.NotificationStateId_ddl = nomService.GetDDL_NotificationStateFromDeliveryGroup(NomenclatureConstants.NotificationDeliveryGroup.WithSummons, NomenclatureConstants.NotificationState.Ready);
+            var model = new CaseNotification()
+            {
+                CaseId = caseId,
+                CourtId = userContext.CourtId,
+                CaseSessionId = caseSessionId,
+            };
+            ViewBag.breadcrumbs = commonService.Breadcrumbs_ForCaseNotificationEdit(model, 0).DeleteOrDisableLast();
+        }
+        [HttpPost]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> NotificationGroupSave(NotificationGroupVM model)
+        {
+            var logVM = new DeliveryLogVM()
+            {
+                Action = "Множествено добавяне",
+                PageLabel = "Призовки/съобщения",
+                PageUrl = "CaseNotification/Edit"
+            };
+            ValidateModelGroup(model);
+            await SetViewBagNotificationGroup(model.NotificationTypeId, model.CaseId, model.CaseSessionId, model.HtmlTemplateId);
+            SetHelpFile(HelpFileValues.SessionNotification);
+            if (@NomenclatureConstants.NotificationDeliveryGroup.OnMoment(model.NotificationDeliveryGroupId))
+            {
+                if (model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.OnEMail &&
+                    model.NotificationDeliveryGroupId != @NomenclatureConstants.NotificationDeliveryGroup.ByRNFL)
+                {
+                    if (!ModelState.IsValid)
+                    {
+                        ModelState.Remove(nameof(model.HtmlTemplateId));
+                    }
+                }
+            }
+            if (!ModelState.IsValid)
+            {
+                await service.LoadNotificationGroupList(model);
+                return View(nameof(NotificationGroup), model);
+            }
+            try
+            {
+                await service.SaveMultiNotification(model, logVM);
+                return RedirectToAction("Preview", "CaseSession", new { id = model.CaseSessionId, tab = "#tabNotification" });
+            }
+            catch (Exception)
+            {
+                SetErrorMessage(MessageConstant.Values.SaveFailed);
+            }
+            return View(nameof(NotificationGroup), model);
+        }
+
+        /// <summary>
+        /// Аддед Бай Косьо
+        /// </summary>
+        /// <param name="model"></param>
+        private void ValidateModelGroup(NotificationGroupVM model)
+        {
+            for (int i = 0; i < model.NotificationItems.Count; i++)
+            {
+
+                var notificationItem = model.NotificationItems[i];
+                if (!notificationItem.IsChecked)
+                {
+                    continue;
+                }
+
+                if ((notificationItem.LinkId ?? 0) <= 0)
+                {
+                    if (casePersonService.IsPersonDead(notificationItem.PersonId))
+                    {
+                        ModelState.AddModelError($"NotificationItems[{i}].PersonId", "Лицето е починало, не може да бъде уведомено!");
+                    }
+                }
+
+
+                if (model.NotificationDeliveryGroupId == NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
+                {
+                    var epepInfo = casePersonLinkService.GetEpepSummonInfo(new CaseNotification()
+                    {
+                        CaseSessionId = model.CaseSessionId,
+                        CasePersonId = notificationItem.PersonId,
+                        CasePersonLinkId = notificationItem.LinkId,
+                        NotificationTypeId = model.NotificationTypeId
+                    });
+                    if (epepInfo == null || !epepInfo.CanSummonByEpep)
+                    {
+                        ModelState.AddModelError($"NotificationItems[{i}].PersonId", "За избраното лице няма разрешен достъп през ЕПЕП");
+                    }
+                }
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetCourtForDelivery_Select2Data()
+        {
+            var deliveryAreaDdl = await areaService.GetCourtForDelivery_Select2Data();
+            return Json(deliveryAreaDdl);
+        }
+        public async Task<IActionResult> PrintPdfNotification(int id)
+        {
+            (var pdfBytesR, var FileName) = await makePrintAndSavePdfDocumentNotification(id);
+            return File(pdfBytesR, System.Net.Mime.MediaTypeNames.Application.Pdf, FileName);
+        }
+        private async Task<(byte[] pdfBytes, string FileName)> makePrintAndSavePdfDocumentNotification(int id)
+        {
+            var cdnResult = await documentNotificationService.ReadPrintedFile(id);
+            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateDocumentNotification(id);
+            if (cdnResult == null)
+            {
+                if (htmlModel == null)
+                {
+                    return (null, "");
+                }
+                var cdnResultDraft = await documentNotificationService.ReadDraftFile(id);
+                if (cdnResultDraft != null)
+                {
+                    htmlModel.Text = Encoding.UTF8.GetString(Convert.FromBase64String(cdnResultDraft.FileContentBase64));
+                }
+                var pdfBytes = await new ViewAsPdfByteWriter("~/Views/Shared/PreviewRaw.cshtml", htmlModel)
+                {
+                    PageOrientation = (Orientation)htmlModel.PageOrientation,
+                    PageMargins = new Margins(10, 5, 10, 5),
+                    PageSize = Size.A4,
+                    CustomSwitches = htmlModel.SmartShrinkingPDF ? "" : "--disable-smart-shrinking"
+                }.GetByte(this.ControllerContext);
+                pdfBytes = await ZoomIfHave3Pages(htmlModel, pdfBytes);
+                await documentNotificationService.SavePrintedFile(id, pdfBytes);
+                cdnResult = await documentNotificationService.ReadPrintedFile(id);
+
+            }
+
+            var pdfBytesC = Convert.FromBase64String(cdnResult.FileContentBase64);
+            if ((Orientation)htmlModel.PageOrientation == Orientation.Landscape)
+            {
+                pdfBytesC = RotateSecondPage180(pdfBytesC);
+            }
+            return (pdfBytesC, cdnResult.FileName);
+        }
+        [HttpGet]
+        public IActionResult RajonAlert()
+        {
+            return PartialView("_RajonAlert");
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetIsValidAddress(int casePersonAddressId, long lawUnitAddressId)
+        {
+            var isValid = await IsValidAddreess(casePersonAddressId, lawUnitAddressId);
+            return Json(new { 
+                isValid, 
+                errMsg = isValid? string.Empty : NomenclatureConstants.NotificationAddressError.Message
+            });
         }
     }
 }

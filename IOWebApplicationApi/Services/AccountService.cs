@@ -27,14 +27,14 @@ namespace IOWebApplicationApi.Services
         private readonly IConfiguration configuration;
         public AccountService(
             IConfiguration _configuration,
-            ILogger<DeliveryAccount> _logger,
+            ILogger<AccountService> _logger,
             IRepository _repo)
         {
             logger = _logger;
             repo = _repo;
             configuration = _configuration;
         }
-   
+
         public async Task<string> GenerateJwtToken(DeliveryAccount account)
         {
             var claims = new List<Claim>
@@ -60,9 +60,9 @@ namespace IOWebApplicationApi.Services
                 signingCredentials: creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
         }
-     
+
         private async Task<string> GenerateJwtMobileToken(DeliveryAccount account)
         {
             var claims = new List<Claim>
@@ -90,20 +90,20 @@ namespace IOWebApplicationApi.Services
                 signingCredentials: creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
         }
-     
+
         public async Task<DeliveryAccountVM> Register(string registerGuid)
         {
-            
+
             var account = repo.All<DeliveryAccount>()
-                              .Where(x => x.Id == registerGuid && 
+                              .Where(x => x.Id == registerGuid &&
                                           x.IsActive &&
                                           string.IsNullOrEmpty(x.MobileToken))
                               .FirstOrDefault();
             if (account == null)
                 return null;
-            var user = repo.All<ApplicationUser>()
+            var user = repo.AllReadonly<ApplicationUser>()
                            .Include(x => x.LawUnit)
                            .Include(x => x.Court)
                            .Where(x => x.Id == account.MobileUserId)
@@ -116,10 +116,10 @@ namespace IOWebApplicationApi.Services
                 return null;
             account.MobileToken = await GenerateJwtMobileToken(account);
             repo.SaveChanges();
-            return new DeliveryAccountVM() 
+            return new DeliveryAccountVM()
             {
                 CourtId = account.CourtId,
-                MobileUserId= account.MobileUserId,
+                MobileUserId = account.MobileUserId,
                 MobileToken = account.MobileToken,
                 UserName = user.Email,
                 FullName = user.LawUnit.FullName,
@@ -128,8 +128,8 @@ namespace IOWebApplicationApi.Services
                 RegisterGuid = account.Id
             };
         }
-      
-       
+
+
         public bool SavePin(string registerGuid, string pin)
         {
             var account = repo.All<DeliveryAccount>()
@@ -153,7 +153,7 @@ namespace IOWebApplicationApi.Services
             if (account == null)
                 return "";
             if (BCrypt.Net.BCrypt.Verify(pin, account.PinHash))
-               return await GenerateJwtToken(account);
+                return await GenerateJwtToken(account);
             return "";
         }
     }

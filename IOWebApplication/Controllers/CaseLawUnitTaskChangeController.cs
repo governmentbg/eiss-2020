@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -28,6 +29,7 @@ namespace IOWebApplication.Controllers
             this.taskService = _taskService;
         }
 
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult Index()
         {
             var model = new CaseLawUnitTaskChangeFilterVM()
@@ -44,6 +46,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        [DisableAudit]
         public IActionResult Add()
         {
             var model = new CaseLawUnitTaskChange();
@@ -54,6 +57,7 @@ namespace IOWebApplication.Controllers
         public IActionResult View(int id)
         {
             var model = service.Select(id, null, null, null, null).FirstOrDefault();
+            auditInfo(null, model);
             return View(model);
         }
 
@@ -71,6 +75,7 @@ namespace IOWebApplication.Controllers
             {
                 SaveLogOperation(true, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
+                auditInfo(model, null);
                 return RedirectToAction(nameof(View), new { id = model.Id });
             }
             else
@@ -81,11 +86,30 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
+        void auditInfo(CaseLawUnitTaskChange model, CaseLawUnitTaskChangeVM viewM)
+        {
+            string operation = AuditConstants.Operations.View;
+            if (viewM == null)
+            {
+                operation = AuditConstants.Operations.Append;
+                viewM = service.Select(model.Id, null, null, null, null).FirstOrDefault();
+            }
+            AddAuditInfo(operation, viewM.CaseNumber, $"{viewM.ActType} {viewM.ActNumber}/{viewM.ActDate:dd.MM.yyyy},избрано лице: {viewM.NewTaskUserName}", "Обективна невъзможност");
+        }
+
         private void ValidateModel(CaseLawUnitTaskChange model)
         {
             if (model.CaseId <= 0)
             {
                 ModelState.AddModelError(nameof(CaseLawUnitTaskChange.CaseId), "Изберете дело");
+            }
+            else
+            {
+                var _case = service.GetById<Case>(model.CaseId);
+                if (_case.CaseGroupId == NomenclatureConstants.CaseGroups.NakazatelnoDelo)
+                {
+                    ModelState.AddModelError(nameof(CaseLawUnitTaskChange.CaseId), "Функционалността не е достъпна за наказателни дела.");
+                }
             }
             if (model.CaseSessionActId <= 0)
             {
@@ -105,9 +129,9 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        public IActionResult Get_WorkTaskToChange(int caseSessionActId)
+        public async Task<IActionResult> Get_WorkTaskToChange(int caseSessionActId)
         {
-            var tasks = taskService.Select(SourceTypeSelectVM.CaseSessionAct, caseSessionActId)
+            var tasks = (await taskService.Select(SourceTypeSelectVM.CaseSessionAct, caseSessionActId))
                 .Where(x => WorkTaskConstants.States.NotFinished.Contains(x.TaskStateId))
                 .Where(x => WorkTaskConstants.Types.TaskCanChangeUser.Contains(x.TaskTypeId))
                 .ToList()

@@ -1,0 +1,102 @@
+﻿@model ElectionPersonPreviewVM
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Infrastructure.Constants
+@using IOWebApplication.Infrastructure.Models.ViewModels.Election;
+
+@{
+    IAccessControl access = (IAccessControl)ViewBag.AccessControl;
+    ViewData["Title"] = $"{Model.ElectionTitle} - {Model.FullName}";
+}
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li><a href="@Url.Action("Index")">Списък избори</a></li>
+        <li><a href="@Url.Action("ElectionPersons",new{id=Model.ElectionGroupId})">@Model.ElectionTitle</a></li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form action="">
+            <fieldset class="is-fieldset">
+                <legend class="legend_1">Съдия</legend>
+                <div class="row">
+                    <div class="col-md-6">
+                        @Html.DisplayFor(x=>x.FullName,"obj")
+                    </div>
+                    <div class="col-md-6">
+                        @Html.DisplayFor(x=>x.Uic,"obj")
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        @Html.DisplayFor(x=>x.CourtName,"obj")
+                    </div>
+                    <div class="col-md-6">
+                        @Html.DisplayFor(x=>x.DateDeclaration,"datetime")
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        @Html.DisplayFor(x=>x.StateName,"obj")
+                    </div>
+                    <div class="col-md-6">
+                        @Html.DisplayFor(x=>x.StateNameDescription,"obj")
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.DismissalType))
+                {
+                    <div class="row">
+                        <div class="col-md-6">
+                            @Html.DisplayFor(x=>x.DismissalType,"obj")
+                        </div>
+                        <div class="col-md-6">
+                            @Html.DisplayFor(x=>x.DismissalTypeDescription,"obj")
+                        </div>
+                    </div>
+                }
+                <div class="form-group">
+                    @if (Model.CanChange)
+                    {
+                        <input type="button" onclick="personChange();return false;" value="Промяна" class="btn btn-warning" />
+
+                        @if (!Model.HasDeclaration)
+                        {
+                            <input type="button" onclick="personDeclare();return false;" value="Декларация" class="btn btn-success" />
+                        }
+                    }
+                </div>
+            </fieldset>
+        </form>
+        <div id="divChange"></div>
+    </div>
+    <div class="col-md-6">
+        @{
+            var cdnMode = "append";
+            if (!Model.CanChange)
+            {
+                cdnMode = "none";
+            }
+        }
+        <div class="cdn-files" data-label="Документи" data-sourcetype="@SourceTypeSelectVM.ElectionPerson" data-sourceid="@Model.Id" data-editmode="@cdnMode"></div>
+        <fieldset class="is-fieldset">
+            <legend class="legend_1">История</legend>
+            <partial name="_SelectLog" model="@(new LogSearchVM(){Person=Model.PersonGid.ToString()  })" />
+        </fieldset>
+    </div>
+</div>
+<partial name="_CdnScript" />
+<script>
+    function personChange() {
+        requestContent('@Url.Action("PersonChange")', { id: @Model.Id}, function (data) {
+            $('#divChange').html(data);
+        });
+    }
+
+    function personDeclare() {
+        swalConfirm('Потвърди добавянето на декларация за участие в избор!', function () {
+            document.location.href = '@Url.Action("HasDeclaration",new{id=Model.Id})';
+        });
+    }
+</script>

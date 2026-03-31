@@ -21,9 +21,11 @@
     {
         ViewData["Title"] = "Добавяне";
     }
+
+    bool isNewExecProcessCase = (bool)ViewBag.isNewExecProcessCase;
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
@@ -45,6 +47,7 @@
                 <div class=@classColMd>
                     <form asp-action=@actionName method="post" id="cmModalFormExecList">
                         @Html.HiddenFor(x => x.Id)
+                        @Html.HiddenFor(x => x.CaseId)
                         @Html.HiddenFor(x => x.ExecListTypeId)
                         @Html.HiddenFor(x => x.ForPopUp)
                         @Html.HiddenFor(x => x.ObligationIdStr)
@@ -92,6 +95,17 @@
                             {
                                 <div class="cdn-files" data-label="Документи към изпълнителен лист" data-sourcetype="@SourceTypeSelectVM.ExecList" data-sourceid="@Model.Id" data-editmode="none"></div>
                             }
+                            @if (isNewExecProcessCase)
+                            {
+                                if (Model.DateSigned == null)
+                                {
+                                    @Html.EditorFor(x => x.GenerateExecProcess, "Boolean")
+                                }
+                                else
+                                {
+                                    @Html.DisplayFor(x => x.GenerateExecProcess, "objVal", null, new { value = (Model.GenerateExecProcess) ? "Да" : "He" })
+                                }
+                            }
                         </div>
 
                         <div class="form-group">
@@ -113,7 +127,12 @@
                                 <a asp-action="AppendUpdateSingle" asp-controller="DocumentTemplate" asp-route-sourceType="@SourceTypeSelectVM.ExecList" asp-route-sourceId="@Model.Id" class="btn btn-primary">Създаване на писмо</a>
 
                                 <div class="pull-right">
+                                    @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Деактивиране на ИЛ", ExpireSubmitUrl = Url.Action("StornoExecList") })
+                                    <span>&nbsp;</span>
+
                                     @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                                    &nbsp;
+                                    <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.ExecList, SourceId = Model.Id })" />
                                 </div>
                             }
                         </div>
@@ -130,7 +149,7 @@
 
 <partial name="_CdnScript" />
 
-<div id="modalMessageContainer">
+<div id="modalMessageContainerPopUp">
 </div>
 
 <script>
@@ -143,7 +162,7 @@
                     messageHelper.ShowSuccessMessage('Записът премина успешно.');
                     window.open('@Url.Action("BlankExecList", "Money")?id=' + data.responseJSON.id, '_blank');
                 } else {
-                    messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainer');
+                    messageHelper.ShowErrorMessage(data.responseJSON.message, '#modalMessageContainerPopUp');
                 }
             });
         }
@@ -166,17 +185,19 @@
     });
 
     function editActBlank() {
-        let editUrl = "@Url.Action("BlankExecList", new { id=Model.Id})";
-            @if (Model.RegDate != null)
-            {
-                <text>
-        swalConfirm('Има генериран файл на ИЛ, който е в процес на подписване или е подписан! След промяна на съдържанието на ИЛ е необходимо да създадете нова задача за подписване, за да се генерира нов файл на ИЛ със същия номер.', function () {
-            document.location.href = editUrl;
-        });
-                </text>
-            }else {
-                <text>document.location.href = editUrl;</text>
-            }
+        let editUrl = "@Url.Action("BlankExecList", new { id = Model.Id })";
+    @if (Model.RegDate != null)
+    {
+        <text>
+                                    swalConfirm('Има генериран файл на ИЛ, който е в процес на подписване или е подписан! След промяна на съдържанието на ИЛ е необходимо да създадете нова задача за подписване, за да се генерира нов файл на ИЛ със същия номер.', function () {
+                                        document.location.href = editUrl;
+                                    });
+        </text>
+    }
+    else
+    {
+        <text>document.location.href = editUrl;</text>
+    }
     }
 
     function sendForSignCheck(sender) {
@@ -185,26 +206,26 @@
         }
         $(sender).attr('disabled', 'disabled');
 
-        let editUrl = "@Url.Action("QuickSentForSignExecList", new { execListid = Model.Id})";
-            @if (Model.RegDate != null)
-            {
-                <text>
-        swalConfirm('Вече има регистриран ИЛ, който е в процес на подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за ИЛ със същия номер и ще се създаде нова задача за подпис.', function () {
-            document.location.href = editUrl;
-        }, function () {
-            $(sender).removeAttr('disabled');
+        let editUrl = "@Url.Action("QuickSentForSignExecList", new { execListid = Model.Id })";
+    @if (Model.RegDate != null)
+    {
+        <text>
+                                    swalConfirm('Вече има регистриран ИЛ, който е в процес на подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за ИЛ със същия номер и ще се създаде нова задача за подпис.', function () {
+                                        document.location.href = editUrl;
+                                    }, function () {
+                                        $(sender).removeAttr('disabled');
 
-        });
-                </text>
-            }
-            else
-            {
-                <text>
+                                    });
+        </text>
+    }
+    else
+    {
+        <text>
 
-        setTimeout(function () {
-            document.location.href = editUrl;
-        }, 200);
-            </text>
-                }
+                                    setTimeout(function () {
+                                        document.location.href = editUrl;
+                                    }, 200);
+        </text>
+    }
             }
 </script>

@@ -15,6 +15,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public DateTime DocumentDate { get; set; }
         public string AuthorId { get; set; }
         public string AuthorName { get; set; }
+        public string SignerId { get; set; }
         public string JudgeName { get; set; }
         public string CourtName { get; set; }
         public string CourAddress { get; set; }

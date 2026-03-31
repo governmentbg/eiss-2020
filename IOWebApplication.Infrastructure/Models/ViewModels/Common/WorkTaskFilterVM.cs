@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IOWebApplication.Infrastructure.Extensions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -30,5 +31,13 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Common
 
         [Display(Name = "Възложена на")]
         public string AssignedTo { get; set; }
+
+        public void Sanitize()
+        {
+            SourceDescription = SourceDescription.EmptyToNull();
+            ParentDescription = ParentDescription.EmptyToNull();
+            TaskTypeId = TaskTypeId.EmptyToNull();
+            TaskStateId = TaskStateId.EmptyToNull();
+        }
     }
 }

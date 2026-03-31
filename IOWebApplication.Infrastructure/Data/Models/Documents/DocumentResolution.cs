@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
     /// Разпореждания по документ
     /// </summary>
     [Table("document_resolution")]
-    public class DocumentResolution : UserDateWRT, IExpiredInfo
+    public class DocumentResolution : UserDateWRT, IExpiredInfo, IHaveLongId
     {
         [Key]
         [Column("id")]

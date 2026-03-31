@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using IOWebApplication.Core.Contracts;
+﻿using IOWebApplication.Core.Contracts;
 using IOWebApplication.Core.Extensions;
 using IOWebApplication.Core.Models;
 using IOWebApplication.Infrastructure.Constants;
@@ -8,22 +7,26 @@ using IOWebApplication.Infrastructure.Data.Common;
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Common;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
 using IOWebApplication.Infrastructure.Data.Models.Documents;
+using IOWebApplication.Infrastructure.Data.Models.EISPP;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using IOWebApplication.Infrastructure.Data.Models.Money;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Extensions;
+using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using iText.Kernel.XMP.Impl;
+using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+using IOWebApplication.Infrastructure.Models.ViewModels.Money;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using static IOWebApplication.Infrastructure.Constants.NomenclatureConstants;
-using CaseSessionResult = IOWebApplication.Infrastructure.Data.Models.Cases.CaseSessionResult;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -31,8 +34,98 @@ namespace IOWebApplication.Core.Services
     {
         protected ILogger logger { get; set; }
         protected IRepository repo { get; set; }
+        protected IReadonlyRepository readonlyrepo { get; set; }
         protected IUserContext userContext { get; set; }
-        protected IMapper mapper { get; set; }
+        protected string applicationDbConnectionString { get; set; }
+
+        private DbEuroConfigVM _dbEuroConfig { get; set; }
+
+        protected DateTime dtTomorrow { get { return DateTime.Now.AddDays(1); } }
+
+        /// <summary>
+        /// Настройка за евро зона с директно четене от базата
+        /// </summary>
+        protected DbEuroConfigVM DbEuroConfig
+        {
+            get
+            {
+                if (_dbEuroConfig != null)
+                {
+                    return _dbEuroConfig;
+                }
+
+                string[] euroDataParamNames = new string[] { NomenclatureConstants.SystemParamName.InterimPeriodEuroStart, NomenclatureConstants.SystemParamName.InterimPeriodEuroEnd,
+                                                         NomenclatureConstants.SystemParamName.EuroExchangeRate };
+                var euroParams = repo.AllReadonly<SystemParam>()
+                                           .Where(x => euroDataParamNames.Contains(x.ParamName))
+                                           .Select(x => new
+                                           {
+                                               x.ParamName,
+                                               x.ParamValue
+                                           })
+                                           .ToList();
+                DbEuroConfigVM result = new DbEuroConfigVM();
+                decimal euroRate = NomenclatureExtensions.ParseDecimal(euroParams.Where(x => x.ParamName == NomenclatureConstants.SystemParamName.EuroExchangeRate).Select(x => x.ParamValue).DefaultIfEmpty("").FirstOrDefault());
+                result.EuroExchangeRate = euroRate;
+                DateTime date = DateTime.Now.AddYears(1);
+
+                try
+                {
+                    var dateStr = euroParams.Where(x => x.ParamName == NomenclatureConstants.SystemParamName.InterimPeriodEuroStart).Select(x => x.ParamValue).DefaultIfEmpty("").FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(dateStr) == false)
+                    {
+                        if (DateTime.TryParseExact(dateStr, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out date))
+                        {
+                            result.InterimPeriodEuroStart = date;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    result.InterimPeriodEuroStart = DateTime.MaxValue;
+                }
+                try
+                {
+                    var dateStr = euroParams.Where(x => x.ParamName == NomenclatureConstants.SystemParamName.InterimPeriodEuroEnd).Select(x => x.ParamValue).DefaultIfEmpty("").FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(dateStr) == false)
+                    {
+                        if (DateTime.TryParseExact(dateStr, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out date))
+                        {
+                            result.InterimPeriodEuroEnd = date;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    result.InterimPeriodEuroEnd = DateTime.MaxValue;
+                }
+
+                _dbEuroConfig = result;
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// UserId на потребител при корекция на данни
+        /// </summary>
+        protected string ImpersonatedUserId { get; set; } = null;
+
+        public void SetImpersonatedUser(string impersonatedUserId)
+        {
+            this.ImpersonatedUserId = impersonatedUserId;
+        }
+
+        /// <summary>
+        /// UserId на потребител при корекция на данни
+        /// </summary>
+        protected int? ImpersonatedCourtId { get; set; } = null;
+
+        public void SetImpersonatedCourt(int impersonatedCourtId)
+        {
+            this.ImpersonatedCourtId = impersonatedCourtId;
+        }
 
         public bool ChangeOrder<T>(object id, bool moveUp, Func<T, int?> orderProp, Expression<Func<T, int?>> setterProp, Expression<Func<T, bool>> predicate = null) where T : class
         {
@@ -60,8 +153,6 @@ namespace IOWebApplication.Core.Services
                     int? middleValue = orderProp(current);
                     current.SetPropertyValue<T, int?>(setterProp, orderProp(next));
                     next.SetPropertyValue<T, int?>(setterProp, middleValue.Value);
-                    repo.Update(current);
-                    repo.Update(next);
                     repo.SaveChanges();
 
                 }
@@ -73,13 +164,87 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-
+        public async Task<T> GetByIdAsync<T>(object id) where T : class
+        {
+            return await repo.GetByIdAsync<T>(id);
+        }
         public T GetById<T>(object id) where T : class
         {
             return repo.GetById<T>(id);
         }
 
-        protected void PersonNamesBase_SaveData(PersonNamesBase model)
+        public T ReadById<T>(int id) where T : class, IHaveId
+        {
+            return repo.All<T>().Where(x => x.Id == id).FirstOrDefault();
+        }
+        public T ReadById<T>(long id) where T : class, IHaveLongId
+        {
+            return repo.All<T>().Where(x => x.Id == id).FirstOrDefault();
+        }
+
+        public Task<T> ReadByIdAsync<T>(int id) where T : class, IHaveId
+        {
+            return repo.All<T>().Where(x => x.Id == id).FirstOrDefaultAsync();
+        }
+        public Task<T> ReadByIdAsync<T>(long id) where T : class, IHaveLongId
+        {
+            return repo.All<T>().Where(x => x.Id == id).FirstOrDefaultAsync();
+        }
+        public Task<T> GetReadonlyAsync<T>(long id) where T : class, IHaveLongId
+        {
+            return repo.AllReadonly<T>().Where(x => x.Id == id).FirstOrDefaultAsync();
+        }
+        public Task<T> GetReadonlyAsync<T>(int id) where T : class, IHaveId
+        {
+            return repo.AllReadonly<T>().Where(x => x.Id == id).FirstOrDefaultAsync();
+        }
+
+        public T GetReadonly<T>(long id) where T : class, IHaveLongId
+        {
+            return repo.AllReadonly<T>().Where(x => x.Id == id).FirstOrDefault();
+        }
+        public T GetReadonly<T>(int id) where T : class, IHaveId
+        {
+            return repo.AllReadonly<T>().Where(x => x.Id == id).FirstOrDefault();
+        }
+        public TProp GetPropById<T, TProp>(long id, Expression<Func<T, TProp>> select)
+           where T : class, IHaveLongId
+        {
+            return repo.GetPropById<T, TProp>(x => x.Id == id, select);
+        }
+        public TProp GetPropById<T, TProp>(int id, Expression<Func<T, TProp>> select)
+           where T : class, IHaveId
+        {
+            return repo.GetPropById<T, TProp>(x => x.Id == id, select);
+        }
+        public TProp GetPropById<T, TProp>(Expression<Func<T, bool>> where, Expression<Func<T, TProp>> select)
+            where T : class
+        {
+            return repo.GetPropById<T, TProp>(where, select);
+        }
+
+        public Task<TProp> GetPropByIdAsync<T, TProp>(int id, Expression<Func<T, TProp>> select)
+          where T : class, IHaveId
+        {
+            return repo.GetPropByIdAsync<T, TProp>(x => x.Id == id, select);
+        }
+        public Task<TProp> GetPropByIdAsync<T, TProp>(long id, Expression<Func<T, TProp>> select)
+          where T : class, IHaveLongId
+        {
+            return repo.GetPropByIdAsync<T, TProp>(x => x.Id == id, select);
+        }
+        public Task<TProp> GetPropByIdAsync<T, TProp>(Expression<Func<T, bool>> where, Expression<Func<T, TProp>> select)
+           where T : class
+        {
+            return repo.GetPropByIdAsync<T, TProp>(where, select);
+        }
+
+        public string PersonNamesBase_GeneratePersonGid(string savedGid = null)
+        {
+            return savedGid ?? Guid.NewGuid().ToString().ToLower();
+        }
+
+        protected void PersonNamesBase_SaveData(PersonNamesBase model, bool isUpdate)
         {
             switch (model.UicTypeId)
             {
@@ -108,12 +273,17 @@ namespace IOWebApplication.Core.Services
             else
             {
                 //търсене по UIC
-                var savedPerson = repo.All<Person>(x => x.Uic == model.Uic && x.UicTypeId == model.UicTypeId).FirstOrDefault();
+                var savedPerson = repo.AllReadonly<Person>(x => x.Uic == model.Uic && x.UicTypeId == model.UicTypeId).FirstOrDefault();
                 if (savedPerson != null)
                 {
                     model.PersonId = savedPerson.Id;
                     savedPerson.CopyFrom(model);
-                    repo.Update<Person>(savedPerson);
+                    if (isUpdate)
+                        if (model.Person == null || model.Person?.Id == 0)
+                        {
+                            model.Person = savedPerson;
+                        }
+                    //repo.Update<Person>(savedPerson);
                     //Person_SaveData(savedPerson);
                 }
                 else
@@ -126,48 +296,140 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        protected void PersonNamesBase_UpdatePerson(PersonNamesBase model, bool saveToDatabase = true)
-        {
-            if (model.Person != null && model.Person.Id > 0)
-            {
-                model.PersonId = model.Person.Id;
-            }
-            if (saveToDatabase)
-            {
-                repo.SaveChanges();
-            }
-        }
-
-
-        protected THistory CreateHistory<TActive, THistory>(TActive source)
+        /// <summary>
+        /// Създава запис за историята на обекта, връща последното състояние от историята, което е деактивирано с текущия запис
+        /// </summary>
+        /// <typeparam name="TActive"></typeparam>
+        /// <typeparam name="THistory"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="historyType"></param>
+        /// <returns></returns>
+        protected THistory CreateHistory<TActive, THistory>(TActive source, string historyType = null)
             where THistory : class, IHistory
-            where TActive : IHaveHistory<THistory>
+            where TActive : class, IHaveHistory<THistory>
         {
+            THistory historyRecord = source.Adapt<THistory>();
 
-            THistory result = mapper.Map<TActive, THistory>(source);
-
-            ExpireHistory<THistory>(result);
+            THistory lastHistory = ExpireHistory<THistory>(historyRecord);
             source.History = source.History ?? new HashSet<THistory>();
-            source.History.Add(result);
+            source.History.Add(historyRecord);
 
-            return result;
+            if (typeof(IHaveHistoryType).IsAssignableFrom(typeof(THistory)))
+            {
+                ((IHaveHistoryType)historyRecord).HistoryType = historyType;
+            }
+
+            foreach (var history in source.History)
+            {
+                history.ClearForeignKeys();
+            }
+
+            return lastHistory;
         }
 
-        private void ExpireHistory<T>(T lastVersion) where T : class, IHistory
+        /// <summary>
+        /// Създава запис за историята на обекта, връща последното състояние от историята, което е деактивирано с текущия запис
+        /// </summary>
+        /// <typeparam name="TActive"></typeparam>
+        /// <typeparam name="THistory"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="historyType"></param>
+        /// <returns></returns>
+        protected async Task<THistory> CreateHistoryAsync<TActive, THistory>(TActive source, string historyType = null)
+            where THistory : class, IHistory
+            where TActive : class, IHaveHistory<THistory>
         {
-            var priorHistories = repo.All<T>().Where(x => x.Id == lastVersion.Id && x.HistoryDateExpire == null);
+            TypeAdapterConfig.GlobalSettings.Default.PreserveReference(true);
+            TypeAdapterConfig.GlobalSettings.Default.ShallowCopyForSameType(true);
+            TypeAdapterConfig.GlobalSettings.Default.MaxDepth(1);
+
+
+            THistory historyRecord = source.Adapt<THistory>();
+
+            THistory lastHistory = await ExpireHistoryAsync<THistory>(historyRecord);
+            source.History = source.History ?? new HashSet<THistory>();
+            source.History.Add(historyRecord);
+
+            if (typeof(IHaveHistoryType).IsAssignableFrom(typeof(THistory)))
+            {
+                ((IHaveHistoryType)historyRecord).HistoryType = historyType;
+            }
+
+            foreach (var history in source.History)
+            {
+                history.ClearForeignKeys();
+            }
+
+            return lastHistory;
+        }
+
+        private T ExpireHistory<T>(T lastVersion) where T : class, IHistory
+        {
+            if (lastVersion.Id == 0)
+            {
+                return null;
+            }
+            var priorHistories = repo.All<T>().Where(x => x.Id == lastVersion.Id && x.HistoryDateExpire == null).OrderBy(x => x.HistoryId).ToList();
             if (priorHistories != null)
             {
                 foreach (var item in priorHistories)
                 {
-                    item.HistoryDateExpire = lastVersion.DateWrt.AddSeconds(-1);
+                    item.HistoryDateExpire = lastVersion.DateWrt.AddMilliseconds(-1);
                 }
+                return priorHistories.FirstOrDefault();
             }
+            return null;
+        }
+        private async Task<T> ExpireHistoryAsync<T>(T lastVersion) where T : class, IHistory
+        {
+            if (lastVersion.Id == 0)
+            {
+                return null;
+            }
+            var priorHistories = await repo.All<T>().Where(x => x.Id == lastVersion.Id && x.HistoryDateExpire == null).OrderBy(x => x.HistoryId).ToListAsync();
+            if (priorHistories != null)
+            {
+                foreach (var item in priorHistories)
+                {
+                    item.HistoryDateExpire = lastVersion.DateWrt.AddMilliseconds(-1);
+                }
+                return priorHistories.FirstOrDefault();
+            }
+            return null;
+        }
+
+        public void ClearEntityTracker()
+        {
+            repo.ClearEntityTracker();
+        }
+
+        public bool StopTrackingApplicationUser()
+        {
+            return repo.StopTrackingApplicationUser();
+        }
+
+        public DateTime? GetFirstHistoryDate<T>(int id) where T : class, IHistory
+        {
+            return repo.AllReadonly<T>().Where(x => x.Id == id).OrderBy(x => x.HistoryId).Select(x => x.DateWrt).FirstOrDefault();
         }
 
         public string GetUserIdByLawUnitId(int lawUnitId)
         {
             return repo.AllReadonly<ApplicationUser>().Where(x => x.LawUnitId == lawUnitId && x.IsActive).Select(x => x.Id).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Извличане на идентификатор на потребител
+        /// </summary>
+        /// <param name="lawUnitId">Идентификатор на лице</param>
+        /// <returns></returns>
+        public async Task<string> GetUserIdByLawUnitIdAsync(int lawUnitId)
+        {
+            return await repo.AllReadonly<ApplicationUser>()
+                             .Where(x => x.LawUnitId == lawUnitId &&
+                                         x.IsActive)
+                             .Select(x => x.Id)
+                             .FirstOrDefaultAsync();
         }
 
         #region Проверка за право на достъп до обекти
@@ -189,7 +451,7 @@ namespace IOWebApplication.Core.Services
                 saved.DateExpired = DateTime.Now;
                 saved.UserExpiredId = userContext.UserId;
                 saved.DescriptionExpired = model.DescriptionExpired;
-                repo.Update(saved);
+                //repo.Update(saved);
                 repo.SaveChanges();
                 return true;
             }
@@ -235,6 +497,11 @@ namespace IOWebApplication.Core.Services
 
         public CurrentContextModel GetCurrentContext(int sourceType, long? sourceId, string operation = "", object parentId = null)
         {
+            return GetCurrentContextAsync(sourceType, sourceId, operation, parentId).Result;
+
+        }
+        public async Task<CurrentContextModel> GetCurrentContextAsync(int sourceType, long? sourceId, string operation = "", object parentId = null)
+        {
             CurrentContextModel model = new CurrentContextModel(sourceType, sourceId, operation);
 
             model.Info.CourtId = userContext.CourtId;
@@ -246,25 +513,38 @@ namespace IOWebApplication.Core.Services
             {
                 case SourceTypeSelectVM.Document:
                     {
-                        setAccessRightsForDocument(model, sourceId);
+                        await setAccessRightsForDocument(model, sourceId);
                     }
                     break;
                 case SourceTypeSelectVM.DocumentResolution:
                     {
                         if (sourceId > 0)
                         {
-                            var info = repo.AllReadonly<DocumentResolution>().Where(x => x.Id == sourceId.Value).FirstOrDefault();
-                            setAccessRightsForDocument(model, info.DocumentId);
+                            var info = await repo.AllReadonly<DocumentResolution>()
+                                                 .Where(x => x.Id == sourceId.Value)
+                                                 .Select(x => new
+                                                 {
+                                                     x.DocumentId,
+                                                     x.DeclaredDate,
+                                                     x.DateExpired,
+                                                     x.CourtId
+                                                 })
+                                                 .FirstOrDefaultAsync();
+
+                            await setAccessRightsForDocument(model, info.DocumentId);
+                            model.CanChangeFull = info.DateExpired == null && info.DeclaredDate == null
+                                && info.CourtId == userContext.CourtId
+                                && userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
                         }
                         else
                         {
                             if (parentId != null)
                             {
-                                setAccessRightsForDocument(model, (long)parentId);
+                                await setAccessRightsForDocument(model, (long)parentId);
                             }
                             else
                             {
-                                setAccessRightsForDocument(model, null);
+                                await setAccessRightsForDocument(model, null);
                             }
                         }
                     }
@@ -273,21 +553,22 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId > 0)
                         {
-                            var info = repo.AllReadonly<DocumentNotification>()
-                                            .Include(x => x.DocumentResolution)
-                                            .Where(x => x.Id == sourceId.Value)
-                                            .Select(x => new
-                                            {
-                                                notificationId = x.Id,
-                                                documentResolutionId = x.DocumentResolutionId,
-                                                documentId = x.DocumentResolution.DocumentId
-                                            }).FirstOrDefault();
+                            var info = await repo.AllReadonly<DocumentNotification>()
+                                                 .Where(x => x.Id == sourceId.Value)
+                                                 .Select(x => new
+                                                 {
+                                                     notificationId = x.Id,
+                                                     documentResolutionId = x.DocumentResolutionId,
+                                                     documentId = x.DocumentResolution.DocumentId
+                                                 })
+                                                 .FirstOrDefaultAsync();
+
                             if (info != null)
-                                setAccessRightsForDocument(model, info.documentId);
+                                await setAccessRightsForDocument(model, info.documentId);
                         }
                         else
                         {
-                            setAccessRightsForDocument(model, null);
+                            await setAccessRightsForDocument(model, null);
                         }
                     }
                     break;
@@ -295,12 +576,24 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId > 0)
                         {
-                            var info = repo.AllReadonly<DocumentDecision>().Where(x => x.Id == sourceId.Value).FirstOrDefault();
-                            setAccessRightsForDocument(model, info.DocumentId);
+                            long? documentId = await repo.AllReadonly<DocumentDecision>()
+                                                         .Where(x => x.Id == sourceId.Value)
+                                                         .Select(x => (long?)x.DocumentId)
+                                                         .FirstOrDefaultAsync();
+
+                            if ((documentId ?? 0) > 0)
+                            {
+                                await setAccessRightsForDocument(model, documentId);
+                            }
+                            else
+                            {
+                                model.CanAccess = false;
+                                model.CanChange = false;
+                            }
                         }
                         else
                         {
-                            setAccessRightsForDocument(model, parentId);
+                            await setAccessRightsForDocument(model, parentId);
                         }
                     }
                     break;
@@ -308,36 +601,36 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetObligationDocument((int)sourceId);
-                            setAccessRightsForDocument(model, info.DocumentId);
+                            var info = await caseInfo_GetObligationDocument((int)sourceId);
+                            await setAccessRightsForDocument(model, info.DocumentId);
                         }
                         else
                         {
                             //parentId  е Id на документ
-                            setAccessRightsForDocument(model, parentId);
+                            await setAccessRightsForDocument(model, parentId);
                         }
                     }
                     break;
                 case SourceTypeSelectVM.Case:
                     {
-                        setAccessRightsForCase(model, sourceId);
+                        await setAccessRightsForCaseAsync(model, sourceId);
                     }
                     break;
                 case SourceTypeSelectVM.CasePersonBulletin:
                     {
-                        setAccessRightsForCase(model, null);
+                        await setAccessRightsForCaseAsync(model, null);
                     }
                     break;
                 case SourceTypeSelectVM.CaseSelectionProtokol:
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSelectionProtokol((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSelectionProtokol((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
-                            setAccessRightsForCase(model, parentId, "Регистрация на протокол");
+                            await setAccessRightsForCaseAsync(model, parentId, "Регистрация на протокол");
                         }
                         if (operation == AuditConstants.Operations.Append)
                         {
@@ -351,35 +644,35 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCasePerson((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePerson((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, parentId, "Регистрация на страна към дело");
+                            await setAccessRightsForCaseAsync(model, parentId, "Регистрация на страна към дело");
                         }
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionPerson:
                     {
                         //parentId е Id на заседание
-                        var info = caseInfo_GetCasePersonForSession((int)parentId);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        var info = await caseInfo_GetCasePersonForSession((int)parentId);
+                        await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                     }
                     break;
                 case SourceTypeSelectVM.CasePersonAddress:
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCasePersonAddress((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePersonAddress((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на страна по дело
-                            var info = caseInfo_GetCasePerson((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePerson((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -387,13 +680,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCasePersonLink((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePersonLink((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на връзки по дело");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на връзки по дело");
                         }
                     }
                     break;
@@ -401,13 +694,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSession((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSession((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, parentId, "Регистрация на заседание");
+                            await setAccessRightsForCaseAsync(model, parentId, "Регистрация на заседание");
                         }
                     }
                     break;
@@ -415,14 +708,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionAct((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionAct((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на заседание
-                            var info = caseInfo_GetCaseSession((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Заседание: {info.Info}");
+                            var info = await caseInfo_GetCaseSession((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Заседание: {info.Info}");
                         }
                     }
                     break;
@@ -430,18 +723,21 @@ namespace IOWebApplication.Core.Services
                     {
                         if (parentId != null)
                         {
-                            var info = caseInfo_GetCaseSessionAct((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Съгласуване на акт {info.Info}");
+                            var actInfo = await caseInfo_GetCaseSessionAct((int)parentId);
+                            await setAccessRightsForCaseAsync(model, actInfo.CaseId, $"Съгласуване на акт {actInfo.Info}");
                             if (sourceId > 0
                                 && model.CanAccess
                                 && !model.CanChange
                                 && userContext.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
                             {
-                                model.CanChange = repo.AllReadonly<CaseSessionActCoordination>()
-                                                        .Include(x => x.CaseLawUnit)
+                                model.CanChange = (await repo.AllReadonly<CaseSessionActCoordination>()
                                                         .Where(x => x.Id == sourceId)
                                                         .Select(x => x.CaseLawUnit.LawUnitId)
-                                                        .FirstOrDefault() == userContext.LawUnitId;
+                                                        .FirstOrDefaultAsync()) == userContext.LawUnitId;
+                            }
+                            if (actInfo.Declared)
+                            {
+                                model.CanChange = false;
                             }
                         }
                     }
@@ -450,13 +746,30 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseNotification((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseNotification((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId);
+                            await setAccessRightsForCaseAsync(model, (int)parentId);
+                        }
+                    }
+                    break;
+                case SourceTypeSelectVM.DeliveryItem:
+                    {
+                        if (sourceId != null)
+                        {
+                            var info = await caseInfo_GetDeliveryItem((int)sourceId);
+                            setAccessRightsForDeliveryItem(model, info);
+                        }
+                        else
+                        {
+                            var info = new DeliveryInfoVM()
+                            {
+                                Info = "Добавяне на призовка от друг съд"
+                            };
+                            setAccessRightsForDeliveryItem(model, info);
                         }
                     }
                     break;
@@ -464,14 +777,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseNotification((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseNotification((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на заседание
-                            var info = caseInfo_GetCaseSession((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Заседание: {info.Info}");
+                            var info = await caseInfo_GetCaseSession((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Заседание: {info.Info}");
                         }
                     }
                     break;
@@ -479,14 +792,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseNotification((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseNotification((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на акт
-                            var info = caseInfo_GetCaseSessionAct((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Акт: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionAct((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Акт: {info.Info}");
                         }
                     }
                     break;
@@ -494,13 +807,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseEvidence((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseEvidence((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на доказателство");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на доказателство");
                         }
                     }
                     break;
@@ -508,14 +821,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseEvidenceMovement((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseEvidenceMovement((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на доказателство
-                            var info = caseInfo_GetCaseEvidence((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseEvidence((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -523,13 +836,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseMovement((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseMovement((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на местоположение");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на местоположение");
                         }
                     }
                     break;
@@ -537,13 +850,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseLoadIndex((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLoadIndex((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на натовареност към дело");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на натовареност към дело");
                         }
                     }
                     break;
@@ -551,13 +864,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseLawyerHelp((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLawyerHelp((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на искане за правна помощ");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на искане за правна помощ");
                         }
                     }
                     break;
@@ -565,14 +878,29 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseLawyerHelpPerson((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLawyerHelpPerson((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на заседание
-                            var info = caseInfo_GetCaseLawyerHelp((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Искане за правна помощ: {info.Info}");
+                            var info = await caseInfo_GetCaseLawyerHelp((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Искане за правна помощ: {info.Info}");
+                        }
+                    }
+                    break;
+                case SourceTypeSelectVM.CaseLawyerHelpAssignedLawyer:
+                    {
+                        if (sourceId != null)
+                        {
+                            var info = await caseInfo_GetCaseLawyerHelpAssignedLawyer((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
+                        }
+                        else
+                        {
+                            //parentId  е Id на заседание
+                            var info = await caseInfo_GetCaseLawyerHelp((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Искане за правна помощ: {info.Info}");
                         }
                     }
                     break;
@@ -580,13 +908,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseLoadCorrection((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLoadCorrection((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на коригиращи коефициенти по дело");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на коригиращи коефициенти по дело");
                         }
                     }
                     break;
@@ -594,13 +922,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseCrime((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseCrime((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на престъпление");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на престъпление");
                         }
                     }
                     break;
@@ -608,14 +936,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCasePersonCrime((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePersonCrime((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на престъпление
-                            var info = caseInfo_GetCaseCrime((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseCrime((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -623,14 +951,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCasePersonMeasure((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePersonMeasure((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на лице в дело
-                            var info = caseInfo_GetCasePerson((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePerson((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -638,14 +966,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCasePersonDocument((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePersonDocument((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на лице в дело
-                            var info = caseInfo_GetCasePerson((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePerson((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -653,14 +981,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetPersonSentence((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetPersonSentence((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на лице в дело
-                            var info = caseInfo_GetCasePerson((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePerson((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -668,14 +996,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetPersonSentencePunishment((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetPersonSentencePunishment((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на присъда
-                            var info = caseInfo_GetPersonSentence((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetPersonSentence((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -683,14 +1011,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetPersonSentencePunishmentCrime((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetPersonSentencePunishmentCrime((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на наказание
-                            var info = caseInfo_GetPersonSentencePunishment((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetPersonSentencePunishment((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -699,13 +1027,13 @@ namespace IOWebApplication.Core.Services
                         // Да го коментираме
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetDocumentTemplate((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetDocumentTemplate((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на лице в дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на изходящ документ");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на изходящ документ");
                         }
                     }
                     break;
@@ -713,13 +1041,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseLifecycle((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLifecycle((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на лице в дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на интервал по дело");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на интервал по дело");
                         }
                     }
                     break;
@@ -727,14 +1055,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetPersonInheritance((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetPersonInheritance((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на лице в дело
-                            var info = caseInfo_GetCasePerson((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCasePerson((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -742,13 +1070,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseLawUnit((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLawUnit((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на дело
-                            setAccessRightsForCase(model, (int)parentId);
+                            await setAccessRightsForCaseAsync(model, (int)parentId);
                         }
                     }
                     break;
@@ -756,35 +1084,35 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseLawUnitDismisal((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLawUnitDismisal((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на член от състава
-                            var info = caseInfo_GetCaseLawUnit((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseLawUnit((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
                 case SourceTypeSelectVM.CaseLawUnitDismisalList:
                     {
                         //parentId  е Id на дело
-                        setAccessRightsForCase(model, (int)parentId);
+                        await setAccessRightsForCaseAsync(model, (int)parentId);
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionResult:
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionResult((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionResult((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на заседание
-                            var info = caseInfo_GetCaseSession((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Заседание: {info.Info}");
+                            var info = await caseInfo_GetCaseSession((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Заседание: {info.Info}");
                         }
                     }
                     break;
@@ -792,14 +1120,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionMeeting((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionMeeting((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на заседание
-                            var info = caseInfo_GetCaseSession((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Заседание: {info.Info}");
+                            var info = await caseInfo_GetCaseSession((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Заседание: {info.Info}");
                         }
                     }
                     break;
@@ -807,14 +1135,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionMeetingUser((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionMeetingUser((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на сесия
-                            var info = caseInfo_GetCaseSessionMeeting((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Сесия: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionMeeting((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Сесия: {info.Info}");
                         }
                     }
                     break;
@@ -822,14 +1150,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionActLawBase((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionActLawBase((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на акт
-                            var info = caseInfo_GetCaseSessionAct((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Акт: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionAct((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Акт: {info.Info}");
                         }
                     }
                     break;
@@ -837,14 +1165,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionActDivorce((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionActDivorce((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на акт
-                            var info = caseInfo_GetCaseSessionAct((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Акт: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionAct((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Акт: {info.Info}");
                         }
                     }
                     break;
@@ -852,14 +1180,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionActCompany((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionActCompany((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на акт
-                            var info = caseInfo_GetCaseSessionAct((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Акт: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionAct((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Акт: {info.Info}");
                         }
                     }
                     break;
@@ -867,14 +1195,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionActComplain((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionActComplain((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на акт
-                            var info = caseInfo_GetCaseSessionAct((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Акт: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionAct((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Акт: {info.Info}");
                         }
                     }
                     break;
@@ -882,14 +1210,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetObligation((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetObligation((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на акт
-                            var info = caseInfo_GetCaseSessionAct((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Акт: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionAct((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Акт: {info.Info}");
                         }
                     }
                     break;
@@ -897,14 +1225,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetObligation((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetObligation((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на заседание
-                            var info = caseInfo_GetCaseSession((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Заседание: {info.Info}");
+                            var info = await caseInfo_GetCaseSession((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Заседание: {info.Info}");
                         }
                     }
                     break;
@@ -912,14 +1240,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionFastDocument((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionFastDocument((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId  е Id на заседание
-                            var info = caseInfo_GetCaseSession((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Заседание: {info.Info}");
+                            var info = await caseInfo_GetCaseSession((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Заседание: {info.Info}");
                         }
                     }
                     break;
@@ -927,96 +1255,123 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionActComplainResult((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionActComplainResult((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на обжалване
-                            var info = caseInfo_GetCaseSessionActComplain((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Обжалване: {info.Info}");
+                            var info = await caseInfo_GetCaseSessionActComplain((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Обжалване: {info.Info}");
                         }
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionActComplainPerson:
                     {
                         //parentId е Id на обжалване - само това се подава
-                        var info = caseInfo_GetCaseSessionActComplainPerson((int)parentId);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        var info = await caseInfo_GetCaseSessionActComplainPerson((int)parentId);
+                        await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                     }
                     break;
                 case SourceTypeSelectVM.CaseMigration:
                     {
                         if (parentId != null && sourceId != null)
                         {
-                            var info = caseInfo_GetCaseMigration((int)sourceId);
-                            setAccessRightsForCase(model, (int)parentId, info.Info);
+                            var info = await caseInfo_GetCaseMigration((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, (int)parentId, info.Info);
                         }
                         else
                         {
                             if (parentId == null)
                             {
-                                parentId = repo.AllReadonly<CaseMigration>().Where(x => x.Id == (int)sourceId).Select(x => x.CaseId).FirstOrDefault();
+                                parentId = await repo.AllReadonly<CaseMigration>()
+                                                     .Where(x => x.Id == (int)sourceId)
+                                                     .Select(x => x.CaseId)
+                                                     .FirstOrDefaultAsync();
                             }
 
                             //parentId е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на движение");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на движение");
                         }
                     }
                     break;
                 case SourceTypeSelectVM.CaseDeadLine:
                     {
                         //parentId е Id на дело
-                        setAccessRightsForCase(model, (int)parentId, "Срокове");
+                        await setAccessRightsForCaseAsync(model, (int)parentId, "Срокове");
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionLawUnit:
                     {
                         //parentId е Id на заседание
-                        var info = caseInfo_GetCaseSessionLawUnit((int)parentId);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        var info = await caseInfo_GetCaseSessionLawUnit((int)parentId);
+                        await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionNotificationList:
                     {
                         // тук е само редакция
-                        var info = caseInfo_GetCaseSessionNotificationList((int)sourceId);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        var info = await caseInfo_GetCaseSessionNotificationList((int)sourceId);
+                        await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionNotificationListLawUnit:
                     {
                         //parentId е Id на заседание
-                        var info = caseInfo_GetCaseSessionNotificationList((int)parentId, NomenclatureConstants.NotificationPersonType.CaseLawUnit);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        var sessionInfo = await repo.AllReadonly<CaseSession>()
+                                                    .Where(x => x.Id == (int)parentId)
+                                                    .Select(x => new CaseInfoVM
+                                                    {
+                                                        CaseId = x.CaseId
+                                                    })
+                                                    .FirstOrDefaultAsync();
+
+                        //var info = caseInfo_GetCaseSessionNotificationList((int)parentId, NomenclatureConstants.NotificationPersonType.CaseLawUnit);
+                        await setAccessRightsForCaseAsync(model, sessionInfo.CaseId, sessionInfo.Info);
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionNotificationListPerson:
                     {
                         //parentId е Id на заседание
-                        var info = caseInfo_GetCaseSessionNotificationList((int)parentId, NomenclatureConstants.NotificationPersonType.CasePerson);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        var sessionInfo = await repo.AllReadonly<CaseSession>()
+                                                    .Where(x => x.Id == (int)parentId)
+                                                    .Select(x => new CaseInfoVM
+                                                    {
+                                                        CaseId = x.CaseId
+                                                    })
+                                                    .FirstOrDefaultAsync();
+
+                        //var info = caseInfo_GetCaseSessionNotificationList((int)parentId, NomenclatureConstants.NotificationPersonType.CasePerson);
+                        await setAccessRightsForCaseAsync(model, sessionInfo.CaseId, sessionInfo.Info);
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionNotificationListPersonLawUnit:
                     {
                         //parentId е Id на заседание
-                        var info = caseInfo_GetCaseSessionNotificationList((int)parentId, 0);
-                        setAccessRightsForCase(model, info.CaseId, info.Info);
+                        var sessionInfo = await repo.AllReadonly<CaseSession>()
+                                                    .Where(x => x.Id == (int)parentId)
+                                                    .Select(x => new CaseInfoVM
+                                                    {
+                                                        CaseId = x.CaseId
+                                                    })
+                                                    .FirstOrDefaultAsync();
+
+                        //var info = caseInfo_GetCaseSessionNotificationList((int)parentId, 0);
+                        await setAccessRightsForCaseAsync(model, sessionInfo.CaseId, sessionInfo.Info);
                     }
                     break;
                 case SourceTypeSelectVM.CaseSessionDoc:
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseSessionDocById((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionDocById((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на заседание
-                            var info = caseInfo_GetCaseSessionDoc((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseSessionDoc((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                     }
                     break;
@@ -1024,13 +1379,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseFastProcess((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseFastProcess((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Заповедно производство");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Заповедно производство");
                         }
                     }
                     break;
@@ -1038,13 +1393,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseBankAccount((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseBankAccount((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на движение");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на движение");
                         }
                     }
                     break;
@@ -1052,13 +1407,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseMoneyClaim((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseMoneyClaim((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на движение");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на движение");
                         }
                     }
                     break;
@@ -1066,13 +1421,13 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseMoneyExpense((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseMoneyExpense((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на дело
-                            setAccessRightsForCase(model, (int)parentId, "Регистрация на движение");
+                            await setAccessRightsForCaseAsync(model, (int)parentId, "Регистрация на движение");
                         }
                     }
                     break;
@@ -1080,14 +1435,14 @@ namespace IOWebApplication.Core.Services
                     {
                         if (sourceId != null)
                         {
-                            var info = caseInfo_GetCaseMoneyCollection((int)sourceId);
-                            setAccessRightsForCase(model, info.CaseId, info.Info);
+                            var info = await caseInfo_GetCaseMoneyCollection((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
                         }
                         else
                         {
                             //parentId е Id на Обстоятелства по заповедни производства
-                            var info = caseInfo_GetCaseMoneyClaim((int)parentId);
-                            setAccessRightsForCase(model, info.CaseId, $"Обстоятелствo: {info.Info}");
+                            var info = await caseInfo_GetCaseMoneyClaim((int)parentId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, $"Обстоятелствo: {info.Info}");
                         }
                     }
                     break;
@@ -1101,6 +1456,19 @@ namespace IOWebApplication.Core.Services
                         setAccessRightsForMoney(model, sourceId);
                     }
                     break;
+                case SourceTypeSelectVM.Integration_EISPP:
+                    {
+                        if (sourceId != null)
+                        {
+                            var info = await caseInfo_GetEisppEvent((int)sourceId);
+                            await setAccessRightsForCaseAsync(model, info.CaseId, info.Info);
+                        }
+                        else
+                        {
+                            await setAccessRightsForCaseAsync(model, (int)parentId, $"Добавяне ЕИСПП събитие");
+                        }
+                    }
+                    break;
                 default:
                     model.IsRead = false;
                     break;
@@ -1109,15 +1477,73 @@ namespace IOWebApplication.Core.Services
             return model;
         }
 
-        private void setAccessRightsForDocument(CurrentContextModel model, object sourceId)
+        /// <summary>
+        /// Определяне права за достъп до документ от Централна Регистратура, courtId=184
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="documentId"></param>
+        /// <param name="createdCourtId"></param>
+        /// <returns></returns>
+        private async Task setAccessRightsForDocumentCR(CurrentContextModel model, long documentId, int? createdCourtId)
         {
             model.CanAccess = userContext.IsUserInFeature(AccountConstants.Features.Modules.Documents);
+
+            if (createdCourtId == NomenclatureConstants.Courts.RandomAssignment)
+            {
+                var hasRegCases = await repo.AllReadonly<Case>()
+                                            .Where(x => x.Document.AssignmentDocumentId == documentId)
+                                            .Where(x => x.RegNumber != null)
+                                            .AnyAsync();
+                if (hasRegCases)
+                {
+                    model.CanChange = false;
+                    model.CanChangeFull = false;
+                }
+                else
+                {
+                    model.CanAccess = false;
+                }
+                return;
+            }
+            var hasAssignmentTask = await repo.AllReadonly<WorkTask>()
+                                             .Where(x => x.SourceType == SourceTypeSelectVM.Document && x.SourceId == documentId)
+                                             .Where(x => x.TaskTypeId == WorkTaskConstants.Types.DocumentForGlobalAssignment)
+                                             .AnyAsync();
+            model.CanChange = false;
+            model.CanChangeFull = false;
+
+            if (hasAssignmentTask)
+            {
+                //Ако е пуснато за разпределение, документа е достъпен от всички съдилища, без промяна
+            }
+            else
+            {
+                //Ако още няма задача за централно разпределяне само съда, входирал документа може да го променя
+                if (createdCourtId == userContext.CourtId)
+                {
+                    model.CanChange = true;
+                    model.CanChangeFull = true;
+                }
+                else
+                {
+                    model.CanAccess = false;
+                }
+            }
+            if (model.Info.Operation == AuditConstants.Operations.View)
+            {
+                model.CanChange = false;
+                model.CanChangeFull = false;
+            }
+
+        }
+        private async Task setAccessRightsForDocument(CurrentContextModel model, object sourceId)
+        {
+            model.CanAccess = userContext.IsUserInFeature(AccountConstants.Features.Modules.Documents);
+            model.CanChange = model.CanAccess;
             if (sourceId != null)
             {
                 long documentId = (long)sourceId;
-                var info = repo.AllReadonly<Document>()
-                                    .Include(x => x.DocumentType)
-                                    .Include(x => x.DocumentGroup)
+                var info = await repo.AllReadonly<Document>()
                                     .Where(x => x.Id == documentId)
                                     .Select(x => new
                                     {
@@ -1127,67 +1553,125 @@ namespace IOWebApplication.Core.Services
                                         DocumentDirectionId = x.DocumentDirectionId,
                                         DateExpired = x.DateExpired,
                                         BaseObject = $"{x.DocumentType.Label} {x.DocumentNumber}/{x.DocumentDate:dd.MM.yyyy}",
-                                        IsRestrictedAccess = x.IsRestictedAccess || (x.IsSecret == true)
-                                    }).FirstOrDefault();
+                                        IsRestrictedAccess = x.IsRestictedAccess || (x.IsSecret == true),
+                                        ConnectedCaseId = x.DocumentCaseInfo.Select(dc => dc.CaseId).FirstOrDefault(),
+                                        SourceType = x.DocumentTemplates.Select(t => t.SourceType).FirstOrDefault(),
+                                        SourceId = x.DocumentTemplates.Select(t => t.SourceId).FirstOrDefault(),
+                                        x.CreatedCourtId
+                                    }).FirstOrDefaultAsync();
+
                 if (info != null)
                 {
+
                     model.Info.BaseObject = info.BaseObject;
+                    if (info.CourtId == NomenclatureConstants.Courts.RandomAssignment)
+                    {
+                        await setAccessRightsForDocumentCR(model, info.Id, info.CreatedCourtId);
+                        return;
+                    }
 
                     //Ако няма достъп и метода е за преглед
                     if (!model.CanAccess && model.Info.Operation == AuditConstants.Operations.View)
                     {
                         //Ако няма достъп до модул Регистратура, но има задача насочена към лицето
-                        model.CanAccess = repo.AllReadonly<WorkTask>()
+                        model.CanAccess = await repo.AllReadonly<WorkTask>()
                                               .Where(x => x.SourceType == SourceTypeSelectVM.Document && x.SourceId == info.Id)
                                               .Where(x => x.UserId == userContext.UserId)
                                               .Select(x => x.Id)
-                                              .Any();
+                                              .AnyAsync();
                     }
                     if (info.IsRestrictedAccess)
                     {
                         model.CanAccess &= userContext.IsUserInRole(AccountConstants.Roles.RestrictedAccess);
                     }
+                    int documentCourtId = info.CreatedCourtId ?? info.CourtId;
+                    //TODO: Права!?!
+                    bool sameCourt = (userContext.CourtId == documentCourtId);
+                    model.CanAccess &= sameCourt;
 
-                    model.CanAccess &= userContext.CourtId == info.CourtId;
-                    model.CanChangeFull = info.DateExpired == null && userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
+
+                    model.CanChangeFull = sameCourt && info.DateExpired == null && userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
                     if (model.CanChangeFull)
                     {
                         switch (info.DocumentKindId)
                         {
                             case DocumentConstants.DocumentKind.InitialDocument:
+
+
                                 //Иницииращите документи могат да се премахват до образуването на делото
-                                var caseRegnumber = repo.AllReadonly<Case>(x => x.DocumentId == documentId)
-                                                .Select(x => x.RegNumber)
-                                                .FirstOrDefault();
-                                if (!string.IsNullOrEmpty(caseRegnumber))
+                                var initCaseInfo = await repo.AllReadonly<Case>(x => x.DocumentId == documentId)
+                                                .Select(x => new
+                                                {
+                                                    hasSpecialAccess = x.CaseClassifications.Any(c => c.ClassificationId == NomenclatureConstants.CaseClassifications.SpecialAccess && c.DateTo == null)
+                                                    ,
+                                                    x.RegNumber
+                                                    ,
+                                                    x.CaseCodeId
+                                                    ,
+                                                    CaseId = x.Id
+                                                })
+                                                .FirstOrDefaultAsync();
+                                if (initCaseInfo != null && !string.IsNullOrEmpty(initCaseInfo.RegNumber))
                                 {
                                     model.CanChangeFull = false;
+                                    //Проверката за специален достъп се прави през новоинициираното дело на иницииращите документи
+                                    if (initCaseInfo.hasSpecialAccess)
+                                    {
+                                        model.CanAccess &= await checkSpecialAccessForCase(documentCourtId, initCaseInfo.CaseId, initCaseInfo.CaseCodeId ?? 0);
+                                    }
                                 }
+
                                 break;
                             case DocumentConstants.DocumentKind.CompliantDocument:
                                 //Съпровождащите документи се премахват преди да са разгледани/окончателно разгледани в заседание
-                                if (repo.AllReadonly<CaseSessionDoc>()
-                                .Where(x => x.DocumentId == documentId && NomenclatureConstants.SessionDocState.UsedInSession.Contains(x.SessionDocStateId)).Any())
+                                if (await repo.AllReadonly<CaseSessionDoc>()
+                                .Where(x => x.DocumentId == documentId && NomenclatureConstants.SessionDocState.UsedInSession.Contains(x.SessionDocStateId)).AnyAsync())
                                 {
                                     model.CanChangeFull = false;
                                 }
                                 break;
                         }
                     }
-                    //Изходящите документи се премахват ако не са по бланка към процес DocumentTemplate
-                    //if (model.CanChangeFull && info.DocumentDirectionId == DocumentConstants.DocumentDirection.OutGoing)
-                    //{
-                    //    if (repo.AllReadonly<DocumentTemplate>()
-                    //           .Where(x => x.DocumentId == documentId).Any())
-                    //    {
-                    //        model.CanChangeFull = false;
-                    //    }
-                    //}
-                    //Коригирано е деактивирането на документи да освобождава бланката
+
+                    int connectedCaseId = info.ConnectedCaseId ?? 0;
+                    if (connectedCaseId > 0)
+                    {
+                        var isSpecialAccess = false;
+                        if (info.DocumentKindId != DocumentConstants.DocumentKind.InitialDocument)
+                        {
+                            //Проверката за специален достъп прави през свързаното дело на съпровождащи/изходящи документи
+                            repo.AllReadonly<CaseClassification>().Any(c => c.CaseId == connectedCaseId && c.CaseSessionId == null && c.ClassificationId == NomenclatureConstants.CaseClassifications.SpecialAccess && c.DateTo == null);
+                        }
+                        if ((documentCourtId != userContext.CourtId) || isSpecialAccess)
+                        {
+                            var caseContext = new CurrentContextModel()
+                            {
+                                Info = new ContextInfoModel()
+                            };
+                            await setAccessRightsForCaseAsync(caseContext, connectedCaseId);
+                            model.CanAccess = caseContext.CanAccess;
+                            model.CanChange = false;
+                            model.CanChangeFull = false;
+                        }
+                    }
+                    if (info.SourceType > 0 && info.SourceId > 0)
+                    {
+                        switch (info.SourceType)
+                        {
+                            case SourceTypeSelectVM.CaseSessionAct:
+                                model.Info.ObjectInfo = (await caseInfo_GetCaseSessionAct((int)info.SourceId)).Info;
+                                break;
+                            case SourceTypeSelectVM.Case:
+                                model.Info.ObjectInfo = (await auditInfo_Case((int)info.SourceId))?.Info;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
             }
 
-            model.CanChange = model.CanAccess;
+
             switch (model.Info.Operation)
             {
                 case AuditConstants.Operations.View:
@@ -1196,680 +1680,654 @@ namespace IOWebApplication.Core.Services
             }
         }
 
-        private CaseInfoVM caseInfo_GetCaseBankAccount(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseBankAccount(int id)
         {
-            return repo.AllReadonly<CaseBankAccount>()
-                       .Include(x => x.CaseBankAccountType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.CaseBankAccountType.Label + " IBAN " + x.IBAN + " BIC: " + x.BIC + " Име на банката: " + x.BankName
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseBankAccount>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.CaseBankAccountType.Label + " IBAN " + x.IBAN + " BIC: " + x.BIC + " Име на банката: " + x.BankName
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseFastProcess(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseFastProcess(int id)
         {
-            return repo.AllReadonly<CaseFastProcess>()
-                       .Include(x => x.Case)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = "Заповедно производство по дело: " + (x.Case.RegNumber ?? string.Empty)
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseFastProcess>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = "Заповедно производство по дело: " + (x.Case.RegNumber ?? string.Empty)
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseMoneyClaim(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseMoneyClaim(int id)
         {
-            return repo.AllReadonly<CaseMoneyClaim>()
-                       .Include(x => x.CaseMoneyClaimGroup)
-                       .Include(x => x.CaseMoneyClaimType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.CaseMoneyClaimGroup.Label + " " + x.CaseMoneyClaimType.Label + " номер " + x.ClaimNumber
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseMoneyClaim>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.CaseMoneyClaimGroup.Label + " " + x.CaseMoneyClaimType.Label + " номер " + x.ClaimNumber
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseMoneyCollection(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseMoneyCollection(int id)
         {
-            return repo.AllReadonly<CaseMoneyCollection>()
-                       .Include(x => x.CaseMoneyCollectionGroup)
-                       .Include(x => x.CaseMoneyCollectionType)
-                       .Include(x => x.CaseMoneyCollectionKind)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.CaseMoneyCollectionGroup.Label +
-                                  (x.CaseMoneyCollectionType != null ? " " + x.CaseMoneyCollectionType.Label : string.Empty) +
-                                  (x.CaseMoneyCollectionKind != null ? " " + x.CaseMoneyCollectionKind.Label : string.Empty)
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseMoneyCollection>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.CaseMoneyCollectionGroup.Label +
+                                        (x.CaseMoneyCollectionType != null ? " " + x.CaseMoneyCollectionType.Label : string.Empty) +
+                                        (x.CaseMoneyCollectionKind != null ? " " + x.CaseMoneyCollectionKind.Label : string.Empty)
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseMoneyExpense(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseMoneyExpense(int id)
         {
-            return repo.AllReadonly<CaseMoneyExpense>()
-                       .Include(x => x.CaseMoneyExpenseType)
-                       .Include(x => x.Currency)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.CaseMoneyExpenseType.Label + " " + x.Amount.ToString("0.00") + " " + x.Currency.Label
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseMoneyExpense>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.CaseMoneyExpenseType.Label + " " + x.Amount.ToString("0.00") + " " + x.Currency.Label
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionFastDocument(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionFastDocument(int id)
         {
-            return repo.AllReadonly<CaseSessionFastDocument>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.SessionDocType)
-                       .Include(x => x.SessionDocState)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.CasePerson.FullName + " " + x.SessionDocType.Label + " " + x.SessionDocState.Label
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionFastDocument>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.CasePerson.FullName + " " + x.SessionDocType.Label + " " + x.SessionDocState.Label
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetObligation(int id)
+        private async Task<CaseInfoVM> caseInfo_GetObligation(int id)
         {
-            return repo.AllReadonly<Obligation>()
-                       .Include(x => x.CaseSession)
-                       .Include(x => x.CaseSessionAct)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseSession != null ? x.CaseSession.CaseId : x.CaseSessionAct.CaseId ?? 0,
-                           Info = x.ObligationNumber + "/" + x.ObligationDate.ToString("dd.MM.yyyy") + " " + x.Amount.ToString("0.00")
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<Obligation>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseSession != null ? x.CaseSession.CaseId : x.CaseSessionAct.CaseId ?? 0,
+                                 Info = x.ObligationNumber + "/" + x.ObligationDate.ToString("dd.MM.yyyy") + " " + x.Amount.ToString("0.00")
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private DocumentInfoLogVM caseInfo_GetObligationDocument(int id)
+        private async Task<DocumentInfoLogVM> caseInfo_GetObligationDocument(int id)
         {
-            return repo.AllReadonly<Obligation>()
-                       .Where(x => x.Id == id)
-                       .Select(x => new DocumentInfoLogVM()
-                       {
-                           DocumentId = x.DocumentId ?? 0,
-                           Info = x.ObligationNumber + "/" + x.ObligationDate.ToString("dd.MM.yyyy") + " " + x.Amount.ToString("0.00")
-                       }).FirstOrDefault() ?? new DocumentInfoLogVM();
+            return await repo.AllReadonly<Obligation>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new DocumentInfoLogVM()
+                             {
+                                 DocumentId = x.DocumentId ?? 0,
+                                 Info = x.ObligationNumber + "/" + x.ObligationDate.ToString("dd.MM.yyyy") + " " + x.Amount.ToString("0.00")
+                             })
+                             .FirstOrDefaultAsync() ?? new DocumentInfoLogVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionDoc(int CaseSessionId)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionDoc(int CaseSessionId)
         {
-            return repo.AllReadonly<CaseSession>()
-                       .Include(x => x.CaseSessionDocs)
-                       .ThenInclude(x => x.Document)
-                       .Include(x => x.CaseSessionDocs)
-                       .ThenInclude(x => x.SessionDocState)
-                       .Where(x => x.Id == CaseSessionId)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = "Съпровождащи документи: " + string.Join(",", x.CaseSessionDocs.Select(a => a.Document.DocumentNumber + "/" + a.Document.DocumentDate.ToString("dd.MM.yyyy") + " " + a.SessionDocState.Label))
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSession>()
+                             .Where(x => x.Id == CaseSessionId)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = "Съпровождащи документи: " + string.Join(",", x.CaseSessionDocs.Select(a => a.Document.DocumentNumber + "/" + a.Document.DocumentDate.ToString("dd.MM.yyyy") + " " + a.SessionDocState.Label))
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionDocById(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionDocById(int id)
         {
-            return repo.AllReadonly<CaseSessionDoc>()
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = "Съпровождащ документ: " + x.Document.DocumentNumber + "/" + x.Document.DocumentDate.ToString("dd.MM.yyyy") + " " + x.SessionDocState.Label
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionDoc>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = "Съпровождащ документ: " + x.Document.DocumentNumber + "/" + x.Document.DocumentDate.ToString("dd.MM.yyyy") + " " + x.SessionDocState.Label
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseMigration(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseMigration(int id)
         {
-            return repo.AllReadonly<CaseMigration>()
-                       .Include(x => x.CaseMigrationType)
-                       .Include(x => x.Case)
-                       .ThenInclude(x => x.Court)
-                       .Include(x => x.PriorCase)
-                       .ThenInclude(x => x.Court)
-                       .Include(x => x.SendToCourt)
-                       .Include(x => x.SendToInstitution)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.CaseMigrationType.Label + " изпратено от " + ((x.CaseMigrationType.MigrationDirection == CaseMigrationDirections.Outgoing) ? x.Case.Court.Label : x.PriorCase.Court.Label) +
-                                                              " изпратено към " + ((x.SendToCourt != null) ? x.SendToCourt.Label : (x.SendToInstitution != null ? x.SendToInstitution.FullName : ""))
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseMigration>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.CaseMigrationType.Label + " изпратено от " + ((x.CaseMigrationType.MigrationDirection == NomenclatureConstants.CaseMigrationDirections.Outgoing) ? x.Case.Court.Label : x.PriorCase.Court.Label) +
+                                                                    " изпратено към " + ((x.SendToCourt != null) ? x.SendToCourt.Label : (x.SendToInstitution != null ? x.SendToInstitution.FullName : ""))
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionNotificationList(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionNotificationList(int id)
         {
-            return repo.AllReadonly<CaseSessionNotificationList>()
-                       .Include(x => x.CaseLawUnit)
-                       .ThenInclude(x => x.LawUnit)
-                       .Include(x => x.CaseLawUnit)
-                       .ThenInclude(x => x.JudgeRole)
-                       .Include(x => x.CasePerson)
-                       .ThenInclude(x => x.PersonRole)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = (x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit) ? x.CaseLawUnit.LawUnit.FullName + " " + x.CaseLawUnit.JudgeRole.Label :
-                                                                                                                           x.CasePerson.FullName + " " + x.CasePerson.PersonRole.Label
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionNotificationList>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = (x.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit) ? x.CaseLawUnit.LawUnit.FullName + " " + x.CaseLawUnit.JudgeRole.Label :
+                                                                                                                                 x.CasePerson.FullName + " " + x.CasePerson.PersonRole.Label
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionNotificationList(int CaseSessionId, int NotificationPersonType)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionNotificationList(int CaseSessionId, int NotificationPersonType)
         {
-            var caseSessionNotificationLists = repo.AllReadonly<CaseSessionNotificationList>()
-                                                   .Include(x => x.CaseLawUnit)
-                                                   .ThenInclude(x => x.LawUnit)
-                                                   .Include(x => x.CaseLawUnit)
-                                                   .ThenInclude(x => x.JudgeRole)
-                                                   .Include(x => x.CasePerson)
-                                                   .ThenInclude(x => x.PersonRole)
-                                                   .Where(x => (x.CaseSessionId == CaseSessionId) &&
-                                                               (x.DateExpired == null) &&
-                                                               (NotificationPersonType > 0 ? x.NotificationPersonType == NotificationPersonType : true))
-                                                   .ToList();
-
             var result = new CaseInfoVM()
             {
-                CaseId = ((caseSessionNotificationLists.Count > 0) ? (caseSessionNotificationLists.FirstOrDefault()).CaseId ?? 0 : repo.GetById<CaseSession>(CaseSessionId).CaseId)
-                //Info = string.Join(",", caseSessionNotificationLists.Select(a => a.NotificationPersonType == NomenclatureConstants.NotificationPersonType.CaseLawUnit ? a.CaseLawUnit.LawUnit.FullName + " " + a.CaseLawUnit.JudgeRole.Label : a.CasePerson.FullName + " " + a.CasePerson.PersonRole.Label))
+                CaseId = (await repo.GetByIdAsync<CaseSession>(CaseSessionId)).CaseId
             };
 
             return result;
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionLawUnit(int CaseSessionId)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionLawUnit(int CaseSessionId)
         {
-            return repo.AllReadonly<CaseSession>()
-                       .Include(x => x.CaseLawUnits)
-                       .ThenInclude(x => x.LawUnit)
-                       .Include(x => x.CaseLawUnits)
-                       .ThenInclude(x => x.JudgeRole)
-                       .Where(x => x.Id == CaseSessionId)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = "Състав: " + string.Join(",", x.CaseLawUnits.Select(a => a.LawUnit.FullName + " " + a.JudgeRole.Label))
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSession>()
+                             .Where(x => x.Id == CaseSessionId)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = "Състав: " + string.Join(",", x.CaseLawUnits.Select(a => a.LawUnit.FullName + " " + a.JudgeRole.Label))
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionActComplainPerson(int CaseSessionActComplainId)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionActComplainPerson(int CaseSessionActComplainId)
         {
-            return repo.AllReadonly<CaseSessionActComplain>()
-                       .Include(x => x.CasePersons)
-                       .ThenInclude(x => x.CasePerson)
-                       .Where(x => x.Id == CaseSessionActComplainId)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = "Жалбоподатели: " + string.Join(",", x.CasePersons.Select(a => a.CasePerson.FullName))
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionActComplain>()
+                             .Where(x => x.Id == CaseSessionActComplainId)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = $"{x.ComplainDocument.DocumentType.Label} {x.ComplainDocument.DocumentNumber}/{x.ComplainDocument.DocumentDate:dd.MM.yyyy}, {x.ComplainState.Label}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionActComplainResult(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionActComplainResult(int id)
         {
-            return repo.AllReadonly<CaseSessionActComplainResult>()
-                       .Include(x => x.CaseSessionAct)
-                       .ThenInclude(x => x.ActType)
-                       .Include(x => x.ActResult)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = "Резултат от обжалване: " + x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") + " - " + x.ActResult.Label
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionActComplainResult>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = "Резултат от обжалване: " + x.CaseSessionAct.ActType.Label + " " + x.CaseSessionAct.RegNumber + "/" + (x.CaseSessionAct.RegDate ?? DateTime.Now).ToString("dd.MM.yyyy") + " - " + x.ActResult.Label
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionActComplain(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionActComplain(int id)
         {
-            return repo.AllReadonly<CaseSessionActComplain>()
-                       .Include(x => x.ComplainDocument)
-                       .ThenInclude(x => x.DocumentType)
-                       .Include(x => x.ComplainState)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = "Обжалване по съпровождащ документ: " + x.ComplainDocument.DocumentType.Label + " " + x.ComplainDocument.DocumentNumber + "/" + x.ComplainDocument.DocumentDate.ToString("dd.MM.yyyy")
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionActComplain>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = "Обжалване по съпровождащ документ: " + x.ComplainDocument.DocumentType.Label + " " + x.ComplainDocument.DocumentNumber + "/" + x.ComplainDocument.DocumentDate.ToString("dd.MM.yyyy")
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionActLawBase(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionActLawBase(int id)
         {
-            return repo.AllReadonly<CaseSessionActLawBase>()
-                       .Include(x => x.LawBase)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = "Нормативен текст: " + x.LawBase.Label
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionActLawBase>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = "Нормативен текст: " + x.LawBase.Label
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionMeetingUser(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionMeetingUser(int id)
         {
-            return repo.AllReadonly<CaseSessionMeetingUser>()
-                       .Include(x => x.SecretaryUser)
-                       .ThenInclude(x => x.LawUnit)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = "Секретар към сесия: " + x.SecretaryUser.LawUnit.FullName
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionMeetingUser>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = "Секретар към сесия: " + x.SecretaryUser.LawUnit.FullName
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionMeeting(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionMeeting(int id)
         {
-            return repo.AllReadonly<CaseSessionMeeting>()
-                       .Include(x => x.SessionMeetingType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = x.SessionMeetingType.Label + " от: " + x.DateFrom.ToString("dd.MM.yyyy") + " до: " + x.DateTo.ToString("dd.MM.yyyy")
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionMeeting>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = x.SessionMeetingType.Label + " от: " + x.DateFrom.ToString("dd.MM.yyyy") + " до: " + x.DateTo.ToString("dd.MM.yyyy")
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionResult(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionResult(int id)
         {
-            return repo.AllReadonly<CaseSessionResult>()
-                       .Include(x => x.SessionResult)
-                       .Include(x => x.SessionResultBase)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = x.SessionResult.Label + (x.SessionResultBase != null ? " - " + x.SessionResultBase.Label : string.Empty)
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionResult>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = x.SessionResult.Label + (x.SessionResultBase != null ? " - " + x.SessionResultBase.Label : string.Empty)
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseLawUnit(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLawUnit(int id)
         {
-            return repo.AllReadonly<CaseLawUnit>()
-                       .Include(x => x.LawUnit)
-                       .Include(x => x.JudgeRole)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.LawUnit.FullName} {x.JudgeRole.Label}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLawUnit>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.LawUnit.FullName} {x.JudgeRole.Label}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseLawUnitDismisal(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLawUnitDismisal(int id)
         {
-            return repo.AllReadonly<CaseLawUnitDismisal>()
-                       .Include(x => x.DismisalType)
-                       .Include(x => x.CaseLawUnit)
-                       .ThenInclude(x => x.LawUnit)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseLawUnit.CaseId,
-                           Info = $"{x.CaseLawUnit.LawUnit.FullName} {x.DismisalType.Label} {x.DismisalDate:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLawUnitDismisal>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseLawUnit.CaseId,
+                                 Info = $"{x.CaseLawUnit.LawUnit.FullName} {x.DismisalType.Label} {x.DismisalDate:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionActDivorce(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionActDivorce(int id)
         {
-            return repo.AllReadonly<CaseSessionActDivorce>()
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = $"Съобщение за прекратяване на граждански брак {x.RegNumber} от {x.RegDate:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionActDivorce>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = $"Съобщение за прекратяване на граждански брак {x.RegNumber} от {x.RegDate:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseLifecycle(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLifecycle(int id)
         {
-            return repo.AllReadonly<CaseLifecycle>()
-                       .Include(x => x.LifecycleType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"Интервал по дело: {x.LifecycleType.Label} повторение {x.Iteration} от {x.DateFrom:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLifecycle>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"Интервал по дело: {x.LifecycleType.Label} повторение {x.Iteration} от {x.DateFrom:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetDocumentTemplate(int id)
+        private async Task<CaseInfoVM> caseInfo_GetDocumentTemplate(int id)
         {
-            return repo.AllReadonly<DocumentTemplate>()
-                       .Include(x => x.DocumentKind)
-                       .Include(x => x.DocumentGroup)
-                       .Include(x => x.DocumentType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = $"Изх. документ към дело: {x.DocumentKind.Label} {x.DocumentGroup.Label} {x.DocumentType.Label}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<DocumentTemplate>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = $"Изх. документ към дело: {x.DocumentKind.Label} {x.DocumentGroup.Label} {x.DocumentType.Label}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetPersonInheritance(int id)
+        private async Task<CaseInfoVM> caseInfo_GetPersonInheritance(int id)
         {
-            return repo.AllReadonly<CasePersonInheritance>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.Court)
-                       .Include(x => x.CaseSessionAct)
-                       .Include(x => x.CasePersonInheritanceResult)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"Наследство на {x.CasePerson.FullName} Постановена от {x.Court.Label} Акт: {x.CaseSessionAct.RegNumber} {x.CaseSessionAct.RegDate:dd.MM.yyyy HH mm} - {x.CasePersonInheritanceResult.Label}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonInheritance>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"Наследство на {x.CasePerson.FullName} Постановена от {x.Court.Label} Акт: {x.CaseSessionAct.RegNumber} {x.CaseSessionAct.RegDate:dd.MM.yyyy HH mm} - {x.CasePersonInheritanceResult.Label}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCasePersonMeasure(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCasePersonMeasure(int id)
         {
-            return repo.AllReadonly<CasePersonMeasure>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.MeasureInstitution)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = "Мярка към: " + x.CasePerson.FullName + " институция, определила мярката: " + x.MeasureInstitution.FullName + " вид мярка: " + x.MeasureTypeLabel
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonMeasure>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = "Мярка към: " + x.CasePerson.FullName + " институция, определила мярката: " + x.MeasureInstitution.FullName + " вид мярка: " + x.MeasureTypeLabel
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCasePersonDocument(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCasePersonDocument(int id)
         {
-            return repo.AllReadonly<CasePersonDocument>()
-                       .Include(x => x.CasePerson)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = "Личен документ на: " + x.CasePerson.FullName + " държава: " + x.IssuerCountryName + " документ: " + x.PersonalDocumentTypeLabel + " номер: " + x.DocumentNumber
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonDocument>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = "Личен документ на: " + x.CasePerson.FullName + " държава: " + x.IssuerCountryName + " документ: " + x.PersonalDocumentTypeLabel + " номер: " + x.DocumentNumber
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetPersonSentence(int id)
+        private async Task<CaseInfoVM> caseInfo_GetPersonSentence(int id)
         {
-            return repo.AllReadonly<CasePersonSentence>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.Court)
-                       .Include(x => x.CaseSessionAct)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.CasePerson.FullName} Постановена от {x.Court.Label} Акт: {x.CaseSessionAct.RegNumber} {x.CaseSessionAct.RegDate:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonSentence>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.CasePerson.FullName} Постановена от {x.Court.Label} Акт: {x.CaseSessionAct.RegNumber} {x.CaseSessionAct.RegDate:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetPersonSentencePunishment(int id)
+        private async Task<CaseInfoVM> caseInfo_GetPersonSentencePunishment(int id)
         {
-            return repo.AllReadonly<CasePersonSentencePunishment>()
-                       .Include(x => x.SentenceType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = $"Наложено наказание по НК: {x.SentenceType.Label} Сумарен ред за присъди: {(x.IsSummaryPunishment ? "Да" : "Не")}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonSentencePunishment>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = $"Наложено наказание по НК: {x.SentenceType.Label} Сумарен ред за присъди: {(x.IsSummaryPunishment ? "Да" : "Не")}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetPersonSentencePunishmentCrime(int id)
+        private async Task<CaseInfoVM> caseInfo_GetPersonSentencePunishmentCrime(int id)
         {
-            return repo.AllReadonly<CasePersonSentencePunishmentCrime>()
-                       .Include(x => x.CaseCrime)
-                       .Include(x => x.PersonRoleInCrime)
-                       .Include(x => x.RecidiveType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = $"Участие в наложени наказания към присъда. Престъпление: {x.CaseCrime.CrimeName} роля: {x.PersonRoleInCrime.Label} рецидив: {x.RecidiveType.Label}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonSentencePunishmentCrime>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = $"Участие в наложени наказания към присъда. Престъпление: {x.CaseCrime.CrimeName} роля: {x.PersonRoleInCrime.Label} рецидив: {x.RecidiveType.Label}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseCrime(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseCrime(int id)
         {
-            return repo.AllReadonly<CaseCrime>()
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.EISSPNumber} {x.CrimeName}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseCrime>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.EISSPNumber} {x.CrimeName}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCasePersonCrime(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCasePersonCrime(int id)
         {
-            return repo.AllReadonly<CasePersonCrime>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.PersonRoleInCrime)
-                       .Include(x => x.RecidiveType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.CasePerson.FullName} {x.PersonRoleInCrime.Label} {x.RecidiveType.Label}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonCrime>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.CasePerson.FullName} {x.PersonRoleInCrime.Label} {x.RecidiveType.Label}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseLoadCorrection(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLoadCorrection(int id)
         {
-            return repo.AllReadonly<CaseLoadCorrection>()
-                       .Include(x => x.CaseLoadCorrectionActivity)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.CaseLoadCorrectionActivity.Label} {x.CorrectionDate:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLoadCorrection>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.CaseLoadCorrectionActivity.Label} {x.CorrectionDate:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseLoadIndex(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLoadIndex(int id)
         {
-            return repo.AllReadonly<CaseLoadIndex>()
-                       .Include(x => x.LawUnit)
-                       .Include(x => x.CaseLoadElementGroup)
-                       .Include(x => x.CaseLoadElementType)
-                       .Include(x => x.CaseLoadAddActivity)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.IsMainActivity ? $"Основна дейност {x.LawUnit.FullName} {x.CaseLoadElementGroup.Label} {x.CaseLoadElementType.Label} {x.DateActivity:dd.MM.yyyy HH mm}" : $"Допълнителна дейност {x.LawUnit.FullName} {x.CaseLoadAddActivity.Label} {x.DateActivity:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLoadIndex>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.IsMainActivity ? $"Основна дейност {x.LawUnit.FullName} {x.CaseLoadElementGroup.Label} {x.CaseLoadElementType.Label} {x.DateActivity:dd.MM.yyyy HH mm}" : $"Допълнителна дейност {x.LawUnit.FullName} {x.CaseLoadAddActivity.Label} {x.DateActivity:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseLawyerHelp(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLawyerHelp(int id)
         {
-            return repo.AllReadonly<CaseLawyerHelp>()
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.LawyerHelpBase.Label + " " + x.LawyerHelpType.Label + (!string.IsNullOrEmpty(x.Description) ? " " + x.Description : string.Empty)
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLawyerHelp>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.LawyerHelpBase.Label + " " + x.LawyerHelpType.Label + (!string.IsNullOrEmpty(x.Description) ? " " + x.Description : string.Empty)
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseLawyerHelpPerson(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLawyerHelpPerson(int id)
         {
-            return repo.AllReadonly<CaseLawyerHelpPerson>()
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseLawyerHelp.CaseId,
-                           Info = "Правна помощ за: " + x.CasePerson.FullName + (x.AssignedLawyerId != null ? " назначен адвокат: " + x.AssignedLawyer.FullName : string.Empty)
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLawyerHelpPerson>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseLawyerHelp.CaseId,
+                                 Info = "Правна помощ за: " + x.CasePerson.FullName + (x.AssignedLawyerId != null ? " назначен адвокат: " + x.AssignedLawyer.FullName : string.Empty)
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseMovement(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseLawyerHelpAssignedLawyer(int id)
         {
-            return repo.AllReadonly<CaseMovement>()
-                       .Include(x => x.MovementType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.MovementType.Label} {x.DateSend:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseLawyerHelpAssignedLawyer>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseLawyerHelp.CaseId,
+                                 Info = $"Върнати адвокати по заявка за правна помощ от ЕЕСПП: {x.LawyerNumber + " " + x.LawyerName} за лице/лица: {string.Join(", ", x.Persons.Select(p => p.CaseLawyerHelpPerson.CasePerson.FullName + " (" + p.CaseLawyerHelpPerson.CasePerson.PersonRole.Label + ")"))}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseEvidence(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseMovement(int id)
         {
-            return repo.AllReadonly<CaseEvidence>()
-                       .Include(x => x.EvidenceType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.EvidenceType.Label} {x.RegNumber}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseMovement>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.MovementType.Label} {x.DateSend:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseEvidenceMovement(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseEvidence(int id)
         {
-            return repo.AllReadonly<CaseEvidenceMovement>()
-                       .Include(x => x.EvidenceMovementType)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId ?? 0,
-                           Info = $"{x.EvidenceMovementType.Label} {x.MovementDate:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseEvidence>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.EvidenceType.Label} {x.RegNumber}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCasePerson(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseEvidenceMovement(int id)
         {
-            return repo.AllReadonly<CasePerson>()
-                       .Include(x => x.PersonRole)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.FullName} {x.PersonRole.Label}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseEvidenceMovement>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId ?? 0,
+                                 Info = $"{x.EvidenceMovementType.Label} {x.MovementDate:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCasePersonLink(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCasePerson(int id)
         {
-            return repo.AllReadonly<CasePersonLink>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.CasePersonRel)
-                       .Include(x => x.CasePersonSecondRel)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = x.CasePerson.FullName + (x.CasePersonRel != null ? " Упълномощено лице: " + x.CasePersonRel.FullName : string.Empty) +
-                                                          (x.CasePersonSecondRel != null ? " Втори представляващ: " + x.CasePersonSecondRel.FullName : string.Empty)
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePerson>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.FullName} {x.PersonRole.Label}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCasePersonForSession(int CaseSessionId)
+        private async Task<CaseInfoVM> caseInfo_GetCasePersonLink(int id)
         {
-            return repo.AllReadonly<CaseSession>()
-                       .Include(x => x.CasePersons)
-                       .ThenInclude(x => x.Person)
-                       .Include(x => x.CasePersons)
-                       .ThenInclude(x => x.PersonRole)
-                       .Where(x => x.Id == CaseSessionId)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = string.Join(",", x.CasePersons.Select(a => a.Person.FullName + " " + a.PersonRole.Label + " от " + a.DateFrom.ToString("dd.MM.yyyy") + " до " + (a.DateTo != null ? (a.DateTo ?? DateTime.Now).ToString("dd.MM.yyyy") : string.Empty)))
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CasePersonLink>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = x.CasePerson.FullName + (x.CasePersonRel != null ? " Упълномощено лице: " + x.CasePersonRel.FullName : string.Empty) +
+                                                                (x.CasePersonSecondRel != null ? " Втори представляващ: " + x.CasePersonSecondRel.FullName : string.Empty)
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCasePersonAddress(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCasePersonForSession(int CaseSessionId)
         {
-            return repo.AllReadonly<CasePersonAddress>()
-                       .Include(x => x.CasePerson)
-                       .Include(x => x.Address)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CasePerson.CaseId,
-                           Info = $"{x.CasePerson.FullName} {x.Address.FullAddress}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSession>()
+                             .Where(x => x.Id == CaseSessionId)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.SessionType.Label} {x.DateFrom:dd.MM.yyyy HH:mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSession(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCasePersonAddress(int id)
         {
-            return repo.AllReadonly<CaseSession>()
-                       .Include(x => x.SessionType)
-                       .Include(x => x.SessionState)
+            return await repo.AllReadonly<CasePersonAddress>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CasePerson.CaseId,
+                                 Info = $"{x.CasePerson.FullName} {x.Address.FullAddress}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
+        }
+
+        private async Task<CaseInfoVM> caseInfo_GetCaseSession(int id)
+        {
+            return (await repo.AllReadonly<CaseSession>()
                        .Where(x => x.Id == id)
                        .Select(x => new CaseInfoVM()
                        {
                            CaseId = x.CaseId,
                            Info = $"{x.SessionState.Label} {x.SessionType.Label} {x.DateFrom:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+                       }).FirstOrDefaultAsync()) ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionAct(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionAct(int id)
         {
-            return repo.AllReadonly<CaseSessionAct>()
-                       .Include(x => x.ActType)
-                       .Include(x => x.ActState)
+            return (await repo.AllReadonly<CaseSessionAct>()
                        .Where(x => x.Id == id)
                        .Select(x => new CaseInfoVM()
                        {
                            CaseId = x.CaseId ?? 0,
-                           Info = $"{x.ActState.Label} {x.ActType.Label}" + (x.RegDate != null ? $" {x.RegNumber}/{x.RegDate:dd.MM.yyyy HH mm}" : ""),
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+                           Declared = x.ActDeclaredDate != null,
+                           Info = $"{x.ActState.Label} {x.ActType.Label}" + (x.RegDate != null ? $" {x.RegNumber}/{x.RegDate:dd.MM.yyyy HH:mm}" : ""),
+                       }).FirstOrDefaultAsync()) ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseNotification(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseNotification(int id)
         {
-            return repo.AllReadonly<CaseNotification>()
-                       .Include(x => x.NotificationType)
-                       .Include(x => x.NotificationState)
+            return (await repo.AllReadonly<CaseNotification>()
                        .Where(x => x.Id == id)
                        .Select(x => new CaseInfoVM()
                        {
                            CaseId = x.CaseId,
+                           Info = $"{x.NotificationType.Label} {x.NotificationState.Label} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
+                       }).FirstOrDefaultAsync()) ?? new CaseInfoVM();
+        }
+
+        private async Task<DeliveryInfoVM> caseInfo_GetDeliveryItem(int id)
+        {
+            return (await repo.AllReadonly<DeliveryItem>()
+                       .Where(x => x.Id == id)
+                       .Select(x => new DeliveryInfoVM()
+                       {
+                           CaseInfo = x.CaseInfo,
                            Info = $"{x.NotificationType.Label} {x.NotificationState.Label}" + (x.RegDate != null ? $" {x.RegNumber}/{x.RegDate:dd.MM.yyyy}" : ""),
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+                       }).FirstOrDefaultAsync()) ?? new DeliveryInfoVM();
+        }
+        private async Task<CaseInfoVM> caseInfo_GetCaseSelectionProtokol(int id)
+        {
+            return await repo.AllReadonly<CaseSelectionProtokol>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.SelectedLawUnit.FullName} ({x.JudgeRole.Label})"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSelectionProtokol(int id)
+        private async Task<CaseInfoVM> caseInfo_GetCaseSessionActCompany(int id)
         {
-            return repo.AllReadonly<CaseSelectionProtokol>()
-                       .Include(x => x.SelectedLawUnit)
-                       .Include(x => x.JudgeRole)
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"{x.SelectedLawUnit.FullName} ({x.JudgeRole.Label})"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            return await repo.AllReadonly<CaseSessionActCompany>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"Заявление за регистрация с Акт: {x.CaseSessionAct.RegNumber} {x.CaseSessionAct.RegDate:dd.MM.yyyy HH mm}"
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private CaseInfoVM caseInfo_GetCaseSessionActCompany(int id)
+        private async Task<CaseInfoVM> caseInfo_GetEisppEvent(int id)
         {
-            return repo.AllReadonly<CaseSessionActCompany>()
-                       .Where(x => x.Id == id)
-                       .Select(x => new CaseInfoVM()
-                       {
-                           CaseId = x.CaseId,
-                           Info = $"Заявление за регистрация с Акт: {x.CaseSessionAct.RegNumber} {x.CaseSessionAct.RegDate:dd.MM.yyyy HH mm}"
-                       }).FirstOrDefault() ?? new CaseInfoVM();
+            var eisppTblElements = repo.AllReadonly<EisppTblElement>();
+
+            return await repo.AllReadonly<EisppEventItem>()
+                             .Where(x => x.Id == id)
+                             .Select(x => new CaseInfoVM()
+                             {
+                                 CaseId = x.CaseId,
+                                 Info = $"{x.Case.EISSPNumber} {x.EventDate:dd.MM.yyyy} " +
+                                        (eisppTblElements.Where(e => e.Code == x.EventType.ToString())
+                                                         .Select(e => e.Label)
+                                                         .FirstOrDefault() ?? ""),
+                             })
+                             .FirstOrDefaultAsync() ?? new CaseInfoVM();
         }
 
-        private void setAccessRightsForCase(CurrentContextModel model, object id, string objectInfo = "")
+        private async Task setAccessRightsForCaseAsync(CurrentContextModel model, object id, string objectInfo = "")
         {
+            //3.1.Разпределение на дела
+            var hasCaseInitRole = userContext.IsUserInRole(AccountConstants.Roles.CaseInit);
             //Да има Роля Деловодство 
             model.CanAccess = userContext.IsUserInRole(AccountConstants.Roles.DocumentEdit)
                             //или 3.1. Разпределение на дела
-                            || userContext.IsUserInRole(AccountConstants.Roles.CaseInit)
+                            || hasCaseInitRole
                             //или 3.5. Ръководство
                             || userContext.IsUserInRole(AccountConstants.Roles.CourtManager);
 
@@ -1879,7 +2337,7 @@ namespace IOWebApplication.Core.Services
                 {
                     int caseId = Convert.ToInt32(id);
 
-                    var info = auditInfo_Case(caseId);
+                    var info = await auditInfo_Case(caseId);
 
                     model.Info.BaseObject = info.Info;
                     model.Info.ObjectInfo = objectInfo;
@@ -1893,6 +2351,18 @@ namespace IOWebApplication.Core.Services
                         if (info.IsRestrictedAccess)
                         {
                             model.CanAccess &= userContext.IsUserInRole(AccountConstants.Roles.RestrictedAccess);
+                        }
+
+                        if (model.CanAccess && info.IsSpecialAccess && !judgListCheck && !hasCaseInitRole)
+                        {
+                            model.CanAccess = await checkSpecialAccessForCase(info.CourtId, 0, info.CaseCodeId);
+                        }
+
+                        if (!model.CanAccess && userContext.IsUserInRole(AccountConstants.Roles.CaseEdit))
+                        {
+                            //Ако делото е в същия съд на друг съдия, но участва в свързано дело
+                            model.CanAccess = info.AllMigrationJudgeLawUnits.Contains(userContext.LawUnitId);
+                            model.CanChange = false;
                         }
 
                         ////Проверява се кое е делото, в което е последното примащо движение.
@@ -1917,7 +2387,9 @@ namespace IOWebApplication.Core.Services
                         model.CanAccess = info.OtherCourtsJudgeLawUnits.Contains(userContext.LawUnitId)
                             || userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator)
                             //Ако делото има движение към или от текущия съд
-                            || (info.AllMigrationCourts.Contains(userContext.CourtId) && userContext.IsUserInFeature(AccountConstants.Features.Modules.CaseAccessData));
+                            || (info.AllMigrationCourts.Contains(userContext.CourtId) && userContext.IsUserInFeature(AccountConstants.Features.Modules.CaseAccessData))
+                            //Новите дела по Заповедно производство се достъпват от всички съдилища, без промяна
+                            || info.IsFastProcess;
                         model.CanChange = false;
                         model.CanChangeFull = false;
 
@@ -1930,9 +2402,9 @@ namespace IOWebApplication.Core.Services
 
                     if (!model.CanAccess && userContext.LawUnitTypeId == NomenclatureConstants.LawUnitTypes.Jury)
                     {
-                        model.CanAccess = repo.AllReadonly<CaseLawUnit>()
+                        model.CanAccess = await repo.AllReadonly<CaseLawUnit>()
                                                 .Where(x => x.CaseId == caseId && x.LawUnitId == userContext.LawUnitId)
-                                                .Any();
+                                                .AnyAsync();
                         model.CanChange = false;
                     }
                 }
@@ -1945,23 +2417,54 @@ namespace IOWebApplication.Core.Services
 
         }
 
-
-
-        private CaseAuditInfoVM auditInfo_Case(int id)
+        async Task<bool> checkSpecialAccessForCase(int courtId, int caseId, int caseCodeId)
         {
-            var result = repo.AllReadonly<Case>()
-                                    .Include(x => x.CaseType)
-                                    .Include(x => x.CaseLawUnits)
-                                    .Include(x => x.CaseMigrations)
-                                    .Include(x => x.CaseClassifications)
-                                    .Include(x => x.Document)
-                                    .ThenInclude(x => x.DocumentType)
-                                    .Where(x => x.Id == id)
+            if (caseCodeId == 0)
+                return true;
+            var dtToday = DateTime.Now;
+            var dtNexDay = DateTime.Now.AddDays(1);
+            var isCaseLawunit = false;
+            if (caseId > 0 && courtId == userContext.CourtId)
+            {
+                isCaseLawunit = await repo.AllReadonly<CaseLawUnit>()
+                                    .Where(x => x.CaseId == caseId && x.CaseSessionId == null)
+                                    .Where(x => x.LawUnitId == userContext.LawUnitId)
+                                    .Where(x => (x.DateTo ?? dtNexDay) > dtToday)
+                                    .AnyAsync();
+            }
+            var hasSpecialGroup = false;
+            if (!isCaseLawunit)
+            {
+                hasSpecialGroup = await repo.AllReadonly<CourtGroup>()
+                                    .Where(x => x.CourtId == courtId)
+                                    .Where(x => x.GroupKind == NomenclatureConstants.CourtGroupKinds.SpecialAccess)
+                                    .Where(x => x.CourtLawUnitGroups.Any(g => g.LawUnitId == userContext.LawUnitId && (g.DateTo ?? dtNexDay) > dtToday))
+                                    .Where(x => x.CourtGroupCodes.Any(g => g.CaseCodeId == caseCodeId && (g.DateTo ?? dtNexDay) > dtToday))
+                                    .Where(x => (x.DateTo ?? dtNexDay) > dtToday)
+                                    .AnyAsync();
+            }
+
+            return isCaseLawunit || hasSpecialGroup;
+        }
+
+        public Task<string> GetCaseInfoById(int id)
+        {
+            return repo.AllReadonly<Case>()
+                                   .Where(x => x.Id == id)
+                                   .Select(x => (string.IsNullOrEmpty(x.RegNumber)) ? $"{x.CaseType.Code} по {x.Document.DocumentType.Label} {x.Document.DocumentNumber}" : $"{x.CaseType.Code} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}")
+                                   .FirstOrDefaultAsync();
+        }
+
+        private async Task<CaseAuditInfoVM> auditInfo_Case(int caseId)
+        {
+            var result = await repo.AllReadonly<Case>()
+                                    .Where(x => x.Id == caseId)
                                     .Select(x => new CaseAuditInfoVM
                                     {
-                                        LastInMigrationCaseId = id,
+                                        LastInMigrationCaseId = caseId,
                                         CourtId = x.CourtId,
                                         CaseId = x.Id,
+                                        CaseCodeId = x.CaseCodeId ?? 0,
                                         CaseStateId = x.CaseStateId,
                                         Info = (string.IsNullOrEmpty(x.RegNumber)) ? $"{x.CaseType.Code} по {x.Document.DocumentType.Label} {x.Document.DocumentNumber}" : $"{x.CaseType.Code} {x.RegNumber}/{x.RegDate:dd.MM.yyyy}",
                                         JudgeLawUnits = x.CaseLawUnits
@@ -1970,50 +2473,103 @@ namespace IOWebApplication.Core.Services
                                                          .Where(c => c.DateFrom <= DateTime.Now && (c.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
                                                          .Where(c => NomenclatureConstants.JudgeRole.JudgeAndManualRoles.Contains(c.JudgeRoleId))
                                                          .Select(c => c.LawUnitId).ToArray(),
-                                        InitMigrations = x.CaseMigrations.Select(m => m.InitialCaseId).Distinct().ToArray(),
-                                        OtherCourts = x.CaseMigrations.Select(m => m.CourtId ?? 0).Distinct().ToArray(),
-                                        ToCourts = x.CaseMigrations.Select(m => m.SendToCourtId ?? 0).Distinct().ToArray(),
-                                        IsRestrictedAccess = (x.CaseClassifications != null) ? x.CaseClassifications.Any(c => c.DateTo == null && NomenclatureConstants.CaseClassifications.RestictedAccess.Contains(c.ClassificationId)) : false
-                                    }).FirstOrDefault();
+                                        //InitMigrations = x.CaseMigrations.Select(m => m.InitialCaseId).Distinct().ToArray(),
+                                        OtherCourts = x.CaseMigrations.Where(x => x.CourtId > 0).Select(m => m.CourtId.Value).Distinct().ToArray(),
+                                        ToCourts = x.CaseMigrations.Where(x => x.SendToCourtId > 0).Select(m => m.SendToCourtId.Value).Distinct().ToArray(),
+                                        IsRestrictedAccess = (x.CaseClassifications != null) ? x.CaseClassifications.Any(c => c.DateTo == null && NomenclatureConstants.CaseClassifications.RestictedAccess.Contains(c.ClassificationId)) : false,
+                                        IsSpecialAccess = (x.CaseClassifications != null) ? x.CaseClassifications.Any(c => c.DateTo == null && NomenclatureConstants.CaseClassifications.SpecialAccess == c.ClassificationId) : false,
+                                        IsFastProcess = x.IsFastProcess ?? false
+                                    }).FirstOrDefaultAsync();
 
-
+            if (result != null)
+            {
+                result.InitMigrations = await GetInitialCasesByCaseIdAsync(caseId);
+            }
 
             if (result.InitMigrations.Length > 0)
             {
                 if (result.CourtId != userContext.CourtId)
                 {
-
-                    result.OtherCourtsJudgeLawUnits = repo.AllReadonly<CaseMigration>()
-                                                          .Include(x => x.Case)
-                                                          .ThenInclude(x => x.CaseLawUnits)
+                    int[] allMigrationCaseIds = (await repo.AllReadonly<CaseMigration>()
                                                           .Where(x => result.InitMigrations.Contains(x.InitialCaseId))
-                                                          .SelectMany(x => x.Case.CaseLawUnits)
+                                                          .Select(x => x.CaseId).Distinct().ToArrayAsync()).Union(result.InitMigrations).Distinct().ToArray();
+
+
+                    //TODO: Да се изтеглят всички дела по initcase
+                    result.OtherCourtsJudgeLawUnits = await repo.AllReadonly<CaseLawUnit>()
+                                                          .Where(x => allMigrationCaseIds.Contains(x.CaseId))
                                                           .Where(c => c.CaseSessionId == null)
                                                           .Where(c => c.DateFrom <= DateTime.Now && (c.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
                                                           .Where(c => NomenclatureConstants.JudgeRole.JudgeAndManualRoles.Contains(c.JudgeRoleId))
-                                                          .Select(c => c.LawUnitId).ToArray();
+                                                          .Select(c => c.LawUnitId).ToArrayAsync();
 
-                    result.AllMigrationCourts = repo.AllReadonly<CaseMigration>()
-                                                          .Include(x => x.CaseMigrationType)
-                                                          .Where(x => result.InitMigrations.Contains(x.InitialCaseId))
-                                                          .Where(x => x.CaseMigrationType.MigrationDirection == NomenclatureConstants.CaseMigrationDirections.Outgoing)
-                                                          .Select(x => x.SendToCourtId ?? 0)
-                                                          .ToArray();
+
+
+                    var allCourts = await repo.AllReadonly<CaseMigration>()
+                                                         .Where(x => result.InitMigrations.Contains(x.InitialCaseId))
+                                                         .Where(x => NomenclatureConstants.CaseMigrationDirections.DirectionsForAccess.Contains(x.CaseMigrationType.MigrationDirection))
+                                                         .Select(x => new
+                                                         {
+                                                             toCourt = x.SendToCourtId ?? 0,
+                                                             fromCourt = x.CourtId ?? 0
+                                                         })
+                                                         .ToArrayAsync();
+
+                    result.AllMigrationCourts = allCourts.Select(x => x.fromCourt).Union(allCourts.Select(x => x.toCourt)).Where(x => x > 0).Distinct().ToArray();
                 }
                 else
                 {
-                    result.LastInMigrationCaseId = repo.AllReadonly<CaseMigration>()
-                                                 .Include(x => x.CaseMigrationType)
+                    result.LastInMigrationCaseId = await repo.AllReadonly<CaseMigration>()
                                                  .Where(x => result.InitMigrations.Contains(x.InitialCaseId))
                                                  .Where(
                                                     m => m.CaseMigrationType.MigrationDirection == NomenclatureConstants.CaseMigrationDirections.Incoming
                                                     && m.OutCaseMigration.SendToCourtId > 0
                                                   )
                                                  .OrderByDescending(m => m.Id)
-                                                 .Select(m => m.CaseId).DefaultIfEmpty(id).FirstOrDefault();
+                                                 .Select(m => m.CaseId).FirstOrValueAsync(caseId);
+
+                    result.AllMigrationJudgeLawUnits = await repo.AllReadonly<CaseMigration>()
+                                      .Where(x => result.InitMigrations.Contains(x.InitialCaseId))
+                                      .SelectMany(x => x.Case.CaseLawUnits)
+                                      .Where(c => c.CaseSessionId == null)
+                                      .Where(c => c.DateFrom <= DateTime.Now && (c.DateTo ?? DateTime.MaxValue) >= DateTime.Now)
+                                      .Where(c => NomenclatureConstants.JudgeRole.JudgeAndManualRoles.Contains(c.JudgeRoleId))
+                                      .Select(c => c.LawUnitId).ToArrayAsync();
+
                 }
             }
             return result ?? new CaseAuditInfoVM();
+        }
+
+        /// <summary>
+        /// Извличане на първото дело от Вертикално движение на дело - между институциите
+        /// </summary>
+        /// <param name="caseId"></param>
+        /// <returns></returns>
+        protected async Task<int[]> GetInitialCasesByCaseIdAsync(int caseId)
+        {
+            List<int> result = await repo.AllReadonly<CaseMigration>()
+                                         .Where(x => x.CaseId == caseId)
+                                         .Select(x => x.InitialCaseId)
+                                         .Distinct()
+                                         .ToListAsync();
+
+            //Заради движенията по свързване и обединяване се добавя и текущото дело
+            result.Add(caseId);
+
+            //Предходни свързани дела
+            result.AddRange(await repo.AllReadonly<CaseMigration>()
+                                      .Where(x => (result.Contains(x.CaseId)) && NomenclatureConstants.CaseMigrationTypes.CaseUnionConnection.Contains(x.CaseMigrationTypeId))
+                                      .Select(x => x.PriorCaseId)
+                                      .ToArrayAsync());
+
+            //Последващи свързани дела
+            result.AddRange(await repo.AllReadonly<CaseMigration>()
+                                      .Where(x => result.Contains(x.PriorCaseId) && NomenclatureConstants.CaseMigrationTypes.CaseUnionConnection.Contains(x.CaseMigrationTypeId))
+                                      .Select(x => x.CaseId)
+                                      .ToArrayAsync());
+
+            return result.Distinct().ToArray();
         }
 
         private void setAccessRightsForMoney(CurrentContextModel model, object id, string objectInfo = "")
@@ -2023,16 +2579,23 @@ namespace IOWebApplication.Core.Services
                                 userContext.IsUserInRole(AccountConstants.Roles.DocumentEdit);
             model.CanChangeFull = userContext.IsUserInRole(AccountConstants.Roles.Supervisor);
         }
-
-        protected IQueryable<LawUnit> SelectLawUnit_ByType(int courtId, int lawUnitType, DateTime? dtNow = null, string selectMode = NomenclatureConstants.LawUnitSelectMode.Current)
+        private void setAccessRightsForDeliveryItem(CurrentContextModel model, DeliveryInfoVM info)
         {
-            int[] lawUnitTypes = new List<int>
-            {
-                lawUnitType
-            }.ToArray();
+            model.CanAccess = userContext.IsUserInRole(AccountConstants.Roles.DeliveryUser) ||
+                userContext.IsUserInRole(AccountConstants.Roles.Supervisor) ||
+                userContext.IsUserInRole(AccountConstants.Roles.Administrator);
+            model.CanChange = userContext.IsUserInRole(AccountConstants.Roles.DeliveryUser) ||
+                userContext.IsUserInRole(AccountConstants.Roles.Supervisor) ||
+                userContext.IsUserInRole(AccountConstants.Roles.Administrator);
+            model.CanChangeFull = userContext.IsUserInRole(AccountConstants.Roles.DeliveryUser) ||
+                userContext.IsUserInRole(AccountConstants.Roles.Supervisor) ||
+                userContext.IsUserInRole(AccountConstants.Roles.Administrator);
 
-            return SelectLawUnit_ByTypes(courtId, lawUnitTypes, dtNow, selectMode);
+            model.Info.BaseObject = info.CaseInfo;
+            model.Info.ObjectInfo = info.Info;
         }
+
+
         protected IQueryable<LawUnit> SelectLawUnit_ByTypes(int courtId, int[] lawUnitTypes, DateTime? dtNow = null, string selectMode = NomenclatureConstants.LawUnitSelectMode.Current)
         {
             dtNow = dtNow ?? DateTime.Now;
@@ -2041,6 +2604,7 @@ namespace IOWebApplication.Core.Services
                 courtId = userContext.CourtId;
             }
             Expression<Func<LawUnit, bool>> courtSearch = x => lawUnitTypes.Contains(x.LawUnitTypeId); ;
+            Expression<Func<LawUnit, bool>> activeOnly = x => x.DateFrom <= dtNow && ((x.DateTo ?? DateTime.MaxValue) >= dtNow);
             if (courtId > 0)
             {
                 switch (selectMode)
@@ -2067,14 +2631,22 @@ namespace IOWebApplication.Core.Services
                        && lawUnitTypes.Contains(c.LawUnitTypeId ?? x.LawUnitTypeId)
                        && c.DateFrom <= dtNow);
                         break;
+                    case NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS:
+                        courtSearch = x => x.Courts.Any(c =>
+                          c.CourtId == courtId
+                       && NomenclatureConstants.PeriodTypes.CurrentlyAvailableExtendedNoVas.Contains(c.PeriodTypeId)
+                       && lawUnitTypes.Contains(c.LawUnitTypeId ?? x.LawUnitTypeId)
+                       && c.DateFrom <= dtNow);
+
+                        activeOnly = x => true;
+                        break;
                 }
             }
 
 
             return repo.AllReadonly<LawUnit>()
-                    .Include(x => x.Courts)
                     .Where(courtSearch)
-                    .Where(x => x.DateFrom <= dtNow && ((x.DateTo ?? DateTime.MaxValue) >= dtNow))
+                    .Where(activeOnly)
                     .AsQueryable();
         }
 
@@ -2091,6 +2663,19 @@ namespace IOWebApplication.Core.Services
                             .FirstOrDefault();
         }
 
+        /// <summary>
+        /// Връща стойност
+        /// </summary>
+        /// <param name="paramName">Име на параметър</param>
+        /// <returns></returns>
+        public async Task<string> SystemParamGetValue(string paramName)
+        {
+            return await repo.AllReadonly<SystemParam>()
+                             .Where(x => x.ParamName == paramName)
+                             .Select(x => x.ParamValue)
+                             .FirstOrDefaultAsync();
+        }
+
         public int[] SystemParam_SelectIntValues(string paramName)
         {
             string txtValue = SystemParam_SelectValue(paramName);
@@ -2099,7 +2684,122 @@ namespace IOWebApplication.Core.Services
                 return new List<int>().ToArray();
             }
 
-            return txtValue.Split(',').Select(x => int.Parse(x)).ToArray();
+            return txtValue.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToArray();
+        }
+        public string[] SystemParam_SelectStringValues(string paramName)
+        {
+            string txtValue = SystemParam_SelectValue(paramName);
+            if (string.IsNullOrEmpty(txtValue))
+            {
+                return new List<string>().ToArray();
+            }
+
+            return txtValue.Split(',', StringSplitOptions.RemoveEmptyEntries).ToArray();
+        }
+
+        public string GetNomLabelById<T>(int id) where T : class, ICommonNomenclature
+        {
+            return GetPropById<T, string>(x => x.Id == id, x => x.Label);
+        }
+
+        public string GetNomCodeById<T>(int id) where T : class, ICommonNomenclature
+        {
+            return GetPropById<T, string>(x => x.Id == id, x => x.Code);
+        }
+
+        public async Task<bool> CheckCaseFeature(int caseId, string featureName)
+        {
+            var caseInfo = await repo.AllReadonly<Case>()
+                                    .Where(x => x.Id == caseId)
+                                    .Select(x => new CaseFeatureInfoVM
+                                    {
+                                        CourtTypeId = x.Court.CourtTypeId,
+                                        CaseTypeId = x.CaseTypeId,
+                                        CaseCodeId = x.CaseCodeId ?? 0
+                                    }).FirstOrDefaultAsync().ConfigureAwait(false);
+
+            return await CheckCaseFeature(caseInfo, featureName).ConfigureAwait(false);
+        }
+
+        public async Task<bool> CheckCaseFeature(CaseFeatureInfoVM caseInfo, string featureName)
+        {
+            if (caseInfo == null)
+            {
+                return false;
+            }
+
+            return await repo.AllReadonly<CaseFeature>()
+                            .Where(x => x.Code == featureName)
+                            .Where(x => x.AllCourtTypes || x.CourtTypes.Any(ct => ct.CourtTypeId == caseInfo.CourtTypeId))
+                            .Where(x => x.AllCaseTypes || x.CaseTypes.Any(ct => ct.CaseTypeId == caseInfo.CaseTypeId))
+                            .Where(x => x.AllCaseCodes || x.CaseCodes.Any(ct => ct.CaseCodeId == caseInfo.CaseCodeId))
+                            .AnyAsync().ConfigureAwait(false);
+        }
+
+        public IDbContextTransaction BeginTransaction()
+        {
+            return repo.BeginTransaction();
+        }
+
+        public Task<string> GetIntegrationKey(int integrationType, int sourceType, long sourceId)
+        {
+            return repo.AllReadonly<IntegrationKey>()
+                        .Where(x => x.IntegrationTypeId == integrationType && x.SourceType == sourceType && x.SourceId == sourceId)
+                        .Select(x => x.OuterCode)
+                        .FirstOrDefaultAsync();
+        }
+
+
+        protected string GetParamValue(string paramName, string defaultValue)
+        {
+            return repo.AllReadonly<Infrastructure.Data.Models.Nomenclatures.SystemParam>()
+                       .Where(x => x.ParamName == NomenclatureConstants.SystemParamName.ZP_StartRegDate)
+                       .Select(x => x.ParamValue)
+                       .FirstOrDefault() ?? defaultValue;
+        }
+
+        private async Task<string> GetParamValueAsync(string paramName, string defaultValue)
+        {
+            return await repo.AllReadonly<Infrastructure.Data.Models.Nomenclatures.SystemParam>()
+                       .Where(x => x.ParamName == NomenclatureConstants.SystemParamName.ZP_StartRegDate)
+                       .Select(x => x.ParamValue)
+                       .FirstOrDefaultAsync() ?? defaultValue;
+        }
+        public async Task<DateTime?> GetParamValueDate(string paramName, string defaultValue)
+        {
+            var newZPCaseRegDateFrom = await GetParamValueAsync(paramName, defaultValue);
+            try
+            {
+                DateTime date;
+                if (DateTime.TryParseExact(newZPCaseRegDateFrom, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out date))
+                {
+                    return date;
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+
+            return null;
+
+        }
+
+        public async Task<bool> IsNewExecProcessCase(int? caseId)
+        {
+            if (!caseId.HasValue)
+            {
+                return false;
+            }
+
+            DateTime? ZPstartDate = await GetParamValueDate(NomenclatureConstants.SystemParamName.ZP_StartRegDate, "01.07.2025");
+            if (!ZPstartDate.HasValue)
+            {
+                return false;
+            }
+
+            DateTime caseRegDate = await repo.GetPropByIdAsync<Case, DateTime>(x => x.Id == caseId.Value, x => x.RegDate);
+            return caseRegDate > ZPstartDate;
         }
     }
 }

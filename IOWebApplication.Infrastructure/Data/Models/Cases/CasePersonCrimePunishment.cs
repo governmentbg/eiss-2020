@@ -2,10 +2,8 @@
 using IOWebApplication.Infrastructure.Data.Models.Base;
 using IOWebApplication.Infrastructure.Data.Models.Identity;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Data.Models.Cases
 {
@@ -49,7 +47,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 		[Column("punishment_weeks")]
 		public int PunishmentWeeks { get; set; }
 
-		// <summary>
+		/// <summary>
 		/// nkzpneden
 		/// Размер на наказание - Дни
 		/// </summary>
@@ -57,11 +55,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 		[Column("punishment_days")]
 		public int PunishmentDays { get; set; }
 
-		/// <summary>
-		/// nkzpnerzm
-		/// Размер на глоба в лева
-		/// </summary>
-		[Display(Name = "Размер на глоба лв.")]
+        /// <summary>
+        /// nkzpnerzm
+        /// Размер на глоба в евро
+        /// </summary>
+        [Display(Name = "Размер евро")]
 		[Column("fine_amount")]
 		public double FineAmount { get; set; }
 

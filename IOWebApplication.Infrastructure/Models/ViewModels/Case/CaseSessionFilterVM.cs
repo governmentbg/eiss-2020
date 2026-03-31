@@ -65,5 +65,8 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels
 
         [Display(Name = "Отделение")]
         public int CourtDepartmentOtdelenieId { get; set; }
+
+        [Display(Name = "Изглед календар")]
+        public bool? IsCalendar { get; set; }
     }
 }

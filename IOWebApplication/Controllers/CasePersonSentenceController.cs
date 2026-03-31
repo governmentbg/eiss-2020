@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
-using Elasticsearch.Net;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Contracts.Integration;
 using IOWebApplication.Core.Helper;
 using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Core.Models;
 using IOWebApplication.Extensions;
 using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Models.Cases;
+using IOWebApplication.Infrastructure.Data.Models.Common;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
 using IOWebApplication.Infrastructure.Models;
 using IOWebApplication.Infrastructure.Models.Cdn;
@@ -18,9 +16,18 @@ using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 using IOWebApplication.Infrastructure.Models.ViewModels.Eispp;
+using IOWebApplication.Infrastructure.Models.ViewModels.Integrations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Rotativa.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Mime;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -38,8 +45,12 @@ namespace IOWebApplication.Controllers
         private readonly IPrintDocumentService printDocumentService;
         private readonly ICdnService cdnService;
         private readonly ICaseLawUnitService lawUnitService;
+        private readonly ICaisBuletinService caisBuletinService;
+        private readonly ICaisMapperService caisMapperService;
+        private readonly IWorkTaskService taskService;
+        private readonly IProxyEissService proxyService;
 
-        public CasePersonSentenceController(ICasePersonSentenceService _service, 
+        public CasePersonSentenceController(ICasePersonSentenceService _service,
                                             INomenclatureService _nomService,
                                             ICommonService _commonService,
                                             ICaseSessionActService _caseSessionActService,
@@ -50,7 +61,11 @@ namespace IOWebApplication.Controllers
                                             ICaseSessionActComplainService _caseSessionActComplainService,
                                             IPrintDocumentService _printDocumentService,
                                             ICdnService _cdnService,
-                                            ICaseLawUnitService _lawUnitService)
+                                            ICaseLawUnitService _lawUnitService,
+                                            ICaisBuletinService _caisBuletinService,
+                                            IWorkTaskService _workTaskService,
+                                            ICaisMapperService _caisMapperService,
+                                            IProxyEissService _proxyService)
         {
             service = _service;
             nomService = _nomService;
@@ -64,6 +79,10 @@ namespace IOWebApplication.Controllers
             printDocumentService = _printDocumentService;
             cdnService = _cdnService;
             lawUnitService = _lawUnitService;
+            caisBuletinService = _caisBuletinService;
+            taskService = _workTaskService;
+            caisMapperService = _caisMapperService;
+            proxyService = _proxyService;
         }
 
         /// <summary>
@@ -71,13 +90,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult Index(int casePersonId)
+        public async Task<IActionResult> Index(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentence, null, AuditConstants.Operations.View, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentence, null, AuditConstants.Operations.View, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = casePersonService.GetById<CasePerson>(casePersonId);
+            var casePerson = await casePersonService.GetByIdAsync<CasePerson>(casePersonId);
             ViewBag.casePersonId = casePersonId;
             ViewBag.casePersonName = casePerson.FullName;
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCase(casePerson.CaseId);
@@ -104,14 +123,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonId"></param>
         /// <returns></returns>
-        public IActionResult Add(int casePersonId)
+        public async Task<IActionResult> Add(int casePersonId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentence, null, AuditConstants.Operations.Append, casePersonId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentence, null, AuditConstants.Operations.Append, casePersonId))
             {
                 return Redirect_Denied();
             }
-            var casePerson = casePersonService.GetById<CasePerson>(casePersonId);
-            SetViewbag(casePerson.CaseId, casePerson.Id, 0);
+            var casePerson = await casePersonService.GetByIdAsync<CasePerson>(casePersonId);
+            await SetViewbag(casePerson.CaseId, casePerson.Id, 0);
             var model = new CasePersonSentenceEditVM()
             {
                 CasePersonId = casePerson.Id,
@@ -129,14 +148,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentence, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentence, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
             var model = service.CasePersonSentence_GetById(id);
-            SetViewbag(model.CaseId, model.CasePersonId, id);
+            await SetViewbag(model.CaseId, model.CasePersonId, id);
             return View(nameof(Edit), model);
         }
 
@@ -176,9 +195,9 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Edit(CasePersonSentenceEditVM model)
+        public async Task<IActionResult> Edit(CasePersonSentenceEditVM model)
         {
-            SetViewbag(model.CaseId, model.CasePersonId, model.Id);
+            await SetViewbag(model.CaseId, model.CasePersonId, model.Id);
 
             if (!ModelState.IsValid)
             {
@@ -193,7 +212,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CasePersonSentence_SaveData(model))
+            if (await service.CasePersonSentence_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CasePersonSentence, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -207,9 +226,9 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        void SetViewbag(int caseId, int casePersonId, int ModelId)
+        private async Task SetViewbag(int caseId, int casePersonId, int ModelId)
         {
-            ViewBag.DecreedCourtId_ddl = caseMigrationService.GetDropDownList_Court(caseId);
+            ViewBag.DecreedCourtId_ddl = await caseMigrationService.GetDropDownList_Court(caseId);
             //ViewBag.CaseSessionActId_ddl = caseSessionActService.GetDropDownList(caseId);
             ViewBag.SentenceResultTypeId_ddl = nomService.GetDropDownList<SentenceResultType>();
             ViewBag.PunishmentActivityId_ddl = nomService.GetDropDownList<PunishmentActivity>();
@@ -218,6 +237,7 @@ namespace IOWebApplication.Controllers
             ViewBag.ChangedCasePersonSentenceId_ddl = service.GetDropDownList_CasePersonSentence(casePersonId, ModelId);
             //ViewBag.ChangeCaseSessionActId_ddl = caseSessionActComplainService.GetDropDownList_CaseSessionActFromCaseSessionActComplainResult(caseId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonSentence(casePersonId);
+
             SetHelpFile(HelpFileValues.CasePerson);
         }
 
@@ -240,9 +260,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult IndexCaseCrime(int caseId)
+        public async Task<IActionResult> IndexCaseCrime(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseCrime, null, AuditConstants.Operations.View, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseCrime, null, AuditConstants.Operations.View, caseId))
             {
                 return Redirect_Denied();
             }
@@ -270,15 +290,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseId"></param>
         /// <returns></returns>
-        public IActionResult AddCaseCrime(int caseId)
+        public async Task<IActionResult> AddCaseCrime(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseCrime, null, AuditConstants.Operations.Append, caseId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseCrime, null, AuditConstants.Operations.Append, caseId))
             {
                 return Redirect_Denied();
             }
-            var caseModel = service.GetById<Case>(caseId);
-            ViewBag.GenerateNumber = eisppService.IsForEisppNum(caseModel);
-            SetViewbagCaseCrime(caseId);
+           
+            await SetViewbagCaseCrime(caseId);
             var model = new CaseCrime()
             {
                 CaseId = caseId,
@@ -293,14 +312,14 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditCaseCrime(int id)
+        public async Task<IActionResult> EditCaseCrime(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseCrime, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseCrime, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CaseCrime>(id);
-            SetViewbagCaseCrime(model.CaseId);
+            var model = await service.GetByIdAsync<CaseCrime>(id);
+            await SetViewbagCaseCrime(model.CaseId);
             return View(nameof(EditCaseCrime), model);
         }
 
@@ -311,17 +330,53 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         private void ValidateCaseCrime(CaseCrime model)
         {
-            if (string.IsNullOrEmpty(model.EISSPNumber)) {
+            if (string.IsNullOrEmpty(model.EISSPNumber) && model.Id == 0)
+            {
                 var caseModel = service.GetById<Case>(model.CaseId);
-                if (!eisppService.IsForEisppNum(caseModel))
+                if (model.IsGeneratedEisppNumber != true && !eisppService.IsForEisppNum(caseModel))
                     ModelState.AddModelError("EISSPNumber", "Въведете код по ЕИСПП");
             }
+
             if (string.IsNullOrEmpty(model.CrimeCode) || model.CrimeCode == "0" || model.CrimeCode == "-1")
-                ModelState.AddModelError("CrimeCode", "Изберете престъпление");
+                ModelState.AddModelError("CrimeCode", "Изберете категория деяние");
+
             if (model.Id <= 0)
             {
                 if (service.IsEISPPNumberExists(model.CaseId, model.EISSPNumber))
-                    ModelState.AddModelError("EISSPNumber", $"{model.EISSPNumber} на престъпление вече е добавен към делото");
+                {
+                    var message = $"{model.EISSPNumber} на престъпление вече е добавен към делото";
+                    model.EISSPNumber = string.Empty;
+                    ModelState.Clear();
+                    ModelState.AddModelError("EISSPNumber", message);
+                    
+                }
+            }
+
+            if ((model.CategoryCommonDeedId == null) || (model.CategoryCommonDeedId < 1))
+                ModelState.AddModelError("CategoryCommonDeedId", $"Изберете обща категория");
+
+            if (string.IsNullOrEmpty(model.DescriptionOffence))
+                ModelState.AddModelError("DescriptionOffence", $"Въведете описание на деянието");
+
+            if ((model.CrimeSceneCountryId == null) || (model.CrimeSceneCountryId < 1))
+                ModelState.AddModelError("CrimeSceneCountryId", $"Изберете място на престъплението - държава");
+
+            //if (!string.IsNullOrEmpty(model.DescriptionOffence))
+            //{`
+            //    if (model.DescriptionOffence.Length > 255)
+            //        ModelState.AddModelError("DescriptionOffence", "Описание на деянието трябва да е по-малко от 255 символа");
+            //}
+
+            if (!string.IsNullOrEmpty(model.LegalQualificationText))
+            {
+                if (model.LegalQualificationText.Length > 255)
+                    ModelState.AddModelError("LegalQualificationText", "Правна квалификация трябва да е по-малко от 255 символа");
+            }
+
+            if (!string.IsNullOrEmpty(model.CrimeSceneText))
+            {
+                if (model.CrimeSceneText.Length > 255)
+                    ModelState.AddModelError("CrimeSceneText", "Описание трябва да е по-малко от 255 символа");
             }
         }
 
@@ -331,11 +386,10 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditCaseCrime(CaseCrime model)
+        public async Task<IActionResult> EditCaseCrime(CaseCrime model)
         {
-            SetViewbagCaseCrime(model.CaseId);
-            var caseModel = service.GetById<Case>(model.CaseId);
-            ViewBag.GenerateNumber = eisppService.IsForEisppNum(caseModel);
+            await SetViewbagCaseCrime(model.CaseId);
+            var caseModel = await service.GetByIdAsync<Case>(model.CaseId);
             ValidateCaseCrime(model);
             if (!ModelState.IsValid)
             {
@@ -343,7 +397,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CaseCrime_SaveData(model))
+            if (await service.CaseCrime_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseCrime, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -358,17 +412,17 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult CaseCrime_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseCrime_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseCrime, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseCrime, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
 
-            var expireObject = service.GetById<CaseCrime>(model.Id);
+            var expireObject = await service.GetByIdAsync<CaseCrime>(model.Id);
 
             if (eisppService.HaveEventForCrime(model.Id))
-            { 
+            {
                 return Json(new { result = false, message = "Може да премахнете престъпление, само ако не е изпратено към ЕИСПП." });
             }
 
@@ -384,13 +438,28 @@ namespace IOWebApplication.Controllers
             }
         }
 
-        void SetViewbagCaseCrime(int caseId)
+        private async Task SetViewbagCaseCrime(int caseId)
         {
             //ViewBag.CrimeCode_ddl = еISPPService.GetDDL_EISPPTblElement(EISPPConstants.EisppTableCode.EISS_PNE);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseCrime(caseId);
-            ViewBag.StartDateTypeDDL = eisppService.GetDDL_EISPPTblElement("1632");
-            ViewBag.CrimeStatusDDL = eisppService.GetDDL_EISPPTblElement("206");
-            ViewBag.CompletitionDegreeDDL = eisppService.GetDDL_EISPPTblElement("207");
+            ViewBag.StartDateTypeDDL = await eisppService.GetDDL_EISPPTblElementAsync("1632");
+            ViewBag.CrimeStatusDDL = await eisppService.GetDDL_EISPPTblElementAsync("206");
+            ViewBag.CompletitionDegreeDDL = await eisppService.GetDDL_EISPPTblElementAsync("207");
+            ViewBag.CategoryDeedId_ddl = await nomService.GetDropDownListAsync<CategoryDeed>();
+            ViewBag.CategoryCommonDeedId_ddl = await nomService.GetDropDownListAsync<CategoryCommonDeed>();
+            ViewBag.CrimeSceneCountryId_ddl = await nomService.GetDDL_Countries(true);
+            ViewBag.FormGuiltId_ddl = nomService.GetDDL_FormGuilt();
+            ViewBag.CrimeSceneLocalization_ddl = await eisppService.GetDDL_EISPPTblElementAsync(EISPPConstants.EisppTableCode.Localization);
+            var caseModel = await service.GetByIdAsync<Case>(caseId);
+            ViewBag.GenerateNumber = false;
+            if (eisppService.IsForEisppNum(caseModel))
+            {
+                ViewBag.GenerateNumber = true;
+            }
+            if (eisppService.CanGenerateEisppNumForCrime(caseModel))
+            {
+                ViewBag.GenerateNumber = null;
+            }
             SetHelpFile(HelpFileValues.CasePersonSentence);
         }
 
@@ -399,10 +468,10 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseCrimeId"></param>
         /// <returns></returns>
-        public IActionResult IndexCasePersonCrime(int caseCrimeId)
+        public async Task<IActionResult> IndexCasePersonCrime(int caseCrimeId)
         {
             var caseCrime = service.CaseCrime_GetById(caseCrimeId);
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonCrime, null, AuditConstants.Operations.View, caseCrimeId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonCrime, null, AuditConstants.Operations.View, caseCrimeId))
             {
                 return Redirect_Denied();
             }
@@ -432,13 +501,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="caseCrimeId"></param>
         /// <returns></returns>
-        public IActionResult AddCasePersonCrime(int caseCrimeId)
+        public async Task<IActionResult> AddCasePersonCrime(int caseCrimeId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonCrime, null, AuditConstants.Operations.Append, caseCrimeId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonCrime, null, AuditConstants.Operations.Append, caseCrimeId))
             {
                 return Redirect_Denied();
             }
-            var caseCrime = service.GetById<CaseCrime>(caseCrimeId);
+            var caseCrime = await service.GetByIdAsync<CaseCrime>(caseCrimeId);
             SetViewbagCasePersonCrime(caseCrime.CaseId, caseCrimeId);
             var model = new CasePersonCrime()
             {
@@ -454,13 +523,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditCasePersonCrime(int id)
+        public async Task<IActionResult> EditCasePersonCrime(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonCrime, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonCrime, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CasePersonCrime>(id);
+            var model = await service.GetByIdAsync<CasePersonCrime>(id);
             SetViewbagCasePersonCrime(model.CaseId, model.CaseCrimeId);
             return View(nameof(EditCasePersonCrime), model);
         }
@@ -523,25 +592,26 @@ namespace IOWebApplication.Controllers
             }
             return View(nameof(EditCasePersonCrime), model);
         }
-       
+
         void SetViewbagCasePersonCrime(int caseId, int caseCrimeId)
         {
-            ViewBag.CasePersonId_ddl = casePerson.GetDropDownList(caseId, null, false, 0, 0, false);
+            //ViewBag.CasePersonId_ddl = casePerson.GetDropDownList(caseId, null, false, 0, 0, false);
+            ViewBag.CasePersonId_ddl = casePerson.CasePerson_SelectForDropDownList(caseId, null, string.Empty, string.Empty, DateTime.Now, false);
             ViewBag.RecidiveTypeId_ddl = nomService.GetDropDownList<RecidiveType>();
-            ViewBag.PersonRoleInCrimeId_ddl = nomService.GetDropDownList<PersonRoleInCrime>();
+            ViewBag.PersonRoleInCrimeId_ddl = nomService.GetDropDownList<Infrastructure.Data.Models.Nomenclatures.PersonRoleInCrime>();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonCrime(caseCrimeId);
             SetHelpFile(HelpFileValues.CasePersonSentence);
         }
 
         [HttpPost]
-        public IActionResult CasePersonCrime_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CasePersonCrime_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonCrime, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonCrime, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
-            
-            var expireObject = service.GetById<CasePersonCrime>(model.Id);
+
+            var expireObject = await service.GetByIdAsync<CasePersonCrime>(model.Id);
             if (service.SaveExpireInfo<CasePersonCrime>(model))
             {
                 SetAuditContextDelete(service, SourceTypeSelectVM.CasePersonCrime, model.Id);
@@ -559,9 +629,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonSentenceId"></param>
         /// <returns></returns>
-        public IActionResult IndexCasePersonSentencePunishment(int casePersonSentenceId)
+        public async Task<IActionResult> IndexCasePersonSentencePunishment(int casePersonSentenceId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishment, null, AuditConstants.Operations.View, casePersonSentenceId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishment, null, AuditConstants.Operations.View, casePersonSentenceId))
             {
                 return Redirect_Denied();
             }
@@ -592,13 +662,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="casePersonSentenceId"></param>
         /// <returns></returns>
-        public IActionResult AddCasePersonSentencePunishment(int casePersonSentenceId)
+        public async Task<IActionResult> AddCasePersonSentencePunishment(int casePersonSentenceId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishment, null, AuditConstants.Operations.Append, casePersonSentenceId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishment, null, AuditConstants.Operations.Append, casePersonSentenceId))
             {
                 return Redirect_Denied();
             }
-            var casePersonSentence = service.GetById<CasePersonSentence>(casePersonSentenceId);
+            var casePersonSentence = await service.GetByIdAsync<CasePersonSentence>(casePersonSentenceId);
             SetViewbagCasePersonSentencePunishment(casePersonSentenceId);
             var model = new CasePersonSentencePunishment()
             {
@@ -617,13 +687,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditCasePersonSentencePunishment(int id)
+        public async Task<IActionResult> EditCasePersonSentencePunishment(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishment, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishment, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CasePersonSentencePunishment>(id);
+            var model = await service.GetByIdAsync<CasePersonSentencePunishment>(id);
             SetViewbagCasePersonSentencePunishment(model.CasePersonSentenceId);
             return View(nameof(EditCasePersonSentencePunishment), model);
         }
@@ -633,10 +703,21 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private string IsValidCasePersonSentencePunishment(CasePersonSentencePunishment model)
+        private async Task<string> IsValidCasePersonSentencePunishment(CasePersonSentencePunishment model)
         {
-            if (model.SentenceTypeId < 1)
-                return "Изберете наказание.";
+            if (model.SentenceTypeId == null || model.SentenceTypeId < 1)
+                return "Изберете наложено наказание.";
+
+            if (model.PunishmentGeneralCategoryId == null || model.PunishmentGeneralCategoryId < 1)
+                return "Изберете обща категория.";
+
+            var sentenceTypeHas = await nomService.GetSentenceTypeHas(model.SentenceTypeId ?? 0);
+
+            if (sentenceTypeHas.HasMoney && model.SentenceTypeId == NomenclatureConstants.SentenceTypes.Fine)
+            {
+                if (model.SentenseMoney < (decimal)0.001)
+                    return "Въведете размер в лева";
+            }
 
             if (model.IsMainPunishment)
             {
@@ -645,6 +726,8 @@ namespace IOWebApplication.Controllers
                     return "Има наказание маркирано като основно.";
                 }
             }
+
+
 
             //if (model.SentenseDays < 0)
             //    return "Не може да въведете отрицателен брой дни";
@@ -658,7 +741,7 @@ namespace IOWebApplication.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult EditCasePersonSentencePunishment(CasePersonSentencePunishment model)
+        public async Task<IActionResult> EditCasePersonSentencePunishment(CasePersonSentencePunishment model)
         {
             SetViewbagCasePersonSentencePunishment(model.CasePersonSentenceId);
 
@@ -667,7 +750,7 @@ namespace IOWebApplication.Controllers
                 return View(nameof(EditCasePersonSentencePunishment), model);
             }
 
-            string _isvalid = IsValidCasePersonSentencePunishment(model);
+            string _isvalid = await IsValidCasePersonSentencePunishment(model);
             if (_isvalid != string.Empty)
             {
                 SetErrorMessage(_isvalid);
@@ -692,14 +775,16 @@ namespace IOWebApplication.Controllers
         void SetViewbagCasePersonSentencePunishment(int casePersonSentenceId)
         {
             ViewBag.SentenceTypeId_ddl = nomService.GetDropDownList<SentenceType>();
+            ViewBag.PunishmentGeneralCategoryId_ddl = nomService.GetDropDownList<PunishmentGeneralCategory>();
             ViewBag.SentenceRegimeTypeId_ddl = nomService.GetDropDownList<SentenceRegimeType>();
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonSentencePunishment(casePersonSentenceId);
+            ViewBag.IsViewBGN = userContext.IsInterimPeriodEuro;
             SetHelpFile(HelpFileValues.CasePerson);
         }
         [HttpPost]
-        public IActionResult CasePersonPunishment_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CasePersonPunishment_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishment, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishment, model.Id, AuditConstants.Operations.Delete))
             {
                 return Json(new { result = false, message = "Нямате права да изтриете наказанието" });
             }
@@ -744,7 +829,17 @@ namespace IOWebApplication.Controllers
             }
             return valResult;
         }
-        
+
+        /// <summary>
+        /// Метод извличащ настройките на присъда
+        /// </summary>
+        /// <param name="sentenceTypeId">Идентификатор на записа</param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<JsonResult> GetSentenceTypeHas(int sentenceTypeId)
+        {
+            return Json(new { result = await nomService.GetSentenceTypeHas(sentenceTypeId) });
+        }
 
         [HttpPost]
         public JsonResult Is_Period(int sentenceTypeId)
@@ -763,9 +858,9 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="CasePersonSentencePunishmentId"></param>
         /// <returns></returns>
-        public IActionResult IndexCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
+        public async Task<IActionResult> IndexCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, null, AuditConstants.Operations.View, CasePersonSentencePunishmentId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, null, AuditConstants.Operations.View, CasePersonSentencePunishmentId))
             {
                 return Redirect_Denied();
             }
@@ -802,13 +897,13 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="CasePersonSentencePunishmentId"></param>
         /// <returns></returns>
-        public IActionResult AddCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
+        public async Task<IActionResult> AddCasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, null, AuditConstants.Operations.Append, CasePersonSentencePunishmentId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, null, AuditConstants.Operations.Append, CasePersonSentencePunishmentId))
             {
                 return Redirect_Denied();
             }
-            var casePersonSentencePunishment = service.GetById<CasePersonSentencePunishment>(CasePersonSentencePunishmentId);
+            var casePersonSentencePunishment = await service.GetByIdAsync<CasePersonSentencePunishment>(CasePersonSentencePunishmentId);
             SetViewbagCasePersonSentencePunishmentCrime(CasePersonSentencePunishmentId);
             var model = new CasePersonSentencePunishmentCrime()
             {
@@ -862,9 +957,9 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditCasePersonSentencePunishmentCrime), model);
         }
 
-        public IActionResult CasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId, int? id)
+        public async Task<IActionResult> CasePersonSentencePunishmentCrime(int CasePersonSentencePunishmentId, int? id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, null, AuditConstants.Operations.Append, CasePersonSentencePunishmentId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, null, AuditConstants.Operations.Append, CasePersonSentencePunishmentId))
             {
                 return Redirect_Denied();
             }
@@ -872,11 +967,11 @@ namespace IOWebApplication.Controllers
             CasePersonSentencePunishmentCrime model;
             if (id > 0)
             {
-                model = nomService.GetById<CasePersonSentencePunishmentCrime>(id);
+                model = await nomService.GetByIdAsync<CasePersonSentencePunishmentCrime>(id);
             }
             else
             {
-                var casePersonSentencePunishment = service.GetById<CasePersonSentencePunishment>(CasePersonSentencePunishmentId);
+                var casePersonSentencePunishment = await service.GetByIdAsync<CasePersonSentencePunishment>(CasePersonSentencePunishmentId);
                 model = new CasePersonSentencePunishmentCrime()
                 {
                     CaseId = casePersonSentencePunishment.CaseId,
@@ -939,6 +1034,18 @@ namespace IOWebApplication.Controllers
         }
 
         /// <summary>
+        /// Изтриване на Участие в престъпления
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<JsonResult> CasePersonSentencePunishmentCrime_Delete(int Id)
+        {
+            await CheckAccessAsync(service, SourceTypeSelectVM.CasePersonSentencePunishmentCrime, Id, AuditConstants.Operations.Delete);
+            return Json(new { result = await service.CasePersonSentencePunishmentCrime_DeleteData(Id) });
+        }
+
+        /// <summary>
         /// Създаване на динамичен панел Наказание към престъпление
         /// </summary>
         /// <param name="index"></param>
@@ -966,18 +1073,32 @@ namespace IOWebApplication.Controllers
         {
             var casePersonSentencePunishment = service.GetById<CasePersonSentencePunishment>(CasePersonSentencePunishmentId);
             var casePersonSentence = service.GetById<CasePersonSentence>(casePersonSentencePunishment.CasePersonSentenceId);
-            ViewBag.PersonRoleInCrimeId_ddl = nomService.GetDropDownList<PersonRoleInCrime>();
+            ViewBag.PersonRoleInCrimeId_ddl = nomService.GetDropDownList<Infrastructure.Data.Models.Nomenclatures.PersonRoleInCrime>();
             ViewBag.RecidiveTypeId_ddl = nomService.GetDropDownList<RecidiveType>();
             ViewBag.CaseCrimeId_ddl = service.GetDropDownList_CasePersonCrime(casePersonSentence.CaseId);
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonSentencePunishmentCrime(CasePersonSentencePunishmentId);
             ViewBag.PunishmentKindDDL = EisppDropDownVM(eisppService.GetDDL_EISPPTblElement(EISPPConstants.EisppTableCode.PunishmentKind)); // nkzvid 209 Видове наказания
             SetHelpFile(HelpFileValues.CasePerson);
+            ViewBag.IsViewBGN = userContext.IsInterimPeriodEuro;
         }
 
-        void SetViewBagBulletin(int personId)
+        private async Task SetViewBagBulletin(int personId, int buletinId)
         {
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCasePersonSentence(personId);
             SetHelpFile(HelpFileValues.CasePerson);
+            ViewBag.IssuingCountryId_ddl = await nomService.GetDDL_Countries(true);
+            ViewBag.BirthDayPlaceCountryId_ddl = await nomService.GetDDL_Countries(true);
+            ViewBag.NationalityCountryOneId_ddl = await nomService.GetDDL_Countries(true);
+            ViewBag.NationalityCountryTwoId_ddl = await nomService.GetDDL_Countries(true);
+            ViewBag.OtherUicIssuingCountryId_ddl = await nomService.GetDDL_Countries(true);
+
+            if (buletinId > 0)
+            {
+                ViewBag.DateRegisteredInCais = await caisBuletinService.SelectFiles(buletinId)
+                                                        .Where(x => x.DateRegisteredInCais != null)
+                                                        .Select(x => x.DateRegisteredInCais)
+                                                        .MaxAsync();
+            }
         }
 
         /// <summary>
@@ -985,12 +1106,12 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="personId"></param>
         /// <returns></returns>
-        public IActionResult AddBulletin(int personId)
+        public async Task<IActionResult> AddBulletin(int personId)
         {
             var bulletin = service.CasePersonSentenceBulletin_GetByIdPerson(personId);
             if (bulletin == null)
             {
-                SetViewBagBulletin(personId);
+                await SetViewBagBulletin(personId, 0);
 
                 var caseSentence = service.CasePersonSentence_GetByPerson(personId);
                 var caseModel = service.GetById<Case>(caseSentence.CaseId);
@@ -1004,7 +1125,8 @@ namespace IOWebApplication.Controllers
                     CaseId = caseSentence.CaseId,
                     CourtId = userContext.CourtId,
                     CaseTypeId = caseModel.CaseTypeId,
-                    SentenceDescription = caseSentence.Description.Replace(Environment.NewLine, "<p>"),
+                    SentenceDescription = "<div style='text-align:justify'>" + service.GetTextNewBulletin(caseSentence.Id, caseSentence.ChangedCasePersonSentenceId) +
+                    "<br>" + caseSentence.Description.Replace(Environment.NewLine, "<br>") + "</div>",
                     LawUnitSignId = caseLawUnit != null ? caseLawUnit.LawUnitId : 0,
                 };
                 if (birthDay != null)
@@ -1022,11 +1144,10 @@ namespace IOWebApplication.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IActionResult EditBulletin(int id)
+        public async Task<IActionResult> EditBulletin(int id)
         {
-            var model = service.CasePersonSentenceBulletin_GetById(id);
-            SetViewBagBulletin(model.CasePersonId);
-
+            var model = await service.CasePersonSentenceBulletin_GetById(id);
+            await SetViewBagBulletin(model.CasePersonId, id);
             return View(nameof(EditBulletin), model);
         }
 
@@ -1038,7 +1159,7 @@ namespace IOWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> EditBulletin(CasePersonSentenceBulletinEditVM model)
         {
-            SetViewBagBulletin(model.CasePersonId);
+            await SetViewBagBulletin(model.CasePersonId, model.Id);
             if (model.LawUnitSignId <= 0)
             {
                 ModelState.AddModelError(nameof(CasePersonSentenceBulletinEditVM.LawUnitSignId), "Изберете подписващ съдия");
@@ -1049,10 +1170,10 @@ namespace IOWebApplication.Controllers
                 return View(nameof(EditBulletin), model);
             }
             var currentId = model.Id;
-            (bool result, string errorMessage) = service.CasePersonSentenceBulletin_SaveData(model);
+            (bool result, string errorMessage) = await service.CasePersonSentenceBulletin_SaveData(model);
             if (result == true)
             {
-                await SaveFileBulletin(model.Id);
+                //await SaveFileBulletin(model.Id, model.CasePersonId);
                 this.SaveLogOperation(currentId == 0, model.Id);
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
                 return RedirectToAction(nameof(EditBulletin), new { id = model.Id });
@@ -1064,33 +1185,93 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditBulletin), model);
         }
 
+        public async Task<FileContentVM> GetBulletinBytes(int id)
+        {
+            FileContentVM result = new FileContentVM();
+
+            if (userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request9_2024))
+            {
+                CaisBuletinModel model = await caisBuletinService.InitBuletinModel(id);
+                if (!string.IsNullOrEmpty(model.ErrorMessage))
+                {
+                    result.FileError = model.ErrorMessage;
+                    return result;
+                }
+                result.RegNumber = model.BuletinInfo.BuletinNumber;
+                string html = await this.RenderPartialViewAsync("~/Views/CasePersonSentence/", "_CriminalReport.cshtml", model, true);
+                result.Content = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html })
+                {
+                    PageSize = Rotativa.AspNetCore.Options.Size.A4,
+                    CustomSwitches = "--disable-smart-shrinking --margin-bottom 10mm --margin-top 5mm --margin-right 5mm --footer-right [page] --footer-font-size 8 --footer-font-name \"Times New Roman\" --footer-spacing 6"
+                }
+                .GetByte(this.ControllerContext);
+            }
+            else
+            {
+                TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateSentenceBulletin(id);
+                string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
+                result.Content = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html })
+                {
+                    PageSize = Rotativa.AspNetCore.Options.Size.B5,
+                    CustomSwitches = "--disable-smart-shrinking --margin-top 16mm --margin-right 15mm  --margin-left 15mm"
+                }
+                .GetByte(this.ControllerContext);
+            }
+            return result;
+        }
+
+        public async Task<IActionResult> PreviewBulletin(int id)
+        {
+            var buletinFile = await GetBulletinBytes(id);
+
+            if (!string.IsNullOrEmpty(buletinFile.FileError))
+            {
+                SetErrorMessage(buletinFile.FileError);
+                return RedirectToAction(nameof(EditBulletin), new { id });
+            }
+
+            var contentDispositionHeader = new ContentDisposition()
+            {
+                Inline = true,
+                FileName = $"casePersonBulletin_{DateTime.Now:yyyyMMdd}_preview.pdf"
+            };
+
+            Response.Headers.Append("Content-Disposition", contentDispositionHeader.ToString());
+
+            return File(buletinFile.Content, NomenclatureConstants.ContentTypes.Pdf);
+        }
+
         /// <summary>
         /// запис на файл за бюлетин към лице
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<bool> SaveFileBulletin(int id)
+        public async Task<SaveResultVM> SaveFileBulletin(int id, int xmlFileId)
         {
-            TinyMCEVM htmlModel = printDocumentService.FillHtmlTemplateSentenceBulletin(id);
-            string html = await this.RenderPartialViewAsync("~/Views/Shared/", "PreviewRaw.cshtml", htmlModel, true);
-            var pdfBytes = await new ViewAsPdfByteWriter("CreatePdf", new BlankEditVM() { HtmlContent = html })
+            var pdfContent = await GetBulletinBytes(id);
+            if (!string.IsNullOrEmpty(pdfContent.FileError))
             {
-                PageSize = Rotativa.AspNetCore.Options.Size.B5
+                return new SaveResultVM(false, pdfContent.FileError);
             }
-            .GetByte(this.ControllerContext);
+
             var pdfRequest = new CdnUploadRequest()
             {
-                SourceType = SourceTypeSelectVM.CasePersonBulletin,
-                SourceId = id.ToString(),
-                FileName = "bulletin.pdf",
-                ContentType = "application/pdf",
-                Title = "Бюлетин за съдимост",
-                FileContentBase64 = Convert.ToBase64String(pdfBytes)
+                SourceType = SourceTypeSelectVM.CasePersonBulletinPdf,
+                SourceId = xmlFileId.ToString(),
+                FileName = $"casePersonBulletin_{pdfContent.RegNumber}.pdf",
+                ContentType = NomenclatureConstants.ContentTypes.Pdf,
+                Title = $"Бюлетин за съдимост {pdfContent.RegNumber}/{DateTime.Now:dd.MM}",
+                FileContentBase64 = Convert.ToBase64String(pdfContent.Content)
             };
+
             bool result = await cdnService.MongoCdn_AppendUpdate(pdfRequest);
             Response.Headers.Clear();
 
-            return result;
+            return new SaveResultVM()
+            {
+                Result = result,
+                ObjectId = pdfRequest.FileId
+            };
         }
 
 
@@ -1101,7 +1282,7 @@ namespace IOWebApplication.Controllers
         /// <returns></returns>
         public async Task<IActionResult> AddCaseCrimeEispp(int caseId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.Case, caseId, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.Case, caseId, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
@@ -1157,5 +1338,169 @@ namespace IOWebApplication.Controllers
             }
             return Json(err);
         }
+
+        public async Task<IActionResult> DoTask_SentBuletinForSign(long id)
+        {
+            var task = await taskService.ReadById(id);
+
+            int buletinId = (int)task.SourceId;
+            if (CheckDoublePostback("asgn"))
+            {
+                return RedirectToAction(nameof(EditBulletin), new { id = buletinId });
+            }
+
+            if (task.TaskStateId == WorkTaskConstants.States.Completed || task.DateCompleted != null)
+            {
+                if (task.DateCompleted < DateTime.Now.AddSeconds(-1))
+                {
+                    SetErrorMessage("Задачата вече е изпълнена успешно.");
+                }
+                else
+                {
+                    SetSuccessMessage("Задачите за подписване са създадени успешно.");
+                }
+                return RedirectToAction(nameof(EditBulletin), new { id = buletinId });
+            }
+
+            var buletinModel = await caisBuletinService.InitBuletinModel(buletinId);
+            if (!string.IsNullOrEmpty(buletinModel.ErrorMessage))
+            {
+                SetErrorMessage(buletinModel.ErrorMessage);
+                return RedirectToAction(nameof(EditBulletin), new { id = buletinId });
+            }
+
+
+            if (task.TaskStateId == WorkTaskConstants.States.Completed || task.DateCompleted != null)
+            {
+                SetErrorMessage("Задачата вече е изпълнена успешно.");
+                return RedirectToAction(nameof(EditBulletin), new { id = buletinId });
+            }
+
+            var bulletinFileId = await caisBuletinService.InitOrGetBulletinFile(buletinId, task.TaskTypeId == WorkTaskConstants.Types.CasePersonBulletin_SentToSignNewNumber);
+
+            if (bulletinFileId == 0)
+            {
+                SetErrorMessage("Грешка при създаване на задача. Моля, опитайте по-късно.");
+                return RedirectToAction(nameof(EditBulletin), new { id = buletinId });
+            }
+
+            //Валидира xml на бюлетин, преди изпращане към ЦАЙС Съдебен статус
+            //Ако има валидационни грешки задачата се отменя и грешките остават в описание на задачата
+            var caisValidationResult = await proxyService.CaisValidateBulletin(buletinId);
+            if (!caisValidationResult.Result)
+            {
+                await taskService.RejectTask(id, caisValidationResult.Content);
+                SetErrorMessage(caisValidationResult.Content);
+                return RedirectToAction(nameof(EditBulletin), new { id = buletinId });
+            }
+
+
+            var taskInitResult = await service.SendBuletinForSign_Init(buletinId, bulletinFileId, id);
+            if (taskInitResult.Result)
+            {
+                SetSuccessMessage("Задачите за подписване са създадени успешно.");
+                await taskService.CompleteTask(id);
+            }
+            else
+            {
+                SetErrorMessage(taskInitResult.ErrorMessage);
+            }
+
+
+            return RedirectToAction(nameof(EditBulletin), new { id = buletinId });
+
+        }
+
+        public async Task<IActionResult> test(int id)
+        {
+            var valRes = await proxyService.CaisValidateBulletin(id);
+            return Ok(valRes);
+        }
+
+        public async Task<IActionResult> SendBuletinForSign(int id, long taskId)
+        {
+            var buletinModel = await service.GetReadonlyAsync<CasePersonSentenceBulletin>(id);
+            if (buletinModel == null)
+            {
+                return Redirect_Denied("Търсения от Вас обект не беше намерен!");
+            }
+            //if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionAct, buletinModel.Id, AuditConstants.Operations.Update, _act.CaseSessionId))
+            //{
+            //    return Redirect_Denied();
+            //}
+
+            var xmlFileId = await service.GetPropByIdAsync<WorkTask, long?>(taskId, x => x.SubSourceId) ?? 0;
+
+            var registerResult = await caisBuletinService.RegisterBulletinFile((int)xmlFileId);
+
+            var safeFileResult = await SaveFileBulletin(buletinModel.Id, (int)xmlFileId);
+            if (!safeFileResult.Result)
+            {
+                SetErrorMessage("Грешка при създаване на бюлетин за съдимост");
+                return RedirectToAction(nameof(EditBulletin), new { id });
+            }
+
+            CaisBuletinModel caisBuletinModel = await caisBuletinService.InitBuletinModel(id);
+            var caisXmlData = caisMapperService.GetXml(caisBuletinModel);
+            var xmlRequest = new CdnUploadRequest()
+            {
+                SourceType = SourceTypeSelectVM.CasePersonBulletinXml,
+                SourceId = xmlFileId.ToString(),
+                FileName = $"caisXmlData_{caisBuletinModel.BuletinInfo.BuletinNumber}.xml",
+                ContentType = MediaTypeNames.Application.Xml,
+                Title = $"Бюлетин за съдимост {DateTime.Now:yyyyMMdd}",
+                FileContentBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(caisXmlData))
+            };
+            bool resultXml = await cdnService.MongoCdn_AppendUpdate(xmlRequest);
+            Response.Headers.Clear();
+
+            Uri url = new Uri(Url.Action(nameof(EditBulletin), new { id }), UriKind.Relative);
+
+            var model = new SignPdfInfo()
+            {
+                SourceId = xmlFileId.ToString(),
+                SourceType = SourceTypeSelectVM.CasePersonBulletinXml,
+                PreviewFileId = safeFileResult.ObjectId.ToString(),
+                DestinationType = SourceTypeSelectVM.CasePersonBulletinXml,
+                Location = userContext.CourtName,
+                Reason = "Подписване на бюлетин за съдимост",
+                SuccessUrl = url,
+                CancelUrl = url,
+                ErrorUrl = url,
+                WorkTaskId = taskId
+            };
+
+            var lu = taskService.GetLawUnitByTaskId(taskId);
+            if (lu != null)
+            {
+                model.SignerName = lu.FullName;
+                model.SignerUic = lu.Uic;
+            }
+
+            return View("_SignXml", model);
+        }
+
+        public async Task<IActionResult> zzzGetXml(int id)
+        {
+            if (!userContext.IsUserInRole(AccountConstants.Roles.GlobalAdministrator))
+            {
+                return null;
+            }
+            CaisBuletinModel caisBuletinModel = await caisBuletinService.InitBuletinModel(id);
+            var caisXmlData = caisMapperService.GetXml(caisBuletinModel);
+            return Content(caisXmlData);
+        }
+
+        //public async Task<IActionResult> xml(int id)
+        //{
+
+        //    CaisBuletinModel model = await caisBuletinService.InitBuletinModel(id);
+
+        //    var mappedData = caisMapperService.MapData(model);
+        //    var xmlData = caisMapperService.GetXmlDataForSign(mappedData);
+
+        //    return Content(xmlData);
+
+        //}
     }
 }

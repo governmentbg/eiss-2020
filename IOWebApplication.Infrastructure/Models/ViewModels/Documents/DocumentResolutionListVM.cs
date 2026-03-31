@@ -12,5 +12,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public string RegNumber { get; set; }
         public DateTime? RegDate { get; set; }
         public string ResolutionTypeLabel { get; set; }
+
+        public virtual ICollection<DocumentTemplateVM> DocumentTemplateVMs { get; set; }
     }
 }

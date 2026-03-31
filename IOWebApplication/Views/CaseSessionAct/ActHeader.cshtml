@@ -1,82 +1,128 @@
-﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+﻿@using IOWebApplication.Infrastructure.Contracts
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Core.Helper
+@using IOWebApplication.Infrastructure.Constants
+@inject IUserContext userContext
 @model CaseSessionActPrintVM
 @{
     Layout = null;
-}
-<partial name="ActHeaderLegacy" model="@Model" />
-<div style="text-align:center;width:100%;">
-    <h2>@Model.ActTypeName.ToUpper()</h2>
-    @if (!string.IsNullOrEmpty(Model.ActRegNumber))
+    string courtText = Model.CourtName;
+    if (Model.IsMixedJuryVKS_VAS)
     {
-        <h3>No @Model.ActRegNumber</h3>
-        <h3>гр. @Model.CourtCity, @Model.ActRegDate</h3>
+        courtText = "Върховният касационен съд и Върховният административен съд на Република България";
+        courtText += ", смесен петчленен състав, ";
     }
     else
     {
-        <h3>Регистрационният номер ще бъде генериран след предаване за подпис на акта</h3>
-        <h3>гр. @Model.CourtCity</h3>
+        if (!string.IsNullOrEmpty(Model.DepartmentName))
+        {
+            courtText += ", " + Model.DepartmentName + ", ";
+        }
     }
-    @if (Model.ActTypeCode != "protocol")
-    {
-        <h2>В ИМЕТО НА НАРОДА</h2>
-    }
-</div>
-<div>
-    @Model.CourtName
-</div>
-@if (!string.IsNullOrEmpty(Model.CompartmentName))
-{
-    <div>
-        @Model.CompartmentType : @Model.CompartmentName
-    </div>
+    var roleCol = 18;
+    var nameCol = 45;
 }
-@if (!string.IsNullOrEmpty(Model.DepartmentName))
-{
-    <div>
-        Състав: @Model.DepartmentName
+<div class="act-header" style="width:100%;">
+    <div style="text-align:center;">
+        <partial name="_ExecListExecProcessInfo" model="@Model" />
+        <h2><b>@Model.BlankActTypeName.ToUpper()</b></h2>
+        @if (!string.IsNullOrEmpty(Model.ActRegNumber))
+        {
+            <div><b>№ @Model.ActRegNumber</b></div>
+        }
+        else
+        {
+            @if (!userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024))
+            {
+                <div>
+                    Регистрационният номер ще бъде генериран след предаване за подпис на акта
+                </div>
+            }
+        }
+        <div>
+            @if (!string.IsNullOrEmpty(Model.ActRegNumber))
+            {
+                <text>гр. @Model.CourtCity, @Model.ActRegDate г.</text>
+            }
+            else
+            {
+                <text>гр. @Model.CourtCity</text>
+            }
+        </div>
+        @if (NomenclatureConstants.ActType.HasInTheNameOfPeople.Contains(Model.ActTypeId))
+        {
+            <h2 style="margin-bottom:20px;"><b>В ИМЕТО НА НАРОДА</b></h2>
+        }
+        <p style="text-align:start;text-indent:30px;"><strong>@(courtText.ToUpper())</strong> в @Model.SessionActLabel на @Model.SessionDate.FullDateDiggitName() в следния състав:</p>
     </div>
-}
-<div>
-    Съдия-докладчик: @Model.JudgeReporter
-</div>
-@if (Model.JudgeList.Count() > 0)
-{
-    <div>
-        <table class="no-border">
+    <br />
+    <table class="no-border" width="100%">
+        @if (!string.IsNullOrEmpty(Model.JudgeChairman))
+        {
             <tr>
-                <td valign="top">Член: </td>
-                <td valign="top">
-                    @foreach (var item in Model.JudgeList)
+                <td>&nbsp;</td>
+                <td width="@roleCol%" valign="top">Председател:</td>
+                <td width="@nameCol%" valign="top">@Model.JudgeChairman</td>
+            </tr>
+        }
+        @if (Model.AllJudgeList.Count > 0)
+        {
+            <tr>
+                <td>&nbsp;</td>
+                <td width="@roleCol%" valign="top">
+                    @if (Model.AllJudgeList.Count == 1)
+                    {
+                        <text>Съдия:</text>
+                    }
+                    else
+                    {
+                        <text>Членове:</text>
+                    }
+                </td>
+                <td width="@nameCol%" valign="top">
+                    @foreach (var item in Model.AllJudgeList)
                     {
                         <div>@item.Value</div>
                     }
                 </td>
             </tr>
-        </table>
-    </div>
-}
-@*@if (Model.SecretaryList.Count() > 0)
-    {
-        <div>
-            <table class="no-border">
-                <tr>
-                    <td valign="top">Секретар: </td>
-                    <td valign="top">
-                        @foreach (var item in Model.SecretaryList)
-                        {
-                            <div>@item</div>
-                        }
-                    </td>
-                </tr>
-            </table>
-        </div>
-    }*@
-<div>
-    В заседание: @Model.SessionTypeName
+        }
+        @if (Model.JuryList.Count > 0)
+        {
+            <tr>
+                <td>&nbsp;</td>
+                <td width="@roleCol%" valign="top">
+                    Съдебни заседатели:
+                </td>
+                <td width="@nameCol%" valign="top">
+                    @foreach (var item in Model.JuryList)
+                    {
+                        <div>@item</div>
+                    }
+                </td>
+            </tr>
+        }
+
+        <tr>
+            <td colspan="3">
+                <br />
+                <partial name="ActHeaderSecretaryProsecutor" model="@Model" />
+                @switch (Model.ActFormatType)
+                {
+                    case "act":
+                        <div>
+                            като разгледа докладваното от @Model.JudgeReporter @Model.CaseTypeName № @Model.CaseRegNumber по описа за @Model.CaseRegYear година
+                        </div>
+                        break;
+                    case "protokol":
+                        <div>
+                            Сложи за разглеждане докладваното от @Model.JudgeReporter @Model.CaseTypeName № @Model.CaseRegNumber по описа за @Model.CaseRegYear година.<br />
+                            На именното повикване в @Model.SessionDate.ToString("HH:mm") часа се явиха:
+                        </div>
+                        break;
+                }
+            </td>
+        </tr>
+    </table>
 </div>
-<div>
-    @Model.CaseTypeName No @Model.CaseRegNumber,
-</div>
-<div>
-    за да се произнесе взе предвид:
-</div>
+

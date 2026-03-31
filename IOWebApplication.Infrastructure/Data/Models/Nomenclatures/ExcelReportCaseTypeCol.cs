@@ -37,12 +37,19 @@ namespace IOWebApplication.Infrastructure.Data.Models.Nomenclatures
         [Column("col_index")]
         public int ColIndex { get; set; }
 
+        [Column("sisma_index")]
+        public string SismaIndex { get; set; }
+
         //Вид на справката - там са 5 справки
         [Column("report_type_id")]
         public int ReportTypeId { get; set; }
 
         [Column("is_true")]
         public bool IsTrue { get; set; }
+
+        //ProcessPriority отделени със запетая
+        [Column("process_priority_id")]
+        public string ProcessPriorityId { get; set; }
 
         [ForeignKey(nameof(CourtTypeId))]
         public virtual CourtType CourtType { get; set; }

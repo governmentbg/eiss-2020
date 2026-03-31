@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Core.Contracts;
-using IOWebApplication.Extensions;
-using IOWebApplication.Infrastructure.Data.Models.Cases;
-using Microsoft.AspNetCore.Mvc;
 using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Extensions;
+using IOWebApplication.Infrastructure.Constants;
+using IOWebApplication.Infrastructure.Data.Models.Cases;
 using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels;
 using IOWebApplication.Infrastructure.Models.ViewModels.Case;
-using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.Common;
-using IOWebApplication.Infrastructure.Constants;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Controllers
 {
@@ -46,13 +45,13 @@ namespace IOWebApplication.Controllers
 
         #region CaseSessionActComplain
 
-        public IActionResult Index(int caseSessionActId)
+        public async Task<IActionResult> Index(int caseSessionActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplain, null, AuditConstants.Operations.View, caseSessionActId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplain, null, AuditConstants.Operations.View, caseSessionActId))
             {
                 return Redirect_Denied();
             }
-            var caseSessionAct = service.GetById<CaseSessionAct>(caseSessionActId);
+            var caseSessionAct = await service.GetByIdAsync<CaseSessionAct>(caseSessionActId);
             ViewBag.caseSessionActId = caseSessionActId;
             ViewBag.IsAdd = ((caseSessionAct.ActStateId != NomenclatureConstants.SessionActState.Project) && (!string.IsNullOrEmpty(caseSessionAct.RegNumber)));
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSession(caseSessionAct.CaseSessionId);
@@ -68,6 +67,7 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
+        [TitleAudit(Operation = Infrastructure.Constants.AuditConstants.Operations.List)]
         public IActionResult IndexSpr()
         {
             ViewBag.CaseGroupId_ddl = nomService.GetDropDownList<CaseGroup>();
@@ -84,19 +84,19 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult ListDataSpr(IDataTablesRequest request, DateTime? DateFrom, DateTime? DateTo, DateTime? DateFromActReturn, DateTime? DateToActReturn, DateTime? DateFromSendDocument, DateTime? DateToSendDocument, int CaseGroupId, int CaseTypeId, string CaseRegNumber, string ActRegNumber, int RegNumFrom, int RegNumTo, int ActComplainIndexId, int ActResultId, int JudgeReporterId)
+        public IActionResult ListDataSpr(IDataTablesRequest request, CaseSessionActComplainFilterVM filter)
         {
-            var data = service.CaseSessionActComplainSpr_Select(DateFrom ?? NomenclatureExtensions.GetStartYear(), DateTo ?? NomenclatureExtensions.GetEndYear(), DateFromActReturn, DateToActReturn, DateFromSendDocument, DateToSendDocument, CaseGroupId, CaseTypeId, CaseRegNumber ?? string.Empty, ActRegNumber ?? string.Empty, RegNumFrom, RegNumTo, ActComplainIndexId, ActResultId, JudgeReporterId);
+            var data = service.CaseSessionActComplainSpr_Select(filter);
             return request.GetResponse(data);
         }
 
-        public IActionResult Add(int caseSessionActId)
+        public async Task<IActionResult> Add(int caseSessionActId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplain, null, AuditConstants.Operations.Append, caseSessionActId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplain, null, AuditConstants.Operations.Append, caseSessionActId))
             {
                 return Redirect_Denied();
             }
-            var caseSessionAct = service.GetById<CaseSessionAct>(caseSessionActId);
+            var caseSessionAct = await service.GetByIdAsync<CaseSessionAct>(caseSessionActId);
             SetViewbag(caseSessionActId);
             var model = new CaseSessionActComplain()
             {
@@ -107,13 +107,13 @@ namespace IOWebApplication.Controllers
             return View(nameof(Edit), model);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplain, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplain, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
-            var model = service.GetById<CaseSessionActComplain>(id);
+            var model = await service.GetByIdAsync<CaseSessionActComplain>(id);
             SetViewbag(model.CaseSessionActId);
             return View(nameof(Edit), model);
         }
@@ -137,7 +137,7 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(CaseSessionActComplain model)
+        public async Task<IActionResult> Edit(CaseSessionActComplain model)
         {
             SetViewbag(model.CaseSessionActId);
 
@@ -154,7 +154,7 @@ namespace IOWebApplication.Controllers
             }
 
             var currentId = model.Id;
-            if (service.CaseSessionActComplain_SaveData(model))
+            if (await service.CaseSessionActComplain_SaveData(model))
             {
                 SetAuditContext(service, SourceTypeSelectVM.CaseSessionActComplain, model.Id, currentId == 0);
                 this.SaveLogOperation(currentId == 0, model.Id);
@@ -179,13 +179,13 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult CaseSessionActComplain_ExpiredInfo(ExpiredInfoVM model)
+        public async Task<IActionResult> CaseSessionActComplain_ExpiredInfo(ExpiredInfoVM model)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplain, model.Id, AuditConstants.Operations.Delete))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplain, model.Id, AuditConstants.Operations.Delete))
             {
                 return Redirect_Denied();
             }
-            var expireObject = service.GetById<CaseSessionActComplain>(model.Id);
+            var expireObject = await service.GetByIdAsync<CaseSessionActComplain>(model.Id);
             if (caseMigrationService.IsExistMigrationWithAct(expireObject.CaseSessionActId))
             {
                 return Json(new { result = false, message = "Акта е изпратен в по-висша инстанция за обжалване." });
@@ -214,13 +214,13 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public IActionResult AddResult(int CaseSessionActComplainId)
+        public async Task<IActionResult> AddResult(int CaseSessionActComplainId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplainResult, null, AuditConstants.Operations.Append, CaseSessionActComplainId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplainResult, null, AuditConstants.Operations.Append, CaseSessionActComplainId))
             {
                 return Redirect_Denied();
             }
-            var caseSessionActComplain = service.GetById<CaseSessionActComplain>(CaseSessionActComplainId);
+            var caseSessionActComplain = await service.GetByIdAsync<CaseSessionActComplain>(CaseSessionActComplainId);
             SetViewbagResult(CaseSessionActComplainId);
             var model = new CaseSessionActComplainResultEditVM()
             {
@@ -235,15 +235,15 @@ namespace IOWebApplication.Controllers
             return View(nameof(EditResult), model);
         }
 
-        public IActionResult EditResult(int id)
+        public async Task<IActionResult> EditResult(int id)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplainResult, id, AuditConstants.Operations.Update))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplainResult, id, AuditConstants.Operations.Update))
             {
                 return Redirect_Denied();
             }
             var model = service.CaseSessionActComplainResult_GetById(id);
             model.IsStartNewLifecycle = false;
-            var caseSessionActComplain = service.GetById<CaseSessionActComplain>(model.CaseSessionActComplainId);
+            var caseSessionActComplain = await service.GetByIdAsync<CaseSessionActComplain>(model.CaseSessionActComplainId);
             model.CaseSessionActComplains = service.GetCheckListCaseSessionActComplains(caseSessionActComplain.Id, caseSessionActComplain.CaseSessionActId);
             SetViewbagResult(model.CaseSessionActComplainId);
             return View(nameof(EditResult), model);
@@ -261,6 +261,23 @@ namespace IOWebApplication.Controllers
 
                 if ((model.DateFromLifeCycle == null) && (model.IsStartNewLifecycle))
                     return "Въведете начало на интервал";
+
+                if (model.ActReturn == null)
+                    return "Въведете дата на връщане";
+
+                if (model.DateFromLifeCycle != null)
+                {
+                    if (model.DateFromLifeCycle > DateTime.Now)
+                        return "Начало на интервала не може да е бъдеща";
+
+                    var dateTimeToLast = caseLifecycleService.GetDateTimeLastCaseLifecycle(model.CaseId);
+
+                    if (dateTimeToLast != null)
+                    {
+                        if (model.DateFromLifeCycle <= dateTimeToLast)
+                            return "Начало на интервала не може да е по-малка от крайната дата на предходният интервал, която е: " + (dateTimeToLast ?? DateTime.Now).ToString("dd.MM.yyyy");
+                    }
+                }
 
                 var caseNumberDecoded = nomService.DecodeCaseRegNumber(model.CaseRegNumberOtherSystem);
                 if (!caseNumberDecoded.IsValid)
@@ -283,14 +300,14 @@ namespace IOWebApplication.Controllers
                 model.CaseYearOtherSystem = null;
                 model.CaseRegNumberOtherSystem = string.Empty;
 
-                if (model.ComplainCaseId < 1)
+                if ((model.ComplainCaseId ?? 0) < 1)
                     return "Изберете дело";
 
-                if (model.CaseSessionActId < 1)
+                if ((model.CaseSessionActId ?? 0) < 1)
                     return "Изберете акт";
             }
 
-            if (model.ActResultId < 1)
+            if ((model.ActResultId ?? 0) < 1)
                 return "Изберете резултат";
 
             if (model.DateResult == null)
@@ -344,7 +361,7 @@ namespace IOWebApplication.Controllers
 
             ViewBag.ComplainCaseId_ddl = caseMigrationService.GetDropDownList_CourtCase(caseSession.CaseId);
             //ViewBag.ActResultId_ddl = nomService.GetDropDownList<ActResult>();
-            
+
             ViewBag.breadcrumbs = commonService.Breadcrumbs_GetForCaseSessionActComplainEdit(CaseSessionActComplainId);
             ViewBag.hasIsStartNewLifecycle = caseLifecycleService.CaseLifecycle_IsAllLifcycleClose(caseSession.CaseId);
             SetHelpFile(HelpFileValues.SessionAct);
@@ -375,9 +392,9 @@ namespace IOWebApplication.Controllers
             return request.GetResponse(data);
         }
 
-        public IActionResult AddCaseSessionActComplainPerson(int CaseSessionActComplainId)
+        public async Task<IActionResult> AddCaseSessionActComplainPerson(int CaseSessionActComplainId)
         {
-            if (!CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplainResult, null, AuditConstants.Operations.Update, CaseSessionActComplainId))
+            if (!await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplainResult, null, AuditConstants.Operations.Update, CaseSessionActComplainId))
             {
                 return Redirect_Denied();
             }
@@ -393,14 +410,14 @@ namespace IOWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddCaseSessionActComplainPerson(CheckListViewVM model)
+        public async Task<IActionResult> AddCaseSessionActComplainPerson(CheckListViewVM model)
         {
             if (service.CaseSessionActComplainPerson_SaveData(model))
                 SetSuccessMessage(MessageConstant.Values.SaveOK);
             else
                 SetErrorMessage(MessageConstant.Values.SaveFailed);
 
-            CheckAccess(service, SourceTypeSelectVM.CaseSessionActComplainResult, null, AuditConstants.Operations.Update, model.ObjectId);
+            await CheckAccessAsync(service, SourceTypeSelectVM.CaseSessionActComplainResult, null, AuditConstants.Operations.Update, model.ObjectId);
 
             ViewBag.backUrl = Url.Action("Edit", "CaseSessionActComplain", new { id = model.ObjectId });
             return View("CheckListViewVM", model);

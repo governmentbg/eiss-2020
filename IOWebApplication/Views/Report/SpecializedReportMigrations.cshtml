@@ -1,0 +1,193 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Report
+@model int
+
+@{
+    ViewData["Title"] = ViewBag.CaseName;
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="mainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            LoadTable();
+        });
+    </script>
+}
+
+<script>
+    function LoadTable() {
+        if ($.fn.dataTable.isDataTable('#mainTable')) {
+            refreshTable('#mainTable');
+        }
+        else {
+            $('#mainTable').DataTable({
+                ajax: {
+                    "url": "@Url.Action("ListDataSpecializedReportMigrations")",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.caseId = @Model;
+                    }
+                },
+                filter:false,
+                columns: [
+                    {
+                        name: 'courtLabel',
+                        data: 'courtLabel',
+                        title: 'Съд на образуване',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseInstanceLabel',
+                        data: 'caseInstanceLabel',
+                        title: 'Инстанция',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'regNumber',
+                        data: 'regNumber',
+                        title: 'Номер на дело',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'regDate',
+                        data: 'regDate',
+                        title: 'Дата',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            if (data)
+                                return moment(data).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'eisspNumber',
+                        data: 'eisspNumber',
+                        title: 'ЕИСПП номер',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseGroupLabel',
+                        data: 'caseGroupLabel',
+                        title: 'Основен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseTypeLabel',
+                        data: 'caseTypeLabel',
+                        title: 'Точен вид',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseCodeLabel',
+                        data: 'caseCodeLabel',
+                        title: 'Шифър',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseClassificationLabel',
+                        data: 'caseClassificationLabel',
+                        title: 'Индикатори по дело',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseStateLabel',
+                        data: 'caseStateLabel',
+                        title: 'Статус',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'caseMigrationRegNumber',
+                        data: 'caseMigrationRegNumber',
+                        title: 'Номер на свързани дела',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actInforcedDate',
+                        data: 'actInforcedDate',
+                        title: 'Дата на влизане в сила на акта',
+                        sortable: true,
+                        searchable: true,
+                        render: function (data) {
+                            if (data)
+                                return moment(data).format("DD.MM.YYYY");
+                            else
+                                return "";
+                        }
+                    },
+                    {
+                        name: 'actComplainResultLabel',
+                        data: 'actComplainResultLabel',
+                        title: 'Резултат/степен на уважаване на иска',
+                        sortable: true,
+                        searchable: true
+                    },
+                    {
+                        name: 'caseSessionActs',
+                        data: 'caseSessionActs',
+                        title: 'Финализиращи актове',
+                        sortable: true,
+                        searchable: false
+                    },
+                    {
+                        name: 'actions',
+                        data: "id",
+                        title: "",
+                        width: 100,
+                        sortable: false,
+                        searchable: false,
+                        className: "text-center noExport",
+                        "render": function (value) {
+                            return TemplateToHtml('#templateEdit', value);
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    $(function () {
+        $(document).on('click', 'div.cdn-listview a.cdn-loader', function () {
+            let url = '@Url.Action("FileListView","Files")';
+            if ($(this).data('url')) {
+                url = $(this).data('url');
+            }
+            let lnk = $(this);
+            requestContent(url,
+                { sourceType: $(this).data('sourcetype'), sourceId: $(this).data('sourceid') },
+                function (html) {
+                    $(lnk).parent().html(html);
+                });
+            return false;
+        });
+    });
+</script>
+
+<script id="templateEdit" type="text/x-handlebars-template">
+    <div class="row">
+    </div>
+</script>

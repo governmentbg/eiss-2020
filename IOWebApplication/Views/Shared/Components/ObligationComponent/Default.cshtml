@@ -1,0 +1,58 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
+@using IOWebApplication.Infrastructure.Models.ViewModels.Money
+@model IEnumerable<ObligationVM>
+@if (!Model.Any())
+{
+    return;
+}
+<fieldset class="is-fieldset">
+    <legend class="legend_1">
+        Суми към документ
+    </legend>
+    <div class="row">
+        <div class="col-lg-3">
+            <label class="control-label">Задължение</label>
+        </div>
+        <div class="col-lg-3">
+            <label class="control-label">Плащане</label>
+        </div>
+        <div class="col-lg-3">
+            <label class="control-label">Дата</label>
+        </div>
+        <div class="col-lg-3">
+            <label class="control-label">Забележка</label>
+        </div>
+    </div>
+    @foreach (var obligation in Model)
+    {
+        <div class="row">
+            <div class="col-lg-3">
+                @obligation.Amount.ToString("N2")
+                <br />
+                <span class="text-muted">@obligation.ObligationCourtName</span>
+            </div>
+            <div class="col-lg-9">
+                @foreach (var payment in obligation.Payments)
+                {
+                    <div class="row">
+                        <div class="col-lg-4">
+                            @payment.Amount.ToString("N2")
+                            <br />
+                            <span class="text-muted">@payment.PaymentCourtName</span>
+                        </div>
+                        <div class="col-lg-4">
+                            @payment.PaymentDate.ToString("dd.MM.yyyy")
+                            @if (payment.IsAutomatic)
+                            {
+                                <span title="Автоматично прихваната сума от банково плащане">&nbsp<b>авт.</b></span>
+                            }
+                            <br />
+                            <span class="text-muted">@payment.PaymentTypeName</span>
+                        </div>
+                        <div class="col-lg-4">@payment.Description</div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</fieldset>

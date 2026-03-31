@@ -7,6 +7,7 @@
             <div class="col-lg-6 col-md-6 col-sm-12">
                 <input type="hidden" name="@(Model.GetPrefix).Index" value="@Model.Index" />
                 @Html.HiddenFor(x => x.Id)
+                @Html.HiddenFor(x => x.PersonGid)
                 @Html.HiddenFor(x => x.Person_SourceType)
                 @Html.HiddenFor(x => x.Person_SourceId)
                 @Html.HiddenFor(x => x.Person_SourceCode)
@@ -23,7 +24,7 @@
                 </h4>
                 <div class="row">
                     <div class="col-lg-6">
-                        @Html.EditorFor(x => x.PersonRoleId, "SelectPersonRole")
+                        @Html.EditorFor(x => x.PersonRoleId, "SelectPersonRole", null, new { selectedrole = Model.PersonRoleLabel, rolekind = Model.PersonRoleKind })
                         @*@Html.EditorFor(x => x.PersonRoleId, "DropDown", null, new { Ddl = ViewBag.PersonRoles })*@
                     </div>
                     <div class="col-lg-6">

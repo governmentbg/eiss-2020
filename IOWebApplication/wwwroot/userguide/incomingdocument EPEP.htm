@@ -1,0 +1,450 @@
+<html>
+
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<link rel="stylesheet" href="viewer.css" />
+	<link rel="stylesheet" href="themes/default/style.min.css" />
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "Calibri Light";
+			panose-1: 2 15 3 2 2 2 4 3 2 4;
+		}
+		/* Style Definitions */
+		p.MsoNormal, li.MsoNormal, div.MsoNormal {
+			mso-style-name: "Normal\,EISS Normal\,Normal ЕИСС";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 10.0pt;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		h2 {
+			mso-style-link: "Heading 2 Char";
+			margin-top: 2.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			text-align: justify;
+			text-indent: 35.45pt;
+			line-height: 115%;
+			page-break-after: avoid;
+			font-size: 13.0pt;
+			font-family: "Calibri Light",sans-serif;
+			color: #2F5496;
+			font-weight: normal;
+		}
+
+		p.MsoCaption, li.MsoCaption, div.MsoCaption {
+			mso-style-name: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			mso-style-link: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			margin-top: 3.0pt;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: 0in;
+			text-align: center;
+			text-indent: 35.45pt;
+			line-height: 150%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 8.0pt;
+			margin-left: .75in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpFirst";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .75in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpMiddle";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 0in;
+			margin-left: .75in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast {
+			mso-style-name: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1CxSpLast";
+			mso-style-link: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			margin-top: 0in;
+			margin-right: 0in;
+			margin-bottom: 8.0pt;
+			margin-left: .75in;
+			text-align: justify;
+			text-indent: -.25in;
+			line-height: 107%;
+			font-size: 12.0pt;
+			font-family: "Times New Roman",serif;
+		}
+
+		span.Heading2Char {
+			mso-style-name: "Heading 2 Char";
+			mso-style-link: "Heading 2";
+			font-family: "Calibri Light",sans-serif;
+			color: #2F5496;
+		}
+
+		span.ListParagraphChar {
+			mso-style-name: "List Paragraph Char\,ПАРАГРАФ Char\,_Bullet Char\,Bullets Char\,List1 Char\,Liste 1 Char";
+			mso-style-link: "List Paragraph\,ПАРАГРАФ\,_Bullet\,Bullets\,List1\,Liste 1";
+			font-family: "Times New Roman",serif;
+		}
+
+		span.CaptionChar {
+			mso-style-name: "Caption Char\,CaptionCFMU Char\,Char Char Char Char Char1\,Char Char Char Char Char Char1\,Char Char Char Char Char Char Char\,Char Char Char Char Char1 Char Char1\,Caption Char1 Char\,Char Char Char Char Char1 Char Char Char\,CaptionTLS Char";
+			mso-style-link: "Caption\,CaptionCFMU\,Char Char Char Char\,Char Char Char Char Char\,Char Char Char Char Char Char\,Char Char Char Char Char1 Char\,Caption Char1\,Char Char Char Char Char1 Char Char\,CaptionTLS\,Char Char Char\, Char Char Char Char\, Char Char Char Char Char";
+			font-family: "Times New Roman",serif;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri",sans-serif;
+		}
+
+		.MsoPapDefault {
+			margin-bottom: 6.0pt;
+			text-indent: 35.45pt;
+			line-height: 115%;
+		}
+
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 56.7pt 42.55pt 56.7pt 99.25pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+		/* List Definitions */
+		ol {
+			margin-bottom: 0in;
+		}
+
+		ul {
+			margin-bottom: 0in;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang=EN-US style='word-wrap:break-word'>
+
+	<div class=WordSection1>
+
+		<h2 style='margin-left:0in'>
+			<span lang=BG>
+				1.1<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span><span lang=BG>
+				РЕГИСТРИРАНЕ НА ВХОДЯЩ ДОКУМЕНТ ПО ЕЛЕКТРОНЕН ПЪТ –
+			</span>(<span lang=BG>ПРЕЗ ЕДИНЕН ПОРТАЛ ЗА ЕЛЕКТРОННО ПРАВОСЪДИЕ)</span>
+		</h2>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt'>
+			<span lang=BG>
+				След
+				въвеждане на нови функционалности в Единен портал за електронно правосъдие, в
+				ЕИСС може да постъпват електронни документи подадени и платени през ЕПЕП.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt'>
+			<span lang=BG>
+				При
+				подадени по електронен път документи при достъпване на екран „Съдебна
+				регистратура“ на потребителите на ЕИСС се визуализира нова икона „Електронно
+				подадени документи“, разположена в горния десен край на навигационната лента.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=BG>
+				<img width=555 height=219 id="Picture 143162"
+					 src="incomingdocument%20EPEP_files/image001.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=BG>
+				Потребителят получава нотификация – върху иконата
+				се визуализира цифра (в зелен цвят)
+			</span><span lang=BG>
+				<img width=39
+					 height=35 id="Picture 143194" src="incomingdocument%20EPEP_files/image002.jpg">
+			</span><span lang=BG>, която показва броя постъпили документи за обработка. </span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=BG>
+				Потребителят кликва върху иконата, след което
+				избира опция „Вземи за обработка“, като по този начин системата зарежда за
+				преглед и регистрация първия по реда на постъпване електронно подаден документ.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=BG style='color:red'>
+				Важно: Документите се преглеждат
+				и регистрират един по един в реда на тяхното постъпване в ЕПЕП в хронологичен
+				ред.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=BG style='color:red'>Важно:</span><span lang=BG>
+				Когато на екрана се визуализира иконката с цифра в червен цвят означава, че
+				конкретен потребител е отворил документ, но все още не го е обработил
+				(регистрирал). В този случай, след избор на опцията „Продължи обработката“, на
+				екрана се визуализира документа, очакващ обработка.
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=BG>
+				<img width=274 height=170 id="Picture 143342"
+					 src="incomingdocument%20EPEP_files/image003.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal>
+			<span lang=BG>
+				В зависимост от вида документ, които е
+				изпратен по електронен път, ЕИСС автоматично го определя дали да бъде
+				регистриран като:
+			</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='margin-left:53.45pt'>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span lang=BG>Иницииращ;</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-left:53.45pt'>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span lang=BG>Съпровождащ;</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='margin-left:53.45pt'>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span lang=BG>Обща администрация.</span>
+		</p>
+
+		<p class=MsoNormal style='margin-left:35.45pt;text-indent:0in'>
+			<span lang=BG>
+				Заредени
+				са данни в част от полетата от таб Основни данни и Свързани лица.
+			</span>
+		</p>
+
+		<p class=MsoNormal><b><span lang=BG>Таб Основно данни</span></b></p>
+
+		<p class=MsoNormal>
+			<img width=531 height=205 id="Picture 143207"
+				 src="incomingdocument%20EPEP_files/image004.jpg">
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='margin-left:53.45pt'>
+			-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span lang=BG>
+				Поле Основен вид документ – автоматично попълнено с вид документ
+				Заявление;
+			</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-left:53.45pt'>
+			-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span lang=BG>
+				Поле Описание – данните в полето са изтеглени автоматично от попълнения
+				от подателя документ в ЕПЕП;
+			</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='margin-left:53.45pt'>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span lang=BG>Поле Начин на получаване – автоматично се извежда запис през ЕПЕП.</span>
+		</p>
+
+		<p class=MsoCaption><span lang=BG>&nbsp;</span></p>
+
+		<p class=MsoNormal>
+			<span lang=BG>
+				В поле Прикачени файлове се визуализират
+				всички прикачени документи от подателя. За конкретния пример са както следва:
+			</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpFirst style='margin-left:53.45pt'>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span lang=BG>Приложение 1.</span>pdf<span lang=BG>
+				– приложен задължителен документ
+				от подателя, подписан електронно;
+			</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpMiddle style='margin-left:53.45pt'>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span lang=BG>
+				Електронен пакет 20230317170444 – пакета съдържа данните на изпратения
+				документ, а номера представлява входящия регистрационен номер генериран от
+				ЕПЕП, с удостоверяване на времето на регистриране с точност до секунда (чрез
+				услуга за удостоверяване на време
+			</span>TimeStamp)<span lang=BG>;</span>
+		</p>
+
+		<p class=MsoListParagraphCxSpLast style='margin-left:53.45pt'>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>
+			</span><span lang=BG>
+				Удостоверение за време на подаване – системен файл, който се генерира
+				от ЕПЕП, подпечатен с квалифициран времеви печат и удостоверява дата и час на
+				подаване.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:0in;
+margin-left:53.45pt;text-indent:0in;line-height:107%'>
+			<span lang=BG>
+				Потребителят
+				в ЕИСС попълва единствено поле Точен вид документ.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt;line-height:
+107%'>
+			<span lang=BG>
+				Важно: <span style='color:red'>
+					Задължение и отговорност на
+					потребителите на ЕИСС е да маркират с отметка опцията  „Ограничен достъп“, при
+					наличие на чувствителни данни.  
+				</span>
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt;line-height:
+107%'>
+			<span lang=BG style='color:red'>
+				Данни немаркирани като „Ограничен достъп“
+				ще са достъпни по чл. 31 от Закона за адвокатурата!
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt;line-height:
+107%'>
+			<span lang=BG style='color:red'>
+				Тази отметка следва да бъде избрана
+				задължително преди образуване на делото.
+			</span>
+		</p>
+
+		<p class=MsoListParagraph>
+			<span lang=BG>
+				-<span style='font:7.0pt "Times New Roman"'>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</span>
+			</span><span lang=BG>Таб Свързани лица</span>
+		</p>
+
+		<p class=MsoCaption><span lang=BG>&nbsp;</span></p>
+
+		<p class=MsoCaption>
+			<span lang=BG>
+				<img width=541 height=197 id="Picture 143209"
+					 src="incomingdocument%20EPEP_files/image005.jpg">
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt;line-height:
+107%'>
+			<span lang=BG>
+				Част от полетата са попълнени автоматично, в зависимост от
+				това, каква информация е подадена през ЕПЕП.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt;line-height:
+107%'>
+			<span lang=BG>
+				Последващата обработка на документа е свързана с
+				изпращането на задача към конкретен потребител.
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt;line-height:
+107%'>
+			<span lang=BG>
+				Видът на задачата зависи от вида на регистрирания документ
+				(иницииращ, съпровождащ или обща администрация (за заявленията за достъп до
+				дело).
+			</span>
+		</p>
+
+		<p class=MsoNormal style='margin-bottom:0in;text-indent:35.3pt;line-height:
+107%'><span lang=BG>&nbsp;</span></p>
+
+		<p class=MsoNormal style='text-indent:35.3pt'><span lang=BG>&nbsp;</span></p>
+
+		<p class=MsoNormal><span lang=BG>&nbsp;</span></p>
+
+	</div>
+	<script src="md5.js"></script>
+	<script src="jquery.js"></script>
+	<script src="jstree.min.js"></script>
+	<script src="viewer.js"></script>
+</body>
+
+</html>

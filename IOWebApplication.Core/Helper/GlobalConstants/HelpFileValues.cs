@@ -1,6 +1,6 @@
 ﻿namespace IOWebApplication.Core.Helper.GlobalConstants
 {
-    public class HelpFileValues
+    public static class HelpFileValues
     {
         public const string HomeDashboard = "dashboard";
         public const string IncommingDocuments = "incomingdocument";
@@ -143,6 +143,7 @@
         public const string Report36 = "report36";
         public const string Report37 = "report37";
         public const string Report38 = "report38";
+        public const string Report39 = "report39";
         public const string Nom1 = "nom1";
         public const string Nom2 = "nom2";
         public const string Nom3 = "nom3";
@@ -166,5 +167,8 @@
         public const string Scheduletask = "scheduletask";
         public const string Casetasks = "casetasks";
         public const string Notificationstatenewspaper = "notificationstatenewspaper";
+        public const string Search = "search";
+        public const string Refusal = "refusal";
+        public const string Massredistribution = "massredistribution";
     }
 }

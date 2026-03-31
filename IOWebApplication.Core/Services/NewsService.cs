@@ -7,9 +7,8 @@ using IOWebApplication.Infrastructure.Data.Models.Messages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -27,9 +26,8 @@ namespace IOWebApplication.Core.Services
 
         public NewsViewModel GetById(int id)
         {
-            return repo.All<News>()
+            return repo.AllReadonly<News>()
                 .Where(n => n.Id == id)
-                .Include(n => n.Author.LawUnit)
                 .Select(n => new NewsViewModel()
                 {
                     Author = n.Author.LawUnit.FullName,
@@ -59,48 +57,72 @@ namespace IOWebApplication.Core.Services
         {
             NewsViewModel result = new NewsViewModel();
 
-            var newsUnRead = repo.AllReadonly<News>()
-                           .Include(n => n.Author.LawUnit)
-                           .Include(n => n.NewsUsers)
-                           .Where(n => !n.NewsUsers.Any(u => u.UserId == userId))
-                           .OrderByDescending(n => n.PublishDate)
-                           .FirstOrDefault();
+            //var newsUnRead = repo.AllReadonly<News>()
+            //               .Include(n => n.Author.LawUnit)
+            //               .Include(n => n.NewsUsers)
+            //               .Where(n => !n.NewsUsers.Any(u => u.UserId == userId))
+            //               .OrderByDescending(n => n.PublishDate)
+            //               .FirstOrDefault();
 
-            var newsRead = repo.AllReadonly<News>()
-                           .Include(n => n.Author.LawUnit)
-                           .Include(n => n.NewsUsers)
-                           .Where(n => n.NewsUsers.Any(u => u.UserId == userId))
-                           .OrderByDescending(n => n.PublishDate)
-                           .FirstOrDefault();
+            //Последната непрочетена новина
+            var newsUnRead = repo.AllReadonly<News>()
+                          .Where(n => !n.NewsUsers.Any(u => u.UserId == userId))
+                          .OrderByDescending(n => n.PublishDate)
+                          .Select(x => new NewsViewModel
+                          {
+                              Author = x.Author.LawUnit.FullName,
+                              Content = x.Content,
+                              Id = x.Id,
+                              PublishDate = x.PublishDate,
+                              Title = x.Title,
+                              IsUnread = true
+                          })
+                          .FirstOrDefault();
 
             if (newsUnRead != null)
             {
-                result = new NewsViewModel() 
-                {
-                    Author = newsUnRead.Author.LawUnit.FullName,
-                    Content = newsUnRead.Content,
-                    Id = newsUnRead.Id,
-                    PublishDate = newsUnRead.PublishDate,
-                    Title = newsUnRead.Title,
-                    IsUnread = true
-                };
+                result = newsUnRead;
+                //result = new NewsViewModel()
+                //{
+                //    Author = newsUnRead.Author.LawUnit.FullName,
+                //    Content = newsUnRead.Content,
+                //    Id = newsUnRead.Id,
+                //    PublishDate = newsUnRead.PublishDate,
+                //    Title = newsUnRead.Title,
+                //    IsUnread = true
+                //};
             }
             else
             {
-                if (newsRead != null)
-                {
-                    result = new NewsViewModel()
-                    {
-                        Author = newsRead.Author.LawUnit.FullName,
-                        Content = newsRead.Content,
-                        Id = newsRead.Id,
-                        PublishDate = newsRead.PublishDate,
-                        Title = newsRead.Title,
-                        IsUnread = false
-                    };
-                }
-                else
-                    return null;
+                //Последната прочетена новина
+                result = repo.AllReadonly<News>()
+                           .Where(n => n.NewsUsers.Any(u => u.UserId == userId))
+                           .OrderByDescending(n => n.PublishDate)
+                           .Select(x => new NewsViewModel
+                           {
+                               Author = x.Author.LawUnit.FullName,
+                               Content = x.Content,
+                               Id = x.Id,
+                               PublishDate = x.PublishDate,
+                               Title = x.Title,
+                               IsUnread = false
+                           })
+                           .FirstOrDefault();
+
+                //if (newsRead != null)
+                //{
+                //    result = new NewsViewModel()
+                //    {
+                //        Author = newsRead.Author.LawUnit.FullName,
+                //        Content = newsRead.Content,
+                //        Id = newsRead.Id,
+                //        PublishDate = newsRead.PublishDate,
+                //        Title = newsRead.Title,
+                //        IsUnread = false
+                //    };
+                //}
+                //else
+                //    return null;
             }
 
             return result;
@@ -131,7 +153,7 @@ namespace IOWebApplication.Core.Services
         public bool SaveNews(NewsViewModel model, string authorId)
         {
             bool result = false;
-            News entity = null; 
+            News entity = null;
 
             try
             {
@@ -171,18 +193,20 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
-        public void SetAsRead(int id, string userId)
+        public async Task SetAsRead(int id, string userId)
         {
-            var entity = repo.GetById<News>(id);
 
-            if (entity != null)
+            if (!(await repo.AllReadonly<NewsUser>()
+                                    .Where(x => x.NewsId == id && x.UserId == userId)
+                                    .AnyAsync()))
             {
-                entity.NewsUsers.Add(new NewsUser() 
+                repo.Add(new NewsUser()
                 {
+                    NewsId = id,
                     UserId = userId
                 });
 
-                repo.SaveChanges();
+                await repo.SaveChangesAsync();
             }
         }
     }

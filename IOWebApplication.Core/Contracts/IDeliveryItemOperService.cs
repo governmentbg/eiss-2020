@@ -6,15 +6,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
-    public interface IDeliveryItemOperService
+    public interface IDeliveryItemOperService: IBaseService
     {
-        IQueryable<DeliveryItemOperListVM> DeliveryItemOperSelect(int deliveryItemId, bool onlyLast);
+        Task<List<DeliveryItemOperListVM>> DeliveryItemOperSelect(int deliveryItemId, bool onlyLast);
 
-        List<SelectListItem> DeliveryOperSelect();
-        List<SelectListItem> NotificationStateForDeliveryOperSelect(int operId);
+        Task<List<SelectListItem>> DeliveryOperSelect(int operId);
+        Task<List<SelectListItem>> NotificationStateForDeliveryOperSelect(int operId);
 
         List<SelectListItem> DeliveryOperForNotificationStateSelect(int operId);
 
@@ -23,9 +24,11 @@ namespace IOWebApplication.Core.Contracts
         DeliveryItemOperVM makeDeliveryItemOper(int deliveryItemId);
         int GetDeliveryOperId(int deliveryItemId);
         List<SelectListItem> GetDeliveryReasonDDL(int notificationStateId);
-        bool CanAdd(int deliveryItemId);
-        DateTime? LastDateOper(int deliveryItemId);
+        Task<bool> CanAdd(int deliveryItemId);
         DateTime? GetRegDate(int deliveryItemId);
-        bool HaveSameOper(int deliveryItemId, int deliveryOperId);
+        Task<DeliveryItemOper> GetSameOperIfHave(int deliveryItemId, int deliveryOperId);
+        string LastVisitLabel(int deliveryItemId);
+        Task<List<string>> CheckDeliveryDate(DeliveryItemOperVM model);
+        Task<List<string>> CheckDeliveryDateSaved(int caseNotificationId);
     }
 }

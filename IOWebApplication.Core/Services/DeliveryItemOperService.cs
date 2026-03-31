@@ -1,41 +1,40 @@
 ﻿using IOWebApplication.Core.Contracts;
+using IOWebApplication.Core.Helper.GlobalConstants;
+using IOWebApplication.Infrastructure.Constants;
 using IOWebApplication.Infrastructure.Contracts;
 using IOWebApplication.Infrastructure.Data.Common;
-using IOWebApplication.Infrastructure.Data.Models.Cases;
-using IOWebApplication.Infrastructure.Models.ViewModels;
+using IOWebApplication.Infrastructure.Data.Models.Delivery;
+using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
+using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Delivery;
-using IOWebApplication.Infrastructure.Models.ViewModels.Delivery;
-using IOWebApplication.Infrastructure.Data.Models.Nomenclatures;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using IOWebApplication.Infrastructure.Constants;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
     public class DeliveryItemOperService : BaseService, IDeliveryItemOperService
     {
+        private readonly IWorkingDaysService workingDaysService;
         public DeliveryItemOperService(
             ILogger<DeliveryItemOperService> _logger,
             IRepository _repo,
-            IUserContext _userContext)
+            IUserContext _userContext,
+            IWorkingDaysService workingDaysService)
         {
             logger = _logger;
             repo = _repo;
             userContext = _userContext;
+            this.workingDaysService = workingDaysService;
         }
-        public IQueryable<DeliveryItemOperListVM> DeliveryItemOperSelect(int deliveryItemId, bool onlyLast)
+        public async Task<List<DeliveryItemOperListVM>> DeliveryItemOperSelect(int deliveryItemId, bool onlyLast)
         {
-            var result = repo.AllReadonly<DeliveryItemOper>()
+            var result = await repo.AllReadonly<DeliveryItemOper>()
                 .Where(x => (x.DeliveryItemId == deliveryItemId))
-                .Include(x => x.DeliveryItem)
-                .Include(x => x.DeliveryOper)
-                .Include(x => x.Court)
                 .Select(x => new DeliveryItemOperListVM()
                 {
                     Id = x.Id,
@@ -49,23 +48,20 @@ namespace IOWebApplication.Core.Services
                     DeliveryInfo = x.DeliveryInfo,
                     OperName = x.NotificationStateId != x.DeliveryOperId ? x.DeliveryOper.Label : "",
                     DeliveryOperId = x.DeliveryOperId,
-                    NotificationStateId = x.NotificationStateId
-                });
+                    NotificationStateId = x.NotificationStateId,
+                    HaveLocation = !string.IsNullOrEmpty(x.Lat) || !string.IsNullOrEmpty(x.Long)
+                })
+                .OrderBy(x => x.DeliveryOperId)
+                .ThenBy(x => x.Id)
+                .ToListAsync();
 
-            if (!onlyLast)
+            if (onlyLast && result.Count() > 0)
             {
-                return result.OrderBy(x => x.Id);
+                result = result.Where(x => !result.Any(z => z.DeliveryOperId == x.DeliveryOperId && z.Id > x.Id))
+                               .Where(x => NomenclatureConstants.DeliveryOper.Visits().Contains(x.DeliveryOperId))
+                               .ToList();
             }
-            else
-            {
-                var operStates = repo.AllReadonly<DeliveryOperState>();
-                var opers = repo.AllReadonly<DeliveryOper>().Where(x => operStates.Any(os => os.DeliveryOperId == x.Id));
-                var list = result.ToList();
-                result = result
-                    .Where(x => !list.Any(z => z.DeliveryOperId == x.DeliveryOperId && z.Id > x.Id))
-                    .Where(x => opers.Any(op => op.Id == x.DeliveryOperId));
-                return result.OrderBy(x => x.Id);
-            }
+            return result;
         }
 
         public int GetDeliveryOperId(int deliveryItemId)
@@ -84,34 +80,27 @@ namespace IOWebApplication.Core.Services
                 return opers.Max(x => x.Id);
             }
         }
-        public List<SelectListItem> DeliveryOperSelect()
+        public async Task<List<SelectListItem>> DeliveryOperSelect(int operId)
         {
-            var result = repo.AllReadonly<DeliveryOperState>()
-              .Include(x => x.DeliveryOper)
-              .Include(x => x.NotificationState)
+            return await repo.AllReadonly<DeliveryOper>()
+              .Where(x => x.Id == operId)
               .Select(x => new SelectListItem()
               {
-                  Value = x.DeliveryOperId.ToString(),
-                  Text = x.DeliveryOper.Label
+                  Value = x.Id.ToString(),
+                  Text = x.Label
               })
-              .Distinct()
-              .OrderBy(x => x.Value)
-              .ToList();
-            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
-            return result;
+              .ToListAsync();
         }
-        public List<SelectListItem> NotificationStateForDeliveryOperSelect(int operId)
+        public async Task<List<SelectListItem>> NotificationStateForDeliveryOperSelect(int operId)
         {
-            var result = repo.AllReadonly<DeliveryOperState>()
+            var result = await repo.AllReadonly<DeliveryOperState>()
               .Where(x => x.DeliveryOperId == operId)
-              .Include(x => x.DeliveryOper)
-              .Include(x => x.NotificationState)
               .OrderBy(x => x.NotificationState.OrderNumber)
               .Select(x => new SelectListItem()
               {
                   Value = x.NotificationStateId.ToString(),
                   Text = x.NotificationState.Label
-              }).ToList() ?? new List<SelectListItem>();
+              }).ToListAsync();
             result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
             return result;
         }
@@ -119,8 +108,6 @@ namespace IOWebApplication.Core.Services
         {
             var result = repo.AllReadonly<DeliveryOperState>()
               .Where(x => x.NotificationStateId == notificationStateId)
-              .Include(x => x.DeliveryOper)
-              .Include(x => x.NotificationState)
               .OrderBy(x => x.DeliveryOper.OrderNumber)
               .Select(x => new SelectListItem()
               {
@@ -136,10 +123,10 @@ namespace IOWebApplication.Core.Services
         {
             return repo.AllReadonly<DeliveryItemOper>()
                 .Where(x => (x.Id == id))
-                .Include(x => x.DeliveryItem)
-                .ThenInclude(x => x.FromCourt)
-                .ThenInclude(x => x.Address)
-                .Include(x => x.DeliveryArea)
+                //.Include(x => x.DeliveryItem)
+                //.ThenInclude(x => x.FromCourt)
+                //.ThenInclude(x => x.Address)
+                //.Include(x => x.DeliveryArea)
                 .Select(x => new DeliveryItemOperVM()
                 {
                     Id = x.Id,
@@ -202,20 +189,15 @@ namespace IOWebApplication.Core.Services
                 result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
             return result;
         }
-        public bool CanAdd(int deliveryItemId)
+        public async Task<bool> CanAdd(int deliveryItemId)
         {
-            var opers = DeliveryItemOperSelect(deliveryItemId, true);
-            if (opers.Count() >= 3)
-                return false;
-            if (opers.Any(x => x.NotificationStateId != NomenclatureConstants.NotificationState.Visited))
+            var opers = await DeliveryItemOperSelect(deliveryItemId, true);
+            var states = NomenclatureConstants.NotificationState.NotificationEndState();
+            if (opers.Any(x => states.Contains(x.NotificationStateId)))
                 return false;
             return true;
         }
-        public DateTime? LastDateOper(int deliveryItemId)
-        {
-            return DeliveryItemOperSelect(deliveryItemId, true)
-                   .Max(x => (DateTime?)x.DateOper);
-        }
+
         public DateTime? GetRegDate(int deliveryItemId)
         {
             return repo.AllReadonly<DeliveryItem>()
@@ -223,12 +205,107 @@ namespace IOWebApplication.Core.Services
                        .Select(x => (DateTime?)x.CaseNotification.RegDate)
                        .FirstOrDefault();
         }
-        public bool HaveSameOper(int deliveryItemId, int deliveryOperId)
+        public async Task<DeliveryItemOper> GetSameOperIfHave(int deliveryItemId, int deliveryOperId)
         {
-            return repo.AllReadonly<DeliveryItemOper>()
+            return await repo.AllReadonly<DeliveryItemOper>()
                        .Where(x => x.DeliveryItemId == deliveryItemId &&
                                    x.DeliveryOperId == deliveryOperId)
-                       .Any();
+                       .OrderByDescending(x => x.Id)
+                       .FirstOrDefaultAsync();
+        }
+
+        public string LastVisitLabel(int deliveryItemId)
+        {
+            var opers = NomenclatureConstants.DeliveryOper.Visits();
+            var oper = repo.AllReadonly<DeliveryItemOper>()
+                            .Where(x => opers.Contains(x.DeliveryOperId))
+                            .Where(x => x.DeliveryItemId == deliveryItemId)
+                            .OrderByDescending(x => x.Id)
+                            .FirstOrDefault();
+            return oper == null ? "" : $"Посещение: {oper.DateOper:dd.MM.yyyy HH:mm}";
+        }
+
+        private (DeliveryItemOperListVM, int) Get7DaysPeriodCountAndLastOper(List<DeliveryItemOperListVM> opers)
+        {
+            var count7daysPeriod = 0;
+            DeliveryItemOperListVM lastOper7 = opers.FirstOrDefault();
+            for (int i = 1; i < opers.Count; i++)
+            {
+                var oper = opers[i];
+                var dR = oper.DateOper - lastOper7.DateOper;
+                if (dR.TotalDays >= 7)
+                {
+                    count7daysPeriod++;
+                    lastOper7 = oper;
+                }
+            }
+
+            return (lastOper7, count7daysPeriod);
+        }
+        public async Task<List<string>> CheckDeliveryDate(DeliveryItemOperVM model)
+        {
+            var errors = new List<string>();
+            if (model.DeliveryOperId == NomenclatureConstants.NotificationState.Delivered)
+            {
+                return errors;
+            }
+            var opers = await DeliveryItemOperSelect(model.DeliveryItemId, true);
+            (var lastOper7, var count7daysPeriod) = Get7DaysPeriodCountAndLastOper(opers);
+
+            if (lastOper7 != null && count7daysPeriod < 2)
+            {
+                var dR = model.DateOper - lastOper7.DateOper;
+                if (dR.Value.TotalDays < 7)
+                    errors.Add($"Няма 7 дни от предното посещение {lastOper7.DateOper.ToString(FormattingConstant.NormalDateFormat)}.");
+            }
+
+            if (opers.Count >= 2)
+            {
+                bool haveHoliday = !workingDaysService.IsWorkingDay(userContext.CourtId, model.DateOper?.Date ?? DateTime.Now);
+                haveHoliday = haveHoliday || opers.Max(x => !workingDaysService.IsWorkingDay(userContext.CourtId, (DateTime)(x.DateOper).Date));
+                if (!haveHoliday)
+                {
+                    errors.Add($"Няма посещение в почивен ден");
+                }
+                var firstOper = opers.First();
+                var dR = model.DateOper - firstOper.DateOper;
+                if (dR.Value.TotalDays < 30)
+                    errors.Add($"Няма 30 дни от първото посещение {firstOper.DateOper.ToString(FormattingConstant.NormalDateFormat)}.");
+
+            }
+            return errors;
+        }
+        public async Task<List<string>> CheckDeliveryDateSaved(int caseNotificationId)
+        {
+            var errors = new List<string>();
+            var deliveryItem = await repo.AllReadonly<DeliveryItem>()
+                                         .Where(x => x.CaseNotificationId == caseNotificationId)
+                                         .FirstOrDefaultAsync();
+            if (deliveryItem == null || deliveryItem.NotificationStateId == NomenclatureConstants.NotificationState.Delivered)
+                return errors;
+            var opers = await DeliveryItemOperSelect(deliveryItem.Id, true);
+            if (opers.Count < 2)
+                return errors;
+            (var lastOper7, var count7daysPeriod) = Get7DaysPeriodCountAndLastOper(opers);
+            if (count7daysPeriod < 2) {
+                errors.Add($"Няма посещение над 7 дни");
+            }
+            var lastOper = opers.LastOrDefault();
+            if (opers.Count >= 2)
+            {
+                bool haveHoliday = !workingDaysService.IsWorkingDay(userContext.CourtId, lastOper.DateOper);
+                haveHoliday = haveHoliday || opers.Max(x => !workingDaysService.IsWorkingDay(userContext.CourtId, (DateTime)(x.DateOper).Date));
+                if (!haveHoliday)
+                {
+                    errors.Add($"Няма посещение в почивен ден");
+                }
+                var firstOper = opers.First();
+                var dR = lastOper.DateOper - firstOper.DateOper;
+                if (dR.TotalDays < 30)
+                    errors.Add($"Няма 30 дни от първото посещение {firstOper.DateOper.ToString(FormattingConstant.NormalDateFormat)}.");
+
+            }
+            return errors;
         }
     }
 }

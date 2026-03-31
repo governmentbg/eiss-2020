@@ -1,0 +1,92 @@
+﻿@model ExcelReportTemplate
+@using IOWebApplication.Infrastructure.Data.Models.Common
+@using IOWebApplication.Extensions
+@{
+    if (Model.Id > 0)
+    {
+        ViewData["Title"] = "Редакция";
+    }
+    else
+    {
+        ViewData["Title"] = "Добавяне";
+    }
+}
+<div class="row">
+    <div class="col-md-12 col-lg-6">
+
+        <form action="@Url.Action("EditExcelReportTemplate","Common")" id="cdnUploadFile" method="post" enctype="multipart/form-data">
+            <div id="saveContainer">
+                <partial name="_SaveFormContent" model="@("#saveContainer")" />
+                @*<form action="@Url.Action("ImportHtmlBlank","HtmlTemplate")" id="cdnUploadFile" method="post" enctype="multipart/form-data">*@
+                @Html.HiddenFor(x => x.Id)
+
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.CourtTypeId, "GenericDropDown")
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.ReportTypeId, "GenericDropDown")
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Label)
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        @Html.EditorFor(x => x.Description)
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateFrom, "DateTime")</div>
+                    <div class="col-lg-6">@Html.EditorFor(x => x.DateTo, "DateTime")</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="DownloadFileDiv">
+                        <a href="#" class="DownloadFile" data-toggle='tooltip' title='Сваляне на файл'>Линк за сваляне на файла: @Model.FileName</a>
+                        <p />
+                    </div>
+                    @*<input type="file" name="files" id="files" multiple="multiple" />*@
+                    <input type="file" name="files" id="files" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <input type="submit" value="Запис" id="cdnUploadButton" class="btn btn-success" />
+                    <a asp-action="ExcelReportTemplate" class="btn btn-danger">Назад</a>
+                    @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+
+   $(document).ready(function () {
+       SH_DownloadFile();
+   });
+
+   $(function () {
+       $(".DownloadFile").click(function (e) {
+           e.preventDefault();
+           var link = document.createElement("a");
+           link.download = name;
+           link.href = '@Url.Action("DownloadFile","Common")' + '?id=' + @Model.Id;
+           link.className = "hidden";
+           document.body.appendChild(link);
+           link.click();
+       });
+   });
+
+   function SH_DownloadFile() {
+       var x = document.getElementById("DownloadFileDiv");
+       if (@Model.Id > 0) x.style.display = "block";
+       else x.style.display = "none";
+   }
+</script>
+

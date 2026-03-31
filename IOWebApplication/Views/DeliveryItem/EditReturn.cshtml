@@ -91,7 +91,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        @if (@Model.IsForReturn)
+                        @if (Model.IsForReturn && Model.NotificationDeliveryGroupId != NomenclatureConstants.NotificationDeliveryGroup.ByEPEP)
                         {
                             <input type="submit" value="Запис" class="btn btn-success" />
                         }

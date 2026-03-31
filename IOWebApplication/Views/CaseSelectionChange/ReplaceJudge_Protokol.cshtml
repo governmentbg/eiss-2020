@@ -1,0 +1,184 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Case
+@using IOWebApplication.Infrastructure.Constants
+@model CaseSelectionChangePrintVM
+<html>
+<head>
+    <style>
+        .prot-container {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+        }
+
+            .prot-container .bold {
+                font-weight: bolder;
+            }
+
+            .prot-container .push-down {
+                margin-bottom: 30px;
+            }
+
+            .prot-container div.lbl-val {
+                width: 100%;
+            }
+
+                .prot-container div.lbl-val span {
+                    font-weight: bold;
+                    min-width: 200px;
+                }
+
+            .prot-container table.tbl {
+                border-collapse: collapse;
+            }
+
+                .prot-container table.tbl th {
+                    color: #fff;
+                    background-color: #a4a1a1;
+                }
+
+                .prot-container table.tbl th, .prot-container table.tbl td {
+                    border: 1px solid #555;
+                    font-family: 'Times New Roman', Times, serif;
+                    font-size: 14px;
+                    padding: 2px 5px;
+                }
+    </style>
+</head>
+<body>
+    <div class="prot-container">
+        <center class="bold push-down">@Model.CourtName</center>
+        @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie)
+        {
+            <center class="bold push-down">Протокол от избор на Съдия-докладчик (преразпределение)</center>
+        }
+        @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.PrerazpredelenieJudge)
+        {
+            <center class="bold push-down">Протокол от избор на Съдия-член на състав (преразпределение)</center>
+        }
+
+        <div class="lbl-val">
+            <span>Дата на разпределението:</span>
+            @Model.DateWrt.ToString("dd.MM.yyyy HH:mm")
+        </div>
+        <div class="lbl-val">
+            <span>Група за разпределяне:</span>
+            @Model.CourtGroupName
+        </div>
+        @if (!string.IsNullOrEmpty(Model.FromLawunitName))
+        {
+            <div class="lbl-val">
+                @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie)
+                {
+                    <span>Досегашен съдия-докладчик:</span>
+                }
+                @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.PrerazpredelenieJudge)
+                {
+                    <span>Досегашен член-съдия на състав:</span>
+                }
+
+
+
+
+                @Model.FromLawunitName
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.ToLawunitName))
+        {
+            <div class="lbl-val">
+                @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie)
+                {
+                    <span>Избран  съдия-докладчик</span>
+                }
+                @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.PrerazpredelenieJudge)
+                {
+                    <span>Избран  член-съдия на състав:</span>
+                }
+
+                @Model.ToLawunitName
+            </div>
+        }
+        @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie)
+        {
+            @if (!string.IsNullOrEmpty(Model.ToLawunitDepartmentName))
+            {
+                <div class="lbl-val">
+                    <span>Нов състав на делата:</span>
+                    @Model.ToLawunitDepartmentName
+                </div>
+            }
+            else
+            {
+                <div class="lbl-val">
+                    <span>Състав:</span>
+                    Без промяна на състава по делата
+                </div>
+            }
+        }
+        <div class="lbl-val push-down">
+            <span>Начин на разпределение:</span>
+            Ръчно
+        </div>
+        <div class="lbl-val">
+            <span>Разпределен от:</span>
+            @Model.UserName
+        </div>
+        <div class="lbl-val">
+            <span>Причина за преразпределение:</span>
+            @Model.Description
+        </div>
+
+        <table class="tbl push-down">
+            <tr>
+                <th>Разпределение по дело №: / вх. номер</th>
+                <th>Точен вид дело:</th>
+                <th>Статистически шифър:</th>
+                <th>Група по натовареност:</th>
+                @if (string.IsNullOrEmpty(Model.FromLawunitName))
+                {
+                    @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie)
+                    {
+                        <th>Досегашен съдия-докладчик:</th>
+                    }
+                    @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.PrerazpredelenieJudge)
+                    {
+                        <th>Досегашен член-съдия на състав:</th>
+                    }
+
+                }
+                @if (string.IsNullOrEmpty(Model.ToLawunitName))
+                {
+                    @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.Prerazpredelenie)
+                    {
+                        <th>Избран  съдия-докладчик:</th>
+                    }
+                    @if (Model.ChangeTypeId == NomenclatureConstants.CaseSelectionChangeTypes.PrerazpredelenieJudge)
+                    {
+                        <th>Избран  член-съдия на състав:</th>
+                    }
+
+                }
+            </tr>
+            @foreach (var item in Model.CaseList)
+            {
+                <tr>
+                    <td>@item.RegNumber<br />@item.DocumentNumber / @(item.DocumentDate.ToString("dd.MM.yyyy"))</td>
+                    <td>@item.CaseTypeLabel</td>
+                    <td>@item.CaseCodeLabel</td>
+                    <td>@item.LoadGroupLabel</td>
+                    @if (string.IsNullOrEmpty(Model.FromLawunitName))
+                    {
+                        <td>@item.FromLawunitName</td>
+                    }
+                    @if (string.IsNullOrEmpty(Model.ToLawunitName))
+                    {
+                        <td>@item.ToLawunitName</td>
+                    }
+                </tr>
+            }
+        </table>
+        <div class="lbl-val">
+            <span>Извършил разпределението:</span>
+            @Model.UserName
+        </div>
+    </div>
+</body>
+</html>

@@ -1,14 +1,13 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.Common;
 @using IOWebApplication.Core.Helper.GlobalConstants;
 @model WorkNotificationFilterVM;
-@inject IViewLocalizer Localizer
 @{
     ViewData["Title"] = "Моите известия";
 }
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 <form id="formFilter" asp-action="Edit" method="post">
@@ -42,8 +41,8 @@
 <form name="formPostEdit" id="formPostEdit" action="@Url.Action("Edit")" method="post">
     <input type="hidden" id="filterJson" name="filterJson" value="">
 </form>
-<div id="divDashboard" name="divDashboard" >
-<partial name="_Dashboard" model="@Model" />
+<div id="divDashboard" name="divDashboard">
+    <partial name="_Dashboard" model="@Model" />
 </div>
 <script>
     $('#ReadTypeId').change(function () {
@@ -67,7 +66,7 @@
         $.ajax({
             method: "POST",
             url: '@Url.Action("DashboardReload")',
-         //   dataType: "json",
+            //   dataType: "json",
             data: filterData,
             success: function (response) {
                 $('#divDashboard').html('');

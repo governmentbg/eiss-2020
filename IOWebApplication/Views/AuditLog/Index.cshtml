@@ -1,9 +1,12 @@
 ﻿@using IOWebApplication.Infrastructure.Models.ViewModels.AuditLog
 @using IOWebApplication.Infrastructure.Constants
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration configuration;
 @model AuditLogFilterVM
 
 @{
     ViewData["Title"] = "Журнал";
+    var environmentName = configuration.GetValue<string>("Environment:Name") ?? NomenclatureConstants.Environments.Production;
 }
 
 @section breadcrumb{
@@ -25,7 +28,7 @@
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.Operation, "GenericDropDownString")</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.RegNumber)</div>
-    <div class="col-lg-3" id="UserSelect">@Html.EditorFor(x => x.UserId, "SelectUser")</div>
+    <div class="col-lg-3" id="UserSelect">@Html.EditorFor(x => x.UserId, "SelectUser",null,new{selectMode=NomenclatureConstants.LawUnitSelectMode.CurrentWithHistory})</div>
 </div>
 
 <div class="row">
@@ -45,6 +48,14 @@
 
 <script>
     function LoadTable() {
+        let fromDate = moment($('#DateFrom').val(),"DD.MM.YYYY HH:mm:ss");
+        let toDate = moment($('#DateTo').val(),"DD.MM.YYYY HH:mm:ss");
+        let totalDays = toDate.diff(fromDate, 'days');
+        if(totalDays > 31){
+            swalOk('Периодът на търсене не може да е по-дълъг от 1 месец');
+            return;
+        }
+
         if ($.fn.dataTable.isDataTable('#mainTable')) {
             refreshTable('#mainTable');
         }
@@ -85,13 +96,6 @@
                         searchable: true
                     },
                     {
-                        name: 'baseObject',
-                        data: 'baseObject',
-                        title: 'Документ/дело',
-                        sortable: true,
-                        searchable: true
-                    },
-                    {
                         name: 'objectType',
                         data: 'objectType',
                         title: 'Вид',
@@ -99,11 +103,22 @@
                         searchable: true
                     },
                     {
-                        name: 'objectInfo',
-                        data: 'objectInfo',
-                        title: 'Обект',
+                        name: 'baseObject',
+                        data: 'baseObject',
+                        title: 'Основен обект',
                         sortable: true,
                         searchable: true
+                    },
+
+                    {
+                        name: 'objectInfo',
+                        data: 'objectInfo',
+                        title: 'Пояснение',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            return TemplateToHtml('#templateObject', row);
+                        }
                     },
                     {
                         name: 'userName',
@@ -113,19 +128,43 @@
                         width: 250,
                         //className: "text-center noExport",
                         "render": function (item, type, row, meta) {
-                            return TemplateToHtml('#templateEdit', row);
+                            return TemplateToHtml('#templateUser', row);
                         }
+                    },
+
+                    {
+                        name: 'clientIP',
+                        data: 'clientIP',
+                        title: 'IP адрес',
+                        sortable: true,
+                        searchable: true
                     }
+                    @if (environmentName == NomenclatureConstants.Environments.Development) {
+                    <text>,
+                    {
+                        name: 'requestUrl',
+                        data: 'requestUrl',
+                        title: 'URL',
+                        sortable: true,
+                        searchable: true
+                    }
+                    </text>}
                 ]
-            });
+            }).order([[0, "desc"]]);
+
         }
     }
 </script>
-
-<script id="templateEdit" type="text/x-handlebars-template">
-    <span title="{{requestUrl}}">{{userName}}</span>
+<script id="templateObject" type="text/x-handlebars-template">
+    <span>{{objectInfo}}</span>
+    {{#if showLink}}
+        <a href="{{{requestUrl}}}" target="_blank" class="btn btn-sm btn-primary" title="Преглед на обекта"><i class="fa fa-search"></i></a>
+    {{/if}}
 </script>
-
+<script id="templateUser" type="text/x-handlebars-template">
+    <span  @if (environmentName == NomenclatureConstants.Environments.Development) {
+                    <text>title="{{requestUrl}}" data-id="{{id}}"</text>}>{{userName}} ({{email}})</span>
+</script>
 <script>
     $(function () {
         initUserAutoComplete();

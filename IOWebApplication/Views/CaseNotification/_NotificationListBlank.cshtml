@@ -54,7 +54,7 @@
                         isFirst = false;
                     }
                     <td width="30%">@not.AddressString?.Replace("<br>", Environment.NewLine)</td>
-                    <td width="25%">@not.Remark?.Replace("</br>", Environment.NewLine)</td>
+                    <td width="25%">@not.Remark?.Replace("<br>", Environment.NewLine)</td>
                     <td align="center" width="10%">@not.DateSend</td>
                 </tr>
             }

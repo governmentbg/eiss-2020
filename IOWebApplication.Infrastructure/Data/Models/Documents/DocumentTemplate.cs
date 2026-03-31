@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
     /// Създаване на изходящи документи
     /// </summary>
     [Table("document_template")]
-    public class DocumentTemplate : UserDateWRT, IExpiredInfo
+    public class DocumentTemplate : UserDateWRT, IExpiredInfo, IHaveId
     {
         [Key]
         [Column("id")]
@@ -38,10 +38,13 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
 
         [Display(Name = "Основен вид документ")]
         [Column("document_group_id")]
+        [Range(1, 9999999, ErrorMessage = "Изберете {0}.")]
         public int DocumentGroupId { get; set; }
 
         [Display(Name = "Точен вид документ")]
         [Column("document_type_id")]
+        [Range(1, 9999999, ErrorMessage = "Изберете {0}.")]
+        [Required(ErrorMessage = "Изберете {0}.")]
         public int DocumentTypeId { get; set; }
 
         [Column("document_id")]
@@ -54,6 +57,10 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
         [Column("author_id")]
         [Display(Name = "Автор")]
         public string AuthorId { get; set; }
+
+        [Column("signer_id")]
+        [Display(Name = "Съдия")]
+        public string SignerId { get; set; }
 
         [Column("document_template_state_id")]
         [Display(Name = "Статус")]
@@ -120,6 +127,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Documents
 
         [ForeignKey(nameof(AuthorId))]
         public virtual ApplicationUser Author { get; set; }
+
+        [ForeignKey(nameof(SignerId))]
+        public virtual ApplicationUser Signer { get; set; }
 
         [ForeignKey(nameof(HtmlTemplateId))]
         public virtual HtmlTemplate HtmlTemplate { get; set; }

@@ -1,0 +1,37 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessRequestVM
+@{
+    var containerId = Guid.NewGuid().ToString();
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+}
+<h3 class="section-title section-title--xs mb-3" id="fp-expense">6. Разноски</h3>
+<div class="dynamic-form expenseList" data-reindex="true" data-container="@containerId" data-addcallback="callbackAddExpense" data-removecallback="callbackRemoveExpenses">
+    <table class="fast-process-tbl" id="@containerId">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Вид</th>
+                <th>Уточнения</th>
+                @if (isInEuro)
+                {
+                    <th width="10%">Сума, евро</th>
+                }
+                else
+                {
+                    <th width="10%">Сума, лв</th>
+                }
+                <th width="30px"></th>
+            </tr>
+        </thead>
+        @for (int i = 0; i < Model.Expenses.Count(); i++)
+        {
+            Model.Expenses[i].Index = i;
+            ViewData.TemplateInfo.HtmlFieldPrefix = Model.Expenses[i].GetPath;
+
+            <partial name="_FastProcessExpenseItem" model="@Model.Expenses[i]" />
+            ViewData.TemplateInfo.HtmlFieldPrefix = String.Empty;
+        }
+    </table>
+    <button class="btn u-btn-border cta-add-dark add-item" data-container="@containerId" data-url="@Url.Action("New_Expense")" data-index="@Model.Expenses.Count()">Добави разноска</button>
+</div>
+<br />

@@ -29,6 +29,7 @@
             @Html.HiddenFor(x => x.CasePersonId)
             @Html.HiddenFor(x => x.CourtId)
             @Html.HiddenFor(x => x.DecreedCourtId)
+            @Html.HiddenFor(x => x.IsActive)
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div id="saveContainer">
@@ -45,8 +46,8 @@
                                 <div class="col-lg-12">@Html.EditorFor(x => x.CasePersonInheritanceResultId, "GenericDropDown")</div>
                             </div>
                             @*<div class="row">
-                                    <div class="col-lg-12">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
-                                </div>*@
+                            <div class="col-lg-12">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
+                        </div>*@
                         </fieldset>
                     </div>
                 </div>

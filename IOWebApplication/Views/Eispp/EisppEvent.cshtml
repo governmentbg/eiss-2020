@@ -4,6 +4,7 @@
 @{
     ViewData["Title"] = "Изпращане на събитие към ЕИСПП";
     var isGetCaseSaved = (bool?)ViewBag.IsGetCaseSaved;
+    var currentHtmlPrefix = ViewData.TemplateInfo.HtmlFieldPrefix;
 }
 
 @section breadcrumb{
@@ -12,93 +13,86 @@
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
-<div class="row">
-    <div class="col-md-12 col-lg-12">
-        <form id="formEdit" asp-action="EisppEvent" method="post">
-            @Html.ValidationSummary()
-            @Html.HiddenFor(x => x.SourceType)
-            @Html.HiddenFor(x => x.SourceId)
-            @Html.HiddenFor(x => x.CaseId)
-            @Html.HiddenFor(x => x.CaseCodeId)
-            @Html.HiddenFor(x => x.CaseTypeId)
-            @Html.HiddenFor(x => x.SaveIfHaveDiff)
-            <div class="row">
-                <div class="col-lg-2 col-md-6">
-                    <div id="divEISPP">
-                        @Html.EditorFor(x => x.EISPPNumber, "EisppNumber")
+    <div class="row">
+        <div class="col-md-12 col-lg-12">
+            <form id="formEdit" asp-action="EisppEvent" method="post">
+                @Html.ValidationSummary()
+                @Html.HiddenFor(x => x.SourceType)
+                @Html.HiddenFor(x => x.SourceId)
+                @Html.HiddenFor(x => x.CaseId)
+                @Html.HiddenFor(x => x.CaseCodeId)
+                @Html.HiddenFor(x => x.CaseTypeId)
+                @Html.HiddenFor(x => x.SaveIfHaveDiff)
+                <div class="row">
+                    <div class="col-lg-2 col-md-6">
+                        <div id="divEISPP">
+                            @Html.EditorFor(x => x.EISPPNumber, "EisppNumber")
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-1">
-                    @Html.EditorFor(x => x.Year, "hd")
+                <div class="row">
+                    <div class="col-lg-1">
+                        @Html.EditorFor(x => x.Year, "hd")
+                    </div>
+                    <div class="col-lg-1">
+                        @Html.EditorFor(x => x.ShortNumber, "hd")
+                    </div>
+                    <div class="col-lg-8">
+                        @Html.EditorFor(x => x.CaseType, "hd")
+                    </div>
                 </div>
-                <div class="col-lg-1">
-                    @Html.EditorFor(x => x.ShortNumber, "hd")
+                <div class="row">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.EventType, "GenericDropDown")
+                    </div>
                 </div>
-                <div class="col-lg-8">
-                    @Html.EditorFor(x => x.CaseType, "hd")
+                <div class="row case-session-act">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.EventType, "GenericDropDown")
-                </div>
-            </div>
-            <div class="row case-session-act">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.CaseSessionActId, "GenericDropDown")
-                </div>
-            </div>
 
-            <div class="row case-person">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.CasePersonId, "GenericDropDown")
+                <div class="row case-person">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.CasePersonId, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
 
-            <div class="row case-person-measure-old">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.PersonOldMeasureId, "GenericDropDown")
+                <div class="row case-person-measure">
+                    @await Html.PartialAsync("_PersonMeasures", Model)
                 </div>
-            </div>
-            <div class="row case-person-measure">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.PersonMeasureId, "GenericDropDown")
+            
+                <div class="row get-case">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.ConnectedCaseId, "GenericDropDownString")
+                    </div>
                 </div>
-            </div>
-
-            <div class="row get-case">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.ConnectedCaseId, "GenericDropDownString")
+                <div class="row get-case">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.ExactCaseType, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
-            <div class="row get-case">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.ExactCaseType, "GenericDropDown")
+                <div class="row send-case">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.CaseMigrationId, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
-            <div class="row send-case">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.CaseMigrationId, "GenericDropDown")
+                <div class="row send-case">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.ReasonId, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
-            <div class="row send-case">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.ReasonId, "GenericDropDown")
+                <div class="row complaint-received">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.CaseComplaintId, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
-            <div class="row complaint-received">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.CaseComplaintId, "GenericDropDown")
+                <div class="row case-added">
+                    <div class="col-lg-10">
+                        @Html.EditorFor(x => x.CaseAddedId, "GenericDropDown")
+                    </div>
                 </div>
-            </div>
-            <div class="row case-added">
-                <div class="col-lg-10">
-                    @Html.EditorFor(x => x.CaseAddedId, "GenericDropDown")
-                </div>
-            </div>
-            <div class="form-group">
+                <div class="form-group">
                 @if (isGetCaseSaved != true)
                 {
                     <input id="btnSave" type="submit" value="Генерирай" class="btn btn-success" />
@@ -173,22 +167,13 @@
 
         if (eventTypeId == @EISPPConstants.EventType.CoercionMeasureChange ||
             eventTypeId == @EISPPConstants.EventType.CoercionMeasureCreate ||
-            eventTypeId == @EISPPConstants.EventType.CoercionMeasureRefused)
+            eventTypeId == @EISPPConstants.EventType.CoercionMeasureRefused ||
+            eventTypeId == @EISPPConstants.EventType.CoercionMeasureChange ||
+            eventTypeId == @EISPPConstants.EventType.CoercionMeasureCancellation)
         {
             $('.case-person-measure').show();
-            $('#PersonMeasureId').attr("disabled", false);
         } else {
             $('.case-person-measure').hide();
-            $('#PersonMeasureId').attr("disabled", true);
-        }
-        if (eventTypeId == @EISPPConstants.EventType.CoercionMeasureChange ||
-            eventTypeId == @EISPPConstants.EventType.CoercionMeasureCancellation )
-        {
-            $('.case-person-measure-old').show();
-            $('#PersonOldMeasureId').attr("disabled", false);
-        } else {
-            $('.case-person-measure-old').hide();
-            $('#PersonOldMeasureId').attr("disabled", true);
         }
 
         if (eventTypeId == @EISPPConstants.EventType.CaseUnion) {
@@ -203,7 +188,7 @@
             url: '@Url.Action("GetCaseSessionActForEvent", "EISPP")',
             dataType: "json",
             cache: false,
-            data: { caseId: caseId, eventTypeId: eventTypeId},
+            data: { caseId: caseId, eventTypeId: eventTypeId },
             success: function (response) {
                 fillCombo(response.sessionActDDL, $('#CaseSessionActId'));
                 setComboSelectedOrFirst($('#CaseSessionActId'), sessionActId);
@@ -264,37 +249,31 @@
     }
     function GetPersonMeasure() {
         let casePersonId = $('#CasePersonId').val();
-        let personOldMeasureId = $('#PersonOldMeasureId').val();
-        let personMeasureId = $('#PersonMeasureId').val();
         let eventTypeId = $('#EventType').val();
-        $.ajax({
-            type: "POST",
-            url: '@Url.Action("GetPersonMeasure", "EISPP")',
-            dataType: "json",
-            cache: false,
-            data: {
+        requestContent(
+            '@Url.Action("GetPersonMeasure", "EISPP")',
+            {
                 casePersonId: casePersonId,
                 eventId: eventTypeId
             },
-            success: function (response) {
-                fillCombo(response.personOldMeasureDDL, $('#PersonOldMeasureId'));
-                setComboSelectedOrFirst($('#PersonOldMeasureId'), personOldMeasureId);
-                fillCombo(response.personMeasureDDL, $('#PersonMeasureId'));
-                setComboSelectedOrFirst($('#PersonMeasureId'), personMeasureId);
-            },
-            complete: function () { },
-            error: log_ajax_err
-        });
+            function (html) {
+                $('.case-person-measure').html(html);
+            }
+        );
     }
 
     function GetSentencePersonId() {
         let caseSessionActId = $('#CaseSessionActId').val();
+        let caseId = $('#CaseId').val();
         $.ajax({
             type: "POST",
             url: '@Url.Action("GetSentencePersonId", "EISPP")',
             dataType: "json",
             cache: false,
-            data: { caseSessionActId: caseSessionActId},
+            data: {
+                caseSessionActId: caseSessionActId,
+                caseId: caseId
+            },
             success: function (response) {
                 if (response.casePersonId > 0) {
                     setComboSelectedOrFirst($('#CasePersonId'), response.casePersonId);
@@ -322,7 +301,7 @@
             success: function (response) {
                 fillCombo(response.exactCaseTypeDDL, $('#ExactCaseType'), $('#ExactCaseType').val());
                 if (response.exactCaseType !== "0")
-                   setComboSelectedOrFirst($('#ExactCaseType'), response.exactCaseType);
+                    setComboSelectedOrFirst($('#ExactCaseType'), response.exactCaseType);
             },
             complete: function () { },
             error: log_ajax_err

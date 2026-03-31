@@ -32,11 +32,14 @@
 
                 <fieldset class="is-fieldset">
                     <legend class="legend_1" data-position="BankAccount"> Основни данни</legend>
+                    <div class="col-lg-12">@Html.EditorFor(x => x.IsAdditional, "Boolean")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.IsND, "Boolean")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.CaseInstanceId, "GenericDropDown")</div>
+                    <div class="col-lg-12">@Html.EditorFor(x => x.CourtTypeId, "GenericDropDown")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeId" })</div>
-                    <div class="col-lg-12">@Html.EditorFor(x => x.DocumentTypeId, "GenericDropDown")</div>
+                    @*<div class="col-lg-12">@Html.EditorFor(x => x.DocumentTypeId, "GenericDropDown")</div>*@
+                    <div class="col-lg-12">@Html.EditorFor(x => x.ArrayDocumentTypeIds, "GenericDropDownMultipleArray")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.ProcessPriorityId, "GenericDropDown")</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.Label)</div>
                     <div class="col-lg-12">@Html.EditorFor(x => x.IsActive, "Boolean")</div>
@@ -65,6 +68,13 @@
 @section scripts {
     <script>
         $(document).ready(function () {
+            $('#ArrayDocumentTypeIds').select2({
+            });
+
+            str = '@Model.StringDocumentTypeIds';
+            var selectedValues = str.split(",");
+            $('#ArrayDocumentTypeIds').val(selectedValues).trigger('change');
+
             initCaseCode();
             $('#CaseTypeId').change(function () {
                 var caseCode = '@Model.CaseCodeId';

@@ -36,15 +36,24 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-3">@Html.EditorFor(m => m.ActComplainIndexId, "GenericDropDown")</div>
+    <div class="col-lg-6">@Html.EditorFor(m => m.ActComplainIndexId, "GenericSelect2",null,new{wrap=true})</div>
     <div class="col-lg-3">@Html.EditorFor(m => m.ActResultId, "GenericDropDown")</div>
-    <div class="col-lg-3">@Html.EditorFor(m => m.CaseRegNumFrom, "Int32")</div>
-    <div class="col-lg-3">@Html.EditorFor(m => m.CaseRegNumTo, "Int32")</div>
+    <div class="col-lg-3">
+        <div class="row">
+            <div class="col-lg-6">@Html.EditorFor(m => m.CaseRegNumFrom, "Int32")</div>
+            <div class="col-lg-6">@Html.EditorFor(m => m.CaseRegNumTo, "Int32")</div>
+        </div>
+    </div>
 </div>
 
 <div class="row">
     <div class="col-lg-3">@Html.EditorFor(m => m.ActRegNumber)</div>
-    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterFinalActId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">@Html.EditorFor(m => m.ActIsFinalDoc, "Boolean")</div>
 </div>
 
 <div class="row">
@@ -63,6 +72,9 @@
 </div>
 
 <script>
+    $(function(){
+        $('#ActComplainIndexId').select2({ language: "bg" });
+    });
     function LoadTable() {
         if ($.fn.dataTable.isDataTable('#mainTable')) {
             refreshTable('#mainTable');
@@ -74,20 +86,24 @@
                     "type": "POST",
                     "datatype": "json",
                     "data": function (d) {
-                        d.CaseGroupId = $("#CaseGroupId").val();
-                        d.CaseTypeId = $("#CaseTypeId").val();
-                        d.DateFrom = $("#DateFrom").val();
-                        d.DateTo = $("#DateTo").val();
-                        d.DateFromActReturn = $("#DateFromActReturn").val();
-                        d.DateToActReturn = $("#DateToActReturn").val();
-                        d.DateFromSendDocument = $("#DateFromSendDocument").val();
-                        d.DateToSendDocument = $("#DateToSendDocument").val();
-                        d.RegNumFrom = $("#CaseRegNumFrom").val();
-                        d.RegNumTo = $("#CaseRegNumTo").val();
-                        d.ActRegNumber = $("#ActRegNumber").val();
-                        d.ActComplainIndexId = $("#ActComplainIndexId").val();
-                        d.ActResultId = $("#ActResultId").val();
-                        d.JudgeReporterId = $("#JudgeReporterId").val();
+                        d.filter = {
+                            CaseGroupId: $("#CaseGroupId").val(),
+                            CaseTypeId: $("#CaseTypeId").val(),
+                            DateFrom: $("#DateFrom").val(),
+                            DateTo: $("#DateTo").val(),
+                            DateFromActReturn: $("#DateFromActReturn").val(),
+                            DateToActReturn: $("#DateToActReturn").val(),
+                            DateFromSendDocument: $("#DateFromSendDocument").val(),
+                            DateToSendDocument: $("#DateToSendDocument").val(),
+                            RegNumFrom: $("#CaseRegNumFrom").val(),
+                            RegNumTo: $("#CaseRegNumTo").val(),
+                            ActRegNumber: $("#ActRegNumber").val(),
+                            ActComplainIndexId: $("#ActComplainIndexId").val(),
+                            ActResultId: $("#ActResultId").val(),
+                            JudgeReporterId: $("#JudgeReporterId").val(),
+                            JudgeReporterFinalActId: $("#JudgeReporterFinalActId").val(),
+                            ActIsFinalDoc: $("#ActIsFinalDoc").is(":checked")
+                        };
                     }
                 },
                 filter:false,
@@ -154,11 +170,21 @@
                         searchable: true
                     },
                     {
-                        name: 'actName',
-                        data: 'actName',
-                        title: 'Съдебен акт',
+                        name: 'judgeReporterFinalActName',
+                        data: 'judgeReporterFinalActName',
+                        title: 'Съдия по обж. акт',
                         sortable: true,
                         searchable: true
+                    },
+                    {
+                        name: 'actDate',
+                        data: 'actDate',
+                        title: 'Съдебен акт',
+                        sortable: true,
+                        searchable: true,
+                        "render": function (item, type, row, meta) {
+                            return row.actName;
+                        },
                     },
                     {
                         name: 'caseGroupLabel',

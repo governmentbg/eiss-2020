@@ -1,13 +1,28 @@
-﻿@{
+﻿@using IOWebApplication.Infrastructure.Constants;
+@{
     int? filterCaseGroupId = ViewBag.filterCaseGroupId;
-    ViewData["Title"] = "Списък групи шифри";
+    int groupKind = ViewBag.groupKind;
+    string btnJudgeLabel = "Съдии";
+    switch (groupKind)
+    {
+        case NomenclatureConstants.CourtGroupKinds.JudgeSelection:
+            ViewData["Title"] = "Списък групи шифри - Разпределение";
+            break;
+        case NomenclatureConstants.CourtGroupKinds.SpecialAccess:
+            ViewData["Title"] = "Списък групи шифри - Специален достъп";
+            btnJudgeLabel = "Лица";
+            break;
+        case NomenclatureConstants.CourtGroupKinds.Replacement:
+            ViewData["Title"] = "Списък групи - заместване";
+            btnJudgeLabel = "Лица";
+            break;
+    }    
 }
 @model int?
-@inject IViewLocalizer Localizer
 @section breadcrumb{
     @if (ViewBag.breadcrumbs != null)
     {
-        <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
+        <partial name="Breadcrumbs" model="@((List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs)" />
     }
 }
 <div class="row">
@@ -39,6 +54,7 @@
                     "datatype": "json",
                     data: function (d) {
                         d.filterCaseGroupId = filterCaseGroupId.value;
+                        d.groupKind = @(groupKind);
                     }
                  },
                 columns: [
@@ -160,14 +176,14 @@
             }, false);
         });
         function addFilterCourtGroup(addr) {
-            window.location.href = addr + "?filterCaseGroupId=" + $("#filterCaseGroupId").val();// + "&filterMainTable=" + $('#mainTable').DataTable().search();
+            window.location.href = addr + "?groupKind=@(groupKind)&filterCaseGroupId=" + $("#filterCaseGroupId").val();// + "&filterMainTable=" + $('#mainTable').DataTable().search();
         }
     </script>
 
     <script id="templateEdit" type="text/x-handlebars-template">
-        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-def btn-sm" title="@Localizer[" btnUp"]"><i class="fa fa-angle-up"></i></a>
-        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-def btn-sm" title="@Localizer[" btnDown"]"><i class="fa fa-angle-down"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="up" class="orderButton btn btn-def btn-sm" title="Нагоре"><i class="fa fa-angle-up"></i></a>
+        <a href="#" data-id="{{this}}" data-direction="down" class="orderButton btn btn-def btn-sm" title="Надолу"><i class="fa fa-angle-down"></i></a>
         <a onclick=addFilterCourtGroup("@Url.Action("Edit")/{{this}}") class="btn btn-warning btn-sm" title="Редакция"><i class="fa fa-edit"></i></a>
-        <a onclick=addFilterCourtGroup("@Url.Action("EditCourtGroupLawUnit")/{{this}}") class="btn btn-def btn-sm" title="Съдии"><i class="fa fa-user"></i><span class="hidden-md hidden-sm hidden-xs"> Съдии</span></a>
+        <a onclick=addFilterCourtGroup("@Url.Action("EditCourtGroupLawUnit")/{{this}}") class="btn btn-def btn-sm" title="@btnJudgeLabel"><i class="fa fa-user"></i><span class="hidden-md hidden-sm hidden-xs"> @btnJudgeLabel</span></a>
     </script>
 }

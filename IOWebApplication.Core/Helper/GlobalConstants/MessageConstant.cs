@@ -38,7 +38,7 @@
             public const string SaveFailed = "Проблем по време на запис.";
             public const string TimeoutSelectProtokol = "Сървърът е претоварен. Изберете бутон 'Запис' тново";
             public const string UpdateOK = "Обновяването премина успешно.";
-            public const string NewerDateWrt = "Данните са коригирани от друго лице.";
+            public const string NewerDateWrt = "Данните вече са коригирани от Вас или друго лице.";
             public const string UpdateFailed = "Проблем при обновяването на данните.";
             public const string FileNotFound = "Файлът не е намерен!";
             public const string FileUploadFailed = "Грешка при запис на Файл!";
@@ -70,6 +70,13 @@
             public const string DocumentTemplateExpireOK = "Документът е премахнат успешно.";
             public const string DivorceExpireOK = "Съобщението е премахнато успешно.";
             public const string ObjectWasDeleted = "Търсения от Вас обект е премахнат.";
+
+            public const string MessageDataValidation = "Моля, прегледайте въведените данните.";
+
+            //Request 1, 2024
+            public const string Req1ActCoordinationDisabled = "Подписването на съгласуване на съдебен акт е част от процеса по подписване на самия акт";
+            public const string Req1ActRegisterDisabled = "Регистриране на съдебен акт се извършва след полагането на последния електронен подпис";
+            public const string Req1ResolutionRegisterDisabled = "Регистриране на разпореждане се извършва след полагането на последния електронен подпис";
         }
         public static class ValidationErrors{
             public const string DeliveryDateFuture = "Не може да въвеждате посещение с бъдеща дата и час.";

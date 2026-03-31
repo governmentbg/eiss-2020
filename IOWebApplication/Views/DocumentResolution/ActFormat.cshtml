@@ -13,7 +13,14 @@
         <table class="no-border row-space-single" align="right">
             <tr>
                 <td align="right">
-                    <b>Съдия:</b>
+                    @if (!string.IsNullOrEmpty(Model.JudgePosition))
+                    {
+                        <b>@(Model.JudgePosition):</b>
+                    }
+                    else
+                    {
+                        <b>Съдия:</b>
+                    }
                 </td>
                 <td>@sign</td>
             </tr>
@@ -21,7 +28,14 @@
             {
                 <tr>
                     <td align="right">
-                        <b>Съдия:</b>
+                        @if (!string.IsNullOrEmpty(Model.JudgePosition2))
+                        {
+                            <b>@(Model.JudgePosition2):</b>
+                        }
+                        else
+                        {
+                            <b>Съдия:</b>
+                        }
                     </td>
                     <td>@sign</td>
                 </tr>

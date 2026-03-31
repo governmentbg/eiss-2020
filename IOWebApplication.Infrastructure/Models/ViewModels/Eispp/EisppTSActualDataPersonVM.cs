@@ -12,6 +12,7 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Eispp
 
         public IList<EisppTSActualDataPersonCrimeVM> PersonCrimes { get; set; }
         public IList<Address> Addresses { get; set; }
+        public string[] SelectedAddresses { get; set; }
 
         public EisppTSActualDataPersonVM()
         {

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Services
 {
@@ -60,23 +61,29 @@ namespace IOWebApplication.Core.Services
                     saved.Description = modelSave.Description;
                     saved.OrganizationLevelId = modelSave.OrganizationLevelId;
                     saved.IsDocumentRegistry = modelSave.IsDocumentRegistry;
-                    repo.Update(saved);
+                    //repo.Update(saved);
 
                     var courtOrganizationCaseGroups = repo.AllReadonly<CourtOrganizationCaseGroup>().Where(x => x.CourtOrganizationId == model.Id);
                     repo.DeleteRange(courtOrganizationCaseGroups);
+
+                    if (model.IsDocumentRegistry ?? false)
+                    {
+                        var modelSaveCaseGroupe = FillCourtOrganizationCaseGroup(model);
+                        modelSaveCaseGroupe.ForEach(x => x.CourtOrganizationId = modelSave.Id);
+                        repo.AddRange(modelSaveCaseGroupe);
+                    }
                 }
                 else
                 {
+                    if (model.IsDocumentRegistry ?? false)
+                    {
+                        modelSave.CaseGroups = FillCourtOrganizationCaseGroup(model);
+                    }
                     //Insert
                     repo.Add<CourtOrganization>(modelSave);
                 }
 
-                if (model.IsDocumentRegistry ?? false)
-                {
-                    var modelSaveCaseGroupe = FillCourtOrganizationCaseGroup(model);
-                    modelSaveCaseGroupe.ForEach(x => x.CourtOrganizationId = modelSave.Id);
-                    repo.AddRange(modelSaveCaseGroupe);
-                }
+
                 repo.SaveChanges();
                 model.Id = modelSave.Id;
 
@@ -84,7 +91,7 @@ namespace IOWebApplication.Core.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Грешка при запис на Организационна структура на съд Id={ model.Id }");
+                logger.LogError(ex, $"Грешка при запис на Организационна структура на съд Id={model.Id}");
                 return false;
             }
         }
@@ -127,6 +134,11 @@ namespace IOWebApplication.Core.Services
             return result;
         }
 
+        /// <summary>
+        /// Извличане на данни за организационна структура на съд
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <returns></returns>
         public List<SelectListItem> CourtOrganization_SelectForDropDownList(int courtId)
         {
             DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
@@ -141,6 +153,32 @@ namespace IOWebApplication.Core.Services
                                      Value = x.Id.ToString(),
                                      Text = x.Label
                                  }).ToList();
+
+
+            result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Извличане на данни за организационна структура на съд
+        /// </summary>
+        /// <param name="courtId">Идентификатор на съд</param>
+        /// <returns></returns>
+        public async Task<List<SelectListItem>> CourtOrganization_SelectForDropDownListAsync(int courtId)
+        {
+            DateTime dateTomorrow = DateTime.Now.AddDays(1).Date;
+
+            var result = await repo.AllReadonly<CourtOrganization>()
+                                   .Where(x => x.CourtId == courtId &&
+                                               (x.DateTo ?? dateTomorrow).Date > DateTime.Now.Date)
+                                   .OrderBy(x => x.Label)
+                                   .Select(x => new SelectListItem()
+                                   {
+                                       Value = x.Id.ToString(),
+                                       Text = x.Label
+                                   })
+                                   .ToListAsync();
 
 
             result.Insert(0, new SelectListItem() { Text = "Избери", Value = "-1" });

@@ -14,7 +14,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Страни по делото
     /// </summary>
     [Table("case_person")]
-    public class CasePerson : BaseInfo_CasePerson, IHaveHistory<CasePersonH>, IExpiredInfo
+    public class CasePerson : BaseInfo_CasePerson, IHaveHistory<CasePersonH>, IExpiredInfo, IHaveId
     {
         [ForeignKey(nameof(CourtId))]
         public virtual Court Court { get; set; }
@@ -41,7 +41,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         public virtual CompanyType CompanyType { get; set; }
 
         public virtual ICollection<CasePersonAddress> Addresses { get; set; }
-        public virtual ICollection<CasePersonH> History { get; set; }
+        public virtual ICollection<CasePersonH>? History { get; set; }
         public virtual ICollection<CasePersonSentence> CasePersonSentences { get; set; }
         public virtual ICollection<CasePersonCrime> CasePersonCrimes { get; set; }
 
@@ -59,6 +59,9 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(UserExpiredId))]
         public virtual ApplicationUser UserExpired { get; set; }
+
+        [ForeignKey(nameof(RelatedActId))]
+        public virtual CaseSessionAct RelatedAct { get; set; }
 
         public CasePerson()
         {
@@ -80,6 +83,11 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [ForeignKey(nameof(Id))]
         public virtual CasePerson CasePerson { get; set; }
+
+        public void ClearForeignKeys()
+        {
+            CasePerson = null;
+        }
     }
     public class BaseInfo_CasePerson : PersonNamesBase, IUserDateWRT
     {
@@ -179,6 +187,28 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
         [Display(Name = "Дата на пререгистрация в АВ")]
         public DateTime? ReRegisterDate { get; set; }
 
-       
+        [Column("person_gid")]
+        [MaxLength(40)]
+        public string PersonGid { get; set; }
+
+        [Column("represents_gid")]
+        [MaxLength(40)]
+        public string RepresentsGid { get; set; }
+
+        #region РНФЛ
+
+        [Column("related_act_id")]
+        public int? RelatedActId { get; set; }
+
+        [Column("appoint_date_from")]
+        public DateTime? AppointDateFrom { get; set; }
+
+        [Column("appoint_date_to")]
+        public DateTime? AppointDateTo { get; set; }
+
+        [Column("birth_date")]
+        public DateTime? BirthDate { get; set; }
+
+        #endregion
     }
 }

@@ -2,10 +2,16 @@
     // DataTables global settings
 
     $.fn.dataTable.ext.buttons.io_excel = {
-        extend: 'excel',
+        extend: 'excelHtml5',
         text: '<i class="fa fa-file-excel-o"></i>',
         titleAttr: 'Excel',
         className: 'btn-default',
+
+        //createEmptyCells : true,
+        //customize: function (xlsx) {
+        //    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+        //    $('row c', sheet).attr('s', '25');
+        //},
         exportOptions: {
             "columns": "thead th:not(.noExport)",
             "columns": ":visible"
@@ -80,6 +86,16 @@
                     initTable.DataTable().search(this.value).draw();
                 }
             });
+        },
+        ajax: {
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.status == 401) {
+                    console.log('Not authorized');
+                    swalOk("Вашата потребителска сесия е изтекла. Моля, влезте отново в профила си.", function () {
+                        document.location.href = document.location.href;
+                    })
+                }
+            }
         },
         dom: '<"row"<"col-sm-6 dataTables_buttons"B><"col-sm-6"f>>rtip',
         buttons: {
@@ -259,7 +275,7 @@ function validateTabs() {
     });
 }
 function initPersonControl() {
-    $('.person--control select[id$="UicTypeId"]').change(function () {
+    $('.person--control select[id$="UicTypeId"]:not(.init-complete)').change(function () {
         let uicType = $(this).val();
         $(this).parents('.person--control:first').find('.person-uic').data("uictype", uicType);
         let isEntity = (uicType === '3' || uicType === '5');
@@ -272,9 +288,10 @@ function initPersonControl() {
             $(this).parents('.person--control:first').find('.person--names').show();
             $(this).parents('.person--control:first').find('.row-deceased').show();
         }
+        $(this).addClass('init-complete');
     }).trigger('change');
 
-    $('.person--control input[id$="Uic"]').change(function () {
+    $('.person--control input[id$="Uic"]:not(.init-complete)').change(function () {
         let uic = $(this).val();
         let personControl = $(this).parents('.person--control:first');
         let uicType = personControl.find('select[id$="UicTypeId"]').val();
@@ -288,9 +305,10 @@ function initPersonControl() {
                     personControl.find('input[id$="FullName"]').val(data.fullName);
                     personControl.find('input[id$="LatinName"]').val(data.latinName);
                     personControl.find('input[id$="DepartmentName"]').val(data.departmentName);
-                }                
+                }
             });
         }
+        $(this).addClass('init-complete');
     });
     $('.person--control input[id$="IsDeceased"]').change(function () {
         let isDeceased = $(this).is(':checked');
@@ -344,10 +362,14 @@ function selectPersonSearchData(sender, personId, controlId) {
             $(personControl).find('input[id$="FirstName"]').val(personData.firstName);
             $(personControl).find('input[id$="MiddleName"]').val(personData.middleName);
             $(personControl).find('input[id$="FamilyName"]').val(personData.familyName);
+            $(personControl).find('input[id$="LatinName"]').val(personData.latinName);
             $(personControl).find('input[id$="FamilyName2"]').val('');
             if (personData.isDead) {
                 $(personControl).find('input[id$="IsDeceased"]').prop('checked', 'checked').trigger('change');
                 $(personControl).find('input[id$="DateDeceased"]').val(personData.deathDate);
+            }
+            if (personData.genderId > 0) {
+                $(personControl).find('select[id$="GenderId"]').val(personData.genderId);
             }
 
             if (typeof appendAddressToDocumentPersonFromNBD === 'function') {
@@ -365,14 +387,14 @@ function selectPersonSearchData(sender, personId, controlId) {
 
 
 function initDatePicker() {
-    $('.date-picker').datepicker({
-        todayHighlight: true,
-        autoclose: true,
+    $('.date-picker').datetimepicker({
+        //todayHighlight: true,
+        //autoclose: true,
         //showOn: "button",
         //showButtonPanel: true,
-        format: 'dd.mm.yyyy',
-        language: 'bg-BG',
-        orientation: 'bottom'
+        format: 'DD.MM.YYYY',
+        locale: 'bg'
+        //orientation: 'bottom'
     });
 
     $(".date-picker").keyup(function (e) {
@@ -390,24 +412,24 @@ function initDatePicker() {
         }
     });
 
-    $('.dateyear-picker').datepicker({
-        todayHighlight: true,
-        autoclose: true,
-        format: 'yyyy',
-        language: 'bg-BG',
-        viewMode: 'years',
-        minViewMode: 'years',
-        maxDate: '2030',
-        minDate: '1900'
+    $('.dateyear-picker').datetimepicker({
+        //todayHighlight: true,
+        //autoclose: true,
+        format: 'YYYY',
+        locale: 'bg',
+        //viewMode: 'years',
+        //minViewMode: 'years',
+        //maxDate: '2030',
+        //minDate: '1900'
     });
 
-    $('.datemonthyear-picker').datepicker({
-        todayHighlight: true,
-        autoclose: true,
-        format: 'mm.yyyy',
-        language: 'bg-BG',
-        viewMode: 'months',
-        minViewMode: 'months'
+    $('.datemonthyear-picker').datetimepicker({
+        //todayHighlight: true,
+        //autoclose: true,
+        format: 'MM.YYYY',
+        locale: 'bg',
+        //viewMode: 'months',
+        //minViewMode: 'months'
     });
 
     $('.datetime-picker').datetimepicker({
@@ -457,9 +479,9 @@ function initDatePicker() {
 
 
         });
-        $(e).find('.time-toggle').click(function (el) {
-            $(el.currentTarget).parent().toggleClass('visibility_hidden');
-        });
+        //$(e).find('.time-toggle').click(function (el) {
+        //    $(el.currentTarget).parent().toggleClass('visibility_hidden');
+        //});
     });
 }
 

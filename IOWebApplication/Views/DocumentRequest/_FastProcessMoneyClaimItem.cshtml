@@ -1,0 +1,67 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessMoneyClaimVM
+@{
+    bool isInEuro = (bool?)ViewData["IsInEuro"] ?? false;
+    var itemId = Guid.NewGuid().ToString();
+}
+<tbody class="item-template">
+    <tr class="main-item">
+        <td class="item-number" data-gid="@Model.Gid">
+            @(Model.Index + 1)
+        </td>
+        <td>
+            <select asp-for="@Model.MoneyClaimTypeCode" class="form-control" asp-items="@ViewBag.MoneyClaimTypesDDL"></select>
+            <span class="text-danger" asp-validation-for="MoneyClaimTypeCode"></span>
+        </td>
+        <td>
+            @Html.EditorFor(x => x.Amount, "DecimalInline")
+        </td>
+        <td>
+            <select asp-for="@Model.CurrencyCode" class="form-control" asp-items="@ViewBag.CurrenciesDDL"></select>
+            <span class="text-danger" asp-validation-for="CurrencyCode"></span>
+        </td>
+        <td>
+            @if (isInEuro)
+            {
+                @Html.EditorFor(x => x.TotalAmountEUR, "DecimalInline")
+            }
+            else
+            {
+                @Html.EditorFor(x => x.TotalAmountBGN, "DecimalInline")
+            }
+        </td>
+        <td>
+            @Html.EditorFor(x => Model.DateFrom, "DateTimeClearNoIcon")
+        </td>
+        <td>
+            @Html.EditorFor(x => Model.DateTo, "DateTimeClearNoIcon")
+        </td>
+        <td>
+            <a class="btn remove-item" aria-label="Премахни" title="Премахни паричното вземане" data-alert="Потвърди премахването на паричното вземане!"><i class="fa fa-remove"></i></a>
+            @Html.HiddenFor(x => x.Gid)
+            <input type="hidden" class="item-index" name="@(nameof(FastProcessRequestVM.MoneyClaims)).Index" value="@Model.Index" />
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td colspan="7">
+            <textarea class="form-control" asp-for="@Model.Description" rows="3" placeholder="Обяснителна част"></textarea>
+        </td>
+    </tr>
+    <tr>
+        <th></th>
+        <th>Законна лихва</th>
+        <th colspan="4" class="sat-interest">Дата</th>
+    </tr>
+    <tr class="item-end">
+        <td></td>
+        <td>
+            <label><input type="checkbox" asp-for="@Model.HasStatutoryinterest" />&nbsp;Законна лихва</label>
+        </td>
+        <td class="sat-interest" colspan="2">
+            @Html.EditorFor(x => Model.StatutoryinterestDate, "DateTimeClearNoIcon")
+        </td>
+        <td class="sat-interest" colspan="2">
+        </td>
+    </tr>
+</tbody>

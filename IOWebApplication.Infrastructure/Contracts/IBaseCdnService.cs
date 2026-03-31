@@ -1,5 +1,6 @@
 ﻿using IOWebApplication.Infrastructure.Models.Cdn;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace IOWebApplication.Infrastructure.Contracts
@@ -11,7 +12,8 @@ namespace IOWebApplication.Infrastructure.Contracts
         Task<bool> MongoCdn_DeleteFile(string id);
         Task<bool> MongoCdn_DeleteFiles(CdnFileSelect request);
 
-        IEnumerable<CdnItemVM> Select(int sourceType, string sourceId, string fileId = null);
+        IQueryable<CdnItemVM> Select(int sourceType, string sourceId, string fileId = null);
         Task<CdnDownloadResult> GetFileById(string id);
+        Task<string> GetTempFileIdByFilename(string filename);
     }
 }

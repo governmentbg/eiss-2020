@@ -115,13 +115,14 @@
         });
 
         $('#SessionResultId').change(function () {
-            requestCombo('@Url.Action("GetDDL_SessionResultBase","Ajax")', { sessionResultId: $(this).val() }, '#SessionResultBaseId', @(Model.SessionResultBaseId??0), function () { $('#SessionResultBaseId').trigger('change') });
+            requestCombo('@Url.Action("GetDDL_SessionResultBase","Ajax")', { sessionResultId: $(this).val(),caseId:@Model.CaseId,caseSessionId:@Model.CaseSessionId }, '#SessionResultBaseId', @(Model.SessionResultBaseId??0), function () { $('#SessionResultBaseId').trigger('change') });
         });
 
         function SessionResultIdChange() {
             var selected = $("#SessionResultId").val()
             if ((selected == @NomenclatureConstants.CaseSessionResult.S_opredelenie_za_otvod) ||
-                (selected == @NomenclatureConstants.CaseSessionResult.S_razporejdane_za_otvod)) {
+                (selected == @NomenclatureConstants.CaseSessionResult.S_razporejdane_za_otvod) ||
+                (selected == @NomenclatureConstants.CaseSessionResult.S_act_za_otvod)) {
                 $('#divLawUnit').show();
             }
             else {

@@ -1,8 +1,5 @@
-﻿using AutoMapper;
-using IOWebApplication.Infrastructure.Data.Models.Documents;
+﻿using IOWebApplication.Infrastructure.Data.Models.Documents;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
 {
@@ -16,11 +13,17 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
         public string ResolutionTypeName { get; set; }
         public string RegNumber { get; set; }
         public DateTime? RegDate { get; set; }
+        public DateTime? DeclaredDate { get; set; }
         public int JudgeCount { get; set; }
         public string JudgeName { get; set; }
+        public int JudgeDecisionLawunitId { get; set; }
         public string JudgeUserId { get; set; }
         public string JudgeName2 { get; set; }
+
+        public int? JudgeDecisionLawunit2Id { get; set; }
         public string JudgeUser2Id { get; set; }
+        public string JudgePosition { get; set; }
+        public string JudgePosition2 { get; set; }
         public string StateName { get; set; }
         public int CourtId { get; set; }
         public string CourtName { get; set; }
@@ -40,43 +43,6 @@ namespace IOWebApplication.Infrastructure.Models.ViewModels.Documents
                     return $"{ResolutionTypeName}";
                 }
             }
-        }
-
-        public static MapperConfiguration GetMapping()
-        {
-            var dtNow = DateTime.Now;
-            return new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<DocumentResolution, DocumentResolutionVM>()
-                    .ForMember(d => d.DocumentNumber, s => s.MapFrom(m => m.Document.DocumentNumber))
-                    .ForMember(d => d.DocumentTypeName, s => s.MapFrom(m => m.Document.DocumentType.Label))
-                    .ForMember(d => d.ResolutionTypeName, s => s.MapFrom(m => m.ResolutionType.Label))
-                    .ForMember(d => d.JudgeUserId, s => s.MapFrom(m => m.JudgeDecisionUserId))
-                    .ForMember(d => d.JudgeName, s => s.MapFrom(m => m.JudgeDecisionLawunit.FullName))
-                    .ForMember(d => d.StateName, s => s.MapFrom(m => m.ResolutionState.Label))
-                    .ForMember(d => d.CourtName, s => s.MapFrom(m => m.Court.Label))
-                    .ForMember(d => d.CourtCity, s => s.MapFrom(m => m.Court.CityName))
-                    .ForMember(d => d.JudgeCount, s => s.MapFrom(m => m.JudgeDecisionCount ?? 1))
-                    .ForMember(d => d.JudgeUser2Id, s => s.MapFrom(m => m.JudgeDecisionUser2Id))
-                    .ForMember(d => d.JudgeName2, s => s.MapFrom(m => (m.JudgeDecisionLawunit2 != null) ? m.JudgeDecisionLawunit2.FullName : ""))
-                ;
-            });
-
-
-            /*
-            Id = x.Id,
-                                DocumentId = x.DocumentId,
-                                ResolutionTypeId = x.ResolutionTypeId,
-                                ResolutionTypeName = x.ResolutionType.Label,
-                                JudgeName = x.JudgeDecisionLawunit.FullName,
-                                JudgeUserId = x.JudgeDecisionUserId,
-                                RegNumber = x.RegNumber,
-                                RegDate = x.RegDate,
-                                StateName = x.ResolutionState.Label,
-                                CourtId = x.CourtId,
-                                CourtName = x.Court.Label,
-                                CourtCity = x.Court.CityName
-            */
         }
     }
 }

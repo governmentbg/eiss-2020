@@ -15,7 +15,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
     /// Обжалвания към съдебен акт
     /// </summary>
     [Table("case_session_act_complain")]
-    public class CaseSessionActComplain: UserDateWRT, IExpiredInfo
+    public class CaseSessionActComplain : UserDateWRT, IExpiredInfo, IHaveId
     {
         [Column("id")]
         [Key]
@@ -29,7 +29,7 @@ namespace IOWebApplication.Infrastructure.Data.Models.Cases
 
         [Column("case_session_act_id")]
         public int CaseSessionActId { get; set; }
-        
+
         /// <summary>
         /// Id на Document от CaseSessionDoc - съпровождащ документ със жалбата
         /// </summary>

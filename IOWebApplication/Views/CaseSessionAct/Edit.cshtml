@@ -1,9 +1,12 @@
-﻿@model CaseSessionAct
+﻿@model CaseSessionActEditVM
+@using IOWebApplication.Infrastructure.Contracts
 @using IOWebApplication.Infrastructure.Data.Models.Cases
+@using IOWebApplication.Infrastructure.Models.ViewModels.Case
 @using IOWebApplication.Infrastructure.Models.ViewModels.Common
 @using IOWebApplication.Infrastructure.Models.ViewModels
 @using IOWebApplication.Infrastructure.Constants
 @using IOWebApplication.Infrastructure.Extensions
+@inject IUserContext userContext
 
 @{
     if (Model.Id > 0)
@@ -17,7 +20,8 @@
 
     var caseId = ViewBag.caseId;
     bool hasActPdf = (bool)(ViewBag.hasActPdf ?? false);
-    bool hasDefacedBlank = (bool)(ViewBag.hasDefacedBlank ?? false);
+    bool isFastProcess = (bool)(ViewBag.isFastProcess ?? false);
+    bool hasDefacedBlank = (bool)(ViewBag.hasDefacedBlank ?? false) || (Model.ActDeclaredDate != null);
     bool hasDefacedMotivesBlank = (bool)(ViewBag.hasDefacedMotivesBlank ?? false);
     bool hasDefacedAct = (bool)(ViewBag.hasDefacedAct ?? false);
     bool hasDefacedMotives = (bool)(ViewBag.hasDefacedMotives ?? false);
@@ -29,11 +33,18 @@
     bool hasComplainResult = (bool)ViewBag.hasComplainResult;
     bool hasComplainIndex = (bool)ViewBag.hasComplainIndex;
     bool hasEditFinishDoc = (bool)ViewBag.hasEditFinishDoc;
+    if (!string.IsNullOrEmpty(Model.EcliCode))
+    {
+        hasEditFinishDoc = false;
+    }
+
     bool canAccessFile = (bool)ViewBag.canAccessFile;
-    bool canRegisterAct = (Model.RegDate == null) && !hasActPdf;
+    bool canRegisterAct = ((Model.RegDate == null) && !hasActPdf) && !userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024);
     bool autoSave = (bool)(ViewBag.autoSave ?? false);
+    bool canAccessDefaceAct = (bool)(ViewBag.canAccessDefaceAct ?? false);
+    bool canAccessDefaceMotive = (bool)(ViewBag.canAccessDefaceMotive ?? false);
     bool showNoResultButton = (bool)(ViewBag.sessionNoResults ?? false);
-    bool manualSecretaryUser = (bool)(ViewBag.ManualSecretaryUser ?? false);
+    bool quickViewEnabled = (bool)(ViewBag.quickViewEnabled ?? false);
     IAccessControl access = (IAccessControl)ViewBag.AccessControl;
     string regNumberDate = "";
     if (Model.RegDate != null)
@@ -45,15 +56,27 @@
     {
         showNoSecretaryInfo = true;
     }
+    bool hasActComplainResultRespect = (bool)ViewBag.hasActComplainResultRespect;
+
+    bool canCorrectAfterDeclare = (bool)(ViewBag.canCorrectAfterDeclare ?? false);
+
+    bool activeRequest12024 = userContext.IsSystemInFeature(NomenclatureConstants.SystemFeatures.Request1_2024);
+
+    ViewData["ShowMenuCounts"] = true;
 }
 
-@section breadcrumb{
+@section breadcrumb {
     @if (ViewBag.breadcrumbs != null)
     {
         <partial name="Breadcrumbs" model="@(List<IOWebApplication.Infrastructure.Models.ViewModels.Common.BreadcrumbsVM>)ViewBag.breadcrumbs" />
     }
 }
-
+@section titleInfo {
+    @if (Model.CaseId > 0)
+    {
+        @await Component.InvokeAsync(nameof(IOWebApplication.Components.CaseWarningComponent), new { caseId = Model.CaseId.Value })
+    }
+}
 
 
 <div class="nav-tabs-custom">
@@ -93,6 +116,8 @@
                         @Html.HiddenFor(x => x.RegNumber)
                         @Html.HiddenFor(x => x.ActDeclaredDate)
                         @Html.HiddenFor(x => x.DateWrt)
+                        @Html.HiddenFor(x => x.Description)
+
 
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div id="saveContainer">
@@ -117,13 +142,24 @@
                                     @Html.HiddenFor(x => x.ActTypeId)
                                     @Html.HiddenFor(x => x.ActKindId)
                                     @Html.HiddenFor(x => x.RelatedActId)
+                                    @Html.HiddenFor(x => x.HasCorrectedAct)
 
                                     <div class="row disable-controls">
-                                        <div class="col-lg-6">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+                                        <div class="col-lg-6">
+                                            @Html.EditorFor(x => x.ActTypeId, "GenericDropDown")
+                                            @if (isFastProcess)
+                                            {
+                                                <div id="divGenerateExecProcess">
+                                                    @Html.DisplayFor(x => x.GenerateExecProcess, "objVal", null, new { value = (Model.GenerateExecProcess) ? "Да" : "He" })
+                                                </div>
+                                            }
+                                        </div>
                                         <div class="col-lg-6">
                                             <div id="divActKind" style="display:none;">
                                                 @Html.EditorFor(x => x.ActKindId, "GenericDropDown")
-
+                                                <div id="divActDirection" style="display:block;">
+                                                    @Html.EditorFor(x => x.ActDirectionId, "GenericDropDown")
+                                                </div>
                                                 <div id="divRelatedAct" style="display:none;">
                                                     @Html.EditorFor(x => x.RelatedActId, "GenericDropDown")
                                                 </div>
@@ -136,16 +172,38 @@
                                     </div>
                                     <div class="row" id="divSignJudge">
                                         <div class="col-lg-12 disable-controls">@Html.EditorFor(x => x.SignJudgeLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
-                                    </div> }
+                                    </div>
+                                    <div class="row disable-controls">
+                                        <div class="col-lg-6">
+                                            @Html.DisplayFor(x => x.HasCorrectedAct, "objVal", null, new { value = (Model.HasCorrectedAct) ? "Да" : "He" })
+                                        </div>
 
+                                    </div>
+                                    @if (Model.HasCorrectedAct)
+                                    {
+                                        <div class="row disable-controls">
+                                            <div class="col-lg-12">
+                                                @Html.EditorFor(x => x.CorrectedActsIds, "GenericDropDownMultipleArray")
+                                            </div>
 
+                                        </div>
+                                    }
+                                }
                                 else
                                 {
                                     <div class="row">
-                                        <div class="col-lg-6">@Html.EditorFor(x => x.ActTypeId, "GenericDropDown")</div>
+                                        <div class="col-lg-6">
+                                            @Html.EditorFor(x => x.ActTypeId, "GenericDropDown")
+                                            <div id="divGenerateExecProcess">
+                                                @Html.EditorFor(x => x.GenerateExecProcess, "Boolean")
+                                            </div>
+                                        </div>
                                         <div class="col-lg-6">
                                             <div id="divActKind" style="display:none;">
                                                 @Html.EditorFor(x => x.ActKindId, "GenericDropDown")
+                                                <div id="divActDirection" style="display:block;">
+                                                    @Html.EditorFor(x => x.ActDirectionId, "GenericDropDown")
+                                                </div>
                                                 <div id="divRelatedAct" style="display:none;">
                                                     @Html.EditorFor(x => x.RelatedActId, "GenericDropDown")
                                                 </div>
@@ -159,33 +217,31 @@
                                     <div class="row" id="divSignJudge">
                                         <div class="col-lg-12">@Html.EditorFor(x => x.SignJudgeLawUnitId, "LawUnit", null, new { lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            @Html.EditorFor(x => x.HasCorrectedAct, "Boolean")
+                                        </div>
+                                    </div>
+                                    <div class="row correct-act">
+                                        <div class="col-lg-12 ">
+                                            @Html.EditorFor(x => x.CorrectedActsIds, "GenericDropDownMultipleArray")
+                                        </div>
+                                    </div>
                                 }
+                                @Html.HiddenFor(x => x.SecretaryUserId_list)
+                                @Html.HiddenFor(x => x.SecretaryUserNamesList)
                                 @if (Model.ActDeclaredDate != null)
                                 {
                                     @Html.HiddenFor(x => x.SecretaryUserId)
                                     <div class="row">
-                                        @if (manualSecretaryUser)
-                                        {
-                                            <div class="col-lg-6">@Html.DisplayFor(x => x.SecretaryUserId, "objVal", new { value = ViewBag.SecretaryUserName })</div>
-                                        }
-                                        else
-                                        {
-                                            <div class="col-lg-6  disable-controls">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
-                                        }
+                                        <div class="col-lg-6">@Html.DisplayFor(x => x.SecretaryUserNamesList, "obj")</div>
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActStateId, "GenericDropDown")</div>
                                     </div>
                                 }
                                 else
                                 {
                                     <div class="row">
-                                        @if (manualSecretaryUser)
-                                        {
-                                            <div class="col-lg-6">@Html.EditorFor(x => x.SecretaryUserId, "SelectUser")</div>
-                                        }
-                                        else
-                                        {
-                                            <div class="col-lg-6">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownString")</div>
-                                        }
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.SecretaryUserId, "GenericDropDownMultiple")</div>
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActStateId, "GenericDropDown")</div>
                                     </div>
                                 }
@@ -194,6 +250,15 @@
                                     <div class="row">
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActISPNReasonId, "GenericDropDown")</div>
                                         <div class="col-lg-6">@Html.EditorFor(x => x.ActISPNDebtorStateId, "GenericDropDown")</div>
+                                    </div>
+                                }
+                                @if ((bool)ViewBag.isRNFLcase)
+                                {
+                                    <div class="row">
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.ActISPNReasonId, "GenericDropDown")</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6">@Html.EditorFor(x => x.RnflEffectiveImmediately, "bool")</div>
                                     </div>
                                 }
                                 <div class="row">
@@ -205,6 +270,10 @@
                                         else
                                         {
                                             @Html.EditorFor(x => x.IsFinalDoc, "BooleanDisabled")
+                                        }
+                                        @if (ViewBag.hasTDActForRegistration == true)
+                                        {
+                                            @Html.EditorFor(x => x.TDActForRegistration, "Boolean")
                                         }
                                     </div>
                                     <div class="col-lg-6">
@@ -222,8 +291,8 @@
                                 </div>
                                 <div class="row">
                                     @*<div class="col-lg-6">
-                                            @Html.EditorFor(x => x.IsReadyForPublish, "Boolean")
-                                        </div>*@
+                                    @Html.EditorFor(x => x.IsReadyForPublish, "Boolean")
+                                    </div>*@
                                     <div class="col-lg-6">
                                         <div id="divInforcedDate">
                                             @Html.EditorFor(x => x.ActInforcedDate, "DateTime")
@@ -231,13 +300,62 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-lg-6">
+                                    <div class="col-lg-4">
                                         @Html.EditorFor(x => x.CanAppeal, "Boolean")
                                     </div>
-                                    <div class="col-lg-6">
+                                    <div class="col-lg-5">
                                         <div class="row" id="divActResult"><div class="col-lg-12">@Html.EditorFor(x => x.ActResultId, "GenericDropDown")</div></div>
-                                        <div class="row" id="divComplainIndex"><div class="col-lg-12">@Html.EditorFor(x => x.ActComplainIndexId, "GenericDropDown")</div></div>
                                     </div>
+                                </div>
+                                <div class="row" id="divAppelFastProcess">
+                                    <div class="col-lg-4">
+                                        @Html.EditorFor(x => x.AppealNotificationDaysFastProcess, "Int32Nullable")
+                                    </div>
+                                    <div class="col-lg-4">
+                                        @Html.EditorFor(x => x.AppealNotificationWeeksFastProcess, "Int32Nullable")
+                                    </div>
+                                    <div class="col-lg-4">
+                                        @Html.EditorFor(x => x.AppealNotificationMontsFastProcess, "Int32Nullable")
+                                    </div>
+                                </div>
+                                @if (isFastProcess)
+                                {
+                                    <div class="row" id="divNotification">
+                                        <div class="col-lg-4">@Html.EditorFor(x => x.NotificationOn, "Boolean")</div>
+                                    </div>
+                                    <div class="row" id="divNotificationTerm">
+                                        <div class="col-lg-4">
+                                            @Html.EditorFor(x => x.NotificationDays, "Int32Nullable")
+                                        </div>
+                                        <div class="col-lg-4">
+                                            @Html.EditorFor(x => x.NotificationWeeks, "Int32Nullable")
+                                        </div>
+                                        <div class="col-lg-4">
+                                            @Html.EditorFor(x => x.NotificationMonts, "Int32Nullable")
+                                        </div>
+                                    </div>
+                                    <div class="row" id="divActNotification">
+                                        <div class="col-lg-8">@Html.EditorFor(x => x.ActNotificationOn, "Boolean")</div>
+                                    </div>
+                                    <div class="row" id="divActNotificationTerm">
+                                        <div class="col-lg-4">
+                                            @Html.EditorFor(x => x.ActNotificationDays, "Int32Nullable")
+                                        </div>
+                                        <div class="col-lg-4">
+                                            @Html.EditorFor(x => x.ActNotificationWeeks, "Int32Nullable")
+                                        </div>
+                                        <div class="col-lg-4">
+                                            @Html.EditorFor(x => x.ActNotificationMonts, "Int32Nullable")
+                                        </div>
+                                    </div>
+                                    <div class="row" id="divActNotificationDescTerm">
+                                        <div class="col-lg-12">
+                                            @Html.EditorFor(x => x.ActNotificationDescription, "Textarea")
+                                        </div>
+                                    </div>
+                                }
+                                <div class="row" id="divComplainIndex">
+                                    <div class="col-lg-12">@Html.EditorFor(x => x.ActComplainIndexId, "GenericSelect2", null, new { wrap = true })</div>
                                 </div>
 
                                 @if (!string.IsNullOrEmpty(Model.Description))
@@ -267,8 +385,11 @@
                                             }
                                         </div>
                                         <div class="col-lg-6" style="margin-top:23px;">
-                                            <a asp-action="BlankMotives" asp-route-id="@Model.Id" class="btn btn-sm btn-def">Изготвяне</a>
-                                            @if (hasDefacedMotivesBlank && canAccessFile)
+                                            @if (!Model.ActMotivesDeclaredDate.HasValue)
+                                            {
+                                                <a asp-action="BlankMotives" asp-route-id="@Model.Id" class="btn btn-sm btn-def">Изготвяне</a>
+                                            }
+                                            @if (hasDefacedMotivesBlank && canAccessDefaceMotive)
                                             {
                                                 if (!hasDefacedMotives)
                                                 {
@@ -280,13 +401,18 @@
                                                     if (access.CanChangeFull)
                                                     {
                                                         <span>&nbsp;</span>
-                                                        <a onclick="confirmDelete(this,'motive'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile",new { actId=Model.Id,sourceType=SourceTypeSelectVM.CaseSessionActMotiveDepersonalized})" class="btn btn-danger" title="Премахване на обезличените мотиви"><i class="fa fa-remove"></i></a>
+                                                        <a onclick="confirmDelete(this,'motive'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile", new { sourceId = Model.Id, sourceType = SourceTypeSelectVM.CaseSessionActMotiveDepersonalized })" class="btn btn-danger" title="Премахване на обезличените мотиви"><i class="fa fa-remove"></i></a>
                                                     }
                                                 }
                                             }
                                         </div>
                                     </div>
                                 </fieldset>
+                            }
+                            @if (!activeRequest12024 && Model.ActDeclaredDate != null && ViewBag.hasCoordinationWithOpinion == true && canAccessFile && access.CanChange)
+                            {
+                                <div id="divCoordinationDepersonalization">
+                                </div>
                             }
                         </div>
                         <div class="form-group">
@@ -295,7 +421,7 @@
                                 <input id="btnMainSubmit" type="submit" value="Запис" class="btn btn-success single-click-submit" />
                             }
                             &nbsp;
-                            <a href="@Url.Action("Preview","CaseSession",new { id=Model.CaseSessionId})#tabSessionAct" class="btn btn-danger">Назад</a>
+                            <a href="@Url.Action("Preview", "CaseSession", new { id = Model.CaseSessionId })#tabSessionAct" class="btn btn-danger">Назад</a>
                             @if (Model.Id > 0)
                             {
                                 <span>&nbsp;</span>
@@ -303,22 +429,27 @@
                                 {
                                     if (!hasDefacedAct)
                                     {
-
                                         if (Model.ActDeclaredDate != null)
                                         {
-                                            <a href="#" id="btnBlank" style="display:none;" onclick="editActBlank(); return false;" class="btn btn-warning">Корекция на акт</a>
+                                            if (canCorrectAfterDeclare)
+                                            {
+                                                <a href="#" id="btnBlank" style="display:none;" onclick="editActBlank(); return false;" class="btn btn-warning">Корекция на акт</a>
+                                            }
                                         }
                                         else
                                         {
                                             <a href="#" id="btnBlank" style="display:none;" onclick="editActBlank(); return false;" class="btn btn-primary">Изготвяне на акт</a>
                                         }
-                                        @if (!string.IsNullOrEmpty(Model.RegNumber))
+                                        @if (!string.IsNullOrEmpty(Model.RegNumber) || activeRequest12024)
                                         {
-                                            <a href="#" id="btnBlankComplete" style="display:none;" onclick="editActBlankComplete(); return false;" class="btn btn-warning">Корекция на акт</a>
+                                            if ((Model.ActDeclaredDate != null && canCorrectAfterDeclare) || Model.ActDeclaredDate == null)
+                                            {
+                                                <a href="#" id="btnBlankComplete" style="display:none;" onclick="editActBlankComplete(); return false;" class="btn btn-warning">Корекция на акт</a>
+                                            }
                                         }
                                     }
                                 }
-                                @if (access.CanChange && hasDefacedBlank && !hasDefacedAct && canAccessFile)
+                                @if (access.CanChange && hasDefacedBlank && !hasDefacedAct && canAccessDefaceAct)
                                 {
                                     <span>&nbsp;</span>
                                     <a asp-action="DepersonalizeAct" asp-route-id="@Model.Id" class="btn btn-primary">Обезличаване на акт</a>
@@ -328,7 +459,7 @@
                                     if (hasDefacedAct && access.CanChangeFull)
                                     {
                                         <span>&nbsp;</span>
-                                        <a onclick="confirmDelete(this,'act'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile",new { actId=Model.Id,sourceType=SourceTypeSelectVM.CaseSessionActDepersonalized})" class="btn btn-danger" title="Премахване на обезличения акт"><i class="fa fa-remove"></i></a>
+                                        <a onclick="confirmDelete(this,'act'); return false;" data-url="@Url.Action("RemoveDepersonalizedFile", new { sourceId = Model.Id, sourceType = SourceTypeSelectVM.CaseSessionActDepersonalized })" class="btn btn-danger" title="Премахване на обезличения акт"><i class="fa fa-remove"></i></a>
                                     }
                                 }
 
@@ -350,16 +481,12 @@
                                         @await Html.PartialAsync("_ExpiredInfoButton", new ExpiredInfoVM() { Id = Model.Id, DialogTitle = "Премахване на съдебен акт", ExpireSubmitUrl = Url.Action("Act_ExpiredInfo") })
                                     }
                                 }
-                                @*<div class="pull-right">
-                                        @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString() })
-                                    </div>*@
-
-                                <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CaseSessionAct, SourceId = Model.Id })" />
                                 @if (Model.Id > 0)
                                 {
                                     <div class="pull-right">
                                         @await Html.PartialAsync("_ShowLogOperation", new IOWebApplication.Core.Models.ShowLogModel() { ObjectKey = Model.Id.ToString(), IconOnly = true })
                                         &nbsp;
+                                        <partial name="MqInfo" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CaseSessionAct, SourceId = Model.Id })" />
                                     </div>
                                 }
                             }
@@ -375,13 +502,19 @@
 
                         @if (access.CanChange)
                         {
+
+
                             <fieldset class="is-fieldset">
                                 <legend class="legend_1">
                                     Действия
                                 </legend>
+                                @if (quickViewEnabled)
+                                {
+                                    <a href="@Url.Action("QuickView", new { id = Model.Id })" class="btn btn-sm btn-warning" title="Преглед на акта преди регистриране." target="_blank">Преглед</a>
+                                }
                                 @if (showNoResultButton)
                                 {
-                                    <a href="@Url.Action("AddResult", "CaseSession", new { caseSessionId = Model.CaseSessionId, CallFromActId = Model.Id })" class="btn btn-sm btn-default" title="Отваря форма за въвеждане на резултат от проведено заседание.">Добави резултат</a>
+                                    <a href="@Url.Action("AddResult", "CaseSession", new { caseSessionId = Model.CaseSessionId, CallFromActId = Model.Id })" class="btn btn-sm btn-success" title="Отваря форма за въвеждане на резултат от проведено заседание.">Добави резултат</a>
                                 }
                                 @if (canRegisterAct)
                                 {
@@ -410,10 +543,10 @@
             </div>
         </div>
         <div class="tab-pane" id="tabWorkTask">
-            <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.CaseSessionAct,Model.Id) { TaskRequired=true})" />
+            <partial name="WorkTask" model="@(new SourceTypeSelectVM(SourceTypeSelectVM.CaseSessionAct, Model.Id) { TaskRequired = true })" />
         </div>
         <div class="tab-pane" id="tabCordination">
-            <partial name="~/Views/CaseSessionActCoordination/_CaseSessionActCoordination.cshtml" model="@(new CaseMainDataVM() { CaseSessionActId = Model.Id})" />
+            <partial name="~/Views/CaseSessionActCoordination/_CaseSessionActCoordination.cshtml" model="@(new CaseMainDataVM() { CaseSessionActId = Model.Id })" />
         </div>
         <div class="tab-pane" id="tabDocTemplates">
             <partial name="~/Views/DocumentTemplate/_DocumentTemplate.cshtml" model="@(new SourceTypeSelectVM() { SourceType = SourceTypeSelectVM.CaseSessionAct, SourceId = Model.Id })" />
@@ -423,36 +556,99 @@
 
 <partial name="_CdnScript" />
 
-@section scripts{
+@section scripts {
     <script>
         $(document).ready(function () {
+            $('.correct-act').hide();
             SH_ComplainResult();
             SH_ComplainIndex();
             SH_ActResult();
+            SH_AppelFastProcess();
+            SH_Notification();
+            SH_ActNotification();
             SH_ActTerm();
             $('#btnBlank').hide();
             $('#btnBlankComplete').hide();
             SH_BlankButtons('');
-
+            SH_CoordinationDepersonalization();
 
             initLawUnit();
             initUserAutoComplete();
 
+            $('#IsFinalDoc').change(function () {
+                SH_ComplainResult();
             });
 
-        $('#IsFinalDoc').change(function () {
-            SH_ComplainResult();
-        });
+            $('#CanAppeal').change(function () {
+                SH_ActResult();
+                SH_ComplainIndex();
+                SH_AppelFastProcess();
+            });
 
-        $('#CanAppeal').change(function () {
-            SH_ActResult();
-            SH_ComplainIndex();
-        });
+            $('#NotificationOn').change(function () {
+                SH_Notification();
+            });
+
+            $('#ActNotificationOn').change(function () {
+                SH_ActNotification();
+            });
+
+            $('#HasCorrectedAct').change(function () {
+                if($(this).is(':checked')){
+                    $('.correct-act').show();
+                }else{
+                    $('.correct-act').hide();
+                }
+            }).trigger('change');
+
+            $('#CorrectedActsIds').select2({ language: "bg" });
+            let s2Str = '@string.Join(',', Model.CorrectedActsIds)';
+            $('#CorrectedActsIds').val(s2Str.split(",")).trigger('change');
+
+        @if (Model.ActDeclaredDate == null)
+        {
+                                <text>
+                                                                                                initSecretaryUser();
+                                </text>
+        }
+                 });
+
+        function initSecretaryUser() {
+            $('#SecretaryUserId').select2({ language: "bg" });
+            setTimeout(function () {
+                $('#SecretaryUserId').val('@Model.SecretaryUserId_list'.split(',')).change();
+
+            }, 250);
+            $('#SecretaryUserId').change(function () {
+                let s2Selection = $(this).val();
+                if (s2Selection[s2Selection.length - 1] == "-1") {
+                    appendSecretaryAllUsers();
+                    return;
+                }
+                var str = '';
+                if (s2Selection !== null && s2Selection.length > 0) {
+                    str = s2Selection.join(',');
+                }
+                $('#SecretaryUserId_list').val(str);
+            });
+            $('#ActComplainIndexId').select2({ language: "bg" });
+        }
+
+        function SH_CoordinationDepersonalization() {
+            if ($('#divCoordinationDepersonalization').length == 0) {
+                return;
+            }
+
+            requestContent('@Url.Action("GetDepersonalizeCoordination")', { actId: @Model.Id}, function (html) {
+                $('#divCoordinationDepersonalization').html(html);
+            });
+        }
+
 
         function SH_BlankButtons(processMode) {
             let _actKind = @(Model.ActKindId ?? 0);
 
-             //Акт се изготвя само ако не е избрана специална бланка с Model.ActKindId или е Обезпечителна заповед
+            //Акт се изготвя само ако не е избрана специална бланка с Model.ActKindId или е Обезпечителна заповед
             if (_actKind <= 0 || processMode == 'blank_body_only') {
                 $('#btnBlank').show();
                 $('#btnBlankComplete').hide();
@@ -465,81 +661,89 @@
         }
 
         function editActBlank() {
-             let editUrl = "@Url.Action("Blank",new { id=Model.Id})";
-            @if (hasActPdf)
-            {
-                <text>
-                    swalConfirm('Има генериран файл на съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! След промяна на съдържанието на съдебния акт/протокол е необходимо да създадете нова задача за подписване, за да се генерира нов файл на съдебния акт/протокол със същия номер.', function () {
-                            document.location.href = editUrl;
-                        },null,@(Model.ActDeclaredDate != null ? "true" : "false"));
-                </text>
-            }else {
-                <text>document.location.href = editUrl;</text>
-            }
-
+            let editUrl = "@Url.Action("Blank", new { id = Model.Id })";
+        @if (hasActPdf)
+        {
+                                <text>
+                                                                                                swalConfirm('Има генериран файл на съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! След промяна на съдържанието на съдебния акт/протокол е необходимо да създадете нова задача за подписване, за да се генерира нов файл на съдебния акт/протокол със същия номер.', function () {
+                                                                                                    document.location.href = editUrl;
+                                                                                                                                                        }, null, @(Model.ActDeclaredDate != null ? "true" : "false"));
+                                </text>
         }
+        else
+        {
+                                <text>document.location.href = editUrl; </text>
+        }
+
+                                                                                                                                                                                        }
 
         function editActBlankComplete() {
-             let editUrl = "@Url.Action("BlankComplete",new { id=Model.Id})";
-            @if (hasActPdf)
-            {
-                <text>
-                    swalConfirm('Има генериран файл на съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! След промяна на съдържанието на съдебния акт/протокол е необходимо да създадете нова задача за подписване, за да се генерира нов файл на съдебния акт/протокол със същия номер.', function () {
-                            document.location.href = editUrl;
-                        });
-                </text>
-            }else {
-                <text>document.location.href = editUrl;</text>
-            }
+            let editUrl = "@Url.Action("BlankComplete", new { id = Model.Id })";
+        @if (hasActPdf)
+        {
+                                <text>
+                                                                                                swalConfirm('Има генериран файл на съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! След промяна на съдържанието на съдебния акт/протокол е необходимо да създадете нова задача за подписване, за да се генерира нов файл на съдебния акт/протокол със същия номер.', function () {
+                                                                                                    document.location.href = editUrl;
+                                                                                                                                                        });
+                                </text>
         }
+        else
+        {
+                                <text>document.location.href = editUrl; </text>
+        }
+                                                                                                                                                                                        }
 
         function sendForSignCheck(sender) {
             if ($(sender).attr('disabled')) {
                 return;
             }
             $(sender).attr('disabled', 'disabled');
-             let editUrl = "@Url.Action("SentForSign",new { actId=Model.Id})";
-            @if (Model.RegDate != null)
-            {
-                <text>
-                    swalConfirm('Вече има регистриран съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за съдебния акт/протокол със същия номер и ще се създадат нови задачи за подпис.', function () {
-                        document.location.href = editUrl;
-                    }, function () {
-                            $(sender).removeAttr('disabled');
-                    });
-                </text>
-            }else {
-                <text>
-            setTimeout(function () {
-                document.location.href = editUrl;
-            },200);
-            </text>
-            }
+            let editUrl = "@Url.Action("SentForSign", new { actId = Model.Id })";
+        @if (Model.RegDate != null)
+        {
+                                <text>
+                                                                                                swalConfirm('Вече има регистриран съдебен акт/протокол, който е в процес на съгласуване/подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за съдебния акт/протокол със същия номер и ще се създадат нови задачи за подпис.', function () {
+                                                                                                    document.location.href = editUrl;
+                                                                                                                                                        }, function () {
+                                                                                                    $(sender).removeAttr('disabled');
+                                                                                                                                                        });
+                                </text>
         }
+        else
+        {
+                                <text>
+                                                                                                setTimeout(function () {
+                                                                                                    document.location.href = editUrl;
+                                                                                                                                                        }, 200);
+                                </text>
+        }
+                                                                                                                                                                                        }
 
         function sendForSignMotivesCheck(sender) {
             if ($(sender).attr('disabled')) {
                 return;
             }
             $(sender).attr('disabled', 'disabled');
-             let editUrl = "@Url.Action("SentForSignMotives", new { actId=Model.Id})";
-            @if (ViewBag.hasMotives == true)
-            {
-                <text>
-                    swalConfirm('Вече създаден документ за мотиви, който е в процес на подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за мотиви и ще се създадат нови задачи за подпис.', function () {
-                        document.location.href = editUrl;
-                    }, function () {
-                            $(sender).removeAttr('disabled');
-                    });
-                </text>
-            }else {
-                <text>
-            setTimeout(function () {
-                document.location.href = editUrl;
-            },200);
-            </text>
-            }
+            let editUrl = "@Url.Action("SentForSignMotives", new { actId = Model.Id })";
+        @if (ViewBag.hasMotives == true)
+        {
+                                <text>
+                                                                                                swalConfirm('Вече създаден документ за мотиви, който е в процес на подписване или е подписан! Ако го изпратите отново за подпис ще се генерира нов файл за мотиви и ще се създадат нови задачи за подпис.', function () {
+                                                                                                    document.location.href = editUrl;
+                                                                                                                                                        }, function () {
+                                                                                                    $(sender).removeAttr('disabled');
+                                                                                                                                                        });
+                                </text>
         }
+        else
+        {
+                                <text>
+                                                                                                setTimeout(function () {
+                                                                                                    document.location.href = editUrl;
+                                                                                                                                                        }, 200);
+                                </text>
+        }
+                                                                                                                                                                                        }
 
         function SH_ComplainResult() {
             var isFinalDoc = $("#IsFinalDoc").is(":checked");
@@ -571,6 +775,38 @@
             }
         }
 
+        function SH_AppelFastProcess() {
+            var isCanAppeal = $("#CanAppeal").is(":checked");
+            if ((isCanAppeal) && ('@isFastProcess' == 'True')) {
+                $("#divAppelFastProcess").show();
+            }
+            else {
+                $("#divAppelFastProcess").hide();
+            }
+        }
+
+        function SH_Notification() {
+            var notificationOn = $("#NotificationOn").is(":checked");
+            if ((notificationOn) && ('@isFastProcess' == 'True')) {
+                $("#divNotificationTerm").show();
+            }
+            else {
+                $("#divNotificationTerm").hide();
+            }
+        }
+
+        function SH_ActNotification() {
+            var notificationOn = $("#ActNotificationOn").is(":checked");
+            if ((notificationOn) && ('@isFastProcess' == 'True')) {
+                $("#divActNotificationTerm").show();
+                $("#divActNotificationDescTerm").show();
+            }
+            else {
+                $("#divActNotificationTerm").hide();
+                $("#divActNotificationDescTerm").hide();
+            }
+        }
+
         function SH_ActTerm() {
             var acttype = $("#ActTypeId").val();
             if ((acttype == @NomenclatureConstants.ActType.CommandmentProtection) || (acttype == @NomenclatureConstants.ActType.CommandmentimmediatelyProtection)) {
@@ -583,7 +819,7 @@
 
         $(function () {
             $('select#ActTypeId').change(function () {
-                requestCombo('@Url.Action("Get_ActKindsByActType")', { actTypeId: $(this).val() }, 'select#ActKindId', '@Model.ActKindId', function (ddl) {
+                requestCombo('@Url.Action("Get_ActKindsByActType")', { actTypeId: $(this).val(), caseId: @Model.CaseId }, 'select#ActKindId', '@Model.ActKindId', function (ddl) {
                     if ($(ddl).find('option').length > 1) {
                         $('#divActKind').show();
                     } else {
@@ -598,23 +834,46 @@
                 } else {
                     $('#divSignJudge').hide();
                 }
-                @if(Model.Id == 0)
-                {
-                    <text>
-                let defFinalActs = JSON.parse('@NomenclatureConstants.ActType.FinalByDefaultStr');
-                let isFinal = false;
-                for (var i = 0; i < defFinalActs.length; i++) {
-                    if (defFinalActs[i] == $(this).val()) {
-                        isFinal = true;
+                if($(this).val() == '@NomenclatureConstants.ActType.ExecListPrivatePerson' ||
+                    $(this).val() == '@NomenclatureConstants.ActType.ExecListForState'){
+                    $('#divGenerateExecProcess').show();
+                }else{
+                    $('#divGenerateExecProcess').hide();
+                }
+                let _isEdit = '@(Model.Id == 0)';
+
+                if (_isEdit == 'True') {
+                    let defFinalActs = JSON.parse('@NomenclatureConstants.ActType.FinalByDefaultStr');
+                    let isFinal = false;
+                    for (var i = 0; i < defFinalActs.length; i++) {
+                        if (defFinalActs[i] == $(this).val()) {
+                            isFinal = true;
+                        }
                     }
-                }
-                if (isFinal) {
-                    $('#IsFinalDoc').prop("checked", true);
-                } else {
-                    $('#IsFinalDoc').prop("checked", false);
-                }
-                SH_ComplainResult();
-                </text>
+                    if (isFinal) {
+                        $('#IsFinalDoc').prop("checked", true);
+                    } else {
+                        $('#IsFinalDoc').prop("checked", false);
+                    }
+                    let defFinalAppealActs = JSON.parse('@NomenclatureConstants.ActType.AppealByDefaultStr');
+                    let isFinalAppeal = false;
+                    for (var i = 0; i < defFinalActs.length; i++) {
+                        if (defFinalAppealActs[i] == $(this).val()) {
+                            isFinalAppeal = true;
+                        }
+                    }
+
+                    if (isFinalAppeal) {
+                        $('#CanAppeal').prop("checked", true);
+                        if ('@hasActComplainResultRespect' == 'True')
+                            $('#ActComplainResultId').val('@NomenclatureConstants.ActComplainResults.Respect');
+                        else
+                            $('#ActComplainResultId').val(0);
+                    } else {
+                        $('#CanAppeal').prop("checked", false);
+                        $('#ActComplainResultId').val(0);
+                    }
+                    SH_ComplainResult();
                 }
             }).trigger('change');
             $('select#ActStateId').change(function () {
@@ -633,18 +892,24 @@
                             $('#divRelatedAct').hide();
                         }
 
+                        if (data.actDirection == true) {
+                            $('#divActDirection').show();
+                        } else {
+                            $('#divActDirection').hide();
+                        }
+
                         SH_BlankButtons(data.processType);
                     } else {
                         $('#divRelatedAct').hide();
                     }
-                    @if (autoSave)
-            {
-                <text>
-            setTimeout(function () { $('#mainForm').trigger('submit'); }, 500);
+        @if (autoSave)
+        {
+                                <text>
+                                                                                                        setTimeout(function () {$('#mainForm').trigger('submit'); }, 500);
 
-        </text>
-            }
-                });
+                                </text>
+        }
+                                                                                                                                                                                                });
             });
 
             $('div.disable-controls').find('select,input').attr('disabled', 'disabled');
@@ -659,19 +924,32 @@
                 window.location.hash = e.target.hash;
             })
         });
-        function confirmDelete(sender,source) {
+        function confirmDelete(sender, source) {
             let confirmText = '';
             switch (source) {
                 case 'act':
                     confirmText = "Потвърди премахването на обезличения акт.";
                     break;
                 case 'motive':
-                    confirmText = "Потвърди премахването на обезличения акт.";
+                    confirmText = "Потвърди премахването на обезличените мотиви.";
+                    break;
+                case 'coordination':
+                    confirmText = "Потвърди премахването на особеното мнение.";
                     break;
             }
             swalConfirm(confirmText, function () {
                 document.location.href = $(sender).data('url');
             });
+        }
+        function appendSecretaryAllUsers() {
+            requestGET_Json('@Url.Action("GetAllUsers")', {}, function (users) {
+                $('#SecretaryUserId').empty();
+                for (let i = 0; i < users.length; i++) {
+                    $("#SecretaryUserId").append(new Option(users[i].text, users[i].value, false, false));
+                }
+                $('#SecretaryUserId').val($("#SecretaryUserId_list").val().split(',')).change();
+                $("#SecretaryUserId").select2("open");
+            })
         }
     </script>
 }

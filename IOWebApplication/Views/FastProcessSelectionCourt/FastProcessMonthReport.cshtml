@@ -1,0 +1,279 @@
+﻿@using IOWebApplication.Infrastructure.Models.ViewModels
+@model FastProcessSelectionCourtReportFilterVM
+
+@{
+    ViewData["Title"] = "Справка Заповедни дела";
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index","Home")" title="Начало"><i class="fa fa-home"></i></a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+}
+
+<div class="row">
+
+    <div class="col-lg-3">@Html.EditorFor(x => x.YearId, "GenericDropDown")</div>
+    <div class="col-lg-3">@Html.EditorFor(x => x.MonthId, "GenericDropDown")</div>
+    
+</div>
+
+<div class="row">
+    <div class="col-md-6 text-left pb-15">
+        <button type="button" class="btn btn-primary" id="btnFilter" onclick="getData()" value="Филтриране" title="Филтриране">
+            Филтриране
+            <i class="fa fa-search" title="Търсене"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="fastSelectionMainTable" class="table table-hover table-striped"></table>
+    </div>
+</div>
+@using Newtonsoft.Json
+@* <script>
+    alert("TEST");
+    const indexesToKeep = @Html.Raw(JsonConvert.SerializeObject(ViewBag.DaysToShow));
+    const indexesToKeep = @Html.Raw(JsonConvert.SerializeObject(ViewBag.DaysToShow));
+</script> 
+  </script>*@
+<script>
+    function getData(){
+        postContent("@Url.Action("GetDataReport", "FastProcessSelectionCourt")",{ model:{ yearId: $('#YearId').val(),
+                        monthId: $('#MonthId').val()}},function(data){
+                 loadTable(data);
+        });
+    }
+    function loadTable(reportData) {
+
+        const tableSelector = '#fastSelectionMainTable';
+
+     
+        if ($.fn.DataTable.isDataTable(tableSelector)) {
+            $(tableSelector).DataTable().clear().destroy();
+        }
+
+        let table = $('#fastSelectionMainTable').DataTable({
+                paging: false,
+                scrollX:true,
+                data:reportData.rows,
+                processing: false,
+                serverSide: false,                
+                filter: false,
+                columns: [           
+                { name: 'courtName', data: 'courtName',title: 'СЪД', sortable: true,searchable: true},
+                { name: 'judgeCount', data: 'judgeCount', title: 'Щат', sortable: false, searchable: true },
+                    {
+                        name: 'bazovKoefCourt',
+                        data: 'bazovKoefCourt',
+                        title: 'Базов коефициент на Съд',
+                        sortable: false,
+                        searchable: true,
+                        "render": function (value) {
+                            if (value)
+                                return parseFloat(value).toFixed(2);
+                            else
+                                return "0.00";
+                        }
+                    }
+                ,
+                {
+                    name: 'bazovKoefCourtJudge',
+                    data: 'bazovKoefCourtJudge',
+                    title: 'Базов коефициент на Съдия',
+                    sortable: false,
+                    searchable: true,
+                    "render": function (value) {
+                        if (value)
+                            return parseFloat(value).toFixed(2);
+                        else
+                            return "0.00";
+
+                    },
+                    "createdCell": function (td, cellData, rowData, row, col) {
+                        const targetValue = parseFloat(rowData['bazovKoefSredenALLCourtJudge']);
+                        const thisValue = parseFloat(cellData);
+
+                        if (!isNaN(thisValue) && !isNaN(targetValue) && thisValue < targetValue) {
+                            $(td).css('background-color', '#f8d7da');  // Light red
+                            $(td).css('color', '#721c24');             // Dark red text
+                        }
+                        
+                    }
+                },
+
+                { name: 'd01', data: 'd01', title: '01', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd02', data: 'd02', title: '02', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd03', data: 'd03', title: '03', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd04', data: 'd04', title: '04', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd05', data: 'd05', title: '05', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd06', data: 'd06', title: '06', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd07', data: 'd07', title: '07', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd08', data: 'd08', title: '08', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd09', data: 'd09', title: '09', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd10', data: 'd10', title: '10', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd11', data: 'd11', title: '11', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd12', data: 'd12', title: '12', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd13', data: 'd13', title: '13', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd14', data: 'd14', title: '14', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd15', data: 'd15', title: '15', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd16', data: 'd16', title: '16', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd17', data: 'd17', title: '17', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd18', data: 'd18', title: '18', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd19', data: 'd19', title: '19', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd20', data: 'd20', title: '20', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd21', data: 'd21', title: '21', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd22', data: 'd22', title: '22', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd23', data: 'd23', title: '23', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd24', data: 'd24', title: '24', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd25', data: 'd25', title: '25', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd26', data: 'd26', title: '26', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd27', data: 'd27', title: '27', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd28', data: 'd28', title: '28', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd29', data: 'd29', title: '29', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd30', data: 'd30', title: '30', sortable: false, searchable: true, className: 'text-end' },
+                { name: 'd31', data: 'd31', title: '31', sortable: false, searchable: true, className: 'text-end' },
+
+                { name: 'startTarget', data: 'startTarget', title: 'Целева стойност', sortable: false, searchable: true, className: 'text - end' },
+
+                { name: 'addedAfterZero', data: 'addedAfterZero', title: 'Разлика в целева стойност', sortable: false, searchable: true, className: 'text - end' },
+
+                { name: 'okonchatelenTarget', data: 'okonchatelenTarget', title: 'Целева стойност в края', sortable: false, searchable: true, className: 'text - end' },
+
+                { name: 'polucheniDela', data: 'polucheniDela', title: 'Получени дела', sortable: false, searchable: true, className: 'text - end' },
+
+           
+                
+                {
+                    name: 'natovarbvenePolucheniDela',
+                    data: 'natovarbvenePolucheniDela',
+                    title: 'Натовареност по Получени дела',
+                    sortable: false,
+                    searchable: true,
+                    "render": function (value) {
+                        if (value)
+                            return parseFloat(value).toFixed(2);
+                        else
+                            return "0.00";
+
+                    }
+                },
+                {
+                    name: 'natovarbveneBazovNachalo_PolucheniDela',
+                    data: 'natovarbveneBazovNachalo_PolucheniDela',
+                    title: 'Натовареност СЪД базов коефициент (базов в началото на периода + получени дела )',
+                    sortable: false,
+                    searchable: true,
+                    "render": function (value) {
+                        if (value)
+                            return parseFloat(value).toFixed(2);
+                        else
+                            return "0.00";
+
+                    }
+                },
+                {
+                    name: 'bazovNaSydiaVkraq',
+                    data: 'bazovNaSydiaVkraq',
+                    title: 'Базов коефициент на СЪДИЯ в края на месеца',
+                    sortable: false,
+                    searchable: true,
+                    "render": function (value) {
+                        if (value)
+                            return parseFloat(value).toFixed(2);
+                        else
+                            return "0.00";
+
+                    },
+                    "createdCell": function (td, cellData, rowData, row, col) {
+                        const targetValue = parseFloat(rowData['bazovKoefSredenALLVkraqCourtJudge']);
+                        const thisValue = parseFloat(cellData);
+
+                        if (!isNaN(thisValue) && !isNaN(targetValue) && thisValue < targetValue) {
+                            $(td).css('background-color', '#f8d7da');  // Light red
+                            $(td).css('color', '#721c24');             // Dark red text
+                        }
+
+                    }
+                }
+                    ]
+                    
+
+            // initComplete: function () {
+            //     const table = $('#fastSelectionMainTable').DataTable();
+
+            //     // List of day column names from d01 to d31
+            //     const allDayColumns = [];
+            //     for (let i = 1; i <= 31; i++) {
+            //         allDayColumns.push(`d${i.toString().padStart(2, '0')}`);
+            //     }
+
+            //     alert(allDayColumns.join(", "));
+
+         
+             
+            //         alert(columnsToShow1.join(", "));
+
+            //     const columnsToShow = ["d01", "d02", "d05", "d10", "d15"];
+            //           alert(columnsToShow.join(", "));
+            //     // Hide only the ones NOT in columnsToShow
+            //     // allDayColumns.forEach(colName => {
+            //     //     if (!columnsToShow.includes(colName)) {
+            //     //         // Hide column by name directly
+            //     //         table.column(`${colName}:name`).visible(false);
+            //     //     }
+            //     // });
+            //     table.column("d1").visible(false);
+
+            // }
+
+
+            //////////////////////////////////////////////////
+        });
+       
+        setTimeout(function(){
+            let indexesToKeep=reportData.listOfDates;
+                    //alert(indexesToKeep.join(", "));
+                    for (let i = 1; i <= 31; i++) {
+                        if (!indexesToKeep.includes(i)) {
+                            table.column(i+3).visible(false);
+                        } else {
+                            table.column(i+3).visible(true);
+                        }
+                    }
+        },300);
+    }
+</script>
+<script>
+    // $(document).ready(function () {
+    //     //$('#CaseGroupId').trigger('change');
+    //     $('#CaseGroupIds').select2({
+    //     });
+    //     $('#CaseTypeIds').select2({
+    //     });
+    //     $('#CourtGroupIds').select2({
+    //     });
+    //     $('#LoadGroupLinkIds').select2({
+    //     });
+    // });
+
+    // $('#YearId').change(function () {
+    //     requestCombo('@Url.Action("GetDDL_SelectionMonths", "FastProcessSelectionCourt")', { year: $(this).val() }, '#MonthId', @Model.MonthId});
+    // });
+
+    $('#YearId').change(function () {
+        requestCombo(
+            '@Url.Action("GetDDL_SelectionMonths", "FastProcessSelectionCourt")',
+            { year: $(this).val() },
+            '#MonthId',
+    @Html.Raw(Model.MonthId)
+        );
+    });
+    
+</script>
+
+
+

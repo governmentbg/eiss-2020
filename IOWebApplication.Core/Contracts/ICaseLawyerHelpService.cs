@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IOWebApplication.Core.Contracts
 {
@@ -14,8 +15,9 @@ namespace IOWebApplication.Core.Contracts
         IQueryable<CaseLawyerHelpVM> CaseLawyerHelp_Select(int CaseId);
         IQueryable<CaseLawyerHelpPersonVM> CaseLawyerHelpPerson_Select(int CaseLawyerHelpId);
         CaseLawyerHelpEditVM CaseLawyerHelp_GetById(int Id);
+        CaseLawyerHelpPersonVM CaseLawyerHelpPerson_GetById(int Id);
         List<CheckListVM> FillCaseLawyerHelpOtherLawyers(int? CaseLawyerHelpId, int CaseId);
-        bool CaseLawyerHelp_SaveData(CaseLawyerHelpEditVM model);
+        Task<bool> CaseLawyerHelp_SaveData(CaseLawyerHelpEditVM model);
         bool CaseLawyerHelpPerson_SaveData(CaseLawyerHelpPerson model);
         List<CheckListVM> FillLeftRightSide(int CaseId);
         List<SelectListItem> GetDDL_LeftRightSide(int CaseLawyerHelpId, int? CasePersonId, bool addDefaultElement = true);
@@ -25,5 +27,10 @@ namespace IOWebApplication.Core.Contracts
         bool CaseLawyerHelpPersonMulti_UpdateData(CaseLawyerHelpPersonMultiEditVM model);
         bool IsExistPerson_CaseLawyerHelp(int Id);
         bool IsExistDocumentTemplate_CaseLawyerHelp(int Id);
+        IQueryable<CaseLawyerHelpAssignedLawyerVM> CaseLawyerHelpAssignedLawyer_Select(int CaseLawyerHelpId);
+        Task<bool> CaseLawyerHelpAssignedLawyer_ChangeState(int CaseId, int Id, int? LawyerStateId, DateTime? dateTime);
+        CaseLawyerHelpAssignedLawyerVM CaseLawyerHelpAssignedLawyerVM_GetById(int Id);
+        CaseLawyerHelpAssignedLawyerEditVM CaseLawyerHelpAssignedLawyerEditVM_GetById(int Id);
+        bool CaseLawyerHelpAssignedLawyer_SaveData(CaseLawyerHelpAssignedLawyerEditVM model);
     }
 }

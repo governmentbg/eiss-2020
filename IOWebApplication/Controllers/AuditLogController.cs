@@ -1,13 +1,12 @@
-﻿using System;
-using DataTables.AspNet.Core;
+﻿using DataTables.AspNet.Core;
 using IOWebApplication.Components;
 using IOWebApplication.Core.Contracts;
 using IOWebApplication.Extensions;
-using IOWebApplication.Infrastructure.Data.Models.UserContext;
 using IOWebApplication.Infrastructure.Extensions;
 using IOWebApplication.Infrastructure.Models.ViewModels.AuditLog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace IOWebApplication.Controllers
 {

@@ -4,6 +4,7 @@
 
 @{
     ViewData["Title"] = "Съдебни дела";
+    ViewData["ShowMenuCounts"] = true;
 }
 
 @section breadcrumb{
@@ -16,31 +17,25 @@
     @Html.HiddenFor(m => m.CaseGroupIds_text)
     @Html.HiddenFor(m => m.CaseTypeIds_text)
     <div class="row">
-        <div class="col-lg-3">
-            @Html.EditorFor(m => m.DateFrom, "DateTime")
-        </div>
-        <div class="col-lg-3">
-            @Html.EditorFor(m => m.DateTo, "DateTime")
-        </div>
-        <div class="col-lg-3">
-            @Html.EditorFor(m => m.CaseYear, "DateTimeYear")
-        </div>
-        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.CurrentWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateFrom, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.DateTo, "DateTime")</div>
+        <div class="col-lg-3">@Html.EditorFor(m => m.CaseYear, "DateTimeYear")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.JudgeReporterId, "LawUnit", null, new { selectMode = NomenclatureConstants.LawUnitSelectMode.AllWithHistoryNoVAS, lawUnitType = NomenclatureConstants.LawUnitTypes.Judge })</div>
     </div>
     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupIds, "GenericDropDownMultiple")</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeIds, "GenericDropDownMultiple")</div>
-        @*<div class="col-lg-3">@Html.EditorFor(x => x.CaseGroupId, "GenericDropDown")</div>
-            <div class="col-lg-3">@Html.EditorFor(x => x.CaseTypeId, "GenericDropDown")</div>*@
-        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeId, "CaseCode", null, new { caseTypeContainer = "#CaseTypeIds_text" })</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseCodeIds, "GenericDropDownMultipleArray")</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.RegNumber)</div>
     </div>
     <div class="row">
         <div class="col-lg-3">@Html.EditorFor(x => x.DocumentNumber)</div>
         <div class="col-lg-3">@Html.EditorFor(x => x.CaseClassificationId, "GenericDropDown")</div>
-        <div class="col-lg-2">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
-        <div class="col-lg-2">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
-        <div class="col-lg-2">@Html.EditorFor(x => x.CourtDepartmentOtdelenieId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CaseStateId, "GenericDropDown")</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentId, "GenericDropDown")</div>
+        <div class="col-lg-3">@Html.EditorFor(x => x.CourtDepartmentOtdelenieId, "GenericDropDown")</div>
     </div>
 
     <div class="row">
@@ -52,14 +47,6 @@
         </div>
     </div>
 </div>
-@*<div class="row">
-        <div class="col-md-12 text-right pb-15">
-            <a asp-action="Add" class="btn btn-success">
-                <i class="fa fa-plus"></i>
-                Добави
-            </a>
-        </div>
-    </div>*@
 
 <div class="row">
     <div class="col-lg-12 col-md-12">
@@ -72,10 +59,9 @@
         localStorage.removeItem('activeTabCase');
 
         $(document).ready(function () {
-            $('#CaseGroupIds').select2({
-            });
-            $('#CaseTypeIds').select2({
-            });
+            $('#CaseGroupIds').select2({ language: "bg" });
+            $('#CaseTypeIds').select2({ language: "bg" });
+            $('#CaseCodeIds').select2({ language: "bg" });
         });
 
         $('#CaseGroupId').change(function () {
@@ -97,6 +83,7 @@
                 str = $('#CaseTypeIds').val().join(',');
             }
             $('#CaseTypeIds_text').val(str);
+            requestCombo('@Url.Action("Get_CaseCodeByLoadGroup_DropDown", "Ajax")', { caseTypeId: $('#CaseTypeIds_text').val() }, '#CaseCodeIds', '', function () { $('#CaseCodeIds').trigger('change') });
         });
 
     </script>
@@ -122,9 +109,7 @@
                         d.model = {
                             DateFrom: $("#DateFrom").val(),
                             DateTo: $("#DateTo").val(),
-                            //CaseGroupId: $("#CaseGroupId").val(),
                             CaseStateId: $("#CaseStateId").val(),
-                            //CaseTypeId: $("#CaseTypeId").val(),
                             CaseCodeId: $("#CaseCodeId").val(),
                             RegNumber: $("#RegNumber").val(),
                             CaseYear: $("#CaseYear").val(),
@@ -134,7 +119,8 @@
                             CourtDepartmentId: $("#CourtDepartmentId").val(),
                             CourtDepartmentOtdelenieId: $("#CourtDepartmentOtdelenieId").val(),
                             CaseGroupIds_text: $('#CaseGroupIds_text').val(),
-                            CaseTypeIds_text: $('#CaseTypeIds_text').val()
+                            CaseTypeIds_text: $('#CaseTypeIds_text').val(),
+                            CaseCodeIds: $("#CaseCodeIds").val(),
                         };
                     }
                 },
@@ -225,7 +211,6 @@
 <script id="templateEdit" type="text/x-handlebars-template">
     <div class="row">
         <a href="@Url.Action("CasePreview")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Преглед"><i class="fa fa-eye"></i><span class="hidden-sm hidden-xs"></span></a>
-        @*<a href="@Url.Action("CaseFolder")/{{this}}" class="btn btn-success btn-sm" title="Обобщена информация"><i class="fa fa-info-circle"></i><span class="hidden-sm hidden-xs"></span></a>*@
         <a href="@Url.Action("CaseTimeLinePreview")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Електронна папка"><i class="fa fa-folder-open-o"></i><span class="hidden-sm hidden-xs"></span></a>
         <a href="@Url.Action("CaseProceedings")/{{this}}" class="btn btn-def btn-sm m-b-5" title="Ход на дело"><i class="fa fa-calendar"></i><span class="hidden-sm hidden-xs"></span></a>
     </div>
@@ -234,6 +219,5 @@
 <script>
     $(function () {
         initLawUnit();
-        initCaseCode();
     });
 </script>

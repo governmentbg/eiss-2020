@@ -1,10 +1,5 @@
 ﻿using IOWebApplication.Infrastructure.Data.Models.Common;
-using IOWebApplication.Infrastructure.Data.Models.Delivery;
-using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace IOWebApplication.Infrastructure.Models.ViewModels.Delivery
 {

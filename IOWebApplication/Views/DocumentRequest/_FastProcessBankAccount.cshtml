@@ -1,0 +1,25 @@
+﻿@using IOWebApplication.Infrastructure.Models.Integrations.EpepFastProcess;
+@model FastProcessBankAccountVM
+<h3 class="section-title section-title--xxs mb-3">Указания за доброволно плащане</h3>
+<h3 class="section-title section-title--xs mb-3" id="fp-bankaccount">4.1 Плащане по банкова сметка</h3>
+<div class="row">
+    <div class="col-lg-6">
+        @Html.EditorFor(x => x.OwnerNames)
+    </div>
+    <div class="col-lg-6">
+        @Html.EditorFor(x => x.BankName)
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        @Html.EditorFor(x => x.IBAN)
+    </div>
+    <div class="col-lg-6">
+        @Html.EditorFor(x => x.CurrencyCode, "GenericDropDownString", null, new { items = ViewBag.CurrenciesDDL })
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        @Html.EditorFor(x => x.OtherPaymentDescription)
+    </div>
+</div>
